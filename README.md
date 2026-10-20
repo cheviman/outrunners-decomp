@@ -18,7 +18,9 @@ the tools verify it, extract the assets and build your own executable.
 - [x] Reference run of the original program on MAME's V70 core against that model (`s32ref`), with MAME's
       Multi 32 video drawing both screens: it boots, runs the attract mode and plays a scripted game, the
       same frame by frame from one run to the next
-- [ ] The sound board in the reference (Z80, YM3438, MultiPCM)
+- [x] The sound board in the reference: the sound program on MAME's Z80, with ymfm's YM3438 (which the
+      program uses only for its timer) and MAME's MultiPCM, which plays the music and the effects
+      (`s32ref --sound-wav`), the same sample for sample from one run to the next
 - [ ] Scenarios, the static analysis, the decompiler, the game's own video and sound, assets, a port
 
 ## Getting started
@@ -49,7 +51,9 @@ Tools on Windows).
    build/bin/s32ref --script tests/controls/attract.txt --video-dump 600 --video-dump 1200 --video-dir build/frames
    ```
 
-   `tests/controls/` holds the control scripts (format in `runtime/include/s32/script.h`).
+   `tests/controls/` holds the control scripts (format in `runtime/include/s32/script.h`). With
+   `--sound-wav FILE` the sound board runs too and what it plays is written as a WAV file. The attract
+   mode, with the settings a new EEPROM gets, plays no note; a game does (`tests/controls/coin_start.txt`).
 
 ## Tools
 

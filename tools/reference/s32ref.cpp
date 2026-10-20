@@ -12,7 +12,9 @@
  *                           [--hashes hashes.txt] [--trace executed.txt] [--calls called.txt]
  *                           [--transfers transfers.txt] [--watch ADDRESS ...] [--profile profile.txt]
  *                           [--dump-frame N ... --dump-dir DIR] [--video-hashes hashes.txt]
- *                           [--video-dump N ... --video-dir DIR] [--verbose]
+ *                           [--video-dump N ... --video-dir DIR] [--sound-hashes hashes.txt]
+ *                           [--sound-log writes.txt] [--sound-wav sound.wav] [--sound-trace executed.txt]
+ *                           [--verbose]
  *
  *    The program and the other ROMs are the game's data the executable carries (game/data.h).
  *
@@ -25,8 +27,10 @@
  *    --video-hashes and --video-dump draw every frame of both screens with MAME's Multi 32 video
  *    (video/s32video.cpp): the hash of each frame, and frames as BMP, the left screen beside the right.
  *
- *    The sound board (MAME's Z80, ymfm's YM3438 and MAME's MultiPCM) is not part of this reference yet:
- *    the Z80 stays in reset, and the program sees the shared RAM as it leaves it.
+ *    --sound-hashes, --sound-log and --sound-wav run the sound board too (sound/s32sound.cpp: MAME's Z80
+ *    and MultiPCM, ymfm's YM3438): for each frame the hash of the samples the chips made and of the sound
+ *    board's memory; every chip write; the sound mixed. --sound-trace lists the Z80 addresses executed.
+ *    Without them the Z80 stays in reset, and the program sees the shared RAM as it leaves it.
  */
 #include "emu.h"
 #include "v60.h"
@@ -34,6 +38,7 @@
 #include "game/data.h"
 #include "s32/machine.h"
 #include "s32/script.h"
+#include "s32sound.h"
 #include "s32video.h"
 
 #include <algorithm>
@@ -79,6 +84,9 @@ std::string g_dump_dir;
 std::ofstream g_video_hashes;                 // --video-hashes: the hash of every frame MAME's video draws
 std::set<uint64_t> g_video_dump_frames;      // --video-dump: frames written as BMP to g_video_dir
 std::string g_video_dir;
+bool g_sound = false;                        // the sound board runs
+std::ofstream g_sound_hashes;                 // --sound-hashes: frame, samples hash, sound memory hash
+std::vector<int16_t> g_sound_mix;            // --sound-wav: everything the chips made, mixed
 std::vector<uint32_t> g_watched;             // bytes whose changes are printed at the end of every frame
 std::vector<uint8_t> g_watched_values;
 
@@ -205,6 +213,30 @@ void dump_state(const std::string &dir)
 	}
 }
 
+// Stereo 16-bit samples as a WAV file
+void write_wav(const std::string &path, const std::vector<int16_t> &samples, uint32_t rate)
+{
+	const uint32_t data_size = uint32_t(samples.size() * 2);
+	std::vector<uint8_t> file(44 + data_size, 0);
+	auto put16 = [&](size_t at, uint32_t value) { file[at] = uint8_t(value); file[at + 1] = uint8_t(value >> 8); };
+	auto put32 = [&](size_t at, uint32_t value) { put16(at, value & 0xffff); put16(at + 2, value >> 16); };
+	std::memcpy(&file[0], "RIFF", 4);
+	put32(4, 36 + data_size);
+	std::memcpy(&file[8], "WAVEfmt ", 8);
+	put32(16, 16);
+	put16(20, 1);
+	put16(22, 2);
+	put32(24, rate);
+	put32(28, rate * 4);
+	put16(32, 4);
+	put16(34, 16);
+	std::memcpy(&file[36], "data", 4);
+	put32(40, data_size);
+	for (size_t index = 0; index < samples.size(); index++)
+		put16(44 + index * 2, uint16_t(samples[index]));
+	write_file(path, file.data(), file.size());
+}
+
 // A frame drawn by the reference video, as a 24-bit BMP: the left screen, then the right one
 void write_bmp(const std::string &path)
 {
@@ -243,6 +275,20 @@ void write_bmp(const std::string &path)
 void end_of_frame()
 {
 	const uint64_t frame = g_frames_done;
+	if (g_sound)
+	{
+		s32s_end_frame(s32_board.cycles);
+		if (g_sound_hashes.is_open())
+		{
+			char line[80];
+			std::snprintf(line, sizeof(line), "%" PRIu64 " %016" PRIx64 " %016" PRIx64 "\n", frame,
+				s32s_frame_samples_hash(), s32s_state_hash());
+			g_sound_hashes << line;
+		}
+		size_t frames = 0;
+		const int16_t *mix = s32s_frame_mix(&frames);
+		g_sound_mix.insert(g_sound_mix.end(), mix, mix + frames * 2);
+	}
 	if (g_video_hashes.is_open())
 	{
 		char line[64];
@@ -344,7 +390,8 @@ void run_until(uint64_t target)
 {
 	while (s32_board.cycles < target)
 	{
-		const uint64_t slice = std::min<uint64_t>(target - s32_board.cycles, 1 << 20);
+		// with the sound board, the two CPUs take turns often enough to talk
+		const uint64_t slice = std::min<uint64_t>(target - s32_board.cycles, g_sound ? 2048 : 1 << 20);
 		g_slice_start = s32_board.cycles;
 		g_slice_budget = int(slice);
 		const int executed = g_cpu->run(g_slice_budget);
@@ -431,6 +478,10 @@ int main(int argc, char **argv)
 	std::string calls_path;
 	std::string hashes_path;
 	std::string video_hashes_path;
+	std::string sound_hashes_path;
+	std::string sound_log_path;
+	std::string sound_wav_path;
+	std::string sound_trace_path;
 	std::string profile_path;
 	std::string script_path;
 	std::string transfers_path;
@@ -439,7 +490,7 @@ int main(int argc, char **argv)
 	const char *usage = "Usage: s32ref [--timing frames|cycles] [--frames N] [--script FILE]"
 		" [--hashes FILE] [--trace FILE] [--calls FILE] [--transfers FILE] [--watch ADDRESS ...] [--profile FILE]"
 		" [--dump-frame N ... --dump-dir DIR] [--video-hashes FILE] [--video-dump N ... --video-dir DIR]"
-		" [--verbose]\n";
+		" [--sound-hashes FILE] [--sound-log FILE] [--sound-wav FILE] [--sound-trace FILE] [--verbose]\n";
 
 	for (int index = 1; index < argc; index++)
 	{
@@ -484,6 +535,14 @@ int main(int argc, char **argv)
 			g_video_dump_frames.insert(std::stoull(argv[++index]));
 		else if (argument == "--video-dir" && has_value)
 			g_video_dir = argv[++index];
+		else if (argument == "--sound-hashes" && has_value)
+			sound_hashes_path = argv[++index];
+		else if (argument == "--sound-log" && has_value)
+			sound_log_path = argv[++index];
+		else if (argument == "--sound-wav" && has_value)
+			sound_wav_path = argv[++index];
+		else if (argument == "--sound-trace" && has_value)
+			sound_trace_path = argv[++index];
 		else if (argument == "--verbose")
 			g_verbose = true;
 		else
@@ -526,6 +585,24 @@ int main(int argc, char **argv)
 		s32v_attach(game_tile_rom, GAME_TILE_ROM_SIZE, game_sprite_rom, GAME_SPRITE_ROM_SIZE);
 		if (!video_hashes_path.empty())
 			g_video_hashes.open(video_hashes_path);
+	}
+
+	// the reference sound board, from the sound ROMs
+	FILE *sound_log = nullptr;
+	g_sound = !sound_hashes_path.empty() || !sound_log_path.empty() || !sound_wav_path.empty()
+		|| !sound_trace_path.empty();
+	if (g_sound)
+	{
+		s32_board.sound_rom = game_sound_rom;
+		s32_board.pcm_rom = game_pcm_rom;
+		s32s_attach();
+		if (!sound_hashes_path.empty())
+			g_sound_hashes.open(sound_hashes_path);
+		if (!sound_log_path.empty())
+		{
+			sound_log = std::fopen(sound_log_path.c_str(), "w");
+			s32s_log_writes(sound_log);
+		}
 	}
 
 	s32_board.irq_changed = on_irq_changed;
@@ -584,6 +661,24 @@ int main(int argc, char **argv)
 		<< "unmapped writes:   " << s32_board.unmapped_writes << '\n'
 		<< "eeprom written:    " << (s32_board.eeprom.dirty ? "yes" : "no") << '\n'
 		<< "final PC:          " << std::hex << s32_board.pc << std::dec << '\n';
+	if (g_sound)
+		std::cout << "Z80 cycles:        " << s32s_z80_cycles() << '\n';
+	if (!sound_wav_path.empty())
+		write_wav(sound_wav_path, g_sound_mix, s32s_mix_rate());
+	if (!sound_trace_path.empty())
+	{
+		std::ofstream out(sound_trace_path);
+		out << "# Z80 addresses executed by s32ref, one per line\n";
+		for (uint32_t address = 0; address < 0x10000; address++)
+			if (s32s_executed()[address >> 3] & (1u << (address & 7)))
+			{
+				char line[8];
+				std::snprintf(line, sizeof(line), "%04X\n", address);
+				out << line;
+			}
+	}
+	if (sound_log)
+		std::fclose(sound_log);
 	if (!trace_path.empty())
 		write_addresses(trace_path, g_executed, "V70 addresses executed by s32ref");
 	if (!calls_path.empty())

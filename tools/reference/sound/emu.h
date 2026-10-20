@@ -1,21 +1,22 @@
 /**
  *    Name:        emu.h
  *    Description: minimal stand-in for MAME's emu.h, enough to build MAME's Z80 core, its disassembler and
- *                 the RF5C68 alone
+ *                 the MultiPCM alone
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    13-10-2026
+ *    Modified:    19-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
- *    Only what z80.cpp, z80dasm.cpp and rf5c68.cpp use, with MAME's meaning: devices with a clock,
- *    a CPU that runs for a number of cycles, memory as four functions the host sets (Z80 memory and
- *    I/O, the RF5C68's wave memory), a sound stream the host pulls samples from, and no-ops for saving
- *    state, logging and the debugger.
+ *    Only what z80.cpp, z80dasm.cpp, multipcm.cpp and gew.cpp use, with MAME's meaning: devices with a
+ *    clock, a CPU that runs for a number of cycles, memory as functions the host sets (Z80 memory and
+ *    I/O; the MultiPCM's sample memory, dirom.h), a sound stream the host pulls samples from, and no-ops
+ *    for saving state, logging and the debugger.
  */
 #pragma once
 
 #include <cassert>
+#include <cmath>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -25,6 +26,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -71,6 +73,23 @@ std::string string_format(const char *format, Args... args)
 }
 
 template <typename... Args> inline void osd_printf_error(const char *, Args...) {}
+
+// an array of 'size' value-initialized elements, as MAME's make_unique_clear
+template <typename T>
+std::enable_if_t<std::is_array<T>::value, std::unique_ptr<T>> make_unique_clear(size_t size)
+{
+	return std::unique_ptr<T>(new std::remove_extent_t<T>[size]());
+}
+
+// bit 'n' of 'x', as MAME's BIT
+template <typename T, typename U>
+constexpr T BIT(T x, U n)
+{
+	return (x >> n) & T(1);
+}
+
+// save states are not kept
+#define ALLOW_SAVE_TYPE(type)
 
 // a register pair, as MAME's PAIR16 (little-endian host)
 union PAIR16
@@ -216,6 +235,7 @@ public:
 	template <typename T> explicit devcb_write8(T &) {}
 	devcb_write8 &bind() { return *this; }
 	void operator()(offs_t, u8, u8 = 0xff) {}
+	void operator()(u8) {}
 	bool isunset() const { return true; }
 };
 
@@ -252,11 +272,19 @@ public:
 	}
 	virtual ~device_t() = default;
 
+	// what a device does not emulate perfectly (MAME flags the systems that use it)
+	struct feature
+	{
+		enum type : u32 { NONE = 0, SOUND = 1 };
+	};
+	using feature_type = feature::type;
+
 	u32 clock() const { return m_clock; }
 	const char *tag() const { return "sound"; }
 	template <typename... Args> void logerror(const char *, Args...) {}
 	template <typename T> void save_item(T &&, const char *) {}
 	template <typename T> void save_item(T &&, const char *, int) {}
+	template <typename... T> void save_pointer(T &&...) {}
 
 	// host API
 	void start() { device_start(); }
