@@ -1,0 +1,41 @@
+# The test mode: every page of the menu but the backup clear, entered with TEST and left with TEST (the
+# C.R.T. test and the bookkeeping have two pages), then the memory test. SERVICE moves the cursor, which
+# starts on EXIT and goes on to the INDIVIDUAL/COMMON heading, then down the list
+300 press test
++60 press service
++60 press service
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++60 press service
++60 press test
++300 press test
++300 press test
++60 press service
++60 press service
++60 press service
++60 press service
++60 press test
++3000 end

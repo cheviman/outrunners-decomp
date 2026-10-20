@@ -21,7 +21,11 @@ the tools verify it, extract the assets and build your own executable.
 - [x] The sound board in the reference: the sound program on MAME's Z80, with ymfm's YM3438 (which the
       program uses only for its timer) and MAME's MultiPCM, which plays the music and the effects
       (`s32ref --sound-wav`), the same sample for sample from one run to the next
-- [ ] Scenarios, the static analysis, the decompiler, the game's own video and sound, assets, a port
+- [ ] Scenarios (`tests/controls/`): so far the attract mode, a game until GAME OVER, a game from the coin to
+      the start of the race and every page of the test mode, 13,953 addresses executed between them
+      (`python tools/check_scenarios.py --reference-only`); the later stages, two players and the name entry
+      are still to come
+- [ ] The static analysis, the decompiler, the game's own video and sound, assets, a port
 
 ## Getting started
 
