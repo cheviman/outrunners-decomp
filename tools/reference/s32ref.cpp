@@ -84,6 +84,7 @@ std::string g_dump_dir;
 std::ofstream g_video_hashes;                 // --video-hashes: the hash of every frame MAME's video draws
 std::set<uint64_t> g_video_dump_frames;      // --video-dump: frames written as BMP to g_video_dir
 std::string g_video_dir;
+bool g_video = false;                        // the reference video is attached
 bool g_sound = false;                        // the sound board runs
 std::ofstream g_sound_hashes;                 // --sound-hashes: frame, samples hash, sound memory hash
 std::vector<int16_t> g_sound_mix;            // --sound-wav: everything the chips made, mixed
@@ -271,6 +272,13 @@ void write_bmp(const std::string &path)
 	write_file(path, file.data(), file.size());
 }
 
+// The screens are drawn only for the frames the options keep: the hashes need every one, the dumps theirs
+void choose_drawing(uint64_t frame)
+{
+	if (g_video)
+		s32v_draw_screens(g_video_hashes.is_open() || g_video_dump_frames.count(frame) != 0);
+}
+
 // A frame is over: record what the options ask for
 void end_of_frame()
 {
@@ -326,6 +334,7 @@ void end_of_frame()
 		g_watched_values[index] = value;
 	}
 	g_frames_done++;
+	choose_drawing(g_frames_done);
 	g_instructions_at_frame = g_instructions;
 	if (g_frames_done >= g_frames_wanted)
 		g_stop = true;
@@ -583,6 +592,7 @@ int main(int argc, char **argv)
 	if (!video_hashes_path.empty() || !g_video_dump_frames.empty())
 	{
 		s32v_attach(game_tile_rom, GAME_TILE_ROM_SIZE, game_sprite_rom, GAME_SPRITE_ROM_SIZE);
+		g_video = true;
 		if (!video_hashes_path.empty())
 			g_video_hashes.open(video_hashes_path);
 	}
@@ -610,6 +620,7 @@ int main(int argc, char **argv)
 	s32_board.log = on_log;
 	s32_board.frame_timing = frame_timing;
 	s32_init(game_program_rom);
+	choose_drawing(0);
 
 	machine_config config;
 	v70_device cpu(config, "maincpu", nullptr, S32_CPU_CLOCK);

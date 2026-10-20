@@ -68,6 +68,9 @@ def run_reference(script, out, video, sound=False, timing=True):
                              "--hashes", str(out / "hashes.txt")] + extra,
                             capture_output=True, text=True)
     stopped = [line for line in result.stderr.splitlines() if line.startswith("V70 stopped")]
+    if not stopped and result.returncode != 0:
+        # the run did not start: s32ref says why on its first lines
+        stopped = [" ".join(line for line in result.stderr.splitlines() if not line.startswith("[s32]"))[:200]]
     return stopped[0] if stopped else None
 
 
@@ -134,8 +137,9 @@ def reference_only(names, jobs, video, sound):
     def run(name):
         out = RESULTS / name
         stopped = run_reference(CONTROLS / f"{name}.txt", out, video, sound, timing=False)
-        frames = len((out / "hashes.txt").read_text(encoding="ascii").split())
-        return frames // 2, stopped
+        hashes = out / "hashes.txt"
+        frames = len(hashes.read_text(encoding="ascii").split()) // 2 if hashes.exists() else 0
+        return frames, stopped
 
     print(f"{'scenario':<28} {'frames':>7} {'executed':>9} {'new':>7}  result")
     seen = set()
