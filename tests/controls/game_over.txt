@@ -1,0 +1,20 @@
+# A one-player game on the first seat with the gas down and the wheel in the centre: the selections, the
+# race until the time runs out, GAME OVER, and the attract mode again
+600 press coin1
+660 press start1
+760 press start1
+880 press start1
+1000 press start1
+1120 press start1
+1240 press start1
+1360 press start1
+1480 press start1
+1600 press start1
+1720 press start1
+1840 press start1
+1960 press start1
+2080 press start1
+2200 press start1
+2320 press start1
+900 gas 1 255
+9000 end

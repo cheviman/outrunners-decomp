@@ -4,21 +4,25 @@ Description: runs every control script on the reference and on the translated ga
              frame, and checks that the static analysis alone finds all the code the reference ran
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    13-10-2026
+Modified:    19-10-2026
 Author:      Sebastian Toyos
 
-Usage: python tools/check_scenarios.py [NAME ...] [--native-only] [--translated] [--video] [--sound] [--jobs N]
-                                       [--bin DIR] [--out DIR]
+Usage: python tools/check_scenarios.py [NAME ...] [--reference-only] [--native-only] [--translated] [--video]
+                                       [--sound] [--jobs N] [--bin DIR] [--out DIR]
   NAME            scripts of tests/controls to run (file names without .txt); all of them by default
+  --reference-only  run the scripts on the reference alone (OutRunners has no decompiled game yet): for
+                  each, whether it ran to its end, the addresses it executed and how many of them no
+                  script before it in the list did; then all of them together
   --native-only   reuse the reference results already in build/scenarios/ (a script without them
                   still runs on the reference)
   --translated    run the translation scaffold (tools/recompile.py) instead of the decompiled game
   --video         compare the frames too: MAME's video in the reference (video_hashes.txt) against the
                   board's video in the game (game_video_hashes.txt), frame by frame
-  --sound         compare the sound too: the reference runs MAME's Z80 and RF5C68 and ymfm's YM3438 with the
-                  game's timing model (build/sound/timing.txt, tools/decompile_sound.py), the game its own
-                  sound program and chips; per frame, the samples and the sound board's memories
-                  (sound_hashes.txt against game_sound_hashes.txt)
+  --sound         compare the sound too: the reference runs MAME's Z80 and MultiPCM and ymfm's YM3438 with
+                  the game's timing model (build/sound/timing.txt, tools/decompile_sound.py), the game its
+                  own sound program and chips; per frame, the samples and the sound board's memory
+                  (sound_hashes.txt against game_sound_hashes.txt). With --reference-only the reference's
+                  Z80 runs cycle by cycle
   --jobs N        run N scripts at a time (half the processors by default)
   --bin DIR       the executables to run (build/bin by default): another build of the game
   --out DIR       where the runs go (build/scenarios by default)
@@ -54,16 +58,16 @@ def executable(name):
     return path if path.exists() else BIN / name
 
 
-def run_reference(script, out, video, sound=False):
+def run_reference(script, out, video, sound=False, timing=True):
     out.mkdir(parents=True, exist_ok=True)
     extra = ["--video-hashes", str(out / "video_hashes.txt")] if video else []
     if sound:
-        extra += ["--sound-timing", str(SOUND_TIMING), "--sound-hashes", str(out / "sound_hashes.txt")]
+        extra += (["--sound-timing", str(SOUND_TIMING)] if timing else []) + ["--sound-hashes", str(out / "sound_hashes.txt")]
     result = subprocess.run([str(executable("s32ref")), "--script", str(script),
                              "--trace", str(out / "executed.txt"), "--calls", str(out / "called.txt"),
                              "--hashes", str(out / "hashes.txt")] + extra,
                             capture_output=True, text=True)
-    stopped = [line for line in result.stderr.splitlines() if line.startswith("V60 stopped")]
+    stopped = [line for line in result.stderr.splitlines() if line.startswith("V70 stopped")]
     return stopped[0] if stopped else None
 
 
@@ -117,6 +121,36 @@ def static_check(names):
     return len(executed), missing, entries
 
 
+def executed_addresses(out):
+    """The addresses a reference run executed (executed.txt)"""
+    path = out / "executed.txt"
+    if not path.exists():
+        return set()
+    return {int(line, 16) for line in path.read_text(encoding="ascii").splitlines() if line and not line.startswith("#")}
+
+
+def reference_only(names, jobs, video, sound):
+    """Every script on the reference: whether it ran to its end, what it executed, what it adds"""
+    def run(name):
+        out = RESULTS / name
+        stopped = run_reference(CONTROLS / f"{name}.txt", out, video, sound, timing=False)
+        frames = len((out / "hashes.txt").read_text(encoding="ascii").split())
+        return frames // 2, stopped
+
+    print(f"{'scenario':<28} {'frames':>7} {'executed':>9} {'new':>7}  result")
+    seen = set()
+    failures = 0
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        for name, (frames, stopped) in zip(names, pool.map(run, names)):
+            executed = executed_addresses(RESULTS / name)
+            new = len(executed - seen)
+            seen |= executed
+            failures += stopped is not None
+            print(f"{name:<28} {frames:7} {len(executed):9} {new:7}  {stopped or 'ran to its end'}", flush=True)
+    print(f"\nall the scenarios: {len(seen)} addresses executed")
+    return 1 if failures else 0
+
+
 def main():
     global BIN, RESULTS
     arguments = sys.argv[1:]
@@ -124,7 +158,8 @@ def main():
     game = "translated" if "--translated" in arguments else "decompiled"
     video = "--video" in arguments
     sound = "--sound" in arguments
-    if sound and not SOUND_TIMING.exists():
+    only_reference = "--reference-only" in arguments
+    if sound and not only_reference and not SOUND_TIMING.exists():
         raise SystemExit(f"{SOUND_TIMING} not found")
     for option in ("--bin", "--out"):
         if option in arguments:
@@ -146,6 +181,8 @@ def main():
     for name in names:
         if not (CONTROLS / f"{name}.txt").exists():
             raise SystemExit(f"{CONTROLS / (name + '.txt')}: no such script")
+    if only_reference:
+        return reference_only(names, jobs, video, sound)
 
     def check(name):
         script = CONTROLS / f"{name}.txt"

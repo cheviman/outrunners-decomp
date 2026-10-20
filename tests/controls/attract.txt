@@ -1,2 +1,3 @@
-# The attract mode for a minute: title, the cars, the demo races, music select, the ranking
-3600 end
+# The attract mode for five minutes: title, the cars, the demo races and the head-to-head one, the map,
+# music select, the rankings
+18000 end
