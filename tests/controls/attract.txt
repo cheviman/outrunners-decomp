@@ -1,0 +1,2 @@
+# The attract mode for a minute: title, the cars, the demo races, music select, the ranking
+3600 end

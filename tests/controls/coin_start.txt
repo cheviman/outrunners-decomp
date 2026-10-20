@@ -1,0 +1,11 @@
+# A one-player game on the first seat: a coin, start, the gas pedal down, a little steering
+600 press coin1
+660 press start1
+720 press shift_up1
+780 press music1
+840 press start1
+900 gas 1 255
+1500 wheel 1 160
+1800 wheel 1 96
+2100 wheel 1 128
+2400 end

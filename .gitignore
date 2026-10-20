@@ -1,0 +1,14 @@
+# Bring your own ROM: game data never goes into the repository
+rom/
+*.zip
+
+# Everything extracted or generated from the ROM: assets, program images, listings, generated C
+assets/
+build/
+
+__pycache__/
+
+# Local Claude Code settings and notes
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+CLAUDE.md
