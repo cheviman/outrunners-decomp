@@ -37,6 +37,21 @@
 03F7AC  func  int_vector_43
 03F830  func  int_vector_44
 
+# ======== the frame loop ========
+# 0008F0-000912: the program waits for the next frame polling 23[R24] (20E023), which an interrupt sets,
+# and clears it; while B00[R25] says data is being unpacked it calls 010E42 for a piece of it each time
+000908  code  frame_wait_loop    # "test.b 23[R24]": the poll
+00090D  code  frame_wait_done    # the wait is over: a frame is done
+
+# ======== the tasks ========
+# The program runs two tasks, each on a stack of its own: the one boot starts runs the loop of screen 2
+# (R25 = 218000, 000719), the other the loop of screen 1 (R25 = 208000, 0006B0). Boot (0005C5-0005EF)
+# copies the second one's first interrupt frame (registers, PC 0006B0, PSW 00040000) from 000C98 to
+# 21FF84, and keeps its stack pointers at 0[R24] (the frame) and 4[R24] (21F800, its L0SP). When 24[R24]
+# is clear, the VBLANK handler swaps them (03F5FC): it stores the running task's pair there and returns
+# into the other one
+0006B0  func  second_task        # where the second task's first frame returns to
+
 # ======== object handler lists ========
 # A 32-bit count, then that many handlers: the code takes a list with "movea.b list[PC], R10" and starts an
 # object per handler with "mov.w [R10+], R8" (the count) and "mov.w [R10+], 4[R21]" (011E2C-011E35); the

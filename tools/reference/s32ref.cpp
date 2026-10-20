@@ -4,7 +4,7 @@
  *                 runtime's Multi 32 model, to find code, log hardware use and record state per frame
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    Not part of the game. Usage:
@@ -18,11 +18,12 @@
  *
  *    The program and the other ROMs are the game's data the executable carries (game/data.h).
  *
- *    --timing cycles, the default, keeps MAME's pace, 8 cycles an instruction, and a frame ends 50 us
- *    after VBLANK, when the sprite list goes out. --timing frames runs the program the way a decompiled
- *    game runs: instructions take no time, and the board moves on to its next event only while the game
- *    waits for the next frame in its frame loop; a frame ends when that wait is over. It needs that
- *    loop's addresses, which OutRunners' program does not have named yet.
+ *    --timing frames, the default, runs the program the way the decompiled game runs: instructions take
+ *    no time, and the board moves on to its next event only while the game waits for the next frame in
+ *    its frame loop; a frame ends when that wait is over. --timing cycles keeps MAME's pace, 8 cycles an
+ *    instruction, and a frame ends 50 us after VBLANK, when the sprite list goes out. While it waits, the
+ *    program may unpack data a piece at a time (000908 and 0008F0-000906); with frame timing that work
+ *    takes no time either, so what it unpacks is ready within the frame that asked for it.
  *
  *    --video-hashes and --video-dump draw every frame of both screens with MAME's Multi 32 video
  *    (video/s32video.cpp): the hash of each frame, and frames as BMP, the left screen beside the right.
@@ -52,13 +53,12 @@
 
 namespace {
 
-// The game's frame loop, where it waits for the next frame, and the byte it polls: not known yet in
-// OutRunners' program (0: --timing frames is not available)
-constexpr uint32_t kFrameWaitLoop = 0;
-constexpr uint32_t kFrameWaitDone = 0;
-constexpr uint32_t kFramesToWait = 0;
+// The game's frame loop (000908): it polls 23[R24] until an interrupt sets it, then clears it
+constexpr uint32_t kFrameWaitLoop = 0x000908;
+constexpr uint32_t kFrameWaitDone = 0x00090D;
+constexpr uint32_t kFrameReady = 0x20E023;
 // With frame timing, a program that stops reaching its frame loop has stopped making frames
-constexpr uint64_t kInstructionsPerFrameLimit = 50000000;
+constexpr uint64_t kInstructionsPerFrameLimit = 500000000;    // the memory test runs some 80 million at once
 
 v70_device *g_cpu = nullptr;
 bool g_line_wanted = false;
@@ -374,7 +374,7 @@ void on_instruction(offs_t pc)
 	if (s32_board.frame_timing)
 	{
 		// the game waits for the next frame: the board moves on to its next event
-		if (pc == kFrameWaitLoop && int8_t(s32_read8(kFramesToWait)) >= 0)
+		if (pc == kFrameWaitLoop && s32_read8(kFrameReady) == 0)
 			s32_wait();
 		else if (pc == kFrameWaitDone && !g_stop)
 			end_of_frame();
@@ -495,7 +495,7 @@ int main(int argc, char **argv)
 	std::string script_path;
 	std::string transfers_path;
 	bool frames_given = false;
-	bool frame_timing = false;
+	bool frame_timing = true;
 	const char *usage = "Usage: s32ref [--timing frames|cycles] [--frames N] [--script FILE]"
 		" [--hashes FILE] [--trace FILE] [--calls FILE] [--transfers FILE] [--watch ADDRESS ...] [--profile FILE]"
 		" [--dump-frame N ... --dump-dir DIR] [--video-hashes FILE] [--video-dump N ... --video-dir DIR]"
@@ -559,11 +559,6 @@ int main(int argc, char **argv)
 			std::cerr << usage;
 			return 1;
 		}
-	}
-	if (frame_timing && kFrameWaitLoop == 0)
-	{
-		std::cerr << "--timing frames: the program's frame loop is not known yet\n";
-		return 1;
 	}
 	if (!script_path.empty())
 	{

@@ -5,7 +5,7 @@ Name:        lift.py
 Description: translates decoded V60 data instructions into IR statements that do what MAME's V60 core does
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 The same rules as codegen.py, which this replaces for data instructions: operands are decoded in
@@ -471,6 +471,43 @@ def lift_data(lifter, instruction):
         emit(ir.Effect("update_psw", (value, mask)))
         return True
 
+    if mnemonic == "mov.d":
+        # MAME's opMOVD: all 64 bits are read before any is written (a register pair, or two words of
+        # memory, low word first)
+        source, dest = lifter.f12_operands(instruction, "address", 3, "address", 3)
+        if source.register is not None:
+            low = lifter.temp(ir.Reg(source.register), "low")
+            high = lifter.temp(ir.Reg(source.register + 1), "high")
+        else:
+            low = lifter.load(source.address, 32, "low")
+            high = lifter.load(ir.op("add", (source.address, ir.const(4)), 32), 32, "high")
+        if dest.register is not None:
+            emit(ir.SetReg(dest.register, low))
+            emit(ir.SetReg(dest.register + 1, high))
+        else:
+            emit(ir.Store(dest.address, low, 32))
+            emit(ir.Store(ir.op("add", (dest.address, ir.const(4)), 32), high, 32))
+        return True
+
+    if mnemonic == "stpr":
+        number, dest = lifter.f12_first(instruction, "value", 2)
+        lifter.write_value(dest, 2, lifter.temp(ir.op("helper:read_privileged", (number,), 32), "value"))
+        return True
+
+    if mnemonic in ("schcu.b", "skpcu.b"):
+        # MAME's opSEARCHUB: the first of 'length' bytes up from the address that is (schcu) or is not
+        # (skpcu) the value; R28 is left at it and R27 at its index, and Z is set when there is none
+        start, length, wanted = instruction.operands
+        address = lifter.address_of(start, 0, "start")
+        if address.register is not None:
+            raise Unsupported(f"{mnemonic} with a register operand")
+        count = lifter.read_value(length, 2, "length") if length.mode == "reg" else ir.const(length.value)
+        value = lifter.read_value(wanted, 0, "value")
+        until_equal = ir.const(1 if mnemonic == "schcu.b" else 0)
+        emit(ir.Effect("search_bytes", (address.address, count, value, until_equal)))
+        emit(ir.SetFlag("z", ir.op("eq", (ir.Reg(27), count), 1)))
+        return True
+
     if mnemonic == "ldpr":
         source, number = lifter.f12_operands(instruction, "address", 2, "value", 2)
         value = ir.Reg(source.register) if source.register is not None else source.address
@@ -591,8 +628,8 @@ def lift_data(lifter, instruction):
         emit(ir.SetFlag("z", ir.op("eq", (ir.Reg(dest.reg), count), 1)))
         return True
 
-    if mnemonic == "nop":
-        return True
+    if mnemonic in ("nop", "brk"):
+        return True    # MAME's opBRK does nothing (its exception is commented out)
     if mnemonic == "halt":
         emit(ir.Effect("halt"))    # the V60 waits for an interrupt there; MAME's core goes on at once
         return True

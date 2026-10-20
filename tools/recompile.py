@@ -1,14 +1,15 @@
 """
 Name:        recompile.py
-Description: translates the game's V60 program into C, one C function per V60 function
+Description: translates the game's V70 program into C, one C function per function
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
-Usage: python tools/recompile.py [rom folder or .zip] --trace build/trace/executed.txt
-                                 --calls build/trace/called.txt
-Writes build/generated/: program.h, program_NN.c and entries.c. Nothing it writes may be
+Usage: python tools/recompile.py [rom folder or .zip] --trace build/scenarios/*/executed.txt
+                                 --calls build/scenarios/*/called.txt
+Each option takes the files that follow it: what the reference executed and called in the scenarios
+(tools/check_scenarios.py --reference-only writes them). Writes build/generated/: program.h, program_NN.c and entries.c. Nothing it writes may be
 redistributed: it is the game's code, translated from the user's own ROM.
 
 Code is followed at the addresses the CPU runs it from, not folded to one copy per ROM chip:
@@ -235,14 +236,15 @@ class Program:
         if loop is None or not loop.operands:
             raise SystemExit("symbols.txt: frame_wait_loop is not an instruction that reads the frame counter")
         block = codegen.Block(self.mem)
-        counter = block.address_of(loop.operands[0], 0, "frames_to_wait")
+        counter = block.address_of(loop.operands[0], 0, "frame_ready")
         if counter.register is not None:
             raise SystemExit("symbols.txt: frame_wait_loop reads a register, not the frame counter")
-        wait = block.lines + [f"v60_frame_wait({counter.address});"]
-        resume = loop.address + loop.length
+        # s32ref raises the line before the poll runs, and the core takes the interrupt there: its frame
+        # returns to the poll (000908)
+        wait = block.lines + [f"v60_frame_wait({counter.address});",
+                              f"v60_take_interrupts({codegen.const(loop.address)});"]
         return {
-            loop.address: wait if len(wait) == 1 else ["{"] + [f"\t{line}" for line in wait] + ["}"],
-            resume: [f"v60_take_interrupts({codegen.const(resume)});"],
+            loop.address: ["{"] + [f"\t{line}" for line in wait] + ["}"],
             named["frame_wait_done"]: ["v60_frame_end();"],
         }
 
@@ -301,8 +303,10 @@ class FunctionWriter:
             invoke = f"{self.program.names[key(static_target)]}();"
         else:
             invoke = f"v60_call({target_expression});"
+        # a callee that drops this function's return address too (001544) comes back past it: this
+        # function leaves as well
         return [f"push32({codegen.const(next_address)});", invoke,
-                f"v60_check_return({codegen.const(next_address)}, {codegen.const(address)});"]
+                f"if (!v60_returned_to({codegen.const(next_address)}, {codegen.const(address)})) {{ {self.resume()} }}"]
 
     def instruction_lines(self, instruction):
         block = codegen.Block(self.program.mem)
@@ -321,7 +325,7 @@ class FunctionWriter:
         elif pushed is not None and mnemonic in ("br", "jmp"):
             # the code pushed its own return address before jumping: a call that comes back to 'pushed'
             return [f"{self.program.names[key(instruction.target)]}();",
-                    f"v60_check_return({codegen.const(pushed)}, {codegen.const(address)});",
+                    f"if (!v60_returned_to({codegen.const(pushed)}, {codegen.const(address)})) {{ {self.resume()} }}",
                     self.transfer(pushed)]
         elif mnemonic == "br":
             return [self.transfer(instruction.target)]
@@ -368,16 +372,18 @@ class FunctionWriter:
         if location.register is not None:
             raise codegen.Unsupported("jmp to a register")
         lines = ["{"] + [f"\t{line}" for line in block.lines]
-        table = self.program.analysis.jump_tables.get(address)
+        # "jmp table(Rx)" goes to one of its entries; "jmp [Rx]" to one of the addresses of the table Rx was
+        # loaded from (013D90)
+        table = self.program.analysis.jump_tables.get(address) or self.program.analysis.pointer_tables.get(address)
         if table:
             lines.append(f"\tswitch ({location.address})")
             lines.append("\t{")
-            for entry in table:
+            for entry in dict.fromkeys(table):
                 lines.append(f"\t\tcase {codegen.const(entry)}: {self.transfer(entry)}")
             lines.append(f"\t\tdefault: v60_unknown_jump({location.address}, {codegen.const(address)}); return;")
             lines.append("\t}")
         else:
-            lines.append(f"\tv60_call({location.address});")
+            lines.append(f"\tv60_jump({location.address});")
             lines.append(f"\t{self.resume()}")
         lines.append("}")
         return lines
@@ -417,19 +423,23 @@ class FunctionWriter:
 
 HEADER = """/*
  * Generated by tools/recompile.py from the user's own ROM. Do not redistribute.
- * SegaSonic The Hedgehog (sonic, Japan rev. C): V60 program translated to C.
+ * OutRunners (orunners, World): V70 program translated to C.
  */
 """
 
 
 def main():
     arguments = sys.argv[1:]
+    # each option takes the files that follow it, up to the next option (the scenarios' traces, by a glob)
     options = {"--trace": [], "--calls": []}
     for option in options:
         while option in arguments:
             position = arguments.index(option)
-            options[option].append(arguments[position + 1])
-            del arguments[position:position + 2]
+            end = position + 1
+            while end < len(arguments) and not arguments[end].startswith("--"):
+                end += 1
+            options[option] += arguments[position + 1:end]
+            del arguments[position:end]
     source = Path(arguments[0]) if arguments else ROOT / "rom"
 
     image = orunners_rom.build_program(orunners_rom.load_set(source))
@@ -446,7 +456,7 @@ def main():
     entries = sorted(program.entries)
     prototypes = [f"void {program.names[entry]}(void);" for entry in entries]
     (out_dir / "program.h").write_text(
-        HEADER + "#ifndef SONIC_PROGRAM_H\n#define SONIC_PROGRAM_H\n\n" + "\n".join(prototypes) + "\n\n#endif\n",
+        HEADER + "#ifndef ORUNNERS_PROGRAM_H\n#define ORUNNERS_PROGRAM_H\n\n" + "\n".join(prototypes) + "\n\n#endif\n",
         encoding="ascii")
 
     failures = []
