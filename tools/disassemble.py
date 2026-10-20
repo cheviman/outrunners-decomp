@@ -1,13 +1,13 @@
 """
 Name:        disassemble.py
-Description: recursive-descent disassembly of the V60 program into a listing and a coverage report
+Description: recursive-descent disassembly of the V70 program into a listing and a coverage report
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/disassemble.py [rom folder or .zip] [--trace executed.txt ...]   (default ROM: rom/)
-Writes build/listing/sonic.s and build/listing/report.txt.
+Writes build/listing/orunners.s and build/listing/report.txt.
 
 --trace adds the addresses a real run executed (tools/reference/s32ref --trace) as entry points
 and checks them against the static analysis: an executed address that falls inside a statically
@@ -20,7 +20,9 @@ On top of plain flow it understands two patterns the game uses everywhere:
     first may be a conditional branch, on a flag the code before the jump sets)
   - pointer tables: "mov.w table[PC](R0), R0" followed by "jsr [R0]" reads a table of addresses
   - code pointer slots: "movea.b func[PC], 1C[R20]" (or an absolute "movea.b func, 1C[R11]") stores
-    a handler that "jsr [1C[R20]]" calls
+    a handler that "jsr [1C[R20]]" calls; "mov.w table[PC](R3), 4[R21]" stores one of a table of them
+  - a table entry loaded into a register some instructions before "jsr [R0]" (OutRunners, 00EAEE), as
+    long as nothing in between writes the register or calls
 A stored or tabled address is accepted as code only if a trial decode of it is clean.
 """
 import re
@@ -37,6 +39,7 @@ import orunners_rom  # noqa: E402
 from v60 import disassembler as dis  # noqa: E402
 
 SYMBOL_KINDS = ("func", "code", "data")
+FORK = -1                       # a record kind (kinds=) that ends its array with a table of arrays
 STACK_POINTER = 31
 MAX_RECORDS = 4096
 CODE_CHIPS = orunners_rom.PROGRAM_AREAS[:2]
@@ -49,11 +52,17 @@ class Layout:
     code: tuple                 # (offset inside each record, base): a 32-bit code address when base is None,
                                 # else a 16-bit offset from base
     count: int | None = None    # records per array ...
-    prefixed: bool = False      # ... or: a 16-bit record count comes before the records ...
+    prefixed: bool = False      # ... or: a record count comes before the records ...
+    prefix_bytes: int = 2       # how long that count is: 2 (count=prefix) or 4 (count=prefix32, bytes32)
+    prefix_in_bytes: bool = False  # the count is the records' length in bytes (count=bytes32)
     end: int | None = None      # ... or: the array ends with this word where the next record would start
     end_bytes: int = 2          # how long that end mark is: 2 (end=FFFF) or 4 (end=FFFFFFFF, a whole end record)
     lists: int | None = None    # the table is this many 16-bit offsets, from its own address, to such arrays
     pointers: int | None = None  # the table is this many 32-bit addresses of such arrays
+    kinds: tuple | None = None   # (offset, {value: length, 0 or FORK}): a 16-bit field picks each record's
+                                 # length, 0 for the record that ends the array (its own first offset + 2
+                                 # bytes), FORK for one that ends it with a table of addresses of arrays
+                                 # (as many as fit before the first of them) that go on from there
 
 
 class Symbol(NamedTuple):
@@ -80,22 +89,34 @@ def parse_layout(attributes, where):
     values = {}
     for attribute in attributes:
         name, _, value = attribute.partition("=")
-        if name not in ("record", "count", "end", "code", "lists", "pointers") or not value:
+        if name not in ("record", "count", "end", "code", "lists", "pointers", "kinds") or not value:
             raise SystemExit(f"{where}: unknown layout attribute '{attribute}'")
         values[name] = value
-    if "record" not in values or "code" not in values or ("count" in values) == ("end" in values):
-        raise SystemExit(f"{where}: a layout needs record=, code= and one of count= or end=")
+    ends = ("count" in values) + ("end" in values) + ("kinds" in values)
+    if "record" not in values or "code" not in values or ends != 1:
+        raise SystemExit(f"{where}: a layout needs record=, code= and one of count=, end= or kinds=")
+    kinds = None
+    if "kinds" in values:
+        offset, _, choices = values["kinds"].partition(":")
+        lengths = {}
+        for choice in choices.split(","):
+            kind, _, length = choice.partition("=")
+            lengths[int(kind, 16)] = 0 if length == "end" else FORK if length == "fork" else int(length)
+        kinds = (int(offset), lengths)
     if "lists" in values and "pointers" in values:
         raise SystemExit(f"{where}: lists= and pointers= do not go together")
-    prefixed = values.get("count") == "prefix"
+    prefixed = values.get("count") in ("prefix", "prefix32", "bytes32")
     return Layout(record=int(values["record"]),
                   code=parse_code_fields(values["code"], where),
                   count=int(values["count"]) if "count" in values and not prefixed else None,
                   prefixed=prefixed,
+                  prefix_bytes=4 if values.get("count") in ("prefix32", "bytes32") else 2,
+                  prefix_in_bytes=values.get("count") == "bytes32",
                   end=int(values["end"], 16) if "end" in values else None,
                   end_bytes=4 if len(values.get("end", "")) > 4 else 2,
                   lists=int(values["lists"]) if "lists" in values else None,
-                  pointers=int(values["pointers"]) if "pointers" in values else None)
+                  pointers=int(values["pointers"]) if "pointers" in values else None,
+                  kinds=kinds)
 
 
 NAME_KINDS = ("var", "io", "table", "struct", "field", "register", "scoped", "param", "result", "local", "port",
@@ -362,7 +383,7 @@ def load_trace(paths, fold_mirrors=True):
 
 
 class Analysis:
-    """Static analysis of the V60 program.
+    """Static analysis of the V70 program.
 
     With fold_mirrors (the listing) every address is folded to its canonical copy. Without it
     (the C generator) addresses are kept as the CPU runs them: the same ROM bytes reached through
@@ -389,6 +410,9 @@ class Analysis:
         self.outside = []        # (address, target): targets outside the program ROM
         self.slots = set()       # displacements of memory slots that indirect calls read their target from
         self.pointer_writes = [] # (address of the store, stored value, slot displacement)
+        self.table_writes = []   # (address of the store, table address, slot displacement): an entry of a
+                                 # table of code addresses stored into a slot
+        self.table_loads = {}    # while tracing: register -> the table "mov.w table[PC](Rx), reg" loaded it from
         self.rejected = []       # (candidate, address of the store): stored values that do not decode cleanly
         self.data_words = {}     # address of a pointer table entry -> address it points to
         self.described = []      # (first, stop): bytes of the tables symbols.txt describes with a layout
@@ -471,19 +495,51 @@ class Analysis:
                 raise SystemExit(f"symbols.txt: {symbol.name} points outside the program ROM")
         else:
             arrays = [address]
-        for array in arrays:
+        arrays = list(arrays)
+        seen_arrays = set(arrays)
+        while arrays:
+            array = arrays.pop(0)
             record = array
             count = layout.count
             if layout.prefixed:
-                count = self.mem.r16(array)
-                record += 2
+                count = self.mem.r32(array) if layout.prefix_bytes == 4 else self.mem.r16(array)
+                if layout.prefix_in_bytes:
+                    count //= layout.record
+                record += layout.prefix_bytes
             for number in range(MAX_RECORDS):
                 if count is not None and number == count:
                     break
+                length = layout.record
+                if layout.kinds is not None:
+                    kind_offset, lengths = layout.kinds
+                    kind = self.mem.r16(record + kind_offset)
+                    if kind not in lengths:
+                        raise SystemExit(f"symbols.txt: {symbol.name} record at {record:06X} is of kind "
+                                         f"{kind:X}, which its layout does not list")
+                    length = lengths[kind]
+                    if length == 0:
+                        record += kind_offset + 2
+                        break
+                    if length == FORK:
+                        table = record + kind_offset + 2
+                        first = orunners_rom.canonical_address(self.mem.r32(table))
+                        branches = (first - table) // 4 if first is not None and first > table else 0
+                        if not 1 <= branches <= 8:
+                            raise SystemExit(f"symbols.txt: {symbol.name} fork at {record:06X} has no table of "
+                                             f"arrays after it")
+                        for number in range(branches):
+                            branch = orunners_rom.canonical_address(self.mem.r32(table + 4 * number))
+                            if branch not in seen_arrays:
+                                seen_arrays.add(branch)
+                                arrays.append(branch)
+                        record = table + 4 * branches
+                        break
                 if layout.end is not None                         and (self.mem.r32(record) if layout.end_bytes == 4 else self.mem.r16(record)) == layout.end:
                     record += layout.end_bytes
                     break
                 for offset, base in layout.code:
+                    if offset + (4 if base is None else 2) > length:
+                        continue   # a shorter kind of record has no such field
                     value = self.mem.r32(record + offset) if base is None else base + self.mem.r16(record + offset)
                     if value == 0:
                         continue   # no handler
@@ -495,7 +551,7 @@ class Analysis:
                         self.data_words[record + offset] = target
                     self.add_target(value, "func", record + offset)
                     self.described_targets.add(value & 0xFFFFFF)
-                record += layout.record
+                record += length
             else:
                 raise SystemExit(f"symbols.txt: {symbol.name} array at {array:06X} has no end in sight")
             self.described.append((array, record))
@@ -508,6 +564,12 @@ class Analysis:
                 self.trace(address, origin)
             # stored code pointers whose slot is read by an indirect call
             found = False
+            for store, table, slot in self.table_writes:
+                if slot not in self.slots or (table, store) in tried:
+                    continue
+                tried.add((table, store))
+                self.pointer_table(table, True, store)
+                found = found or bool(self.pending)
             for store, value, slot in self.pointer_writes:
                 candidate = self.key(value)
                 if slot not in self.slots or candidate is None or (candidate, store) in tried:
@@ -590,10 +652,18 @@ class Analysis:
             return
         self.labels.setdefault(cursor, "data")
         targets = self.pointer_tables.setdefault(origin, [])
+        first_after = None      # the nearest target after the table: a table never runs into its own code
         for _ in range(512):
-            target = self.key(self.mem.r32(cursor))
+            if first_after is not None and cursor >= first_after:
+                return
+            word = self.mem.r32(cursor)
+            if word >> 24:
+                return          # an address on the 24-bit bus has nothing in its top byte
+            target = self.key(word)
             if target is None or not self.trial(target):
                 return
+            if target > cursor and (first_after is None or target < first_after):
+                first_after = target
             self.data_words[cursor] = target
             targets.append(target)
             self.add_target(target, "func" if called else "loc", origin)
@@ -601,6 +671,7 @@ class Analysis:
 
     def trace(self, address, origin):
         previous = None
+        self.table_loads = {}
         while True:
             if address in self.instructions:
                 return
@@ -621,6 +692,7 @@ class Analysis:
             for byte_address in range(address, last_byte + 1):
                 self.owner[byte_address] = address
             self.follow(instruction, previous)
+            self.note_table_load(instruction)
             if instruction.flow in (dis.FLOW_JUMP, dis.FLOW_RETURN):
                 return
             previous = instruction
@@ -649,8 +721,10 @@ class Analysis:
             called = instruction.mnemonic == "jsr" or pushed is not None
             self.branch_table(first.value, called, instruction.address)
         elif instruction.mnemonic in ("jmp", "jsr") and first.mode == "reg_indirect" \
-                and self.loads_table_entry(previous, first.reg):
-            self.pointer_table(previous.operands[0].value, instruction.mnemonic == "jsr", instruction.address)
+                and (self.loads_table_entry(previous, first.reg) or first.reg in self.table_loads):
+            table = previous.operands[0].value if self.loads_table_entry(previous, first.reg) \
+                else self.table_loads[first.reg]
+            self.pointer_table(table, instruction.mnemonic == "jsr", instruction.address)
         elif instruction.mnemonic in ("jmp", "jsr", "call"):
             self.unresolved.append((instruction.address, instruction.text))
             if first is not None and first.mode == "disp_indirect":
@@ -664,6 +738,8 @@ class Analysis:
                     self.pointer_writes.append((instruction.address, source.value, dest.disp))
                 elif instruction.mnemonic == "mov.w" and source.mode == "immediate":
                     self.pointer_writes.append((instruction.address, source.value, dest.disp))
+                elif instruction.mnemonic == "mov.w" and source.mode == "pc_disp_indexed":
+                    self.table_writes.append((instruction.address, source.value, dest.disp))
 
         # "movea target[PC], [-SP]" right before a return: the return lands on target
         if instruction.flow == dis.FLOW_RETURN and pushed is not None:
@@ -677,6 +753,22 @@ class Analysis:
             candidate = self.key(own)
             if candidate is not None and (candidate in self.instructions or self.trial(candidate)):
                 self.add_target(own, "loc", instruction.address)
+
+    def note_table_load(self, instruction):
+        """Keeps which registers hold an entry of a PC-relative table: set by "mov.w table[PC](Rx), reg",
+        forgotten when the register is written again or a call may change it"""
+        if instruction.flow == dis.FLOW_CALL:
+            self.table_loads.clear()
+            return
+        if not instruction.operands:
+            return
+        dest = instruction.operands[-1]
+        if dest.mode != "reg":
+            return
+        if self.loads_table_entry(instruction, dest.reg):
+            self.table_loads[dest.reg] = instruction.operands[0].value
+        else:
+            self.table_loads.pop(dest.reg, None)
 
     @staticmethod
     def pushed_return(previous):
@@ -719,7 +811,7 @@ class Analysis:
 def write_listing(analysis, path):
     image = analysis.image
     with open(path, "w", encoding="ascii", newline="\n") as out:
-        out.write("; SegaSonic The Hedgehog (sonic, Japan rev. C) - V60 program\n")
+        out.write("; OutRunners (orunners, World) - V70 program\n")
         out.write("; Generated by tools/disassemble.py from the user's own ROM. Do not redistribute.\n")
         for start, end in orunners_rom.PROGRAM_AREAS:
             out.write(f"\n; ======== {start:06X}-{end - 1:06X} ========\n")
@@ -755,7 +847,7 @@ def write_listing(analysis, path):
 
 
 def write_report(analysis, path):
-    lines = ["V60 program analysis", "====================", ""]
+    lines = ["V70 program analysis", "====================", ""]
     total_code = 0
     total_size = 0
     for start, end in orunners_rom.PROGRAM_AREAS:
@@ -827,12 +919,12 @@ def main():
 
     out_dir = ROOT / "build" / "listing"
     out_dir.mkdir(parents=True, exist_ok=True)
-    write_listing(analysis, out_dir / "sonic.s")
+    write_listing(analysis, out_dir / "orunners.s")
     report = write_report(analysis, out_dir / "report.txt")
     # print everything up to the first detailed section (a title underlined with dashes)
     end = next((index for index in range(3, len(report) - 1) if report[index + 1].startswith("-")), len(report))
     print("\n".join(report[:end]).rstrip())
-    print(f"\nListing: {out_dir / 'sonic.s'}\nReport:  {out_dir / 'report.txt'}")
+    print(f"\nListing: {out_dir / 'orunners.s'}\nReport:  {out_dir / 'report.txt'}")
     return 0
 
 
