@@ -1,0 +1,46 @@
+The files in this directory are copied from MAME (https://github.com/mamedev/mame). They are
+only built into development tools, never into the game.
+
+- src/devices/cpu/v60/ (here at the top): the NEC V60 CPU core (v60.cpp, v60.h, *.hxx) and its
+  disassembler (v60d.cpp, v60d.h); copyright Farfetch'd, R. Belmont. tools/v60/disassembler.py is a
+  Python port of v60d.cpp.
+- src/mame/sega/segas32_v.cpp (sega/): the System 32 video; copyright Aaron Giles. runtime/src/video.c
+  follows its behavior. One line is changed, marked "segasonic": draw_one_sprite clipped a horizontally
+  flipped sprite against the clip's right edge instead of its left one, so an opaque flipped sprite ran on
+  to the left edge drawing what follows it in the sprite ROM.
+- src/devices/cpu/z80/ (z80/): the Z80 CPU core (z80.cpp, z80.h, z80.inc, z80.lst, from which
+  z80make.py writes the core's steps at build time; copyright Juergen Buchmueller, z80make.py Andre I.
+  Holub) and its disassembler (z80dasm.cpp, z80dasm.h; copyright Juergen Buchmueller).
+  tools/z80/disassembler.py is a Python port of z80dasm.cpp.
+- src/devices/sound/rf5c68.cpp and rf5c68.h (sound/): the Ricoh RF5C68; copyright Olivier Galibert,
+  Aaron Giles.
+
+runtime/src/machine.c, sound.c and video.c follow the behavior of MAME's System 32 driver
+(src/mame/sega/segas32.cpp, segas32_m.cpp; copyright Aaron Giles) under the same terms.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

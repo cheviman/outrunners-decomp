@@ -1,0 +1,7 @@
+# Store text with LF; check out with the platform's line endings
+* text=auto
+
+# Windows batch files need CRLF, shell scripts need LF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.sh text eol=lf
