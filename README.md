@@ -24,13 +24,18 @@ the tools verify it, extract the assets and build your own executable.
 - [x] Scenarios (`tests/controls/`): the attract mode; a game until GAME OVER; races to all ten goals of the
       map, the race time held by a poke (`race_*`, `two_players`, and the `route_*` that
       `tools/make_routes.py` writes, turning the wheel before the forks a route takes); a name typed into
-      the entry; every page of the test mode and its 122 sounds. Between them they execute 16,113 addresses
+      the entry; every page of the test mode and its 122 sounds. Between them they execute 16,103 addresses
       (`python tools/check_scenarios.py --reference-only`); the game has no continue
 - [x] Recursive disassembly without traces (`tools/disassemble.py`, from `symbols.txt`): the vectors, the
       tables of code addresses next to the jumps that read them, the object handlers (stored in field 4,
       from lists, tables of lists and the streams of objects along each stage's road, which fork with the
       route) and a timeline: 18,733 instructions in 580 functions, no invalid or overlapping paths, and all
-      16,113 addresses the scenarios execute among them
+      16,103 addresses the scenarios execute among them
+- [x] Translation scaffold (`tools/recompile.py`): the program translated into C one instruction at a time,
+      615 functions that the V60 runtime (`runtime/src/v60.c`) runs a frame at a time. `orunners_headless`
+      matches the reference frame by frame in all 16 scenarios. The game runs two tasks, each on a stack
+      of its own, and its VBLANK handler swaps them; their C runs on native stacks of their own
+      (`runtime/src/tasks.c`)
 - [ ] The decompiler, the game's own video and sound, assets, a port
 
 ## Getting started
@@ -64,6 +69,31 @@ Tools on Windows).
    `tests/controls/` holds the control scripts (format in `runtime/include/s32/script.h`). With
    `--sound-wav FILE` the sound board runs too and what it plays is written as a WAV file. The attract
    mode, with the settings a new EEPROM gets, plays no note; a game does (`tests/controls/coin_start.txt`).
+
+4. Run every scenario on the reference, translate the program into C from what they execute, build that
+   translation (`orunners_headless`) and compare it with the reference, frame by frame:
+
+   ```bash
+   python tools/check_scenarios.py --reference-only
+   ```
+
+   ```bash
+   python tools/recompile.py --trace build/scenarios/*/executed.txt --calls build/scenarios/*/called.txt
+   ```
+
+   ```bash
+   cmake -S . -B build/cmake -DORUNNERS_SCAFFOLD=ON
+   ```
+
+   ```bash
+   cmake --build build/cmake --config Release
+   ```
+
+   ```bash
+   python tools/check_scenarios.py --translated --native-only
+   ```
+
+   The translation goes to `build/generated/` and stays out of the repository: it is the game's code.
 
 ## Tools
 

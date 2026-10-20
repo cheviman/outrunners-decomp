@@ -2,7 +2,7 @@
 # Description: build of the OutRunners runtime and its development tools
 # Version:     0.1.0
 # Created:     11-10-2026
-# Modified:    19-10-2026
+# Modified:    20-10-2026
 # Author:      Sebastian Toyos
 cmake_minimum_required(VERSION 3.20)
 project(outrunners C CXX)
@@ -32,6 +32,7 @@ add_library(s32runtime STATIC
 	runtime/src/sound.c
 	runtime/src/ym3438.c
 	runtime/src/memory_census.c
+	runtime/src/tasks.c
 )
 target_include_directories(s32runtime PUBLIC runtime/include)
 
@@ -55,6 +56,24 @@ add_custom_command(OUTPUT ${ORUNNERS_DATA_SOURCES}
 	COMMENT "Writing the game's data from the ROM set")
 add_library(orunners_data STATIC ${ORUNNERS_DATA_SOURCES})
 target_include_directories(orunners_data PUBLIC runtime/include)
+
+# The translation scaffold: the V60 runtime plus the C tools/recompile.py writes from the user's ROM into
+# build/generated, instruction by instruction (to run the program natively before the decompiler exists)
+option(ORUNNERS_SCAFFOLD "Build the V70 translation scaffold (orunners_headless)" OFF)
+file(GLOB ORUNNERS_GENERATED CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/build/generated/*.c)
+if(ORUNNERS_SCAFFOLD AND ORUNNERS_GENERATED)
+	add_library(orunners_program STATIC runtime/src/v60.c ${ORUNNERS_GENERATED})
+	target_include_directories(orunners_program PUBLIC runtime/include build/generated)
+	target_link_libraries(orunners_program PUBLIC s32runtime)
+	if(MSVC)
+		target_compile_options(orunners_program PRIVATE /bigobj)
+	endif()
+
+	add_executable(orunners_headless ports/headless/main.c)
+	target_link_libraries(orunners_headless PRIVATE orunners_program orunners_data)
+elseif(ORUNNERS_SCAFFOLD)
+	message(STATUS "No generated program yet: run tools/recompile.py to build the scaffold")
+endif()
 
 # Development tools built on MAME's code; never linked into the game
 option(ORUNNERS_REFERENCE_TOOLS "Build the MAME-based reference tools" ON)

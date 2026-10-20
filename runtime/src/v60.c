@@ -1,10 +1,11 @@
 /**
  *    Name:        v60.c
  *    Description: V60 runtime for the generated code: processor status, the frame loop and its
- *                 interrupts, calls through computed addresses and the multi-step instructions
+ *                 interrupts, the tasks they swap, calls through computed addresses and the multi-step
+ *                 instructions
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    11-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -14,6 +15,7 @@
 #include "v60/cpu.h"
 #include "v60/ops.h"
 #include "v60/code.h"
+#include "host/tasks.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +76,28 @@ void v60_load_privileged(uint32_t number, uint32_t value)
 	cpu.reg[36 + number] = value;
 }
 
+uint32_t v60_read_privileged(uint32_t number)
+{
+	/* STPR: privileged registers 0-28 live at 36-64; MAME stops on anything else */
+	if (number > 28)
+	{
+		fprintf(stderr, "STPR from privileged register %u (frame %llu)\n", number, (unsigned long long)cpu.frame);
+		exit(3);
+	}
+	return cpu.reg[36 + number];
+}
+
+void v60_search_bytes(uint32_t address, uint32_t length, uint8_t value, bool until_equal)
+{
+	uint32_t index;
+
+	for (index = 0; index < length; index++)
+		if ((mem_read8(address + index) == value) == until_equal)
+			break;
+	cpu.reg[28] = address + index;
+	cpu.reg[27] = index;
+}
+
 static uint32_t enter_exception(bool interrupt, uint32_t level)
 {
 	const uint32_t old_psw = v60_read_psw();
@@ -89,12 +113,79 @@ static uint32_t enter_exception(bool interrupt, uint32_t level)
 	return old_psw;
 }
 
+/* ---- tasks ---- */
+
+/* The game runs tasks on stacks of their own, and its interrupt handler swaps them: it returns into
+   another task (OutRunners, 03F5FC). Each task's C runs on a native stack of its own too; a task the
+   handler leaves waits for a handler to return into it again: to the place it was interrupted at, with
+   its own stack pointer back */
+#define MAX_TASKS 8
+
+typedef struct
+{
+	uint32_t pc;
+	uint32_t sp;
+	host_task *task;
+} waiting_task;
+
+static waiting_task waiting[MAX_TASKS];
+static size_t waiting_count;
+static host_task *main_task;
+
+/* the last call that came back past its caller (v60_returned_to) */
+static uint32_t past_from;
+static uint32_t past_expected;
+static uint32_t past_to;
+
+static void run_task(void)
+{
+	/* a task the handler returns into for the first time starts there (OutRunners: its first frame, at
+	   000C98, returns to 0006B0) */
+	const uint32_t start = cpu.pc;
+
+	v60_call(start);
+	fprintf(stderr, "The task started at %06X came to its end at %06X (frame %llu)\n", start & 0xffffff,
+		cpu.pc & 0xffffff, (unsigned long long)cpu.frame);
+	if (past_to)
+		fprintf(stderr, "The last call that came back past its caller: from %06X, to %06X instead of %06X\n",
+			past_from & 0xffffff, past_to & 0xffffff, past_expected & 0xffffff);
+	exit(3);
+}
+
+static void switch_task(uint32_t resume, uint32_t sp)
+{
+	host_task *next = NULL;
+	size_t index;
+
+	for (index = 0; index < waiting_count; index++)
+		if (waiting[index].pc == cpu.pc && waiting[index].sp == cpu.reg[V60_SP])
+			break;
+	if (index < waiting_count)
+	{
+		next = waiting[index].task;
+		waiting[index] = waiting[--waiting_count];
+	}
+	else
+		next = host_task_create(run_task);
+	if (waiting_count == MAX_TASKS)
+	{
+		fprintf(stderr, "More than %d tasks wait (frame %llu)\n", MAX_TASKS, (unsigned long long)cpu.frame);
+		exit(3);
+	}
+	waiting[waiting_count].pc = resume;
+	waiting[waiting_count].sp = sp;
+	waiting[waiting_count].task = host_task_current();
+	waiting_count++;
+	host_task_switch(next);
+}
+
 /* ---- interrupts ---- */
 
 static void take_interrupt(uint32_t resume)
 {
 	/* the interrupt cycle asks the controller for its vector, as MAME's v60_try_irq does */
 	const uint32_t vector = s32_irq_acknowledge() + 0x40u;
+	const uint32_t sp = cpu.reg[V60_SP];
 	const uint32_t old_psw = enter_exception(true, 0);
 	uint32_t handler;
 
@@ -103,14 +194,16 @@ static void take_interrupt(uint32_t resume)
 	push32(resume);
 	handler = mem_read32((cpu.reg[V60_SBR] & ~0xfffu) + vector * 4);
 	v60_call(handler);
-	v60_check_return(resume, handler);
+	/* a handler that returns into another task: this one goes on when one returns into it */
+	if (cpu.pc != resume || cpu.reg[V60_SP] != sp)
+		switch_task(resume, sp);
 }
 
 /* ---- the frame loop ---- */
 
-void v60_frame_wait(uint32_t frames_to_wait)
+void v60_frame_wait(uint32_t frame_ready)
 {
-	if ((int8_t)mem_read8(frames_to_wait) >= 0)
+	if (mem_read8(frame_ready) == 0)
 		s32_wait();
 }
 
@@ -138,7 +231,16 @@ void program_reset(void)
 
 void program_run(void)
 {
-	v60_call(cpu.pc);
+	/* the program's first task runs on a stack of its own, like the ones it starts later; the port's
+	   stays apart, for program_stop to go back to */
+	waiting_count = 0;
+	main_task = host_task_main();
+	host_task_switch(host_task_create(run_task));
+}
+
+void program_stop(void)
+{
+	host_task_switch(main_task);
 }
 
 void program_irq_line(bool asserted)
@@ -158,7 +260,7 @@ uint32_t program_interrupts(void)
 
 /* ---- calls and jumps through computed addresses ---- */
 
-void v60_call(uint32_t address)
+static const v60_code_entry *find_code(uint32_t address)
 {
 	const uint32_t key = address & 0xffffff;
 	size_t low = 0;
@@ -172,22 +274,41 @@ void v60_call(uint32_t address)
 		else
 			high = middle;
 	}
-	if (low < v60_code_entry_count && v60_code_entries[low].address == key)
+	return low < v60_code_entry_count && v60_code_entries[low].address == key ? &v60_code_entries[low] : NULL;
+}
+
+void v60_call(uint32_t address)
+{
+	const v60_code_entry *code = find_code(address);
+
+	if (code)
 	{
-		v60_code_entries[low].function();
+		code->function();
 		return;
 	}
-	fprintf(stderr, "No translated code starts at %06X (frame %llu)\n", key, (unsigned long long)cpu.frame);
+	fprintf(stderr, "No translated code starts at %06X (frame %llu)\n", address & 0xffffff,
+		(unsigned long long)cpu.frame);
 	exit(3);
 }
 
-void v60_check_return(uint32_t expected, uint32_t from)
+void v60_jump(uint32_t address)
+{
+	const v60_code_entry *code = find_code(address);
+
+	if (code)
+		code->function();
+	else
+		cpu.pc = address;
+}
+
+bool v60_returned_to(uint32_t expected, uint32_t from)
 {
 	if (cpu.pc == expected)
-		return;
-	fprintf(stderr, "Code called from %06X returned to %06X instead of %06X (frame %llu)\n",
-		from & 0xffffff, cpu.pc & 0xffffff, expected & 0xffffff, (unsigned long long)cpu.frame);
-	exit(3);
+		return true;
+	past_from = from;
+	past_expected = expected;
+	past_to = cpu.pc;
+	return false;
 }
 
 void v60_unknown_jump(uint32_t address, uint32_t from)

@@ -4,7 +4,7 @@
  *                 hooks that run board events and interrupts while the game waits for a frame
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    11-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -87,15 +87,28 @@ void v60_reset(void);
 uint32_t v60_read_psw(void);
 void v60_write_psw(uint32_t value);
 void v60_load_privileged(uint32_t number, uint32_t value);
+uint32_t v60_read_privileged(uint32_t number);
+
+/* SCHCU.B / SKPCU.B: the first byte of 'length' from 'address' that is (or is not) 'value'; R28 gets its
+   address and R27 its index ('length' when there is none, which the generated code turns into Z) */
+void v60_search_bytes(uint32_t address, uint32_t length, uint8_t value, bool until_equal);
 void v60_call(uint32_t address);
-void v60_check_return(uint32_t expected, uint32_t from);
+
+/* A jump through a register: to the function that starts there, or, where none does, back to a caller
+   whose return address the code took off the stack into the register (01CB8F: "pop R11" ... "jmp [R11]",
+   a memory test that keeps out of the stack); the generated code then leaves as after a return */
+void v60_jump(uint32_t address);
+/* After a call from 'from': whether it came back to 'expected'. A callee that drops its caller's return
+   address too (OutRunners 001544, "add.w #4, SP; rsr") comes back past it, and the caller leaves as
+   well, up to the code the return goes to */
+bool v60_returned_to(uint32_t expected, uint32_t from);
 void v60_unknown_jump(uint32_t address, uint32_t from);
 
-/* The game's frame loop polls 'frames_to_wait' until the end of VBLANK makes it negative. The
-   generated code calls these where s32ref steps the board: before the loop's first instruction, the
-   board runs its next event if the game still waits; after it, the CPU takes the interrupts that event
-   raised ('resume' is where they return to); where the wait is over, a frame is done. */
-void v60_frame_wait(uint32_t frames_to_wait);
+/* The game's frame loop polls 'frame_ready' until an interrupt sets it (OutRunners: 23[R24], 20E023).
+   The generated code calls these where s32ref steps the board: before the poll, the board runs its next
+   event if the game still waits, and the CPU takes the interrupts that event raised before the poll runs
+   ('resume', where they return to, is the poll); where the wait is over, a frame is done. */
+void v60_frame_wait(uint32_t frame_ready);
 void v60_take_interrupts(uint32_t resume);
 void v60_frame_end(void);    /* calls program_frame_done (s32/program.h) */
 

@@ -5,7 +5,7 @@ Name:        emit_c.py
 Description: writes IR expressions and statements as C
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    13-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 C carries every value of up to 32 bits as uint32_t (64-bit ones as uint64_t) and casts to the
@@ -153,6 +153,8 @@ class Printer:
             return f"v60_byte_swap({values[0]})"
         if name == "read_psw":
             return "v60_read_psw()"
+        if name == "read_privileged":
+            return f"v60_read_privileged({values[0]})"
         raise ValueError(f"unknown helper {name}")
 
     # ---- statements ----
@@ -188,6 +190,8 @@ class Printer:
                     f"{fill} != 0, {downward} != 0);")
         if name in ("move_bits_down", "move_bits_up"):
             return f"v60_{name}({', '.join(values)});"
+        if name == "search_bytes":
+            return f"v60_search_bytes({values[0]}, {values[1]}, (uint8_t){values[2]}, {values[3]} != 0);"
         if name == "halt":
             return "/* nothing: MAME's core does not wait on halt */"
         raise ValueError(f"unknown effect {name}")

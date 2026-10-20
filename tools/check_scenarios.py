@@ -4,7 +4,7 @@ Description: runs every control script on the reference and on the translated ga
              frame, and checks that the static analysis alone finds all the code the reference ran
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    19-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/check_scenarios.py [NAME ...] [--reference-only] [--native-only] [--translated] [--video]
@@ -29,7 +29,7 @@ Usage: python tools/check_scenarios.py [NAME ...] [--reference-only] [--native-o
   --out DIR       where the runs go (build/scenarios by default)
 
 For every script: build/bin/s32ref writes build/scenarios/NAME/{executed,called,hashes}.txt, the
-game (build/bin/sonic_game_headless, from tools/decompile.py) writes game_hashes.txt, and the two hash
+game (build/bin/orunners_game_headless, from tools/decompile.py) writes game_hashes.txt, and the two hash
 lists are compared. Then the static analysis (tools/disassemble.py, symbols.txt, no traces) is run once,
 and every address the reference executed in any scenario has to be among the instructions it found:
 the ones that are not are listed by the place they are entered from, which is where symbols.txt or the
@@ -75,8 +75,8 @@ def run_reference(script, out, video, sound=False, timing=True):
     return stopped[0] if stopped else None
 
 
-GAMES = {"decompiled": ("sonic_game_headless", "game_hashes.txt"),
-         "translated": ("sonic_headless", "native_hashes.txt")}
+GAMES = {"decompiled": ("orunners_game_headless", "game_hashes.txt"),
+         "translated": ("orunners_headless", "native_hashes.txt")}
 
 
 def run_native(script, out, game, video, sound=False):
