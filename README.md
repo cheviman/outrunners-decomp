@@ -21,11 +21,11 @@ the tools verify it, extract the assets and build your own executable.
 - [x] The sound board in the reference: the sound program on MAME's Z80, with ymfm's YM3438 (which the
       program uses only for its timer) and MAME's MultiPCM, which plays the music and the effects
       (`s32ref --sound-wav`), the same sample for sample from one run to the next
-- [ ] Scenarios (`tests/controls/`): the attract mode; a game until GAME OVER; three one-player races to the
-      goal by three routes (the wheel in the centre, left and right: Lapland, Kenya, Australia with the name
-      entry) and a two-player one (Japan), the race time held by a poke; every page of the test mode and its
-      122 sounds: 15,946 addresses executed between them (`python tools/check_scenarios.py --reference-only`).
-      The other routes, a name typed in and the continue are still to come
+- [x] Scenarios (`tests/controls/`): the attract mode; a game until GAME OVER; races to all ten goals of the
+      map, the race time held by a poke (`race_*`, `two_players`, and the `route_*` that
+      `tools/make_routes.py` writes, turning the wheel before the forks a route takes); a name typed into
+      the entry; every page of the test mode and its 122 sounds. Between them they execute 16,113 addresses
+      (`python tools/check_scenarios.py --reference-only`); the game has no continue
 - [ ] The static analysis, the decompiler, the game's own video and sound, assets, a port
 
 ## Getting started
