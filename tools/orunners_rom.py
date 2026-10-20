@@ -3,7 +3,7 @@ Name:        orunners_rom.py
 Description: MAME 'orunners' ROM set (OutRunners, World) and memory region builders
 Version:     0.1.0
 Created:     19-10-2026
-Modified:    19-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Files are identified by CRC32 + SHA1, not by name: dumps circulate with the current names
@@ -65,7 +65,18 @@ def read_files(source):
 
 
 def identify_set(source):
-    """Return ({mame_name: bytes}, [report lines]), matching every file by its hashes."""
+    """Return ({mame_name: bytes}, [report lines]), matching every file by its hashes. A folder that holds
+    none of the set's files loose is read through the first .zip in it that does."""
+    found, report = _identify(source)
+    if not found and Path(source).is_dir():
+        for archive in sorted(Path(source).glob("*.zip")):
+            found, report = _identify(archive)
+            if found:
+                break
+    return found, report
+
+
+def _identify(source):
     by_crc = {crc: name for name, (crc, _, _) in ROM_FILES.items()}
     found = {}
     report = []

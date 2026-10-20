@@ -12,7 +12,8 @@ Usage: python tools/check_scenarios.py [NAME ...] [--reference-only] [--native-o
   NAME            scripts of tests/controls to run (file names without .txt); all of them by default
   --reference-only  run the scripts on the reference alone (OutRunners has no decompiled game yet): for
                   each, whether it ran to its end, the addresses it executed and how many of them no
-                  script before it in the list did; then all of them together
+                  script before it in the list did; then all of them together, and whether the static
+                  analysis finds them all
   --native-only   reuse the reference results already in build/scenarios/ (a script without them
                   still runs on the reference)
   --translated    run the translation scaffold (tools/recompile.py) instead of the decompiled game
@@ -152,7 +153,15 @@ def reference_only(names, jobs, video, sound):
             failures += stopped is not None
             print(f"{name:<28} {frames:7} {len(executed):9} {new:7}  {stopped or 'ran to its end'}", flush=True)
     print(f"\nall the scenarios: {len(seen)} addresses executed")
-    return 1 if failures else 0
+    executed, missing, entries = static_check(names)
+    image = orunners_rom.build_program(orunners_rom.load_set(ROOT / "rom"))
+    analysis = disassemble.Analysis(image, disassemble.load_symbols(ROOT / "symbols.txt"))
+    analysis.run()
+    print(f"static analysis: {executed - len(missing)} of {executed} executed addresses found without traces; "
+          f"the scenarios run {executed - len(missing)} of its {len(analysis.instructions)} instructions")
+    for address in entries[:40]:
+        print(f"  not found: {address:06X}")
+    return 1 if failures or missing else 0
 
 
 def main():

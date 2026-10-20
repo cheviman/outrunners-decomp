@@ -1,0 +1,68 @@
+# OutRunners (MAME set 'orunners', World) - V70 program symbols
+#
+# Addresses and names only: no game data lives in this file.
+# Format:  ADDRESS  KIND  NAME  [LAYOUT]   [# comment]
+#   KIND: func = function entry, code = code label, data = data label
+# Addresses use the copy of the program the code refers to:
+#   000000-03FFFF (ic37 + ic40, a 16-bit word of each in every 32-bit word), 100000-1FFFFF (ic36 + ic39)
+# Mirrors are accepted and folded (e.g. FFFFF0 -> 03FFF0).
+#
+# LAYOUT, for data tables that hold code addresses the analysis cannot see the code load:
+#   record=N        the table is an array of N-byte records
+#   count=N         ... of N records, or
+#   count=prefix    ... of as many records as the 16-bit word before them says, or
+#   count=prefix32  ... of as many records as the 32-bit word before them says, or
+#   count=bytes32   ... of as many records as fill the length in bytes the 32-bit word before them says, or
+#   end=XXXX        ... closed by this 16-bit word where the next record would start
+#   kinds=O:K=N,..  ... of records whose length the 16-bit field at offset O picks: N bytes for kind K
+#                   (hexadecimal), 'end' for a kind that closes the array, or 'fork' for one that closes it
+#                   with a table of addresses of arrays that go on from there (as many as fit before the
+#                   first of them)
+#   code=A,B        every record holds a 32-bit code address at these offsets (0 = no code);
+#                   A:BASE is a 16-bit offset from BASE instead
+#   lists=N         the table is N 16-bit offsets, from its own address, to such arrays
+#   pointers=N      the table is N 32-bit addresses of such arrays
+# Sizes, offsets and counts are decimal; end and BASE are hexadecimal, like the data and addresses.
+
+# ======== entry points ========
+03FFF0  func  reset              # V70 reset vector (0xFFFFFFF0 on a 24-bit bus): "jmp 6"
+000006  func  boot               # sets SBR to 03F000, the stack to 21FC00, and copies blocks to E00000 and E80000
+03F000  data  vector_table       # 256 x 32-bit entries, base loaded into SBR by boot
+03F8B4  func  int_default        # target of 250 of the 256 vector table entries
+03F8C0  func  int_vector_02      # NMI
+# The V70 takes maskable interrupts at vector 0x40 + the number the interrupt controller (D00000) supplies
+03F500  func  int_vector_40
+03F794  func  int_vector_41
+03F7A0  func  int_vector_42
+03F7AC  func  int_vector_43
+03F830  func  int_vector_44
+
+# ======== object handler lists ========
+# A 32-bit count, then that many handlers: the code takes a list with "movea.b list[PC], R10" and starts an
+# object per handler with "mov.w [R10+], R8" (the count) and "mov.w [R10+], 4[R21]" (011E2C-011E35); the
+# object loop calls the handler at field 4 (011CD2, "jsr [4[R20]]")
+003470  data  object_handlers_346C  record=4 count=1 code=0    # the count at 00346C; list taken at 003133
+003478  data  object_handlers_3474  record=4 count=19 code=0   # the count at 003474; list taken at 003161
+0034C8  data  object_handlers_34C4  record=4 count=9 code=0    # the count at 0034C4; list taken at 003170
+0034F0  data  object_handlers_34EC  record=4 count=1 code=0    # the count at 0034EC; list taken at 003257
+001A7C  data  object_handlers_1A78  record=4 count=3 code=0    # the count at 001A78; list taken at 0014BA
+002D5C  data  object_handlers_2D58  record=4 count=4 code=0    # the count at 002D58
+
+# Tables of lists taken by an index: "mov.w table[PC](R0), R10", then the records with [R10+]
+014A20  data  object_lists_14A20  pointers=16 record=8 count=prefix32 code=0   # 0146E9-014709: a 32-bit count, then (handler -> field 4, data -> field 80) pairs
+014A60  data  object_list_14A60  record=8 count=prefix32 code=0    # the same, taken whole at 0146DB
+0181B8  data  object_lists_181B8  pointers=31 record=8 count=bytes32 code=0  # 017BD2-017BF6: the records' length in bytes (the count is >> 3), then (handler, data) pairs
+02E1F0  data  object_lists_2E1F0  pointers=26 record=16 end=FFFF8000 code=4  # 0137F1, 013809-013821: (position, type, handler -> field 4, field 84, field 18) records, closed by 8000 FFFF
+00DF78  data  object_handlers_DF74  record=4 count=3 code=0    # the count at 00DF74; list taken at 00DE57
+
+# The objects of each stage's road: a stream of (position, command) halfword pairs, taken from this table by
+# the stage's number (012720 and 0127BF, "mov.w 20800(R0), 80[R20]") and read at 01272C-012746 as the road
+# goes by. Command 0 starts an object (handler -> field 4, then a parameter -> field 18, 012758); 1 ends the
+# stage's stream, which goes on from this table when the next stage starts (012777, 0127A4-0127CA); 2 ends
+# it for good (01279C); 3 is a fork: a table of the streams of its branches follows, and the one the route
+# takes, C9[R23], goes on when the stage changes (012786, 0127CD-0127EB)
+020800  data  road_object_streams  pointers=32 record=12 kinds=2:0=12,1=end,2=end,3=fork code=4
+
+# A timeline: (frame, routine) pairs that 01AE0D-01AE2C calls when the object's counter, 10[R20], reaches the
+# frame, from the address 01ADFC puts in 80[R20]; closed by frame 0000FFFF
+01AFC0  data  timeline_1AFC0  record=8 end=0000FFFF code=4

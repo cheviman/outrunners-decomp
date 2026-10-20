@@ -26,7 +26,12 @@ the tools verify it, extract the assets and build your own executable.
       `tools/make_routes.py` writes, turning the wheel before the forks a route takes); a name typed into
       the entry; every page of the test mode and its 122 sounds. Between them they execute 16,113 addresses
       (`python tools/check_scenarios.py --reference-only`); the game has no continue
-- [ ] The static analysis, the decompiler, the game's own video and sound, assets, a port
+- [x] Recursive disassembly without traces (`tools/disassemble.py`, from `symbols.txt`): the vectors, the
+      tables of code addresses next to the jumps that read them, the object handlers (stored in field 4,
+      from lists, tables of lists and the streams of objects along each stage's road, which fork with the
+      route) and a timeline: 18,733 instructions in 580 functions, no invalid or overlapping paths, and all
+      16,113 addresses the scenarios execute among them
+- [ ] The decompiler, the game's own video and sound, assets, a port
 
 ## Getting started
 
