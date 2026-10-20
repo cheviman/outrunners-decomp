@@ -46,6 +46,7 @@ std::vector<uint16_t> g_palette[S32V_SCREENS] = {
 	std::vector<uint16_t>(S32_PALETTE_ENTRIES), std::vector<uint16_t>(S32_PALETTE_ENTRIES) };
 std::vector<uint32_t> g_sprite_rom;
 int g_width[S32V_SCREENS] = { 320, 320 };
+bool g_draw_screens = true;
 
 void load_sprite_ram()
 {
@@ -78,6 +79,8 @@ void on_sprites_due(bool erase, bool draw)
 // updates, the left screen's first)
 void on_frame_shown()
 {
+	if (!g_draw_screens)
+		return;
 	std::memcpy(g_video_ram.data(), s32_board.video_ram, S32_VIDEO_RAM_SIZE);
 	s32v::video_memory_generation++;
 	for (int screen = 0; screen < S32V_SCREENS; screen++)
@@ -137,6 +140,11 @@ extern "C" void s32v_attach(const uint8_t *tiles, size_t tiles_size, const uint8
 	}
 	s32_board.sprites_due = on_sprites_due;
 	s32_board.frame_shown = on_frame_shown;
+}
+
+extern "C" void s32v_draw_screens(bool on)
+{
+	g_draw_screens = on;
 }
 
 extern "C" const uint32_t *s32v_frame(int screen, int *width)

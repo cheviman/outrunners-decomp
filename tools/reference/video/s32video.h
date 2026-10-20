@@ -15,6 +15,7 @@
 #ifndef S32_REFERENCE_VIDEO_H
 #define S32_REFERENCE_VIDEO_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -29,6 +30,11 @@ extern "C" {
 /* The tile ROM (4 MB) and the sprite ROMs (16 MB, every 32-bit word big endian) as tools/embed_data.py
    writes them; the reference keeps pointers to them */
 void s32v_attach(const uint8_t *tiles, size_t tiles_size, const uint8_t *sprites, size_t sprites_size);
+
+/* Whether the screens are drawn when the next VBLANKs start (on by default). The sprite lists are drawn
+   whatever it says, as the board's frame buffers carry them from one frame to the next: a run that keeps
+   only some frames turns the screens off for the others */
+void s32v_draw_screens(bool on);
 
 /* The last frame drawn on a screen (0 the left one, 1 the right one): 0x00RRGGBB pixels, S32V_MAX_WIDTH
    a row; its width is 320 or 416 */
