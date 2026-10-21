@@ -1,22 +1,28 @@
 /**
  *    Name:        video.c
- *    Description: Sega System 32 video: the tilemaps, text, bitmap and backdrop layers, the sprite frame
- *                 buffers and the mixer, drawing each frame from the board's memories
+ *    Description: Sega System Multi 32 video: the tilemaps, text, bitmap and backdrop layers, the sprite
+ *                 frame buffers and the two mixers, drawing each frame of both screens from the board's
+ *                 memories
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
- *    Behavior follows MAME's sega/segas32_v.cpp (Aaron Giles) pixel for pixel: tools/reference/video
- *    builds that file unmodified, and tools/check_scenarios.py --video compares its frames with these.
- *    MAME's terms are in tools/reference/mame/LICENSE.
+ *    Behavior follows MAME's sega/segas32_v.cpp (Aaron Giles) pixel for pixel, as it draws the Multi 32
+ *    (screen_update_multi32_left and _right): tools/reference/video builds that file, and
+ *    tools/check_scenarios.py --video compares its frames with these. MAME's terms are in
+ *    tools/reference/mame/LICENSE.
  *
  *    How a frame is made: every layer draws a palette offset per pixel (0 is transparent) into a buffer
  *    of its own, through its clip windows. The sprites were drawn before, into the hidden one of two
  *    frame buffers, when the board sent the list. The mixer then takes, pixel by pixel, the topmost
  *    layer that is not transparent in the order its priority registers give, maybe blends it with the
  *    one below, and looks the color up in the palette.
+ *
+ *    The two screens share the video RAM, so their tilemaps, text, bitmap and backdrop are the same; each
+ *    has a mixer and a palette of its own, and sprites of its own: a sprite goes to one screen's frame
+ *    buffers or the other's, as bit 11 of its fourth word says.
  *
  *    Video RAM holds the tilemap pages (32 x 16 cells of a 16x16 tile, 0x400 bytes each), the text cells
  *    and their graphics, the bitmap layer, the line tables, and the registers at 0x31FF00.
@@ -110,9 +116,10 @@ static struct
 
 	area visible;                           /* 320 or 416 x 224 */
 	layer layers[LAYERS];                   /* the sprites' entry is unused: they have their own buffers */
-	uint16_t sprites[2][HEIGHT][WIDTH];     /* frame buffers: one is shown, the list draws into the other */
+	uint16_t sprites[S32_SCREENS][2][HEIGHT][WIDTH];    /* each screen's frame buffers: one is shown, the
+	                                                       list draws into the other */
 	int shown_sprites;
-	uint32_t frame[HEIGHT][WIDTH];
+	uint32_t frame[S32_SCREENS][HEIGHT][WIDTH];
 	clip_runs runs;
 } video;
 
@@ -149,10 +156,10 @@ static uint16_t video_register(uint32_t offset)
 	return video_word((0x1ff00 + offset) / 2);
 }
 
-/* A mixer register, by its offset in the mixer's window */
-static uint16_t mixer_register(uint32_t offset)
+/* A register of a screen's mixer, by its offset in the mixer's window */
+static uint16_t mixer_register(int screen, uint32_t offset)
 {
-	return s32_board.mixer[offset / 2];
+	return s32_board.mixer[screen][offset / 2];
 }
 
 static uint16_t sprite_word(uint32_t index)
@@ -410,7 +417,8 @@ static int pages_of(int number, int *pages)
 	pages[1] = (upper >> 8) & 0x7f;
 	pages[2] = lower & 0x7f;
 	pages[3] = (lower >> 8) & 0x7f;
-	return (s32_board.tilebank_external & 1) << 1 | ((video_register(0x00) >> 10) & 1);
+	/* the I/O chip's port H gives each tilemap a bank of its own (System 32: one, with register 0x00) */
+	return (s32_board.tilebank_external >> (2 * number)) & 3;
 }
 
 /* Register 0x00 flips tilemap 0-3 against the whole screen's flip (bit 9); bit 8 keeps them from
@@ -798,7 +806,9 @@ static int draw_sprite(uint32_t entry, int x_offset, int y_offset, const area *i
 	const int source_height = size >> 8;
 	const int height = height_word & 0x3ff;
 	const int width = width_word & 0x3ff;
-	const uint32_t bank = ((width_word & 0x0800) >> 11 | (width_word & 0x4000) >> 13) % (video.sprite_banks ? video.sprite_banks : 1);
+	/* the bank in bits 13 and 15 of the fourth word; bit 11 picks the screen */
+	const uint32_t bank = ((width_word & 0x2000) >> 13 | (width_word & 0x8000) >> 14) % (video.sprite_banks ? video.sprite_banks : 1);
+	const int screen = bit(width_word, 11);
 	const int taken = (bit(flags, 13) && table_inline) ? 2 : 0;
 	sprite_drawing sprite;
 	int source_width;
@@ -905,7 +915,7 @@ static int draw_sprite(uint32_t entry, int x_offset, int y_offset, const area *i
 	{
 		if (row >= inside->top && row <= inside->bottom)
 		{
-			sprite.row = video.sprites[video.shown_sprites ^ 1][row];
+			sprite.row = video.sprites[screen][video.shown_sprites ^ 1][row];
 			sprite.outside_row = row >= outside->top && row <= outside->bottom;
 			draw_sprite_row(&sprite, from_ram, bank, address, x, x_end, x_delta, x_zoom, end_pen);
 		}
@@ -974,12 +984,13 @@ static void draw_sprite_list(void)
 void s32_video_sprites(bool erase, bool draw)
 {
 	if (erase)
-	{
-		uint16_t *shown = &video.sprites[video.shown_sprites][0][0];
+		for (int screen = 0; screen < S32_SCREENS; screen++)
+		{
+			uint16_t *shown = &video.sprites[screen][video.shown_sprites][0][0];
 
-		for (size_t index = 0; index < (size_t)HEIGHT * WIDTH; index++)
-			shown[index] = 0xffff;
-	}
+			for (size_t index = 0; index < (size_t)HEIGHT * WIDTH; index++)
+				shown[index] = 0xffff;
+		}
 	if (draw)
 	{
 		video.shown_sprites ^= 1;
@@ -990,9 +1001,9 @@ void s32_video_sprites(bool erase, bool draw)
 /* ---- the mixer ---- */
 
 /* Which color offset a layer takes (0x3E bit 15 and the layer's bit there pick how its own flag counts) */
-static uint8_t color_offsets(bool layer_bit, bool layer_flag)
+static uint8_t color_offsets(int screen, bool layer_bit, bool layer_flag)
 {
-	switch ((bit(mixer_register(0x3e), 15) ? 2 : 0) | (layer_bit ? 1 : 0))
+	switch ((bit(mixer_register(screen, 0x3e), 15) ? 2 : 0) | (layer_bit ? 1 : 0))
 	{
 		case 1: return 2;
 		case 2: return layer_flag ? 0 : 2;
@@ -1055,43 +1066,43 @@ static const mix_layer *top_layer(const mix_layer *entry, const uint16_t *const 
 	}
 }
 
-static uint16_t palette_color(const mix_layer *entry, int pixel)
+static uint16_t palette_color(int screen, const mix_layer *entry, int pixel)
 {
-	return s32_board.palette[(entry->palette_base + ((pixel >> entry->shift) & 0xfff0) + (pixel & 0x0f)) & 0x3fff];
+	return s32_board.palette[screen][(entry->palette_base + ((pixel >> entry->shift) & 0xfff0) + (pixel & 0x0f)) & 0x3fff];
 }
 
-uint16_t s32_video_tile_pen_color(int tilemap, uint16_t color, int pen)
+uint16_t s32_video_tile_pen_color(int screen, int tilemap, uint16_t color, int pen)
 {
-	const uint16_t control = mixer_register(0x20 + 2 * (uint32_t)(LAYER_NBG0 + tilemap));
+	const uint16_t control = mixer_register(screen, 0x20 + 2 * (uint32_t)(LAYER_NBG0 + tilemap));
 	mix_layer layer;
 
 	layer.palette_base = (uint16_t)((control & 0x00f0) << 6);
 	layer.shift = (control >> 8) & 3;
-	return palette_color(&layer, ((color & 0x1ff) << 4 | (pen & 0x0f)) & 0x1fff);
+	return palette_color(screen, &layer, ((color & 0x1ff) << 4 | (pen & 0x0f)) & 0x1fff);
 }
 
-uint16_t s32_video_sprite_pixel_color(uint16_t pixel)
+uint16_t s32_video_sprite_pixel_color(int screen, uint16_t pixel)
 {
-	const uint16_t sprite_control = mixer_register(0x4c);
+	const uint16_t sprite_control = mixer_register(screen, 0x4c);
 	const sprite_grouping grouping = groupings[sprite_control & 0x0f];
 	const int group = (pixel >> grouping.shift) & grouping.mask;
-	const uint16_t control = mixer_register(2 * (uint32_t)(grouping.base | group));
+	const uint16_t control = mixer_register(screen, 2 * (uint32_t)(grouping.base | group));
 	mix_layer sprites;
 
 	sprites.palette_base = (uint16_t)((((sprite_control & 3) != 3) ? control : sprite_control) & 0x00f0) << 6;
 	sprites.shift = (control >> 8) & 3;
-	return palette_color(&sprites, pixel & (((1 << grouping.shift) - 1) & 0x3fff));
+	return palette_color(screen, &sprites, pixel & (((1 << grouping.shift) - 1) & 0x3fff));
 }
 
-/* The frame from the layers: registers 0x00-0x1E give each sprite group its priority and palette, 0x20-0x2C
+/* A screen's frame from the layers and its sprites: registers 0x00-0x1E give each sprite group its priority and palette, 0x20-0x2C
    each layer, 0x30-0x3A what each blends with, 0x40-0x4A two color offsets, 0x4C the sprite grouping and
    shadows, 0x4E blending */
-static void mix(int drawn)
+static void mix(int screen, int drawn)
 {
-	const uint16_t blend_control = mixer_register(0x4e);
+	const uint16_t blend_control = mixer_register(screen, 0x4e);
 	const bool blending = bit(blend_control, 11);
 	const int blend_factor = (blend_control >> 8) & 7;
-	const uint16_t sprite_control = mixer_register(0x4c);
+	const uint16_t sprite_control = mixer_register(screen, 0x4c);
 	const sprite_grouping grouping = groupings[sprite_control & 0x0f];
 	const int shadow_mask = bit(sprite_control, 2) ? 0x8000 : 0;
 	const int sprite_bits = ((1 << grouping.shift) - 1) & 0x3fff;
@@ -1106,16 +1117,16 @@ static void mix(int drawn)
 
 	for (int channel = 0; channel < 3; channel++)
 	{
-		offsets[0][channel] = sign_extend(mixer_register(0x40 + 2 * (uint32_t)channel), 6);
-		offsets[1][channel] = sign_extend(mixer_register(0x46 + 2 * (uint32_t)channel), 6);
+		offsets[0][channel] = sign_extend(mixer_register(screen, 0x40 + 2 * (uint32_t)channel), 6);
+		offsets[1][channel] = sign_extend(mixer_register(screen, 0x46 + 2 * (uint32_t)channel), 6);
 		offsets[2][channel] = 0;
 	}
 
 	/* the layers that are on and have a priority, then the backdrop, from the top down */
 	for (int index = LAYER_TEXT; index <= LAYER_BITMAP; index++)
 	{
-		const uint16_t control = mixer_register(0x20 + 2 * (uint32_t)index);
-		const uint16_t blend = mixer_register(0x30 + 2 * (uint32_t)index);
+		const uint16_t control = mixer_register(screen, 0x20 + 2 * (uint32_t)index);
+		const uint16_t blend = mixer_register(screen, 0x30 + 2 * (uint32_t)index);
 
 		if (!bit((uint32_t)drawn, index) || (control & 0x0f) == 0)
 			continue;
@@ -1125,16 +1136,16 @@ static void mix(int drawn)
 		sorted[count].shift = (control >> 8) & 3;
 		sorted[count].blend = blending ? (uint8_t)((blend >> 6) & 0xff) : 0;
 		sorted[count].sprite_blend = sprite_blend(blend & 0x3f);
-		sorted[count].offsets = color_offsets(bit(mixer_register(0x3e), index), bit(blend, 14));
+		sorted[count].offsets = color_offsets(screen, bit(mixer_register(screen, 0x3e), index), bit(blend, 14));
 		count++;
 	}
 	sorted[count].index = LAYER_BACKDROP;
 	sorted[count].priority = 1 << 3;
-	sorted[count].palette_base = (uint16_t)((mixer_register(0x2c) & 0x00f0) << 6);
-	sorted[count].shift = (mixer_register(0x2c) >> 8) & 3;
+	sorted[count].palette_base = (uint16_t)((mixer_register(screen, 0x2c) & 0x00f0) << 6);
+	sorted[count].shift = (mixer_register(screen, 0x2c) >> 8) & 3;
 	sorted[count].blend = 0;
 	sorted[count].sprite_blend = 0;
-	sorted[count].offsets = color_offsets(bit(mixer_register(0x3e), 8), bit(mixer_register(0x3e), 14));
+	sorted[count].offsets = color_offsets(screen, bit(mixer_register(screen, 0x3e), 8), bit(mixer_register(screen, 0x3e), 14));
 	count++;
 	for (int index = 0; index < count; index++)
 		for (int other = index + 1; other < count; other++)
@@ -1149,7 +1160,7 @@ static void mix(int drawn)
 	/* each sprite group goes in above the first layer of a lower priority */
 	for (int group = 0; group <= grouping.mask; group++)
 	{
-		const uint16_t control = mixer_register(2 * (uint32_t)(grouping.base | group));
+		const uint16_t control = mixer_register(screen, 2 * (uint32_t)(grouping.base | group));
 		const int priority = (control & 0x0f) << 3 | 7;
 		int place = count;
 		int copied = 0;
@@ -1168,7 +1179,7 @@ static void mix(int drawn)
 		sprites->shift = (control >> 8) & 3;
 		sprites->blend = 0;
 		sprites->sprite_blend = 0;
-		sprites->offsets = color_offsets(bit(mixer_register(0x3e), 6), bit(sprite_control, 15));
+		sprites->offsets = color_offsets(screen, bit(mixer_register(screen, 0x3e), 6), bit(sprite_control, 15));
 	}
 
 	/* the sprite buffer is scanned flipped as the sprite controls say */
@@ -1182,7 +1193,7 @@ static void mix(int drawn)
 
 		for (int index = LAYER_TEXT; index <= LAYER_BITMAP; index++)
 			rows[index] = video.layers[index].empty[y] ? transparent_row : video.layers[index].pixels[y];
-		rows[LAYER_SPRITES] = video.sprites[video.shown_sprites][sprite_y];
+		rows[LAYER_SPRITES] = video.sprites[screen][video.shown_sprites][sprite_y];
 		rows[LAYER_BACKDROP] = video.layers[LAYER_BACKDROP].pixels[y];
 
 		for (int x = video.visible.left; x <= video.visible.right; x++, sprite_x += sprite_dx)
@@ -1193,7 +1204,7 @@ static void mix(int drawn)
 			int pixel;
 			const mix_layer *first = top_layer(orders[group], rows, x, sprite_pixel, shadow_mask, sprite_bits,
 				shadow_pen, &pixel, &shadow);
-			uint16_t color = palette_color(first, pixel);
+			uint16_t color = palette_color(screen, first, pixel);
 			int red = (color & 0x1f) + offsets[first->offsets][0];
 			int green = ((color >> 5) & 0x1f) + offsets[first->offsets][1];
 			int blue = ((color >> 10) & 0x1f) + offsets[first->offsets][2];
@@ -1206,7 +1217,7 @@ static void mix(int drawn)
 
 				if (bit(first->blend, second->index) && (second->index != LAYER_SPRITES || bit(first->sprite_blend, group)))
 				{
-					color = palette_color(second, below);
+					color = palette_color(screen, second, below);
 					red = shift_down(red * (7 - blend_factor) + ((color & 0x1f) + offsets[second->offsets][0]) * (blend_factor + 1), 3);
 					green = shift_down(green * (7 - blend_factor) + (((color >> 5) & 0x1f) + offsets[second->offsets][1]) * (blend_factor + 1), 3);
 					blue = shift_down(blue * (7 - blend_factor) + (((color >> 10) & 0x1f) + offsets[second->offsets][2]) * (blend_factor + 1), 3);
@@ -1221,7 +1232,7 @@ static void mix(int drawn)
 			red = red > 31 ? 31 : (red > 0 ? red : 0);
 			green = green > 31 ? 31 : (green > 0 ? green : 0);
 			blue = blue > 31 ? 31 : (blue > 0 ? blue : 0);
-			video.frame[y][x] = (uint32_t)red << 19 | (uint32_t)green << 11 | (uint32_t)blue << 3;
+			video.frame[screen][y][x] = (uint32_t)red << 19 | (uint32_t)green << 11 | (uint32_t)blue << 3;
 		}
 	}
 }
@@ -1237,14 +1248,21 @@ void s32_video_draw_frame(void)
 	video.visible.top = 0;
 	video.visible.bottom = HEIGHT - 1;
 
-	/* the I/O chip's CNT1 output turns the display on */
-	if (!bit(s32_board.io_cnt, 1))
+	/* each screen's I/O chip turns it on (CNT1); the layers they share are drawn once */
+	int drawn = -1;
+
+	for (int screen = 0; screen < S32_SCREENS; screen++)
 	{
-		for (int y = 0; y < HEIGHT; y++)
-			memset(video.frame[y], 0, (size_t)width * sizeof(video.frame[y][0]));
-		return;
+		if (!s32_display_enabled(screen))
+		{
+			for (int y = 0; y < HEIGHT; y++)
+				memset(video.frame[screen][y], 0, (size_t)width * sizeof(video.frame[screen][y][0]));
+			continue;
+		}
+		if (drawn < 0)
+			drawn = draw_layers();
+		mix(screen, drawn);
 	}
-	mix(draw_layers());
 }
 
 void s32_video_init(const uint8_t *tiles, size_t tiles_size, const uint8_t *sprites, size_t sprites_size)
@@ -1261,20 +1279,21 @@ void s32_video_init(const uint8_t *tiles, size_t tiles_size, const uint8_t *spri
 	s32_board.frame_shown = s32_video_draw_frame;
 }
 
-const uint32_t *s32_video_frame(int *width)
+const uint32_t *s32_video_frame(int screen, int *width)
 {
 	if (width)
 		*width = video.visible.right + 1;
-	return &video.frame[0][0];
+	return &video.frame[screen & 1][0][0];
 }
 
 uint64_t s32_video_frame_hash(void)
 {
 	uint64_t hash = 0xcbf29ce484222325ull;
 
-	for (int y = 0; y < HEIGHT; y++)
-		for (int x = 0; x <= video.visible.right; x++)
-			for (int shift = 0; shift < 24; shift += 8)
-				hash = (hash ^ ((video.frame[y][x] >> shift) & 0xff)) * 0x100000001b3ull;
+	for (int screen = 0; screen < S32_SCREENS; screen++)
+		for (int y = 0; y < HEIGHT; y++)
+			for (int x = 0; x <= video.visible.right; x++)
+				for (int shift = 0; shift < 24; shift += 8)
+					hash = (hash ^ ((video.frame[screen][y][x] >> shift) & 0xff)) * 0x100000001b3ull;
 	return hash;
 }

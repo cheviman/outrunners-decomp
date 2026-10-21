@@ -64,6 +64,8 @@ def writes_register(statement, register, call_writes):
         return register in (27, 28)
     if isinstance(statement, ir.Effect) and statement.name == "search_bits_up":
         return register in (statement.args[4].value, 28)
+    if isinstance(statement, ir.Effect) and statement.name == "refresh_read":
+        return register == statement.args[1].value
     if isinstance(statement, ir.Call):
         return ("r", register) in call_writes(statement)
     return False

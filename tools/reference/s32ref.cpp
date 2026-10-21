@@ -4,7 +4,7 @@
  *                 runtime's Multi 32 model, to find code, log hardware use and record state per frame
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    Not part of the game. Usage:
@@ -14,6 +14,7 @@
  *                           [--dump-frame N ... --dump-dir DIR] [--video-hashes hashes.txt]
  *                           [--video-dump N ... --video-dir DIR] [--sound-hashes hashes.txt]
  *                           [--sound-log writes.txt] [--sound-wav sound.wav] [--sound-trace executed.txt]
+ *                           [--sound-timing timing.txt]
  *                           [--verbose]
  *
  *    The program and the other ROMs are the game's data the executable carries (game/data.h).
@@ -31,6 +32,9 @@
  *    --sound-hashes, --sound-log and --sound-wav run the sound board too (sound/s32sound.cpp: MAME's Z80
  *    and MultiPCM, ymfm's YM3438): for each frame the hash of the samples the chips made and of the sound
  *    board's memory; every chip write; the sound mixed. --sound-trace lists the Z80 addresses executed.
+ *    --sound-timing keeps the Z80's time with the timing model the game's own sound board has
+ *    (tools/decompile_sound.py --timing writes the table), so that the two compare sample for sample;
+ *    without it the Z80 runs cycle by cycle.
  *    Without them the Z80 stays in reset, and the program sees the shared RAM as it leaves it.
  */
 #include "emu.h"
@@ -491,6 +495,7 @@ int main(int argc, char **argv)
 	std::string sound_log_path;
 	std::string sound_wav_path;
 	std::string sound_trace_path;
+	std::string sound_timing_path;
 	std::string profile_path;
 	std::string script_path;
 	std::string transfers_path;
@@ -499,7 +504,8 @@ int main(int argc, char **argv)
 	const char *usage = "Usage: s32ref [--timing frames|cycles] [--frames N] [--script FILE]"
 		" [--hashes FILE] [--trace FILE] [--calls FILE] [--transfers FILE] [--watch ADDRESS ...] [--profile FILE]"
 		" [--dump-frame N ... --dump-dir DIR] [--video-hashes FILE] [--video-dump N ... --video-dir DIR]"
-		" [--sound-hashes FILE] [--sound-log FILE] [--sound-wav FILE] [--sound-trace FILE] [--verbose]\n";
+		" [--sound-hashes FILE] [--sound-log FILE] [--sound-wav FILE] [--sound-trace FILE] [--sound-timing FILE]"
+		" [--verbose]\n";
 
 	for (int index = 1; index < argc; index++)
 	{
@@ -552,6 +558,8 @@ int main(int argc, char **argv)
 			sound_wav_path = argv[++index];
 		else if (argument == "--sound-trace" && has_value)
 			sound_trace_path = argv[++index];
+		else if (argument == "--sound-timing" && has_value)
+			sound_timing_path = argv[++index];
 		else if (argument == "--verbose")
 			g_verbose = true;
 		else
@@ -601,6 +609,11 @@ int main(int argc, char **argv)
 		s32_board.sound_rom = game_sound_rom;
 		s32_board.pcm_rom = game_pcm_rom;
 		s32s_attach();
+		if (!sound_timing_path.empty() && !s32s_use_timing(sound_timing_path.c_str()))
+		{
+			std::cerr << sound_timing_path << ": no timing model in it\n";
+			return 1;
+		}
 		if (!sound_hashes_path.empty())
 			g_sound_hashes.open(sound_hashes_path);
 		if (!sound_log_path.empty())

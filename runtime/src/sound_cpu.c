@@ -3,19 +3,22 @@
  *    Description: runs the decompiled sound program on the board's time: the Z80's timing model
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    15-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    The sound program is C (src/sound/, tools/decompile_sound.py) and keeps the Z80's time itself: every
  *    basic block of the original starts with z80_block(cycles). The rules, the same tools/reference/sound
  *    keeps for MAME's Z80 so that the two compare sample for sample:
- *      - the Z80's time counts in board cycles (two a Z80 cycle) and moves on by each block's cycles
- *        (tools/z80/timing.py), the extra cycles of a condition's longer way, and 21 for every round of a
- *        block move but its last;
+ *      - the Z80's time counts in its own cycles and moves on by each block's cycles (tools/z80/timing.py),
+ *        the extra cycles of a condition's longer way, and 21 for every round of a block move but its
+ *        last; the board's time is 2.5 board cycles a Z80 cycle (20 MHz against 8), rounded down;
  *      - when a block starts, the YM3438 timers due by then run out, and an interrupt is taken if the
  *        line is up and the Z80 lets interrupts in (not right after an EI that ended the block before):
- *        13 cycles, then sound_irq(); after it returns the same is looked at again;
+ *        13 cycles and one count of the refresh register, then sound_irq(); after it returns the same is
+ *        looked at again;
+ *      - the refresh register counts the opcode fetches: every block's (tools/z80/timing.py fetches), two
+ *        for every round of a block move but its last, and one for an interrupt; it starts at 0;
  *      - everything a block reads and writes happens at the time it starts;
  *      - the board runs the program whenever its time moves on (s32_board.time_passes): from its reset
  *        once the I/O chip lets the Z80 run, then the main loop again and again until the Z80's time is
@@ -29,6 +32,18 @@
 
 #define INTERRUPT_CYCLES 13
 
+/* the board's time when the Z80 has run 'cycles' */
+static uint64_t board_time(uint64_t cycles)
+{
+	return cycles * S32_CPU_CLOCK / S32_SOUND_CLOCK;
+}
+
+/* the first Z80 cycle at or after the board's 'time' */
+static uint64_t z80_time(uint64_t time)
+{
+	return (time * S32_SOUND_CLOCK + S32_CPU_CLOCK - 1) / S32_CPU_CLOCK;
+}
+
 /* the sound program's ways in (sound_symbols.txt) */
 void sound_reset(void);
 void sound_irq(void);
@@ -36,33 +51,48 @@ void sound_main_loop(void);
 
 static struct
 {
-	uint64_t clock;         /* where the next block starts */
+	uint64_t clock;         /* where the next block starts, Z80 cycles */
 	bool interrupts;        /* IFF1 */
 	bool after_ei;          /* EI ended the block before */
 	bool line;              /* the board's interrupt line to the Z80 */
 	bool held;              /* in reset */
 	bool running;           /* past the reset code: the main loop runs */
-} z80 = { 0, false, false, false, true, false };
+	uint32_t refresh;       /* opcode fetches so far */
+	uint32_t block_refresh; /* ... when the block started */
+} z80 = { 0, false, false, false, true, false, 0, 0 };
 
-void z80_block(int cycles)
+void z80_block(int cycles, int fetches)
 {
 	for (;;)
 	{
-		sound_chips_timers_due(z80.clock);
+		sound_chips_timers_due(board_time(z80.clock));
 		if (!z80.interrupts || z80.after_ei || !z80.line)
 			break;
 		z80.interrupts = false;
-		z80.clock += 2 * INTERRUPT_CYCLES;
+		z80.clock += INTERRUPT_CYCLES;
+		z80.refresh++;
 		sound_irq();
 	}
 	z80.after_ei = false;
-	s32_board.sound_cycles = z80.clock;
-	z80.clock += 2 * (uint64_t)cycles;
+	s32_board.sound_cycles = board_time(z80.clock);
+	z80.clock += (uint64_t)cycles;
+	z80.block_refresh = z80.refresh;
+	z80.refresh += (uint32_t)fetches;
+}
+
+uint8_t refresh_read(int fetches)
+{
+	return (uint8_t)((z80.block_refresh + (uint32_t)fetches) & 0x7f);
+}
+
+bool interrupts_enabled(void)
+{
+	return z80.interrupts;
 }
 
 void z80_cycles(int cycles)
 {
-	z80.clock += 2 * (uint64_t)cycles;
+	z80.clock += (uint64_t)cycles;
 }
 
 void interrupts_on(void)
@@ -110,6 +140,9 @@ uint8_t port_in(uint8_t port)
 
 void port_out(uint8_t port, uint8_t value)
 {
+	/* the MultiPCM's samples up to now come from the banks as they were */
+	if ((port & 0xf0) == 0xb0)
+		sound_chips_pcm_banks_changing();
 	s32_z80_out(port, value);
 }
 
@@ -123,7 +156,8 @@ void move_block(uint16_t source, uint16_t destination, uint16_t count, bool upwa
 		source = (uint16_t)(upward ? source + 1 : source - 1);
 		destination = (uint16_t)(upward ? destination + 1 : destination - 1);
 	}
-	z80.clock += 2 * 21 * (uint64_t)(rounds - 1);
+	z80.clock += 21 * (uint64_t)(rounds - 1);
+	z80.refresh += 2 * (rounds - 1);
 }
 
 void sound_invalid_jump(uint32_t address)
@@ -143,8 +177,8 @@ static void on_time_passes(uint64_t until)
 	if (z80.held)
 	{
 		sound_chips_timers_due(until);
-		if (z80.clock < until)
-			z80.clock = until;
+		if (z80.clock < z80_time(until))
+			z80.clock = z80_time(until);
 		return;
 	}
 	if (!z80.running)
@@ -152,7 +186,7 @@ static void on_time_passes(uint64_t until)
 		z80.running = true;
 		sound_reset();
 	}
-	while (z80.clock < until)
+	while (board_time(z80.clock) < until)
 		sound_main_loop();
 }
 
@@ -169,6 +203,7 @@ static void on_sound_reset(bool held)
 		z80.running = false;
 		z80.interrupts = false;
 		z80.after_ei = false;
+		z80.refresh = 0;
 	}
 	z80.held = held;
 }
@@ -176,7 +211,7 @@ static void on_sound_reset(bool held)
 /* Hooks the sound program to the board; s32_board.sound_rom and the chips have to be set */
 void sound_cpu_attach(void)
 {
-	z80.clock = s32_board.cycles;
+	z80.clock = z80_time(s32_board.cycles);
 	s32_board.time_passes = on_time_passes;
 	s32_board.sound_irq_changed = on_sound_irq;
 	s32_board.sound_reset_changed = on_sound_reset;

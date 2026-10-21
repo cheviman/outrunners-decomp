@@ -166,6 +166,8 @@ class KnownBits:
         elif isinstance(statement, ir.Effect):
             for index in (27, 28) if statement.name in ("move_string", "move_bits_down", "move_bits_up", "search_bytes") else ():
                 state[index] = 0
+            if statement.name == "refresh_read":
+                state[statement.args[1].value] = 0
             if statement.name == "search_bits_up":
                 state[statement.args[4].value] = 0
                 state[28] = 0

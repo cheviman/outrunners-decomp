@@ -5,7 +5,7 @@ Name:        timing.py
 Description: how many clock cycles each Z80 instruction takes, as MAME's core counts them
 Version:     0.1.0
 Created:     13-10-2026
-Modified:    13-10-2026
+Modified:    21-10-2026
 Author:      Sebastian Toyos
 
 cycles(instruction) is (taken, not taken) for the instructions whose time depends on a condition
@@ -40,6 +40,17 @@ def memory_cost(operand):
     if operand.mode == "reg" and operand.reg in INDEX_BYTES:
         return 4
     return 0
+
+
+PREFIXES = (0xCB, 0xDD, 0xED, 0xFD)
+
+
+def fetches(first_byte):
+    """How many opcode fetches (M1 cycles) an instruction makes, each of which counts the refresh register
+    R up, as MAME's core does: one, and one more when it starts with a prefix (DD CB d op makes two: the
+    displacement and the opcode after CB are argument reads). LDIR and LDDR fetch both bytes again on
+    every round, and an interrupt counts R up once (runtime/src/sound_cpu.c)."""
+    return 2 if first_byte in PREFIXES else 1
 
 
 def cycles(instruction):

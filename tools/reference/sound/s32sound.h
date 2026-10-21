@@ -36,8 +36,12 @@ void s32s_attach(void);
 /* Brings the chips' samples up to 'time' (board cycles) and closes the frame's samples */
 void s32s_end_frame(uint64_t time);
 
+/* Keeps the Z80's time with the timing model of 'path' (tools/decompile_sound.py --timing): false if
+   there is none in it */
+bool s32s_use_timing(const char *path);
+
 /* FNV-1a hashes of the frame just closed: the samples of the two chips, and the sound board's memory
-   (the RAM it shares with the V70, which is all the RAM the Z80 has) */
+   (the RAM it shares with the V70, which is all the RAM the Z80 has, but the Z80's stack, FD00-FDFF) */
 uint64_t s32s_frame_samples_hash(void);
 uint64_t s32s_state_hash(void);
 

@@ -486,4 +486,6 @@ class Printer:
         if name == "port_in":
             port = PORT_NAMES.get(args[0].value) if isinstance(args[0], ir.Const) else None
             return Value(f"port_in({port or values[0]})", PRIMARY, True, "int")
+        if name == "interrupts_enabled":
+            return Value("interrupts_enabled()", PRIMARY, True, "int")
         raise ValueError(f"unknown helper {name}")

@@ -126,6 +126,8 @@ class Variables:
                 return [index for index in (27, 28) if self.scratch(index)]
             if statement.name == "search_bits_up":
                 return [index for index in (statement.args[4].value, 28) if self.scratch(index)]
+            if statement.name == "refresh_read":
+                return [statement.args[1].value] if self.scratch(statement.args[1].value) else []
             if statement.name in ("divx", "divux") and isinstance(statement.args[1], ir.Const):
                 low = statement.args[1].value
                 return [index for index in (low, low + 1) if self.scratch(index)]
@@ -340,7 +342,7 @@ class Variables:
                     return False
             elif not (isinstance(statement, ir.Effect) and statement.name in ("move_string", "move_bits_down",
                                                                                  "move_bits_up", "search_bits_up",
-                                                                                 "search_bytes")):
+                                                                                 "search_bytes", "refresh_read")):
                 return False
         return True
 
