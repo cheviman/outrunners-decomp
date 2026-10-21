@@ -1,0 +1,38 @@
+# OutRunners (MAME set 'orunners') - Z80 sound program symbols (epr-15550.ic31)
+#
+# Addresses and names only: no game data lives in this file.
+# Format:  ADDRESS  KIND  NAME  [...]   [# comment]
+#   func     a function entry
+#   loop     the main loop's top: the program waits there for the board (a function entry)
+#   code     a code label
+#   jumps    NAME COUNT: a table of COUNT 16-bit code addresses
+#   via      TABLE: the JP (HL), JP (IX) or JP (IY) at ADDRESS goes to an entry of TABLE
+#   data     where a piece of data starts
+# Addresses are the Z80's: 0000-9FFF is the start of the sound ROM, A000-BFFF a banked page of it (ports
+# A0-AF), C000-DFFF the MultiPCM, E000-FFFF the RAM shared with the V70 (V70 700000-701FFF).
+#
+# Names for the decompiled C (tools/decompile_sound.py), as symbols.txt has them (disassemble.load_names):
+#   ADDRESS  var    NAME TYPE [STRUCT]   a variable in the shared RAM (TYPE: u8 s8 u16 s16); a struct name
+#                                        after the type: it holds the address of one
+#   ADDRESS  table  NAME TYPE            data in the program ROM the code reads by index, TYPE per element
+#   ADDRESS  io     NAME TYPE            a place of the MultiPCM's window, read and written through the bus
+#   ADDRESS  port   NAME                 an I/O port
+#   struct   NAME   SIZE                 a structure in the shared RAM (SIZE in hexadecimal)
+#   array    STRUCT FIRST COUNT          COUNT of them one after another from FIRST (COUNT in decimal)
+#   field    STRUCT OFFSET NAME TYPE [STRUCT]  one of its fields
+#   param    FUNCTION REGISTER NAME      what a function takes or hands back in a register (bc, de, hl, ix,
+#                                        iy, a)
+#   result   FUNCTION REGISTER NAME      what a function nothing calls hands back in a register
+#   local    FUNCTION WHERE REGISTER NAME  the local variable that holds what the instructions at WHERE
+#                                        write in REGISTER; "entry" is what it holds when the function starts
+# build/sound/listing.s and build/sound/index.txt (written with the C) are what naming works from.
+
+# Functions and labels
+0000  func  sound_reset          # DI; JP 0100 (name kept: runtime/src/sound_cpu.c calls it)
+0038  func  sound_irq            # IM 1: the YM3438's timer; acknowledges the inputs (C1 = 0), rearms timer A (27 = 15) (name kept: sound_cpu.c calls it)
+0100  code  sound_main           # IM 1, SP = FDFF, clears E000-FDFF, maps the interrupt inputs (D0-D2), sound_init, EI, then the loop
+012D  loop  sound_main_loop      # waits while FFFF is not 0, then the main loop's calls (name kept: sound_cpu.c calls it)
+
+# Jump tables
+401E  jumps  table_401E 16
+3FCB  via    table_401E

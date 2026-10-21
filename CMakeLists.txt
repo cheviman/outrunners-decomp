@@ -2,7 +2,7 @@
 # Description: build of the OutRunners runtime and its development tools
 # Version:     0.1.0
 # Created:     11-10-2026
-# Modified:    20-10-2026
+# Modified:    21-10-2026
 # Author:      Sebastian Toyos
 cmake_minimum_required(VERSION 3.20)
 project(outrunners C CXX)
@@ -23,8 +23,8 @@ if(MSVC)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif()
 
-# Multi 32 board model (script.c drives the controls in test runs). The game's own video and sound chip
-# libraries come back into it when they draw two screens and play the MultiPCM
+# Multi 32 board model (script.c drives the controls in test runs; video.c draws the two screens; sound.c
+# is the Z80's side of the board and sound_chips.c its YM3438 and MultiPCM)
 add_library(s32runtime STATIC
 	runtime/src/machine.c
 	runtime/src/io.c
@@ -33,6 +33,9 @@ add_library(s32runtime STATIC
 	runtime/src/ym3438.c
 	runtime/src/memory_census.c
 	runtime/src/tasks.c
+	runtime/src/video.c
+	runtime/src/multipcm.c
+	runtime/src/sound_chips.c
 )
 target_include_directories(s32runtime PUBLIC runtime/include)
 
@@ -61,8 +64,25 @@ target_include_directories(orunners_data PUBLIC runtime/include)
 # another folder). Its own video and sound come back into it when their libraries draw the two screens and
 # play the MultiPCM
 set(ORUNNERS_DECOMPILED_DIR ${CMAKE_SOURCE_DIR}/src CACHE PATH "The game's C (tools/decompile.py)")
-file(GLOB_RECURSE ORUNNERS_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/*.c)
-if(ORUNNERS_DECOMPILED)
+file(GLOB ORUNNERS_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/*.c)
+
+# The sound program: the Z80's C (src/sound/, tools/decompile_sound.py) on the board's time
+# (runtime/src/sound_cpu.c). The decompiled game and the scaffold both play it
+file(GLOB ORUNNERS_SOUND_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/sound/*.c)
+if(ORUNNERS_SOUND_DECOMPILED)
+	add_library(orunners_sound STATIC runtime/src/sound_cpu.c ${ORUNNERS_SOUND_DECOMPILED})
+	target_include_directories(orunners_sound PUBLIC runtime/include PRIVATE ${ORUNNERS_DECOMPILED_DIR}/sound)
+	target_link_libraries(orunners_sound PUBLIC s32runtime)
+	if(MSVC)
+		target_compile_options(orunners_sound PRIVATE /bigobj)
+	else()
+		target_compile_options(orunners_sound PRIVATE -fno-strict-aliasing)
+	endif()
+else()
+	message(STATUS "No sound program C in ${ORUNNERS_DECOMPILED_DIR}/sound")
+endif()
+
+if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	add_library(orunners_game STATIC runtime/src/game.c ${ORUNNERS_DECOMPILED})
 	target_include_directories(orunners_game PUBLIC runtime/include ${ORUNNERS_DECOMPILED_DIR})
 	target_link_libraries(orunners_game PUBLIC s32runtime)
@@ -74,16 +94,38 @@ if(ORUNNERS_DECOMPILED)
 	endif()
 
 	add_executable(orunners_game_headless ports/headless/main.c)
-	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_data)
+	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_sound orunners_data)
+
+	# The game in a window (ports/sdl2): SDL2 from the system, or on Windows the development package
+	# unpacked in build/downloads/sdl2 (SDL2_DIR picks another), a library beside the executable
+	set(ORUNNERS_SDL2_UNPACKED "")
+	if(WIN32)    # (the VC package: its libraries are Windows' only)
+		file(GLOB ORUNNERS_SDL2_UNPACKED ${CMAKE_SOURCE_DIR}/build/downloads/sdl2/SDL2-*/cmake)
+	endif()
+	find_package(SDL2 CONFIG QUIET HINTS ${ORUNNERS_SDL2_UNPACKED})
+	if(SDL2_FOUND)
+		set(ORUNNERS_SDL2 SDL2::SDL2)
+		if(TARGET SDL2::SDL2main)
+			list(APPEND ORUNNERS_SDL2 SDL2::SDL2main)
+		endif()
+		add_executable(orunners WIN32 ports/sdl2/main.c)
+		target_link_libraries(orunners PRIVATE orunners_game orunners_sound orunners_data ${ORUNNERS_SDL2})
+		if(WIN32)
+			add_custom_command(TARGET orunners POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE_DIR:orunners>)
+		endif()
+	else()
+		message(STATUS "No SDL2: the window port (orunners) is not built")
+	endif()
 else()
-	message(STATUS "No game C in ${ORUNNERS_DECOMPILED_DIR}: run tools/decompile.py")
+	message(STATUS "No game C in ${ORUNNERS_DECOMPILED_DIR}")
 endif()
 
 # The translation scaffold: the V60 runtime plus the C tools/recompile.py writes from the user's ROM into
 # build/generated, instruction by instruction (to run the program natively before the decompiler exists)
 option(ORUNNERS_SCAFFOLD "Build the V70 translation scaffold (orunners_headless)" OFF)
 file(GLOB ORUNNERS_GENERATED CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/build/generated/*.c)
-if(ORUNNERS_SCAFFOLD AND ORUNNERS_GENERATED)
+if(ORUNNERS_SCAFFOLD AND ORUNNERS_GENERATED AND ORUNNERS_SOUND_DECOMPILED)
 	add_library(orunners_program STATIC runtime/src/v60.c ${ORUNNERS_GENERATED})
 	target_include_directories(orunners_program PUBLIC runtime/include build/generated)
 	target_link_libraries(orunners_program PUBLIC s32runtime)
@@ -92,9 +134,9 @@ if(ORUNNERS_SCAFFOLD AND ORUNNERS_GENERATED)
 	endif()
 
 	add_executable(orunners_headless ports/headless/main.c)
-	target_link_libraries(orunners_headless PRIVATE orunners_program orunners_data)
+	target_link_libraries(orunners_headless PRIVATE orunners_program orunners_sound orunners_data)
 elseif(ORUNNERS_SCAFFOLD)
-	message(STATUS "No generated program yet: run tools/recompile.py to build the scaffold")
+	message(STATUS "No generated program in build/generated: no scaffold")
 endif()
 
 # Development tools built on MAME's code; never linked into the game
@@ -142,6 +184,14 @@ if(ORUNNERS_REFERENCE_TOOLS)
 		PRIVATE tools/reference/ymfm runtime/include ${CMAKE_BINARY_DIR}/generated)
 	if(MSVC)
 		target_compile_options(s32sound_reference PRIVATE /bigobj /wd4244 /wd4267 /wd4100 /wd4146 /wd4127)
+	endif()
+
+	# the game's MultiPCM against MAME's, sample for sample, over what s32ref --sound-log records
+	add_executable(pcmcheck tools/reference/sound/pcmcheck.cpp)
+	target_include_directories(pcmcheck PRIVATE tools/reference/sound runtime/include)
+	target_link_libraries(pcmcheck PRIVATE s32runtime orunners_data)
+	if(MSVC)
+		target_compile_options(pcmcheck PRIVATE /wd4244 /wd4267 /wd4100 /wd4146)
 	endif()
 
 	add_executable(s32ref

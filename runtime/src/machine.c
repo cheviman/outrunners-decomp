@@ -3,7 +3,7 @@
  *    Description: Multi 32 memory map, interrupt controller, timers, video registers and link board
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -301,7 +301,9 @@ uint64_t s32_state_hash(void)
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
 	hash = hash_bytes(s32_board.work_ram + S32_STACK_END, S32_WORK_RAM_SIZE - S32_STACK_END, hash);
 	hash = hash_bytes(s32_board.video_ram, sizeof(s32_board.video_ram), hash);
-	hash = hash_bytes(s32_board.sprite_ram, S32_TASK_STACKS, hash);
+	hash = hash_bytes(s32_board.sprite_ram, S32_SOUND_STACK_COPY, hash);
+	hash = hash_bytes(s32_board.sprite_ram + S32_SOUND_STACK_COPY + S32_SOUND_STACK_COPY_SIZE,
+		S32_TASK_STACKS - S32_SOUND_STACK_COPY - S32_SOUND_STACK_COPY_SIZE, hash);
 	hash = hash_bytes(s32_board.sprite_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
 	hash = hash_bytes(s32_board.sprite_ram + S32_STACK_END, sizeof(s32_board.sprite_ram) - S32_STACK_END, hash);

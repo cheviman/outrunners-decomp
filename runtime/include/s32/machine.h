@@ -4,7 +4,7 @@
  *                 timers, I/O
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -71,6 +71,11 @@ extern "C" {
 /* The test mode's work RAM test keeps a copy of the work RAM in the sprite RAM while it checks it, and leaves
    it there: the copy of what is left out above is left out of the sprite RAM too (the game uses those
    places of the sprite RAM for nothing else) */
+/* Its sound RAM test does the same with the sound board's RAM (0x700000-0x701FFF to the sprite RAM's
+   0x0000-0x1FFF): the copy of the Z80's stack (0xFD00-0xFDFF), which the decompiled sound program does not
+   have either (sound_board_state_hash leaves it out), is left out of the sprite RAM too */
+#define S32_SOUND_STACK_COPY      0x1d00
+#define S32_SOUND_STACK_COPY_SIZE 0x100
 
 /* Interrupt controller sources, highest priority first */
 enum

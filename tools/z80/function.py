@@ -5,13 +5,15 @@ Name:        function.py
 Description: the sound program's functions as control-flow graphs of IR blocks, with the time they take
 Version:     0.1.0
 Created:     13-10-2026
-Modified:    13-10-2026
+Modified:    21-10-2026
 Author:      Sebastian Toyos
 
 Takes the functions tools/z80/analysis.py splits the program into, lifts every instruction to IR
 (tools/z80/lift.py for data, here for control), and keeps the sound board's timing model (see
-runtime/src/sound_cpu.c): every basic block starts with Effect("z80_block", cycles), where the board
-runs what is due (the YM3438 timers, an interrupt the Z80 would take) and the block's time passes; a
+runtime/src/sound_cpu.c): every basic block starts with Effect("z80_block", cycles, fetches), where the
+board runs what is due (the YM3438 timers, an interrupt the Z80 would take), the block's time passes and its
+opcode fetches count the refresh register up (LD A,R reads it: Effect("refresh_read", k, A), k the block's
+fetches up to it); a
 condition that sends a JR, DJNZ, CALL or RET the long way adds its extra cycles on that way
 (Effect("z80_cycles")). A block ends after every call, so a callee starts when its caller's time says.
 DI and EI become Effects; EI as the last instruction of a block delays interrupts by that block start,
@@ -80,7 +82,7 @@ class Builder:
                 current = None
             if current is None:
                 current = Block(address)
-                current.statements.append(ir.Effect("z80_block", (ir.const(0, 32),)))
+                current.statements.append(ir.Effect("z80_block", (ir.const(0, 32), ir.const(0, 32))))
                 function.blocks[address] = current
             current.addresses.append(address)
             before, extra = len(current.statements), len(self.extra_blocks)
@@ -100,7 +102,8 @@ class Builder:
             if current.end is not None:
                 current = None
         for block in function.blocks.values():
-            block.statements[0] = ir.Effect("z80_block", (ir.const(self.block_cycles(body, block), 32),))
+            block.statements[0] = ir.Effect("z80_block", (ir.const(self.block_cycles(body, block), 32),
+                                                          ir.const(self.block_fetches(block), 32)))
             block.statements[0].origin = block.addresses[0]
         for block in self.extra_blocks:
             function.blocks[block.label] = block
@@ -110,6 +113,10 @@ class Builder:
     def block_cycles(self, body, block):
         """The block's time: every instruction, a conditional one the short way."""
         return sum(timing.cycles(body[address])[1] for address in block.addresses)
+
+    def block_fetches(self, block):
+        """The opcode fetches of the block's instructions (timing.fetches)."""
+        return sum(timing.fetches(self.program.mem.r8(address)) for address in block.addresses)
 
     def transfer(self, entry, target):
         """How execution gets to 'target': back to the board at the loop's top, a jump in this function, or
@@ -193,6 +200,15 @@ class Builder:
 
         if self.swapped_back(instruction, body):
             return    # EX (SP),HL twice: nothing changes, only time passes (the block counts it)
+        if mnemonic == "ld" and [operand.reg for operand in instruction.operands] == ["a", "r"]:
+            # the refresh register: the fetches up to the block's start, and the block's own up to here
+            fetched = self.block_fetches(block)
+            statements.append(ir.Effect("refresh_read", (ir.const(fetched, 32), ir.const(lift.A, 8))))
+            value = lift.reg(lift.A)
+            statements.append(ir.SetFlag("z", ir.op("eq", (value, lift.c8(0)), 1)))
+            statements.append(ir.SetFlag("s", ir.op("ne", (ir.op("and", (value, lift.c8(0x80)), 8), lift.c8(0)), 1)))
+            statements.append(ir.SetFlag("ov", ir.op("helper:interrupts_enabled", (), 1)))
+            return
         lifter = lift.Lifter(self.program.mem, prefix=f"t{address:04X}_", carry=self.carry_left(statements))
         if lift.lift_data(lifter, instruction):
             statements += lifter.statements

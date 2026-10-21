@@ -4,21 +4,22 @@
  *                 and the sound board's timing model
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    15-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    The program's memory is the board's (s32/machine.h): SOUND_RAM8/16 is the RAM the Z80 shares with the
- *    V60 (Z80 E000-FFFF), SOUND_ROM8/16 the sound ROM's first 40 KB, and a computed address goes over the
- *    Z80's bus (z80_read8 and the rest: the banked page, the RF5C68). port_in and port_out are its I/O
+ *    V70 (Z80 E000-FFFF), SOUND_ROM8/16 the sound ROM's first 40 KB, and a computed address goes over the
+ *    Z80's bus (z80_read8 and the rest: the banked page, the MultiPCM). port_in and port_out are its I/O
  *    instructions.
  *
  *    The timing model (runtime/src/sound_cpu.c): every basic block of the original starts with
- *    z80_block(cycles). There the board runs what is due by the Z80's time (the YM3438 timers) and the Z80
- *    takes an interrupt if one is pending and it lets them in; then the block's accesses happen at that
- *    time, and its cycles pass. z80_cycles() adds the extra cycles of a condition that takes the longer
- *    way. EI that ends a block lets interrupts in from the block after the next start, as the Z80 waits
- *    one instruction.
+ *    z80_block(cycles, fetches). There the board runs what is due by the Z80's time (the YM3438 timers) and
+ *    the Z80 takes an interrupt if one is pending and it lets them in; then the block's accesses happen at
+ *    that time, its cycles pass and its opcode fetches count the refresh register up. z80_cycles() adds
+ *    the extra cycles of a condition that takes the longer way. EI that ends a block lets interrupts in
+ *    from the block after the next start, as the Z80 waits one instruction. LD A,R reads the refresh
+ *    register (refresh_read): the program takes it for a random number.
  */
 #ifndef SOUND_SUPPORT_H
 #define SOUND_SUPPORT_H
@@ -54,14 +55,21 @@ uint8_t port_in(uint8_t port);
 void port_out(uint8_t port, uint8_t value);
 
 /* LDIR and LDDR: 'count' bytes (0 is 65536) from 'source' to 'destination', upward or downward; every
-   round but the last takes 21 cycles more */
+   round but the last takes 21 cycles more, and fetches its two opcode bytes again */
 void move_block(uint16_t source, uint16_t destination, uint16_t count, bool upward);
 
 /* A jump through a table to an entry the table does not have: the original would run whatever is there */
 void sound_invalid_jump(uint32_t address);    /* the default of a switch on a jump table's index */
 
-void z80_block(int cycles);
+void z80_block(int cycles, int fetches);
 void z80_cycles(int cycles);
+
+/* The refresh register (seven bits, the eighth as LD R,A left it) after the block's first 'fetches' opcode
+   fetches */
+uint8_t refresh_read(int fetches);
+
+/* IFF2: what LD A,R puts in P/V */
+bool interrupts_enabled(void);
 void interrupts_on(void);
 void interrupts_on_after_block(void);
 void interrupts_off(void);

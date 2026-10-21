@@ -22,8 +22,9 @@ Usage: python tools/check_scenarios.py [NAME ...] [--reference-only] [--native-o
   --sound         compare the sound too: the reference runs MAME's Z80 and MultiPCM and ymfm's YM3438 with
                   the game's timing model (build/sound/timing.txt, tools/decompile_sound.py), the game its
                   own sound program and chips; per frame, the samples and the sound board's memory
-                  (sound_hashes.txt against game_sound_hashes.txt). With --reference-only the reference's
-                  Z80 runs cycle by cycle
+                  (sound_hashes.txt against game_sound_hashes.txt); the reference also lists the Z80
+                  addresses it executed (sound_executed.txt). With --reference-only the reference's Z80
+                  runs cycle by cycle
   --jobs N        run N scripts at a time (half the processors by default)
   --bin DIR       the executables to run (build/bin by default): another build of the game
   --out DIR       where the runs go (build/scenarios by default)
@@ -63,7 +64,8 @@ def run_reference(script, out, video, sound=False, timing=True):
     out.mkdir(parents=True, exist_ok=True)
     extra = ["--video-hashes", str(out / "video_hashes.txt")] if video else []
     if sound:
-        extra += (["--sound-timing", str(SOUND_TIMING)] if timing else []) + ["--sound-hashes", str(out / "sound_hashes.txt")]
+        extra += (["--sound-timing", str(SOUND_TIMING)] if timing else []) + ["--sound-hashes", str(out / "sound_hashes.txt"),
+                                                                             "--sound-trace", str(out / "sound_executed.txt")]
     result = subprocess.run([str(executable("s32ref")), "--script", str(script),
                              "--trace", str(out / "executed.txt"), "--calls", str(out / "called.txt"),
                              "--hashes", str(out / "hashes.txt")] + extra,

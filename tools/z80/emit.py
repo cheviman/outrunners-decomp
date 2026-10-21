@@ -106,7 +106,9 @@ class SoundWriter(emit.FunctionWriter):
         name = statement.name
         args = statement.args
         if name == "z80_block":
-            return [f"z80_block({args[0].value});"]
+            return [f"z80_block({args[0].value}, {args[1].value});"]
+        if name == "refresh_read":
+            return [f"{self.register_set(args[1].value)} = refresh_read({args[0].value});"]
         if name == "z80_cycles":
             return [f"z80_cycles({args[0].value});"]
         if name == "interrupts_off":

@@ -3,7 +3,7 @@
  *    Description: reference Multi 32 sound board: MAME's Z80 and MultiPCM and ymfm's YM3438 on the board model
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    21-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -11,9 +11,19 @@
  *    (emu.h, dirom.h, machine/z80daisy.h, logmacro.h, wavwrite.h), so that their names keep away from the
  *    V70 core's stand-ins in the same program. ymfm is a library of its own and builds as it is.
  *
- *    The Z80 runs cycle by cycle in slices that end at the YM3438's timers (a timer set while it runs
- *    cuts its slice short), and takes interrupts as MAME's core does. Its time is its own cycle count,
- *    which gives the board's: 2.5 board cycles a Z80 cycle.
+ *    The Z80's time is its own cycle count, which gives the board's: 2.5 board cycles a Z80 cycle, rounded
+ *    down. Two ways to keep it:
+ *      - free: the Z80 runs cycle by cycle in slices that end at the YM3438's timers (a timer set while it
+ *        runs cuts its slice short), and takes interrupts as MAME's core does;
+ *      - the timing model (s32s_use_timing, the table tools/decompile_sound.py --timing writes): the rules
+ *        of runtime/src/sound_cpu.c, kept around MAME's core by its instruction hook. The time is the
+ *        model's: every block of the table adds its cycles when it starts, and a condition's longer way
+ *        its extra ones; the timers run out and interrupts are taken only where a block starts (this
+ *        code pushes the address, counts the refresh register up and jumps to 0038 itself: the core never
+ *        sees the line); every access happens at its block's start; the board stops the Z80 where the
+ *        main loop's top finds its time past the board's. The refresh register is the core's own, which
+ *        counts the opcode fetches as runtime/src/sound_cpu.c does. The game's own sound board keeps the
+ *        same rules, so the two compare sample for sample.
  */
 #include "s32sound.h"
 
@@ -28,8 +38,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <map>
+#include <set>
+#include <sstream>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -80,6 +93,38 @@ uint64_t g_slice_z80 = 0;
 int g_slice_budget = 0;
 uint64_t g_now_override = UINT64_MAX;       // while a timer fires, its own time
 
+constexpr int kInterruptCycles = 13;        // the interrupt's acknowledge, in the timing model
+constexpr uint16_t kStackStart = 0xFD00;    // the Z80's stack, FD00-FDFF (SP starts at FDFF): not in the hash
+constexpr uint16_t kStackEnd = 0xFE00;
+
+// ---- the timing model ----
+
+struct block_timing
+{
+	int cycles;
+	uint16_t last;          // the block's last instruction
+	uint8_t length;         // its length
+	int extra;              // its condition's longer way
+};
+
+struct
+{
+	bool on = false;
+	std::map<uint16_t, block_timing> blocks;
+	std::set<uint16_t> repeats;
+	uint16_t loop = 0;
+	uint16_t irq = 0;
+	uint64_t clock = 0;             // where the next block starts, Z80 cycles
+	uint64_t access = 0;            // when the current block's accesses happen
+	uint64_t until = 0;             // where the board stops the Z80 (board cycles)
+	bool stop = false;              // the hook stopped the core at the loop's top
+	bool rewind = false;            // the core fetched the loop top's opcode before it stopped
+	bool line = false;              // the board's interrupt line
+	int previous = -1;              // the instruction before this one
+	uint8_t previous_opcode = 0;
+	const block_timing *current = nullptr;
+} g_model;
+
 // ---- the Z80 ----
 
 class sound_cpu : public s32s::z80_device
@@ -108,6 +153,30 @@ public:
 		return done - m_cut;
 	}
 
+	// the timing model takes the interrupt itself, as the core's take_interrupt does in interrupt mode 1:
+	// the return address on the stack, IFF1 and IFF2 off, the refresh register counted up, on to the handler
+	void interrupt_to(uint16_t handler)
+	{
+		m_sp.w = uint16_t(m_sp.w - 1);
+		s32_z80_write(m_sp.w, m_pc.b.h);
+		m_sp.w = uint16_t(m_sp.w - 1);
+		s32_z80_write(m_sp.w, m_pc.b.l);
+		m_pc.w = handler;
+		m_iff1 = m_iff2 = false;
+		m_r++;
+	}
+
+	bool interrupts_on() const { return m_iff1; }
+
+	// back to the start of the instruction whose opcode the core read as the slice ended: the read's
+	// step ran out of cycles before the fetch counted (no PC++, no refresh count), so only the rest of
+	// the instruction is dropped
+	void restart_at(uint16_t address)
+	{
+		m_pc.w = address;
+		m_ref = 0xffff00;
+	}
+
 private:
 	int m_cut = 0;
 };
@@ -128,6 +197,8 @@ uint64_t current_time()
 {
 	if (g_now_override != UINT64_MAX)
 		return g_now_override;
+	if (g_model.on)
+		return board_time(g_running ? g_model.access : g_model.clock);
 	return g_running ? running_time() : g_time;
 }
 
@@ -212,8 +283,8 @@ public:
 			return;
 		}
 		m_deadline[number] = current_time() + fm_span(uint64_t(clocks));
-		// a running Z80 stops by then, for the interrupt to come on time
-		if (g_running && g_now_override == UINT64_MAX
+		// free timing: a running Z80 stops by then, for the interrupt to come on time
+		if (!g_model.on && g_running && g_now_override == UINT64_MAX
 			&& m_deadline[number] < board_time(g_slice_z80 + uint64_t(g_slice_budget)))
 		{
 			const uint64_t at = g_slice_z80 + uint64_t(g_z80->cycles_done());
@@ -286,24 +357,131 @@ void fm_write(int offset, uint8_t data) { g_fm->write(offset, data); }
 uint8_t pcm_read(int offset) { (void)offset; return g_pcm->read(); }
 void pcm_write(int offset, uint8_t data) { log_write("pcm", offset, data); g_pcm->write(s32s::offs_t(offset), data); }
 
+// ---- the timing model's hook ----
+
+// a block starts at 'pc': the timers due, an interrupt if the Z80 takes one, then the block's time
+void start_block(uint16_t pc)
+{
+	for (;;)
+	{
+		g_fm->fire(board_time(g_model.clock));
+		if (!g_z80->interrupts_on() || g_model.previous_opcode == 0xFB || !g_model.line)
+			break;
+		// the interrupt: its cycles, then the handler's first block starts
+		g_z80->interrupt_to(g_model.irq);
+		pc = g_model.irq;
+		g_model.clock += kInterruptCycles;
+		g_model.previous_opcode = 0;
+	}
+	const auto found = g_model.blocks.find(pc);
+	if (found == g_model.blocks.end())
+		throw std::runtime_error("the Z80 starts a block the timing model does not have");
+	g_model.current = &found->second;
+	g_model.access = g_model.clock;
+	g_model.clock += uint64_t(found->second.cycles);
+}
+
+void on_instruction(uint32_t address)
+{
+	const uint16_t pc = uint16_t(address);
+	g_executed[pc >> 3] |= uint8_t(1u << (pc & 7));
+	if (!g_model.on)
+		return;
+	const int previous = g_model.previous;
+	g_model.previous = pc;
+	if (previous == pc && g_model.repeats.count(pc))
+	{
+		g_model.clock += 21;    // another round of a block move
+		return;
+	}
+	if (g_model.blocks.count(pc))
+	{
+		// the way the last block left: its condition's longer way adds its extra cycles
+		const block_timing *last = g_model.current;
+		if (last != nullptr && previous == last->last && pc != uint16_t(last->last + last->length))
+			g_model.clock += uint64_t(last->extra);
+		// (coming back there from an interrupt is not coming to the top: the C took the interrupt where
+		// the loop's first block starts)
+		const bool from_interrupt = previous >= 0 && s32_z80_read(uint16_t(previous)) == 0xED
+			&& s32_z80_read(uint16_t(previous + 1)) == 0x4D;
+		if (pc == g_model.loop && board_time(g_model.clock) >= g_model.until && !from_interrupt)
+		{
+			// the main loop's top with the board's time reached: the board takes over, and when the Z80
+			// goes on, the loop's top starts its block (its way in is counted already)
+			g_model.stop = true;
+			g_model.rewind = true;
+			g_model.previous = previous;
+			g_model.current = nullptr;
+			g_slice_budget -= g_z80->cut_slice(0);
+			return;
+		}
+		start_block(pc);
+	}
+	g_model.previous_opcode = s32_z80_read(pc);
+}
+
 // ---- running ----
 
 void on_sound_irq(bool asserted, uint8_t vector)
 {
 	g_vector = vector;
-	g_z80->set_input_line(s32s::INPUT_LINE_IRQ0, asserted ? s32s::ASSERT_LINE : s32s::CLEAR_LINE);
+	if (g_model.on)
+		g_model.line = asserted;
+	else
+		g_z80->set_input_line(s32s::INPUT_LINE_IRQ0, asserted ? s32s::ASSERT_LINE : s32s::CLEAR_LINE);
 }
 
 void on_sound_reset(bool held)
 {
 	if (held && !g_z80_held)
+	{
 		g_z80->reset();
+		g_model.rewind = false;
+		g_model.previous = -1;
+		g_model.previous_opcode = 0;
+		g_model.current = nullptr;
+	}
 	g_z80_held = held;
+}
+
+// the timing model: the Z80 up to the main loop's top past 'until'
+void run_model(uint64_t until)
+{
+	if (g_z80_held)
+	{
+		g_fm->fire(until);
+		g_model.clock = std::max(g_model.clock, z80_time(until));
+		return;
+	}
+	if (g_model.rewind)
+	{
+		if (board_time(g_model.clock) >= until)
+			return;
+		g_z80->restart_at(g_model.loop);
+		g_model.rewind = false;
+	}
+	g_model.until = until;
+	g_model.stop = false;
+	while (!g_model.stop)
+	{
+		g_slice_z80 = g_model.clock;
+		g_slice_budget = 1 << 20;
+		g_running = true;
+		const int done = g_z80->run_slice(g_slice_budget);
+		g_running = false;
+		g_z80_cycles += uint64_t(done);
+	}
 }
 
 // the Z80 and the YM3438 timers, from now up to 'until'
 void on_time_passes(uint64_t until)
 {
+	if (g_model.on)
+	{
+		run_model(until);
+		g_time = std::max(g_time, until);
+		return;
+	}
 	while (g_time < until)
 	{
 		const uint64_t stop = std::min(until, g_fm->next_timer());
@@ -377,10 +555,7 @@ extern "C" void s32s_attach(void)
 		s32_z80_out(uint8_t(port), data);
 	};
 	g_z80->irq_vector = []() { return int(g_vector); };
-	g_z80->instruction_hook = [](uint32_t address)
-	{
-		g_executed[(address & 0xffff) >> 3] |= uint8_t(1u << (address & 7));
-	};
+	g_z80->instruction_hook = on_instruction;
 	g_z80->start();
 	g_z80->reset();
 	g_fm = std::make_unique<fm_chip>();
@@ -397,6 +572,39 @@ extern "C" void s32s_attach(void)
 	s32_board.time_passes = on_time_passes;
 	g_time = s32_board.cycles;
 	g_z80_time = z80_time(g_time);
+	g_model.clock = z80_time(g_time);
+}
+
+extern "C" bool s32s_use_timing(const char *path)
+{
+	std::ifstream file(path);
+	if (!file)
+		return false;
+	std::string line;
+	while (std::getline(file, line))
+	{
+		std::istringstream words(line);
+		std::string kind;
+		words >> kind;
+		unsigned address = 0;
+		if (kind == "loop")
+			words >> std::hex >> address, g_model.loop = uint16_t(address);
+		else if (kind == "irq")
+			words >> std::hex >> address, g_model.irq = uint16_t(address);
+		else if (kind == "repeat")
+			words >> std::hex >> address, g_model.repeats.insert(uint16_t(address));
+		else if (kind == "block")
+		{
+			block_timing block{};
+			unsigned last = 0, length = 0;
+			words >> std::hex >> address >> std::dec >> block.cycles >> std::hex >> last >> std::dec >> length >> block.extra;
+			block.last = uint16_t(last);
+			block.length = uint8_t(length);
+			g_model.blocks[uint16_t(address)] = block;
+		}
+	}
+	g_model.on = !g_model.blocks.empty();
+	return g_model.on;
 }
 
 extern "C" void s32s_end_frame(uint64_t time)
@@ -436,7 +644,9 @@ extern "C" uint64_t s32s_frame_samples_hash(void)
 
 extern "C" uint64_t s32s_state_hash(void)
 {
-	return hash_bytes(s32_board.shared_ram, sizeof(s32_board.shared_ram), 0xcbf29ce484222325ull);
+	uint64_t hash = 0xcbf29ce484222325ull;
+	hash = hash_bytes(s32_board.shared_ram, kStackStart - 0xE000, hash);
+	return hash_bytes(s32_board.shared_ram + (kStackEnd - 0xE000), 0x10000 - kStackEnd, hash);
 }
 
 extern "C" const int16_t *s32s_frame_mix(size_t *frames)

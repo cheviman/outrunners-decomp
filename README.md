@@ -47,7 +47,8 @@ the tools verify it, extract the assets and build your own executable.
 ## Getting started
 
 Requirements: Python 3.10 or newer, CMake 3.20 or newer and a C11 / C++17 compiler (Visual Studio Build
-Tools on Windows).
+Tools on Windows). The window port needs SDL2 2.32: on Windows its development package for Visual C++
+(`SDL2-devel-2.32.10-VC.zip`) unpacked in `build/downloads/sdl2/`, elsewhere the system's.
 
 1. Put your MAME `orunners.zip`, or the files inside it, in `rom/`, and check it:
 
@@ -108,7 +109,29 @@ Tools on Windows).
    python tools/check_scenarios.py --native-only
    ```
 
-   `python tools/decompile.py` writes `src/` again, from the ROM and `symbols.txt`.
+   `python tools/decompile.py` writes `src/` again, from the ROM and `symbols.txt`, and
+   `python tools/decompile_sound.py` the sound program's C (`src/sound/`), from the ROM and
+   `sound_symbols.txt`, with the timing model the reference runs the sound program on
+   (`build/sound/timing.txt`). With the picture and the sound:
+
+   ```bash
+   python tools/check_scenarios.py --video --sound
+   ```
+
+   (this runs the reference again: with `--sound` its Z80 keeps the game's time, block by block).
+
+6. Play it in a window:
+
+   ```bash
+   build/bin/orunners
+   ```
+
+   The two screens side by side, the cabinet's two seats. Arrows: the wheel, gas and brake; Q and A:
+   shift up and down; space: the DJ, `[` and `]`: the songs; 5 and 6: coins; 1 and 2: starts; 9: service;
+   F2: test; F11: full screen; Escape: quit. A game controller per player: the left stick is the wheel,
+   the triggers the pedals, the shoulders the gears. `--script FILE` plays a control script instead
+   (`--fast` without waiting for the frames' time), and `--hashes`, `--video-hashes` and
+   `--sound-hashes` write the same hashes as the reference.
 
 ## Tools
 

@@ -3,7 +3,7 @@ Name:        decompile_sound.py
 Description: decompiles the Z80 sound program into readable C, one C function per original function
 Version:     0.1.0
 Created:     13-10-2026
-Modified:    16-10-2026
+Modified:    21-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/decompile_sound.py [--check] [--out DIR] [--timing FILE]
@@ -16,7 +16,7 @@ Usage: python tools/decompile_sound.py [--check] [--out DIR] [--timing FILE]
   --variables FILE  lists every local variable with the instructions that write it, which is what
               sound_symbols.txt's "local" lines name them by (decompile.py --variables)
 
-The sound program (epr-15785, read from the ROM set in rom/ by tools/orunners_rom.py) goes
+The sound program (epr-15550, read from the ROM set in rom/ by tools/orunners_rom.py) goes
 through the decompiler the V60 program goes through (tools/decompiler/), with the Z80's profile
 (decompiler/cpu.py): tools/z80/analysis.py splits it into functions with sound_symbols.txt,
 tools/z80/function.py lifts them to IR with the sound board's timing model, and the passes work out
@@ -198,7 +198,7 @@ def file_header(name, description):
             f" *    Modified:    {time.strftime('%d-%m-%Y')}\n"
             " *    Author:      Sebastian Toyos\n"
             " *\n"
-            " *    SegaSonic The Hedgehog (arcade, Sega System 32): the Z80 sound program decompiled into C by\n"
+            " *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by\n"
             " *    tools/decompile_sound.py, with the names of sound_symbols.txt.\n"
             " */\n")
 
@@ -361,7 +361,7 @@ def write_c(program, out_dir, variables_path=None):
     prototypes = grouped_prototypes(files, emitter.prototype)
     (out_dir / "sound.h").write_text(
         file_header("sound.h", "the sound program's ports, variables, tables, structures and functions")
-        + "#ifndef SONIC_SOUND_H\n#define SONIC_SOUND_H\n\n#include \"sound/support.h\"\n\n"
+        + "#ifndef ORUNNERS_SOUND_H\n#define ORUNNERS_SOUND_H\n\n#include \"sound/support.h\"\n\n"
         + "/* the board's I/O ports the program uses */\n" + "\n".join(emitter.port_declarations()) + "\n\n"
         + "\n".join(named.declarations()) + "\n\n/* data in the program ROM sound_symbols.txt labels */\n"
         + "\n".join(f"#define {name}_ADDRESS 0x{address:04X}u" for address, name in sorted(emitter.data_labels.items()))
@@ -385,7 +385,7 @@ def write_reports(program, built, flow, names, out_dir):
     labels = {address: symbol.name for address, symbol in program.symbols.items()
               if symbol.kind in ("func", "code", "loop", "data", "jumps")}
     labels.update(names)
-    lines = ["; the sound program (epr-15785), function by function: tools/decompile_sound.py"]
+    lines = ["; the sound program (epr-15550), function by function: tools/decompile_sound.py"]
     for entry in sorted(program.bodies):
         lines += ["", f"; ---- {names[entry]} ({entry:04X})"]
         for address in sorted(program.bodies[entry]):

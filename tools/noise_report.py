@@ -4,17 +4,21 @@ Description: counts what is left of the CPU and of the decompiler in the C (src/
              with the counts last saved
 Version:     0.1.0
 Created:     17-10-2026
-Modified:    17-10-2026
+Modified:    21-10-2026
 Author:      Sebastian Toyos
 
 Every kind of leftover the C can still have, counted in one pass over the generated C, so a round of work
 shows what it took away and nothing comes back unseen: gotos, functions and locals named after an address
 or a register, fields without a name, memory reached through computed addresses, results copied back at
-every return, jumps out of a table, ROM addresses printed as numbers, functions without a comment. The
+every return, jumps out of a table, ROM addresses printed as numbers, functions without a comment, data
+read through its ROM address instead of a table or structure with a name, tables the C names over the ROM
+(src/ram.h), functions the board puts its own in place of. The
 counts are compared with tools/noise_baseline.txt; a count that went up makes the run fail.
 
-Usage: python tools/noise_report.py [--save]
+Usage: python tools/noise_report.py [--save] [--src DIR] [--files]
   --save   write the counts as the new baseline (after a round that took something away)
+  --src    count another copy of the C (tools/decompile.py --out DIR) against the same baseline
+  --files  also the data read through its ROM address, file by file
 """
 import re
 import sys
@@ -29,7 +33,7 @@ FUNCTION = re.compile(r"^(?:static )?\w[\w ]*?\b(\w+)\((.*)\)$")
 KINDS = {
     "goto": ("goto statements", re.compile(r"\bgoto\b")),
     "control_variables": ("functions with bool control variables", None),
-    "sub_functions": ("functions named after their address (sub_XXXXXX)", None),
+    "sub_functions": ("functions named after their address (sub_XXXXXX, the sound program's sound_XXXX)", None),
     "unk_names": ("memory named after its address (unk_XXXXXX)", re.compile(r"\bunk_[0-9A-F]{4,6}\b")),
     "register_names": ("parameters and locals named after a register (r1, p_r4, r0_2)", None),
     "var_fields": ("object fields without a name (var_XX)", re.compile(r"\bvar_[0-9A-F]{2}\b")),
@@ -41,6 +45,10 @@ KINDS = {
     "unknown_code": ("calls to code the analysis does not know", re.compile(r"\bunknown_code\(")),
     "raw_rom_addresses": ("ROM addresses printed as numbers (build/decompile/unnamed_addresses.txt)", None),
     "uncommented": ("functions without a comment above them", None),
+    "rom_reads": ("data read through its ROM address (ROM8/16/32, rom(), SOUND_ROM8/16, sound_rom_at)",
+                  re.compile(r"\b(?:ROM(?:8|16|32)S?|SOUND_ROM(?:8|16)|rom|sound_rom_at)\(")),
+    "rom_table_reads": ("reads of a table the C names over the ROM (src/ram.h: rom(...))", None),
+    "board_replaced": ("functions the board puts its own in place of (BOARD_ORIGINAL, runtime/replaced.txt)", None),
 }
 INFORMATION = {
     "functions": "functions",
@@ -65,8 +73,10 @@ def count(paths):
                 counts["functions"] += 1
                 if not lines[index - 1].endswith("*/"):
                     counts["uncommented"] += 1
-                if re.fullmatch(r"sub_[0-9A-F]{6}", found.group(1)):
+                if re.fullmatch(r"sub_[0-9A-F]{6}|sound_[0-9A-F]{4}", found.group(1)):
                     counts["sub_functions"] += 1
+                if found.group(1) == "BOARD_ORIGINAL":
+                    counts["board_replaced"] += 1
                 counts["register_names"] += len(re.findall(r"(?<!\w)(?:p_)?r\d+(?:_\d+)?(?=[,)])", found.group(2)))
                 continue
             if not in_function:
@@ -84,8 +94,21 @@ def count(paths):
 
 
 def main():
-    sources = sorted(path for path in (ROOT / "src").rglob("*.c"))
+    arguments = sys.argv[1:]
+    source = ROOT / "src"
+    if "--src" in arguments:
+        source = Path(arguments[arguments.index("--src") + 1]).resolve()
+    sources = sorted(path for path in source.rglob("*.c"))
     counts = count(sources)
+    # the tables src/ram.h defines over the ROM ("#define NAME ((const uint16_t *)rom(NAME_ADDRESS))"): every
+    # use of one reads the ROM, which the game has to read from its assets instead
+    header = source / "ram.h"
+    tables = re.findall(r"^#define (\w+) \(\(const \w+ \*\)rom\(", header.read_text(encoding="ascii"), re.M) \
+        if header.exists() else []
+    if tables:
+        use = re.compile(r"\b(?:" + "|".join(tables) + r")\b")
+        counts["rom_table_reads"] = sum(len(use.findall(path.read_text(encoding="ascii", errors="replace")))
+                                        for path in sources)
     if UNNAMED_ADDRESSES.exists():
         counts["raw_rom_addresses"] = sum(1 for line in UNNAMED_ADDRESSES.read_text().splitlines()
                                           if line and not line.startswith("#"))
@@ -103,7 +126,13 @@ def main():
         print(f"{kind:20s} {counts[kind]:7d} {'' if before is None else before:>7} {change:>6s}  {what}")
         if kind in KINDS and before is not None and counts[kind] > before:
             rose.append(kind)
-    if "--save" in sys.argv[1:]:
+    if "--files" in arguments:
+        print()
+        for path in sources:
+            found = count([path])["rom_reads"]
+            if found:
+                print(f"{found:5d}  {path.relative_to(source).as_posix()}")
+    if "--save" in arguments and source == ROOT / "src":
         BASELINE.write_text("# KIND COUNT: tools/noise_report.py --save writes it\n" +
                             "".join(f"{kind} {value}\n" for kind, value in counts.items()), encoding="ascii")
         print(f"saved in {BASELINE.relative_to(ROOT)}")

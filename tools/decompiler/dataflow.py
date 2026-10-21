@@ -360,7 +360,7 @@ class Program:
             if value and key in self.functions:
                 slots.setdefault(slot, set()).add(key)
         # an entry of a table of code addresses stored there ("mov.w 9EBC[PC](R3), 4[R21]", 0096C4)
-        for store, _, slot in self.analysis.table_writes:
+        for store, _, slot in getattr(self.analysis, "table_writes", ()):
             for value in self.analysis.pointer_tables.get(store, ()):
                 key = value & 0xFFFFFF
                 if value and key in self.functions:
@@ -368,8 +368,8 @@ class Program:
         handlers = slots.setdefault(HANDLER_SLOTS[0], set())
         for slot in HANDLER_SLOTS[1:]:
             handlers |= slots.get(slot, set())
-        called = {symbol.calls for symbol in self.analysis.symbols.values() if symbol.calls}
-        described = set().union(*[targets for name, targets in self.analysis.table_targets.items()
+        called = {getattr(symbol, "calls", None) for symbol in getattr(self.analysis, "symbols", {}).values()} - {None}
+        described = set().union(*[targets for name, targets in getattr(self.analysis, "table_targets", {}).items()
                                   if name not in called])
         handlers |= {target for target in described if target in self.functions}
         return slots
@@ -538,6 +538,10 @@ class Program:
             # the index of the byte found goes to R27, its address to R28
             pair = register_parts(27, FULL) | register_parts(28, FULL)
             return set(), pair, pair
+        if name == "refresh_read":
+            # LD A,R: its register
+            target = register_parts(statement.args[1].value, FULL)
+            return set(), target, target
         if name == "search_bits_up":
             # the count goes to its register; R28 only changes when the length is not 0
             count = register_parts(statement.args[4].value, FULL)
