@@ -36,7 +36,13 @@ the tools verify it, extract the assets and build your own executable.
       matches the reference frame by frame in all 16 scenarios. The game runs two tasks, each on a stack
       of its own, and its VBLANK handler swaps them; their C runs on native stacks of their own
       (`runtime/src/tasks.c`)
-- [ ] The decompiler, the game's own video and sound, assets, a port
+- [x] Decompiler, first pass (`tools/decompile.py`): the program decompiled into C, in `src/`: 620 functions
+      with no goto, which the game's runtime (`runtime/src/game.c`) runs a frame at a time.
+      `orunners_game_headless` matches the reference frame by frame in all 16 scenarios. The VBLANK handler
+      asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
+      says so (`left_caller`). Most names are still addresses, and some of SegaSonic's (`GAME_VARIABLES`,
+      `PLAYER_BLOCK`) stand where OutRunners' will go
+- [ ] Names, types and structures for the C (`symbols.txt`), the game's own video and sound, assets, a port
 
 ## Getting started
 
@@ -95,13 +101,24 @@ Tools on Windows).
 
    The translation goes to `build/generated/` and stays out of the repository: it is the game's code.
 
+5. The decompiled program is in `src/`, and the build makes `orunners_game_headless` from it. Compare it
+   with the reference (the first command of step 4 writes the reference's results):
+
+   ```bash
+   python tools/check_scenarios.py --native-only
+   ```
+
+   `python tools/decompile.py` writes `src/` again, from the ROM and `symbols.txt`.
+
 ## Tools
 
 `tools/` starts as a copy of segasonic-decomp's tools at commit `c329452`: the disassemblers and lifters
 of the V60 (which decode the V70's code as they are) and the Z80, the decompiler, the checks, and the
-reference tools built on MAME's cores. They still describe SegaSonic's board and game (`sonic_rom.py`, the
-decompiler's settings) and are being adapted to the Multi 32 and to OutRunners. SegaSonic's own data
-formats and stage scripts were left out.
+reference tools built on MAME's cores. They are adapted to the Multi 32 and to OutRunners as each step
+needs them: `orunners_rom.py` replaced `sonic_rom.py`, and the decompiler's settings (the registers the
+program shares, R24 as the base of its variables, the object handler's field) are OutRunners'. Some of
+SegaSonic's names stay in them until `symbols.txt` gives OutRunners' own. SegaSonic's own data formats and
+stage scripts were left out.
 
 ## Legal
 

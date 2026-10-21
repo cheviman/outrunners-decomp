@@ -4,7 +4,7 @@ Description: finds registers a function saves on the stack and puts back before 
              removes the saving and the putting back
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 A register is preserved when, on every path to every return, it holds again the value it had when the
@@ -60,7 +60,7 @@ def writes_register(statement, register, call_writes):
     if isinstance(statement, ir.Effect) and statement.name in ("divx", "divux"):
         target = statement.args[1]
         return isinstance(target, ir.Const) and register in (target.value, target.value + 1)
-    if isinstance(statement, ir.Effect) and statement.name in ("move_string", "move_bits_down", "move_bits_up"):
+    if isinstance(statement, ir.Effect) and statement.name in ("move_string", "move_bits_down", "move_bits_up", "search_bytes"):
         return register in (27, 28)
     if isinstance(statement, ir.Effect) and statement.name == "search_bits_up":
         return register in (statement.args[4].value, 28)
@@ -81,11 +81,17 @@ def run(block, state, register, call_writes):
         if isinstance(statement, ir.SetTemp):
             temps[statement.temp.name] = statement
         if isinstance(statement, ir.SetStack):
-            value = statement.value
+            value, feeder = statement.value, None
+            if isinstance(value, ir.Temp) and value.name in temps:
+                # "push R0" reads the register into a temporary first (OutRunners' interrupt handlers)
+                feeder = temps[value.name]
+                value = feeder.value
             if isinstance(value, ir.Reg) and value.index == register and intact and statement.bits == value.bits:
                 slots.add(statement.offset)
                 found["saves"].add(id(statement))
                 found["saving_slots"].add(statement.offset)
+                if feeder is not None:
+                    found["feeders"].add(id(feeder))
                 continue
             end = statement.offset + statement.bits // 8
             slots -= {offset for offset in slots if offset < end and statement.offset < offset + size}
@@ -196,7 +202,7 @@ def trace(function, register, call_writes, is_context=False):
                 feeder_names.add(statement.temp.name)
     for block in blocks.values():
         for statement in block.statements + [block.end]:
-            if id(statement) in restores or id(statement) in feeders:
+            if id(statement) in restores or id(statement) in feeders or id(statement) in saves:
                 continue
             for expression in ir.statement_expressions(statement):
                 for node in ir.walk(expression):

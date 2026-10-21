@@ -3,7 +3,7 @@ Name:        dataflow.py
 Description: what each function reads, writes and hands back in registers and flags, across the program
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Variables are the parts of the V60 registers (("r", n, part): part 0 is bits 0-7, part 1 bits 8-15,
@@ -39,6 +39,9 @@ from . import cpu
 
 PARTS = ((0, 0x000000FF), (1, 0x0000FF00), (2, 0xFFFF0000))
 FULL = 0xFFFFFFFF
+# the field of an object that holds the handler the object loop calls (OutRunners: "jsr [4[R20]]", 011CD2),
+# then fields holding handlers the object later moves there (SegaSonic: 1C, and 9C)
+HANDLER_SLOTS = (0x4,)
 ZERO_MASKS = (0xFF, 0xFFFF, FULL)                 # what a test of R0 looks at: byte, halfword, word
 
 
@@ -348,16 +351,27 @@ class Program:
 
     def code_pointer_slots(self):
         """For each memory slot calls read their target from (by displacement): the functions the program
-        stores there. Object handlers go to 1C; 9C holds the next one, which the object later moves to 1C;
-        the tables symbols.txt describes hold handlers too. A stored 0 is no handler."""
+        stores there. Object handlers go to HANDLER_SLOTS[0], and the tables symbols.txt describes hold
+        handlers too, but for the ones whose code a computed call reaches (calls=, the timeline's). A stored
+        0 is no handler."""
         slots = {}
         for _, value, slot in self.analysis.pointer_writes:
             key = value & 0xFFFFFF
             if value and key in self.functions:
                 slots.setdefault(slot, set()).add(key)
-        handlers = slots.setdefault(0x1C, set())
-        handlers |= slots.get(0x9C, set())
-        handlers |= {target for target in self.analysis.described_targets if target in self.functions}
+        # an entry of a table of code addresses stored there ("mov.w 9EBC[PC](R3), 4[R21]", 0096C4)
+        for store, _, slot in self.analysis.table_writes:
+            for value in self.analysis.pointer_tables.get(store, ()):
+                key = value & 0xFFFFFF
+                if value and key in self.functions:
+                    slots.setdefault(slot, set()).add(key)
+        handlers = slots.setdefault(HANDLER_SLOTS[0], set())
+        for slot in HANDLER_SLOTS[1:]:
+            handlers |= slots.get(slot, set())
+        called = {symbol.calls for symbol in self.analysis.symbols.values() if symbol.calls}
+        described = set().union(*[targets for name, targets in self.analysis.table_targets.items()
+                                  if name not in called])
+        handlers |= {target for target in described if target in self.functions}
         return slots
 
     # ---- calls ----
@@ -520,6 +534,10 @@ class Program:
         if name in ("move_bits_down", "move_bits_up"):
             pair = register_parts(27, FULL) | register_parts(28, FULL)
             return set(), pair, set()
+        if name == "search_bytes":
+            # the index of the byte found goes to R27, its address to R28
+            pair = register_parts(27, FULL) | register_parts(28, FULL)
+            return set(), pair, pair
         if name == "search_bits_up":
             # the count goes to its register; R28 only changes when the length is not 0
             count = register_parts(statement.args[4].value, FULL)

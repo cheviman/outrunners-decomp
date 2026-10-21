@@ -4,7 +4,7 @@ Description: follows which bits of each variable are known to be zero, and simpl
              pointless: masks that clear nothing, casts that cut nothing
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 "mov.b [R18], R0" loads a byte into R0: in C, r0 = mem_read8(...), and bits 8-31 of r0 are zero from
@@ -164,7 +164,7 @@ class KnownBits:
             for index in self.context:
                 state[index] = 0
         elif isinstance(statement, ir.Effect):
-            for index in (27, 28) if statement.name in ("move_string", "move_bits_down", "move_bits_up") else ():
+            for index in (27, 28) if statement.name in ("move_string", "move_bits_down", "move_bits_up", "search_bytes") else ():
                 state[index] = 0
             if statement.name == "search_bits_up":
                 state[statement.args[4].value] = 0

@@ -4,7 +4,7 @@
  *                 timers, I/O
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -60,10 +60,17 @@ extern "C" {
 #define S32_SOUND_ROM_SIZE   0x80000      /* the Z80 program: 0x0000-0x9FFF, then 8 KB pages at 0xA000 */
 #define S32_PCM_ROM_SIZE     0x400000     /* the MultiPCM's samples */
 
-/* Work RAM left out of state comparisons: the V70's stack, which a decompiled program does not have.
-   The program starts it at 0x21FC00 */
+/* Work RAM left out of state comparisons: the V70's stacks, which a decompiled program does not have.
+   Boot starts the first task's at 0x21F400; the second task's goes down from 0x21F800 and its interrupt
+   frames from 0x220000; where each task's stack pointers wait while the other runs (0x20E000-0x20E007,
+   0[R24] and 4[R24]) */
 #define S32_STACK_START      0x1f000
-#define S32_STACK_END        0x1fc00
+#define S32_STACK_END        0x20000
+#define S32_TASK_STACKS      0xe000
+#define S32_TASK_STACKS_SIZE 8
+/* The test mode's work RAM test keeps a copy of the work RAM in the sprite RAM while it checks it, and leaves
+   it there: the copy of what is left out above is left out of the sprite RAM too (the game uses those
+   places of the sprite RAM for nothing else) */
 
 /* Interrupt controller sources, highest priority first */
 enum

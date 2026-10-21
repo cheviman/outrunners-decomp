@@ -3,7 +3,7 @@ Name:        cpu.py
 Description: what the decompiler's passes need to know about the processor whose code they work on
 Version:     0.1.0
 Created:     13-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 The passes were written for the V60 and work on any code lifted to the same IR: a processor is its
@@ -34,17 +34,18 @@ class Profile:
 
 V60 = Profile(
     name="v60",
-    registers=tuple(range(31)) + (32,),    # 32: SP where the stack stays in memory (stack.MEMORY_SP)
+    registers=tuple(range(31)) + (32, 33),    # 32: SP where the stack stays in memory (stack.MEMORY_SP);
+                                              # 33: whether a call returned for its caller too (stack.LEFT_CALLER)
     sp=31,
     address_bits=32,
     flags=("z", "s", "ov", "cy"),
     return_address_bytes=4,
     interrupt_effects=("frame_wait", "take_interrupts"),
     result_register=0,
-    register_bits={index: 32 for index in tuple(range(31)) + (32,)},
-    register_names={29: "ap", 30: "fp"},
+    register_bits={index: 32 for index in tuple(range(31)) + (32, 33)},
+    register_names={29: "ap", 30: "fp", 33: "left_caller"},
     flag_names={"z": "zero", "s": "negative", "ov": "overflow", "cy": "carry"},
-    variable_names={},
+    variable_names={33: "left_caller"},
     invalid_jump="invalid_jump",
 )
 

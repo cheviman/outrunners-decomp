@@ -3,7 +3,7 @@ Name:        gotos.py
 Description: takes out of structure.py's tree the gotos it leaves, with control variables
 Version:     0.1.0
 Created:     16-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 What the structurer cannot write as if, loops, switch, break and continue (a loop entered at two places,
@@ -20,8 +20,9 @@ its label: the label clears it.
   its list runs when the variable is clear ("if (!found) { ... }"), a loop or a switch is left with break,
   and after the statement the goto stands again ("if (found) goto L;");
 - a goto goes into the statement its label is in: the if takes "found ||" in its condition (a loop
-  "while (found || ...)"), and the goto, at the start of the branch, goes on moving; when the label comes
-  before the goto, a loop around the two takes the goto back to before the label's statement;
+  "while (found || ...)", a switch "switch (found ? CASE : ...)" with the label's case), and the goto, at
+  the start of the branch, goes on moving; when the label comes before the goto, a loop around the two
+  takes the goto back to before the label's statement;
 - a goto next to its label: a jump forward is an if around what it skips, a jump back a do-while.
 
 Then what nothing needs goes: a setting nothing reads before the next one (the clearing at a label the code
@@ -129,7 +130,8 @@ def read_names(expression):
 
 def reads(node, name):
     """True if the condition or value of 'node' itself (not of the nodes inside it) reads the variable."""
-    value = node.condition if isinstance(node, (If, Loop)) else node.value if isinstance(node, Mark) else None
+    value = node.condition if isinstance(node, (If, Loop)) else node.value if isinstance(node, (Mark, Switch)) \
+        else None
     return name in read_names(value)
 
 
@@ -293,7 +295,10 @@ def into(nodes, index, label_path, depth, goto, name):
         if statement.kind == "while":
             statement.condition = logical("lor", control(name), statement.condition)
     else:
-        raise GotoError("a goto into a switch")
+        # the switch goes to the label's case while the variable is set
+        values = next(case_values for case_values, body in statement.cases if body is branch)
+        bits = statement.value.bits
+        statement.value = ir.op("select", (control(name), ir.const(values[0], bits), statement.value), bits)
     branch.insert(0, goto)
 
 
@@ -423,7 +428,7 @@ def live_node(node, after, leave, again, notes):
         for _, body in reversed(node.cases):
             following = live_in(body, following, after, again, notes)    # (a case runs on into the next)
             live |= following
-        return live
+        return live | read_names(node.value)
     if isinstance(node, End):
         return frozenset()
     if isinstance(node, Break):
@@ -479,6 +484,8 @@ def replace_reads(nodes, name):
     for node in nodes:
         if isinstance(node, (If, Loop)) and node.condition is not None:
             node.condition = substitute(node.condition, name)
+        elif isinstance(node, Switch):
+            node.value = substitute(node.value, name)
         for inner in children(node):
             replace_reads(inner, name)
 
@@ -499,6 +506,8 @@ def substitute(expression, name, value=TRUE):
             if len(rest) == 1:
                 return rest[0]
             return ir.op(expression.name, tuple(rest), expression.bits)
+        if expression.name == "select" and args[0] in (TRUE, FALSE):
+            return args[1] if args[0] == TRUE else args[2]
         if expression.name in ("eq", "ne") and args[1] == FALSE and args[0] in (TRUE, FALSE):
             return (TRUE if args[0] == FALSE else FALSE) if expression.name == "eq" else args[0]
         return ir.op(expression.name, args, expression.bits)

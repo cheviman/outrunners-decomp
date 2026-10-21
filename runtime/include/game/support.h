@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    15-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -50,7 +50,7 @@ static inline uint8_t *ram(uint32_t address)
 {
 	if ((address & 0xf00000) != 0x200000)
 		return ram_outside(address);
-	return &s32_board.work_ram[address & 0xffff];
+	return &s32_board.work_ram[address & 0x1ffff];
 }
 
 #define RAM8(address)   (*(uint8_t *)ram(address))
@@ -161,11 +161,20 @@ static inline uint32_t byte_swap32(uint32_t value) { return v60_byte_swap(value)
 /* LDPR: the privileged registers (the system base register says where the interrupt vectors are) */
 void load_privileged(uint32_t number, uint32_t value);
 
-/* The frame loop: while the program waits for a frame, the board runs its next event; then the
-   program takes the interrupts that event raised; when the wait is over, a frame is done */
-void frame_wait(uint32_t frames_to_wait);
+/* The frame loop: while the program waits for a frame (polling 'frame_ready', which an interrupt sets), the
+   board runs its next event; then the program takes the interrupts that event raised; when the wait is
+   over, a frame is done */
+void frame_wait(uint32_t frame_ready);
 void take_interrupts(void);
 void frame_end(void);
+
+/* The game's two tasks: the VBLANK handler asks for the other one (03F5FC), and the runtime takes it up
+   when the handler is done, as the V70 returns into it. Each task keeps its own copy of the registers the
+   whole program shares (game_context, written by tools/decompile.py) */
+void swap_tasks(void);
+extern uint32_t *const game_context[];
+extern const uint8_t game_context_registers[];  /* the V70 register each one is */
+extern const size_t game_context_count;
 
 /* HALT: the V60 stops until an interrupt comes. MAME's core goes on with the next instruction at once,
    and so does the game here (the program's only halts start int_default and int_vector_02, the handlers
@@ -222,6 +231,10 @@ void move_bits_up(uint32_t source, uint32_t source_offset, uint32_t dest, uint32
 /* SCH0BSU / SCH1BSU: how many of the 'length' bits up from the bit string's start come before the first
    one equal to 'bit' ('length' when none is); 'work' (R28) is left at the byte of the last bit looked at */
 uint32_t search_bits_up(uint32_t address, uint32_t offset, uint32_t length, uint32_t bit, uint32_t *work);
+/* SCHCU.B / SKPCU.B: the first of 'length' bytes from 'address' that is (until_equal) or is not 'value';
+   its index goes to *index ('length' when there is none) and its address to *found */
+void search_bytes(uint32_t address, uint32_t length, uint32_t value, uint32_t until_equal, uint32_t *index,
+	uint32_t *found);
 
 /* DIVX / DIVUX into a register pair: the 64-bit dividend is high:low, the quotient goes to low and the
    remainder to high */

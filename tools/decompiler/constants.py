@@ -1,22 +1,24 @@
 """
 Name:        constants.py
-Description: replaces R25, the base of the game's variables, with its value at each point
+Description: replaces R24, the base of the game's variables, with its value at each point
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    11-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
-Boot sets R25 to 0x208000 and the game reaches its variables as displacements from it. The only other
-value it ever gets is a constant too: the memory test points it at video RAM (0x308000) while it checks
-work RAM, calls nothing meanwhile, and sets it back before it returns. So every function starts with
-R25 = 0x208000, R25 is followed through the function as a constant (with the stack slots that hold a
+Boot sets R24 to 0x20E000 and the game reaches its variables as displacements from it (23[R24], the frame
+flag; 0[R24] and 4[R24], the stacks of the task the VBLANK handler swaps in). So every function starts
+with R24 = 0x20E000, R24 is followed through the function as a constant (with the stack slots that hold a
 copy of it, for the VBLANK handler that saves every register and puts them back), every read becomes
 that constant and every write goes away. Runs on the stack slots stack.py makes.
+
+R25 is not one: it points at the block of the screen being run (0x208000 or 0x218000, SegaSonic's base of
+its variables), and stays a register.
 """
 from v60 import ir
 
-GLOBALS_BASE = 25
-GLOBALS_VALUE = 0x208000
+GLOBALS_BASE = 24
+GLOBALS_VALUE = 0x20E000
 
 
 class ConstantError(Exception):

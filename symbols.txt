@@ -3,6 +3,7 @@
 # Addresses and names only: no game data lives in this file.
 # Format:  ADDRESS  KIND  NAME  [LAYOUT]   [# comment]
 #   KIND: func = function entry, code = code label, data = data label
+#   A code label of a computed call or jump may say where it goes: calls=TABLE, the code of a described table
 # Addresses use the copy of the program the code refers to:
 #   000000-03FFFF (ic37 + ic40, a 16-bit word of each in every 32-bit word), 100000-1FFFFF (ic36 + ic39)
 # Mirrors are accepted and folded (e.g. FFFFF0 -> 03FFF0).
@@ -51,6 +52,9 @@
 # is clear, the VBLANK handler swaps them (03F5FC): it stores the running task's pair there and returns
 # into the other one
 0006B0  func  second_task        # where the second task's first frame returns to
+task  second_task
+03F5FC  code  task_swap          # 03F5FC-03F608: the running task's stacks go to 0[R24] and 4[R24], the other one's come back
+03F60C  code  task_swap_done     # the handler goes on with the other task's interrupt frame: it returns into that task
 
 # ======== object handler lists ========
 # A 32-bit count, then that many handlers: the code takes a list with "movea.b list[PC], R10" and starts an
@@ -81,3 +85,9 @@
 # A timeline: (frame, routine) pairs that 01AE0D-01AE2C calls when the object's counter, 10[R20], reaches the
 # frame, from the address 01ADFC puts in 80[R20]; closed by frame 0000FFFF
 01AFC0  data  timeline_1AFC0  record=8 end=0000FFFF code=4
+01AE24  code  timeline_call  calls=timeline_1AFC0    # "jsr [R1]": the routine of the record the counter reached
+
+# 019266-019294: lists of routines an object runs one after another, a step each time; 019280 picks the list
+# by a number below 14 and keeps its place at 38[R20]
+01966C  data  routine_lists_1966C  pointers=14 record=4 end=00000000 code=0
+019294  code  routine_list_jump  calls=routine_lists_1966C   # "jmp [R0]": the list's next routine

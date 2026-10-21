@@ -4,7 +4,7 @@ Description: works out which registers point at which of the game's structures, 
              through them reads as a field: OBJECT(r20)->unk_30 instead of mem_read32(r20 + 0x30u)
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 The structures (STRUCTS) are the game objects (0xA0 bytes in work RAM, run by the object loop with R20
@@ -68,7 +68,7 @@ OFFSET = ("offset", 0)        # not a pointer: a value below 0x10000 (a halfword
 CONFLICT = ("conflict", 0)    # callers that know different things: nothing is known
 UNKNOWN = ("unknown", 0)      # a caller that does not know
 ROUNDS = 40
-WORK_RAM = (0x200000, 0x210000)
+WORK_RAM = (0x200000, 0x220000)
 ADDRESS_MASK = 0xFFFFFF
 POINTER_BITS = 32              # a value read at this width holds a whole address
 PAGE_LINKS = True              # structures linked by the low halves of their addresses, in the work RAM page

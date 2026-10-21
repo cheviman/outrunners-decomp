@@ -4,7 +4,7 @@ Description: writes the decompiled functions as C: one C function per V60 functi
              variables, results through pointers
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Every function becomes "void name(parameters)", or returns the one value it hands back. Its parameters
@@ -66,7 +66,8 @@ rotate_with_carry_by byte_swap32 mem_read8 mem_read16 mem_read32 mem_write8 mem_
 call_code unknown_code invalid_jump invalid_operand frame_wait take_interrupts frame_end halt move_string game_trace game_trace_block
 GAME_VARIABLES PLAYER_BLOCK WORK_RAM VIDEO_RAM SPRITE_RAM SPRITE_CONTROL PALETTE_RAM MIXER_REGISTERS SOUND_RAM IO_PORTS
 INTERRUPT_CONTROL RANDOM_GENERATOR TEXT_LAYER TEXT_CELL RAM8S RAM16S RAM32S ROM8S ROM16S ROM32S move_bytes move_halfwords move_bytes_backward
-move_halfwords_backward set_bytes set_halfwords move_bits_down move_bits_up search_bits_up divx_pair divux_pair""".split())
+move_halfwords_backward set_bytes set_halfwords move_bits_down move_bits_up search_bits_up search_bytes divx_pair
+divux_pair""".split())
 
 
 # the board's memories, as game/support.h names them (addresses the code computes into them)
@@ -437,7 +438,7 @@ class FunctionWriter:
         for block in self.function.blocks.values():
             for statement in block.statements:
                 hit = self.fields.get(id(statement))
-                if not isinstance(statement, ir.Store) or hit is None or hit[:2] != ("object", 0x1C) \
+                if not isinstance(statement, ir.Store) or hit is None or hit[:2] != ("object", dataflow.HANDLER_SLOTS[0]) \
                         or not isinstance(hit[2], ir.Reg) or hit[3] or not isinstance(statement.value, ir.Const):
                     continue
                 target = self.emitter.names.get(statement.value.value & 0xFFFFFF)
@@ -1617,7 +1618,7 @@ class FunctionWriter:
                             summed |= {id(arg) for arg in node.args if isinstance(arg, ir.Const)}
                         elif isinstance(node, ir.Const) and not node.value & 0xFFFF:
                             hit = self.fields.get(id(statement))
-                            if isinstance(statement, ir.Store) and statement.value is node                                     and hit is not None and hit[:2] == ("object", 0x1C):
+                            if isinstance(statement, ir.Store) and statement.value is node                                     and hit is not None and hit[:2] == ("object", dataflow.HANDLER_SLOTS[0]):
                                 continue
                             if isinstance(statement, ir.SetReg) and statement.value is node                                     and node.value in BOARD_MEMORIES                                     and self.vars.def_name(statement, statement.index) in pointing:
                                 continue
@@ -1679,6 +1680,8 @@ class FunctionWriter:
             return ["take_interrupts();"]
         if name == "frame_end":
             return ["frame_end();"]
+        if name == "swap_tasks":
+            return ["swap_tasks();"]
         if name == "halt":
             return ["halt();"]
         if name == "invalid_operand":
@@ -1710,6 +1713,9 @@ class FunctionWriter:
         if name in ("move_bits_down", "move_bits_up"):
             values = ", ".join(self.exact(arg) for arg in args)
             return [f"{name}({values}, &{self.register_set(27)}, &{self.register_set(28)});"]
+        if name == "search_bytes":
+            values = ", ".join(self.exact(arg) for arg in args)
+            return [f"search_bytes({values}, &{self.register_set(27)}, &{self.register_set(28)});"]
         if name == "search_bits_up":
             values = ", ".join(self.exact(arg) for arg in args[:4])
             return [f"{self.register_set(args[4].value)} = {name}({values}, &{self.register_set(28)});"]
@@ -2250,6 +2256,10 @@ class Emitter:
             if address < memory.ROM_NAMES_FROM:
                 return None
             canonical = memory.own_copy(address)
+            if canonical != address:
+                # another copy of the ROM: its own value, which may be no address at all (the memory test
+                # counts 0xFF000 bytes, the copy of vector_table's 0x03F000 in the code ROM's fourth mirror)
+                return None
             item = self.memory.tables.get(canonical)
             if item is not None:
                 return f"{item.name}_ADDRESS", cprint.PRIMARY

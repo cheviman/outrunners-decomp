@@ -1,10 +1,11 @@
 /**
  *    Name:        game.c
  *    Description: runtime of the decompiled game program: processor status, the frame loop and its
- *                 interrupts, calls by address, and the V60's string and bit-string moves and searches
+ *                 interrupts, the game's two tasks, calls by address, and the V60's string and bit-string
+ *                 moves and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    15-10-2026
+ *    Modified:    20-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -12,6 +13,7 @@
  *    Farfetch'd, R. Belmont) and the frame timing of tools/reference/s32ref.cpp.
  */
 #include "game/support.h"
+#include "host/tasks.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +22,10 @@
 #define PSW_IS        (1u << 28)    /* running on the interrupt stack */
 #define PRIVILEGED    29            /* LDPR numbers 0-28 */
 #define SBR           5             /* system base register: the vector table, in 4 KB steps */
+#define TASK_FRAME    0x20E000u     /* 0[R24]: the interrupt frame of the task that waits */
+#define FRAME_PC      116           /* in such a frame (pushm #1FFFFFFF, then the V70's own): R0-R28, */
+#define FRAME_PSW     120           /* then the PC and the PSW RETIS takes */
+#define CONTEXT_LIMIT 32
 
 uint32_t psw;
 void (*program_frame_done)(void);
@@ -28,6 +34,22 @@ static uint32_t privileged[PRIVILEGED];
 static bool irq_line;
 static uint64_t frames;
 static uint32_t interrupts;
+
+/* A task of the game: a native stack of its own and its copy of the registers the program shares */
+typedef struct
+{
+	host_task *native;
+	uint32_t frame;                       /* the interrupt frame a new task starts from */
+	uint32_t token;                       /* what 0[R24] holds while it waits */
+	uint32_t context[CONTEXT_LIMIT];
+} game_task;
+
+static game_task task_records[2];
+static game_task *running_task;
+static game_task *waiting_task;
+static uint32_t tokens;
+static bool swap_pending;
+static host_task *main_task;
 
 /* ---- processor status ---- */
 
@@ -61,17 +83,20 @@ void load_privileged(uint32_t number, uint32_t value)
 
 /* ---- the frame loop and its interrupts ---- */
 
-void frame_wait(uint32_t frames_to_wait)
+void frame_wait(uint32_t frame_ready)
 {
-	if ((int8_t)mem_read8(frames_to_wait) >= 0)
+	if (mem_read8(frame_ready) == 0)
 		s32_wait();
 }
+
+static void switch_task(void);
 
 void take_interrupts(void)
 {
 	/* the interrupt cycle asks the controller for its vector, as MAME's v60_try_irq does; the handler
 	   runs at level 0 on the interrupt stack with interrupts off, and RETIS puts the status back. A
-	   handler that leaves another source pending is followed by the next one */
+	   handler that leaves another source pending is followed by the next one. A handler that swapped the
+	   tasks returns into the other one: this one goes on when a handler swaps them back */
 	while (irq_line && (psw & PSW_IE))
 	{
 		const uint32_t vector = s32_irq_acknowledge() + 0x40u;
@@ -82,6 +107,11 @@ void take_interrupts(void)
 		psw &= ~((3u << 24) | (1u << 18) | (1u << 16) | (1u << 27) | (1u << 17) | (1u << 29));
 		psw |= PSW_IS | (1u << 31);
 		call_code(handler);
+		if (swap_pending)
+		{
+			swap_pending = false;
+			switch_task();
+		}
 		psw = saved;
 	}
 }
@@ -91,6 +121,63 @@ void frame_end(void)
 	frames++;
 	if (program_frame_done)
 		program_frame_done();
+}
+
+/* ---- the game's two tasks ---- */
+
+/* OutRunners runs two tasks, each with registers and a stack of its own: boot's, and one that starts from
+   the interrupt frame boot writes at 21FF84 (its PC, 0006B0, and its registers). The VBLANK handler swaps
+   them (03F5FC, swap_tasks): it keeps the running task's stack pointers at 0[R24] and 4[R24], takes the
+   other one's, and returns into it. Here each task runs on a native stack of its own and keeps its own
+   copy of the registers the program shares; the swap happens when the handler is done (what the handler
+   does after it, it does for the task it interrupted). While a task waits, 0[R24] holds a token for it;
+   an address there is a new frame (boot again, after the test mode): a new task starts from it */
+
+void swap_tasks(void)
+{
+	swap_pending = true;
+}
+
+static void start_task(void)
+{
+	const uint32_t frame = running_task->frame;
+
+	for (size_t index = 0; index < game_context_count; index++)
+		*game_context[index] = mem_read32(frame + 4u * game_context_registers[index]);
+	psw = mem_read32(frame + FRAME_PSW);
+	call_code(mem_read32(frame + FRAME_PC));
+	fprintf(stderr, "The task started from the frame at %06X came to its end (frame %llu)\n", frame,
+		(unsigned long long)frames);
+	exit(3);
+}
+
+static void switch_task(void)
+{
+	const uint32_t frame = mem_read32(TASK_FRAME);
+	game_task *from = running_task;
+	game_task *to;
+	bool fresh = false;
+
+	for (size_t index = 0; index < game_context_count; index++)
+		from->context[index] = *game_context[index];
+	if (waiting_task && frame == waiting_task->token)
+		to = waiting_task;
+	else
+	{
+		/* the one that waited, if any, is left where it is: the game started over without it */
+		to = from == &task_records[0] ? &task_records[1] : &task_records[0];
+		to->native = host_task_create(start_task);
+		to->frame = frame;
+		fresh = true;
+	}
+	from->token = 0xff000000u | ++tokens;
+	mem_write32(TASK_FRAME, from->token);
+	waiting_task = from;
+	running_task = to;
+	if (!fresh)
+		for (size_t index = 0; index < game_context_count; index++)
+			*game_context[index] = to->context[index];
+	host_task_switch(to->native);
 }
 
 /* ---- calls by address ---- */
@@ -425,6 +512,20 @@ uint32_t search_bits_up(uint32_t address, uint32_t offset, uint32_t length, uint
 	return count;
 }
 
+/* ---- SCHCU.B / SKPCU.B (op7a.hxx, opSEARCHUB) ---- */
+
+void search_bytes(uint32_t address, uint32_t length, uint32_t value, uint32_t until_equal, uint32_t *index,
+	uint32_t *found)
+{
+	uint32_t count;
+
+	for (count = 0; count < length; count++)
+		if ((mem_read8(address + count) == (uint8_t)value) == (until_equal != 0))
+			break;
+	*index = count;
+	*found = address + count;
+}
+
 /* ---- DIVX / DIVUX ---- */
 
 static void division_by_zero(void)
@@ -468,11 +569,35 @@ void program_reset(void)
 	irq_line = false;
 	frames = 0;
 	interrupts = 0;
+	swap_pending = false;
+	waiting_task = NULL;
+}
+
+static void run_entry(void)
+{
+	game_entry();
+	fprintf(stderr, "The program came to its end (frame %llu)\n", (unsigned long long)frames);
+	exit(3);
 }
 
 void program_run(void)
 {
-	game_entry();
+	/* the program's first task runs on a stack of its own, like the one it starts later; the port's
+	   stays apart, for program_stop to go back to */
+	if (game_context_count > CONTEXT_LIMIT)
+	{
+		fprintf(stderr, "The program shares more registers than a task keeps\n");
+		exit(3);
+	}
+	main_task = host_task_main();
+	running_task = &task_records[0];
+	running_task->native = host_task_create(run_entry);
+	host_task_switch(running_task->native);
+}
+
+void program_stop(void)
+{
+	host_task_switch(main_task);
 }
 
 void program_irq_line(bool asserted)
