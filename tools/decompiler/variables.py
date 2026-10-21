@@ -4,7 +4,7 @@ Description: splits each register of a function into the variables it really hol
              definitions and uses), each with the width its uses need
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    15-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Hand-written assembly reuses a register for one thing after another. A definition (an assignment, a call
@@ -122,7 +122,7 @@ class Variables:
         if isinstance(statement, (ir.Call, ir.TailCall)):
             return [index for index in self.call_info(statement)[1] if self.scratch(index)]
         if isinstance(statement, ir.Effect):
-            if statement.name in ("move_string", "move_bits_down", "move_bits_up"):
+            if statement.name in ("move_string", "move_bits_down", "move_bits_up", "search_bytes"):
                 return [index for index in (27, 28) if self.scratch(index)]
             if statement.name == "search_bits_up":
                 return [index for index in (statement.args[4].value, 28) if self.scratch(index)]
@@ -339,7 +339,8 @@ class Variables:
                 if item[2] not in self.new_values(statement) and not self.passes_only(statement, item[2]):
                     return False
             elif not (isinstance(statement, ir.Effect) and statement.name in ("move_string", "move_bits_down",
-                                                                                 "move_bits_up", "search_bits_up")):
+                                                                                 "move_bits_up", "search_bits_up",
+                                                                                 "search_bytes")):
                 return False
         return True
 

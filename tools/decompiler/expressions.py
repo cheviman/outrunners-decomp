@@ -4,7 +4,7 @@ Description: makes the statements of a function read as expressions: temporaries
              uses them, constants fold, and register writes that keep bits nobody reads write the value
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 The lifter binds every value an instruction reads or computes to a temporary, in the order MAME's core
@@ -640,7 +640,7 @@ def propagate_constants(function, call_results, context):
                 for index in set(call_results.get(id(statement), ())) | set(context):
                     known.pop(index, None)
             elif isinstance(statement, ir.Effect):
-                for index in (27, 28) if statement.name in ("move_string", "move_bits_down", "move_bits_up") else ():
+                for index in (27, 28) if statement.name in ("move_string", "move_bits_down", "move_bits_up", "search_bytes") else ():
                     known.pop(index, None)
                 if statement.name == "search_bits_up":
                     known.pop(statement.args[4].value, None)

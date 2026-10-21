@@ -3,17 +3,22 @@ Name:        signatures.py
 Description: the C signature of every function: its parameters and the results it hands back
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    13-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 The game passes values in registers, as hand-written assembly does. In C:
-  - Context registers the whole program shares (CONTEXT: the object lists, the current object...) are
-    global variables. R25 never changes after boot (the base of the game's variables) and disappears.
-    R14 is one too, although the game uses it as scratch: nothing clears it between object handlers, and
-    the handlers of 013C66's objects queue their pieces at the depth found in its low halfword, which
-    013D93 sets only every other frame and 013F7D never does, so the value comes from whatever handler
-    ran before. Only that halfword outlives the function that sets it (SCRATCH_CONTEXT), unless the
-    callers read more, and its assignments fold into their uses like a local's.
+  - Context registers the whole program shares (CONTEXT) are global variables. In OutRunners: R25, the
+    block of the screen being run (0x208000 or 0x218000), which the interrupt handlers read too; R23, a
+    place in it (1000[R25]); R20, the object the object loop (011CC0) runs, and R22, the loop's place in
+    the list; R26, R27 and R28, which the loop does not set between handlers, so a handler may find what
+    the one before left there. R12 is one too, although the game uses it as scratch: an object handler,
+    009590, sets only the low halfword of R12 ("mov.h R21, R12") and reads through it, so the high one is
+    the work RAM page some code before it left there (the screen's, 0x0020 or 0x0021); only that halfword
+    outlives the function that sets it (SCRATCH_CONTEXT), unless the callers read more, and its assignments
+    fold into their uses like a local's. R14 likewise: 016D00 sets only its low halfword and stores all of
+    it in the object (7C), and other handlers read it whole as they start. R24 never changes after boot (the base of the game's variables)
+    and disappears. Each of the game's two tasks has its own copy of them, as each has its own registers:
+    the runtime swaps them with the task.
   - Any other register a function reads before writing is a parameter when some caller sets it before
     the call. When none does, the value would be whatever an earlier piece of code left there, which only
     happens on paths the game never takes: the function starts the register at 0 instead.
@@ -37,13 +42,13 @@ from v60 import ir
 
 from . import dataflow
 
-CONTEXT = (14, 18, 20, 21, 22, 23, 24, 26, 32)
-# what a context register holds when the program starts, where it is not 0 (the V60's SP after boot,
-# 00004D: functions whose stack stays in memory, stack.MEMORY_SP, push from there)
-INITIAL = {32: 0x20FF00}
+CONTEXT = (12, 14, 20, 22, 23, 25, 26, 27, 28, 32)
+# what a context register holds when the program starts, where it is not 0 (the V70's SP after boot,
+# 000072: functions whose stack stays in memory, stack.MEMORY_SP, push from there)
+INITIAL = {32: 0x21F400}
 # context registers the game uses as scratch: the bits code that runs later may read without setting them
-SCRATCH_CONTEXT = {14: 0x0000FFFF}
-CONSTANT = {25: 0x208000}
+SCRATCH_CONTEXT = {12: 0xFFFF0000, 14: 0xFFFFFFFF}
+CONSTANT = {24: 0x20E000}
 # the functions nothing reaches (decompile.py)
 OPEN = set()
 

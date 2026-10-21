@@ -69,6 +69,7 @@ class Symbol(NamedTuple):
     kind: str
     name: str
     layout: Layout | None = None
+    calls: str | None = None     # code: the computed call there goes to the code of this described table
 
 
 def parse_code_fields(text, where):
@@ -120,7 +121,7 @@ def parse_layout(attributes, where):
 
 
 NAME_KINDS = ("var", "io", "table", "struct", "field", "register", "scoped", "param", "result", "local", "port",
-              "file", "anchor", "comment")    # names for the decompiled C (load_names; file lines:
+              "file", "anchor", "comment", "task")    # names for the decompiled C (load_names; file lines:
                                               # decompile.source_files)
 
 
@@ -137,13 +138,17 @@ def load_symbols(path):
             continue
         if len(parts) < 3 or parts[1] not in SYMBOL_KINDS:
             raise SystemExit(f"{path.name}:{number}: expected 'ADDRESS KIND NAME' with KIND in {SYMBOL_KINDS}")
+        calls = None
+        if len(parts) == 4 and parts[1] == "code" and parts[3].startswith("calls="):
+            calls = parts[3].partition("=")[2]
+            parts = parts[:3]
         if len(parts) > 3 and parts[1] != "data":
-            raise SystemExit(f"{path.name}:{number}: only data symbols take a layout")
+            raise SystemExit(f"{path.name}:{number}: only data symbols take a layout (code ones, calls=TABLE)")
         address = orunners_rom.canonical_address(int(parts[0], 16))
         if address is None:
             raise SystemExit(f"{path.name}:{number}: {parts[0]} is not in the program ROM")
         layout = parse_layout(parts[3:], f"{path.name}:{number}") if len(parts) > 3 else None
-        symbols[address] = Symbol(parts[1], parts[2], layout)
+        symbols[address] = Symbol(parts[1], parts[2], layout, calls)
     return symbols
 
 
@@ -181,6 +186,7 @@ class Names(NamedTuple):
     anchors: dict       # work RAM address -> (variable, offset): where a structure would be whose field at
                         # 'offset' is the variable (a list's head), as the code that walks the list starts there
     comments: dict      # function name -> what the C says above it (comment lines)
+    tasks: set          # functions a task starts at: the runtime runs them by address (task lines)
 
 
 def load_names(path, registers=None):
@@ -219,9 +225,11 @@ def load_names(path, registers=None):
                                          VARIABLE (the list's head) as its field at OFFSET (the link the walk
                                          follows), so the C writes it as VARIABLE's address less OFFSET
         comment  FUNCTION TEXT           what the C says about the function, in a /* */ block above it
+        task     FUNCTION                a task starts there, from an interrupt frame the game writes (the
+                                         runtime runs it by its address)
     'registers' ({name: number}) lets param and local lines name a register by its name (hl, iy) on a
     processor whose registers have names; RN works on any."""
-    names = Names({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, set(), {}, {}, {}, {})
+    names = Names({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, set(), {}, {}, {}, {}, set())
     registers = registers or {}
 
     def register_number(text):
@@ -248,6 +256,11 @@ def load_names(path, registers=None):
         if not parts:
             continue
         where = f"{path.name}:{number}"
+        if parts[0] == "task":
+            if len(parts) != 2 or not parts[1].isidentifier():
+                raise SystemExit(f"{where}: expected 'task FUNCTION'")
+            names.tasks.add(parts[1])
+            continue
         if parts[0] == "comment":
             words = line.split(None, 2)
             if len(words) != 3 or not words[1].isidentifier():
@@ -417,6 +430,7 @@ class Analysis:
         self.data_words = {}     # address of a pointer table entry -> address it points to
         self.described = []      # (first, stop): bytes of the tables symbols.txt describes with a layout
         self.described_targets = set()  # code addresses those tables hold
+        self.table_targets = {}  # name of such a table -> the code addresses it holds
         self.jump_tables = {}    # address of "jmp table(Rx)" -> addresses of its "br" entries
         self.call_tables = {}    # address of "jsr table(Rx)" -> addresses of its "br" entries
         self.pointer_tables = {} # address of "jsr [Rx]" fed by a table -> addresses in the table
@@ -460,6 +474,12 @@ class Analysis:
         for address, symbol in sorted(self.symbols.items()):
             if symbol.layout is not None:
                 self.described_table(address, symbol)
+        # a computed call symbols.txt says goes to a described table's code (calls=): its targets
+        for address, symbol in sorted(self.symbols.items()):
+            if symbol.calls is not None:
+                if symbol.calls not in self.table_targets:
+                    raise SystemExit(f"symbols.txt: {symbol.name} calls {symbol.calls}, which is no described table")
+                self.pointer_tables[address] = sorted(self.table_targets[symbol.calls])
         tried = set()
         self.settle(tried)
         if not self.executed:
@@ -551,6 +571,7 @@ class Analysis:
                         self.data_words[record + offset] = target
                     self.add_target(value, "func", record + offset)
                     self.described_targets.add(value & 0xFFFFFF)
+                    self.table_targets.setdefault(symbol.name, set()).add(value & 0xFFFFFF)
                 record += length
             else:
                 raise SystemExit(f"symbols.txt: {symbol.name} array at {array:06X} has no end in sight")
@@ -736,7 +757,8 @@ class Analysis:
             if dest.mode == "disp":
                 if instruction.mnemonic.startswith("movea") and source.mode in ("pc_disp", "direct"):
                     self.pointer_writes.append((instruction.address, source.value, dest.disp))
-                elif instruction.mnemonic == "mov.w" and source.mode == "immediate":
+                elif instruction.mnemonic == "mov.w" and source.mode == "immediate" and not source.value >> 24:
+                    # (a word with its top byte set is data, not a code address: "mov.w #F800F800, 4[R27]")
                     self.pointer_writes.append((instruction.address, source.value, dest.disp))
                 elif instruction.mnemonic == "mov.w" and source.mode == "pc_disp_indexed":
                     self.table_writes.append((instruction.address, source.value, dest.disp))

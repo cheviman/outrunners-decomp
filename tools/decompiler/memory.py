@@ -5,7 +5,7 @@ Description: the game's variables, tables and hardware registers by name: work R
              named addresses
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    15-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Work RAM (0x200000-0x20FFFF) stays the board's byte array, so the state compares byte for byte with the
@@ -37,7 +37,7 @@ from v60 import ir
 
 from . import cprint
 
-WORK_RAM = (0x200000, 0x210000)
+WORK_RAM = (0x200000, 0x220000)
 ROM_AREAS = ((0x000000, 0x200000), (0xF00000, 0x1000000))    # the program ROM, the first area holding it whole
 ADDRESS_MASK = 0xFFFFFF
 ADDRESS_DIGITS = 6
@@ -57,7 +57,7 @@ NOTES = {
 TYPES = {8: "uint8_t", 16: "uint16_t", 32: "uint32_t"}
 SIGNED = {"u8": (8, False), "s8": (8, True), "u16": (16, False), "s16": (16, True),
           "u32": (32, False), "s32": (32, True)}
-BUS_ONLY = [(0x20E5C4, 0x20E5C6)]    # writes the protection device watches
+BUS_ONLY = []    # writes a device on the bus watches in work RAM (SegaSonic: its protection)
 VARIABLES = 0x208000    # where the game's variables start: R25 of the original, which some code adds offsets to
 HARDWARE = [(0x300000, 0x320000, "VIDEO"), (0x400000, 0x420000, "SPRITE_RAM"), (0x500000, 0x500010, "SPRITE_CONTROL"),
             (0x600000, 0x610000, "PALETTE"), (0x610000, 0x620000, "MIXER"), (0x700000, 0x702000, "SOUND"),

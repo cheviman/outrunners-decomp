@@ -57,6 +57,28 @@ add_custom_command(OUTPUT ${ORUNNERS_DATA_SOURCES}
 add_library(orunners_data STATIC ${ORUNNERS_DATA_SOURCES})
 target_include_directories(orunners_data PUBLIC runtime/include)
 
+# The game: its runtime plus its C, src/ (tools/decompile.py writes it; ORUNNERS_DECOMPILED_DIR picks
+# another folder). Its own video and sound come back into it when their libraries draw the two screens and
+# play the MultiPCM
+set(ORUNNERS_DECOMPILED_DIR ${CMAKE_SOURCE_DIR}/src CACHE PATH "The game's C (tools/decompile.py)")
+file(GLOB_RECURSE ORUNNERS_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/*.c)
+if(ORUNNERS_DECOMPILED)
+	add_library(orunners_game STATIC runtime/src/game.c ${ORUNNERS_DECOMPILED})
+	target_include_directories(orunners_game PUBLIC runtime/include ${ORUNNERS_DECOMPILED_DIR})
+	target_link_libraries(orunners_game PUBLIC s32runtime)
+	if(MSVC)
+		target_compile_options(orunners_game PRIVATE /bigobj)
+	else()
+		# variables are typed lvalues over the work RAM bytes (game/support.h)
+		target_compile_options(orunners_game PRIVATE -fno-strict-aliasing)
+	endif()
+
+	add_executable(orunners_game_headless ports/headless/main.c)
+	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_data)
+else()
+	message(STATUS "No game C in ${ORUNNERS_DECOMPILED_DIR}: run tools/decompile.py")
+endif()
+
 # The translation scaffold: the V60 runtime plus the C tools/recompile.py writes from the user's ROM into
 # build/generated, instruction by instruction (to run the program natively before the decompiler exists)
 option(ORUNNERS_SCAFFOLD "Build the V70 translation scaffold (orunners_headless)" OFF)

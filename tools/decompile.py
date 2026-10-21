@@ -1,16 +1,16 @@
 """
 Name:        decompile.py
-Description: decompiles the game's V60 program into readable C, one C function per original function
+Description: decompiles the game's V70 program into readable C, one C function per original function
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    16-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/decompile.py [rom folder or .zip] [--check] [--trace] [--out DIR] [--symbols FILE]
                                  [--variables FILE] [--split-webs] [--fields FILE]
   --check     build every function's IR and report what does not lift, without writing anything
   --trace     every function and block reports itself when it runs (game_trace in runtime/src/game.c)
-  --out       where to write the C (src/ by default, the game's source; CMake reads SONIC_DECOMPILED_DIR)
+  --out       where to write the C (src/ by default, the game's source; CMake reads ORUNNERS_DECOMPILED_DIR)
   --symbols   the names to use instead of symbols.txt
   --variables also list every function's local variables and the instructions that write them, in the
               terms of symbols.txt's "local" lines (for naming them)
@@ -253,7 +253,7 @@ def check(program):
     if not failures:
         flow = analyse_after_stack(program, built)
         left = [(function.entry, statement) for function in built.values() for statement in constants.uses(function)]
-        print(f"R25 left:   {len(left)}")
+        print(f"R{constants.GLOBALS_BASE} left:   {len(left)}")
         for entry, statement in left[:5]:
             print(f"  {entry:06X}  {statement}")
         kept = Counter(len(function.preserved) for function in built.values())
@@ -299,6 +299,7 @@ def report_signatures(found):
 
 def analyse_after_stack(program, built):
     """analyse() for functions whose stack slots are already made."""
+    stack.link_caller_exits(built)
     for function in built.values():
         constants.substitute(function)
     flow = dataflow.Program(built, program.analysis, interrupt_handlers(program), signatures.CONTEXT)
@@ -332,7 +333,7 @@ def file_header(name, description):
             f" *    Modified:    {time.strftime('%d-%m-%Y')}\n"
             " *    Author:      Sebastian Toyos\n"
             " *\n"
-            " *    SegaSonic The Hedgehog (arcade, Sega System 32): the game's V60 program decompiled into C by\n"
+            " *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by\n"
             " *    tools/decompile.py, with the names of symbols.txt.\n"
             " */\n")
 FUNCTIONS_PER_FILE = 120
@@ -426,8 +427,8 @@ RESET_ADDRESS = 0xFFFFF0
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 # names the runtime the decompiled code includes already uses (game/support.h, s32/bus.h, v60/arith.h)
 TAKEN = {"psw", "psw_read", "psw_write", "psw_update", "load_privileged", "frame_wait", "take_interrupts",
-         "frame_end", "halt", "call_code", "unknown_code", "invalid_jump", "move_string", "move_bits_down", "move_bits_up",
-         "search_bits_up", "divx_pair", "divux_pair", "game_code", "game_code_count", "game_entry", "main"}
+         "frame_end", "swap_tasks", "game_context", "game_context_registers", "game_context_count", "halt", "call_code", "unknown_code", "invalid_jump", "move_string", "move_bits_down", "move_bits_up",
+         "search_bits_up", "search_bytes", "divx_pair", "divux_pair", "game_code", "game_code_count", "game_entry", "main"}
 
 
 def needs_return_address(built):
@@ -517,10 +518,17 @@ def write_index(out_dir, program, built, flow, names, texts, entries):
 
 
 def code_table(program, flow):
-    """Addresses call_code() may get: what calls through memory slots find there, the interrupt handlers."""
+    """Addresses call_code() may get: what calls through memory slots find there, the interrupt handlers,
+    where tasks start (symbols.txt's task lines)."""
     addresses = set(interrupt_handlers(program))
     for targets in flow.slot_targets.values():
         addresses |= targets
+    tasks = disassemble.load_names(SYMBOLS).tasks
+    entries = {name: entry for entry, name in program.names.items()}
+    for name in sorted(tasks):
+        if name not in entries:
+            raise SystemExit(f"symbols.txt: task {name}, which is no function")
+        addresses.add(entries[name])
     return sorted(address for address in addresses if address in flow.functions)
 
 
@@ -716,13 +724,15 @@ def write_c(program, out_dir, trace=False, variables_path=None, split_webs=False
     context = ", ".join(emitter.context_name(index) for index in signatures.CONTEXT)
     defined = ", ".join(emitter.context_name(index) + (f" = 0x{signatures.INITIAL[index]:X}u" if index in signatures.INITIAL else "")
                         for index in signatures.CONTEXT)
+    context_pointers = ", ".join("&" + emitter.context_name(index) for index in signatures.CONTEXT)
+    context_numbers = ", ".join(str(index) for index in signatures.CONTEXT)
     files = game_files(entries)
     prototypes = grouped_prototypes(files, emitter.prototype)
     addresses = [f"#define {name} 0x{address:06X}u" for address, name in sorted(emitter.code_addresses.items())]
     (out_dir / "game.h").write_text(
         file_header("game.h", "prototypes of the game's functions and the addresses of the code it keeps in "
                     "memory slots")
-        + "#ifndef SONIC_GAME_H\n#define SONIC_GAME_H\n\n#include \"game/support.h\"\n#include \"ram.h\"\n\n"
+        + "#ifndef ORUNNERS_GAME_H\n#define ORUNNERS_GAME_H\n\n#include \"game/support.h\"\n#include \"ram.h\"\n\n"
         f"/* registers the whole program shares */\nextern uint32_t {context};\n\n"
         "/* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own\n"
         "   addresses: what it stores and compares, and what call_code() runs */\n"
@@ -731,7 +741,7 @@ def write_c(program, out_dir, trace=False, variables_path=None, split_webs=False
     labels = [f"#define {name}_ADDRESS 0x{address:06X}u" for address, name in sorted(emitter.data_labels.items())]
     (out_dir / "ram.h").write_text(
         file_header("ram.h", "the game's variables, tables, board registers and structures")
-        + "#ifndef SONIC_RAM_H\n#define SONIC_RAM_H\n\n"
+        + "#ifndef ORUNNERS_RAM_H\n#define ORUNNERS_RAM_H\n\n"
         + "\n".join(named.declarations()) + "\n\n/* data in the program ROM symbols.txt labels */\n"
         + "\n".join(labels) + "\n\n/* the game's structures in work RAM */\n"
         + "\n".join(emitter.layouts.declarations()) + "\n\n#endif\n", encoding="ascii")
@@ -753,7 +763,11 @@ def write_c(program, out_dir, trace=False, variables_path=None, split_webs=False
         file_header("table.c", "the registers the whole program shares, the code calls through memory "
                     "slots reach (by address), and the reset entry")
         + '#include "game.h"\n\n'
-        f"uint32_t {defined};\n\n" + "\n".join(wrappers) + "\n"
+        f"uint32_t {defined};\n\n"
+        "/* the same, for the runtime to keep a copy for each of the game's tasks */\n"
+        f"uint32_t *const game_context[] = {{ {context_pointers} }};\n"
+        f"const uint8_t game_context_registers[] = {{ {context_numbers} }};\n"
+        f"const size_t game_context_count = {len(signatures.CONTEXT)};\n\n" + "\n".join(wrappers) + "\n"
         "/* the code calls through memory slots and interrupts can reach, by address */\n"
         "const game_code_entry game_code[] =\n{\n" + "\n".join(rows) + "\n};\n\n"
         f"const size_t game_code_count = {len(rows)};\n\n" + entry_text, encoding="ascii")

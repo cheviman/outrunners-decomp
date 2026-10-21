@@ -3,7 +3,7 @@ Name:        function.py
 Description: the game's functions as control-flow graphs of IR blocks, built from the analysed program
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    14-10-2026
+Modified:    20-10-2026
 Author:      Sebastian Toyos
 
 Takes the functions tools/recompile.py splits the program into and lifts every instruction to IR
@@ -82,6 +82,9 @@ class Builder:
         self.frame_wait_done = named["frame_wait_done"]
         loop = self.analysis.instructions[self.frame_wait_loop]
         self.frame_resume = self.frame_wait_loop + loop.length
+        # where the VBLANK handler swaps the running task for the other one (symbols.txt: task_swap up to
+        # task_swap_done): the C asks the runtime to, which takes the other task up when the handler returns
+        self.task_swap = (named["task_swap"], named["task_swap_done"]) if "task_swap" in named else None
 
     def build_all(self):
         return {entry: self.build(entry) for entry in sorted(self.entries)}
@@ -92,6 +95,7 @@ class Builder:
         body = self.program.bodies[entry]
         function = Function(entry, self.program.names[entry])
         self.extra_blocks = []
+        self.return_register = self.popped_return(entry, body)
         leaders = self.leaders(entry, body)
         order = sorted(body)
         current = None
@@ -158,7 +162,9 @@ class Builder:
                            **function.blocks}
 
     def leaders(self, entry, body):
-        leaders = {entry}
+        # another function's way in starts a block even where nothing here jumps (second_task's 000637,
+        # which boot reaches and second_task runs into after a call)
+        leaders = {entry} | set(getattr(self.program, "second_entries", {}).get(entry, []))
         for address, instruction in body.items():
             following = address + instruction.length
             for target in self.program.successors(instruction):
@@ -216,11 +222,12 @@ class Builder:
     def frame_hooks(self, statements, instruction):
         address = instruction.address
         if address == self.frame_wait_loop:
+            # the board runs its next event, and the interrupts it raised come before the poll (as s32ref
+            # takes them: their frames return to the poll, 000908)
             lifter = lift.Lifter(self.mem, prefix=f"w{address:06X}_")
-            counter = lifter.address_of(instruction.operands[0], 0, "frames_to_wait")
+            counter = lifter.address_of(instruction.operands[0], 0, "frame_ready")
             statements += lifter.statements
             statements.append(ir.Effect("frame_wait", (counter.address,)))
-        elif address == self.frame_resume:
             statements.append(ir.Effect("take_interrupts", (ir.const(address),)))
         elif address == self.frame_wait_done:
             statements.append(ir.Effect("frame_end", ()))
@@ -230,6 +237,10 @@ class Builder:
         mnemonic = instruction.mnemonic
         following = address + instruction.length
         statements = block.statements
+        if self.task_swap is not None and self.task_swap[0] <= address < self.task_swap[1]:
+            if address == self.task_swap[0]:
+                statements.append(ir.Effect("swap_tasks", ()))
+            return
         self.frame_hooks(statements, instruction)
         previous = body.get(block.addresses[-2]) if len(block.addresses) > 1 else None
         back = self.pushed(previous) if previous is not None else None
@@ -244,6 +255,14 @@ class Builder:
                 return
             if next_instruction is not None and next_instruction.mnemonic in ("br", "jmp"):
                 return    # the push belongs to the call the jump makes
+
+        if self.return_register is not None:
+            operand = instruction.operands[0] if instruction.operands else None
+            if address == function.entry:
+                return    # the return address goes to a register, not off the C's stack
+            if mnemonic == "jmp" and operand.mode == "reg_indirect" and operand.reg == self.return_register:
+                block.end = ir.Return()
+                return
 
         lifter = lift.Lifter(self.mem, prefix=f"t{address:06X}_")
         if lift.lift_data(lifter, instruction):
@@ -299,6 +318,18 @@ class Builder:
             return
         raise lift.Unsupported(f"{address:06X}: {mnemonic}")
 
+    @staticmethod
+    def popped_return(entry, body):
+        """The register a function pops its own return address into, to go back through it with "jmp [Rn]"
+        (the memory test, 01CB8F: it keeps off the stack while it checks the work RAM), or None."""
+        first = body.get(entry)
+        if first is None or first.mnemonic != "pop" or first.operands[0].mode != "reg":
+            return None
+        register = first.operands[0].reg
+        jumps = [instruction for instruction in body.values() if instruction.mnemonic == "jmp"
+                 and instruction.operands[0].mode == "reg_indirect" and instruction.operands[0].reg == register]
+        return register if jumps else None
+
     def exits_caller(self, entry):
         """True for code that drops its own return address and returns: add.w #4, SP then rsr."""
         instruction = self.analysis.instructions.get(entry)
@@ -315,8 +346,9 @@ class Builder:
         location = lifter.address_of(instruction.operands[0], 0, "target")
         if location.register is not None:
             raise lift.Unsupported(f"{instruction.address:06X}: jsr to a register")
-        choices = tuple(self.analysis.call_tables.get(instruction.address, ())) \
-            or tuple(self.analysis.pointer_tables.get(instruction.address, ()))
+        # each target once: a table may hold one at several places (00B626)
+        choices = tuple(dict.fromkeys(self.analysis.call_tables.get(instruction.address, ()))) \
+            or tuple(dict.fromkeys(self.analysis.pointer_tables.get(instruction.address, ())))
         operand = instruction.operands[0]
         slot = operand.disp if operand.mode == "disp_indirect" else None
         if instruction.target is not None:
@@ -347,5 +379,13 @@ class Builder:
         if table:
             # a run of branches, or a table of code addresses the jump reads its target from (099C22)
             block.end = ir.Switch(location.address, {case: case for case in table})
+            return
+        operand = instruction.operands[0]
+        if operand.mode == "disp_indirect":
+            # to the code a memory slot holds (the test mode's page, "jmp [704[R24]]", 01C38E): a call through
+            # the slot, whose return is this function's
+            block.statements.append(ir.Call(address=location.address, return_address=instruction.address
+                                            + instruction.length, slot=operand.disp))
+            block.end = ir.Return()
             return
         block.end = ir.ComputedJump(location.address)
