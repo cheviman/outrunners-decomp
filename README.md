@@ -42,7 +42,18 @@ the tools verify it, extract the assets and build your own executable.
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
       says so (`left_caller`). Most names are still addresses, and some of SegaSonic's (`GAME_VARIABLES`,
       `PLAYER_BLOCK`) stand where OutRunners' will go
-- [ ] Names, types and structures for the C (`symbols.txt`), the game's own video and sound, assets, a port
+- [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
+      decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
+      board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,
+      the same as MAME's sample for sample). `orunners_game_headless` matches the reference frame by frame
+      in state, picture and sound in all 16 scenarios (`python tools/check_scenarios.py --video --sound`).
+      Left out of the comparisons: the V70's and the Z80's stacks, which the C keeps in no memory, and the
+      copies the test mode's RAM tests leave of them in the sprite RAM (`runtime/include/s32/machine.h`)
+- [x] A window port (`orunners`, `ports/sdl2/`): both screens, the sound, the keyboard and game controllers;
+      a control script played in the window gives the reference's frames (`coin_start`: state, picture
+      and sound)
+- [ ] Names, types and structures for the C (`symbols.txt` and `sound_symbols.txt`); the assets, and the
+      ROM out of every executable (today the build still writes the ROM's regions into them); other ports
 
 ## Getting started
 
