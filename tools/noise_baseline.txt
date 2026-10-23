@@ -3,7 +3,8 @@ goto 0
 control_variables 24
 sub_functions 718
 unk_names 1164
-register_names 2258
+register_names 2259
+context_registers 2036
 var_fields 0
 mem_access 6502
 wide_access 907

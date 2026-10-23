@@ -4,6 +4,7 @@
 # Format:  ADDRESS  KIND  NAME  [LAYOUT]   [# comment]
 #   KIND: func = function entry, code = code label, data = data label
 #   A code label of a computed call or jump may say where it goes: calls=TABLE, the code of a described table
+#   register RN NAME: a register the whole program shares, a global variable of the C (its name)
 # Addresses use the copy of the program the code refers to:
 #   000000-03FFFF (ic37 + ic40, a 16-bit word of each in every 32-bit word), 100000-1FFFFF (ic36 + ic39)
 # Mirrors are accepted and folded (e.g. FFFFF0 -> 03FFF0).
@@ -40,6 +41,15 @@
 03F7A0  func  int_vector_42
 03F7AC  func  int_vector_43
 03F830  func  int_vector_44
+
+# ======== the registers the program shares ========
+# Globals of the C (decompiler/signatures.py CONTEXT); each task has its own copy, which the runtime swaps
+# with it. R12, R14, R26, R27 and R28 are shared too, as scratch registers whose last value the next
+# function may read (a handler what the one before it left), and keep their register names
+register R20  current_object     # the object the object loop (011CC0) runs: set before it calls the handler at field 4
+register R23  player_car         # the screen's car: the object at 1000[R25] (209000 or 219000)
+register R25  screen             # the block of the screen the task runs: 208000 for screen 1 (the second task), 218000 for screen 2 (the boot task)
+register R32  stack_pointer      # SP, in the functions whose stack stays in memory (decompiler/stack.py); 21F400 after boot
 
 # ======== the frame loop ========
 # 0008F0-000912: the program waits for the next frame polling 23[R24] (20E023), which an interrupt sets,

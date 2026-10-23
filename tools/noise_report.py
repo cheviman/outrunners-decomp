@@ -4,7 +4,7 @@ Description: counts what is left of the CPU and of the decompiler in the C (src/
              with the counts last saved
 Version:     0.1.0
 Created:     17-10-2026
-Modified:    21-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Every kind of leftover the C can still have, counted in one pass over the generated C, so a round of work
@@ -36,6 +36,7 @@ KINDS = {
     "sub_functions": ("functions named after their address (sub_XXXXXX, the sound program's sound_XXXX)", None),
     "unk_names": ("memory named after its address (unk_XXXXXX)", re.compile(r"\bunk_[0-9A-F]{4,6}\b")),
     "register_names": ("parameters and locals named after a register (r1, p_r4, r0_2)", None),
+    "context_registers": ("uses of the registers the C keeps as globals, still named after them (src/game.h)", None),
     "var_fields": ("object fields without a name (var_XX)", re.compile(r"\bvar_[0-9A-F]{2}\b")),
     "mem_access": ("memory reached through a computed address (mem_read/mem_write)",
                    re.compile(r"\bmem_(?:read|write)\d+\(")),
@@ -109,6 +110,17 @@ def main():
         use = re.compile(r"\b(?:" + "|".join(tables) + r")\b")
         counts["rom_table_reads"] = sum(len(use.findall(path.read_text(encoding="ascii", errors="replace")))
                                         for path in sources)
+    # the registers the whole program shares, globals of the C ("extern uint32_t r20, ..." in src/game.h and
+    # src/sound/sound.h): the ones still named after the register
+    registers = set()
+    for header in (source / "game.h", source / "sound" / "sound.h"):
+        if header.exists():
+            for declaration in re.findall(r"^extern \w+ ([^;]*);", header.read_text(encoding="ascii"), re.M):
+                registers |= {name.strip() for name in declaration.split(",") if re.fullmatch(r"r\d+", name.strip())}
+    if registers:
+        use = re.compile(r"\b(?:" + "|".join(sorted(registers)) + r")\b")
+        counts["context_registers"] = sum(len(use.findall(path.read_text(encoding="ascii", errors="replace")))
+                                          for path in sources)
     if UNNAMED_ADDRESSES.exists():
         counts["raw_rom_addresses"] = sum(1 for line in UNNAMED_ADDRESSES.read_text().splitlines()
                                           if line and not line.startswith("#"))
