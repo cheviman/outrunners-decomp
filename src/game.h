@@ -16,7 +16,7 @@
 #include "ram.h"
 
 /* registers the whole program shares */
-extern uint32_t r12, r14, current_object, player_car, screen, r26, r27, r28, stack_pointer;
+extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_pointer;
 
 /* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
    addresses: what it stores and compares, and what call_code() runs */

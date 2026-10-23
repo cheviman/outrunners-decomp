@@ -607,7 +607,7 @@ void sub_0188BE(void)
 
 void sub_0189D9(void)
 {
-	uint8_t r1_2 = 0;
+	uint8_t r1_2 = 0, r26 = 0;
 	uint32_t r0 = 0, r1 = 0, r10 = 0, r11 = 0;
 	uint8_t t1 = 0, t2 = 0, t3 = 0;
 
@@ -662,7 +662,7 @@ void sub_0189D9(void)
 		mem_write32(screen + 0xF44u, r1);
 		mem_write32(screen + 0xF40u, 0u);
 		mem_write8(screen + 0xF48u, 0u);
-		r26 = (r26 & ~0xFFu) | 0x20u;
+		r26 = 0x20u;
 		move_string(r10, 0u, r10, r0 + 1u, 1u, 1u, 0u, r26, &r27, &r28);
 	}
 	r11 = mem_read32(screen + 0xF44u);
@@ -675,7 +675,7 @@ void sub_0189D9(void)
 		mem_write32(screen + 0xF44u, r11 + 1u);
 		if (r1_2 == 0x60u)
 			r1_2 = 7u;
-		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, r26, &r27, &r28);
+		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, r1_2);
 		mem_write8(screen + 0xF49u, 5u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
@@ -690,7 +690,7 @@ void sub_0189D9(void)
 		}
 		mem_write32(screen + 0xF44u, r0 + 1u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
-		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, r26, &r27, &r28);
+		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
 		mem_write8(screen + 0xF49u, 5u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
@@ -707,13 +707,13 @@ void sub_0189D9(void)
 		}
 		mem_write32(screen + 0xF44u, r0 + 1u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
-		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, r26, &r27, &r28);
+		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
 		mem_write8(screen + 0xF49u, 5u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
 		break;
 	case 2:
-		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, r26, &r27, &r28);
+		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
 		mem_write8(screen + 0xF49u, 5u);
 		mem_write8(screen + 0xF48u, mem_read8(screen + 0xF48u) + 1u);
@@ -797,7 +797,7 @@ void sub_018BB2(void)
 		{
 			r1 = 0u;
 			divux_pair(0x1Eu, &r0, &r1);
-			move_string(rom_018EA0[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+			move_string(rom_018EA0[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			mem_write8(screen + 0xF19u, r0 + 0x31u);
 			return;
 		}
@@ -851,7 +851,7 @@ void sub_018BB2(void)
 		switch (OBJECT(current_object)->unk_0E)
 		{
 		case 0:
-			move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+			move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			OBJECT(current_object)->unk_0E++;
 			break;
 		case 1:
@@ -867,7 +867,7 @@ void sub_018BB2(void)
 		switch (OBJECT(current_object)->unk_0E)
 		{
 		case 0:
-			move_string(0x18F48u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+			move_string(0x18F48u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			OBJECT(current_object)->unk_0E++;
 			break;
 		case 1:
@@ -904,7 +904,7 @@ void sub_018BB2(void)
 			switch (OBJECT(current_object)->unk_0E)
 			{
 			case 0:
-				move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+				move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 				OBJECT(current_object)->unk_0E++;
 				break;
 			case 1:
@@ -917,7 +917,7 @@ void sub_018BB2(void)
 			sub_018DDF(r0, r10);
 			return;
 		}
-		move_string(0x18F2Cu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x18F2Cu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->unk_10 = 0u;
 		OBJECT(current_object)->unk_11 = 0u;
 		OBJECT(current_object)->unk_0E++;
@@ -947,7 +947,7 @@ void sub_018BB2(void)
 
 void sub_018C8C(void)
 {
-	move_string(0x18F1Eu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x18F1Eu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	OBJECT(current_object)->unk_0E++;
 	sub_018C99();
 }
@@ -978,7 +978,7 @@ void sub_018C99(void)
 
 void sub_018DBC(void)
 {
-	move_string(0x18F56u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x18F56u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	OBJECT(current_object)->unk_0E++;
 	sub_018DC9();
 }
@@ -1047,7 +1047,7 @@ void sub_018E32(void)
 	switch (OBJECT(current_object)->unk_0C)
 	{
 	case 0:
-		move_string(0x18F64u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x18F64u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->unk_0C++;
 		if (mem_read32(screen + 0xF44u) == 0u)
 			return;
@@ -3438,7 +3438,7 @@ void sub_01C5BA(void)
 
 void sub_01C5DB(void)
 {
-	uint8_t r1_2 = 0;
+	uint8_t r1_2 = 0, r26 = 0;
 	uint16_t r0_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r10 = 0;
 	uint8_t t3 = 0, t4 = 0, t6 = 0, t7 = 0;
@@ -3449,7 +3449,7 @@ void sub_01C5DB(void)
 	r0 = sub_01F17D();
 	mem_write8(SOUND_701FFF, 1u);
 	current_object = 0x20E716u;
-	r26 = r26 & ~0xFFu;
+	r26 = 0u;
 	set_bytes(WORK_RAM + 0xE716u, 0x19u, r26);
 	OBJECT(current_object)->unk_00 = 1u;
 	OBJECT(current_object)->unk_01 = 1u;
@@ -4179,14 +4179,15 @@ uint32_t sub_01CB8F(uint32_t r0, uint32_t r10)
 
 void sub_01CC80(void)
 {
+	uint16_t r26 = 0;
 	uint32_t t1 = 0;
 
-	r26 = (r26 & ~0xFFFFu) | 0x6600u;
+	r26 = 0x6600u;
 	r27 = TEXT_CELL(14, 25);
 	r28 = 0x1CD87u;
 	do
 	{
-		r26 = (r26 & ~0xFFu) | ROM8(r28);
+		r26 = (uint16_t)((r26 & ~0xFFu) | ROM8(r28));
 		t1 = r27;
 		r27 = r27 + 2u;
 		mem_write16(t1, mem_read16(t1) ^ r26);

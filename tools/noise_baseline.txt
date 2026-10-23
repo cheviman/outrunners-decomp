@@ -3,8 +3,8 @@ goto 0
 control_variables 24
 sub_functions 718
 unk_names 1164
-register_names 2259
-context_registers 2036
+register_names 2281
+context_registers 1485
 var_fields 0
 mem_access 6502
 wide_access 907
@@ -13,10 +13,10 @@ invalid_jump 193
 unknown_code 0
 raw_rom_addresses 101
 uncommented 731
-rom_reads 274
+rom_reads 273
 rom_table_reads 665
 board_replaced 0
 functions 746
-lines 37335
-casts 3259
-partial_writes 551
+lines 37243
+casts 3243
+partial_writes 535

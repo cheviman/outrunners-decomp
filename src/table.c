@@ -11,12 +11,12 @@
  */
 #include "game.h"
 
-uint32_t r12, r14, current_object, player_car, screen, r26, r27, r28, stack_pointer = 0x21F400u;
+uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_pointer = 0x21F400u;
 
 /* the same, for the runtime to keep a copy for each of the game's tasks */
-uint32_t *const game_context[] = { &r12, &r14, &current_object, &player_car, &screen, &r26, &r27, &r28, &stack_pointer };
-const uint8_t game_context_registers[] = { 12, 14, 20, 23, 25, 26, 27, 28, 32 };
-const size_t game_context_count = 9;
+uint32_t *const game_context[] = { &r12, &r14, &current_object, &player_car, &screen, &r27, &r28, &stack_pointer };
+const uint8_t game_context_registers[] = { 12, 14, 20, 23, 25, 27, 28, 32 };
+const size_t game_context_count = 8;
 
 /* How call_code() runs second_task from a slot that holds its address: with 0 for what it takes, and
    what it hands back dropped. */

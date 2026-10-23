@@ -398,7 +398,7 @@ void sub_000375(void)
 	r11 = 0x3Au;
 	r0 = sub_0000C4(r10, r11);
 	unk_20E608 = r0;
-	move_string(unk_20E608_ADDRESS, 0x1Eu, unk_20E644_ADDRESS, 0x1Eu, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(unk_20E608_ADDRESS, 0x1Eu, unk_20E644_ADDRESS, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
 	r4 = 0x30u;
 	sub_0004A1(&r2, &r13);
 	sub_000451(r2, r4, r13);
@@ -2481,7 +2481,7 @@ void sub_0022F7(void)
 	case 0:
 		sub_018AF0();
 		mem_write8(screen + 0xF35u, 0xFFu);
-		move_string(OBJECT(current_object)->unk_14 + 0xAAu, 7u, screen + 0xF13u, 7u, 1u, 0u, 0u, r26, &r27, &r28);
+		move_string(OBJECT(current_object)->unk_14 + 0xAAu, 7u, screen + 0xF13u, 7u, 1u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->unk_0C++;
 		break;
 	case 1:
@@ -3706,7 +3706,7 @@ void sub_003425(void)
 	sub_00DEC2();
 	move_halfwords(player_car, 0x100800u, 0x180u);
 	move_halfwords(screen + 0x330u, 0x100800u, 0xB0u);
-	move_string(0x100800u, 0x80u, screen + 0x600u, 0x80u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x80u, screen + 0x600u, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_003520(void)
@@ -5124,7 +5124,7 @@ void sub_00503D(void)
 		move_halfwords(r10 + 0x800u, 0x100800u, 0xE0u);
 		move_halfwords(r10 + 0x1000u, 0x100800u, 0xE0u);
 		move_halfwords(r10 + 0x1800u, 0x100800u, 0xE0u);
-		move_string(0x100800u, 0xE0u, screen + 0x3800u, 0xE0u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x100800u, 0xE0u, screen + 0x3800u, 0xE0u, 2u, 0u, 0u, 0u, &r27, &r28);
 		return;
 	case 1:
 		if (mem_read16(screen + 0xB00u) != 0u)
@@ -6760,7 +6760,7 @@ void sub_005F51(void)
 		OBJECT(current_object)->unk_0C++;
 		if (mem_read32(screen + 0xF44u) != 0u)
 			return;
-		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		r9 = unk_20E041;
 		do
 		{
@@ -6776,7 +6776,7 @@ void sub_005F51(void)
 	case 1:
 		if (mem_read32(screen + 0xF44u) != 0u)
 			return;
-		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		r9 = unk_20E041;
 		do
 		{

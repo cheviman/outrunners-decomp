@@ -128,6 +128,7 @@ void sub_01DD58(uint32_t r1)
 void sub_01DDAC(uint32_t *p_r0, uint32_t *p_r1)
 {
 	uint32_t zero = 0;
+	uint16_t r26 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
 
 	current_object = unk_20E600_ADDRESS;
@@ -137,7 +138,7 @@ void sub_01DDAC(uint32_t *p_r0, uint32_t *p_r1)
 	r0 = unk_20E614 + 1u;
 	sub_01F103(r2, &r0, &r1, &r10);
 	r11 = rom_01E220[(uint8_t)OBJECT(current_object)->unk_14];
-	r26 = r26 & ~0xFFFFu;
+	r26 = 0u;
 	r12 = TEXT_CELL(17, 10);
 	r9 = 5u;
 	for (;;)
@@ -1101,10 +1102,10 @@ void sub_01EEEF(void)
 
 uint32_t sub_01EF6E(void)
 {
-	uint16_t r0_2 = 0, r1 = 0, r2 = 0;
+	uint16_t r0_2 = 0, r1 = 0, r2 = 0, r26 = 0;
 	uint32_t r0 = 0, r1_2 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0;
 
-	r26 = (r26 & ~0xFFFFu) | 0x733u;
+	r26 = 0x733u;
 	set_halfwords(PALETTE_RAM + 0x8000u, 0x4000u, r26);
 	set_halfwords(0x688000u, 0x4000u, r26);
 	r0 = rom_01F302;
@@ -1112,7 +1113,7 @@ uint32_t sub_01EF6E(void)
 	move_halfwords(PALETTE_RAM + 0x9E00u, 0x1F304u, r0);
 	r0 = rom_01F504;
 	r0 = r0 >> 1;
-	move_string(0x1F506u, r0, 0x689E00u, r0, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x1F506u, r0, 0x689E00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
 	r27 = r27 & ~0x8000u;
 	r0_2 = 0u;
 	r9 = 0x20u;
@@ -1369,10 +1370,11 @@ uint32_t sub_01F16C(uint32_t r0, uint32_t r10)
 
 uint32_t sub_01F17D(void)
 {
+	uint16_t r26 = 0;
 	uint32_t r0 = 0;
 
 	r0 = 0x780u;
-	r26 = r26 & ~0xFFFFu;
+	r26 = 0u;
 	move_string(screen, 0u, TEXT_CELL(0, 0), 0x780u, 2u, 1u, 0u, r26, &r27, &r28);
 	return r0;
 }
@@ -1543,7 +1545,7 @@ void sub_03F62A(void)
 	if ((mem_read32(screen + 0x94u) & 1u) != 0u)
 	{
 		sub_01167E();
-		move_string(screen + 0x19Eu, 7u, mem_read32(screen + 8u) + 0x3Eu, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(screen + 0x19Eu, 7u, mem_read32(screen + 8u) + 0x3Eu, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
 	t1 = mem_read32(screen + 0x94u);
 	mem_write32(screen + 0x94u, t1 & ~4u);
@@ -1551,7 +1553,7 @@ void sub_03F62A(void)
 	{
 		r0 = mem_read32(screen + 8u);
 		move_halfwords(r0, screen + 0x160u, 0x1Fu);
-		move_string(screen + 0x1ACu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(screen + 0x1ACu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
 	t2 = mem_read32(screen + 0x94u);
 	mem_write32(screen + 0x94u, t2 & ~8u);
@@ -1561,7 +1563,7 @@ void sub_03F62A(void)
 		move_halfwords(screen + 0x160u, screen + 0x1B0u, 0x1Fu);
 		move_halfwords(screen + 0x1ACu, screen + 0x1FCu, 2u);
 		move_halfwords(r0, screen + 0x1B0u, 0x1Fu);
-		move_string(screen + 0x1FCu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(screen + 0x1FCu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
 	if (mem_read32(screen + 0x900u) != 0u)
 		sub_0115EB();

@@ -4,7 +4,7 @@ Description: writes the decompiled functions as C: one C function per V60 functi
              variables, results through pointers
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    20-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Every function becomes "void name(parameters)", or returns the one value it hands back. Its parameters
@@ -1708,8 +1708,10 @@ class FunctionWriter:
             if shorter is not None:
                 return [shorter]
             source, length1, dest, length2, size, fill, downward = (self.exact(arg) for arg in args)
+            # (R26, the fill, only where the move fills)
+            fill_value = "0u" if isinstance(args[5], ir.Const) and not args[5].value else self.use(("r", 26))
             return [f"move_string({source}, {length1}, {dest}, {length2}, {size}, {fill}, {downward}, "
-                    f"{self.use(('r', 26))}, &{self.register_set(27)}, &{self.register_set(28)});"]
+                    f"{fill_value}, &{self.register_set(27)}, &{self.register_set(28)});"]
         if name in ("move_bits_down", "move_bits_up"):
             values = ", ".join(self.exact(arg) for arg in args)
             return [f"{name}({values}, &{self.register_set(27)}, &{self.register_set(28)});"]

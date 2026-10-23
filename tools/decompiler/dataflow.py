@@ -3,7 +3,7 @@ Name:        dataflow.py
 Description: what each function reads, writes and hands back in registers and flags, across the program
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    20-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Variables are the parts of the V60 registers (("r", n, part): part 0 is bits 0-7, part 1 bits 8-15,
@@ -529,8 +529,13 @@ class Program:
                 return pair, written | pair, written | pair
             return set(), written, written
         if name == "move_string":
+            # the end addresses go to R27 and R28; R26 is the fill, of the elements' width, for MOVCFU/MOVCFD
             pair = register_parts(27, FULL) | register_parts(28, FULL)
-            return register_parts(26, FULL), pair, pair
+            size, fill = statement.args[4], statement.args[5]
+            if isinstance(fill, ir.Const) and not fill.value:
+                return set(), pair, pair
+            bits = ir.MASKS[8 * size.value] if isinstance(size, ir.Const) and size.value in (1, 2) else FULL
+            return register_parts(26, bits), pair, pair
         if name in ("move_bits_down", "move_bits_up"):
             pair = register_parts(27, FULL) | register_parts(28, FULL)
             return set(), pair, set()
