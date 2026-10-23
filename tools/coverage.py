@@ -3,7 +3,7 @@ Name:        coverage.py
 Description: byte map of the program ROM: decoded code, data the code points at, fill, and what is still unknown
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    11-10-2026
+Modified:    22-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/coverage.py [rom folder or .zip] [--trace executed.txt ...]   (default ROM: rom/)
@@ -15,7 +15,9 @@ Runs the same analysis as tools/disassemble.py and gives every byte of the progr
                    the analysis follows
   referenced data  from a place the code reads or takes the address of, or a data symbol, up to the
                    next known thing
-  fill             runs of at least 16 bytes of 0xFF, the erased state of an EPROM
+  fill             runs of at least 16 bytes of 0xFF, the erased state of an EPROM; the zeros that take
+                   the code after a function to the next 32-bit word; up to three zeros or nops (CD)
+                   between two known things (before data, on a 16-bit word)
   unknown          everything else
 Unknown runs are listed largest first, with two hints about what they are: how much of the run decodes
 as instructions from its start, and how many 32-bit words elsewhere in the ROM hold its address.
@@ -40,6 +42,8 @@ CLASSES = (CODE, DESCRIBED, DATA, FILL, UNKNOWN)
 
 FILL_BYTE = 0xFF
 FILL_MINIMUM = 16
+ALIGNMENT = 4          # functions start on a 32-bit word: the zeros before one are fill
+PADDING_BYTES = (0x00, 0xCD)    # the bytes that fill up to it: zeros, or nops
 # Operand modes whose Operand.value is a fixed place in memory
 FIXED_MODES = {"pc_disp", "pc_disp_indexed", "pc_disp_indirect", "pc_disp_indirect_indexed", "pc_double_disp",
                "direct", "direct_indexed", "direct_deferred", "direct_deferred_indexed"}
@@ -50,8 +54,13 @@ CODE_CHIPS = orunners_rom.PROGRAM_AREAS[:2]
 
 
 def data_references(analysis):
-    """ROM places the code reads, or takes the address of, that are not code: {address: [instruction addresses]}"""
+    """ROM places the code reads, or takes the address of, that are not code: {address: [instruction addresses]};
+    the data the described tables' data fields hold too, from the field's address (a field that holds the
+    address of code holds a number there, not data)"""
     references = defaultdict(list)
+    for field, target in analysis.data_fields.items():
+        if target not in analysis.owner:
+            references[target].append(field)
     for instruction in analysis.instructions.values():
         jumps = instruction.flow != dis.FLOW_NORMAL
         for operand in instruction.operands:
@@ -102,6 +111,27 @@ def classify(analysis, references):
                 for byte_address in range(address, stop):
                     classes[byte_address] = FILL
             address = stop
+        # the zeros that take the code after a function to the next 32-bit word
+        for address in range(start + 1, end):
+            if classes[address] != UNKNOWN or classes[address - 1] != CODE:
+                continue
+            stop = address
+            while stop < end and stop % ALIGNMENT and classes[stop] == UNKNOWN and image[stop] == 0:
+                stop += 1
+            if stop % ALIGNMENT == 0 and stop > address:
+                for byte_address in range(address, stop):
+                    classes[byte_address] = FILL
+        # a few zeros or nops (CD) between two known things: before code, or before data on a 16-bit word
+        for address in range(start + 1, end):
+            if classes[address] != UNKNOWN or classes[address - 1] == UNKNOWN:
+                continue
+            stop = address
+            while stop < end and classes[stop] == UNKNOWN and image[stop] in PADDING_BYTES:
+                stop += 1
+            if address < stop < end and stop - address < ALIGNMENT and classes[stop] != UNKNOWN \
+                    and (classes[stop] == CODE or stop % 2 == 0):
+                for byte_address in range(address, stop):
+                    classes[byte_address] = FILL
     return classes
 
 

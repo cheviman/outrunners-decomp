@@ -3,13 +3,298 @@
  *    Description: the game's functions, part 01 (in the order of their V60 addresses)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
  *    tools/decompile.py, with the names of symbols.txt.
  */
 #include "game.h"
+
+void sub_006070(void)
+{
+	uint32_t r0 = 0, r9 = 0, r21 = 0;
+
+	OBJECT(r20)->unk_3E = 0xAu;
+	OBJECT(r20)->unk_3C = 0xEEu;
+	r9 = 0x1Bu;
+	sub_00F366(r9);
+	r0 = (uint8_t)(OBJECT(r20)->unk_08 >> 16u);
+	OBJECT(r20)->unk_3A = rom_006E80[r0];
+	OBJECT(r20)->unk_24 = r0 << 9;
+	r21 = sub_011D43();
+	mem_write32(r21 + 4u, sub_006173_ADDRESS);
+	mem_write32(r21 + 0x14u, r20);
+	OBJECT(r20)->unk_04 = sub_0060B1_ADDRESS;
+	sub_0060B1();
+}
+
+void sub_0060B1(void)
+{
+	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r10 = 0;
+	uint8_t t1 = 0;
+	uint32_t t2 = 0, t3 = 0;
+
+	r10 = OBJECT(r20)->unk_14;
+	t1 = ~~mem_read8(r10 + 0x12u);
+	OBJECT(r20)->unk_12 = t1;
+	if (t1 == 0u)
+	{
+		OBJECT(r20)->unk_00 &= 0xDFu;
+		return;
+	}
+	r0 = OBJECT(r20)->unk_24;
+	r0 = (uint16_t)(r0 - mem_read16(mem_read32(r10 + 0x14u) + 0x24u));
+	r0 = r0 & 0xFFFu;
+	r2 = mem_read32(r25 + 0xF08u) + 0x140u;
+	r1 = (int32_t)((int16_t)rom_100C00[r0] * r2) >> 14;
+	r3 = (int32_t)((0u - (int16_t)rom_101400[r0]) * r2) >> 14;
+	r2 = 0x44u;
+	r3 += 0x140u;
+	r0 = 0x100000u;
+	t2 = mem_read32(r25 + 0xF04u);
+	r3 += 0x100u;
+	t3 = r3 + t2;
+	overflow = v60_overflow_add32(r3, t2, 0u);
+	zero = t3 == 0u;
+	negative = t3 >> 31;
+	r3 = t3;
+	if ((negative ^ overflow) | zero)
+	{
+		OBJECT(r20)->unk_00 &= 0xDFu;
+		return;
+	}
+	r0 = divide_s32(r0, r3);
+	r1 = r1 * r0;
+	carry = (r1 >> 11) & 1u;
+	r1 = (uint16_t)(((int32_t)r1 >> 12) + 0xA0u + carry);
+	r2 = r2 * r0;
+	carry = (r2 >> 11) & 1u;
+	OBJECT(r20)->unk_30 = r1;
+	OBJECT(r20)->unk_32 = ((int32_t)r2 >> 12) + 0x60u + carry;
+	r0 = sub_00EAE4(r0);
+}
+
+void sub_006105(void)
+{
+	uint32_t r9 = 0, r21 = 0;
+
+	OBJECT(r20)->unk_3E = 0xAu;
+	OBJECT(r20)->unk_3C = 0xEEu;
+	r9 = 0x1Bu;
+	sub_00F366(r9);
+	OBJECT(r20)->unk_3A = rom_006E80[(uint8_t)(OBJECT(r20)->unk_08 >> 16u)];
+	r21 = sub_011D43();
+	mem_write32(r21 + 4u, sub_006173_ADDRESS);
+	mem_write32(r21 + 0x14u, r20);
+	OBJECT(r20)->unk_04 = sub_00613F_ADDRESS;
+	sub_00613F();
+}
+
+void sub_00613F(void)
+{
+	uint32_t r0 = 0, r10 = 0;
+	uint8_t t1 = 0;
+
+	r10 = OBJECT(r20)->unk_14;
+	if ((mem_read32(r10) & 0x20u) != 0u)
+	{
+		t1 = ~~mem_read8(r10 + 0x12u);
+		OBJECT(r20)->unk_12 = t1;
+		if (t1 != 0u)
+		{
+			OBJECT(r20)->unk_30 = mem_read16(r10 + 0x30u) + 3u;
+			r0 = (uint16_t)(mem_read16(r10 + 0x32u) - 0x14u);
+			OBJECT(r20)->unk_32 = r0;
+			r0 = sub_00EAE4(r0);
+			return;
+		}
+	}
+	OBJECT(r20)->unk_00 &= 0xDFu;
+}
+
+void sub_006173(void)
+{
+	uint32_t r9 = 0;
+
+	OBJECT(r20)->unk_3E = 0xAu;
+	OBJECT(r20)->unk_3C = 0xEFu;
+	r9 = rom_006E90[unk_20E030[mem_read8(OBJECT(r20)->unk_14 + 9u)]];
+	sub_00F366(r9);
+	OBJECT(r20)->unk_3A = 0x27u;
+	OBJECT(r20)->unk_04 = sub_0061A2_ADDRESS;
+	sub_0061A2();
+}
+
+void sub_0061A2(void)
+{
+	uint32_t r0 = 0, r10 = 0;
+	uint8_t t1 = 0;
+
+	r10 = OBJECT(r20)->unk_14;
+	if ((mem_read32(r10) & 0x20u) != 0u)
+	{
+		t1 = ~~mem_read8(r10 + 0x12u);
+		OBJECT(r20)->unk_12 = t1;
+		if (t1 != 0u)
+		{
+			OBJECT(r20)->unk_30 = mem_read16(r10 + 0x30u) + 0x13u;
+			r0 = (uint16_t)(mem_read16(r10 + 0x32u) - 0x10u);
+			OBJECT(r20)->unk_32 = r0;
+			r0 = sub_00EAE4(r0);
+			return;
+		}
+	}
+	OBJECT(r20)->unk_00 &= 0xDFu;
+}
+
+uint32_t sub_0061DB(uint32_t r1, uint32_t r2, uint32_t r3)
+{
+	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
+	uint8_t r3_4 = 0;
+	uint16_t r3_3 = 0;
+	uint32_t r0 = 0, r3_2 = 0;
+	uint16_t t3 = 0;
+	uint32_t t1 = 0, t2 = 0;
+
+	r0 = 0x100000u;
+	t1 = mem_read32(r25 + 0xF04u);
+	r3 += 0x100u;
+	t2 = r3 + t1;
+	overflow = v60_overflow_add32(r3, t1, 0u);
+	zero = t2 == 0u;
+	negative = t2 >> 31;
+	r3_2 = t2;
+	if (((negative ^ overflow) | zero) == 0u)
+	{
+		r0 = divide_s32(r0, r3_2);
+		t3 = (uint16_t)r3_2 >> 4;
+		r3_3 = t3;
+		if (t3 != 0u)
+		{
+			OBJECT(r20)->unk_3C = 0u - (r3_3 - 0x100u);
+			r3_4 = 0xF4u;
+			r1 = r1 * r0;
+			carry = (r1 >> 11) & 1u;
+			r1 = ((int32_t)r1 >> 12) + 0xA0u + carry;
+			if ((int32_t)r1 <= -0x28 || (int32_t)r1 >= 0x168)
+			{
+				OBJECT(r20)->unk_00 &= 0xDFu;
+				return r0;
+			}
+			r2 = r2 * r0;
+			carry = v60_sha_cy(r2, r3_4, 32);
+			OBJECT(r20)->unk_30 = r1;
+			OBJECT(r20)->unk_32 = shift_signed_by(r2, r3_4, 32) + 0x60u + carry;
+			r0 = r0 * OBJECT(r20)->unk_1C;
+			carry = v60_sha_cy(r0, r3_4, 32);
+			r0 = shift_signed_by(r0, r3_4, 32);
+			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + carry);
+			OBJECT(r20)->unk_34 = r0;
+			OBJECT(r20)->unk_36 = r0;
+			return sub_00EAE4(r0);
+		}
+	}
+	OBJECT(r20)->unk_00 &= 0xDFu;
+	return r0;
+}
+
+uint32_t sub_006294(void)
+{
+	uint32_t zero = 0;
+	uint32_t r0 = 0;
+
+	r0 = (uint8_t)(OBJECT(r20)->unk_08 >> 24u);
+	if (r0 != 0u)
+		AT8(OBJECT(r20)->unk_08, 3) = r0 - 1u;
+	switch (OBJECT(r20)->unk_0D)
+	{
+	case 0:
+		if (mem_read8(r25 + 0x101u) < 0xC0u)
+		{
+			if ((mem_read32(r25 + 0x118u) & 0x40u) != 0u)
+			{
+				if ((uint8_t)(OBJECT(r20)->unk_08 >> 24u) == 0u)
+				{
+					zero = 1u == 0u;
+					return zero;
+				}
+			}
+			zero = 0u == 0u;
+			return zero;
+		}
+		OBJECT(r20)->unk_0D++;
+		if ((uint8_t)(OBJECT(r20)->unk_08 >> 24u) != 0u)
+		{
+			zero = 0u == 0u;
+			return zero;
+		}
+		zero = 1u == 0u;
+		return zero;
+	case 1:
+		if (mem_read8(r25 + 0x101u) >= 0x40u)
+		{
+			if ((mem_read32(r25 + 0x118u) & 0x40u) != 0u)
+			{
+				if ((uint8_t)(OBJECT(r20)->unk_08 >> 24u) == 0u)
+				{
+					zero = 1u == 0u;
+					return zero;
+				}
+			}
+			zero = 0u == 0u;
+			return zero;
+		}
+		OBJECT(r20)->unk_0D--;
+		if ((mem_read32(r25 + 0x118u) & 0x40u) != 0u)
+		{
+			if ((uint8_t)(OBJECT(r20)->unk_08 >> 24u) == 0u)
+			{
+				zero = 1u == 0u;
+				return zero;
+			}
+		}
+		zero = 0u == 0u;
+		return zero;
+	default:
+		invalid_jump(rom_0062B0[OBJECT(r20)->unk_0D]);
+	}
+}
+
+void sub_006356(void)
+{
+	uint8_t r0 = 0;
+	uint32_t r9 = 0, r19 = 0, r21 = 0;
+
+	r19 = 0x6988u + mem_read8(r25) * 5u * 4u;
+	sub_0179AC(r19);
+	r19 = 0x13F66Cu;
+	sub_0184D0(r19);
+	sub_018AF0();
+	mem_write8(r25 + 0xF35u, 0xFFu);
+	r0 = 0xFu;
+	sub_011EB8(r0);
+	r0 = 0x3Bu;
+	sub_019402(r0);
+	mem_write8(r25 + 0xE2u, 0xFFu);
+	r21 = sub_011D43();
+	mem_write32(r21 + 4u, sub_0064E2_ADDRESS);
+	r21 = sub_011D43();
+	mem_write32(r21 + 4u, sub_00652A_ADDRESS);
+	OBJECT(r20)->unk_14 = r21;
+	r21 = sub_011D43();
+	mem_write32(r21 + 4u, sub_00660F_ADDRESS);
+	OBJECT(r20)->unk_3E = 0u;
+	OBJECT(r20)->unk_3C = 0x19Du;
+	r9 = 0x26Fu;
+	sub_00F366(r9);
+	OBJECT(r20)->unk_3A = 0x4Eu;
+	OBJECT(r20)->unk_30 = 0xA0u;
+	OBJECT(r20)->unk_32 = 0x7Au;
+	OBJECT(r20)->unk_04 = sub_0063F9_ADDRESS;
+	sub_0063F9();
+}
 
 void sub_0063F9(void)
 {
@@ -3120,6 +3405,20 @@ void sub_00AABC(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t *p_r3, uint32_t 
 	*p_r5 = (int32_t)(((int32_t)((int16_t)rom_101400[r1] * r6) >> 14) * r2) >> 14;
 }
 
+void sub_00AB24(void)
+{
+	sub_00AB46();
+}
+
+void sub_00AB36(void)
+{
+	sub_00AB46();
+}
+
+void sub_00AB46(void)
+{
+}
+
 void sub_00B4F8(void)
 {
 	uint16_t r5 = 0;
@@ -3837,6 +4136,10 @@ void sub_00C43E(void)
 	} while (L_00C4B3);
 }
 
+void sub_00C552(void)
+{
+}
+
 void sub_00C553(void)
 {
 	uint32_t r9 = 0;
@@ -4239,6 +4542,10 @@ void sub_00C873(void)
 		OBJECT(r20)->unk_01 = 0u;
 		return;
 	}
+}
+
+void sub_00C8B5(void)
+{
 }
 
 void sub_00C8B6(void)
@@ -4803,6 +5110,12 @@ void sub_00CE99(uint32_t r0, uint32_t r1)
 	uint32_t r10 = 0;
 
 	r10 = r20 + 0xB0u + r1 * 2u * 4u;
+	sub_00CEA7(r0, r10);
+}
+
+void sub_00CEA4(uint32_t r0, uint32_t r10)
+{
+	r0 = r0 / 0xAu;
 	sub_00CEA7(r0, r10);
 }
 
@@ -5404,6 +5717,17 @@ uint32_t sub_00D612(uint32_t left_caller)
 	return left_caller;
 }
 
+void sub_00D658(void)
+{
+	uint32_t r0 = 0;
+
+	r0 = 0x3000u;
+	do
+	{
+		r0--;
+	} while (r0 != 0u);
+}
+
 void sub_00D664(uint32_t *p_r2, uint32_t *p_left_caller)
 {
 	uint32_t r0 = 0, r19 = 0;
@@ -5643,1674 +5967,4 @@ void sub_00D8A5(void)
 	unk_20E632 = AS16(unk_20FC0B[0]);
 	unk_20E634 = unk_20FC0D;
 	sub_00036B();
-}
-
-void sub_00D9F3(void)
-{
-	uint32_t zero = 0;
-	uint8_t r0_2 = 0, r1_2 = 0, r3 = 0;
-	uint16_t r2 = 0, r9 = 0;
-	uint32_t r0 = 0, r1 = 0, r3_2 = 0, r11 = 0, r13 = 0;
-	uint8_t t2 = 0;
-	uint16_t t1 = 0;
-	uint32_t t3 = 0;
-
-	r11 = mem_read32(r25 + 0x24u);
-	r12 = 0x20FC00u;
-	if (mem_read8(r25 + 1u) == 0u)
-	{
-		r1 = unk_20E041;
-		r2 = 0x80u;
-		r3 = mem_read8(r11 + 0x1Du);
-		r13 = r12 + 0x1Cu;
-		r14 = r25 + 0x300u;
-		r0 = mem_read16(r11 + 0x1Au);
-		do
-		{
-			r1--;
-		} while ((r1 != 0u) & (unk_20FC1C == r3));
-		if (unk_20FC1C == r3)
-		{
-			if (r0 == 0u)
-			{
-				r1 = 0u;
-				if (unk_20E620 == 0u)
-					r1 = unk_20E040;
-				r9 = rom_00E614[r1];
-				r13 = r12 + 0x19u;
-				r1 = unk_20E041;
-				r3_2 = 0u;
-				for (;;)
-				{
-					if (mem_read8(r14 + r3_2) != 0u || mem_read8(r13) == 0u)
-					{
-						r3_2 = (uint8_t)(r3_2 + 1u);
-						r13 = (r13 & ~0xFFFFu) | (uint16_t)(r13 + r2);
-						r1--;
-						if (r1 == 0u)
-							break;
-						continue;
-					}
-					mem_write8(r14 + r3_2, 0xFFu);
-					mem_write8(r11 + 0x1Eu, r3_2);
-					mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
-					r0 = r9;
-					if ((uint8_t)(mem_read8(r25 + 0x30Fu) + 1u) != unk_20E041 || r0 <= 0x28u)
-						break;
-					r0 = 0x28u;
-					break;
-				}
-			}
-			else
-			{
-				t1 = r0;
-				r0 = (uint16_t)(t1 - 1u);
-				r9 = (uint16_t)r0;
-				if (t1 != 1u)
-				{
-					r13 = r12 + 0x19u;
-					r1 = unk_20E041;
-					r3_2 = 0u;
-					for (;;)
-					{
-						if (mem_read8(r14 + r3_2) != 0u || mem_read8(r13) == 0u)
-						{
-							r3_2 = (uint8_t)(r3_2 + 1u);
-							r13 = (r13 & ~0xFFFFu) | (uint16_t)(r13 + r2);
-							r1--;
-							if (r1 == 0u)
-								break;
-							continue;
-						}
-						mem_write8(r14 + r3_2, 0xFFu);
-						mem_write8(r11 + 0x1Eu, r3_2);
-						mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
-						r0 = r9;
-						if ((uint8_t)(mem_read8(r25 + 0x30Fu) + 1u) != unk_20E041 || r0 <= 0x28u)
-							break;
-						r0 = 0x28u;
-						break;
-					}
-				}
-				else
-				{
-					mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
-					mem_write8(r11 + 0x1Eu, 0xFFu);
-					mem_write32(r14, 0u);
-					r14 = r14 + 4u;
-					mem_write32(r14, 0u);
-					mem_write8(0x80000Au, 1u);
-					r14 = r14 + 4u;
-				}
-			}
-		}
-		mem_write16(r11 + 0x1Au, r0);
-	}
-	r1 = unk_20E041;
-	r13 = r12 + 0x28u;
-	do
-	{
-		t2 = mem_read8(r13);
-		zero = t2 == 0u;
-		r13 += 0x80u;
-		r1--;
-	} while ((r1 != 0u) & (t2 == 0u));
-	if (zero)
-	{
-		if (unk_20FC1A != 0u && mem_read8(r25 + 0x80u) != 0u && mem_read8(r25 + 0x80u) <= 5u)
-			mem_write32(r25 + 0x80u, 7u);
-	}
-	else if (mem_read8(r25 + 0x80u) != 0u && mem_read8(r25 + 0x80u) <= 5u)
-	{
-		mem_write32(r25 + 0x80u, 5u);
-		unk_20E02E = 0u;
-		if (unk_20FC1A != 0u && mem_read8(r25 + 0x80u) != 0u && mem_read8(r25 + 0x80u) <= 5u)
-			mem_write32(r25 + 0x80u, 7u);
-	}
-	if (unk_20FC1D == mem_read8(r11 + 0x1Cu))
-		return;
-	mem_write8(r11 + 0x1Cu, unk_20FC1D);
-	r0_2 = unk_20FC1E;
-	if ((int8_t)r0_2 < 0)
-	{
-		mem_write8(r25 + 0x30Fu, 0u);
-		mem_write8(r25 + 0x319u, 0u);
-		return;
-	}
-	r13 = r25 + 0x30Fu;
-	r1 = mem_read8(r13);
-	r1 = (uint8_t)(r1 + 1u);
-	mem_write8(r13, r1);
-	mem_write8(r13 + r1, r0_2);
-	if (mem_read8(r25 + 1u) == r0_2)
-	{
-		mem_write8(r11 + 0x19u, 0u);
-		mem_write8(r25 + 0x319u, 0xFFu);
-		r1_2 = mem_read8(r13 + 1u);
-		mem_write8(r25 + 0x30Cu, r1_2);
-		if (mem_read8(r25 + 1u) == r1_2)
-			mem_write8(r25 + 0x318u, 0xFFu);
-	}
-	if (mem_read8(r25 + 0x319u) != 0u && mem_read8(r25 + 0x318u) != 0u)
-	{
-		r14 = r11 + 0x1Fu;
-		mem_write8(r14, mem_read8(r13));
-		r14 = r14 + 1u;
-		r13++;
-		t3 = mem_read32(r13 + 4u);
-		mem_write32(r14, mem_read32(r13));
-		mem_write32(r14 + 4u, t3);
-		r14 = r14 + 8u;
-	}
-}
-
-void sub_00DB6D(void)
-{
-	uint8_t r0_2 = 0, r1 = 0, r3_2 = 0, r5 = 0;
-	uint16_t r4 = 0;
-	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r9 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r19 = 0;
-	uint8_t t2 = 0;
-	uint32_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-	r11 = mem_read32(r25 + 0x24u);
-	r12 = mem_read32(r25 + 0x308u);
-	if (mem_read8(r25 + 0x31Au) == 0u)
-		return;
-	if (mem_read8(r25 + 0x318u) != 0u)
-	{
-		r19 = r12 + 0x1Fu;
-		r9 = mem_read8(r19);
-		r1 = mem_read8(r11 + 0x63u);
-		r19++;
-		r13 = r19;
-		r0 = r9;
-		do
-		{
-			r2 = rom_00E0A0[mem_read8(r13)] + unk_20E000_ADDRESS;
-			r0--;
-			r13++;
-		} while ((r0 != 0u) & (mem_read8(r2 + 0x61u) == r1));
-		if (mem_read8(r2 + 0x61u) == r1)
-		{
-			r13 = r19;
-			r14 = r25 + 0x330u;
-			r0 = r9;
-			do
-			{
-				r2 = mem_read8(r13);
-				r15 = rom_00E0A0[r2] + unk_20E000_ADDRESS;
-				r0--;
-				r13++;
-			} while ((r0 != 0u) & (mem_read8(r14 + r2) == mem_read8(r15 + 0x60u)));
-			if (mem_read8(r14 + r2) != mem_read8(r15 + 0x60u))
-			{
-				r3 = mem_read8(r15 + 0x60u);
-				mem_write8(r14 + r2, r3);
-				mem_write8(r11 + 0x64u, r2);
-				r3 = (uint8_t)(r3 - 1u);
-				mem_write8(r11 + 0x65u, r3);
-				r4 = mem_read8(r25 + 0x338u + r3);
-				t1 = r25 + 0x338u + r3;
-				mem_write8(t1, mem_read8(t1) + 1u);
-				mem_write8(r11 + 0x66u, (uint8_t)r4);
-				r5 = (uint8_t)(mem_read16(r15 + 0x44u) >> 15);
-				mem_write8(r11 + 0x67u, r5);
-				mem_write16(r11 + 0x68u, mem_read32(r11 + 0x6Cu) / 0xAu + r4);
-				mem_write8(r11 + 0x63u, mem_read8(r11 + 0x63u) + 1u);
-				if (r4 == 0u && r3 != 5u)
-				{
-					r0 = mem_read8(r15 + 0x62u);
-					r0 = (uint8_t)(r0 * 2u);
-					r0 = (uint8_t)(r0 + r5);
-					mem_write16(r11 + 0x6Au, mem_read16(r11 + 0x6Au) + (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + unk_20FC0B[r3]) * 0x1Eu);
-				}
-			}
-		}
-		if (mem_read8(r25 + 0x31Cu) != 0u)
-		{
-			mem_write32(r11 + 0x6Cu, mem_read32(r11 + 0x6Cu) + 0x22u);
-			if (mem_read16(r11 + 0x6Au) != 0u)
-				mem_write16(r11 + 0x6Au, mem_read16(r11 + 0x6Au) - 1u);
-		}
-		r16 = r11 + 0x1Fu;
-		r0 = mem_read8(r16);
-		t2 = r0;
-		r0 = (uint8_t)(t2 - 1u);
-		r16++;
-		if ((int8_t)t2 > 1)
-		{
-			r4_2 = mem_read8(r16);
-			r13 = rom_00E0A0[r4_2] + unk_20E000_ADDRESS;
-			r16++;
-			if (mem_read8(r25 + 0x31Cu) != 0u)
-			{
-				do
-				{
-					r6 = mem_read8(r16);
-					r14 = rom_00E0A0[r6] + unk_20E000_ADDRESS;
-					r16++;
-					if (mem_read8(r13 + 0x5Eu) != 0u)
-					{
-						if (mem_read8(r14 + 0x5Eu) == 0u || mem_read16(r13 + 0x16u) <= mem_read16(r14 + 0x16u))
-						{
-							t3 = r6;
-							r6 = r4_2;
-							r4_2 = t3;
-							r13 = r14;
-						}
-					}
-					else if (mem_read32(r14 + 0x40u) <= mem_read32(r13 + 0x40u))
-					{
-						t3 = r6;
-						r6 = r4_2;
-						r4_2 = t3;
-						r13 = r14;
-					}
-					mem_write8(r16 - 2u, r6);
-					r0--;
-				} while (r0 != 0u);
-				mem_write8(r16 - 1u, r4_2);
-			}
-		}
-	}
-	r13 = r12 + 0x1Fu;
-	r0 = mem_read8(r13);
-	r1 = 0u;
-	r13++;
-	r2 = mem_read8(r13);
-	r3_2 = mem_read8(r25 + 1u);
-	r14 = rom_00E0A0[r2] + unk_20E000_ADDRESS;
-	mem_write16(r25 + 0x350u, mem_read16(r14 + 0x46u));
-	mem_write8(r25 + 0x352u, mem_read8(r14 + 0x62u));
-	r13++;
-	do
-	{
-		mem_write8(r25 + 0x320u + r2, r1);
-		if (r2 == r3_2)
-			mem_write8(r25 + 0x31Fu, r1);
-		r2 = mem_read8(r13);
-		r1++;
-		r0--;
-		r13++;
-	} while (r0 != 0u);
-	if (mem_read8(r25 + 0x342u) != mem_read8(r12 + 0x63u))
-	{
-		r0_2 = mem_read8(r12 + 0x63u);
-		mem_write8(r25 + 0x342u, r0_2);
-		mem_write8(r11 + 0x61u, r0_2);
-		r0 = mem_read8(r12 + 0x64u);
-		r1_2 = mem_read8(r12 + 0x65u);
-		r2 = mem_read8(r12 + 0x66u);
-		r3_2 = mem_read8(r12 + 0x67u);
-		r4 = mem_read16(r12 + 0x68u);
-		r5_2 = r1_2 * 2u;
-		t4 = r25 + 0x480u + r0;
-		mem_write8(t4, mem_read8(t4) + 1u);
-		t5 = r25 + 0x35Au + r1_2;
-		mem_write8(t5, mem_read8(t5) + 1u);
-		mem_write8(r25 + 0x360u + r5_2 * 4u + r0, r2);
-		mem_write8(r25 + 0x390u + r5_2 * 4u + r2, r0);
-		r5_2 = r5_2 * 2u;
-		mem_write16(r25 + 0x3C0u + r5_2 * 4u + r0 * 2u, r4);
-		mem_write16(r25 + 0x420u + r5_2 * 4u + r2 * 2u, r4);
-		if (r2 == 0u && r1_2 != 5u)
-		{
-			mem_write8(r25 + 0x349u, mem_read8(r25 + 0x349u) + 1u);
-			mem_write8(r25 + 0x34Au + r1_2, r3_2);
-			r0 = mem_read8(rom_00E0A0[r0] + 0x20E062u);
-			r0 = (uint8_t)(r0 * 2u);
-			mem_write8(r25 + 0x344u + r1_2, rom_00E5D3[(uint8_t)(r0 + r3_2)]);
-		}
-	}
-}
-
-void sub_00DDA8(void)
-{
-	uint32_t r0 = 0, r10 = 0, ignored = 0;
-
-	switch (mem_read8(r25 + 0x82u))
-	{
-	case 0:
-		mem_write8(r25 + 0x153u, 0u);
-		mem_write32(r25 + 0x94u, mem_read32(r25 + 0x94u) | 1u);
-		mem_write8(r25 + 0x82u, mem_read8(r25 + 0x82u) + 1u);
-		return;
-	case 1:
-		break;
-	case 2:
-		mem_write8(r25 + 0x82u, mem_read8(r25 + 0x82u) + 1u);
-		r10 = 0xDF74u;
-		ignored = sub_011E2C(r10);
-		return;
-	case 3:
-		if (mem_read8(r25) != 0u)
-			mem_write8(0xC8001Cu, 0x86u);
-		else
-			mem_write8(IO_C0001C, 6u);
-		mem_write8(r25 + 0x153u, 1u);
-		mem_write32(r25 + 0x94u, mem_read32(r25 + 0x94u) | 1u);
-		mem_write8(r25 + 0x82u, mem_read8(r25 + 0x82u) + 1u);
-		return;
-	case 4:
-		if (unk_20FC1A != 0u)
-			return;
-		sub_012004();
-		mem_write32(r25 + 0x80u, 2u);
-		r10 = unk_20E000_ADDRESS + mem_read8(r25) * 4u;
-		mem_write32(r10 + 0xC0u, 0u);
-		mem_write32(r10 + 0xC8u, 0u);
-		sub_018AF0();
-		return;
-	default:
-		invalid_jump(rom_00DDB4[mem_read8(r25 + 0x82u)]);
-	}
-	if ((mem_read32(r25 + 0x94u) & 1u) == 0u)
-	{
-		mem_write8(r25 + 0x82u, mem_read8(r25 + 0x82u) + 1u);
-		sub_012004();
-		sub_011C60();
-		sub_01070C();
-		sub_010889();
-		sub_01076A();
-		sub_00DEC2();
-		mem_write32(r25 + 0x90u, mem_read32(r25 + 0x90u) & ~0x100u);
-		r0 = mem_read8(r25);
-		unk_20E0D0[r0] = 0u;
-		r10 = unk_20E000_ADDRESS + r0 * 4u;
-		mem_write8(r10 + 0xC0u, 2u);
-		mem_write8(r10 + 0xC8u, 8u);
-		mem_write8(r10 + 0xC1u, 0xFFu);
-		mem_write8(r10 + 0xC2u, 0x10u);
-		mem_write8(r10 + 0xC3u, 1u);
-		mem_write8(r10 + 0xC9u, 0xFFu);
-		mem_write8(r10 + 0xCAu, 0x10u);
-		mem_write8(r10 + 0xCBu, 1u);
-	}
-}
-
-void sub_00DEC2(void)
-{
-	move_string(0x100800u, 0x28u, mem_read32(r25 + 0x24u) + 0x30u, 0x28u, 2u, 0u, 0u, r26, &r27, &r28);
-}
-
-void sub_00DED2(void)
-{
-	mem_write8(mem_read32(r25 + 0x24u) + 0x5Cu, 0xFFu);
-}
-
-uint32_t sub_00DED9(void)
-{
-	uint32_t zero = 0;
-	uint32_t r0 = 0, r1 = 0;
-	uint8_t t1 = 0;
-
-	r0 = mem_read32(r25 + 0x308u) + 0x1Fu;
-	r1 = mem_read8(r0);
-	r0++;
-	do
-	{
-		t1 = mem_read8(0x20FC5Cu + rom_00E0C4[mem_read8(r0)]);
-		zero = t1 == 0u;
-		r1--;
-		r0++;
-	} while ((r1 != 0u) & (t1 != 0u));
-	return zero;
-}
-
-void sub_00DEF8(void)
-{
-	uint16_t r1 = 0;
-	uint32_t r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, ignored = 0;
-	uint8_t t1 = 0;
-
-	r10 = r25 + 0x328u;
-	r9 = unk_20E041;
-	r11 = unk_20FB80_ADDRESS;
-	do
-	{
-		r11 += 0x80u;
-		t1 = mem_read8(r10);
-		r10++;
-		if (mem_read8(r11 + 0x11u) != t1)
-		{
-			mem_write8(r10 - 1u, mem_read8(r11 + 0x11u));
-			r1 = mem_read16(r11 + 0x16u);
-			r8 = mem_read8(r11 + 0x18u);
-			r8 = (uint8_t)(r8 * 6u);
-			r12 = unk_20E300_ADDRESS + r8;
-			if (r1 <= mem_read16(r12 + 4u))
-			{
-				mem_write16(r12 + 4u, r1);
-				mem_write8(r12, mem_read8(r11 + 0x12u));
-				mem_write8(r12 + 1u, mem_read8(r11 + 0x13u));
-				mem_write16(r12 + 2u, mem_read16(r11 + 0x14u));
-				r13 = SOUND_RAM + 0x1F32u + r8;
-				mem_write32(r13, mem_read32(r12));
-				mem_write16(r13 + 4u, mem_read16(r12 + 4u));
-				sub_011418(ignored);
-				r13 = SOUND_RAM + 0x1FAEu + r8;
-				mem_write32(r13, mem_read32(r12));
-				mem_write16(r13 + 4u, mem_read16(r12 + 4u));
-			}
-		}
-		r9--;
-	} while (r9 != 0u);
-}
-
-void sub_00E620(void)
-{
-	bool L_00E854 = false;
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
-	uint8_t t65 = 0, t66 = 0;
-	uint32_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0, t64 = 0;
-
-	for (;;)
-	{
-		if (L_00E854 || unk_20E623 == 0u)
-		{
-			if (L_00E854 || unk_20E043 != 0u || unk_20E042 != 0u)
-			{
-				if (!L_00E854)
-				{
-					r10 = unk_20FB00_ADDRESS;
-					r11 = 0x20FC00u;
-					r1 = 1u;
-				}
-				do
-				{
-					t1 = r11;
-					r11 += 8u;
-					t2 = mem_read32(r10 + 4u);
-					mem_write32(t1, mem_read32(r10));
-					mem_write32(t1 + 4u, t2);
-					r10 += 8u;
-					t3 = r11;
-					r11 += 8u;
-					t4 = mem_read32(r10 + 4u);
-					mem_write32(t3, mem_read32(r10));
-					mem_write32(t3 + 4u, t4);
-					r10 += 8u;
-					t5 = r11;
-					r11 += 8u;
-					t6 = mem_read32(r10 + 4u);
-					mem_write32(t5, mem_read32(r10));
-					mem_write32(t5 + 4u, t6);
-					r10 += 8u;
-					t7 = r11;
-					r11 += 8u;
-					t8 = mem_read32(r10 + 4u);
-					mem_write32(t7, mem_read32(r10));
-					mem_write32(t7 + 4u, t8);
-					r10 += 8u;
-					t9 = r11;
-					r11 += 8u;
-					t10 = mem_read32(r10 + 4u);
-					mem_write32(t9, mem_read32(r10));
-					mem_write32(t9 + 4u, t10);
-					r10 += 8u;
-					t11 = r11;
-					r11 += 8u;
-					t12 = mem_read32(r10 + 4u);
-					mem_write32(t11, mem_read32(r10));
-					mem_write32(t11 + 4u, t12);
-					r10 += 8u;
-					t13 = r11;
-					r11 += 8u;
-					t14 = mem_read32(r10 + 4u);
-					mem_write32(t13, mem_read32(r10));
-					mem_write32(t13 + 4u, t14);
-					r10 += 8u;
-					t15 = r11;
-					r11 += 8u;
-					t16 = mem_read32(r10 + 4u);
-					mem_write32(t15, mem_read32(r10));
-					mem_write32(t15 + 4u, t16);
-					r10 += 8u;
-					t17 = r11;
-					r11 += 8u;
-					t18 = mem_read32(r10 + 4u);
-					mem_write32(t17, mem_read32(r10));
-					mem_write32(t17 + 4u, t18);
-					r10 += 8u;
-					t19 = r11;
-					r11 += 8u;
-					t20 = mem_read32(r10 + 4u);
-					mem_write32(t19, mem_read32(r10));
-					mem_write32(t19 + 4u, t20);
-					r10 += 8u;
-					t21 = r11;
-					r11 += 8u;
-					t22 = mem_read32(r10 + 4u);
-					mem_write32(t21, mem_read32(r10));
-					mem_write32(t21 + 4u, t22);
-					r10 += 8u;
-					t23 = r11;
-					r11 += 8u;
-					t24 = mem_read32(r10 + 4u);
-					mem_write32(t23, mem_read32(r10));
-					mem_write32(t23 + 4u, t24);
-					r10 += 8u;
-					t25 = r11;
-					r11 += 8u;
-					t26 = mem_read32(r10 + 4u);
-					mem_write32(t25, mem_read32(r10));
-					mem_write32(t25 + 4u, t26);
-					r10 += 8u;
-					t27 = r11;
-					r11 += 8u;
-					t28 = mem_read32(r10 + 4u);
-					mem_write32(t27, mem_read32(r10));
-					mem_write32(t27 + 4u, t28);
-					r10 += 8u;
-					t29 = r11;
-					r11 += 8u;
-					t30 = mem_read32(r10 + 4u);
-					mem_write32(t29, mem_read32(r10));
-					mem_write32(t29 + 4u, t30);
-					r10 += 8u;
-					t31 = r11;
-					r11 += 8u;
-					t32 = mem_read32(r10 + 4u);
-					mem_write32(t31, mem_read32(r10));
-					mem_write32(t31 + 4u, t32);
-					r10 += 8u;
-					t33 = r11;
-					r11 += 8u;
-					t34 = mem_read32(r10 + 4u);
-					mem_write32(t33, mem_read32(r10));
-					mem_write32(t33 + 4u, t34);
-					r10 += 8u;
-					t35 = r11;
-					r11 += 8u;
-					t36 = mem_read32(r10 + 4u);
-					mem_write32(t35, mem_read32(r10));
-					mem_write32(t35 + 4u, t36);
-					r10 += 8u;
-					t37 = r11;
-					r11 += 8u;
-					t38 = mem_read32(r10 + 4u);
-					mem_write32(t37, mem_read32(r10));
-					mem_write32(t37 + 4u, t38);
-					r10 += 8u;
-					t39 = r11;
-					r11 += 8u;
-					t40 = mem_read32(r10 + 4u);
-					mem_write32(t39, mem_read32(r10));
-					mem_write32(t39 + 4u, t40);
-					r10 += 8u;
-					t41 = r11;
-					r11 += 8u;
-					t42 = mem_read32(r10 + 4u);
-					mem_write32(t41, mem_read32(r10));
-					mem_write32(t41 + 4u, t42);
-					r10 += 8u;
-					t43 = r11;
-					r11 += 8u;
-					t44 = mem_read32(r10 + 4u);
-					mem_write32(t43, mem_read32(r10));
-					mem_write32(t43 + 4u, t44);
-					r10 += 8u;
-					t45 = r11;
-					r11 += 8u;
-					t46 = mem_read32(r10 + 4u);
-					mem_write32(t45, mem_read32(r10));
-					mem_write32(t45 + 4u, t46);
-					r10 += 8u;
-					t47 = r11;
-					r11 += 8u;
-					t48 = mem_read32(r10 + 4u);
-					mem_write32(t47, mem_read32(r10));
-					mem_write32(t47 + 4u, t48);
-					r10 += 8u;
-					t49 = r11;
-					r11 += 8u;
-					t50 = mem_read32(r10 + 4u);
-					mem_write32(t49, mem_read32(r10));
-					mem_write32(t49 + 4u, t50);
-					r10 += 8u;
-					t51 = r11;
-					r11 += 8u;
-					t52 = mem_read32(r10 + 4u);
-					mem_write32(t51, mem_read32(r10));
-					mem_write32(t51 + 4u, t52);
-					r10 += 8u;
-					t53 = r11;
-					r11 += 8u;
-					t54 = mem_read32(r10 + 4u);
-					mem_write32(t53, mem_read32(r10));
-					mem_write32(t53 + 4u, t54);
-					r10 += 8u;
-					t55 = r11;
-					r11 += 8u;
-					t56 = mem_read32(r10 + 4u);
-					mem_write32(t55, mem_read32(r10));
-					mem_write32(t55 + 4u, t56);
-					r10 += 8u;
-					t57 = r11;
-					r11 += 8u;
-					t58 = mem_read32(r10 + 4u);
-					mem_write32(t57, mem_read32(r10));
-					mem_write32(t57 + 4u, t58);
-					r10 += 8u;
-					t59 = r11;
-					r11 += 8u;
-					t60 = mem_read32(r10 + 4u);
-					mem_write32(t59, mem_read32(r10));
-					mem_write32(t59 + 4u, t60);
-					r10 += 8u;
-					t61 = r11;
-					r11 += 8u;
-					t62 = mem_read32(r10 + 4u);
-					mem_write32(t61, mem_read32(r10));
-					mem_write32(t61 + 4u, t62);
-					r10 += 8u;
-					t63 = r11;
-					r11 += 8u;
-					t64 = mem_read32(r10 + 4u);
-					mem_write32(t63, mem_read32(r10));
-					mem_write32(t63 + 4u, t64);
-					r1--;
-					r10 += 8u;
-				} while (r1 != 0u);
-				return;
-			}
-			t65 = mem_read8(0x80000Cu);
-			if (t65 != 0u)
-			{
-				sub_00D2EB();
-				return;
-			}
-			r10 = 0x800020u;
-			r11 = 0x20FC00u;
-			r1 = 8u;
-			t66 = mem_read8(0x80000Eu);
-			if (t66 == 0u)
-			{
-				sub_00E67C(r1, r10, r11);
-				return;
-			}
-			r10 += 0x700u;
-			sub_00E67C(r1, r10, r11);
-			return;
-		}
-		r10 = 0x21E000u;
-		r11 = 0x20FC00u;
-		r1 = 4u;
-		L_00E854 = true;
-	}
-}
-
-void sub_00E638(void)
-{
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
-
-	r10 = 0x800600u;
-	r11 = 0x21E000u;
-	r1 = 8u;
-	sub_00E67C(r1, r10, r11);
-}
-
-void sub_00E67C(uint32_t r1, uint32_t r10, uint32_t r11)
-{
-	do
-	{
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11 += 0x11u;
-		r1--;
-		r10 += 2u;
-	} while (r1 != 0u);
-}
-
-void sub_00E8DF(void)
-{
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
-	uint8_t t1 = 0;
-
-	if (unk_20E623 == 0u)
-	{
-		unk_20E046 = unk_20E038;
-		if (unk_20E043 != 0u || unk_20E042 != 0u)
-			return;
-		t1 = mem_read8(0x80000Cu);
-		if (t1 != 0u)
-		{
-			sub_00D2EB();
-			return;
-		}
-		r10 = 0x20FC00u;
-		r11 = 0x800FE0u;
-		r1 = 2u;
-		do
-		{
-			r10 = r10 - 0x10u - 1u;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
-			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r1--;
-		} while (r1 != 0u);
-		mem_write8(0x800006u, 0xFFu);
-	}
-}
-
-uint32_t sub_00EAE4(uint32_t r0)
-{
-	uint32_t r2 = 0, r10 = 0, r11 = 0, left_caller = 0;
-	uint32_t target1 = 0;
-
-	if ((OBJECT(r20)->unk_00 & 2u) != 0u)
-		return r0;
-	r0 = rom_00EB44[OBJECT(r20)->unk_3E];
-	r10 = mem_read32(r25 + 0xC0u) + 0x10u;
-	if (mem_read32(r25 + 0xC4u) <= r10)
-		return r0;
-	left_caller = 0u;
-	target1 = r0;
-	switch (target1)
-	{
-	case 0x00EF32u:
-		sub_00EF32(&r0, &r10);
-		break;
-	case 0x00F104u:
-		r10 = sub_00F104(r10);
-		break;
-	case 0x00EB74u:
-		sub_00EB74(&r0, &r10, &left_caller);
-		break;
-	case 0x00EEBFu:
-		sub_00EEBF(&r0, &r10, &left_caller);
-		break;
-	case 0x00EE37u:
-		sub_00EE37(&r0, &r10, &left_caller);
-		break;
-	case 0x00EC1Bu:
-		sub_00EC1B(&r0, &r10, &left_caller);
-		break;
-	case 0x00F126u:
-		r10 = sub_00F126(r10);
-		break;
-	case 0x00ECCDu:
-		sub_00ECCD(&r0, &r10, &left_caller);
-		break;
-	case 0x00F04Eu:
-		sub_00F04E(&r0, &r10);
-		break;
-	case 0x00EE75u:
-		sub_00EE75(&r0, &r10, &left_caller);
-		break;
-	case 0x00F15Cu:
-		sub_00F15C(&r0, &r10);
-		break;
-	case 0x00ED82u:
-		sub_00ED82(&r0, &r10, &left_caller);
-		break;
-	default:
-		invalid_jump(target1);
-	}
-	if (left_caller != 0u)
-		return r0;
-	r0 = OBJECT(r20)->unk_3C;
-	r11 = r25 + 0x5000u + r0 * 4u;
-	if (mem_read16(r11) == 0u)
-		mem_write16(r11 + 2u, r10);
-	r12 = mem_read32(r25 + 0xC0u) + 0x10u;
-	r2 = mem_read16(r11);
-	mem_write32(r10, r2);
-	mem_write32(r10 + 0x3000u, (uint16_t)(r2 + 0x300u));
-	mem_write32(r25 + 0xC0u, r10);
-	r12 = r12 >> 4;
-	r12 = (r12 & ~0xFFFFu) | (uint16_t)(r12 | 0x8000u);
-	mem_write16(r11, r12);
-	mem_write16(r25 + 0xB0u, mem_read16(r25 + 0xB0u) + 1u);
-	return r0;
-}
-
-void sub_00EB74(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
-{
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
-
-	r0 = OBJECT(r20)->unk_1C;
-	t1 = mem_read16(mem_read32(r25 + 0x20u) + 0x46u);
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 * 0x10u);
-	r11 = r25 + 0x3000u + r0;
-	r2 = mem_read16(r11);
-	if (r2 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 + 0x10u);
-	r12 = r25 + 0x3000u + r0;
-	r3 = (int16_t)mem_read16(r12);
-	if (r3 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (int32_t)((int16_t)OBJECT(r20)->unk_20 * r2) >> 12;
-	r1 = (int32_t)((int16_t)OBJECT(r20)->unk_24 * r2) >> 12;
-	r4 = (int32_t)((int16_t)OBJECT(r20)->unk_20 * r3) >> 12;
-	r5 = (int32_t)((int16_t)OBJECT(r20)->unk_24 * r3) >> 12;
-	r7 = (uint16_t)OBJECT(r20)->unk_28;
-	r6 = (uint16_t)(0x80u - r7);
-	r4 = ((r4 & ~0xFFFFu) | (uint16_t)(r4 + mem_read16(r12 + 4u))) * r7;
-	r0 = (int32_t)(((r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u))) * r6 + r4) >> 7;
-	r5 = ((r5 & ~0xFFFFu) | (uint16_t)(r5 + mem_read16(r12 + 6u))) * r7;
-	r1 = (int32_t)(((r1 & ~0xFFFFu) | (uint16_t)(r1 + mem_read16(r11 + 6u))) * r6 + r5) >> 7;
-	r2 = (r2 * r4 + r3 * r5) >> 7;
-	sub_00EEFF((uint16_t)r1, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = r0;
-}
-
-void sub_00EC1B(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
-{
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
-
-	r0 = OBJECT(r20)->unk_1C;
-	r1 = r0;
-	t1 = mem_read16(mem_read32(r25 + 0x20u) + 0x46u);
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 * 0x10u);
-	r11 = r25 + 0x3000u + r0;
-	r2 = (int16_t)mem_read16(r11);
-	if (r2 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 + 0x10u);
-	r12 = r25 + 0x3000u + r0;
-	r3 = (int16_t)mem_read16(r12);
-	if (r3 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(r20)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(r20)->unk_20 + (uint32_t)mem_read16(r25 + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(r20)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (r2 * r4 + r3 * r5) >> 7;
-	sub_00EEF4(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = r0;
-}
-
-void sub_00ECCD(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
-{
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
-
-	r0 = OBJECT(r20)->unk_1C;
-	r1 = r0;
-	t1 = mem_read16(mem_read32(r25 + 0x20u) + 0x46u);
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 * 0x10u);
-	r11 = r25 + 0x3000u + r0;
-	r2 = (int16_t)mem_read16(r11);
-	if (r2 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 + 0x10u);
-	r12 = r25 + 0x3000u + r0;
-	r3 = (int16_t)mem_read16(r12);
-	if (r3 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(r20)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(r20)->unk_20 + (uint32_t)mem_read16(r25 + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(r20)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (int32_t)(r2 * r4 + r3 * r5) >> 11;
-	sub_00EEFF(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = r0;
-}
-
-void sub_00ED82(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
-{
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
-
-	r0 = OBJECT(r20)->unk_1C;
-	r1 = r0;
-	t1 = mem_read16(mem_read32(r25 + 0x20u) + 0x46u);
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 * 0x10u);
-	r11 = r25 + 0x3000u + r0;
-	r2 = (int16_t)mem_read16(r11);
-	if (r2 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r0 = (uint16_t)(r0 + 0x10u);
-	r12 = r25 + 0x3000u + r0;
-	r3 = (int16_t)mem_read16(r12);
-	if (r3 == 0u)
-	{
-		*p_left_caller = 1u;
-		*p_r0 = r0;
-		return;
-	}
-	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(r20)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(r20)->unk_20 + (uint32_t)mem_read16(r25 + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(r20)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (int32_t)(r2 * r4 + r3 * r5) >> 10;
-	sub_00EEFF(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = r0;
 }

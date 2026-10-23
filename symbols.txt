@@ -21,8 +21,11 @@
 #                   first of them)
 #   code=A,B        every record holds a 32-bit code address at these offsets (0 = no code);
 #                   A:BASE is a 16-bit offset from BASE instead
+#   data=A,B        every record holds at these offsets a 32-bit value that its code may take as the address
+#                   of data: the data it goes with, when the value's low 24 bits (the V70's address bus) are
+#                   an address of the program ROM that is not code (0 and numbers are not)
 #   lists=N         the table is N 16-bit offsets, from its own address, to such arrays
-#   pointers=N      the table is N 32-bit addresses of such arrays
+#   pointers=N      the table is N 32-bit addresses of such arrays (0: no array)
 # Sizes, offsets and counts are decimal; end and BASE are hexadecimal, like the data and addresses.
 
 # ======== entry points ========
@@ -68,10 +71,10 @@ task  second_task
 002D5C  data  object_handlers_2D58  record=4 count=4 code=0    # the count at 002D58
 
 # Tables of lists taken by an index: "mov.w table[PC](R0), R10", then the records with [R10+]
-014A20  data  object_lists_14A20  pointers=16 record=8 count=prefix32 code=0   # 0146E9-014709: a 32-bit count, then (handler -> field 4, data -> field 80) pairs
-014A60  data  object_list_14A60  record=8 count=prefix32 code=0    # the same, taken whole at 0146DB
-0181B8  data  object_lists_181B8  pointers=31 record=8 count=bytes32 code=0  # 017BD2-017BF6: the records' length in bytes (the count is >> 3), then (handler, data) pairs
-02E1F0  data  object_lists_2E1F0  pointers=26 record=16 end=FFFF8000 code=4  # 0137F1, 013809-013821: (position, type, handler -> field 4, field 84, field 18) records, closed by 8000 FFFF
+014A20  data  object_lists_14A20  pointers=16 record=8 count=prefix32 code=0 data=4   # 0146E9-014709: a 32-bit count, then (handler -> field 4, data -> field 80) pairs
+014A60  data  object_list_14A60  record=8 count=prefix32 code=0 data=4    # the same, taken whole at 0146DB
+0181B8  data  object_lists_181B8  pointers=62 record=8 count=bytes32 code=0 data=4  # 017BD2-017BF6: the records' length in bytes (the count is >> 3), then (handler, data) pairs
+02E1F0  data  object_lists_2E1F0  pointers=32 record=16 end=FFFF8000 code=4 data=12  # 0137F1, 013809-013821: (position, type, handler -> field 4, field 84, field 18) records, closed by 8000 FFFF
 00DF78  data  object_handlers_DF74  record=4 count=3 code=0    # the count at 00DF74; list taken at 00DE57
 
 # The objects of each stage's road: a stream of (position, command) halfword pairs, taken from this table by
@@ -80,14 +83,94 @@ task  second_task
 # stage's stream, which goes on from this table when the next stage starts (012777, 0127A4-0127CA); 2 ends
 # it for good (01279C); 3 is a fork: a table of the streams of its branches follows, and the one the route
 # takes, C9[R23], goes on when the stage changes (012786, 0127CD-0127EB)
-020800  data  road_object_streams  pointers=32 record=12 kinds=2:0=12,1=end,2=end,3=fork code=4
+020800  data  road_object_streams  pointers=32 record=12 kinds=2:0=12,1=end,2=end,3=fork code=4 data=8
 
 # A timeline: (frame, routine) pairs that 01AE0D-01AE2C calls when the object's counter, 10[R20], reaches the
 # frame, from the address 01ADFC puts in 80[R20]; closed by frame 0000FFFF
 01AFC0  data  timeline_1AFC0  record=8 end=0000FFFF code=4
 01AE24  code  timeline_call  calls=timeline_1AFC0    # "jsr [R1]": the routine of the record the counter reached
 
+# Messages typed out a character at a time: (sound << 24 | address) records; the address is a string of
+# indices into the character table 018AE8, closed by a negative byte. 019402 starts message R0 (the sound
+# through 011EB8, the string's address to F30[R25]); 0189D9 types its next character every third frame
+019576  data  typed_messages  record=4 count=61 data=0
+
 # 019266-019294: lists of routines an object runs one after another, a step each time; 019280 picks the list
 # by a number below 14 and keeps its place at 38[R20]
 01966C  data  routine_lists_1966C  pointers=14 record=4 end=00000000 code=0
 019294  code  routine_list_jump  calls=routine_lists_1966C   # "jmp [R0]": the list's next routine
+
+# ======== code and data nothing uses ========
+# No scenario runs or reads them, and no table or instruction holds their addresses: functions nothing
+# calls, code a branch or a jump right before it always goes past, and tables nothing reads. The "func"
+# ones are decompiled too. The "code" ones are left out of the C: they jump or call into the middle of
+# functions the game runs, and their C would cut those functions in two (tools/coverage.py counts them
+# as code all the same)
+0002E6  code  unused_0002E6      # unused: what the branch before it skips, then on into the code at 0002EA
+0002FD  code  unused_0002FD      # unused: runs into the code at 00041B
+000303  code  unused_000303      # unused: what the branch before it skips, then on into the code at 00041B
+000310  func  sub_000310         # unused: what the branch before it skips
+000327  func  sub_000327         # unused: what the branch before it skips
+000354  func  sub_000354         # unused
+000EA4  func  sub_000EA4         # unused object handler: goes by its state (C[R20]) through the table after it
+0010CD  func  sub_0010CD         # unused: starts objects (011D43)
+001737  code  unused_001737      # unused object set-up; its handler (001820) calls into 011EB8 at 011EC0
+001783  code  unused_001783      # unused object set-up, like unused_001737
+0017CF  code  unused_0017CF      # unused object set-up, like unused_001737
+00183B  data  unk_00183B         # unused: bytes 60-67
+004578  func  sub_004578         # unused: after a jump that always leaves (to 00EAE4)
+009EFC  data  unk_009EFC         # unused: 16-bit words 0DC6-0DCD
+009FE4  data  unk_009FE4         # unused: 32-bit numbers
+00A337  code  unused_00A337      # unused: what the branch before it skips, then on into the code at 00A373
+00AB04  data  unk_00AB04  record=4 count=8 code=0   # unused: the addresses of the code after it (00AB24, 00AB36)
+00AB66  code  unused_00AB66      # unused: the code of unk_00AB04, on into the code at 00A71B
+00C552  func  sub_00C552         # unused: an rsr after a jump that always leaves (to 00EAE4)
+00C8B5  func  sub_00C8B5         # unused: an rsr after the function's own rsr
+00CEA4  func  sub_00CEA4         # unused: what the branch before it skips
+00D658  func  sub_00D658         # unused
+00D797  code  unused_00D797      # unused: what the branch before it skips, then on into 00D7CB
+00D7B1  code  unused_00D7B1      # unused: what the branch before it skips, then on into 00D7CB
+010309  data  unk_010309         # unused: bytes
+010425  data  unk_010425         # unused: bytes
+01078F  func  sub_01078F         # unused
+010996  func  sub_010996         # unused: copies by jumping into an unrolled run of moves
+010F66  func  sub_010F66         # unused
+010FA6  func  sub_010FA6         # unused
+011314  func  sub_011314         # unused
+011362  func  sub_011362         # unused
+011388  func  sub_011388         # unused
+011393  func  sub_011393         # unused
+01142A  func  sub_01142A         # unused
+0117FE  func  sub_0117FE         # unused
+011896  code  unused_011896      # unused: calls into 011874 at 011884
+0118BD  func  sub_0118BD         # unused
+0118D2  func  sub_0118D2         # unused
+0118F7  func  sub_0118F7         # unused
+011914  func  sub_011914         # unused: what the branch before it skips
+01191C  func  sub_01191C         # unused: what the branch before it skips
+011928  func  sub_011928         # unused: what the branch before it skips
+011958  func  sub_011958         # unused
+0119B1  code  unused_0119B1      # unused: on into the code at 011A7C
+011AAD  code  unused_011AAD      # unused: what the branch before it skips, then on into the code at 011C27
+011B29  code  unused_011B29      # unused: an entry into the code at 011B9D, on into 011C27
+011B39  code  unused_011B39      # unused: an entry into the code at 011B9D, on into 011C27
+011B49  code  unused_011B49      # unused: an entry into the code at 011B9D, on into 011C27
+011B58  code  unused_011B58      # unused: an entry into the code at 011B9D, on into 011C27
+011B64  code  unused_011B64      # unused: an entry into the code at 011B9D, on into 011C27
+011B74  code  unused_011B74      # unused: an entry into the code at 011B9D, on into 011C27
+011B84  code  unused_011B84      # unused: an entry into the code at 011B9D, on into 011C27
+011B93  code  unused_011B93      # unused: an entry into the code at 011B9D, on into 011C27
+011DEB  func  sub_011DEB         # unused
+011E1D  func  sub_011E1D         # unused
+011EF4  func  sub_011EF4         # unused
+01248C  func  sub_01248C         # unused: called only by unused_0129D0
+0129D0  code  unused_0129D0      # unused object handler: goes by its state (C[R20]) through the table after it, into 00F911 at 00F916
+017D70  func  sub_017D70         # unused object handler
+018009  func  sub_018009         # unused object handler
+01AFDC  func  sub_01AFDC         # unused object handler: goes by its state (C[R20]) through the table after it
+01B248  data  unk_01B248         # unused: 16-bit words
+01EA14  func  sub_01EA14         # unused: what the branch before it skips
+01EA4B  func  sub_01EA4B         # unused
+030B60  data  unk_030B60         # unused: data before the object data of object_lists_2E1F0
+03F7D8  code  unused_03F7D8      # unused: what the branch before it skips, then on into the code at 03F801
+03F86C  code  link_unused_case   # unused: a case of int_vector_44 (R0 and R1 pushed) its table at 03F85C does not list; it runs into the shared ending at 03F895

@@ -5,7 +5,7 @@ Name:        lift.py
 Description: translates decoded V60 data instructions into IR statements that do what MAME's V60 core does
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    20-10-2026
+Modified:    22-10-2026
 Author:      Sebastian Toyos
 
 The same rules as codegen.py, which this replaces for data instructions: operands are decoded in
@@ -328,6 +328,23 @@ def lift_data(lifter, instruction):
         high = ir.op("shr", (product, ir.const(bits, 8)), 2 * bits)
         emit(ir.SetFlag("ov", ir.op("ne", (high, ir.const(0, 2 * bits)), 1)))
         lifter.store(dest, dim, result)
+        return True
+
+    if name in ("mulx", "mulux"):
+        # all 64 bits of a 32 x 32-bit product: the low word to the destination register, the high word to
+        # the register after it (MAME's opMULX/opMULUX); Z of the whole product, S of its top bit
+        source, dest = lifter.f12_operands(instruction, "value", 2, "address", 2)
+        if dest.register is None:
+            raise Unsupported(f"{name} to memory")
+        value = lifter.load_location(dest, 2)
+        extend = ir.sext if name == "mulx" else ir.zext
+        product = lifter.temp(ir.op("mul", (extend(value, 64), extend(source, 64)), 64), "product")
+        low = lifter.temp(ir.trunc(product, 32), "result")
+        high = lifter.temp(ir.trunc(ir.op("shr", (product, ir.const(32, 8)), 64), 32), "result")
+        emit(ir.SetFlag("z", ir.op("eq", (product, ir.const(0, 64)), 1)))
+        emit(ir.SetFlag("s", ir.bit(high, 31)))
+        lifter.store(dest, 2, low)
+        lifter.store(Location(register=dest.register + 1), 2, high)
         return True
 
     if name in ("div", "divu", "rem", "remu") and dim is not None:

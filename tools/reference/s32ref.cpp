@@ -4,7 +4,7 @@
  *                 runtime's Multi 32 model, to find code, log hardware use and record state per frame
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    Not part of the game. Usage:
@@ -14,7 +14,7 @@
  *                           [--dump-frame N ... --dump-dir DIR] [--video-hashes hashes.txt]
  *                           [--video-dump N ... --video-dir DIR] [--sound-hashes hashes.txt]
  *                           [--sound-log writes.txt] [--sound-wav sound.wav] [--sound-trace executed.txt]
- *                           [--sound-timing timing.txt]
+ *                           [--sound-timing timing.txt] [--rom-reads reads.txt]
  *                           [--verbose]
  *
  *    The program and the other ROMs are the game's data the executable carries (game/data.h).
@@ -36,6 +36,11 @@
  *    (tools/decompile_sound.py --timing writes the table), so that the two compare sample for sample;
  *    without it the Z80 runs cycle by cycle.
  *    Without them the Z80 stays in reset, and the program sees the shared RAM as it leaves it.
+ *
+ *    --rom-reads lists the program ROM's bytes the program reads as data (not as its instructions), by
+ *    the instruction that reads them: "PC FIRST-LAST" ranges, addresses as the ROM's own copy has them
+ *    (000000-03FFFF and 100000-1FFFFF). A measure for the coverage of the ROM (tools/coverage.py): what
+ *    the static analysis does not describe yet, and where the code that reads it is.
  */
 #include "emu.h"
 #include "v60.h"
@@ -50,6 +55,7 @@
 #include <cinttypes>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <set>
 #include <string>
@@ -126,6 +132,47 @@ std::vector<uint32_t> g_read_counts;
 uint64_t g_region_reads[16];
 uint64_t g_region_writes[16];
 
+// --rom-reads: (instruction, ROM address) pairs of the program's data reads of its ROM
+std::set<uint64_t> g_rom_reads;
+bool g_record_rom_reads = false;
+
+inline void count_rom_read(offs_t address, int size)
+{
+	address &= 0xffffff;
+	if (!g_record_rom_reads || g_reading_instructions || address >= 0x200000)
+		return;
+	for (int index = 0; index < size; index++)
+	{
+		const uint32_t byte = (address + index) < 0x100000 ? (address + index) & 0x3ffff : address + index;
+		g_rom_reads.insert(uint64_t(s32_board.pc) << 24 | byte);
+	}
+}
+
+void write_rom_reads(const std::string &path)
+{
+	std::ofstream output(path);
+	uint32_t pc = 0, first = 0, last = 0;
+	bool open = false;
+	for (const uint64_t pair : g_rom_reads)
+	{
+		const uint32_t here_pc = uint32_t(pair >> 24), here = uint32_t(pair & 0xffffff);
+		if (open && here_pc == pc && here == last + 1)
+		{
+			last = here;
+			continue;
+		}
+		if (open)
+			output << std::hex << std::uppercase << std::setfill('0') << std::setw(6) << pc << ' ' << std::setw(6)
+				<< first << '-' << std::setw(6) << last << '\n';
+		pc = here_pc;
+		first = last = here;
+		open = true;
+	}
+	if (open)
+		output << std::hex << std::uppercase << std::setfill('0') << std::setw(6) << pc << ' ' << std::setw(6)
+			<< first << '-' << std::setw(6) << last << '\n';
+}
+
 inline void count_read(offs_t address)
 {
 	if (g_read_counts.empty())
@@ -141,9 +188,9 @@ inline void count_write(offs_t address)
 		g_region_writes[(address >> 20) & 0xf]++;
 }
 
-u8 read8(offs_t address) { count_read(address); return s32_read8(address & 0xffffff); }
-u16 read16(offs_t address) { count_read(address); return s32_read16(address & 0xffffff); }
-u32 read32(offs_t address) { count_read(address); return s32_read32(address & 0xffffff); }
+u8 read8(offs_t address) { count_read(address); count_rom_read(address, 1); return s32_read8(address & 0xffffff); }
+u16 read16(offs_t address) { count_read(address); count_rom_read(address, 2); return s32_read16(address & 0xffffff); }
+u32 read32(offs_t address) { count_read(address); count_rom_read(address, 4); return s32_read32(address & 0xffffff); }
 void write8(offs_t address, u8 data) { count_write(address); s32_write8(address & 0xffffff, data); }
 void write16(offs_t address, u16 data) { count_write(address); s32_write16(address & 0xffffff, data); }
 void write32(offs_t address, u32 data)
@@ -497,6 +544,7 @@ int main(int argc, char **argv)
 	std::string sound_trace_path;
 	std::string sound_timing_path;
 	std::string profile_path;
+	std::string rom_reads_path;
 	std::string script_path;
 	std::string transfers_path;
 	bool frames_given = false;
@@ -505,7 +553,7 @@ int main(int argc, char **argv)
 		" [--hashes FILE] [--trace FILE] [--calls FILE] [--transfers FILE] [--watch ADDRESS ...] [--profile FILE]"
 		" [--dump-frame N ... --dump-dir DIR] [--video-hashes FILE] [--video-dump N ... --video-dir DIR]"
 		" [--sound-hashes FILE] [--sound-log FILE] [--sound-wav FILE] [--sound-trace FILE] [--sound-timing FILE]"
-		" [--verbose]\n";
+		" [--rom-reads FILE] [--verbose]\n";
 
 	for (int index = 1; index < argc; index++)
 	{
@@ -538,6 +586,8 @@ int main(int argc, char **argv)
 			calls_path = argv[++index];
 		else if (argument == "--profile" && has_value)
 			profile_path = argv[++index];
+		else if (argument == "--rom-reads" && has_value)
+			rom_reads_path = argv[++index];
 		else if (argument == "--hashes" && has_value)
 			hashes_path = argv[++index];
 		else if (argument == "--dump-frame" && has_value)
@@ -582,6 +632,7 @@ int main(int argc, char **argv)
 	}
 
 	g_record_transfers = !transfers_path.empty();
+	g_record_rom_reads = !rom_reads_path.empty();
 	if (!profile_path.empty())
 	{
 		g_pc_counts.assign(1u << 24, 0);
@@ -704,6 +755,8 @@ int main(int argc, char **argv)
 		write_addresses(calls_path, g_called, "V70 addresses reached by jsr, bsr or call");
 	if (!profile_path.empty())
 		write_profile(profile_path);
+	if (!rom_reads_path.empty())
+		write_rom_reads(rom_reads_path);
 	if (!transfers_path.empty())
 		write_transfers(transfers_path);
 	s32_script_free(g_script);

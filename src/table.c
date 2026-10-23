@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -120,6 +120,9 @@ static void call_01E72D(void)
 const game_code_entry game_code[] =
 {
 	{ 0x0006B0u, call_0006B0 },
+	{ 0x0010EBu, sub_0010EB },
+	{ 0x001141u, sub_001141 },
+	{ 0x0011ABu, sub_0011AB },
 	{ 0x001687u, sub_001687 },
 	{ 0x001894u, sub_001894 },
 	{ 0x0018A4u, call_0018A4 },
@@ -195,6 +198,8 @@ const game_code_entry game_code[] =
 	{ 0x007C9Eu, sub_007C9E },
 	{ 0x009590u, sub_009590 },
 	{ 0x00974Cu, sub_00974C },
+	{ 0x00AB24u, sub_00AB24 },
+	{ 0x00AB36u, sub_00AB36 },
 	{ 0x00BFC1u, sub_00BFC1 },
 	{ 0x00C017u, sub_00C017 },
 	{ 0x00C0C6u, sub_00C0C6 },
@@ -277,10 +282,12 @@ const game_code_entry game_code[] =
 	{ 0x017BFBu, sub_017BFB },
 	{ 0x017CAAu, sub_017CAA },
 	{ 0x017D1Fu, sub_017D1F },
+	{ 0x017DB0u, sub_017DB0 },
 	{ 0x017E1Bu, sub_017E1B },
 	{ 0x017E5Bu, sub_017E5B },
 	{ 0x017EF2u, sub_017EF2 },
 	{ 0x017F3Du, sub_017F3D },
+	{ 0x018050u, sub_018050 },
 	{ 0x0180CBu, sub_0180CB },
 	{ 0x018110u, sub_018110 },
 	{ 0x01854Au, sub_01854A },
@@ -357,7 +364,7 @@ const game_code_entry game_code[] =
 	{ 0x03F830u, int_vector_44 },
 };
 
-const size_t game_code_count = 236;
+const size_t game_code_count = 243;
 
 /* the code at the reset vector */
 void game_entry(void)
