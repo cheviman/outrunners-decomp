@@ -1475,12 +1475,12 @@ void int_vector_40(void)
 	mem_write16(IRQ_D00008, rom_03F82A);
 	unk_20E02C = 0x22u;
 	unk_20E00E--;
-	if (mem_read8(screen) != 0u)
+	if (SCREEN(screen)->unk_00 != 0u)
 	{
 		saved_screen_2 = screen;
-		screen = GAME_VARIABLES;
+		screen = SCREEN_1;
 		sub_03F62A();
-		screen = 0x218000u;
+		screen = SCREEN_2;
 		sub_03F62A();
 		screen = saved_screen_2;
 		if (unk_20E027 == 0u)
@@ -1542,30 +1542,30 @@ void sub_03F62A(void)
 	uint32_t r0 = 0;
 	uint32_t t1 = 0, t2 = 0;
 
-	if ((mem_read32(screen + 0x94u) & 1u) != 0u)
+	if ((SCREEN(screen)->unk_94 & 1u) != 0u)
 	{
 		sub_01167E();
-		move_string(screen + 0x19Eu, 7u, mem_read32(screen + 8u) + 0x3Eu, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_string(screen + 0x19Eu, 7u, SCREEN(screen)->unk_08 + 0x3Eu, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
-	t1 = mem_read32(screen + 0x94u);
-	mem_write32(screen + 0x94u, t1 & ~4u);
+	t1 = SCREEN(screen)->unk_94;
+	SCREEN(screen)->unk_94 = t1 & ~4u;
 	if ((t1 & 4u) != 0u)
 	{
-		r0 = mem_read32(screen + 8u);
+		r0 = SCREEN(screen)->unk_08;
 		move_halfwords(r0, screen + 0x160u, 0x1Fu);
 		move_string(screen + 0x1ACu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
-	t2 = mem_read32(screen + 0x94u);
-	mem_write32(screen + 0x94u, t2 & ~8u);
+	t2 = SCREEN(screen)->unk_94;
+	SCREEN(screen)->unk_94 = t2 & ~8u;
 	if ((t2 & 8u) != 0u)
 	{
-		r0 = mem_read32(screen + 8u);
+		r0 = SCREEN(screen)->unk_08;
 		move_halfwords(screen + 0x160u, screen + 0x1B0u, 0x1Fu);
 		move_halfwords(screen + 0x1ACu, screen + 0x1FCu, 2u);
 		move_halfwords(r0, screen + 0x1B0u, 0x1Fu);
 		move_string(screen + 0x1FCu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
-	if (mem_read32(screen + 0x900u) != 0u)
+	if (SCREEN(screen)->unk_900 != 0u)
 		sub_0115EB();
 }
 
@@ -1574,7 +1574,7 @@ void sub_03F6A0(void)
 	uint8_t r0_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0;
 
-	r0 = mem_read8(screen) * 2u;
+	r0 = SCREEN(screen)->unk_00 * 2u;
 	mem_write32(VIDEO_RAM + 0x1FF10u + r0 * 4u, unk_20E210[r0]);
 	mem_write32(VIDEO_RAM + 0x1FF14u + r0 * 4u, unk_20E214[r0]);
 	r1 = 0u - r0 + 2u;
@@ -1706,26 +1706,26 @@ void sub_03F8DA(void)
 	uint32_t r0 = 0, r1 = 0, r10 = 0;
 	uint8_t t1 = 0, t2 = 0;
 
-	r10 = (uint32_t)mem_read8(screen) << 8;
+	r10 = (uint32_t)SCREEN(screen)->unk_00 << 8;
 	r0 = screen + 0x800u;
-	r1 = mem_read8(r0);
+	r1 = SCREEN(r0 - 0x800u)->unk_800;
 	r0++;
-	t1 = mem_read8(r0);
+	t1 = SCREEN(r0 - 0x801u)->unk_801;
 	r0++;
 	if (r1 != t1)
 	{
 		mem_write8(r10 + SOUND_700700, mem_read8(r0 + r1));
-		mem_write8(r0 - 2u, (r1 + 1u) & 0x1Fu);
+		SCREEN(r0 - 0x802u)->unk_800 = (r1 + 1u) & 0x1Fu;
 	}
 	r0 = screen + 0x840u;
-	r1 = mem_read8(r0);
+	r1 = SCREEN(r0 - 0x840u)->unk_840;
 	r0++;
-	t2 = mem_read8(r0);
+	t2 = SCREEN(r0 - 0x841u)->unk_841;
 	r0++;
 	if (r1 != t2)
 	{
 		mem_write8(r10 + (SOUND_RAM + 0x708u), mem_read8(r0 + r1));
-		mem_write8(r0 - 2u, (r1 + 1u) & 0x1Fu);
+		SCREEN(r0 - 0x842u)->unk_840 = (r1 + 1u) & 0x1Fu;
 	}
 }
 
@@ -1826,10 +1826,10 @@ void sub_03F96B(void)
 	if ((unk_218090 & 0x100u) == 0u && unk_20E624 != 0u)
 		r0 |= unk_20E0D1;
 	mem_write8(0xC80006u, r0);
-	r10 = GAME_VARIABLES;
+	r10 = SCREEN_1;
 	r11 = unk_20E094_ADDRESS;
 	sub_03FA54(r10, r11);
-	r10 = 0x218000u;
+	r10 = SCREEN_2;
 	r11 = 0x20E095u;
 	sub_03FA54(r10, r11);
 }
@@ -1840,14 +1840,14 @@ void sub_03FA54(uint32_t r10, uint32_t r11)
 	uint8_t t1 = 0, t2 = 0;
 
 	r0 = mem_read8(r11);
-	r1 = mem_read8(r10 + 0xF20u);
-	if (r1 != mem_read8(r10 + 0xF22u))
+	r1 = (uint8_t)SCREEN(r10)->unk_F20;
+	if (r1 != SCREEN(r10)->unk_F22)
 	{
-		mem_write8(r10 + 0xF22u, r1);
+		SCREEN(r10)->unk_F22 = r1;
 		if ((int8_t)r1 > 0)
 		{
 			r0 ^= 1u;
-			mem_write8(r10 + 0xF24u, r1);
+			SCREEN(r10)->unk_F24 = r1;
 		}
 		else if (r1 == 0u)
 			r0 &= ~1u;
@@ -1856,35 +1856,35 @@ void sub_03FA54(uint32_t r10, uint32_t r11)
 	}
 	else if ((int8_t)r1 > 0)
 	{
-		t1 = mem_read8(r10 + 0xF24u);
-		mem_write8(r10 + 0xF24u, t1 - 1u);
+		t1 = SCREEN(r10)->unk_F24;
+		SCREEN(r10)->unk_F24 = t1 - 1u;
 		if (t1 == 1u)
 		{
 			r0 ^= 1u;
-			mem_write8(r10 + 0xF24u, r1);
+			SCREEN(r10)->unk_F24 = r1;
 		}
 	}
-	r1 = mem_read8(r10 + 0xF21u);
-	if (r1 == mem_read8(r10 + 0xF23u))
+	r1 = (uint8_t)(SCREEN(r10)->unk_F20 >> 8u);
+	if (r1 == SCREEN(r10)->unk_F23)
 	{
 		if ((int8_t)r1 > 0)
 		{
-			t2 = mem_read8(r10 + 0xF25u);
-			mem_write8(r10 + 0xF25u, t2 - 1u);
+			t2 = SCREEN(r10)->unk_F25;
+			SCREEN(r10)->unk_F25 = t2 - 1u;
 			if (t2 == 1u)
 			{
 				r0 ^= 2u;
-				mem_write8(r10 + 0xF25u, r1);
+				SCREEN(r10)->unk_F25 = r1;
 			}
 		}
 		mem_write8(r11, r0);
 		return;
 	}
-	mem_write8(r10 + 0xF23u, r1);
+	SCREEN(r10)->unk_F23 = r1;
 	if ((int8_t)r1 > 0)
 	{
 		r0 ^= 2u;
-		mem_write8(r10 + 0xF25u, r1);
+		SCREEN(r10)->unk_F25 = r1;
 		mem_write8(r11, r0);
 		return;
 	}

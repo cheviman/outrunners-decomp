@@ -12,9 +12,10 @@
 #ifndef ORUNNERS_RAM_H
 #define ORUNNERS_RAM_H
 
-/* the game's variables in work RAM (the original code reaches them from R25, which holds
-   GAME_VARIABLES; some code adds offsets it reads from tables) */
-#define GAME_VARIABLES 0x208000u
+/* the game's variables in work RAM; SCREEN_1 and SCREEN_2 are the blocks of the two screens,
+   which the code reaches through screen (R25 of the task that runs each) */
+#define SCREEN_1 0x208000u
+#define SCREEN_2 0x218000u
 #define unk_208001_ADDRESS 0x208001u
 #define unk_208001 RAM8(unk_208001_ADDRESS)
 #define unk_208002_ADDRESS 0x208002u
@@ -24,7 +25,7 @@
 #define unk_208024_ADDRESS 0x208024u
 #define unk_208024 RAM32(unk_208024_ADDRESS)
 #define unk_208080_ADDRESS 0x208080u
-#define unk_208080 RAM8(unk_208080_ADDRESS)
+#define unk_208080 RAM16(unk_208080_ADDRESS)
 #define unk_208090_ADDRESS 0x208090u
 #define unk_208090 RAM32(unk_208090_ADDRESS)
 #define unk_208094_ADDRESS 0x208094u
@@ -39,10 +40,6 @@
 #define unk_2080C0 RAM32(unk_2080C0_ADDRESS)
 #define unk_208153_ADDRESS 0x208153u
 #define unk_208153 RAM8(unk_208153_ADDRESS)
-#define unk_208800_ADDRESS 0x208800u
-#define unk_208800 RAM32(unk_208800_ADDRESS)
-#define unk_208822_ADDRESS 0x208822u
-#define unk_208822 RAM8(unk_208822_ADDRESS)
 #define unk_208B00_ADDRESS 0x208B00u
 #define unk_208B00 RAM32(unk_208B00_ADDRESS)
 #define unk_208F10_ADDRESS 0x208F10u
@@ -430,7 +427,7 @@
 #define unk_218024_ADDRESS 0x218024u
 #define unk_218024 RAM32(unk_218024_ADDRESS)
 #define unk_218080_ADDRESS 0x218080u
-#define unk_218080 RAM8(unk_218080_ADDRESS)
+#define unk_218080 RAM16(unk_218080_ADDRESS)
 #define unk_218090_ADDRESS 0x218090u
 #define unk_218090 RAM32(unk_218090_ADDRESS)
 #define unk_218094_ADDRESS 0x218094u
@@ -1474,8 +1471,7 @@ struct object
 {
 	uint8_t unk_00;
 	uint8_t unk_01;
-	uint8_t unk_02;
-	uint8_t unk_03;
+	uint16_t unk_02;
 	uint32_t unk_04;
 	uint32_t unk_08;
 	uint8_t unk_0C;
@@ -1510,9 +1506,97 @@ struct object
 	uint8_t unk_3F;
 	uint8_t unk_40;
 	uint8_t unk_41;
-	uint16_t unk_42;
+	uint8_t unk_42;
+	uint8_t unk_43;
 	uint8_t unk_44;
 	uint8_t unk_45;
+	uint8_t pad_46[0xA];
+	uint32_t unk_50;
+	uint32_t unk_54;
+	uint16_t unk_58;
+	uint8_t pad_5A[0x2];
+	uint32_t unk_5C;
+	uint32_t unk_60;
+	uint32_t unk_64;
+	uint32_t unk_68;
+	uint32_t unk_6C;
+	uint32_t unk_70;
+	uint32_t unk_74;
+	uint32_t unk_78;
+	uint32_t unk_7C;
+	uint32_t unk_80;
+	uint16_t unk_84;
+	uint8_t unk_86;
+	uint8_t unk_87;
+	uint32_t unk_88;
+	uint32_t unk_8C;
+	uint32_t unk_90;
+	uint32_t unk_94;
+	uint32_t unk_98;
+	uint32_t unk_9C;
+	uint32_t unk_A0;
+	uint32_t unk_A4;
+	uint32_t unk_A8;
+	uint32_t unk_AC;
+	uint32_t unk_B0;
+	uint32_t unk_B4;
+	uint16_t unk_B8;
+	uint16_t unk_BA;
+	uint8_t unk_BC;
+	uint8_t unk_BD;
+	uint8_t pad_BE[0x1];
+	uint8_t unk_BF;
+	uint32_t unk_C0;
+	uint32_t unk_C4;
+	uint32_t unk_C8;
+	uint16_t unk_CC;
+	uint16_t unk_CE;
+	uint8_t unk_D0;
+	uint8_t unk_D1;
+	uint8_t unk_D2;
+	uint8_t pad_D3[0x6];
+	uint8_t unk_D9;
+	uint8_t unk_DA;
+	uint8_t unk_DB;
+	uint8_t unk_DC;
+	uint8_t pad_DD[0x3];
+	uint8_t unk_E0;
+	uint8_t unk_E1;
+	uint16_t unk_E2;
+	uint8_t unk_E4;
+	uint8_t pad_E5[0xB];
+	uint16_t unk_F0;
+	uint16_t unk_F2;
+	uint16_t unk_F4;
+	uint8_t unk_F6;
+	uint8_t unk_F7;
+	uint8_t unk_F8;
+	uint8_t pad_F9[0x7];
+};
+
+struct car
+{
+	uint32_t unk_00;
+	uint32_t unk_04;
+	uint32_t unk_08;
+	uint8_t pad_0C[0x6];
+	uint16_t unk_12;
+	uint8_t unk_14;
+	uint8_t pad_15[0xB];
+	uint32_t unk_20;
+	uint32_t unk_24;
+	uint32_t unk_28;
+	uint16_t unk_2C;
+	uint16_t unk_2E;
+	uint16_t unk_30;
+	uint16_t unk_32;
+	uint32_t unk_34;
+	uint16_t unk_38;
+	uint16_t unk_3A;
+	uint32_t unk_3C;
+	uint16_t unk_40;
+	uint16_t unk_42;
+	uint16_t unk_44;
 	uint16_t unk_46;
 	uint16_t unk_48;
 	uint16_t unk_4A;
@@ -1520,46 +1604,328 @@ struct object
 	uint16_t unk_4E;
 	uint32_t unk_50;
 	uint32_t unk_54;
-	uint16_t unk_58;
-	uint8_t pad_5A[0x2];
-	uint32_t unk_5C;
+	uint32_t unk_58;
+	uint8_t pad_5C[0x4];
 	uint8_t unk_60;
 	uint8_t unk_61;
 	uint8_t unk_62;
 	uint8_t unk_63;
-	uint32_t unk_64;
-	uint32_t unk_68;
-	uint32_t unk_6C;
+	uint8_t unk_64;
+	uint8_t unk_65;
+	uint8_t unk_66;
+	uint8_t unk_67;
+	uint16_t unk_68;
+	uint16_t unk_6A;
+	uint8_t pad_6C[0x4];
 	uint16_t unk_70;
 	uint8_t pad_72[0x2];
 	uint16_t unk_74;
-	uint8_t pad_76[0x2];
-	uint32_t unk_78;
+	uint8_t pad_76[0x6];
 	uint8_t unk_7C;
 	uint8_t pad_7D[0x1];
 	uint16_t unk_7E;
 	uint32_t unk_80;
 	uint32_t unk_84;
 	uint32_t unk_88;
-	uint32_t unk_8C;
+	uint8_t pad_8C[0x4];
 	uint32_t unk_90;
 	uint32_t unk_94;
 	uint32_t unk_98;
-	uint32_t unk_9C;
+	uint8_t unk_9C;
+	uint8_t unk_9D;
+	uint8_t pad_9E[0x2];
+	uint32_t unk_A0;
+	uint16_t unk_A4;
+	uint16_t unk_A6;
+	uint16_t unk_A8;
+	uint16_t unk_AA;
+	uint16_t unk_AC;
+	uint16_t unk_AE;
+	uint32_t unk_B0;
+	uint32_t unk_B4;
+	uint16_t unk_B8;
+	uint16_t unk_BA;
+	uint16_t unk_BC;
+	uint16_t unk_BE;
+	uint16_t unk_C0;
+	uint16_t unk_C2;
+	uint8_t pad_C4[0x5];
+	uint8_t unk_C9;
+	uint8_t unk_CA;
+	uint8_t unk_CB;
+	uint8_t unk_CC;
+	uint8_t unk_CD;
+	uint8_t unk_CE;
+	uint8_t pad_CF[0x1];
+	uint8_t unk_D0;
+	uint8_t unk_D1;
+	uint8_t pad_D2[0xA];
+	uint32_t unk_DC;
+	uint32_t unk_E0;
+	uint32_t unk_E4;
+	uint32_t unk_E8;
+	uint32_t unk_EC;
+	uint32_t unk_F0;
+	uint32_t unk_F4;
+	uint32_t unk_F8;
+	uint32_t unk_FC;
+	uint16_t unk_100;
+	uint16_t unk_102;
+	uint16_t unk_104;
+	uint16_t unk_106;
+	uint16_t unk_108;
+	uint16_t unk_10A;
+	uint16_t unk_10C;
+	uint16_t unk_10E;
+	uint16_t unk_110;
+	uint16_t unk_112;
+	uint8_t pad_114[0xC];
+	uint16_t unk_120;
+	uint16_t unk_122;
+	uint8_t pad_124[0x2];
+	uint16_t unk_126;
+	uint16_t unk_128;
+	uint16_t unk_12A;
+	uint16_t unk_12C;
+	uint8_t pad_12E[0x2];
+	uint32_t unk_130;
+	uint8_t unk_134;
+	uint8_t unk_135;
+	uint8_t unk_136;
+	uint8_t unk_137;
+	uint8_t pad_138[0x8];
+	uint8_t unk_140;
+	uint8_t unk_141;
+	uint8_t unk_142;
+	uint8_t pad_143[0x1];
+	uint8_t unk_144;
+	uint8_t unk_145;
+	uint8_t unk_146;
+	uint8_t unk_147;
+	uint32_t unk_148;
+	uint32_t unk_14C;
+	uint8_t pad_150[0x30];
+	uint8_t unk_180;
+	uint8_t unk_181;
+	uint8_t unk_182;
+	uint8_t pad_183[0x7D];
 };
 
-struct player
+struct screen
 {
 	uint8_t unk_00;
-	uint8_t pad_01[0x1FF];
+	uint8_t unk_01;
+	uint8_t unk_02;
+	uint8_t pad_03[0x1];
+	uint32_t unk_04;
+	uint32_t unk_08;
+	uint32_t unk_0C;
+	uint16_t unk_10;
+	uint16_t unk_12;
+	uint16_t unk_14;
+	uint16_t unk_16;
+	uint16_t unk_18;
+	uint16_t unk_1A;
+	uint8_t pad_1C[0x4];
+	uint32_t unk_20;
+	uint32_t unk_24;
+	uint8_t pad_28[0x18];
+	uint8_t unk_40;
+	uint8_t unk_41;
+	uint8_t pad_42[0x3];
+	uint8_t unk_45;
+	uint8_t unk_46;
+	uint8_t unk_47;
+	uint8_t unk_48;
+	uint8_t pad_49[0x17];
+	uint32_t unk_60;
+	uint32_t unk_64;
+	uint32_t unk_68;
+	uint32_t unk_6C;
+	uint8_t unk_70;
+	uint8_t unk_71;
+	uint8_t unk_72;
+	uint8_t unk_73;
+	uint8_t pad_74[0xC];
+	uint32_t unk_80;
+	uint8_t pad_84[0x4];
+	uint16_t unk_88;
+	uint8_t pad_8A[0x6];
+	uint32_t unk_90;
+	uint32_t unk_94;
+	uint32_t unk_98;
+	uint8_t unk_9C;
+	uint8_t unk_9D;
+	uint8_t unk_9E;
+	uint8_t pad_9F[0x1];
+	uint8_t unk_A0;
+	uint8_t unk_A1;
+	uint8_t unk_A2;
+	uint8_t unk_A3;
+	uint8_t unk_A4;
+	uint8_t unk_A5;
+	uint8_t unk_A6;
+	uint8_t unk_A7;
+	uint8_t pad_A8[0x8];
+	uint16_t unk_B0;
+	uint8_t pad_B2[0x2];
+	uint32_t unk_B4;
+	uint16_t unk_B8;
+	uint8_t pad_BA[0x6];
+	uint32_t unk_C0;
+	uint32_t unk_C4;
+	uint8_t pad_C8[0x8];
+	uint32_t unk_D0;
+	uint8_t unk_D4;
+	uint8_t pad_D5[0xC];
+	uint8_t unk_E1;
+	uint8_t unk_E2;
+	uint8_t pad_E3[0x1D];
+	uint8_t unk_100;
+	uint8_t unk_101;
+	uint8_t unk_102;
+	uint8_t pad_103[0x5];
+	uint8_t unk_108;
+	uint8_t unk_109;
+	uint8_t pad_10A[0x6];
+	uint32_t unk_110;
+	uint32_t unk_114;
+	uint32_t unk_118;
+	uint32_t unk_11C;
+	uint8_t pad_120[0x30];
+	uint8_t unk_150;
+	uint8_t unk_151;
+	uint8_t unk_152;
+	uint8_t unk_153;
+	uint8_t unk_154;
+	uint8_t pad_155[0x4A];
+	uint8_t unk_19F;
+	uint8_t pad_1A0[0x60];
+	uint16_t unk_200;
+	uint8_t unk_202;
+	uint8_t unk_203;
+	uint8_t unk_204;
+	uint8_t unk_205;
+	uint8_t unk_206;
+	uint8_t unk_207;
+	uint32_t unk_208;
+	uint16_t unk_20C;
+	uint8_t pad_20E[0xF2];
+	uint32_t unk_300;
+	uint32_t unk_304;
+	uint32_t unk_308;
+	uint8_t unk_30C;
+	uint8_t pad_30D[0x2];
+	uint8_t unk_30F;
+	uint32_t unk_310;
+	uint32_t unk_314;
+	uint8_t unk_318;
+	uint8_t unk_319;
+	uint8_t unk_31A;
+	uint8_t unk_31B;
+	uint8_t unk_31C;
+	uint8_t pad_31D[0x2];
+	uint8_t unk_31F;
+	uint8_t pad_320[0x22];
+	uint8_t unk_342;
+	uint8_t pad_343[0x6];
+	uint8_t unk_349;
+	uint8_t unk_34A;
+	uint8_t pad_34B[0x5];
+	uint16_t unk_350;
+	uint8_t unk_352;
+	uint8_t pad_353[0x15C];
+	uint8_t unk_4AF;
+	uint8_t unk_4B0;
+	uint8_t pad_4B1[0x41];
+	uint8_t unk_4F2;
+	uint8_t pad_4F3[0xD];
+	uint32_t unk_500;
+	uint8_t pad_504[0xC];
+	uint32_t unk_510;
+	uint8_t pad_514[0x1EC];
+	uint16_t unk_700;
+	uint8_t pad_702[0x3C];
+	uint16_t unk_73E;
+	uint8_t pad_740[0xC0];
+	uint8_t unk_800;
+	uint8_t unk_801;
+	uint8_t pad_802[0x20];
+	uint8_t unk_822;
+	uint8_t pad_823[0x1D];
+	uint8_t unk_840;
+	uint8_t unk_841;
+	uint8_t pad_842[0xBE];
+	uint32_t unk_900;
+	uint8_t pad_904[0x1FC];
+	uint16_t unk_B00;
+	uint8_t unk_B02;
+	uint8_t unk_B03;
+	uint32_t unk_B04;
+	uint32_t unk_B08;
+	uint32_t unk_B0C;
+	uint8_t unk_B10;
+	uint8_t unk_B11;
+	uint8_t unk_B12;
+	uint8_t pad_B13[0x3ED];
+	uint32_t unk_F00;
+	uint32_t unk_F04;
+	uint32_t unk_F08;
+	uint8_t pad_F0C[0x2];
+	uint8_t unk_F0E;
+	uint8_t unk_F0F;
+	uint16_t unk_F10;
+	uint8_t pad_F12[0x2];
+	uint32_t unk_F14;
+	uint32_t unk_F18;
+	uint32_t unk_F1C;
+	uint16_t unk_F20;
+	uint8_t unk_F22;
+	uint8_t unk_F23;
+	uint8_t unk_F24;
+	uint8_t unk_F25;
+	uint8_t pad_F26[0xA];
+	uint32_t unk_F30;
+	uint8_t unk_F34;
+	uint8_t unk_F35;
+	uint8_t pad_F36[0xA];
+	uint32_t unk_F40;
+	uint32_t unk_F44;
+	uint8_t unk_F48;
+	uint8_t unk_F49;
+	uint8_t pad_F4A[0x6];
+	uint16_t unk_F50;
+	uint16_t unk_F52;
+	uint32_t unk_F54;
+	uint16_t unk_F58;
+	uint8_t pad_F5A[0x26];
+	uint32_t unk_F80;
+	uint16_t unk_F84;
+	uint8_t pad_F86[0x20];
+	uint16_t unk_FA6;
+	uint8_t unk_FA8;
+	uint8_t pad_FA9[0xF57];
+	uint8_t unk_1F00;
+	uint8_t pad_1F01[0x2F];
+	uint16_t unk_1F30;
+	uint8_t pad_1F32[0x3746];
+	uint16_t unk_5678;
+	uint16_t unk_567A;
+	uint8_t pad_567C[0x184];
+	uint32_t unk_5800;
+	uint16_t unk_5804;
+	uint16_t unk_5806;
+	uint8_t pad_5808[0x27F8];
 };
 
 #pragma pack(pop)
 
-_Static_assert(sizeof(struct object) == 0xA0, "struct object has the size of the game's blocks");
-_Static_assert(sizeof(struct player) == 0x200, "struct player has the size of the game's blocks");
+_Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
+_Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
+_Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
-#define PLAYER(address) ((struct player *)ram(address))
+#define CAR(address) ((struct car *)ram(address))
+#define SCREEN(address) ((struct screen *)ram(address))
 
 #endif

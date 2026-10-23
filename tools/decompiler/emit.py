@@ -2239,6 +2239,8 @@ class Emitter:
         if memory.work_ram(address):
             if address == memory.VARIABLES:
                 return "GAME_VARIABLES", cprint.PRIMARY
+            if address in memory.NAMED_BASES:
+                return memory.NAMED_BASES[address], cprint.PRIMARY
             first, size, count = pointers.PLAYERS
             if first <= address < first + size * count and not (address - first) % size:
                 return f"PLAYER_BLOCK({(address - first) // size + 1})", cprint.PRIMARY

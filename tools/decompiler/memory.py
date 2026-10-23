@@ -5,7 +5,7 @@ Description: the game's variables, tables and hardware registers by name: work R
              named addresses
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    20-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Work RAM (0x200000-0x20FFFF) stays the board's byte array, so the state compares byte for byte with the
@@ -44,12 +44,12 @@ ADDRESS_DIGITS = 6
 RAM_MACRO, ROM_MACRO = "RAM", "ROM"          # the lvalue and rvalue macros (game/support.h) ...
 RAM_FUNCTION, ROM_FUNCTION = "ram", "rom"    # ... and what gives a pointer into either
 PAGED = True                                 # tables read with 16-bit arithmetic inside their 64 KB page
-PLAYER_FIELDS = (0x208400, 0x208A00)         # reached by the player's number (pointers.py), not as tables
+PLAYER_FIELDS = ()                           # reached by the player's number (pointers.py), not as tables
 CANONICAL = orunners_rom.canonical_address      # the copy of the ROM tables are named by
 ROM_NAMES_FROM = 0x1000                      # constants below are numbers, never ROM addresses (the vectors)
 NOTES = {
-    "variables": ["/* the game's variables in work RAM (the original code reaches them from R25, which holds",
-                  "   GAME_VARIABLES; some code adds offsets it reads from tables) */"],
+    "variables": ["/* the game's variables in work RAM; SCREEN_1 and SCREEN_2 are the blocks of the two screens,",
+                  "   which the code reaches through screen (R25 of the task that runs each) */"],
     "scoped": ["/* work RAM as one family of functions uses it (their scratch variables) */"],
     "tables": ["/* data in the program ROM the code reads */"],
     "hardware": ["/* the board's registers (read and written through the bus) */"],
@@ -58,7 +58,9 @@ TYPES = {8: "uint8_t", 16: "uint16_t", 32: "uint32_t"}
 SIGNED = {"u8": (8, False), "s8": (8, True), "u16": (16, False), "s16": (16, True),
           "u32": (32, False), "s32": (32, True)}
 BUS_ONLY = []    # writes a device on the bus watches in work RAM (SegaSonic: its protection)
-VARIABLES = 0x208000    # where the game's variables start: R25 of the original, which some code adds offsets to
+VARIABLES = None        # where the game's variables start, as a constant base (SegaSonic's R25); none
+# work RAM addresses with a name of their own: the blocks of the two screens (R25 of each task)
+NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2"}
 HARDWARE = [(0x300000, 0x320000, "VIDEO"), (0x400000, 0x420000, "SPRITE_RAM"), (0x500000, 0x500010, "SPRITE_CONTROL"),
             (0x600000, 0x610000, "PALETTE"), (0x610000, 0x620000, "MIXER"), (0x700000, 0x702000, "SOUND"),
             (0xC00000, 0xC00080, "IO"), (0xD00000, 0xD00010, "IRQ"), (0xD80000, 0xD80010, "RANDOM")]
@@ -345,6 +347,8 @@ class Memory:
         lines = list(NOTES["variables"])
         if VARIABLES is not None:
             lines.append(f"#define GAME_VARIABLES 0x{VARIABLES:06X}u")
+        for address, name in sorted(NAMED_BASES.items()):
+            lines.append(f"#define {name} 0x{address:06X}u")
         for address, item in sorted(self.variables.items()):
             lines += self.declare(item, RAM_MACRO, RAM_FUNCTION)
             for (start, bits), overlay in sorted(self.overlays.items()):
