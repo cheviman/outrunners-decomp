@@ -1478,8 +1478,7 @@ struct object
 	uint8_t unk_0D;
 	uint8_t unk_0E;
 	uint8_t unk_0F;
-	uint8_t unk_10;
-	uint8_t unk_11;
+	uint16_t unk_10;
 	uint8_t unk_12;
 	uint8_t unk_13;
 	uint32_t unk_14;
@@ -1518,7 +1517,8 @@ struct object
 	uint32_t unk_5C;
 	uint32_t unk_60;
 	uint32_t unk_64;
-	uint32_t unk_68;
+	uint16_t unk_68;
+	uint16_t unk_6A;
 	uint32_t unk_6C;
 	uint32_t unk_70;
 	uint32_t unk_74;
@@ -1576,7 +1576,7 @@ struct object
 
 struct car
 {
-	uint32_t unk_00;
+	uint32_t object;
 	uint32_t unk_04;
 	uint32_t unk_08;
 	uint8_t pad_0C[0x6];
@@ -1727,8 +1727,8 @@ struct screen
 	uint16_t unk_18;
 	uint16_t unk_1A;
 	uint8_t pad_1C[0x4];
-	uint32_t unk_20;
-	uint32_t unk_24;
+	uint32_t race_copy;
+	uint32_t race;
 	uint8_t pad_28[0x18];
 	uint8_t unk_40;
 	uint8_t unk_41;
@@ -1918,14 +1918,81 @@ struct screen
 	uint8_t pad_5808[0x27F8];
 };
 
+struct race
+{
+	uint8_t pad_00[0x2];
+	uint8_t unk_02;
+	uint8_t pad_03[0xE];
+	uint8_t unk_11;
+	uint8_t unk_12;
+	uint8_t unk_13;
+	uint16_t unk_14;
+	uint16_t unk_16;
+	uint8_t unk_18;
+	uint8_t unk_19;
+	uint16_t unk_1A;
+	uint8_t unk_1C;
+	uint8_t unk_1D;
+	uint8_t unk_1E;
+	uint8_t unk_1F;
+	uint32_t unk_20;
+	uint32_t unk_24;
+	uint8_t unk_28;
+	uint8_t unk_29;
+	uint8_t unk_2A;
+	uint8_t unk_2B;
+	uint8_t pad_2C[0x4];
+	uint32_t unk_30;
+	uint32_t unk_34;
+	uint32_t unk_38;
+	uint16_t unk_3C;
+	uint16_t unk_3E;
+	uint16_t unk_40;
+	uint16_t unk_42;
+	uint16_t unk_44;
+	uint16_t unk_46;
+	uint8_t unk_48;
+	uint8_t unk_49;
+	uint8_t unk_4A;
+	uint8_t unk_4B;
+	uint16_t unk_4C;
+	uint16_t unk_4E;
+	uint8_t unk_50;
+	uint8_t unk_51;
+	uint8_t unk_52;
+	uint8_t unk_53;
+	uint16_t unk_54;
+	uint16_t unk_56;
+	uint16_t unk_58;
+	uint8_t pad_5A[0x2];
+	uint8_t unk_5C;
+	uint8_t unk_5D;
+	uint8_t unk_5E;
+	uint8_t unk_5F;
+	uint8_t unk_60;
+	uint8_t unk_61;
+	uint8_t unk_62;
+	uint8_t unk_63;
+	uint8_t unk_64;
+	uint8_t unk_65;
+	uint8_t unk_66;
+	uint8_t unk_67;
+	uint16_t unk_68;
+	uint16_t unk_6A;
+	uint32_t unk_6C;
+	uint8_t pad_70[0x10];
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
 _Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
 _Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of the game's blocks");
+_Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
 #define SCREEN(address) ((struct screen *)ram(address))
+#define RACE(address) ((struct race *)ram(address))
 
 #endif
