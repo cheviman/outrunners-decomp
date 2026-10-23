@@ -49,7 +49,10 @@ the tools verify it, extract the assets and build your own executable.
       `tools/check_structure.py` finds the C's ifs, loops and switches doing what the program's jumps do in
       every function, the ones no scenario runs included (and in the sound program's 60, with `--sound`). The VBLANK handler
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
-      says so (`left_caller`). Most names are still addresses, and some of SegaSonic's (`GAME_VARIABLES`,
+      says so (`left_caller`). The registers the whole program shares are globals, a copy for each task:
+      `current_object`, `player_car` and `screen` (named by `symbols.txt`), and R12, R14 and R26-R28,
+      scratch registers whose last value the next function may read, still named after them (2,036 uses,
+      which `tools/noise_report.py` counts). Most names are still addresses, and some of SegaSonic's (`GAME_VARIABLES`,
       `PLAYER_BLOCK`) stand where OutRunners' will go
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
