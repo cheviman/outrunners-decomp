@@ -265,9 +265,9 @@ void sub_0122EB(uint32_t *p_r7, uint32_t *p_r15)
 	uint32_t r15 = *p_r15;
 	uint16_t r4 = 0, r6 = 0, r8 = 0, r9 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0;
 	uint32_t r0 = 0, r7_2 = 0, r10 = 0, r15_2 = 0;
-	uint32_t t1 = 0;
+	uint32_t object = 0;
 
-	if ((mem_read32(CAR(player_car)->unk_00) & 8u) != 0u)
+	if ((OBJECT(CAR(player_car)->object)->unk_00 & 8u) != 0u)
 		return;
 	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 	r15_2 = SCREEN(screen)->unk_500 + 6u;
@@ -288,7 +288,7 @@ void sub_0122EB(uint32_t *p_r7, uint32_t *p_r15)
 		*p_r15 = r15_2;
 		return;
 	}
-	r4 = OBJECT(current_object)->unk_10;
+	r4 = (uint8_t)OBJECT(current_object)->unk_10;
 	if (r0 < (uint16_t)r12)
 	{
 		do
@@ -320,9 +320,9 @@ void sub_0122EB(uint32_t *p_r7, uint32_t *p_r15)
 		r7 = (uint16_t)(r7 - r16);
 		r9 = (uint16_t)(r8 + mem_read16(r10 + 2u) - r18);
 	} while ((int16_t)(((r8 + mem_read16(r10) - r19) ^ r9) & ((r6 - r17) ^ r7)) >= 0);
-	t1 = CAR(player_car)->unk_00;
-	mem_write16(t1, mem_read16(t1) | 4u);
-	mem_write8(CAR(player_car)->unk_00 + 0x6Eu, r27);
+	object = CAR(player_car)->object;
+	mem_write16(object, mem_read16(object) | 4u);
+	AT8(OBJECT(CAR(player_car)->object)->unk_6C, 2) = r27;
 	r7 = (uint16_t)((int16_t)r7 >> 1);
 	CAR(player_car)->unk_122 = r7;
 	CAR(player_car)->unk_120 = (int16_t)r9 >> 1;
@@ -337,10 +337,10 @@ void sub_0123AF(uint32_t *p_r7, uint32_t *p_r15)
 	uint16_t r4 = 0, r6 = 0, r8 = 0, r9 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0;
 	uint32_t r0 = 0, r7_2 = 0, r10 = 0, r15_2 = 0;
 	uint16_t t1 = 0;
-	uint32_t t2 = 0;
+	uint32_t object = 0;
 
 	r27 = 0u;
-	if ((mem_read32(CAR(player_car)->unk_00) & 8u) != 0u)
+	if ((OBJECT(CAR(player_car)->object)->unk_00 & 8u) != 0u)
 		return;
 	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 	r15_2 = SCREEN(screen)->unk_500 + 6u;
@@ -361,7 +361,7 @@ void sub_0123AF(uint32_t *p_r7, uint32_t *p_r15)
 		*p_r15 = r15_2;
 		return;
 	}
-	r4 = OBJECT(current_object)->unk_10;
+	r4 = (uint8_t)OBJECT(current_object)->unk_10;
 	if (r0 < (uint16_t)r12)
 	{
 		do
@@ -403,9 +403,9 @@ void sub_0123AF(uint32_t *p_r7, uint32_t *p_r15)
 		t1 = r28 | (((r8 - r19) ^ r9) & r6);
 		r28 = (r28 & ~0xFFFFu) | t1;
 	} while ((int16_t)t1 >= 0);
-	t2 = CAR(player_car)->unk_00;
-	mem_write16(t2, mem_read16(t2) | 4u);
-	mem_write8(CAR(player_car)->unk_00 + 0x6Eu, r27);
+	object = CAR(player_car)->object;
+	mem_write16(object, mem_read16(object) | 4u);
+	AT8(OBJECT(CAR(player_car)->object)->unk_6C, 2) = r27;
 	r7 = (uint16_t)((int16_t)r7 >> 1);
 	CAR(player_car)->unk_122 = r7;
 	CAR(player_car)->unk_120 = (int16_t)r9 >> 1;
@@ -418,10 +418,10 @@ void sub_01248C(void)
 	uint16_t r4 = 0, r6 = 0, r7_2 = 0, r8 = 0, r9 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0;
 	uint32_t r0 = 0, r7 = 0, r10 = 0, r15 = 0;
 	uint16_t t1 = 0;
-	uint32_t t2 = 0;
+	uint32_t object = 0;
 
 	r27 = 0u;
-	if ((mem_read32(CAR(player_car)->unk_00) & 8u) == 0u)
+	if ((OBJECT(CAR(player_car)->object)->unk_00 & 8u) == 0u)
 	{
 		r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 		r15 = SCREEN(screen)->unk_500 + 6u;
@@ -437,7 +437,7 @@ void sub_01248C(void)
 		r19 = mem_read16(r15 + 2u);
 		if ((int16_t)((r12 - OBJECT(current_object)->unk_58) ^ (r13 - r0)) >= 0)
 			return;
-		r4 = OBJECT(current_object)->unk_10;
+		r4 = (uint8_t)OBJECT(current_object)->unk_10;
 		if (r0 < (uint16_t)r12)
 		{
 			do
@@ -477,9 +477,9 @@ void sub_01248C(void)
 			t1 = r28 | (((r8 - r19) ^ r9) & r6);
 			r28 = (r28 & ~0xFFFFu) | t1;
 		} while ((int16_t)t1 >= 0);
-		t2 = CAR(player_car)->unk_00;
-		mem_write16(t2, mem_read16(t2) | 4u);
-		mem_write8(CAR(player_car)->unk_00 + 0x6Eu, r27);
+		object = CAR(player_car)->object;
+		mem_write16(object, mem_read16(object) | 4u);
+		AT8(OBJECT(CAR(player_car)->object)->unk_6C, 2) = r27;
 		CAR(player_car)->unk_122 = (int16_t)r7_2 >> 1;
 		CAR(player_car)->unk_120 = (int16_t)r9 >> 1;
 	}
@@ -489,9 +489,9 @@ void sub_01256F(void)
 {
 	uint16_t r4 = 0, r6_2 = 0, r7 = 0, r8 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0;
 	uint32_t r5 = 0, r6 = 0, r15 = 0;
-	uint32_t t1 = 0;
+	uint32_t object = 0;
 
-	if ((mem_read32(CAR(player_car)->unk_00) & 8u) != 0u)
+	if ((OBJECT(CAR(player_car)->object)->unk_00 & 8u) != 0u)
 		return;
 	r14 = screen + 0x510u;
 	r15 = SCREEN(screen)->unk_500;
@@ -557,10 +557,10 @@ void sub_01256F(void)
 		r14 = r14 + 2u;
 		if ((int16_t)(r8 & ((r6_2 - r17) ^ (r7 - r16))) < 0)
 		{
-			t1 = CAR(player_car)->unk_00;
-			mem_write16(t1, mem_read16(t1) | 4u);
-			mem_write8(CAR(player_car)->unk_00 + 0x6Eu, 2u);
-			mem_write16(CAR(player_car)->unk_00 + 0x68u, r26);
+			object = CAR(player_car)->object;
+			mem_write16(object, mem_read16(object) | 4u);
+			AT8(OBJECT(CAR(player_car)->object)->unk_6C, 2) = 2u;
+			OBJECT(CAR(player_car)->object)->unk_68 = r26;
 		}
 		r5--;
 		if (r5 == 0u)
@@ -572,10 +572,10 @@ uint32_t sub_01262A(void)
 {
 	uint32_t negative = 0;
 	uint16_t r8 = 0;
-	uint32_t r0 = 0, r6 = 0, r7 = 0, r10 = 0, r15 = 0;
+	uint32_t r6 = 0, r7 = 0, r10 = 0, r15 = 0, object = 0;
 	uint16_t t1 = 0;
 
-	if ((mem_read32(CAR(player_car)->unk_00) & 8u) != 0u)
+	if ((OBJECT(CAR(player_car)->object)->unk_00 & 8u) != 0u)
 	{
 		negative = 0u;
 		return negative;
@@ -592,10 +592,10 @@ uint32_t sub_01262A(void)
 	negative = t1 >> 15;
 	if ((int16_t)t1 < 0)
 	{
-		r0 = CAR(player_car)->unk_00;
-		mem_write16(r0, mem_read16(r0) | 4u);
-		mem_write8(r0 + 0x6Eu, 1u);
-		mem_write16(r0 + 0x68u, current_object);
+		object = CAR(player_car)->object;
+		OBJECT(object)->unk_00 |= 4u;
+		AT8(OBJECT(object)->unk_6C, 2) = 1u;
+		OBJECT(object)->unk_68 = current_object;
 		negative = 1u;
 	}
 	return negative;
@@ -734,11 +734,11 @@ void sub_0127EE(void)
 	}
 	if (SCREEN(screen)->unk_1F00 == 0u)
 		return;
-	OBJECT(current_object)->unk_10 = 0u;
+	AS8(OBJECT(current_object)->unk_10) = 0u;
 	OBJECT(current_object)->unk_3C = 0xFFFFu;
 	do
 	{
-		r1 = OBJECT(current_object)->unk_10;
+		r1 = (uint8_t)OBJECT(current_object)->unk_10;
 		r0 = mem_read16(screen + 0x1F10u + r1 * 2u);
 		if (r0 < OBJECT(current_object)->unk_3C)
 		{
@@ -747,8 +747,8 @@ void sub_0127EE(void)
 			AT16(OBJECT(current_object)->unk_80, 2) = r0_2;
 			sub_00EAE4(r0_2);
 		}
-		OBJECT(current_object)->unk_10++;
-	} while (OBJECT(current_object)->unk_10 <= SCREEN(screen)->unk_1F00);
+		AS8(OBJECT(current_object)->unk_10)++;
+	} while ((uint8_t)OBJECT(current_object)->unk_10 <= SCREEN(screen)->unk_1F00);
 }
 
 void sub_01287C(void)
@@ -795,7 +795,7 @@ void sub_012894(void)
 	r10 += 2u;
 	OBJECT(current_object)->unk_24 = mem_read16(r10);
 	r10 += 2u;
-	AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+	OBJECT(current_object)->unk_10 = mem_read16(r10);
 	r10 += 2u;
 	AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 	r10 += 2u;
@@ -804,7 +804,7 @@ void sub_012894(void)
 	OBJECT(current_object)->unk_60 = r10;
 	sub_00F366(r9);
 	r0 = OBJECT(current_object)->unk_1C;
-	r1 = (uint16_t)(AS16(OBJECT(current_object)->unk_10) * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
+	r1 = (uint16_t)(OBJECT(current_object)->unk_10 * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
 	AT16(OBJECT(current_object)->unk_54, 2) = r0;
 	OBJECT(current_object)->unk_58 = r0 + r1;
 }
@@ -835,7 +835,7 @@ void sub_012906(void)
 		r10 += 2u;
 		OBJECT(current_object)->unk_24 = mem_read16(r10);
 		r10 += 2u;
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+		OBJECT(current_object)->unk_10 = mem_read16(r10);
 		r10 += 2u;
 		AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 		r10 += 2u;
@@ -844,7 +844,7 @@ void sub_012906(void)
 		OBJECT(current_object)->unk_60 = r10;
 		sub_00F366(r9);
 		r0 = OBJECT(current_object)->unk_1C;
-		r1 = (uint16_t)(AS16(OBJECT(current_object)->unk_10) * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
+		r1 = (uint16_t)(OBJECT(current_object)->unk_10 * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
 		AT16(OBJECT(current_object)->unk_54, 2) = r0;
 		OBJECT(current_object)->unk_58 = r0 + r1;
 		return;
@@ -963,7 +963,7 @@ void sub_012A20(void)
 		if ((int16_t)OBJECT(current_object)->unk_30 >= 0xA0)
 			OBJECT(current_object)->unk_0C++;
 		sub_012AA5();
-		r0 = (uint16_t)((r0 & ~0xFFu) | OBJECT(current_object)->unk_10);
+		r0 = (uint16_t)((r0 & ~0xFFu) | (uint8_t)OBJECT(current_object)->unk_10);
 		t2 = r0 & 1u;
 		r0_2 = (r0 & ~0xFFu) | t2;
 		if (t2 == 0u)
@@ -977,7 +977,7 @@ void sub_012A20(void)
 		invalid_jump(rom_012A2C[t1]);
 	}
 	sub_012AA5();
-	r0 = (uint16_t)((r0 & ~0xFFu) | OBJECT(current_object)->unk_10);
+	r0 = (uint16_t)((r0 & ~0xFFu) | (uint8_t)OBJECT(current_object)->unk_10);
 	t2 = r0 & 1u;
 	r0_2 = (r0 & ~0xFFu) | t2;
 	if (t2 == 0u)
@@ -990,8 +990,8 @@ void sub_012AA5(void)
 {
 	uint8_t t1 = 0;
 
-	t1 = OBJECT(current_object)->unk_10;
-	OBJECT(current_object)->unk_10 = t1 - 1u;
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
 	if (t1 == 1u)
 	{
 		sub_012AAB();
@@ -1014,7 +1014,7 @@ void sub_012AAB(void)
 	}
 	r9 = r0;
 	OBJECT(current_object)->unk_18 = r10;
-	OBJECT(current_object)->unk_10 = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
+	AS8(OBJECT(current_object)->unk_10) = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
 	sub_00F366(r9);
 }
 
@@ -1083,7 +1083,7 @@ void sub_012B0C(void)
 	r10 += 2u;
 	OBJECT(current_object)->unk_24 = mem_read16(r10);
 	r10 += 2u;
-	AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+	OBJECT(current_object)->unk_10 = mem_read16(r10);
 	r10 += 2u;
 	AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 	r10 += 2u;
@@ -1092,7 +1092,7 @@ void sub_012B0C(void)
 	OBJECT(current_object)->unk_60 = r10;
 	sub_00F366(r9);
 	r0 = OBJECT(current_object)->unk_1C;
-	r1 = (uint16_t)(AS16(OBJECT(current_object)->unk_10) * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
+	r1 = (uint16_t)(OBJECT(current_object)->unk_10 * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
 	AT16(OBJECT(current_object)->unk_54, 2) = r0;
 	OBJECT(current_object)->unk_58 = r0 + r1;
 }
@@ -1156,10 +1156,10 @@ void sub_012BAE(void)
 		OBJECT(current_object)->unk_58 = r0_2 - (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		if ((int16_t)CAR(player_car)->unk_44 < (int16_t)OBJECT(current_object)->unk_58)
@@ -1174,7 +1174,7 @@ void sub_012BAE(void)
 		{
 			OBJECT(current_object)->unk_20 += OBJECT(current_object)->unk_84;
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1198,7 +1198,7 @@ void sub_012BAE(void)
 		{
 			OBJECT(current_object)->unk_20 += OBJECT(current_object)->unk_84;
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1214,7 +1214,7 @@ void sub_012BAE(void)
 		{
 			OBJECT(current_object)->unk_20 += OBJECT(current_object)->unk_84;
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1266,10 +1266,10 @@ void sub_012CAA(void)
 		OBJECT(current_object)->unk_58 = r0_2 - (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		if ((int16_t)CAR(player_car)->unk_44 < (int16_t)OBJECT(current_object)->unk_58)
@@ -1292,7 +1292,7 @@ void sub_012CAA(void)
 		{
 			r0 = (uint16_t)(r0 - 0x80u);
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				AS16(OBJECT(current_object)->unk_28) = r0;
 				sub_00F30D(0u);
@@ -1335,7 +1335,7 @@ void sub_012CAA(void)
 		{
 			r0 = (uint16_t)(r0 - 0x80u);
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				AS16(OBJECT(current_object)->unk_28) = r0;
 				sub_00F30D(0u);
@@ -1370,7 +1370,7 @@ void sub_012CAA(void)
 		{
 			r0 = (uint16_t)(r0 - 0x80u);
 			OBJECT(current_object)->unk_1C++;
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				AS16(OBJECT(current_object)->unk_28) = r0;
 				sub_00F30D(0u);
@@ -1438,10 +1438,10 @@ void sub_012DB7(void)
 		OBJECT(current_object)->unk_58 = r0_2 - (uint16_t)OBJECT(current_object)->unk_80;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)OBJECT(current_object)->unk_58)
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)OBJECT(current_object)->unk_58)
 			return;
 		OBJECT(current_object)->unk_0C++;
 		if ((int16_t)CAR(player_car)->unk_42 < (int16_t)OBJECT(current_object)->unk_1C)
@@ -1449,7 +1449,7 @@ void sub_012DB7(void)
 			OBJECT(current_object)->unk_20 += (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 			OBJECT(current_object)->unk_24 += OBJECT(current_object)->unk_84;
 			OBJECT(current_object)->unk_1C += AS16(OBJECT(current_object)->unk_86);
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1466,7 +1466,7 @@ void sub_012DB7(void)
 			OBJECT(current_object)->unk_20 += (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 			OBJECT(current_object)->unk_24 += OBJECT(current_object)->unk_84;
 			OBJECT(current_object)->unk_1C += AS16(OBJECT(current_object)->unk_86);
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1528,10 +1528,10 @@ void sub_012EA2(void)
 		OBJECT(current_object)->unk_58 = r0_2 - (uint16_t)OBJECT(current_object)->unk_80;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)OBJECT(current_object)->unk_58 < (int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u))
+		if ((int16_t)OBJECT(current_object)->unk_58 < (int16_t)RACE(SCREEN(screen)->race_copy)->unk_46)
 		{
 			OBJECT(current_object)->unk_0C++;
 			OBJECT(current_object)->unk_12 = (uint8_t)OBJECT(current_object)->unk_88;
@@ -1546,7 +1546,7 @@ void sub_012EA2(void)
 		if (t2 != 1u)
 		{
 			OBJECT(current_object)->unk_1C += AS16(OBJECT(current_object)->unk_86);
-			if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+			if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 			{
 				sub_00F30D(0u);
 				sub_00EAE4(r0);
@@ -1567,7 +1567,7 @@ void sub_012EA2(void)
 		OBJECT(current_object)->unk_20 += (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 		OBJECT(current_object)->unk_24 += OBJECT(current_object)->unk_84;
 		OBJECT(current_object)->unk_1C += AS16(OBJECT(current_object)->unk_86);
-		if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+		if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 		{
 			sub_00F30D(0u);
 			sub_00EAE4(r0);
@@ -1587,7 +1587,7 @@ void sub_012EA2(void)
 		OBJECT(current_object)->unk_20 += (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 		OBJECT(current_object)->unk_24 += OBJECT(current_object)->unk_84;
 		OBJECT(current_object)->unk_1C += AS16(OBJECT(current_object)->unk_86);
-		if ((int16_t)(0u - AS16(OBJECT(current_object)->unk_10) + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
+		if ((int16_t)(0u - OBJECT(current_object)->unk_10 + OBJECT(current_object)->unk_1C) < (int16_t)CAR(player_car)->unk_42)
 		{
 			sub_00F30D(0u);
 			sub_00EAE4(r0);
@@ -1631,7 +1631,7 @@ void sub_012FBC(void)
 		r10 += 2u;
 		OBJECT(current_object)->unk_24 = mem_read16(r10);
 		r10 += 2u;
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+		OBJECT(current_object)->unk_10 = mem_read16(r10);
 		r10 += 2u;
 		AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 		r10 += 2u;
@@ -1640,7 +1640,7 @@ void sub_012FBC(void)
 		OBJECT(current_object)->unk_60 = r10;
 		sub_00F366(r9);
 		r0_2 = OBJECT(current_object)->unk_1C;
-		r1 = (uint16_t)(AS16(OBJECT(current_object)->unk_10) * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
+		r1 = (uint16_t)(OBJECT(current_object)->unk_10 * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2;
 		OBJECT(current_object)->unk_58 = r0_2 + r1;
 		return;
@@ -1649,7 +1649,7 @@ void sub_012FBC(void)
 		r0 = sub_00EAE4(r0);
 		return;
 	case 2:
-		r0 = mem_read16(CAR(player_car)->unk_00 + 0x10u);
+		r0 = OBJECT(CAR(player_car)->object)->unk_10;
 		r0 = (uint16_t)(r0 + 0x1Du);
 		r0 = r0 / 0x1Eu;
 		OBJECT(current_object)->unk_3A = rom_01306E[r0];
@@ -1692,7 +1692,7 @@ void sub_01307E(void)
 		OBJECT(current_object)->unk_44 = 1u;
 		return;
 	case 1:
-		r0 = mem_read16(CAR(player_car)->unk_00 + 0x10u);
+		r0 = OBJECT(CAR(player_car)->object)->unk_10;
 		if (r0 != 0u)
 		{
 			r0 = sub_00EAE4(r0);
@@ -1755,10 +1755,10 @@ void sub_013104(void)
 		OBJECT(current_object)->unk_58 = r0_2 - 0x1Eu;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		r9 = (uint16_t)OBJECT(current_object)->unk_80;
@@ -1809,7 +1809,7 @@ void sub_0131A5(void)
 		OBJECT(current_object)->unk_44 = 1u;
 		return;
 	case 1:
-		if (mem_read16(CAR(player_car)->unk_00 + 0x10u) != 0u)
+		if (OBJECT(CAR(player_car)->object)->unk_10 != 0u)
 			return;
 		OBJECT(current_object)->unk_0C++;
 		if ((int16_t)OBJECT(current_object)->unk_1C <= (int16_t)CAR(player_car)->unk_42 || (int16_t)OBJECT(current_object)->unk_24 < -0x3000)
@@ -1853,7 +1853,7 @@ void sub_01322D(void)
 	switch (OBJECT(current_object)->unk_0C)
 	{
 	case 0:
-		AS16(OBJECT(current_object)->unk_10) = CAR(player_car)->unk_44 + OBJECT(current_object)->unk_18;
+		OBJECT(current_object)->unk_10 = CAR(player_car)->unk_44 + OBJECT(current_object)->unk_18;
 		OBJECT(current_object)->unk_0C++;
 		r0_2 = 0x51u;
 		sub_011EB8(r0_2);
@@ -1868,7 +1868,7 @@ void sub_01322D(void)
 	default:
 		invalid_jump(rom_013238[OBJECT(current_object)->unk_0C]);
 	}
-	if ((int16_t)AS16(OBJECT(current_object)->unk_10) <= (int16_t)CAR(player_car)->unk_44)
+	if ((int16_t)OBJECT(current_object)->unk_10 <= (int16_t)CAR(player_car)->unk_44)
 	{
 		OBJECT(current_object)->unk_00 = 0u;
 		return;
@@ -1922,9 +1922,9 @@ void sub_013296(void)
 				return;
 			}
 		}
-		r0 = AS16(OBJECT(current_object)->unk_10);
+		r0 = OBJECT(current_object)->unk_10;
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
-		AS16(OBJECT(current_object)->unk_10) = r0;
+		OBJECT(current_object)->unk_10 = r0;
 		r0 = (uint16_t)(((r0 >> 2) & 3u) + (uint16_t)OBJECT(current_object)->unk_80);
 		OBJECT(current_object)->unk_3A = r0;
 		r0 = sub_00EAE4(r0);
@@ -1941,9 +1941,9 @@ void sub_013296(void)
 				return;
 			}
 		}
-		r0 = AS16(OBJECT(current_object)->unk_10);
+		r0 = OBJECT(current_object)->unk_10;
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
-		AS16(OBJECT(current_object)->unk_10) = r0;
+		OBJECT(current_object)->unk_10 = r0;
 		r0 = (uint16_t)(((r0 >> 2) & 3u) + (uint16_t)OBJECT(current_object)->unk_80);
 		OBJECT(current_object)->unk_3A = r0;
 		r0 = sub_00EAE4(r0);
@@ -1956,9 +1956,9 @@ void sub_013296(void)
 			OBJECT(current_object)->unk_01 = 0u;
 			return;
 		}
-		r0 = AS16(OBJECT(current_object)->unk_10);
+		r0 = OBJECT(current_object)->unk_10;
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
-		AS16(OBJECT(current_object)->unk_10) = r0;
+		OBJECT(current_object)->unk_10 = r0;
 		r0 = (uint16_t)(((r0 >> 2) & 3u) + (uint16_t)OBJECT(current_object)->unk_80);
 		OBJECT(current_object)->unk_3A = r0;
 		r0 = sub_00EAE4(r0);
@@ -2008,10 +2008,10 @@ void sub_01333C(void)
 		OBJECT(current_object)->unk_58 = r0_2 - 0x64u;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 	case 2:
@@ -2106,10 +2106,10 @@ void sub_01344F(void)
 		OBJECT(current_object)->unk_58 = r0_2 - 0x64u;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		OBJECT(current_object)->unk_20 += (uint16_t)OBJECT(current_object)->unk_80;
@@ -2192,7 +2192,7 @@ void sub_01351E(void)
 		r10 += 2u;
 		OBJECT(current_object)->unk_24 = mem_read16(r10);
 		r10 += 2u;
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+		OBJECT(current_object)->unk_10 = mem_read16(r10);
 		r10 += 2u;
 		AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 		r10 += 2u;
@@ -2201,7 +2201,7 @@ void sub_01351E(void)
 		OBJECT(current_object)->unk_60 = r10;
 		sub_00F366(r9);
 		r0 = OBJECT(current_object)->unk_1C;
-		r1 = (uint16_t)(AS16(OBJECT(current_object)->unk_10) * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
+		r1 = (uint16_t)(OBJECT(current_object)->unk_10 * (AS16(OBJECT(current_object)->unk_12) - 1u) + 1u);
 		AT16(OBJECT(current_object)->unk_54, 2) = r0;
 		OBJECT(current_object)->unk_58 = r0 + r1;
 		return;
@@ -2261,10 +2261,10 @@ void sub_0135CC(void)
 		OBJECT(current_object)->unk_58 = r0_2 - 0x64u;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0_2 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		OBJECT(current_object)->unk_20 += (uint16_t)OBJECT(current_object)->unk_80;
@@ -2349,10 +2349,10 @@ void sub_01369A(void)
 		OBJECT(current_object)->unk_58 = r0 - 0x64u;
 		r1 = SCREEN(screen)->unk_12 >> 7;
 		AT16(OBJECT(current_object)->unk_54, 2) = r0 - r1;
-		AS16(OBJECT(current_object)->unk_10) = r1;
+		OBJECT(current_object)->unk_10 = r1;
 		return;
 	case 1:
-		if ((int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u) <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
+		if ((int16_t)RACE(SCREEN(screen)->race_copy)->unk_46 <= (int16_t)(uint16_t)(OBJECT(current_object)->unk_54 >> 16u))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		OBJECT(current_object)->unk_20 += (uint16_t)OBJECT(current_object)->unk_80;
@@ -2631,7 +2631,7 @@ void sub_0138EB(uint32_t r1)
 	}
 	r0 = (r0 & ~0xFFFFu) | OBJECT(current_object)->unk_1C;
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 - 8u);
-	if ((int16_t)r0 < (int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u))
+	if ((int16_t)r0 < (int16_t)RACE(SCREEN(screen)->race_copy)->unk_46)
 	{
 		SCREEN(screen)->unk_FA8--;
 		OBJECT(current_object)->unk_00 = 0u;
@@ -2674,7 +2674,7 @@ void sub_013900(void)
 	r11++;
 	AT8(OBJECT(current_object)->unk_80, 2) = t4;
 	t5 = mem_read16(r11);
-	AT16(OBJECT(current_object)->unk_68, 2) = t5;
+	OBJECT(current_object)->unk_6A = t5;
 	OBJECT(current_object)->unk_60 = r11 + 2u;
 	r10 += 4u;
 	OBJECT(current_object)->unk_3F = (uint8_t)mem_read16(r10);
@@ -2691,7 +2691,7 @@ void sub_01397E(uint32_t r0, uint32_t r1)
 	uint32_t zero = 0, negative = 0, carry = 0;
 	uint8_t r0_3 = 0, r2_2 = 0;
 	uint16_t r1_3 = 0, r2 = 0, r3 = 0;
-	uint32_t r0_2 = 0, r1_2 = 0, r10 = 0;
+	uint32_t r0_2 = 0, r1_2 = 0, r10 = 0, race = 0;
 	uint32_t stack_4 = 0, stack_8 = 0;
 	uint8_t t1 = 0;
 
@@ -2704,10 +2704,10 @@ void sub_01397E(uint32_t r0, uint32_t r1)
 		OBJECT(current_object)->unk_00 = 0u;
 		return;
 	}
-	r10 = SCREEN(screen)->unk_20;
+	race = SCREEN(screen)->race_copy;
 	r1_2 = (r1 & ~0xFFFFu) | (uint16_t)r0_2;
 	r1_2 = (r1_2 & ~0xFFFFu) | (uint16_t)(r1_2 - SCREEN(screen)->unk_FA6);
-	r2 = mem_read16(r10 + 0x42u);
+	r2 = RACE(race)->unk_42;
 	if ((uint8_t)OBJECT(current_object)->unk_80 != 0u)
 	{
 		if ((int16_t)r2 < (int16_t)r0_2)
@@ -2731,7 +2731,7 @@ void sub_01397E(uint32_t r0, uint32_t r1)
 		r1_2 = stack_8;
 		r0_2 = stack_4;
 	}
-	r2 = mem_read16(r10 + 0x46u);
+	r2 = RACE(race)->unk_46;
 	if ((int16_t)r0_2 < (int16_t)r2 || (int16_t)r2 <= (int16_t)r1_2)
 		return;
 	r10 = screen + 0x2000u + CAR(player_car)->unk_40;
@@ -2834,7 +2834,7 @@ void sub_013AF9(void)
 	{
 		r0 = (r0 & ~0xFFFFu) | OBJECT(current_object)->unk_1C;
 		r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 - 8u);
-		if ((int16_t)r0 < (int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u))
+		if ((int16_t)r0 < (int16_t)RACE(SCREEN(screen)->race_copy)->unk_46)
 		{
 			SCREEN(screen)->unk_FA8--;
 			OBJECT(current_object)->unk_00 = 0u;
@@ -2907,7 +2907,7 @@ void sub_013BA3(void)
 {
 	uint32_t zero = 0, negative = 0;
 	uint16_t r0 = 0, r1 = 0;
-	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0, ignored = 0;
+	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0, ignored = 0, race = 0;
 	uint16_t t1 = 0, t2 = 0;
 
 	switch (OBJECT(current_object)->unk_0C)
@@ -2931,7 +2931,7 @@ void sub_013BA3(void)
 			r11++;
 			AT8(OBJECT(current_object)->unk_80, 2) = mem_read8(r11);
 			r11++;
-			AT16(OBJECT(current_object)->unk_68, 2) = mem_read16(r11);
+			OBJECT(current_object)->unk_6A = mem_read16(r11);
 			OBJECT(current_object)->unk_60 = r11 + 2u;
 			OBJECT(current_object)->unk_3F = (uint8_t)mem_read16(r10);
 			r10 += 2u;
@@ -2949,7 +2949,7 @@ void sub_013BA3(void)
 		r11++;
 		AT8(OBJECT(current_object)->unk_80, 2) = mem_read8(r11);
 		r11++;
-		AT16(OBJECT(current_object)->unk_68, 2) = mem_read16(r11);
+		OBJECT(current_object)->unk_6A = mem_read16(r11);
 		OBJECT(current_object)->unk_60 = r11 + 2u;
 		OBJECT(current_object)->unk_3F = (uint8_t)mem_read16(r10);
 		r10 += 2u;
@@ -2960,7 +2960,7 @@ void sub_013BA3(void)
 		sub_00F366(r9);
 		return;
 	case 1:
-		if (CAR(player_car)->unk_181 != 0u && (int16_t)(OBJECT(current_object)->unk_1C - 8u) < (int16_t)mem_read16(SCREEN(screen)->unk_20 + 0x46u))
+		if (CAR(player_car)->unk_181 != 0u && (int16_t)(OBJECT(current_object)->unk_1C - 8u) < (int16_t)RACE(SCREEN(screen)->race_copy)->unk_46)
 		{
 			SCREEN(screen)->unk_FA8--;
 			OBJECT(current_object)->unk_00 = 0u;
@@ -2999,9 +2999,9 @@ void sub_013BA3(void)
 			OBJECT(current_object)->unk_00 = 0u;
 			return;
 		}
-		r10 = SCREEN(screen)->unk_20;
+		race = SCREEN(screen)->race_copy;
 		r1 = (uint16_t)(r0_2 - SCREEN(screen)->unk_FA6);
-		if ((int16_t)r0_2 < (int16_t)mem_read16(r10 + 0x46u) || (int16_t)mem_read16(r10 + 0x46u) <= (int16_t)r1)
+		if ((int16_t)r0_2 < (int16_t)RACE(race)->unk_46 || (int16_t)RACE(race)->unk_46 <= (int16_t)r1)
 			return;
 		if (mem_read32(OBJECT(current_object)->unk_60) != 0u)
 		{
@@ -3035,8 +3035,8 @@ void sub_013D15(void)
 	uint8_t r0 = 0;
 	uint8_t t1 = 0;
 
-	t1 = OBJECT(current_object)->unk_10;
-	OBJECT(current_object)->unk_10 = t1 - 1u;
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
 	if (t1 == 1u)
 	{
 		OBJECT(current_object)->unk_00 = 0u;
@@ -3107,7 +3107,7 @@ void sub_013DE4(void)
 	default:
 		invalid_jump(rom_013DF0[OBJECT(current_object)->unk_0C]);
 	}
-	r9 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	r9 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r16 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 	r17 = OBJECT(current_object)->unk_58;
 	if (r17 <= r9)
@@ -3437,7 +3437,7 @@ uint32_t sub_0142B4(uint32_t r10)
 	uint32_t r9 = 0;
 	uint8_t t1 = 0;
 
-	r9 = rom_0143A0[mem_read8(CAR(player_car)->unk_00 + 0xCu)];
+	r9 = rom_0143A0[OBJECT(CAR(player_car)->object)->unk_0C];
 	r9 = r9 & rom_0143A6[(uint8_t)(OBJECT(r10)->unk_E2 >> 8u)];
 	if (r9 == 0u)
 	{
@@ -3546,8 +3546,8 @@ void sub_0144C9(void)
 	uint8_t r0 = 0;
 	uint32_t r10 = 0;
 
-	OBJECT(current_object)->unk_10++;
-	if (OBJECT(current_object)->unk_10 < OBJECT(current_object)->unk_12)
+	AS8(OBJECT(current_object)->unk_10)++;
+	if ((uint8_t)OBJECT(current_object)->unk_10 < OBJECT(current_object)->unk_12)
 	{
 		sub_0144EB();
 		return;
@@ -3581,19 +3581,19 @@ void sub_014514(void)
 	{
 	case 0:
 		OBJECT(current_object)->unk_0C++;
-		AT8(OBJECT(current_object)->unk_08, 1) = mem_read8(SCREEN(screen)->unk_20 + 0x60u);
+		AT8(OBJECT(current_object)->unk_08, 1) = RACE(SCREEN(screen)->race_copy)->unk_60;
 		r10 = 0x1466Fu;
-		OBJECT(current_object)->unk_10 = mem_read8(r10);
+		AS8(OBJECT(current_object)->unk_10) = mem_read8(r10);
 		OBJECT(current_object)->unk_18 = r10 + 1u;
 		return;
 	case 1:
-		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) != mem_read8(SCREEN(screen)->unk_20 + 0x60u))
+		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) != RACE(SCREEN(screen)->race_copy)->unk_60)
 		{
 			OBJECT(current_object)->unk_0C++;
 			return;
 		}
-		t1 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t1 - 1u;
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
 		if (t1 != 1u)
 			return;
 		r10 = OBJECT(current_object)->unk_18;
@@ -3602,14 +3602,14 @@ void sub_014514(void)
 		sub_011EB8(r0);
 		if (mem_read8(r10) != 0u)
 		{
-			OBJECT(current_object)->unk_10 = mem_read8(r10);
+			AS8(OBJECT(current_object)->unk_10) = mem_read8(r10);
 			OBJECT(current_object)->unk_18 = r10 + 1u;
 			return;
 		}
 		OBJECT(current_object)->unk_0C++;
 		return;
 	case 2:
-		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) == mem_read8(SCREEN(screen)->unk_20 + 0x60u))
+		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) == RACE(SCREEN(screen)->race_copy)->unk_60)
 			return;
 		r0 = 0x24u;
 		if (SCREEN(screen)->unk_01 != SCREEN(screen)->unk_70)
@@ -3634,10 +3634,10 @@ void sub_01458D(void)
 	switch (OBJECT(current_object)->unk_0C)
 	{
 	case 0:
-		if (mem_read16(SCREEN(screen)->unk_20 + 0x42u) < OBJECT(current_object)->unk_1C)
+		if (RACE(SCREEN(screen)->race_copy)->unk_42 < OBJECT(current_object)->unk_1C)
 			return;
 		OBJECT(current_object)->unk_0C++;
-		r0 = mem_read8(SCREEN(screen)->unk_20 + 0x49u);
+		r0 = RACE(SCREEN(screen)->race_copy)->unk_49;
 		OBJECT(current_object)->unk_84 = 0u - rom_010BD2[r0] + 0x1E0u;
 		AS16(OBJECT(current_object)->unk_80) = rom_014674[r0];
 		AT16(OBJECT(current_object)->unk_80, 2) = rom_014684[r0];
@@ -3657,7 +3657,7 @@ void sub_01458D(void)
 		CAR(player_car)->unk_108 -= (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
 		return;
 	case 2:
-		if (mem_read16(SCREEN(screen)->unk_20 + 0x42u) < AS16(OBJECT(current_object)->unk_86))
+		if (RACE(SCREEN(screen)->race_copy)->unk_42 < AS16(OBJECT(current_object)->unk_86))
 			return;
 		OBJECT(current_object)->unk_0C++;
 		break;
@@ -3698,7 +3698,7 @@ void sub_014694(void)
 		r1 = SCREEN(screen)->unk_01;
 		for (;;)
 		{
-			if (L_0146F4 || mem_read8(SCREEN(screen)->unk_20 + 0x5Eu) == 0u)
+			if (L_0146F4 || RACE(SCREEN(screen)->race_copy)->unk_5E == 0u)
 			{
 				if (!L_0146F4)
 				{
@@ -3733,7 +3733,7 @@ void sub_014694(void)
 		sub_011EB8(r0_2);
 		SCREEN(screen)->unk_94 |= 2u;
 		SCREEN(screen)->unk_94 &= 0xFFFFFFEFu;
-		if (mem_read8(SCREEN(screen)->unk_20 + 0x5Eu) == 0u)
+		if (RACE(SCREEN(screen)->race_copy)->unk_5E == 0u)
 		{
 			sub_011FE6();
 			return;
@@ -3749,11 +3749,11 @@ void sub_014735(void)
 	uint32_t r9 = 0, r10 = 0;
 
 	r10 = OBJECT(current_object)->unk_14;
-	r9 = mem_read16(SCREEN(screen)->unk_20 + 0x3Cu);
+	r9 = RACE(SCREEN(screen)->race_copy)->unk_3C;
 	OBJECT(current_object)->unk_38 = r9;
 	sub_00F366(r9);
-	OBJECT(current_object)->unk_3A = mem_read16(SCREEN(screen)->unk_20 + 0x3Eu);
-	OBJECT(current_object)->unk_40 = mem_read8(SCREEN(screen)->unk_20 + 0x4Au);
+	OBJECT(current_object)->unk_3A = RACE(SCREEN(screen)->race_copy)->unk_3E;
+	OBJECT(current_object)->unk_40 = RACE(SCREEN(screen)->race_copy)->unk_4A;
 	OBJECT(current_object)->unk_3C = mem_read16(r10 + 0x3Cu);
 	OBJECT(current_object)->unk_30 = mem_read16(r10 + 0x30u);
 	OBJECT(current_object)->unk_32 = mem_read16(r10 + 0x32u);
@@ -3783,12 +3783,12 @@ void sub_014782(void)
 void sub_01478B(uint32_t r10)
 {
 	uint32_t carry = 0;
-	uint32_t r3 = 0, r5 = 0, r6 = 0, r7 = 0, r9 = 0, r11 = 0, r19 = 0;
+	uint32_t r3 = 0, r5 = 0, r6 = 0, r7 = 0, r9 = 0, r11 = 0, race = 0;
 
 	OBJECT(current_object)->unk_3A = mem_read16(r12 + 6u);
 	OBJECT(current_object)->unk_3C = mem_read16(r10 + 0x3Cu);
-	r19 = SCREEN(screen)->unk_20;
-	r11 = mem_read32(rom_034138[mem_read16(r19 + 0x3Cu)] + 4u + mem_read8(r19 + 0x4Au) * 4u) + 2u;
+	race = SCREEN(screen)->race_copy;
+	r11 = mem_read32(rom_034138[RACE(race)->unk_3C] + 4u + RACE(race)->unk_4A * 4u) + 2u;
 	r3 = mem_read16(r11);
 	r11 += 2u;
 	r3 = r3 & 0x40u;
@@ -3844,16 +3844,15 @@ void sub_014846(void)
 		r10 += 2u;
 		if (carry)
 		{
-			AS16(OBJECT(current_object)->unk_10)++;
+			OBJECT(current_object)->unk_10++;
 			t1 = mem_read16(r10);
 			r10 += 2u;
-			if (AS16(OBJECT(current_object)->unk_10) <= t1)
+			if (OBJECT(current_object)->unk_10 <= t1)
 			{
 				r0 = sub_00EAE4(r0);
 				return;
 			}
 			OBJECT(current_object)->unk_10 = 0u;
-			OBJECT(current_object)->unk_11 = 0u;
 			OBJECT(current_object)->unk_80 = r10;
 			continue;
 		}
@@ -3861,17 +3860,16 @@ void sub_014846(void)
 		r5 = (uint16_t)(r5 * 2u);
 		if (carry)
 		{
-			AS16(OBJECT(current_object)->unk_10)++;
+			OBJECT(current_object)->unk_10++;
 			t2 = mem_read16(r10);
 			r10 += 2u;
-			if (AS16(OBJECT(current_object)->unk_10) <= t2)
+			if (OBJECT(current_object)->unk_10 <= t2)
 			{
 				r10 = AS32(OBJECT(current_object)->unk_84);
 				OBJECT(current_object)->unk_80 = r10;
 				continue;
 			}
 			OBJECT(current_object)->unk_10 = 0u;
-			OBJECT(current_object)->unk_11 = 0u;
 			OBJECT(current_object)->unk_80 = r10;
 			continue;
 		}
@@ -4025,17 +4023,16 @@ void sub_014846(void)
 		default:
 			invalid_jump(rom_014994[t4]);
 		}
-		AS16(OBJECT(current_object)->unk_10)++;
+		OBJECT(current_object)->unk_10++;
 		r0 = (uint16_t)(mem_read16(r10) + ((uint32_t)rom_014A16[mem_read8(screen + 0x320u + SCREEN(screen)->unk_01)] << 3));
 		r10 += 2u;
-		if (AS16(OBJECT(current_object)->unk_10) <= r0)
+		if (OBJECT(current_object)->unk_10 <= r0)
 		{
 			r10 = AS32(OBJECT(current_object)->unk_84);
 			OBJECT(current_object)->unk_80 = r10;
 			continue;
 		}
 		OBJECT(current_object)->unk_10 = 0u;
-		OBJECT(current_object)->unk_11 = 0u;
 		OBJECT(current_object)->unk_80 = r10;
 	}
 }
@@ -4087,7 +4084,7 @@ void sub_016B00(void)
 	default:
 		invalid_jump(rom_016B0C[OBJECT(current_object)->unk_0C]);
 	}
-	r0 = AS16(OBJECT(current_object)->unk_10);
+	r0 = OBJECT(current_object)->unk_10;
 	r0 = (uint16_t)(r0 + 0x4FFu);
 	mem_write32(OBJECT(current_object)->unk_54, mem_read32(current_object - 0x24u + ((r0 >> 9) + OBJECT(current_object)->unk_0D * 5u) * 4u));
 	if ((uint16_t)OBJECT(current_object)->unk_14 <= (uint16_t)(OBJECT(current_object)->unk_14 >> 16u))
@@ -4220,7 +4217,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 	r11 = AS32(OBJECT(current_object)->unk_58) + r0 * 4u;
 	stack_4 = r11;
 	r12 = OBJECT(current_object)->unk_5C + r0 * 4u;
-	r13 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	r13 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r14 = r14 & ~0xFFFFu;
 	r15 = 0xFFFFFFF4u;
 	r16 = 0x800u;
@@ -4362,7 +4359,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 											SCREEN(screen)->unk_200 = r1;
 											mem_write16(r26, 0xFFFFu);
 											sub_0170A6((uint8_t)r15, r16, r18, &r5, &r6);
-											AS16(OBJECT(current_object)->unk_10) = mem_read16(stack_4 - 2u);
+											OBJECT(current_object)->unk_10 = mem_read16(stack_4 - 2u);
 											*p_r4 = r4;
 											*p_r5 = r5;
 											*p_r6 = r6;
@@ -4438,7 +4435,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 							if (!L_016E09)
 							{
 								OBJECT(current_object)->unk_64 = r5;
-								OBJECT(current_object)->unk_68 = r6;
+								AS32(OBJECT(current_object)->unk_68) = r6;
 								sub_016FEB(r0, r1, r2, r3, (uint8_t)r15, r16, r18, &r4, &r5, &r6, &r7, &r8, &r11, &zero);
 								OBJECT(current_object)->unk_6C = r7;
 								OBJECT(current_object)->unk_70 = r8;
@@ -4488,7 +4485,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 		SCREEN(screen)->unk_200 = r1;
 		mem_write16(r26, 0xFFFFu);
 		sub_0170A6((uint8_t)r15, r16, r18, &r5, &r6);
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(stack_4 - 2u);
+		OBJECT(current_object)->unk_10 = mem_read16(stack_4 - 2u);
 		*p_r4 = r4;
 		*p_r5 = r5;
 		*p_r6 = r6;
@@ -4505,7 +4502,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 		SCREEN(screen)->unk_200 = r1;
 		mem_write16(r26, 0xFFFFu);
 		sub_0170A6((uint8_t)r15, r16, r18, &r5, &r6);
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(stack_4 - 2u);
+		OBJECT(current_object)->unk_10 = mem_read16(stack_4 - 2u);
 		*p_r4 = r4;
 		*p_r5 = r5;
 		*p_r6 = r6;
@@ -4527,7 +4524,7 @@ void sub_016D00(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13,
 	SCREEN(screen)->unk_200 = r1;
 	mem_write16(r26, 0xFFFFu);
 	sub_0170A6((uint8_t)r15, r16, r18, &r5, &r6);
-	AS16(OBJECT(current_object)->unk_10) = mem_read16(stack_4 - 2u);
+	OBJECT(current_object)->unk_10 = mem_read16(stack_4 - 2u);
 	*p_r4 = r4;
 	*p_r5 = r5;
 	*p_r6 = r6;
@@ -4666,7 +4663,7 @@ void sub_016E8C(uint32_t r4, uint32_t r5, uint32_t r6, uint32_t r13, uint8_t r15
 					else
 					{
 						OBJECT(current_object)->unk_64 = r5;
-						OBJECT(current_object)->unk_68 = r6;
+						AS32(OBJECT(current_object)->unk_68) = r6;
 						sub_016FEB(r0, r1, r2, r3, r15, r16, r18, &r4, &r5, &r6, &r7, &r8, &r11, &zero);
 						OBJECT(current_object)->unk_6C = r7;
 						OBJECT(current_object)->unk_70 = r8;
@@ -4856,7 +4853,7 @@ void sub_0170A6(uint8_t r15, uint32_t r16, uint16_t r18, uint32_t *p_r5, uint32_
 	if (r1 == 0u)
 		return;
 	*p_r5 = (OBJECT(current_object)->unk_64 << 12) + r16;
-	*p_r6 = (OBJECT(current_object)->unk_68 << 12) + r16;
+	*p_r6 = (AS32(OBJECT(current_object)->unk_68) << 12) + r16;
 	r7 = OBJECT(current_object)->unk_6C;
 	r8 = OBJECT(current_object)->unk_70;
 	r11 = OBJECT(current_object)->unk_74;
@@ -4924,13 +4921,13 @@ void sub_0171CE(void)
 			r12 = r12 + 1u;
 			r10 += 4u;
 		} while (r9 != 0u);
-		OBJECT(current_object)->unk_10 = 0u;
+		AS8(OBJECT(current_object)->unk_10) = 0u;
 		OBJECT(current_object)->unk_12 = 4u;
 		OBJECT(current_object)->unk_0C++;
 	case 1:
-		r0 = OBJECT(current_object)->unk_10;
+		r0 = (uint8_t)OBJECT(current_object)->unk_10;
 		move_string(mem_read32(current_object + 0x18u + r0 * 4u), 0x200u, mem_read32(current_object + 0x28u + r0 * 4u), 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
-		OBJECT(current_object)->unk_10++;
+		AS8(OBJECT(current_object)->unk_10)++;
 		t2 = OBJECT(current_object)->unk_12;
 		OBJECT(current_object)->unk_12 = t2 - 1u;
 		if (t2 != 1u)
@@ -4961,7 +4958,7 @@ void sub_0171CE(void)
 			r11++;
 			r10 += 4u;
 		} while (r9 != 0u);
-		OBJECT(current_object)->unk_10 = 0x10u;
+		AS8(OBJECT(current_object)->unk_10) = 0x10u;
 		OBJECT(current_object)->unk_0C++;
 		return;
 	case 2:
@@ -4979,8 +4976,8 @@ void sub_0171CE(void)
 			r10 += 4u;
 			r11 += 4u;
 		} while (r9 != 0u);
-		t3 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t3 - 1u;
+		t3 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
 		if (t3 != 1u)
 			return;
 		r10 = r21 + 0x34u;
@@ -5015,13 +5012,13 @@ void sub_0171CE(void)
 			r12 = r12 + 1u;
 			r10 += 4u;
 		} while (r9 != 0u);
-		OBJECT(current_object)->unk_10 = 0u;
+		AS8(OBJECT(current_object)->unk_10) = 0u;
 		OBJECT(current_object)->unk_12 = 4u;
 		OBJECT(current_object)->unk_0C++;
 	case 4:
-		r0 = OBJECT(current_object)->unk_10;
+		r0 = (uint8_t)OBJECT(current_object)->unk_10;
 		move_string(mem_read32(current_object + 0x18u + r0 * 4u), 0x200u, mem_read32(current_object + 0x28u + r0 * 4u), 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
-		OBJECT(current_object)->unk_10++;
+		AS8(OBJECT(current_object)->unk_10)++;
 		t5 = OBJECT(current_object)->unk_12;
 		OBJECT(current_object)->unk_12 = t5 - 1u;
 		if (t5 != 1u)
@@ -5052,7 +5049,7 @@ void sub_0171CE(void)
 			r11++;
 			r10 += 4u;
 		} while (r9 != 0u);
-		OBJECT(current_object)->unk_10 = 0x10u;
+		AS8(OBJECT(current_object)->unk_10) = 0x10u;
 		OBJECT(current_object)->unk_0C++;
 		return;
 	case 5:
@@ -5070,8 +5067,8 @@ void sub_0171CE(void)
 			r10 += 4u;
 			r11 += 4u;
 		} while (r9 != 0u);
-		t6 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t6 - 1u;
+		t6 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t6 - 1u;
 		if (t6 != 1u)
 			return;
 		r10 = r21 + 0x52u;
@@ -5439,11 +5436,11 @@ void sub_0178D5(void)
 		OBJECT(current_object)->unk_00 = 0u;
 		return;
 	}
-	t1 = OBJECT(current_object)->unk_10;
-	OBJECT(current_object)->unk_10 = t1 - 1u;
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
 	if (t1 == 1u)
 	{
-		OBJECT(current_object)->unk_10 = 2u;
+		AS8(OBJECT(current_object)->unk_10) = 2u;
 		r0 = OBJECT(current_object)->unk_12;
 		r0 = (uint8_t)(r0 + 2u);
 		r0 = r0 & 7u;
@@ -5484,11 +5481,11 @@ void sub_017958(void)
 		OBJECT(current_object)->unk_00 = 0u;
 		return;
 	}
-	t1 = OBJECT(current_object)->unk_10;
-	OBJECT(current_object)->unk_10 = t1 - 1u;
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
 	if (t1 != 1u)
 		return;
-	OBJECT(current_object)->unk_10 = 3u;
+	AS8(OBJECT(current_object)->unk_10) = 3u;
 	r0 = OBJECT(current_object)->unk_12;
 	r0 = (uint8_t)(r0 + 2u);
 	if ((int8_t)r0 >= 6)
@@ -5591,7 +5588,7 @@ void sub_017BFB(void)
 	{
 	case 0:
 		r10 = OBJECT(current_object)->unk_80;
-		AS16(OBJECT(current_object)->unk_10) = mem_read16(r10);
+		OBJECT(current_object)->unk_10 = mem_read16(r10);
 		r10 += 2u;
 		AS16(OBJECT(current_object)->unk_12) = mem_read16(r10);
 		r10 += 2u;
@@ -5601,10 +5598,10 @@ void sub_017BFB(void)
 		AT16(OBJECT(current_object)->unk_14, 2) = r0;
 		OBJECT(current_object)->unk_0D = 0u;
 		OBJECT(current_object)->unk_0C++;
-		if ((OBJECT(current_object)->unk_10 | OBJECT(current_object)->unk_11) != 0u)
+		if (OBJECT(current_object)->unk_10 != 0u)
 		{
-			t1 = AS16(OBJECT(current_object)->unk_10);
-			AS16(OBJECT(current_object)->unk_10) = t1 - 1u;
+			t1 = OBJECT(current_object)->unk_10;
+			OBJECT(current_object)->unk_10 = t1 - 1u;
 			if (t1 != 1u)
 				return;
 		}
@@ -5623,8 +5620,8 @@ void sub_017BFB(void)
 			OBJECT(current_object)->unk_0C++;
 		break;
 	case 1:
-		t1 = AS16(OBJECT(current_object)->unk_10);
-		AS16(OBJECT(current_object)->unk_10) = t1 - 1u;
+		t1 = OBJECT(current_object)->unk_10;
+		OBJECT(current_object)->unk_10 = t1 - 1u;
 		if (t1 != 1u)
 			return;
 		OBJECT(current_object)->unk_0C++;
@@ -5703,7 +5700,7 @@ void sub_017CAA(void)
 		AS32(OBJECT(current_object)->unk_10) = mem_read32(r10);
 		AS32(OBJECT(current_object)->unk_38) = mem_read32(r10 + 4u);
 		OBJECT(current_object)->unk_0C++;
-		if ((OBJECT(current_object)->unk_10 | OBJECT(current_object)->unk_11) != 0u)
+		if (OBJECT(current_object)->unk_10 != 0u)
 		{
 			t1 = AS32(OBJECT(current_object)->unk_10);
 			AS32(OBJECT(current_object)->unk_10) = t1 - 1u;
@@ -5938,7 +5935,7 @@ void sub_017EF2(void)
 	OBJECT(current_object)->unk_3E = 0xAu;
 	OBJECT(current_object)->unk_3C = 2u;
 	sub_00F366(r9);
-	AS16(OBJECT(current_object)->unk_10) = 0u - mem_read32(r10 + 2u) + CAR(player_car)->unk_42;
+	OBJECT(current_object)->unk_10 = 0u - mem_read32(r10 + 2u) + CAR(player_car)->unk_42;
 	OBJECT(current_object)->unk_04 = sub_017F3D_ADDRESS;
 	sub_017F3D();
 }
@@ -5963,7 +5960,7 @@ void sub_017F3D(void)
 			return;
 		OBJECT(current_object)->unk_0C++;
 		r0_2 = CAR(player_car)->unk_42;
-		r0_2 = (uint16_t)(r0_2 - AS16(OBJECT(current_object)->unk_10));
+		r0_2 = (uint16_t)(r0_2 - OBJECT(current_object)->unk_10);
 		r0 = rom_100C00[r0_2 >> 1] >> 6;
 		if ((int16_t)r0 >= 0x100)
 		{
@@ -5975,7 +5972,7 @@ void sub_017F3D(void)
 		break;
 	case 1:
 		r0_2 = CAR(player_car)->unk_42;
-		r0_2 = (uint16_t)(r0_2 - AS16(OBJECT(current_object)->unk_10));
+		r0_2 = (uint16_t)(r0_2 - OBJECT(current_object)->unk_10);
 		r0 = rom_100C00[r0_2 >> 1] >> 6;
 		if ((int16_t)r0 >= 0x100)
 		{
@@ -6027,8 +6024,7 @@ void sub_018009(void)
 	OBJECT(current_object)->unk_3E = 0xAu;
 	OBJECT(current_object)->unk_3C = 1u;
 	sub_00F366(r9);
-	OBJECT(current_object)->unk_10 = 0x20u;
-	OBJECT(current_object)->unk_11 = 1u;
+	OBJECT(current_object)->unk_10 = 0x120u;
 	OBJECT(current_object)->unk_04 = sub_018050_ADDRESS;
 	sub_018050();
 }
@@ -6046,10 +6042,10 @@ void sub_018050(void)
 		r0 = r0 >> 2;
 	OBJECT(current_object)->unk_30 = 0u - (((r0 - OBJECT(current_object)->unk_20) & 0x3FFu) - 0x2A0u);
 	sub_00F30D(0u);
-	t1 = AS16(OBJECT(current_object)->unk_10);
+	t1 = OBJECT(current_object)->unk_10;
 	r0 = OBJECT(current_object)->unk_3A;
 	OBJECT(current_object)->unk_3A = t1;
-	AS16(OBJECT(current_object)->unk_10) = r0;
+	OBJECT(current_object)->unk_10 = r0;
 	switch (OBJECT(current_object)->unk_0C)
 	{
 	case 0:
@@ -6094,7 +6090,7 @@ void sub_0180CB(void)
 	OBJECT(current_object)->unk_3E = 0xAu;
 	OBJECT(current_object)->unk_3C = 1u;
 	sub_00F366(r9);
-	OBJECT(current_object)->unk_10 = 0u;
+	AS8(OBJECT(current_object)->unk_10) = 0u;
 	OBJECT(current_object)->unk_04 = sub_018110_ADDRESS;
 	sub_018110();
 }
@@ -6111,7 +6107,7 @@ void sub_018110(void)
 		r0 = r0 >> 2;
 	OBJECT(current_object)->unk_30 = 0u - (((r0 - OBJECT(current_object)->unk_20) & 0x3FFu) - 0x2A0u);
 	sub_00F30D(0u);
-	OBJECT(current_object)->unk_10++;
+	AS8(OBJECT(current_object)->unk_10)++;
 	switch (OBJECT(current_object)->unk_0C)
 	{
 	case 0:

@@ -220,20 +220,20 @@ void sub_01DE56(void)
 		r10 = 0x1E3E8u + r0 * 4u;
 		if ((int8_t)ROM8(r10) < 0)
 		{
-			OBJECT(current_object)->unk_10 = 1u;
+			AS8(OBJECT(current_object)->unk_10) = 1u;
 			OBJECT(current_object)->unk_13 = 0xFFu;
-			OBJECT(current_object)->unk_11 = 1u;
+			AT8(OBJECT(current_object)->unk_10, 1) = 1u;
 			OBJECT(current_object)->unk_12 = 1u;
 			AT8(OBJECT(current_object)->unk_14, 1) = 0xFFu;
 			sub_01DDAC(&ignored, &ignored);
 			return;
 		}
-	} while (r0 != 0u && OBJECT(current_object)->unk_10 == ROM8(r10) && OBJECT(current_object)->unk_13 == ROM8(r10 + 1u) && OBJECT(current_object)->unk_11 == ROM8(r10 + 2u));
-	OBJECT(current_object)->unk_10 = ROM8(r10);
+	} while (r0 != 0u && (uint8_t)OBJECT(current_object)->unk_10 == ROM8(r10) && OBJECT(current_object)->unk_13 == ROM8(r10 + 1u) && (uint8_t)(OBJECT(current_object)->unk_10 >> 8u) == ROM8(r10 + 2u));
+	AS8(OBJECT(current_object)->unk_10) = ROM8(r10);
 	r10++;
 	OBJECT(current_object)->unk_13 = ROM8(r10);
 	r10++;
-	OBJECT(current_object)->unk_11 = ROM8(r10);
+	AT8(OBJECT(current_object)->unk_10, 1) = ROM8(r10);
 	OBJECT(current_object)->unk_12 = ROM8(r10 + 1u);
 	AT8(OBJECT(current_object)->unk_14, 1) = 0u;
 	sub_01DDAC(&ignored, &ignored);
@@ -341,15 +341,15 @@ uint32_t sub_01DF51(uint32_t r1)
 		sub_01F0CA(r0, r10);
 	}
 	r10 = TEXT_CELL(32, 12);
-	r0 = OBJECT(current_object)->unk_11;
+	r0 = (uint8_t)(OBJECT(current_object)->unk_10 >> 8u);
 	r1_2 = (r1_2 & ~0xFFFFu) | 0x6464u;
 	r2 = 1u;
 	r3 = 6u;
 	sub_01F0ED(r0, r2, r3, &r1_2, &r10);
 	r10 = (r10 & ~0xFFFFu) | 0xF784u;
-	r0 = OBJECT(current_object)->unk_10;
+	r0 = (uint8_t)OBJECT(current_object)->unk_10;
 	r1_2 = (int8_t)OBJECT(current_object)->unk_13;
-	r2 = OBJECT(current_object)->unk_11;
+	r2 = (uint8_t)(OBJECT(current_object)->unk_10 >> 8u);
 	r3 = 0u;
 	r4 = 0u;
 	r9 = 9u;

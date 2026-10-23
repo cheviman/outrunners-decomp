@@ -51,6 +51,20 @@ register R23  player_car         # the screen's car: the object at 1000[R25] (20
 register R25  screen             # the block of the screen the task runs: 208000 for screen 1 (the second task), 218000 for screen 2 (the boot task)
 register R32  stack_pointer      # SP, in the functions whose stack stays in memory (decompiler/stack.py); 21F400 after boot
 
+# ======== structures ========
+# The game's own (decompiler/pointers.py works out which registers point at them): the objects, 124 in the
+# page of each screen's block, run by the object loop; the screen's car, at 1000 of its block (an object
+# in its first 100 bytes); the block of the screen a task runs (R25)
+struct object 100
+struct car 200
+struct screen 8000
+# Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (stage at
+# 60, node at 62, the race time at 68), and 20FC00 and 20FC80, which the time is copied to
+struct race 80
+field screen 20 race_copy u32 race     # 20FC00 for screen 1, 20FC80 for screen 2
+field screen 24 race u32 race          # 20FB00 for screen 1, 20FB80 for screen 2
+field car 0 object u32 object          # the car's object, in the screen's objects (set as it starts, 0072xx)
+
 # ======== the frame loop ========
 # 0008F0-000912: the program waits for the next frame polling 23[R24] (20E023), which an interrupt sets,
 # and clears it; while B00[R25] says data is being unpacked it calls 010E42 for a piece of it each time

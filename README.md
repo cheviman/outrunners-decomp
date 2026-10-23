@@ -55,8 +55,9 @@ the tools verify it, extract the assets and build your own executable.
       which `tools/noise_report.py` counts). The game's structures are typed (`tools/decompiler/pointers.py`):
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
       1000 of the block) and the block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as
-      `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`. Most names are still addresses and
-      offsets
+      `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, and each player's race record
+      (`RACE(p)`, which `symbols.txt` declares with the fields that point at it). Most names are still
+      addresses and offsets
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

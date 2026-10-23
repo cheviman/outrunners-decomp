@@ -16,21 +16,21 @@ void sub_00D9F3(void)
 	uint32_t zero = 0;
 	uint8_t r0_2 = 0, r1_2 = 0, r3 = 0;
 	uint16_t r2 = 0, r9 = 0;
-	uint32_t r0 = 0, r1 = 0, r3_2 = 0, r11 = 0, r13 = 0;
+	uint32_t r0 = 0, r1 = 0, r3_2 = 0, r13 = 0, race = 0;
 	uint8_t t2 = 0;
 	uint16_t t1 = 0;
 	uint32_t t3 = 0;
 
-	r11 = SCREEN(screen)->unk_24;
+	race = SCREEN(screen)->race;
 	r12 = 0x20FC00u;
 	if (SCREEN(screen)->unk_01 == 0u)
 	{
 		r1 = unk_20E041;
 		r2 = 0x80u;
-		r3 = mem_read8(r11 + 0x1Du);
+		r3 = RACE(race)->unk_1D;
 		r13 = r12 + 0x1Cu;
 		r14 = screen + 0x300u;
-		r0 = mem_read16(r11 + 0x1Au);
+		r0 = RACE(race)->unk_1A;
 		do
 		{
 			r1--;
@@ -58,8 +58,8 @@ void sub_00D9F3(void)
 						continue;
 					}
 					mem_write8(r14 + r3_2, 0xFFu);
-					mem_write8(r11 + 0x1Eu, r3_2);
-					mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
+					RACE(race)->unk_1E = r3_2;
+					RACE(race)->unk_1D++;
 					r0 = r9;
 					if ((uint8_t)(SCREEN(screen)->unk_30F + 1u) != unk_20E041 || r0 <= 0x28u)
 						break;
@@ -89,8 +89,8 @@ void sub_00D9F3(void)
 							continue;
 						}
 						mem_write8(r14 + r3_2, 0xFFu);
-						mem_write8(r11 + 0x1Eu, r3_2);
-						mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
+						RACE(race)->unk_1E = r3_2;
+						RACE(race)->unk_1D++;
 						r0 = r9;
 						if ((uint8_t)(SCREEN(screen)->unk_30F + 1u) != unk_20E041 || r0 <= 0x28u)
 							break;
@@ -100,8 +100,8 @@ void sub_00D9F3(void)
 				}
 				else
 				{
-					mem_write8(r11 + 0x1Du, mem_read8(r11 + 0x1Du) + 1u);
-					mem_write8(r11 + 0x1Eu, 0xFFu);
+					RACE(race)->unk_1D++;
+					RACE(race)->unk_1E = 0xFFu;
 					SCREEN(r14 - 0x300u)->unk_300 = 0u;
 					r14 = r14 + 4u;
 					SCREEN(r14 - 0x304u)->unk_304 = 0u;
@@ -110,7 +110,7 @@ void sub_00D9F3(void)
 				}
 			}
 		}
-		mem_write16(r11 + 0x1Au, r0);
+		RACE(race)->unk_1A = r0;
 	}
 	r1 = unk_20E041;
 	r13 = r12 + 0x28u;
@@ -133,9 +133,9 @@ void sub_00D9F3(void)
 		if (unk_20FC1A != 0u && (uint8_t)SCREEN(screen)->unk_80 != 0u && (uint8_t)SCREEN(screen)->unk_80 <= 5u)
 			SCREEN(screen)->unk_80 = 7u;
 	}
-	if (unk_20FC1D == mem_read8(r11 + 0x1Cu))
+	if (unk_20FC1D == RACE(race)->unk_1C)
 		return;
-	mem_write8(r11 + 0x1Cu, unk_20FC1D);
+	RACE(race)->unk_1C = unk_20FC1D;
 	r0_2 = unk_20FC1E;
 	if ((int8_t)r0_2 < 0)
 	{
@@ -150,7 +150,7 @@ void sub_00D9F3(void)
 	mem_write8(r13 + r1, r0_2);
 	if (SCREEN(screen)->unk_01 == r0_2)
 	{
-		mem_write8(r11 + 0x19u, 0u);
+		RACE(race)->unk_19 = 0u;
 		SCREEN(screen)->unk_319 = 0xFFu;
 		r1_2 = (uint8_t)SCREEN(r13 - 0x30Fu)->unk_310;
 		SCREEN(screen)->unk_30C = r1_2;
@@ -159,13 +159,13 @@ void sub_00D9F3(void)
 	}
 	if (SCREEN(screen)->unk_319 != 0u && SCREEN(screen)->unk_318 != 0u)
 	{
-		r14 = r11 + 0x1Fu;
-		mem_write8(r14, SCREEN(r13 - 0x30Fu)->unk_30F);
+		r14 = race + 0x1Fu;
+		RACE(r14 - 0x1Fu)->unk_1F = SCREEN(r13 - 0x30Fu)->unk_30F;
 		r14 = r14 + 1u;
 		r13++;
 		t3 = SCREEN(r13 - 0x310u)->unk_314;
-		mem_write32(r14, SCREEN(r13 - 0x310u)->unk_310);
-		mem_write32(r14 + 4u, t3);
+		RACE(r14 - 0x20u)->unk_20 = SCREEN(r13 - 0x310u)->unk_310;
+		RACE(r14 - 0x20u)->unk_24 = t3;
 		r14 = r14 + 8u;
 	}
 }
@@ -174,11 +174,11 @@ void sub_00DB6D(void)
 {
 	uint8_t r0_2 = 0, r1 = 0, r3_2 = 0, r5 = 0;
 	uint16_t r4 = 0;
-	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r9 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r19 = 0;
+	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r9 = 0, r13 = 0, r15 = 0, r19 = 0, race = 0, race_2 = 0;
 	uint8_t t2 = 0;
 	uint32_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
 
-	r11 = SCREEN(screen)->unk_24;
+	race = SCREEN(screen)->race;
 	r12 = SCREEN(screen)->unk_308;
 	if (SCREEN(screen)->unk_31A == 0u)
 		return;
@@ -186,7 +186,7 @@ void sub_00DB6D(void)
 	{
 		r19 = r12 + 0x1Fu;
 		r9 = mem_read8(r19);
-		r1 = mem_read8(r11 + 0x63u);
+		r1 = RACE(race)->unk_63;
 		r19++;
 		r13 = r19;
 		r0 = r9;
@@ -212,49 +212,49 @@ void sub_00DB6D(void)
 			{
 				r3 = mem_read8(r15 + 0x60u);
 				mem_write8(r14 + r2, r3);
-				mem_write8(r11 + 0x64u, r2);
+				RACE(race)->unk_64 = r2;
 				r3 = (uint8_t)(r3 - 1u);
-				mem_write8(r11 + 0x65u, r3);
+				RACE(race)->unk_65 = r3;
 				r4 = mem_read8(screen + 0x338u + r3);
 				t1 = screen + 0x338u + r3;
 				mem_write8(t1, mem_read8(t1) + 1u);
-				mem_write8(r11 + 0x66u, (uint8_t)r4);
+				RACE(race)->unk_66 = (uint8_t)r4;
 				r5 = (uint8_t)(mem_read16(r15 + 0x44u) >> 15);
-				mem_write8(r11 + 0x67u, r5);
-				mem_write16(r11 + 0x68u, mem_read32(r11 + 0x6Cu) / 0xAu + r4);
-				mem_write8(r11 + 0x63u, mem_read8(r11 + 0x63u) + 1u);
+				RACE(race)->unk_67 = r5;
+				RACE(race)->unk_68 = RACE(race)->unk_6C / 0xAu + r4;
+				RACE(race)->unk_63++;
 				if (r4 == 0u && r3 != 5u)
 				{
 					r0 = mem_read8(r15 + 0x62u);
 					r0 = (uint8_t)(r0 * 2u);
 					r0 = (uint8_t)(r0 + r5);
-					mem_write16(r11 + 0x6Au, mem_read16(r11 + 0x6Au) + (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + unk_20FC0B[r3]) * 0x1Eu);
+					RACE(race)->unk_6A += (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + unk_20FC0B[r3]) * 0x1Eu;
 				}
 			}
 		}
 		if (SCREEN(screen)->unk_31C != 0u)
 		{
-			mem_write32(r11 + 0x6Cu, mem_read32(r11 + 0x6Cu) + 0x22u);
-			if (mem_read16(r11 + 0x6Au) != 0u)
-				mem_write16(r11 + 0x6Au, mem_read16(r11 + 0x6Au) - 1u);
+			RACE(race)->unk_6C += 0x22u;
+			if (RACE(race)->unk_6A != 0u)
+				RACE(race)->unk_6A--;
 		}
-		r16 = r11 + 0x1Fu;
-		r0 = mem_read8(r16);
+		race_2 = race + 0x1Fu;
+		r0 = RACE(race_2 - 0x1Fu)->unk_1F;
 		t2 = r0;
 		r0 = (uint8_t)(t2 - 1u);
-		r16++;
+		race_2++;
 		if ((int8_t)t2 > 1)
 		{
-			r4_2 = mem_read8(r16);
+			r4_2 = (uint8_t)RACE(race_2 - 0x20u)->unk_20;
 			r13 = rom_00E0A0[r4_2] + unk_20E000_ADDRESS;
-			r16++;
+			race_2++;
 			if (SCREEN(screen)->unk_31C != 0u)
 			{
 				do
 				{
-					r6 = mem_read8(r16);
+					r6 = mem_read8(race_2);
 					r14 = rom_00E0A0[r6] + unk_20E000_ADDRESS;
-					r16++;
+					race_2++;
 					if (mem_read8(r13 + 0x5Eu) != 0u)
 					{
 						if (mem_read8(r14 + 0x5Eu) == 0u || mem_read16(r13 + 0x16u) <= mem_read16(r14 + 0x16u))
@@ -272,10 +272,10 @@ void sub_00DB6D(void)
 						r4_2 = t3;
 						r13 = r14;
 					}
-					mem_write8(r16 - 2u, r6);
+					mem_write8(race_2 - 2u, r6);
 					r0--;
 				} while (r0 != 0u);
-				mem_write8(r16 - 1u, r4_2);
+				mem_write8(race_2 - 1u, r4_2);
 			}
 		}
 	}
@@ -303,7 +303,7 @@ void sub_00DB6D(void)
 	{
 		r0_2 = mem_read8(r12 + 0x63u);
 		SCREEN(screen)->unk_342 = r0_2;
-		mem_write8(r11 + 0x61u, r0_2);
+		RACE(race)->unk_61 = r0_2;
 		r0 = mem_read8(r12 + 0x64u);
 		r1_2 = mem_read8(r12 + 0x65u);
 		r2 = mem_read8(r12 + 0x66u);
@@ -396,12 +396,12 @@ void sub_00DDA8(void)
 
 void sub_00DEC2(void)
 {
-	move_string(0x100800u, 0x28u, SCREEN(screen)->unk_24 + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(0x100800u, 0x28u, SCREEN(screen)->race + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_00DED2(void)
 {
-	mem_write8(SCREEN(screen)->unk_24 + 0x5Cu, 0xFFu);
+	RACE(SCREEN(screen)->race)->unk_5C = 0xFFu;
 }
 
 uint32_t sub_00DED9(void)
@@ -1501,7 +1501,7 @@ void sub_00EB74(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 	uint16_t t1 = 0, t2 = 0;
 
 	r0 = OBJECT(current_object)->unk_1C;
-	t1 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	t2 = r0;
 	r0 = (uint16_t)(t2 - t1);
 	if ((int16_t)t2 < (int16_t)t1)
@@ -1551,7 +1551,7 @@ void sub_00EC1B(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 
 	r0 = OBJECT(current_object)->unk_1C;
 	r1 = r0;
-	t1 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	t2 = r0;
 	r0 = (uint16_t)(t2 - t1);
 	if ((int16_t)t2 < (int16_t)t1)
@@ -1597,7 +1597,7 @@ void sub_00ECCD(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 
 	r0 = OBJECT(current_object)->unk_1C;
 	r1 = r0;
-	t1 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	t2 = r0;
 	r0 = (uint16_t)(t2 - t1);
 	if ((int16_t)t2 < (int16_t)t1)
@@ -1643,7 +1643,7 @@ void sub_00ED82(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 
 	r0 = OBJECT(current_object)->unk_1C;
 	r1 = r0;
-	t1 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	t2 = r0;
 	r0 = (uint16_t)(t2 - t1);
 	if ((int16_t)t2 < (int16_t)t1)
@@ -1720,7 +1720,7 @@ void sub_00EE75(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 	uint16_t t1 = 0, t2 = 0;
 
 	r0 = OBJECT(current_object)->unk_1C;
-	t1 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	t2 = r0;
 	r0 = (uint16_t)(t2 - t1);
 	if ((int16_t)t2 < (int16_t)t1)
@@ -2305,9 +2305,9 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 
 	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 	r1 = OBJECT(current_object)->unk_58;
-	r2 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
-	r4 = AS16(OBJECT(current_object)->unk_10);
+	r4 = OBJECT(current_object)->unk_10;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
 		OBJECT(current_object)->unk_00 = 0u;
@@ -2519,9 +2519,9 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 	r30 = 0x43u;
 	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
 	r1 = OBJECT(current_object)->unk_58;
-	r2 = mem_read16(SCREEN(screen)->unk_20 + 0x46u);
+	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
-	r4 = AS16(OBJECT(current_object)->unk_10);
+	r4 = OBJECT(current_object)->unk_10;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
 		OBJECT(current_object)->unk_00 = 0u;
@@ -2766,7 +2766,7 @@ void sub_00FD22(void)
 {
 	uint8_t r1_2 = 0;
 	uint16_t r0 = 0, r1 = 0, r5 = 0;
-	uint32_t r0_2 = 0, r2 = 0, r10 = 0, r11 = 0, r21 = 0;
+	uint32_t r0_2 = 0, r2 = 0, r11 = 0, r21 = 0, race = 0;
 
 	r5 = 0xFFFu;
 	if (CAR(player_car)->unk_CB == 0u)
@@ -2831,9 +2831,9 @@ void sub_00FD22(void)
 			CAR(player_car)->unk_A0 = mem_read32(r11);
 			continue;
 		case 2:
-			r10 = SCREEN(screen)->unk_24;
+			race = SCREEN(screen)->race;
 			CAR(player_car)->unk_CC++;
-			mem_write8(r10 + 0x60u, mem_read8(r10 + 0x60u) + 1u);
+			RACE(race)->unk_60++;
 			CAR(player_car)->unk_A0 = r11;
 			CAR(player_car)->unk_CB = 0xFFu;
 			return;
@@ -2876,7 +2876,7 @@ void sub_00FD22(void)
 void sub_00FD78(uint16_t r5)
 {
 	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r10 = 0, r11 = 0, r21 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, r21 = 0, race = 0;
 	uint16_t t1 = 0;
 
 	for (;;)
@@ -2911,9 +2911,9 @@ void sub_00FD78(uint16_t r5)
 				CAR(player_car)->unk_A0 = mem_read32(r11);
 				continue;
 			case 2:
-				r10 = SCREEN(screen)->unk_24;
+				race = SCREEN(screen)->race;
 				CAR(player_car)->unk_CC++;
-				mem_write8(r10 + 0x60u, mem_read8(r10 + 0x60u) + 1u);
+				RACE(race)->unk_60++;
 				CAR(player_car)->unk_A0 = r11;
 				CAR(player_car)->unk_CB = 0xFFu;
 				return;
