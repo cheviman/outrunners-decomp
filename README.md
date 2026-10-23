@@ -43,9 +43,11 @@ the tools verify it, extract the assets and build your own executable.
       matches the reference frame by frame in all 16 scenarios. The game runs two tasks, each on a stack
       of its own, and its VBLANK handler swaps them; their C runs on native stacks of their own
       (`runtime/src/tasks.c`)
-- [x] Decompiler, first pass (`tools/decompile.py`): the program decompiled into C, in `src/`: 686 functions
+- [x] Decompiler, first pass (`tools/decompile.py`): the program decompiled into C, in `src/`: 671 functions
       with no goto, which the game's runtime (`runtime/src/game.c`) runs a frame at a time.
-      `orunners_game_headless` matches the reference frame by frame in all 16 scenarios. The VBLANK handler
+      `orunners_game_headless` matches the reference frame by frame in all 16 scenarios, and
+      `tools/check_structure.py` finds the C's ifs, loops and switches doing what the program's jumps do in
+      every function, the ones no scenario runs included (and in the sound program's 60, with `--sound`). The VBLANK handler
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
       says so (`left_caller`). Most names are still addresses, and some of SegaSonic's (`GAME_VARIABLES`,
       `PLAYER_BLOCK`) stand where OutRunners' will go

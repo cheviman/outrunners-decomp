@@ -3,7 +3,7 @@ Name:        check_structure.py
 Description: checks that the C's if, loops, switch and control variables do what the program's jumps do
 Version:     0.1.0
 Created:     16-10-2026
-Modified:    16-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Decompiles the game (and with --sound the sound program) into a scratch folder and, for every function, runs
@@ -196,13 +196,22 @@ class Runner:
         if start is not None:
             chosen = next(index for index, body in enumerate(bodies) if position(body, start) is not None)
         else:
-            value = choose_case(self, switch.value, [value for values, _ in switch.cases for value in values])
+            value = self.case_value(switch.value, [value for values, _ in switch.cases for value in values])
             chosen = next(index for index, (values, _) in enumerate(switch.cases) if value in values)
         try:
             for index in range(chosen, len(bodies)):
                 self.nodes(bodies[index], start if index == chosen else None)
         except BreakOut:
             pass
+
+    def case_value(self, value, values):
+        """The case a switch on 'value' goes to. "switch (x ? CASE : v)" (gotos.py: a jump into one of its
+        cases) goes to CASE while the control variable x is set, else where v takes it, as the graph's
+        switch on v does."""
+        if isinstance(value, ir.Op) and value.name == "select":
+            control, case, rest = value.args
+            return case.value if self.test(control) else self.case_value(rest, values)
+        return choose_case(self, value, values)
 
 
 def choose_case(runner, key, values):
