@@ -396,7 +396,7 @@ void sub_00DDA8(void)
 
 void sub_00DEC2(void)
 {
-	move_string(0x100800u, 0x28u, mem_read32(screen + 0x24u) + 0x30u, 0x28u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x28u, mem_read32(screen + 0x24u) + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_00DED2(void)
@@ -1834,19 +1834,15 @@ void sub_00EF4A(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t 
 	uint16_t r0 = (uint16_t)*p_r0;
 	uint32_t r10 = *p_r10;
 	uint16_t r0_2 = 0, r1_2 = 0, r2_2 = 0, r3_2 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r19 = 0;
-	uint32_t r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0;
+	uint32_t r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r26 = 0;
 	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
 
 	r8 = (uint16_t)r0;
 	r9 = (uint16_t)r1;
 	r16 = r2;
 	r15 = r3;
-	r26 = OBJECT(current_object)->unk_38;
-	r12 = rom_034138[r26];
-	r26 = OBJECT(current_object)->unk_40;
-	r12 = mem_read32(r12 + 4u + r26 * 4u);
-	r26 = OBJECT(current_object)->unk_3A;
-	r13 = rom_032BA4[r26];
+	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u);
+	r13 = rom_032BA4[OBJECT(current_object)->unk_3A];
 	r19 = AS16(OBJECT(current_object)->unk_00) & 0xC0u;
 	r26 = r19;
 	r26 = r26 >> 5;
@@ -1857,11 +1853,9 @@ void sub_00EF4A(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t 
 	do
 	{
 		r0_2 = mem_read16(r12) ^ r19;
-		r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u);
-		r26 = r26 * 3u;
+		r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u) * 3u;
 		r12 = r12 + 2u;
-		r26 = (uint16_t)(r26 + mem_read16(r12));
-		r14 = 0x122B74u + r26 * 4u;
+		r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
 		t1 = ROM16(r14);
 		r14 = r14 + 2u;
 		r1_2 = t1;
@@ -1920,25 +1914,17 @@ void sub_00F04E(uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint32_t r10 = *p_r10;
 	uint16_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0;
-	uint32_t r13 = 0;
+	uint32_t r26 = 0;
 
-	r26 = OBJECT(current_object)->unk_38;
-	r12 = rom_034138[r26];
-	r26 = OBJECT(current_object)->unk_40;
-	r12 = mem_read32(r12 + 4u + r26 * 4u);
-	r26 = OBJECT(current_object)->unk_3A;
-	r13 = rom_032BA4[r26];
-	r12 = r12 + 2u;
+	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u) + 2u;
 	r0 = mem_read16(r12);
-	r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u);
-	r26 = r26 * 3u;
+	r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u) * 3u;
 	r12 = r12 + 2u;
-	r26 = (uint16_t)(r26 + mem_read16(r12));
-	r14 = 0x122B74u + r26 * 4u;
+	r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
 	r1 = ROM16(r14);
 	r14 = r14 + 2u;
 	r6 = ROM16(r14);
-	r7 = mem_read16(r13);
+	r7 = mem_read16(rom_032BA4[OBJECT(current_object)->unk_3A]);
 	r14 = r14 + 2u;
 	r2 = ROM16(r14);
 	r14 = r14 + 2u;
@@ -1984,7 +1970,7 @@ void sub_00F04E(uint32_t *p_r0, uint32_t *p_r10)
 uint32_t sub_00F104(uint32_t r10)
 {
 	move_halfwords(r10, AS32(OBJECT(current_object)->unk_38), 8u);
-	move_string(AS32(OBJECT(current_object)->unk_38), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(AS32(OBJECT(current_object)->unk_38), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
 	mem_write16(r10 + 6u, mem_read16(r10 + 6u) | mem_read16(screen + 0x1Au));
 	mem_write16(r10 + 0x3006u, mem_read16(r10 + 0x3006u) | mem_read16(screen + 0x1Au));
 	r10 += 0x10u;
@@ -1994,7 +1980,7 @@ uint32_t sub_00F104(uint32_t r10)
 uint32_t sub_00F126(uint32_t r10)
 {
 	move_halfwords(r10, AS32(OBJECT(current_object)->unk_38), 8u);
-	move_string(AS32(OBJECT(current_object)->unk_38), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(AS32(OBJECT(current_object)->unk_38), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
 	r10 += 0x10u;
 	return r10;
 }
@@ -2002,8 +1988,8 @@ uint32_t sub_00F126(uint32_t r10)
 void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint32_t r10 = *p_r10;
-	uint16_t r4 = 0, r9 = 0, r15 = 0, r16 = 0, r19 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0, r13 = 0, r15_2 = 0, r18 = 0;
+	uint16_t r4 = 0, r9 = 0, r15 = 0, r16 = 0, r19 = 0, r26_2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0, r13 = 0, r15_2 = 0, r18 = 0, r26 = 0;
 	uint16_t t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
 	uint32_t t1 = 0;
 
@@ -2047,16 +2033,11 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 	r27 = r27 + 8u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & 0xEFFFu);
 	mem_write32(screen + 0xB4u, r27);
-	r26 = OBJECT(current_object)->unk_38;
-	r12 = rom_034138[r26];
-	r26 = OBJECT(current_object)->unk_40;
-	r12 = mem_read32(r12 + 4u + r26 * 4u);
-	r26 = OBJECT(current_object)->unk_3A;
-	r13 = rom_032BA4[r26];
+	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u);
+	r13 = rom_032BA4[OBJECT(current_object)->unk_3A];
 	r19 = AS16(OBJECT(current_object)->unk_00) & 0xC0u;
 	r26 = r19;
-	r26 = r26 >> 5;
-	r18 = rom_00F4EC[r26];
+	r18 = rom_00F4EC[r26 >> 5];
 	r28 = mem_read16(r12);
 	r11 = r10 + 0x3000u;
 	r12 = r12 + 2u;
@@ -2068,11 +2049,9 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 		r10 += 2u;
 		mem_write16(r11, r27);
 		r11 += 2u;
-		r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u);
-		r26 = r26 * 3u;
+		r26 = (uint8_t)(OBJECT(current_object)->unk_42 >> 8u) * 3u;
 		r12 = r12 + 2u;
-		r26 = (uint16_t)(r26 + mem_read16(r12));
-		r14 = 0x122B74u + r26 * 4u;
+		r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
 		t2 = ROM16(r14);
 		r14 = r14 + 2u;
 		r15 = t2;
@@ -2082,7 +2061,7 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 		r11 += 2u;
 		t3 = ROM16(r14);
 		r14 = r14 + 2u;
-		r26 = t3;
+		r26_2 = t3;
 		t4 = ROM16(r14);
 		r14 = r14 + 2u;
 		r15_2 = t4;
@@ -2119,9 +2098,9 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 		r10 += 2u;
 		mem_write16(r11, (uint32_t)((int32_t)(r15_2 * r6) >> 8) + r4);
 		r11 += 2u;
-		mem_write16(r10, r26);
+		mem_write16(r10, r26_2);
 		r10 += 2u;
-		mem_write16(r11, r26);
+		mem_write16(r11, r26_2);
 		r11 += 2u;
 		t8 = mem_read16(r13);
 		r13 += 2u;
@@ -2319,8 +2298,8 @@ void sub_00F396(void)
 
 void sub_00F5C8(uint32_t r7, uint32_t r15)
 {
-	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0;
+	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26_2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0;
 	uint16_t t1 = 0;
 	uint32_t t2 = 0, t3 = 0;
 
@@ -2410,8 +2389,7 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 				mem_write32(screen + 0xC0u, r10);
 				break;
 			}
-			r26 = OBJECT(current_object)->unk_44;
-			r3_2 = shift_by(r3_2, r26, 32);
+			r3_2 = shift_by(r3_2, OBJECT(current_object)->unk_44, 32);
 			r4 = r3_2;
 			if (r4 >= 0x1000u)
 				r4 = 0xFFFu;
@@ -2446,34 +2424,24 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 			r10 += 4u;
 			if (mem_read16(r28 + 8u) == (uint16_t)r7)
 			{
-				r26 = mem_read16(r28);
+				r26_2 = mem_read16(r28);
 				mem_write16(r27, r3_2);
-				r26 = (uint16_t)(r26 + r3_2);
-				r26 = r26 >> 1;
-				r26 = r26 | r1;
-				mem_write16(r10 + 0x3000u, r26);
+				mem_write16(r10 + 0x3000u, ((uint16_t)(r26_2 + r3_2) >> 1) | r1);
 				mem_write16(r10, r3_2 | r1);
-				r26 = mem_read16(r28 + 2u);
+				r26_2 = mem_read16(r28 + 2u);
 				mem_write16(r27 + 2u, r4_2);
-				r26 = (uint16_t)(r26 + r4_2);
-				r26 = r26 >> 1;
-				r26 = r26 | r2;
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r26);
+				mem_write16(r10 + 0x3000u, ((uint16_t)(r26_2 + r4_2) >> 1) | r2);
 				mem_write16(r10, r4_2 | r2);
-				r26 = mem_read16(r28 + 4u);
+				r26_2 = mem_read16(r28 + 4u);
 				mem_write16(r27 + 4u, r5);
-				r26 = (uint16_t)(r26 + r5);
-				r26 = (uint16_t)((int16_t)r26 >> 1);
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r26);
+				mem_write16(r10 + 0x3000u, (int16_t)(r26_2 + r5) >> 1);
 				mem_write16(r10, r5);
-				r26 = mem_read16(r28 + 6u);
+				r26_2 = mem_read16(r28 + 6u);
 				mem_write16(r27 + 6u, r6);
-				r26 = (uint16_t)(r26 + r6);
-				r26 = (uint16_t)((int16_t)r26 >> 1);
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r26);
+				mem_write16(r10 + 0x3000u, (int16_t)(r26_2 + r6) >> 1);
 				mem_write16(r10, r6);
 				r10 += 2u;
 			}
@@ -2543,8 +2511,8 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 
 void sub_00F911(uint32_t r7, uint32_t r15)
 {
-	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r21 = 0, r30 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0;
+	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r21 = 0, r26 = 0, r30 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0;
 	uint16_t t1 = 0;
 	uint32_t t2 = 0, t3 = 0;
 
@@ -2617,19 +2585,18 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 		{
 			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F + (int16_t)OBJECT(current_object)->unk_20) * r3_2) >> 12;
 			r5 = (uint16_t)(((int32_t)((int16_t)OBJECT(current_object)->unk_24 * r3_2) >> 12) + mem_read16(r19 + 6u));
-			r26 = (r26 & ~0xFFFFu) | (uint16_t)r6;
+			r26 = (uint16_t)r6;
 			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
 			r6 = (((r6 << 16) | (r6 >> 16)) & ~0xFFFFu) | (uint16_t)(0u - r26);
 			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
-			r26 = OBJECT(current_object)->unk_44;
-			r3_2 = shift_by(r3_2, r26, 32);
+			r3_2 = shift_by(r3_2, OBJECT(current_object)->unk_44, 32);
 			r4 = r3_2;
 			if (r4 >= 0x1000u)
 				r4 = 0xFFFu;
 			r4 = r4 >> 5;
-			r26 = OBJECT(current_object)->unk_45;
-			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[r26] + r4), 32);
-			r4 = mem_read8(rom_1598CC[r26] + r4);
+			r26_2 = OBJECT(current_object)->unk_45;
+			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[r26_2] + r4), 32);
+			r4 = mem_read8(rom_1598CC[r26_2] + r4);
 			if (r4 != (uint8_t)(OBJECT(current_object)->unk_42 >> 8u))
 			{
 				AT8(OBJECT(current_object)->unk_42, 1) = r4;
@@ -2663,9 +2630,7 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 			{
 				r26 = mem_read16(r28);
 				mem_write16(r27, r3_2);
-				r26 = (uint16_t)(r26 + r3_2);
-				r26 = r26 >> 1;
-				r26 = r26 | r1;
+				r26 = ((uint16_t)(r26 + r3_2) >> 1) | r1;
 				r3_2 = r3_2 | r1;
 				mem_write16(r10 + 0x3010u, r26);
 				mem_write16(r10 + 0x10u, r3_2);
@@ -2673,9 +2638,7 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 				mem_write16(r10, r3_2);
 				r26 = mem_read16(r28 + 2u);
 				mem_write16(r27 + 2u, r4_2);
-				r26 = (uint16_t)(r26 + r4_2);
-				r26 = r26 >> 1;
-				r26 = r26 | r2;
+				r26 = ((uint16_t)(r26 + r4_2) >> 1) | r2;
 				r4_2 |= r2;
 				r10 += 2u;
 				mem_write16(r10 + 0x3010u, r26);
@@ -2684,8 +2647,7 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 				mem_write16(r10, r4_2);
 				r26 = mem_read16(r28 + 4u);
 				mem_write16(r27 + 4u, r5);
-				r26 = (uint16_t)(r26 + r5);
-				r26 = (uint16_t)((int16_t)r26 >> 1);
+				r26 = (uint16_t)((int16_t)(r26 + r5) >> 1);
 				r10 += 2u;
 				mem_write16(r10 + 0x3010u, r26);
 				mem_write16(r10 + 0x10u, r5);
@@ -2693,17 +2655,13 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 				mem_write16(r10, r5);
 				r26 = mem_read16(r28 + 0xAu);
 				mem_write16(r27 + 0xAu, r6);
-				r26 = (uint16_t)(r26 + r6);
-				r26 = (uint16_t)((int16_t)r26 >> 1);
 				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r26);
+				mem_write16(r10 + 0x3010u, (int16_t)(r26 + r6) >> 1);
 				mem_write16(r10 + 0x10u, r6);
 				r6 = (r6 << 16) | (r6 >> 16);
 				r26 = mem_read16(r28 + 6u);
 				mem_write16(r27 + 6u, r6);
-				r26 = (uint16_t)(r26 + r6);
-				r26 = (uint16_t)((int16_t)r26 >> 1);
-				mem_write16(r10 + 0x3000u, r26);
+				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r6) >> 1);
 				mem_write16(r10, r6);
 				r10 += 2u;
 			}
@@ -2767,17 +2725,17 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 			break;
 		}
 	}
-	r26 = rom_100000;
-	mem_write32(r27, r26);
+	r26_2 = rom_100000;
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
 	mem_write32(screen + 0xB4u, r27);
@@ -2788,7 +2746,7 @@ void sub_00FCBC(void)
 	uint16_t r0 = 0, r5 = 0;
 	uint32_t r11 = 0;
 
-	move_string(0x100800u, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 	r11 = rom_03CC00[mem_read8(screen + 0xA0u)];
 	mem_write32(player_car + 0xA0u, r11);
 	r0 = mem_read8(r11 + 8u);
@@ -3056,7 +3014,7 @@ void sub_010062(void)
 {
 	uint32_t carry = 0;
 	uint16_t r5 = 0, r21 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r29 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, r29 = 0;
 	uint8_t t1 = 0;
 	uint16_t t4 = 0;
 	uint32_t t2 = 0, t3 = 0;
@@ -3125,7 +3083,7 @@ void sub_010062(void)
 			t2 = mem_read32(r26 + 4u);
 			mem_write32(r19, mem_read32(r26));
 			mem_write32(r19 + 4u, t2);
-			r26 = r26 + 8u;
+			r26 += 8u;
 			t3 = mem_read32(r26 + 4u);
 			mem_write32(r19 + 8u, mem_read32(r26));
 			mem_write32(r19 + 0xCu, t3);
@@ -3139,8 +3097,7 @@ void sub_010062(void)
 			}
 			continue;
 		}
-		r26 = r0;
-		r26 = r26 + mem_read32(r18 + 4u);
+		r26 = r0 + mem_read32(r18 + 4u);
 		r27 = r1;
 		r27 = r27 + mem_read32(r18 + 0xCu);
 		r28 = r2;
@@ -3156,10 +3113,7 @@ void sub_010062(void)
 		r27 = r27 + r7 * r14;
 		r27 = r27 + r8;
 		r27 = (int32_t)r27 >> 14;
-		r26 = r26 * r10;
-		r26 = r26 + r7 * r11;
-		r26 = r26 + r8;
-		r26 = (int32_t)r26 >> 14;
+		r26 = (int32_t)(r26 * r10 + r7 * r11 + r8) >> 14;
 		if ((int32_t)r4 <= (int32_t)r28 || (int32_t)r28 <= (int32_t)r3)
 		{
 			mem_write16(r19, 0u);
@@ -3179,8 +3133,7 @@ void sub_010062(void)
 		r26 = r26 * r5_2;
 		r27 = r27 * r5_2;
 		carry = (r26 >> 11) & 1u;
-		r26 = (int32_t)r26 >> 12;
-		r26 = r26 + carry;
+		r26 = ((int32_t)r26 >> 12) + carry;
 		carry = (r27 >> 11) & 1u;
 		r27 = (int32_t)r27 >> 12;
 		r27 = r27 + carry;
@@ -3331,7 +3284,7 @@ void sub_010688(void)
 	r1 = 0x200u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
 		r10 += 0x400u;
 		r0--;
 	} while (r0 != 0u);
@@ -3350,7 +3303,7 @@ uint32_t sub_0106AF(void)
 	}
 	move_halfwords(unk_20E290_ADDRESS, 0x100800u, 0x10u);
 	move_halfwords(VIDEO_RAM + 0x1FF02u, 0x10B12u, 0x47u);
-	move_string(0x10B12u, 0x47u, unk_20E202_ADDRESS, 0x47u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x10B12u, 0x47u, unk_20E202_ADDRESS, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
 	return sub_01070C();
 }
 
@@ -3382,7 +3335,7 @@ void sub_010741(void)
 	r1 = 0x80u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
 		r10 += 0x100u;
 		r0--;
 	} while (r0 != 0u);
@@ -3397,7 +3350,7 @@ void sub_01076A(void)
 	r1 = 0x80u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, r26, &r27, &r28);
+		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
 		r10 += 0x100u;
 		r0--;
 	} while (r0 != 0u);
@@ -3420,7 +3373,7 @@ void sub_01078F(uint16_t r9)
 
 void sub_0107A0(uint16_t r9)
 {
-	move_string(0x100800u, 0x200u, 0x300000u | (uint16_t)r9, 0x200u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x200u, 0x300000u | (uint16_t)r9, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_0107BC(void)
@@ -3449,7 +3402,7 @@ void sub_0107BC(void)
 
 void sub_0107F0(void)
 {
-	move_string(0x10BF4u, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x10BF4u, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 	unk_2080C0 = SPRITE_RAM_404000;
 	unk_2180C0 = SPRITE_RAM_414000;
 	unk_2080B4 = 0x20C000u;
@@ -3480,7 +3433,7 @@ void sub_010890(void)
 	r11 = mem_read32(screen + 8u);
 	move_halfwords_backward(r11, 0x10AB6u, 0x28u);
 	move_halfwords(screen + 0x160u, 0x10AB6u, 0x28u);
-	move_string(0x10AB6u, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x10AB6u, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 	r10 = 0x10B06u + mem_read8(screen) * 2u;
 	r0 = ROM8(r10);
 	r1 = ROM8(r10 + 1u);
@@ -3511,7 +3464,7 @@ void sub_010936(void)
 {
 	move_halfwords(SPRITE_RAM + 0x10000u, 0x12297Cu, 0xF0u);
 	move_halfwords(SPRITE_RAM + 0x1000u, 0x107020u, 0x1200u);
-	move_string(0x10C44u, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x10C44u, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_010996(uint16_t r0, uint32_t r10, uint32_t r11)
@@ -4656,7 +4609,7 @@ uint32_t sub_0113E5(uint32_t r0)
 
 uint32_t sub_01140E(uint32_t r0, uint32_t r2, uint32_t r3)
 {
-	move_string(r2, 0x3Eu, r3, 0x3Eu, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(r2, 0x3Eu, r3, 0x3Eu, 2u, 0u, 0u, 0u, &r27, &r28);
 	return sub_011418(r0);
 }
 
@@ -4961,7 +4914,7 @@ void sub_01167E(void)
 
 void sub_0117E4(void)
 {
-	move_string(0x104020u, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x104020u, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_0117FE(void)
@@ -5291,7 +5244,7 @@ void sub_011C60(void)
 	move_halfwords(screen - 0x7E00u, 0x100800u, r0);
 	r0 = mem_read8(screen - 0x7D00u);
 	r0 = (uint16_t)(r0 + 1u);
-	move_string(0x100800u, r0, screen - 0x7D00u, r0, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, r0, screen - 0x7D00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
 	mem_write16(screen + 0x900u, 0u);
 }
 
@@ -5343,7 +5296,7 @@ uint32_t sub_011D43(void)
 {
 	uint32_t zero = 0;
 	uint8_t r9 = 0;
-	uint32_t r21 = 0;
+	uint32_t r21 = 0, r26 = 0;
 	uint32_t t1 = 0;
 
 	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
@@ -5362,97 +5315,97 @@ uint32_t sub_011D43(void)
 	r26 = r21;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
-	r26 = r26 + 8u;
+	r26 += 8u;
 	mem_write32(r26, 0u);
 	mem_write32(r26 + 4u, 0u);
 	mem_write8(r21, mem_read8(r21) | 1u);
@@ -5460,7 +5413,6 @@ uint32_t sub_011D43(void)
 	t1 = mem_read32(screen - 0x8000u);
 	mem_write16(t1, mem_read16(t1) + 1u);
 	mem_write16(mem_read32(screen - 0x8000u) + mem_read16(mem_read32(screen - 0x8000u)) * 2u, r21);
-	r26 = r26 + 8u;
 	return r21;
 }
 
@@ -5473,8 +5425,7 @@ void sub_011DEB(void)
 	if (zero)
 		return;
 	mem_write8(r28, 0xFFu);
-	r26 = 0x80u;
-	move_string(0x100800u, 0x80u, (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8), 0x80u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x80u, (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8), 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 void sub_011E1D(uint16_t r21)

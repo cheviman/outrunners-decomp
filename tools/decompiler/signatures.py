@@ -9,10 +9,10 @@ Author:      Sebastian Toyos
 The game passes values in registers, as hand-written assembly does. In C:
   - Context registers the whole program shares (CONTEXT) are global variables. In OutRunners: R25, the
     block of the screen being run (0x208000 or 0x218000), which the interrupt handlers read too; R23, a
-    place in it (1000[R25]); R20, the object the object loop (011CC0) runs; R26, R27 and R28, which the
-    loop does not set between handlers, so a handler may find what the one before left there. (R22, the
-    loop's place in the list, is not one: no function reads it before setting it.) symbols.txt names
-    them ("register" lines). R12 is one too, although the game uses it as scratch: an object handler,
+    place in it (1000[R25]); R20, the object the object loop (011CC0) runs; R27 and R28, which the loop
+    does not set between handlers, so a handler may find what the one before left there. (R22, the loop's
+    place in the list, and R26, the fill of the string moves, are not: no function reads them before
+    setting them.) symbols.txt names them ("register" lines). R12 is one too, although the game uses it as scratch: an object handler,
     009590, sets only the low halfword of R12 ("mov.h R21, R12") and reads through it, so the high one is
     the work RAM page some code before it left there (the screen's, 0x0020 or 0x0021); only that halfword
     outlives the function that sets it (SCRATCH_CONTEXT), unless the callers read more, and its assignments
@@ -43,7 +43,7 @@ from v60 import ir
 
 from . import dataflow
 
-CONTEXT = (12, 14, 20, 23, 25, 26, 27, 28, 32)
+CONTEXT = (12, 14, 20, 23, 25, 27, 28, 32)
 # what a context register holds when the program starts, where it is not 0 (the V70's SP after boot,
 # 000072: functions whose stack stays in memory, stack.MEMORY_SP, push from there)
 INITIAL = {32: 0x21F400}

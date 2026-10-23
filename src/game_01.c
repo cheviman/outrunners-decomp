@@ -319,7 +319,7 @@ void sub_0063F9(void)
 	divux_pair(0x1Eu, &r0, &r1);
 	OBJECT(current_object)->unk_40 = r0;
 	mem_write8(OBJECT(current_object)->unk_14 + 0x10u, r1);
-	move_string(rom_006464[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(rom_006464[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	r1 = 0u;
 	divux_pair(0xAu, &r0, &r1);
 	zero = (uint32_t)(r0 == 0u);
@@ -5218,7 +5218,7 @@ void sub_00D0C8(void)
 	move_halfwords(r12 + 4u, 0x100800u, 0x10u);
 	move_halfwords(r12 + 0x600u, 0x100800u, 0x400u);
 	move_halfwords(unk_20FB00_ADDRESS, 0x100800u, 0x80u);
-	move_string(0x100800u, 0x200u, 0x20FC00u, 0x200u, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x100800u, 0x200u, 0x20FC00u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 	sub_00D2BE();
 }
 
@@ -5857,14 +5857,15 @@ void sub_00D716(void)
 
 void sub_00D72D(void)
 {
+	uint16_t r26 = 0;
 	uint32_t t1 = 0;
 
-	r26 = (r26 & ~0xFFFFu) | 0x6000u;
+	r26 = 0x6000u;
 	r27 = TEXT_CELL(8, 24);
 	r28 = 0xE17Au;
 	do
 	{
-		r26 = (r26 & ~0xFFu) | ROM8(r28);
+		r26 = (uint16_t)((r26 & ~0xFFu) | ROM8(r28));
 		t1 = r27;
 		r27 = r27 + 2u;
 		mem_write16(t1, mem_read16(t1) ^ r26);
@@ -5944,7 +5945,7 @@ void sub_00D8A5(void)
 	} while (r0 != 0u);
 	move_halfwords(SOUND_RAM + 0x1F32u, WORK_RAM + 0xFC30u, 0x1Eu);
 	sub_011418(r0);
-	move_string(0x20FC30u, 0x1Eu, SOUND_RAM + 0x1FAEu, 0x1Eu, 2u, 0u, 0u, r26, &r27, &r28);
+	move_string(0x20FC30u, 0x1Eu, SOUND_RAM + 0x1FAEu, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
 	sub_001D84();
 	r10 = 0x20FC00u;
 	r9 = 0u;
