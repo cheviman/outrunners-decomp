@@ -3,7 +3,7 @@ Name:        decompile.py
 Description: decompiles the game's V70 program into readable C, one C function per original function
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    20-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/decompile.py [rom folder or .zip] [--check] [--trace] [--out DIR] [--symbols FILE]
@@ -602,12 +602,14 @@ def write_c(program, out_dir, trace=False, variables_path=None, split_webs=False
         live_after[entry] = after
         live_at_start[entry] = start
     known = disassemble.load_names(SYMBOLS)
-    # the structures: the object and the player, and any other symbols.txt declares (flood_fill_record)
+    # the structures: the game's (pointers.STRUCTS: the object, the car, the screen's block), and any other
+    # symbols.txt declares
+    built_in = set(pointers.STRUCTS)
     pointers.STRUCTS.update(known.structs)
     pointers.ROM_STRUCTS = set(known.rom_structs)
-    # records of their own (not the object's or the player's blocks) come one after another: the flood
-    # fill's queue is walked a record at a time
-    pointers.RUNS = set(known.structs) - {"object", "player"}
+    # records of their own (not the game's blocks) come one after another: a pointer moved past one points
+    # into the next
+    pointers.RUNS = set(known.structs) - built_in
     # what symbols.txt says a parameter, or a local variable where an instruction writes it, points at
     entries_by_name = {program.names[entry]: entry for entry in built}
     hints = {}

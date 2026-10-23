@@ -4,14 +4,15 @@ Description: works out which registers point at which of the game's structures, 
              through them reads as a field: OBJECT(r20)->unk_30 instead of mem_read32(r20 + 0x30u)
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    20-10-2026
+Modified:    23-10-2026
 Author:      Sebastian Toyos
 
-The structures (STRUCTS) are the game objects (0xA0 bytes in work RAM, run by the object loop with R20
-pointing at each) and the player blocks (0x200 bytes from 0x208400, R18 pointing at the current one).
-A kind is (structure, offset): a pointer to a structure, or into it; or ("global", address): a pointer
-to a variable in work RAM (R21 holds the free object stack at 0x20E900), so that what is reached through
-it reads as that variable.
+The structures (STRUCTS) are OutRunners': the game objects (0x100 bytes, 124 of them below each screen's
+block, run by the object loop with R20 pointing at each), the screen's car (0x200 bytes at 1000 of the
+screen's block, R23; an object in its first 0x100 bytes) and the block of the screen a task runs (from
+0x208000 or 0x218000, R25). A kind is (structure, offset): a pointer to a structure, or into it; or
+("global", address): a pointer to a variable in work RAM, so that what is reached through it reads as
+that variable.
 
 Fields and variables symbols.txt says point at a structure (a struct name after their type) give
 their kind to what is read from them: a u32 holds the address, a u16 the low half of it, which the code
@@ -31,17 +32,21 @@ into the ROM ("rom" after its type). What is read through one reads the ROM itse
 the board's bus; rom() stops the program if such an address ever falls outside the ROM.
 
 Forward over each function's blocks, a register keeps the kind of what it was set to:
-  - another register, or one plus a constant (a pointer into the same structure);
+  - another register, or one plus a constant (a pointer into the same structure; into a structure
+    inside it, NESTED, a pointer to that one: the screen's block plus 0x1000 is its car);
+  - an address BASE_KINDS names (the blocks of the two screens, 0x208000 and 0x218000);
   - "(r & 0xFFFF0000) | halfword": the game keeps structures in the 0x20xxxx page and links them with
-    16-bit addresses, so this is another structure of the same kind;
-  - 0x208400 plus a multiple of 0x200: a player (0x2084CC plus one: its field CC);
+    16-bit addresses, so this is another structure of the same kind, or the one PAGE_LINK_KINDS says the
+    page of r's leads to (a screen's objects are in the page of its block);
+  - the first of a run of players (PLAYERS) plus a multiple of their size: a player (none in OutRunners);
   - a word read from a variable that holds a pointer (GLOBAL_KINDS: the ends of the object list);
-  - 0x208000 (R25) plus a word read from a table of offsets symbols.txt says lead to a structure.
+  - the variables' base (VARIABLES, none in OutRunners) plus a word read from a table of offsets
+    symbols.txt says lead to a structure.
 Across functions: what a function finds in its registers when it starts is what its callers have there
 (through calls of any kind), and what a call leaves in the registers it hands back is what the callee
 has there when it returns. A caller that does not know says nothing; two that know different things make
-it unknown. The context registers start as the game keeps them (CONTEXT_KINDS: R20, R22, R23 and R24 an
-object, R18 a player) unless the callers say otherwise. Inside a function, where paths meet, a kind
+it unknown. The context registers start as the game keeps them (CONTEXT_KINDS: R20 an object, R23 the
+car, R25 the screen's block) unless the callers say otherwise. Inside a function, where paths meet, a kind
 holds only if it is the same on all of them. Repeated until it settles.
 
 This only decides how accesses are written, never what they do: the C reads and writes the same bytes.
@@ -51,18 +56,19 @@ names below (tools/decompile_sound.py: the Z80's sound channels in its shared RA
 """
 from v60 import ir
 
-STRUCTS = {"object": 0xA0, "player": 0x200}
-VARIABLES = 0x208000          # where R25 points: the game's variables
-PLAYERS = (0x208400, 0x200, 3)    # first, size, count
+STRUCTS = {"object": 0x100, "car": 0x200, "screen": 0x8000}
+VARIABLES = None              # a constant base of the game's variables (SegaSonic's R25); OutRunners' R25 is the
+                              # block of the screen each task runs
+PLAYERS = (0, 0, 0)           # first, size, count of a run of player blocks (SegaSonic's); none
 # (struct, offset) or ("global", address) -> (struct, bits): what a field or variable points at (Program)
 TARGETS = {}
 # (struct, family, offset) -> (what it points at, bits): a field one family of functions uses as a pointer;
 # ("global", family, address) the same for a variable of the work RAM the family uses its own way
 SCOPED_TARGETS = {}
 GLOBAL_FAMILY = None          # the family whose own names of the work RAM the function being analysed uses
-CONTEXT_KINDS = {20: ("object", 0), 22: ("object", 0), 23: ("object", 0), 24: ("object", 0), 18: ("player", 0)}
-OBJECT_REGISTERS = (20, 22, 23, 24)    # what the game keeps here it reads as objects, wherever it put them
-OWN_REGISTERS = (20, 23)      # what points at the object a function runs on when it starts (the object loop's)
+CONTEXT_KINDS = {20: ("object", 0), 23: ("car", 0), 25: ("screen", 0)}
+OBJECT_REGISTERS = (20,)      # what the game keeps here it reads as objects, wherever it put them
+OWN_REGISTERS = (20,)         # what points at the object a function runs on when it starts (the object loop's)
 REGIONS = {"rom"}             # kinds that are a memory, not a structure
 OFFSET = ("offset", 0)        # not a pointer: a value below 0x10000 (a halfword read, a mask...), an offset
 CONFLICT = ("conflict", 0)    # callers that know different things: nothing is known
@@ -81,6 +87,13 @@ ROM_FUNCTION = "rom"           # ... and what gives a pointer to one of those (c
 CONSTANTS = False              # registers keep the constants they are set to, so that a pointer moved by one
                                # (the Z80's "ld de,12h ... add iy,de") keeps its kind
 PAGED = False                  # structures a page long, one per page: (p & FF00) | n is field n of p's (page_parts)
+# addresses that are a structure of the game: the blocks of the two screens (R25 of each task)
+BASE_KINDS = {0x208000: ("screen", 0), 0x218000: ("screen", 0)}
+# what the page of a structure's address plus a 16-bit link points at, where it is not the same structure:
+# the objects of a screen are in the page of its block (0x200400-0x207FFF, 0x210400-0x217FFF)
+PAGE_LINK_KINDS = {"screen": ("object", 0)}
+# structures inside others: struct -> (offset, size, inner struct); a pointer into one is a pointer to it
+NESTED = {"screen": ((0x1000, 0x200, "car"),)}
 RUNS = set()                   # structures laid one after another wherever a pointer starts (no fixed base,
                                # unlike ARRAYS): a pointer moved past one points into the next
 
@@ -268,7 +281,7 @@ def kind_of(node, state, zeros):
         return state.get(("temp", node.name))    # (PAGED only: the Z80's EX DE,HL goes through one)
     if isinstance(node, ir.Const):
         value = node.value & ADDRESS_MASK
-        found = player_constant(value)
+        found = BASE_KINDS.get(value) or player_constant(value)
         if found is None and in_work_ram(value):
             found = ("global", value)
         if found is None and rom_address(value):
@@ -305,6 +318,9 @@ def kind_of(node, state, zeros):
         if inner is not None and inner[0] in STRUCTS:
             offset = signed(inner[1] + delta)
             if 0 <= offset < STRUCTS[inner[0]]:
+                for start, size, nested in NESTED.get(inner[0], ()):
+                    if start <= offset < start + size:
+                        return nested, offset - start
                 return (inner[0], offset) + tuple(inner[2:])
             if inner[0] in RUNS or (inner[0] in ARRAYS and offset >= 0):
                 return inner[0], offset % STRUCTS[inner[0]]    # into the next (or the one before) of the array
@@ -340,6 +356,8 @@ def kind_of(node, state, zeros):
                     return link_kind(target)
         if masked and isinstance(kept.args[0], ir.Reg):
             inner = state.get(kept.args[0].index)
+            if inner is not None and inner[0] in PAGE_LINK_KINDS:
+                return PAGE_LINK_KINDS[inner[0]]
             if inner is not None and inner[0] in STRUCTS:
                 return inner[0], 0
             if inner == ("rom", 0):
