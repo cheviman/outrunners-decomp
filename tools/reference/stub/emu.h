@@ -4,7 +4,7 @@
  *                 its Z80 disassembler, alone
  *    Version:     0.2.1
  *    Created:     11-10-2026
- *    Modified:    13-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    Only what v60.cpp, v60d.cpp, their .hxx files and z80dasm.cpp use. Memory goes through function
@@ -210,15 +210,26 @@ public:
 	void cache(Cache &target) { target.space = this; }
 };
 
+// true while the CPU reads its instruction stream (the cache below), false for its data reads
+inline bool g_reading_instructions = false;
+
 template <int Width, int AddressShift, int Unused, endianness_t Endian>
 struct memory_access
 {
 	struct cache
 	{
 		address_space *space = nullptr;
-		u8 read_byte(offs_t address) { return space->read_byte(address); }
-		u16 read_word_unaligned(offs_t address) { return space->read_word_unaligned(address); }
-		u32 read_dword_unaligned(offs_t address) { return space->read_dword_unaligned(address); }
+		template <typename Read>
+		auto fetch(Read read)
+		{
+			g_reading_instructions = true;
+			const auto value = read();
+			g_reading_instructions = false;
+			return value;
+		}
+		u8 read_byte(offs_t address) { return fetch([&] { return space->read_byte(address); }); }
+		u16 read_word_unaligned(offs_t address) { return fetch([&] { return space->read_word_unaligned(address); }); }
+		u32 read_dword_unaligned(offs_t address) { return fetch([&] { return space->read_dword_unaligned(address); }); }
 	};
 };
 

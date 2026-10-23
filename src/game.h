@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,6 +20,9 @@ extern uint32_t r12, r14, r20, r22, r23, r25, r26, r27, r28, r32;
 
 /* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
    addresses: what it stores and compares, and what call_code() runs */
+#define sub_0010EB_ADDRESS 0x0010EBu
+#define sub_001141_ADDRESS 0x001141u
+#define sub_0011AB_ADDRESS 0x0011ABu
 #define sub_001687_ADDRESS 0x001687u
 #define sub_001894_ADDRESS 0x001894u
 #define sub_0018A4_ADDRESS 0x0018A4u
@@ -95,6 +98,8 @@ extern uint32_t r12, r14, r20, r22, r23, r25, r26, r27, r28, r32;
 #define sub_007C9E_ADDRESS 0x007C9Eu
 #define sub_009590_ADDRESS 0x009590u
 #define sub_00974C_ADDRESS 0x00974Cu
+#define sub_00AB24_ADDRESS 0x00AB24u
+#define sub_00AB36_ADDRESS 0x00AB36u
 #define sub_00BFC1_ADDRESS 0x00BFC1u
 #define sub_00C017_ADDRESS 0x00C017u
 #define sub_00C0C6_ADDRESS 0x00C0C6u
@@ -177,10 +182,12 @@ extern uint32_t r12, r14, r20, r22, r23, r25, r26, r27, r28, r32;
 #define sub_017BFB_ADDRESS 0x017BFBu
 #define sub_017CAA_ADDRESS 0x017CAAu
 #define sub_017D1F_ADDRESS 0x017D1Fu
+#define sub_017DB0_ADDRESS 0x017DB0u
 #define sub_017E1B_ADDRESS 0x017E1Bu
 #define sub_017E5B_ADDRESS 0x017E5Bu
 #define sub_017EF2_ADDRESS 0x017EF2u
 #define sub_017F3D_ADDRESS 0x017F3Du
+#define sub_018050_ADDRESS 0x018050u
 #define sub_0180CB_ADDRESS 0x0180CBu
 #define sub_018110_ADDRESS 0x018110u
 #define sub_01854A_ADDRESS 0x01854Au
@@ -263,7 +270,10 @@ uint32_t sub_0000FC(void);
 void sub_00013C(uint32_t r0);
 void sub_0002CA(void);
 void sub_0002E1(void);
+void sub_000310(uint8_t r4);
+void sub_000327(uint32_t r0);
 void sub_000337(uint32_t r0);
+void sub_000354(uint16_t r0, uint8_t r4);
 void sub_00036B(void);
 void sub_000372(void);
 void sub_000375(void);
@@ -286,7 +296,12 @@ uint32_t sub_000C1C(uint32_t r10, uint32_t r11);
 uint32_t sub_000C5A(void);
 void sub_000D7D(void);
 void sub_000D9F(void);
+void sub_000EA4(void);
 void sub_001000(void);
+void sub_0010CD(void);
+void sub_0010EB(void);
+void sub_001141(void);
+void sub_0011AB(void);
 void sub_001440(void);
 void sub_00144C(void);
 void sub_001458(void);
@@ -339,6 +354,7 @@ void sub_004122(void);
 void sub_004152(void);
 void sub_004240(void);
 void sub_004421(void);
+void sub_004578(void);
 void sub_00457D(void);
 void sub_00463C(void);
 void sub_0046BB(void);
@@ -368,6 +384,8 @@ void sub_005D5C(void);
 void sub_005E10(void);
 void sub_005EB4(void);
 void sub_005F51(void);
+
+/* game_01.c: the game's functions, part 01 (in the order of their V60 addresses) */
 void sub_006070(void);
 void sub_0060B1(void);
 void sub_006105(void);
@@ -377,8 +395,6 @@ void sub_0061A2(void);
 uint32_t sub_0061DB(uint32_t r1, uint32_t r2, uint32_t r3);
 uint32_t sub_006294(void);
 void sub_006356(void);
-
-/* game_01.c: the game's functions, part 01 (in the order of their V60 addresses) */
 void sub_0063F9(void);
 void sub_006463(void);
 void sub_0064E2(void);
@@ -420,6 +436,9 @@ void sub_00A537(uint32_t r11, uint32_t r13, uint32_t r15, uint32_t r17);
 void sub_00A632(uint32_t r11, uint32_t r13, uint32_t r15, uint32_t r17);
 void sub_00A85D(uint32_t r7, uint32_t r8, uint32_t r9, uint32_t r19);
 void sub_00AABC(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t *p_r3, uint32_t *p_r4, uint32_t *p_r5);
+void sub_00AB24(void);
+void sub_00AB36(void);
+void sub_00AB46(void);
 void sub_00B4F8(void);
 uint32_t sub_00B52F(uint32_t r0, uint16_t r1, uint16_t r2, uint16_t r3);
 void sub_00B65F(void);
@@ -441,6 +460,7 @@ void sub_00C231(void);
 void sub_00C2AC(void);
 void sub_00C342(void);
 void sub_00C43E(void);
+void sub_00C552(void);
 void sub_00C553(void);
 void sub_00C585(void);
 void sub_00C59C(void);
@@ -451,6 +471,7 @@ void sub_00C7CD(void);
 void sub_00C7EC(void);
 void sub_00C857(uint32_t r0);
 void sub_00C873(void);
+void sub_00C8B5(void);
 void sub_00C8B6(void);
 void sub_00C9ED(void);
 void sub_00CA44(void);
@@ -460,6 +481,7 @@ void sub_00CABC(void);
 void sub_00CBC0(void);
 void sub_00CD8B(uint32_t r21);
 void sub_00CE99(uint32_t r0, uint32_t r1);
+void sub_00CEA4(uint32_t r0, uint32_t r10);
 void sub_00CEA7(uint32_t r0, uint32_t r10);
 void sub_00CEF3(uint32_t r0, uint32_t r1);
 void sub_00D0C8(void);
@@ -473,6 +495,7 @@ uint32_t sub_00D524(uint32_t left_caller);
 uint32_t sub_00D544(uint32_t r0, uint32_t r10);
 void sub_00D5E0(uint32_t *p_r2, uint32_t *p_left_caller);
 uint32_t sub_00D612(uint32_t left_caller);
+void sub_00D658(void);
 void sub_00D664(uint32_t *p_r2, uint32_t *p_left_caller);
 uint32_t sub_00D6AD(uint32_t r2, uint32_t left_caller);
 void sub_00D6BB(uint32_t *p_r2, uint32_t *p_left_caller);
@@ -483,6 +506,8 @@ void sub_00D72D(void);
 void sub_00D7CB(uint32_t r19, uint32_t *p_r2, uint32_t *p_left_caller);
 void sub_00D884(uint32_t *p_r2, uint32_t *p_left_caller);
 void sub_00D8A5(void);
+
+/* game_02.c: the game's functions, part 02 (in the order of their V60 addresses) */
 void sub_00D9F3(void);
 void sub_00DB6D(void);
 void sub_00DDA8(void);
@@ -499,8 +524,6 @@ void sub_00EB74(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00EC1B(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00ECCD(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00ED82(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-
-/* game_02.c: the game's functions, part 02 (in the order of their V60 addresses) */
 void sub_00EE37(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00EE75(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00EEBF(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
@@ -530,15 +553,20 @@ uint32_t sub_0106AF(void);
 uint32_t sub_01070C(void);
 void sub_010741(void);
 void sub_01076A(void);
+void sub_01078F(uint16_t r9);
+void sub_0107A0(uint16_t r9);
 void sub_0107BC(void);
 void sub_0107F0(void);
 void sub_010889(void);
 void sub_010890(void);
 void sub_0108EA(void);
 void sub_010936(void);
+void sub_010996(uint16_t r0, uint32_t r10, uint32_t r11);
 void sub_010DC4(uint32_t r10, uint32_t r11);
 uint32_t sub_010E42(uint32_t r2);
+void sub_010F66(uint32_t r10);
 void sub_010FA1(uint32_t r10);
+void sub_010FA6(uint32_t r10);
 void sub_011011(uint32_t r10);
 void sub_011018(void);
 void sub_01106C(uint32_t r6);
@@ -548,14 +576,19 @@ uint32_t sub_01122C(uint32_t r9, uint32_t r10, uint32_t r11);
 uint32_t sub_011252(uint32_t r6, uint32_t r9, uint32_t r19);
 void sub_0112D9(void);
 void sub_0112F0(uint32_t r7);
+void sub_011314(uint32_t r7);
 void sub_011324(uint32_t r7, uint16_t r9);
 void sub_011341(uint32_t r7, uint32_t r9);
+void sub_011362(uint32_t r7, uint8_t r9);
 void sub_01137D(uint32_t r7, uint16_t r9);
+void sub_011388(uint32_t r7, uint32_t r9);
+void sub_011393(uint32_t r7, uint8_t r9);
 void sub_01139E(void);
 void sub_0113C0(void);
 uint32_t sub_0113E5(uint32_t r0);
 uint32_t sub_01140E(uint32_t r0, uint32_t r2, uint32_t r3);
 uint32_t sub_011418(uint32_t r0);
+void sub_01142A(void);
 uint32_t sub_01143E(uint32_t r0, uint32_t r2);
 void sub_011594(void);
 void sub_0115B1(void);
@@ -567,8 +600,18 @@ void sub_011615(uint32_t r19);
 void sub_011643(uint32_t r19);
 void sub_01167E(void);
 void sub_0117E4(void);
+void sub_0117FE(void);
 void sub_011868(uint32_t r19);
 uint32_t sub_011874(uint32_t r19);
+void sub_0118BD(uint32_t r19);
+void sub_0118D2(uint32_t r19);
+void sub_0118F7(uint32_t r19);
+void sub_01190C(uint32_t r0, uint16_t r1, uint32_t r11);
+void sub_011914(uint32_t r0, uint16_t r1, uint32_t r11);
+void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11);
+void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11);
+void sub_01192B(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11);
+void sub_011958(void);
 uint32_t sub_011975(uint32_t r0);
 void sub_0119FA(uint32_t r3, uint16_t r5, uint32_t r18);
 uint32_t sub_011A32(uint32_t r19);
@@ -576,12 +619,17 @@ uint32_t sub_011A72(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t
 void sub_011C60(void);
 void sub_011CC0(void);
 uint32_t sub_011D43(void);
+void sub_011DEB(void);
+void sub_011E1D(uint16_t r21);
 uint32_t sub_011E2C(uint32_t r10);
 uint32_t sub_011E45(void);
 void sub_011E88(void);
 void sub_011EB8(uint8_t r0);
 void sub_011EDE(uint8_t r0);
+void sub_011EF4(uint8_t r0);
 void sub_011F30(void);
+
+/* game_03.c: the game's functions, part 03 (in the order of their V60 addresses) */
 void sub_011F7C(void);
 void sub_011FC3(uint8_t r0);
 void sub_011FC9(uint8_t r0);
@@ -596,6 +644,7 @@ void sub_0122E3(uint32_t *p_r7, uint32_t *p_r15);
 void sub_0122E8(uint32_t *p_r7, uint32_t *p_r15);
 void sub_0122EB(uint32_t *p_r7, uint32_t *p_r15);
 void sub_0123AF(uint32_t *p_r7, uint32_t *p_r15);
+void sub_01248C(void);
 void sub_01256F(void);
 uint32_t sub_01262A(void);
 void sub_0126FC(void);
@@ -621,8 +670,6 @@ void sub_012CAA(void);
 void sub_012DB7(void);
 void sub_012EA2(void);
 void sub_012FBC(void);
-
-/* game_03.c: the game's functions, part 03 (in the order of their V60 addresses) */
 void sub_01307E(void);
 void sub_013104(void);
 void sub_0131A5(void);
@@ -689,16 +736,22 @@ void sub_017BC8(uint32_t r0);
 void sub_017BFB(void);
 void sub_017CAA(void);
 void sub_017D1F(void);
+void sub_017D70(void);
+void sub_017DB0(void);
 void sub_017E1B(void);
 void sub_017E5B(void);
 void sub_017EF2(void);
 void sub_017F3D(void);
+void sub_018009(void);
+void sub_018050(void);
 void sub_0180CB(void);
 void sub_018110(void);
 uint32_t sub_01818A(void);
 void sub_0184D0(uint32_t r19);
 void sub_0184EC(uint32_t r19);
 void sub_01850B(uint32_t r19);
+
+/* game_04.c: the game's functions, part 04 (in the order of their V60 addresses) */
 void sub_01854A(void);
 uint32_t sub_018581(uint8_t r0, uint8_t r1, uint32_t r10, uint32_t r11);
 void sub_0185D2(void);
@@ -743,8 +796,6 @@ void sub_019CAC(void);
 void sub_019E6B(void);
 void sub_019F4C(void);
 void sub_019F60(void);
-
-/* game_04.c: the game's functions, part 04 (in the order of their V60 addresses) */
 void sub_019FD3(void);
 void sub_01A0A2(void);
 void sub_01A0E2(void);
@@ -768,6 +819,12 @@ void sub_01AE61(void);
 void sub_01AE6B(void);
 void sub_01AE75(uint8_t r0, uint32_t r1);
 void sub_01AE8D(void);
+void sub_01AFDC(void);
+void sub_01B1B1(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10);
+void sub_01B1CD(uint32_t r11, uint32_t r13);
+uint32_t sub_01B1E7(uint32_t r13);
+uint32_t sub_01B200(uint32_t r13);
+void sub_01B20C(uint32_t r3, uint16_t r4);
 void sub_01C241(void);
 void sub_01C388(void);
 void sub_01C392(void);
@@ -815,6 +872,8 @@ uint32_t sub_01DA7C(void);
 void sub_01DB58(void);
 void sub_01DB68(void);
 void sub_01DB85(void);
+
+/* game_05.c: the game's functions, part 05 (in the order of their V60 addresses) */
 void sub_01DB97(void);
 void sub_01DBA9(void);
 void sub_01DD1E(void);
@@ -847,6 +906,8 @@ uint32_t sub_01E740(void);
 uint32_t sub_01E862(void);
 uint32_t sub_01E9A4(uint32_t r0, uint32_t r11);
 void sub_01E9E6(uint32_t *p_r0, uint32_t *p_r11);
+void sub_01EA14(void);
+void sub_01EA4B(uint32_t r0, uint32_t r10);
 void sub_01EDC4(void);
 void sub_01EDF1(void);
 void sub_01EE66(void);
@@ -865,8 +926,6 @@ void sub_01F103(uint32_t r2, uint32_t *p_r0, uint32_t *p_r1, uint32_t *p_r10);
 uint32_t sub_01F131(uint32_t r0, uint8_t r1, uint32_t r2, uint32_t r10);
 uint32_t sub_01F16C(uint32_t r0, uint32_t r10);
 uint32_t sub_01F17D(void);
-
-/* game_05.c: the game's functions, part 05 (in the order of their V60 addresses) */
 void sub_01F190(void);
 void sub_01F237(void);
 void sub_01F266(uint16_t r0);

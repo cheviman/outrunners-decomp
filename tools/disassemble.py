@@ -3,7 +3,7 @@ Name:        disassemble.py
 Description: recursive-descent disassembly of the V70 program into a listing and a coverage report
 Version:     0.1.0
 Created:     11-10-2026
-Modified:    20-10-2026
+Modified:    22-10-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/disassemble.py [rom folder or .zip] [--trace executed.txt ...]   (default ROM: rom/)
@@ -47,7 +47,7 @@ CODE_CHIPS = orunners_rom.PROGRAM_AREAS[:2]
 
 @dataclass(frozen=True)
 class Layout:
-    """Where a data table holds code addresses (symbols.txt: record=, count=, end=, code=, lists=, pointers=)."""
+    """Where a data table holds code addresses (symbols.txt: record=, count=, end=, code=, data=, lists=, pointers=)."""
     record: int                 # bytes per record
     code: tuple                 # (offset inside each record, base): a 32-bit code address when base is None,
                                 # else a 16-bit offset from base
@@ -59,6 +59,7 @@ class Layout:
     end_bytes: int = 2          # how long that end mark is: 2 (end=FFFF) or 4 (end=FFFFFFFF, a whole end record)
     lists: int | None = None    # the table is this many 16-bit offsets, from its own address, to such arrays
     pointers: int | None = None  # the table is this many 32-bit addresses of such arrays
+    data: tuple = ()             # offsets of 32-bit fields that hold the address of data the record goes with
     kinds: tuple | None = None   # (offset, {value: length, 0 or FORK}): a 16-bit field picks each record's
                                  # length, 0 for the record that ends the array (its own first offset + 2
                                  # bytes), FORK for one that ends it with a table of addresses of arrays
@@ -84,18 +85,26 @@ def parse_code_fields(text, where):
     return tuple(fields)
 
 
+def parse_offsets(text, where):
+    """'8,12': field offsets"""
+    try:
+        return tuple(int(offset) for offset in text.split(","))
+    except ValueError:
+        raise SystemExit(f"{where}: bad field offsets '{text}'") from None
+
+
 def parse_layout(attributes, where):
     """Layout from 'key=value' attributes: sizes, offsets and counts in decimal, the end mark and bases in
     hexadecimal (an end mark of more than four digits is 32 bits long)"""
     values = {}
     for attribute in attributes:
         name, _, value = attribute.partition("=")
-        if name not in ("record", "count", "end", "code", "lists", "pointers", "kinds") or not value:
+        if name not in ("record", "count", "end", "code", "data", "lists", "pointers", "kinds") or not value:
             raise SystemExit(f"{where}: unknown layout attribute '{attribute}'")
         values[name] = value
     ends = ("count" in values) + ("end" in values) + ("kinds" in values)
-    if "record" not in values or "code" not in values or ends != 1:
-        raise SystemExit(f"{where}: a layout needs record=, code= and one of count=, end= or kinds=")
+    if "record" not in values or ("code" not in values and "data" not in values) or ends != 1:
+        raise SystemExit(f"{where}: a layout needs record=, code= or data=, and one of count=, end= or kinds=")
     kinds = None
     if "kinds" in values:
         offset, _, choices = values["kinds"].partition(":")
@@ -108,7 +117,7 @@ def parse_layout(attributes, where):
         raise SystemExit(f"{where}: lists= and pointers= do not go together")
     prefixed = values.get("count") in ("prefix", "prefix32", "bytes32")
     return Layout(record=int(values["record"]),
-                  code=parse_code_fields(values["code"], where),
+                  code=parse_code_fields(values["code"], where) if "code" in values else (),
                   count=int(values["count"]) if "count" in values and not prefixed else None,
                   prefixed=prefixed,
                   prefix_bytes=4 if values.get("count") in ("prefix32", "bytes32") else 2,
@@ -117,6 +126,7 @@ def parse_layout(attributes, where):
                   end_bytes=4 if len(values.get("end", "")) > 4 else 2,
                   lists=int(values["lists"]) if "lists" in values else None,
                   pointers=int(values["pointers"]) if "pointers" in values else None,
+                  data=parse_offsets(values["data"], where) if "data" in values else (),
                   kinds=kinds)
 
 
@@ -430,6 +440,7 @@ class Analysis:
         self.data_words = {}     # address of a pointer table entry -> address it points to
         self.described = []      # (first, stop): bytes of the tables symbols.txt describes with a layout
         self.described_targets = set()  # code addresses those tables hold
+        self.data_fields = {}    # address of a described table's data field (data=) -> the address it holds
         self.table_targets = {}  # name of such a table -> the code addresses it holds
         self.jump_tables = {}    # address of "jmp table(Rx)" -> addresses of its "br" entries
         self.call_tables = {}    # address of "jsr table(Rx)" -> addresses of its "br" entries
@@ -508,8 +519,9 @@ class Analysis:
             arrays = [address + self.mem.r16(address + 2 * number) for number in range(layout.lists)]
             self.described.append((address, address + 2 * layout.lists))
         elif layout.pointers is not None:
+            # (an address of 0 is no array)
             arrays = [orunners_rom.canonical_address(self.mem.r32(address + 4 * number))
-                      for number in range(layout.pointers)]
+                      for number in range(layout.pointers) if self.mem.r32(address + 4 * number)]
             self.described.append((address, address + 4 * layout.pointers))
             if None in arrays:
                 raise SystemExit(f"symbols.txt: {symbol.name} points outside the program ROM")
@@ -572,6 +584,13 @@ class Analysis:
                     self.add_target(value, "func", record + offset)
                     self.described_targets.add(value & 0xFFFFFF)
                     self.table_targets.setdefault(symbol.name, set()).add(value & 0xFFFFFF)
+                for offset in layout.data:
+                    if offset + 4 > length:
+                        continue   # a shorter kind of record has no such field
+                    # (the V70 sees 24 address bits: a byte above them may hold something else)
+                    target = orunners_rom.canonical_address(self.mem.r32(record + offset) & 0xFFFFFF)
+                    if target is not None and self.mem.r32(record + offset) & 0xFFFFFF:
+                        self.data_fields[record + offset] = target
                 record += length
             else:
                 raise SystemExit(f"symbols.txt: {symbol.name} array at {array:06X} has no end in sight")

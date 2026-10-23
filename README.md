@@ -29,14 +29,21 @@ the tools verify it, extract the assets and build your own executable.
 - [x] Recursive disassembly without traces (`tools/disassemble.py`, from `symbols.txt`): the vectors, the
       tables of code addresses next to the jumps that read them, the object handlers (stored in field 4,
       from lists, tables of lists and the streams of objects along each stage's road, which fork with the
-      route) and a timeline: 18,733 instructions in 580 functions, no invalid or overlapping paths, and all
+      route) and a timeline: 19,708 instructions in 640 functions, no invalid or overlapping paths, and all
       16,103 addresses the scenarios execute among them
+- [x] Coverage (`tools/coverage.py`): every byte of the code chips is code, data that the code or the
+      tables `symbols.txt` describes point at, or fill; none is unknown. To find the last of it,
+      `s32ref --rom-reads FILE` lists what a run reads of the ROM as data, by instruction. The code and the
+      tables nothing uses are in `symbols.txt` too (its last section): 52 functions nothing calls are
+      decompiled with the rest; 1,039 bytes of code are left out of the C, the reset vector's jump and 14
+      places of dead code that jump or call into the middle of functions the game runs, whose C would cut
+      those functions in two
 - [x] Translation scaffold (`tools/recompile.py`): the program translated into C one instruction at a time,
       615 functions that the V60 runtime (`runtime/src/v60.c`) runs a frame at a time. `orunners_headless`
       matches the reference frame by frame in all 16 scenarios. The game runs two tasks, each on a stack
       of its own, and its VBLANK handler swaps them; their C runs on native stacks of their own
       (`runtime/src/tasks.c`)
-- [x] Decompiler, first pass (`tools/decompile.py`): the program decompiled into C, in `src/`: 620 functions
+- [x] Decompiler, first pass (`tools/decompile.py`): the program decompiled into C, in `src/`: 686 functions
       with no goto, which the game's runtime (`runtime/src/game.c`) runs a frame at a time.
       `orunners_game_headless` matches the reference frame by frame in all 16 scenarios. The VBLANK handler
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too

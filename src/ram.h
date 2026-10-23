@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    22-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -223,6 +223,8 @@
 #define unk_20E129 RAM8(unk_20E129_ADDRESS)
 #define unk_20E200_ADDRESS 0x20E200u
 #define unk_20E200 RAM16(unk_20E200_ADDRESS)
+#define unk_20E202_ADDRESS 0x20E202u
+#define unk_20E202 RAM16(unk_20E202_ADDRESS)
 #define unk_20E204_ADDRESS 0x20E204u
 #define unk_20E204 RAM16(unk_20E204_ADDRESS)
 #define unk_20E210_ADDRESS 0x20E210u
@@ -237,6 +239,12 @@
 #define unk_20E240 ((uint32_t *)ram(unk_20E240_ADDRESS))
 #define unk_20E248_ADDRESS 0x20E248u
 #define unk_20E248 ((uint32_t *)ram(unk_20E248_ADDRESS))
+#define unk_20E288_ADDRESS 0x20E288u
+#define unk_20E288 RAM16(unk_20E288_ADDRESS)
+#define unk_20E28A_ADDRESS 0x20E28Au
+#define unk_20E28A RAM16(unk_20E28A_ADDRESS)
+#define unk_20E28C_ADDRESS 0x20E28Cu
+#define unk_20E28C RAM16(unk_20E28C_ADDRESS)
 #define unk_20E290_ADDRESS 0x20E290u
 #define unk_20E290 ((uint32_t *)ram(unk_20E290_ADDRESS))
 #define unk_20E294_ADDRESS 0x20E294u
@@ -475,6 +483,20 @@
 #define rom_000D14 ((const uint32_t *)rom(rom_000D14_ADDRESS))
 #define rom_000DAC_ADDRESS 0x000DACu
 #define rom_000DAC ((const uint32_t *)rom(rom_000DAC_ADDRESS))
+#define rom_000EB0_ADDRESS 0x000EB0u
+#define rom_000EB0 ((const uint32_t *)rom(rom_000EB0_ADDRESS))
+#define rom_000F78_ADDRESS 0x000F78u
+#define rom_000F78 ((const uint32_t *)rom(rom_000F78_ADDRESS))
+#define rom_000F80_ADDRESS 0x000F80u
+#define rom_000F80 ROM32(rom_000F80_ADDRESS)
+#define rom_000F84_ADDRESS 0x000F84u
+#define rom_000F84 ROM32(rom_000F84_ADDRESS)
+#define rom_000F88_ADDRESS 0x000F88u
+#define rom_000F88 ROM32(rom_000F88_ADDRESS)
+#define rom_000F8C_ADDRESS 0x000F8Cu
+#define rom_000F8C ROM32(rom_000F8C_ADDRESS)
+#define rom_000F90_ADDRESS 0x000F90u
+#define rom_000F90 ROM32(rom_000F90_ADDRESS)
 #define rom_001014_ADDRESS 0x001014u
 #define rom_001014 ((const uint32_t *)rom(rom_001014_ADDRESS))
 #define rom_00146C_ADDRESS 0x00146Cu
@@ -909,6 +931,8 @@
 #define rom_012026 ((const uint8_t *)rom(rom_012026_ADDRESS))
 #define rom_01202E_ADDRESS 0x01202Eu
 #define rom_01202E ((const uint32_t *)rom(rom_01202E_ADDRESS))
+#define rom_01204E_ADDRESS 0x01204Eu
+#define rom_01204E ((const uint32_t *)rom(rom_01204E_ADDRESS))
 #define rom_0121D8_ADDRESS 0x0121D8u
 #define rom_0121D8 ((const uint16_t *)rom(rom_0121D8_ADDRESS))
 #define rom_0121E8_ADDRESS 0x0121E8u
@@ -1061,10 +1085,14 @@
 #define rom_017C68 ((const uint32_t *)rom(rom_017C68_ADDRESS))
 #define rom_017CB8_ADDRESS 0x017CB8u
 #define rom_017CB8 ((const uint32_t *)rom(rom_017CB8_ADDRESS))
+#define rom_017DE4_ADDRESS 0x017DE4u
+#define rom_017DE4 ((const uint32_t *)rom(rom_017DE4_ADDRESS))
 #define rom_017E98_ADDRESS 0x017E98u
 #define rom_017E98 ((const uint32_t *)rom(rom_017E98_ADDRESS))
 #define rom_017F7C_ADDRESS 0x017F7Cu
 #define rom_017F7C ((const uint32_t *)rom(rom_017F7C_ADDRESS))
+#define rom_018094_ADDRESS 0x018094u
+#define rom_018094 ((const uint32_t *)rom(rom_018094_ADDRESS))
 #define rom_01814C_ADDRESS 0x01814Cu
 #define rom_01814C ((const uint32_t *)rom(rom_01814C_ADDRESS))
 #define object_lists_181B8_ADDRESS 0x0181B8u
@@ -1117,8 +1145,8 @@
 #define rom_019561 ((const uint16_t *)rom(rom_019561_ADDRESS))
 #define rom_019571_ADDRESS 0x019571u
 #define rom_019571 ((const uint8_t *)rom(rom_019571_ADDRESS))
-#define rom_019576_ADDRESS 0x019576u
-#define rom_019576 ((const uint32_t *)rom(rom_019576_ADDRESS))
+#define typed_messages_ADDRESS 0x019576u
+#define typed_messages ((const uint32_t *)rom(typed_messages_ADDRESS))
 #define routine_lists_1966C_ADDRESS 0x01966Cu
 #define routine_lists_1966C ((const uint32_t *)rom(routine_lists_1966C_ADDRESS))
 #define rom_019CB8_ADDRESS 0x019CB8u
@@ -1203,6 +1231,10 @@
 #define rom_01ADF4 ((const uint32_t *)rom(rom_01ADF4_ADDRESS))
 #define rom_01AE98_ADDRESS 0x01AE98u
 #define rom_01AE98 ((const uint32_t *)rom(rom_01AE98_ADDRESS))
+#define rom_01AFE8_ADDRESS 0x01AFE8u
+#define rom_01AFE8 ((const uint32_t *)rom(rom_01AFE8_ADDRESS))
+#define rom_01B254_ADDRESS 0x01B254u
+#define rom_01B254 ((const uint32_t *)rom(rom_01B254_ADDRESS))
 #define rom_01C378_ADDRESS 0x01C378u
 #define rom_01C378 ROM32(rom_01C378_ADDRESS)
 #define rom_01C37C_ADDRESS 0x01C37Cu
@@ -1361,6 +1393,8 @@
 #define rom_19A340 ((const uint16_t *)rom(rom_19A340_ADDRESS))
 #define rom_1A0340_ADDRESS 0x1A0340u
 #define rom_1A0340 ((const uint16_t *)rom(rom_1A0340_ADDRESS))
+#define rom_1A6340_ADDRESS 0x1A6340u
+#define rom_1A6340 ((const uint32_t *)rom(rom_1A6340_ADDRESS))
 
 /* the board's registers (read and written through the bus) */
 #define VIDEO_31F736 0x31F736u
@@ -1413,16 +1447,25 @@
 #define IRQ_D00007 0xD00007u
 #define IRQ_D00008 0xD00008u
 #define IRQ_D0000A 0xD0000Au
+#define RANDOM_D80000 0xD80000u
 
 /* data in the program ROM symbols.txt labels */
+#define unk_00183B_ADDRESS 0x00183Bu
 #define object_handlers_1A78_ADDRESS 0x001A7Cu
 #define object_handlers_2D58_ADDRESS 0x002D5Cu
 #define object_handlers_346C_ADDRESS 0x003470u
 #define object_handlers_3474_ADDRESS 0x003478u
 #define object_handlers_34C4_ADDRESS 0x0034C8u
 #define object_handlers_34EC_ADDRESS 0x0034F0u
+#define unk_009EFC_ADDRESS 0x009EFCu
+#define unk_009FE4_ADDRESS 0x009FE4u
+#define unk_00AB04_ADDRESS 0x00AB04u
 #define object_handlers_DF74_ADDRESS 0x00DF78u
+#define unk_010309_ADDRESS 0x010309u
+#define unk_010425_ADDRESS 0x010425u
 #define timeline_1AFC0_ADDRESS 0x01AFC0u
+#define unk_01B248_ADDRESS 0x01B248u
+#define unk_030B60_ADDRESS 0x030B60u
 #define vector_table_ADDRESS 0x03F000u
 
 /* the game's structures in work RAM */
