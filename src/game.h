@@ -24,10 +24,10 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_001141_ADDRESS 0x001141u
 #define sub_0011AB_ADDRESS 0x0011ABu
 #define sub_001687_ADDRESS 0x001687u
-#define sub_001894_ADDRESS 0x001894u
-#define sub_0018A4_ADDRESS 0x0018A4u
-#define sub_0018E5_ADDRESS 0x0018E5u
-#define sub_0018FE_ADDRESS 0x0018FEu
+#define staff_credits_code_start_ADDRESS 0x001894u
+#define staff_credits_code_watch_ADDRESS 0x0018A4u
+#define staff_credits_code_show_ADDRESS 0x0018E5u
+#define staff_credits_code_done_ADDRESS 0x0018FEu
 #define sub_001980_ADDRESS 0x001980u
 #define sub_0019C0_ADDRESS 0x0019C0u
 #define sub_001EC2_ADDRESS 0x001EC2u
@@ -58,21 +58,21 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_00463C_ADDRESS 0x00463Cu
 #define sub_0046BB_ADDRESS 0x0046BBu
 #define sub_004771_ADDRESS 0x004771u
-#define sub_005030_ADDRESS 0x005030u
-#define sub_00503D_ADDRESS 0x00503Du
+#define car_select_start_ADDRESS 0x005030u
+#define car_select_run_ADDRESS 0x00503Du
 #define sub_005526_ADDRESS 0x005526u
 #define sub_0056B4_ADDRESS 0x0056B4u
 #define sub_005762_ADDRESS 0x005762u
-#define sub_005862_ADDRESS 0x005862u
-#define sub_005883_ADDRESS 0x005883u
+#define welcome_letter_start_ADDRESS 0x005862u
+#define welcome_letter_show_ADDRESS 0x005883u
 #define sub_005908_ADDRESS 0x005908u
 #define sub_0059B8_ADDRESS 0x0059B8u
 #define sub_005A1D_ADDRESS 0x005A1Du
 #define sub_005B45_ADDRESS 0x005B45u
 #define sub_005BD6_ADDRESS 0x005BD6u
-#define sub_005C71_ADDRESS 0x005C71u
-#define sub_005CA4_ADDRESS 0x005CA4u
-#define sub_005CE5_ADDRESS 0x005CE5u
+#define transmission_label_start_automatic_ADDRESS 0x005C71u
+#define transmission_label_start_manual_ADDRESS 0x005CA4u
+#define transmission_label_follow_ADDRESS 0x005CE5u
 #define sub_005D14_ADDRESS 0x005D14u
 #define sub_005D5C_ADDRESS 0x005D5Cu
 #define sub_005E10_ADDRESS 0x005E10u
@@ -84,13 +84,13 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_00613F_ADDRESS 0x00613Fu
 #define sub_006173_ADDRESS 0x006173u
 #define sub_0061A2_ADDRESS 0x0061A2u
-#define sub_006356_ADDRESS 0x006356u
-#define sub_0063F9_ADDRESS 0x0063F9u
-#define sub_006463_ADDRESS 0x006463u
-#define sub_0064E2_ADDRESS 0x0064E2u
-#define sub_006514_ADDRESS 0x006514u
-#define sub_00652A_ADDRESS 0x00652Au
-#define sub_006560_ADDRESS 0x006560u
+#define entry_countdown_start_ADDRESS 0x006356u
+#define entry_countdown_count_ADDRESS 0x0063F9u
+#define entry_countdown_done_ADDRESS 0x006463u
+#define entry_banner_start_ADDRESS 0x0064E2u
+#define entry_banner_blink_ADDRESS 0x006514u
+#define entry_car_ring_start_ADDRESS 0x00652Au
+#define entry_car_ring_draw_ADDRESS 0x006560u
 #define sub_00660F_ADDRESS 0x00660Fu
 #define sub_00664E_ADDRESS 0x00664Eu
 #define sub_006EF0_ADDRESS 0x006EF0u
@@ -108,8 +108,8 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_00C2AC_ADDRESS 0x00C2ACu
 #define sub_00C342_ADDRESS 0x00C342u
 #define sub_00C43E_ADDRESS 0x00C43Eu
-#define sub_00C553_ADDRESS 0x00C553u
-#define sub_00C585_ADDRESS 0x00C585u
+#define stage_indicator_start_ADDRESS 0x00C553u
+#define stage_indicator_draw_ADDRESS 0x00C585u
 #define sub_00C59C_ADDRESS 0x00C59Cu
 #define sub_00C65F_ADDRESS 0x00C65Fu
 #define sub_00C7EC_ADDRESS 0x00C7ECu
@@ -122,24 +122,24 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_00CAA8_ADDRESS 0x00CAA8u
 #define sub_00CABC_ADDRESS 0x00CABCu
 #define sub_00CBC0_ADDRESS 0x00CBC0u
-#define sub_00EAE4_ADDRESS 0x00EAE4u
+#define draw_object_ADDRESS 0x00EAE4u
 #define sub_0126FC_ADDRESS 0x0126FCu
 #define sub_0127EE_ADDRESS 0x0127EEu
-#define sub_01287C_ADDRESS 0x01287Cu
-#define sub_012906_ADDRESS 0x012906u
-#define sub_0129AB_ADDRESS 0x0129ABu
-#define sub_0129F4_ADDRESS 0x0129F4u
+#define scenery_update_ADDRESS 0x01287Cu
+#define flashing_scenery_update_ADDRESS 0x012906u
+#define scenery_pair_update_ADDRESS 0x0129ABu
+#define overhead_scenery_update_ADDRESS 0x0129F4u
 #define sub_012A20_ADDRESS 0x012A20u
-#define sub_012ACF_ADDRESS 0x012ACFu
-#define sub_012AF4_ADDRESS 0x012AF4u
-#define sub_012B84_ADDRESS 0x012B84u
-#define sub_012BAE_ADDRESS 0x012BAEu
+#define fork_sign_update_ADDRESS 0x012ACFu
+#define animated_scenery_update_ADDRESS 0x012AF4u
+#define animated_scenery_pair_update_ADDRESS 0x012B84u
+#define road_crosser_update_ADDRESS 0x012BAEu
 #define sub_012CAA_ADDRESS 0x012CAAu
-#define sub_012DB7_ADDRESS 0x012DB7u
+#define moving_scenery_update_ADDRESS 0x012DB7u
 #define sub_012EA2_ADDRESS 0x012EA2u
 #define sub_012FBC_ADDRESS 0x012FBCu
 #define sub_01307E_ADDRESS 0x01307Eu
-#define sub_013104_ADDRESS 0x013104u
+#define flagman_update_ADDRESS 0x013104u
 #define sub_0131A5_ADDRESS 0x0131A5u
 #define sub_01322D_ADDRESS 0x01322Du
 #define sub_013288_ADDRESS 0x013288u
@@ -193,14 +193,14 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define sub_01854A_ADDRESS 0x01854Au
 #define sub_0185D2_ADDRESS 0x0185D2u
 #define sub_01864A_ADDRESS 0x01864Au
-#define sub_018BA0_ADDRESS 0x018BA0u
-#define sub_018BB2_ADDRESS 0x018BB2u
-#define sub_018E32_ADDRESS 0x018E32u
-#define sub_018E98_ADDRESS 0x018E98u
-#define sub_018F74_ADDRESS 0x018F74u
-#define sub_018FD3_ADDRESS 0x018FD3u
-#define sub_018FE0_ADDRESS 0x018FE0u
-#define sub_01900A_ADDRESS 0x01900Au
+#define lcd_race_info_start_ADDRESS 0x018BA0u
+#define lcd_race_info_update_ADDRESS 0x018BB2u
+#define lcd_race_info_finish_ADDRESS 0x018E32u
+#define lcd_race_info_paused_ADDRESS 0x018E98u
+#define car_radio_start_ADDRESS 0x018F74u
+#define car_radio_wait_start_ADDRESS 0x018FD3u
+#define car_radio_read_buttons_ADDRESS 0x018FE0u
+#define car_radio_update_ADDRESS 0x01900Au
 #define sub_019322_ADDRESS 0x019322u
 #define sub_019CAC_ADDRESS 0x019CACu
 #define sub_019E6B_ADDRESS 0x019E6Bu
@@ -313,11 +313,11 @@ void sub_0015A9(void);
 uint32_t sub_0015C0(uint32_t left_caller);
 void sub_0015D8(void);
 void sub_001687(void);
-void sub_001894(void);
-void sub_0018A4(uint32_t r0, uint32_t r2);
-void sub_0018E5(void);
-void sub_0018FE(void);
-void sub_00190B(uint32_t r2, uint32_t *p_r0, uint32_t *p_zero);
+void staff_credits_code_start(void);
+void staff_credits_code_watch(uint32_t r0, uint32_t r2);
+void staff_credits_code_show(void);
+void staff_credits_code_done(void);
+void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_zero);
 uint32_t sub_001969(uint32_t r0, uint32_t r1, uint8_t r2, uint32_t r3);
 void sub_001980(void);
 void sub_0019C0(void);
@@ -359,26 +359,26 @@ void sub_00457D(void);
 void sub_00463C(void);
 void sub_0046BB(void);
 void sub_004771(void);
-void sub_005030(void);
-void sub_00503D(void);
-void sub_0053DF(void);
-void sub_005443(void);
-void sub_0054BC(void);
-void sub_0054C1(void);
-void sub_0054C4(uint16_t r0);
+void car_select_start(void);
+void car_select_run(void);
+void car_select_turn_to_choice(void);
+void car_select_update_rowscroll(void);
+void car_select_skew_floor_next(void);
+void car_select_skew_floor_previous(void);
+void car_select_skew_floor(uint16_t r0);
 void sub_005526(void);
 void sub_0056B4(void);
 void sub_005762(void);
-void sub_005862(void);
-void sub_005883(void);
+void welcome_letter_start(void);
+void welcome_letter_show(void);
 void sub_005908(void);
 void sub_0059B8(void);
 void sub_005A1D(void);
 void sub_005B45(void);
 void sub_005BD6(void);
-void sub_005C71(void);
-void sub_005CA4(void);
-void sub_005CE5(void);
+void transmission_label_start_automatic(void);
+void transmission_label_start_manual(void);
+void transmission_label_follow(void);
 void sub_005D14(void);
 void sub_005D5C(void);
 void sub_005E10(void);
@@ -393,17 +393,17 @@ void sub_00613F(void);
 void sub_006173(void);
 void sub_0061A2(void);
 uint32_t sub_0061DB(uint32_t r1, uint32_t r2, uint32_t r3);
-uint32_t sub_006294(void);
-void sub_006356(void);
-void sub_0063F9(void);
-void sub_006463(void);
-void sub_0064E2(void);
-void sub_006514(void);
-void sub_00652A(void);
-void sub_006560(void);
+uint32_t car_select_wait_confirm(void);
+void entry_countdown_start(void);
+void entry_countdown_count(void);
+void entry_countdown_done(void);
+void entry_banner_start(void);
+void entry_banner_blink(void);
+void entry_car_ring_start(void);
+void entry_car_ring_draw(void);
 void sub_00660F(void);
 void sub_00664E(void);
-void sub_0068FE(void);
+void step_palette(void);
 void sub_006EF0(void);
 void sub_0070EC(void);
 void sub_007396(void);
@@ -461,8 +461,8 @@ void sub_00C2AC(void);
 void sub_00C342(void);
 void sub_00C43E(void);
 void sub_00C552(void);
-void sub_00C553(void);
-void sub_00C585(void);
+void stage_indicator_start(void);
+void stage_indicator_draw(void);
 void sub_00C59C(void);
 void sub_00C65F(void);
 void sub_00C68E(void);
@@ -512,14 +512,14 @@ void sub_00D9F3(void);
 void sub_00DB6D(void);
 void sub_00DDA8(void);
 void sub_00DEC2(void);
-void sub_00DED2(void);
-uint32_t sub_00DED9(void);
+void set_player_ready(void);
+uint32_t players_not_ready(void);
 void sub_00DEF8(void);
 void sub_00E620(void);
 void sub_00E638(void);
 void sub_00E67C(uint32_t r1, uint32_t r10, uint32_t r11);
 void sub_00E8DF(void);
-uint32_t sub_00EAE4(uint32_t r0);
+uint32_t draw_object(uint32_t r0);
 void sub_00EB74(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00EC1B(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
 void sub_00ECCD(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
@@ -536,11 +536,11 @@ void sub_00F04E(uint32_t *p_r0, uint32_t *p_r10);
 uint32_t sub_00F104(uint32_t r10);
 uint32_t sub_00F126(uint32_t r10);
 void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10);
-uint32_t sub_00F30D(uint32_t r7);
-void sub_00F366(uint32_t r9);
+uint32_t animation_advance(uint32_t r7);
+void animation_start(uint32_t r9);
 void sub_00F396(void);
-void sub_00F5C8(uint32_t r7, uint32_t r15);
-void sub_00F911(uint32_t r7, uint32_t r15);
+void road_row_draw(uint32_t r7, uint32_t r15);
+void road_row_pair_draw(uint32_t r7, uint32_t r15);
 void sub_00FCBC(void);
 void sub_00FD22(void);
 void sub_00FD78(uint16_t r5);
@@ -612,20 +612,20 @@ void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11);
 void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11);
 void sub_01192B(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11);
 void sub_011958(void);
-uint32_t sub_011975(uint32_t r0);
+uint32_t binary_to_bcd(uint32_t r0);
 void sub_0119FA(uint32_t r3, uint16_t r5, uint32_t r18);
-uint32_t sub_011A32(uint32_t r19);
+uint32_t draw_text(uint32_t r19);
 uint32_t sub_011A72(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t r5, uint32_t r10, uint32_t r11, uint32_t r18);
 void sub_011C60(void);
-void sub_011CC0(void);
-uint32_t sub_011D43(void);
+void run_objects(void);
+uint32_t start_object(void);
 void sub_011DEB(void);
 void sub_011E1D(uint16_t r21);
 uint32_t sub_011E2C(uint32_t r10);
-uint32_t sub_011E45(void);
+uint32_t random_number(void);
 void sub_011E88(void);
-void sub_011EB8(uint8_t r0);
-void sub_011EDE(uint8_t r0);
+void request_sound(uint8_t r0);
+void queue_sound(uint8_t r0);
 void sub_011EF4(uint8_t r0);
 void sub_011F30(void);
 
@@ -640,10 +640,10 @@ uint32_t sub_0120AC(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3);
 void sub_012109(uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5, uint32_t *p_r0, uint32_t *p_r1);
 void sub_012238(void);
 uint32_t sub_0122AD(uint16_t r1, uint32_t r2, uint32_t r11, uint16_t r15, uint16_t r17);
-void sub_0122E3(uint32_t *p_r7, uint32_t *p_r15);
-void sub_0122E8(uint32_t *p_r7, uint32_t *p_r15);
-void sub_0122EB(uint32_t *p_r7, uint32_t *p_r15);
-void sub_0123AF(uint32_t *p_r7, uint32_t *p_r15);
+void fork_sign_hit_check(uint32_t *p_r7, uint32_t *p_r15);
+void road_row_crash_check(uint32_t *p_r7, uint32_t *p_r15);
+void road_row_hit_check(uint32_t *p_r7, uint32_t *p_r15);
+void road_row_pair_crash_check(uint32_t *p_r7, uint32_t *p_r15);
 void sub_01248C(void);
 void sub_01256F(void);
 uint32_t sub_01262A(void);
@@ -653,25 +653,25 @@ uint32_t sub_012777(void);
 uint32_t sub_012786(uint32_t r10);
 uint32_t sub_01279C(void);
 void sub_0127EE(void);
-void sub_01287C(void);
-void sub_012894(void);
-void sub_012906(void);
-void sub_0129AB(void);
-void sub_0129F4(void);
+void scenery_update(void);
+void road_row_start(void);
+void flashing_scenery_update(void);
+void scenery_pair_update(void);
+void overhead_scenery_update(void);
 void sub_012A20(void);
 void sub_012AA5(void);
 void sub_012AAB(void);
-void sub_012ACF(void);
-void sub_012AF4(void);
-void sub_012B0C(void);
-void sub_012B84(void);
-void sub_012BAE(void);
+void fork_sign_update(void);
+void animated_scenery_update(void);
+void road_row_start_copy(void);
+void animated_scenery_pair_update(void);
+void road_crosser_update(void);
 void sub_012CAA(void);
-void sub_012DB7(void);
+void moving_scenery_update(void);
 void sub_012EA2(void);
 void sub_012FBC(void);
 void sub_01307E(void);
-void sub_013104(void);
+void flagman_update(void);
 void sub_0131A5(void);
 void sub_01322D(void);
 void sub_013288(void);
@@ -765,33 +765,33 @@ void sub_018827(void);
 void sub_018863(void);
 void sub_0188BE(void);
 void sub_0189D9(void);
-void sub_018AF0(void);
-void sub_018BA0(void);
-void sub_018BB2(void);
-void sub_018C8C(void);
-void sub_018C99(void);
-void sub_018DBC(void);
-void sub_018DC9(void);
-void sub_018DDF(uint32_t r0, uint32_t r10);
-void sub_018E32(void);
-void sub_018E98(void);
-void sub_018F74(void);
-void sub_018FD3(void);
-void sub_018FE0(void);
-void sub_01900A(void);
-void sub_01929E(void);
-void sub_0192B1(void);
-void sub_0192BC(void);
-void sub_0192C3(void);
-void sub_0192CA(void);
-void sub_0192D1(void);
-void sub_0192D8(void);
-uint32_t sub_0192E5(uint32_t r0);
-void sub_0192F5(uint32_t r10);
-uint32_t sub_01930A(uint32_t r10);
+void clear_lcd(void);
+void lcd_race_info_start(void);
+void lcd_race_info_update(void);
+void lcd_race_info_time_page(void);
+void lcd_race_info_time(void);
+void lcd_race_info_average_page(void);
+void lcd_race_info_average(void);
+void lcd_race_info_write_number(uint32_t r0, uint32_t r10);
+void lcd_race_info_finish(void);
+void lcd_race_info_paused(void);
+void car_radio_start(void);
+void car_radio_wait_start(void);
+void car_radio_read_buttons(void);
+void car_radio_update(void);
+void car_radio_dj_leader(void);
+void car_radio_dj_own_car(void);
+void car_radio_dj_remark_2a(void);
+void car_radio_dj_remark_2b(void);
+void car_radio_dj_remark_2d(void);
+void car_radio_dj_remark_2f(void);
+void car_radio_dj_remark_2c(void);
+uint32_t car_radio_song(uint32_t r0);
+void car_radio_show_title(uint32_t r10);
+uint32_t start_song_title(uint32_t r10);
 void sub_019322(void);
-void sub_0193FC(uint8_t r0);
-void sub_019402(uint8_t r0);
+void start_dj_message_if_quiet(uint8_t r0);
+void start_dj_message(uint8_t r0);
 void sub_019CAC(void);
 void sub_019E6B(void);
 void sub_019F4C(void);

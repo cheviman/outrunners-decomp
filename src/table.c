@@ -25,11 +25,11 @@ static void call_0006B0(void)
 	second_task(0u);
 }
 
-/* How call_code() runs sub_0018A4 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs staff_credits_code_watch from a slot that holds its address: with 0 for what it
+   takes, and what it hands back dropped. */
 static void call_0018A4(void)
 {
-	sub_0018A4(0, 0);
+	staff_credits_code_watch(0, 0);
 }
 
 /* How call_code() runs sub_00C857 from a slot that holds its address: with 0 for what it takes, and what
@@ -39,11 +39,11 @@ static void call_00C857(void)
 	sub_00C857(0);
 }
 
-/* How call_code() runs sub_00EAE4 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs draw_object from a slot that holds its address: with 0 for what it takes, and
+   what it hands back dropped. */
 static void call_00EAE4(void)
 {
-	sub_00EAE4(0);
+	draw_object(0);
 }
 
 /* How call_code() runs sub_0138EB from a slot that holds its address: with 0 for what it takes, and what
@@ -124,10 +124,10 @@ const game_code_entry game_code[] =
 	{ 0x001141u, sub_001141 },
 	{ 0x0011ABu, sub_0011AB },
 	{ 0x001687u, sub_001687 },
-	{ 0x001894u, sub_001894 },
+	{ 0x001894u, staff_credits_code_start },
 	{ 0x0018A4u, call_0018A4 },
-	{ 0x0018E5u, sub_0018E5 },
-	{ 0x0018FEu, sub_0018FE },
+	{ 0x0018E5u, staff_credits_code_show },
+	{ 0x0018FEu, staff_credits_code_done },
 	{ 0x001980u, sub_001980 },
 	{ 0x0019C0u, sub_0019C0 },
 	{ 0x001EC2u, sub_001EC2 },
@@ -158,21 +158,21 @@ const game_code_entry game_code[] =
 	{ 0x00463Cu, sub_00463C },
 	{ 0x0046BBu, sub_0046BB },
 	{ 0x004771u, sub_004771 },
-	{ 0x005030u, sub_005030 },
-	{ 0x00503Du, sub_00503D },
+	{ 0x005030u, car_select_start },
+	{ 0x00503Du, car_select_run },
 	{ 0x005526u, sub_005526 },
 	{ 0x0056B4u, sub_0056B4 },
 	{ 0x005762u, sub_005762 },
-	{ 0x005862u, sub_005862 },
-	{ 0x005883u, sub_005883 },
+	{ 0x005862u, welcome_letter_start },
+	{ 0x005883u, welcome_letter_show },
 	{ 0x005908u, sub_005908 },
 	{ 0x0059B8u, sub_0059B8 },
 	{ 0x005A1Du, sub_005A1D },
 	{ 0x005B45u, sub_005B45 },
 	{ 0x005BD6u, sub_005BD6 },
-	{ 0x005C71u, sub_005C71 },
-	{ 0x005CA4u, sub_005CA4 },
-	{ 0x005CE5u, sub_005CE5 },
+	{ 0x005C71u, transmission_label_start_automatic },
+	{ 0x005CA4u, transmission_label_start_manual },
+	{ 0x005CE5u, transmission_label_follow },
 	{ 0x005D14u, sub_005D14 },
 	{ 0x005D5Cu, sub_005D5C },
 	{ 0x005E10u, sub_005E10 },
@@ -184,13 +184,13 @@ const game_code_entry game_code[] =
 	{ 0x00613Fu, sub_00613F },
 	{ 0x006173u, sub_006173 },
 	{ 0x0061A2u, sub_0061A2 },
-	{ 0x006356u, sub_006356 },
-	{ 0x0063F9u, sub_0063F9 },
-	{ 0x006463u, sub_006463 },
-	{ 0x0064E2u, sub_0064E2 },
-	{ 0x006514u, sub_006514 },
-	{ 0x00652Au, sub_00652A },
-	{ 0x006560u, sub_006560 },
+	{ 0x006356u, entry_countdown_start },
+	{ 0x0063F9u, entry_countdown_count },
+	{ 0x006463u, entry_countdown_done },
+	{ 0x0064E2u, entry_banner_start },
+	{ 0x006514u, entry_banner_blink },
+	{ 0x00652Au, entry_car_ring_start },
+	{ 0x006560u, entry_car_ring_draw },
 	{ 0x00660Fu, sub_00660F },
 	{ 0x00664Eu, sub_00664E },
 	{ 0x006EF0u, sub_006EF0 },
@@ -208,8 +208,8 @@ const game_code_entry game_code[] =
 	{ 0x00C2ACu, sub_00C2AC },
 	{ 0x00C342u, sub_00C342 },
 	{ 0x00C43Eu, sub_00C43E },
-	{ 0x00C553u, sub_00C553 },
-	{ 0x00C585u, sub_00C585 },
+	{ 0x00C553u, stage_indicator_start },
+	{ 0x00C585u, stage_indicator_draw },
 	{ 0x00C59Cu, sub_00C59C },
 	{ 0x00C65Fu, sub_00C65F },
 	{ 0x00C7ECu, sub_00C7EC },
@@ -225,21 +225,21 @@ const game_code_entry game_code[] =
 	{ 0x00EAE4u, call_00EAE4 },
 	{ 0x0126FCu, sub_0126FC },
 	{ 0x0127EEu, sub_0127EE },
-	{ 0x01287Cu, sub_01287C },
-	{ 0x012906u, sub_012906 },
-	{ 0x0129ABu, sub_0129AB },
-	{ 0x0129F4u, sub_0129F4 },
+	{ 0x01287Cu, scenery_update },
+	{ 0x012906u, flashing_scenery_update },
+	{ 0x0129ABu, scenery_pair_update },
+	{ 0x0129F4u, overhead_scenery_update },
 	{ 0x012A20u, sub_012A20 },
-	{ 0x012ACFu, sub_012ACF },
-	{ 0x012AF4u, sub_012AF4 },
-	{ 0x012B84u, sub_012B84 },
-	{ 0x012BAEu, sub_012BAE },
+	{ 0x012ACFu, fork_sign_update },
+	{ 0x012AF4u, animated_scenery_update },
+	{ 0x012B84u, animated_scenery_pair_update },
+	{ 0x012BAEu, road_crosser_update },
 	{ 0x012CAAu, sub_012CAA },
-	{ 0x012DB7u, sub_012DB7 },
+	{ 0x012DB7u, moving_scenery_update },
 	{ 0x012EA2u, sub_012EA2 },
 	{ 0x012FBCu, sub_012FBC },
 	{ 0x01307Eu, sub_01307E },
-	{ 0x013104u, sub_013104 },
+	{ 0x013104u, flagman_update },
 	{ 0x0131A5u, sub_0131A5 },
 	{ 0x01322Du, sub_01322D },
 	{ 0x013288u, sub_013288 },
@@ -293,14 +293,14 @@ const game_code_entry game_code[] =
 	{ 0x01854Au, sub_01854A },
 	{ 0x0185D2u, sub_0185D2 },
 	{ 0x01864Au, call_01864A },
-	{ 0x018BA0u, sub_018BA0 },
-	{ 0x018BB2u, sub_018BB2 },
-	{ 0x018E32u, sub_018E32 },
-	{ 0x018E98u, sub_018E98 },
-	{ 0x018F74u, sub_018F74 },
-	{ 0x018FD3u, sub_018FD3 },
-	{ 0x018FE0u, sub_018FE0 },
-	{ 0x01900Au, sub_01900A },
+	{ 0x018BA0u, lcd_race_info_start },
+	{ 0x018BB2u, lcd_race_info_update },
+	{ 0x018E32u, lcd_race_info_finish },
+	{ 0x018E98u, lcd_race_info_paused },
+	{ 0x018F74u, car_radio_start },
+	{ 0x018FD3u, car_radio_wait_start },
+	{ 0x018FE0u, car_radio_read_buttons },
+	{ 0x01900Au, car_radio_update },
 	{ 0x019322u, sub_019322 },
 	{ 0x019CACu, sub_019CAC },
 	{ 0x019E6Bu, sub_019E6B },

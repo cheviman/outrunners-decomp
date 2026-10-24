@@ -1142,8 +1142,8 @@
 #define rom_019561 ((const uint16_t *)rom(rom_019561_ADDRESS))
 #define rom_019571_ADDRESS 0x019571u
 #define rom_019571 ((const uint8_t *)rom(rom_019571_ADDRESS))
-#define typed_messages_ADDRESS 0x019576u
-#define typed_messages ((const uint32_t *)rom(typed_messages_ADDRESS))
+#define dj_messages_ADDRESS 0x019576u
+#define dj_messages ((const uint32_t *)rom(dj_messages_ADDRESS))
 #define routine_lists_1966C_ADDRESS 0x01966Cu
 #define routine_lists_1966C ((const uint32_t *)rom(routine_lists_1966C_ADDRESS))
 #define rom_019CB8_ADDRESS 0x019CB8u
@@ -1469,109 +1469,379 @@
 #pragma pack(push, 1)
 struct object
 {
-	uint8_t unk_00;
+	uint8_t flags;
 	uint8_t unk_01;
 	uint16_t unk_02;
-	uint32_t unk_04;
-	uint32_t unk_08;
-	uint8_t unk_0C;
-	uint8_t unk_0D;
-	uint8_t unk_0E;
-	uint8_t unk_0F;
-	uint16_t unk_10;
-	uint8_t unk_12;
-	uint8_t unk_13;
-	uint32_t unk_14;
-	uint32_t unk_18;
-	uint16_t unk_1C;
-	uint8_t unk_1E;
-	uint8_t pad_1F[0x1];
-	uint16_t unk_20;
-	uint8_t unk_22;
-	uint8_t unk_23;
-	uint16_t unk_24;
-	uint8_t pad_26[0x2];
-	uint32_t unk_28;
-	uint16_t unk_2C;
-	uint16_t unk_2E;
-	uint16_t unk_30;
-	uint16_t unk_32;
-	uint16_t unk_34;
-	uint16_t unk_36;
-	uint16_t unk_38;
-	uint16_t unk_3A;
-	uint16_t unk_3C;
-	uint8_t unk_3E;
-	uint8_t unk_3F;
-	uint8_t unk_40;
-	uint8_t unk_41;
-	uint8_t unk_42;
-	uint8_t unk_43;
-	uint8_t unk_44;
-	uint8_t unk_45;
-	uint8_t pad_46[0xA];
-	uint32_t unk_50;
-	uint32_t unk_54;
-	uint16_t unk_58;
-	uint8_t pad_5A[0x2];
-	uint32_t unk_5C;
-	uint32_t unk_60;
-	uint32_t unk_64;
-	uint16_t unk_68;
-	uint16_t unk_6A;
-	uint32_t unk_6C;
-	uint32_t unk_70;
-	uint32_t unk_74;
-	uint32_t unk_78;
-	uint32_t unk_7C;
-	uint32_t unk_80;
-	uint16_t unk_84;
-	uint8_t unk_86;
-	uint8_t unk_87;
-	uint32_t unk_88;
-	uint32_t unk_8C;
-	uint32_t unk_90;
-	uint32_t unk_94;
-	uint32_t unk_98;
-	uint32_t unk_9C;
-	uint32_t unk_A0;
-	uint32_t unk_A4;
-	uint32_t unk_A8;
-	uint32_t unk_AC;
-	uint32_t unk_B0;
-	uint32_t unk_B4;
-	uint16_t unk_B8;
-	uint16_t unk_BA;
-	uint8_t unk_BC;
-	uint8_t unk_BD;
-	uint8_t pad_BE[0x1];
-	uint8_t unk_BF;
-	uint32_t unk_C0;
-	uint32_t unk_C4;
-	uint32_t unk_C8;
-	uint16_t unk_CC;
-	uint16_t unk_CE;
-	uint8_t unk_D0;
-	uint8_t unk_D1;
-	uint8_t unk_D2;
-	uint8_t pad_D3[0x6];
-	uint8_t unk_D9;
-	uint8_t unk_DA;
-	uint8_t unk_DB;
-	uint8_t unk_DC;
-	uint8_t pad_DD[0x3];
-	uint8_t unk_E0;
-	uint8_t unk_E1;
-	uint16_t unk_E2;
-	uint8_t unk_E4;
-	uint8_t pad_E5[0xB];
-	uint16_t unk_F0;
-	uint16_t unk_F2;
-	uint16_t unk_F4;
-	uint8_t unk_F6;
-	uint8_t unk_F7;
-	uint8_t unk_F8;
-	uint8_t pad_F9[0x7];
+	uint32_t handler;
+	union
+	{
+		struct
+		{
+			uint32_t unk_08;
+			uint8_t state;
+			uint8_t unk_0D;
+			uint8_t unk_0E;
+			uint8_t unk_0F;
+			uint16_t unk_10;
+			uint8_t unk_12;
+			uint8_t unk_13;
+			uint32_t unk_14;
+			uint32_t unk_18;
+			uint16_t unk_1C;
+			uint8_t unk_1E;
+			uint8_t pad_1F[0x1];
+			uint16_t unk_20;
+			uint8_t unk_22;
+			uint8_t unk_23;
+			uint16_t unk_24;
+			uint8_t pad_26[0x2];
+			uint32_t unk_28;
+			uint16_t unk_2C;
+			uint16_t unk_2E;
+			uint16_t unk_30;
+			uint16_t unk_32;
+			uint16_t unk_34;
+			uint16_t unk_36;
+			uint16_t unk_38;
+			uint16_t unk_3A;
+			uint16_t unk_3C;
+			uint8_t unk_3E;
+			uint8_t unk_3F;
+			uint8_t unk_40;
+			uint8_t unk_41;
+			uint8_t unk_42;
+			uint8_t unk_43;
+			uint8_t unk_44;
+			uint8_t unk_45;
+			uint8_t pad_46[0xA];
+			uint32_t unk_50;
+			uint32_t unk_54;
+			uint16_t unk_58;
+			uint8_t pad_5A[0x2];
+			uint32_t unk_5C;
+			uint32_t unk_60;
+			uint32_t unk_64;
+			uint16_t unk_68;
+			uint16_t unk_6A;
+			uint32_t unk_6C;
+			uint32_t unk_70;
+			uint32_t unk_74;
+			uint32_t unk_78;
+			uint32_t unk_7C;
+			uint32_t unk_80;
+			uint16_t unk_84;
+			uint8_t unk_86;
+			uint8_t unk_87;
+			uint32_t unk_88;
+			uint32_t unk_8C;
+			uint32_t unk_90;
+			uint32_t unk_94;
+			uint32_t unk_98;
+			uint32_t unk_9C;
+			uint32_t unk_A0;
+			uint32_t unk_A4;
+			uint32_t unk_A8;
+			uint32_t unk_AC;
+			uint32_t unk_B0;
+			uint32_t unk_B4;
+			uint16_t unk_B8;
+			uint16_t unk_BA;
+			uint8_t unk_BC;
+			uint8_t unk_BD;
+			uint8_t pad_BE[0x1];
+			uint8_t unk_BF;
+			uint32_t unk_C0;
+			uint32_t unk_C4;
+			uint32_t unk_C8;
+			uint16_t unk_CC;
+			uint16_t unk_CE;
+			uint8_t unk_D0;
+			uint8_t unk_D1;
+			uint8_t unk_D2;
+			uint8_t pad_D3[0x6];
+			uint8_t unk_D9;
+			uint8_t unk_DA;
+			uint8_t unk_DB;
+			uint8_t unk_DC;
+			uint8_t pad_DD[0x3];
+			uint8_t unk_E0;
+			uint8_t unk_E1;
+			uint16_t unk_E2;
+			uint8_t unk_E4;
+			uint8_t pad_E5[0xB];
+			uint16_t unk_F0;
+			uint16_t unk_F2;
+			uint16_t unk_F4;
+			uint8_t unk_F6;
+			uint8_t unk_F7;
+			uint8_t unk_F8;
+			uint8_t pad_F9[0x7];
+		};
+		struct
+		{
+			uint8_t pad_08[0x30];
+			uint16_t animation;
+			uint8_t pad_3A[0x6];
+			uint8_t frame;
+			uint8_t frame_time;
+			int8_t frame_countdown;
+			uint8_t size_step;
+		} animation;
+		struct
+		{
+			uint8_t pad_08[0x1];
+			uint8_t car_number;
+			uint8_t stage;
+			uint8_t queued_message;
+			uint8_t pad_0C[0x1];
+			uint8_t talk_step;
+			uint8_t pad_0E[0x2];
+			uint8_t timer;
+			uint8_t pad_11[0x7];
+			uint32_t title;
+			uint8_t pad_1C[0x10];
+			uint16_t buttons;
+			uint8_t pad_2E[0xA];
+			uint32_t remark_list;
+			uint8_t pad_3C[0x44];
+			uint8_t car_models;
+			uint8_t pad_81[0x7];
+			uint8_t cars_to_introduce;
+			uint8_t next_car_number;
+		} car_radio;
+		struct
+		{
+			uint8_t pad_08[0x1];
+			int8_t turn;
+			int8_t turn_delay;
+			uint8_t confirm_delay;
+			uint8_t pad_0C[0x1];
+			uint8_t gas_down;
+			uint8_t rowscroll_copies;
+			uint8_t choice_turn;
+			uint16_t timer;
+			uint8_t pad_12[0xA];
+			uint16_t time_left;
+			uint8_t pad_1E[0x6];
+			uint16_t angle;
+			uint8_t pad_26[0x2];
+			uint16_t top_scroll;
+			uint8_t pad_2A[0x2];
+			uint8_t car_chosen;
+			uint8_t transmission_chosen;
+			uint8_t pad_2E[0x6A];
+			uint32_t scroll_x_address;
+			uint32_t scroll_y_address;
+			uint32_t rowscroll_address;
+			uint32_t rowselect_address;
+			uint32_t second_scroll_x_address;
+			uint32_t second_scroll_y_address;
+			uint8_t entry_over;
+		} car_select;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint8_t blink;
+		} entry_banner;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint8_t copies;
+			uint8_t pad_11[0x1];
+			uint8_t car;
+		} entry_car_ring;
+		struct
+		{
+			uint8_t pad_08[0xC];
+			uint32_t car_ring;
+		} entry_countdown;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint16_t draw_distance;
+			uint8_t pad_12[0x6];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x14];
+			uint16_t palette;
+			uint8_t pad_3C[0x2];
+			uint8_t draw_mode;
+			int8_t side;
+			uint8_t pad_40[0x4];
+			uint8_t scale_shift;
+			uint8_t pad_45[0x11];
+			int16_t appear_position;
+			uint8_t pad_58[0x28];
+			uint16_t in_view_animation;
+		} flagman;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint16_t spacing;
+			uint16_t count;
+			uint8_t pad_14[0x4];
+			uint32_t palette_cycle;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x14];
+			uint16_t palette;
+			uint8_t pad_3C[0x3];
+			int8_t side;
+			uint8_t pad_40[0x4];
+			uint8_t scale_shift;
+			uint8_t size_table;
+			uint8_t pad_46[0x10];
+			int16_t first_position;
+			int16_t end_position;
+			uint8_t pad_5A[0x6];
+			uint32_t hit_box;
+		} flashing_scenery;
+		struct
+		{
+			uint8_t pad_08[0x1];
+			uint8_t player_count;
+			uint8_t pad_0A[0x3];
+			uint8_t page;
+			uint8_t page_step;
+			uint8_t pad_0F[0x1];
+			uint16_t frames;
+			uint16_t page_frames;
+			uint8_t pad_14[0x4];
+			uint32_t order_list;
+		} lcd_race_info;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint16_t draw_distance;
+			uint8_t pad_12[0x6];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0xA];
+			int16_t screen_x;
+			uint8_t pad_32[0x8];
+			uint16_t palette;
+			uint8_t pad_3C[0x2];
+			uint8_t draw_mode;
+			int8_t side;
+			uint8_t pad_40[0x4];
+			uint8_t scale_shift;
+			uint8_t pad_45[0x11];
+			int16_t appear_position;
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
+			uint16_t trigger_distance;
+			int16_t x_speed;
+			int16_t y_speed;
+			int16_t road_speed;
+		} moving_scenery;
+		struct
+		{
+			uint8_t pad_08[0x54];
+			uint8_t screen_centered;
+		} overhead_scenery;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint16_t draw_distance;
+			uint8_t pad_12[0x6];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0xA];
+			int16_t screen_x;
+			uint8_t pad_32[0x8];
+			uint16_t palette;
+			uint8_t pad_3C[0x2];
+			uint8_t draw_mode;
+			int8_t side;
+			uint8_t pad_40[0x4];
+			uint8_t scale_shift;
+			uint8_t pad_45[0x11];
+			int16_t appear_position;
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
+			uint16_t crossing_animation;
+			uint16_t trigger_distance;
+			int16_t x_speed;
+		} road_crosser;
+		struct
+		{
+			uint8_t pad_08[0x8];
+			uint16_t spacing;
+			uint16_t count;
+			uint8_t pad_14[0x4];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x2];
+			uint16_t position_fraction;
+			uint8_t pad_2A[0xE];
+			uint16_t animation;
+			uint16_t palette;
+			uint8_t pad_3C[0x3];
+			int8_t side;
+			uint8_t frame;
+			uint8_t pad_41[0x2];
+			uint8_t size_step;
+			uint8_t scale_shift;
+			uint8_t size_table;
+			uint8_t pad_46[0xA];
+			uint32_t previous_sprites;
+			uint8_t pad_54[0x2];
+			int16_t first_position;
+			int16_t end_position;
+			uint8_t pad_5A[0x2];
+			uint8_t screen_centered;
+			uint8_t pad_5D[0x3];
+			uint32_t hit_box;
+		} road_row;
+		struct
+		{
+			uint8_t pad_08[0x1];
+			uint8_t controls_held;
+			uint8_t pad_0A[0x6];
+			uint16_t frames_left;
+			uint8_t pad_12[0x2];
+			uint32_t presentation;
+			uint32_t code_place;
+		} staff_credits_code;
+		struct
+		{
+			uint8_t pad_08[0xC];
+			uint32_t panel;
+			uint8_t pad_18[0x8];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+		} transmission_label;
+		struct
+		{
+			uint8_t pad_08[0x1];
+			uint8_t index;
+			uint8_t pad_0A[0x6];
+			int16_t delay;
+			uint16_t frames_left;
+			uint8_t pad_14[0x4];
+			uint32_t palette_list;
+		} welcome_letter;
+	};
 };
 
 struct car

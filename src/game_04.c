@@ -34,7 +34,7 @@ void sub_01854A(void)
 	if ((r0 & 1u) == 0u)
 	{
 		SCREEN(screen)->unk_206 = 0u;
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 	}
 }
 
@@ -43,7 +43,7 @@ uint32_t sub_018581(uint8_t r0, uint8_t r1, uint32_t r10, uint32_t r11)
 	uint8_t r0_2 = 0;
 	uint32_t r21 = 0;
 
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_0185D2_ADDRESS);
 	mem_write16(r21 + 0x28u, 8u);
 	mem_write32(r21 + 0x2Cu, r21 + 0x34u);
@@ -92,7 +92,7 @@ void sub_0185D2(void)
 	r11 += 2u;
 	if (t1 == 1u)
 	{
-		OBJECT(current_object)->unk_04 = sub_01864A_ADDRESS;
+		OBJECT(current_object)->handler = sub_01864A_ADDRESS;
 		sub_01864A(r0);
 		return;
 	}
@@ -114,7 +114,7 @@ void sub_01864A(uint32_t r0)
 		r0_2 = (r0 & ~0xFFu) | SCREEN(screen)->unk_153;
 		if ((int8_t)r0_2 <= 5 && (r0_2 & 1u) == 0u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
 	}
@@ -316,7 +316,7 @@ void sub_01864A(uint32_t r0)
 		r11 += 2u;
 		r9--;
 	} while (r9 != 0u);
-	OBJECT(current_object)->unk_00 = 0u;
+	OBJECT(current_object)->flags = 0u;
 }
 
 void sub_0186FC(void)
@@ -738,7 +738,9 @@ void sub_0189D9(void)
 	SCREEN(screen)->unk_F48--;
 }
 
-void sub_018AF0(void)
+/* Clears the cabinet's LCD: sixteen spaces, no DJ message (screen unk_F30), no scrolling text (unk_F40,
+   unk_F44), the DJ's face off (unk_F35). */
+void clear_lcd(void)
 {
 	uint32_t r10 = 0;
 
@@ -756,41 +758,51 @@ void sub_018AF0(void)
 	SCREEN(screen)->unk_F44 = 0u;
 }
 
-void sub_018BA0(void)
+/* Starts the race information on the cabinet LCD: clears it (clear_lcd), shows the DJ's face in its
+   first two characters (screen unk_F35) and goes on to lcd_race_info_update. */
+void lcd_race_info_start(void)
 {
-	sub_018AF0();
+	clear_lcd();
 	SCREEN(screen)->unk_F35 = 0xFFu;
-	OBJECT(current_object)->unk_04 = sub_018BB2_ADDRESS;
-	sub_018BB2();
+	OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
+	lcd_race_info_update();
 }
 
-void sub_018BB2(void)
+/* Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames
+   to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150
+   frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, unk_20E030 + 1,
+   in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen
+   unk_F50), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1 updates
+   the number. When the car reaches the goal (car unk_181) goes to lcd_race_info_finish; when the race is
+   over (car unk_182) shows the average and ends; while the LCD scrolls a text (screen unk_F44) waits in
+   lcd_race_info_paused. */
+void lcd_race_info_update(void)
 {
 	uint8_t r0_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r11 = 0;
-	uint16_t t1 = 0;
+	uint16_t page_frames = 0;
 
 	if (CAR(player_car)->unk_181 != 0u)
 	{
-		OBJECT(current_object)->unk_0C = 0u;
-		OBJECT(current_object)->unk_04 = sub_018E32_ADDRESS;
-		sub_018E32();
+		OBJECT(current_object)->state = 0u;
+		OBJECT(current_object)->handler = lcd_race_info_finish_ADDRESS;
+		lcd_race_info_finish();
 		return;
 	}
 	if (CAR(player_car)->unk_182 != 0u)
 	{
-		OBJECT(current_object)->unk_00 = 0u;
-		sub_018DBC();
+		OBJECT(current_object)->flags = 0u;
+		lcd_race_info_average_page();
 		return;
 	}
 	if (SCREEN(screen)->unk_F44 != 0u)
 	{
-		OBJECT(current_object)->unk_0C = 1u;
-		OBJECT(current_object)->unk_04 = sub_018E98_ADDRESS;
-		sub_018E98();
+		OBJECT(current_object)->state = 1u;
+		OBJECT(current_object)->handler = lcd_race_info_paused_ADDRESS;
+		lcd_race_info_paused();
 		return;
 	}
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		r0 = OBJECT(CAR(player_car)->object)->unk_10;
@@ -802,139 +814,137 @@ void sub_018BB2(void)
 			AT8(SCREEN(screen)->unk_F18, 1) = r0 + 0x31u;
 			return;
 		}
-		AT8(OBJECT(current_object)->unk_08, 1) = mem_read8(SCREEN(screen)->unk_308 + 0x1Fu);
-		OBJECT(current_object)->unk_18 = SCREEN(screen)->unk_308 + 0x20u;
-		OBJECT(current_object)->unk_12 = 0x96u;
-		OBJECT(current_object)->unk_13 = 0u;
-		OBJECT(current_object)->unk_0C++;
-		OBJECT(current_object)->unk_0E = 0u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->lcd_race_info.player_count = mem_read8(SCREEN(screen)->unk_308 + 0x1Fu);
+		OBJECT(current_object)->lcd_race_info.order_list = SCREEN(screen)->unk_308 + 0x20u;
+		OBJECT(current_object)->lcd_race_info.page_frames = 0x96u;
+		OBJECT(current_object)->state++;
+		OBJECT(current_object)->lcd_race_info.page_step = 0u;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
-		OBJECT(current_object)->unk_0E = 0u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->lcd_race_info.page_step = 0u;
+		OBJECT(current_object)->state++;
 		break;
 	case 2:
 		break;
 	default:
-		invalid_jump(rom_018BD4[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_018BD4[OBJECT(current_object)->state]);
 	}
-	t1 = AS16(OBJECT(current_object)->unk_12);
-	AS16(OBJECT(current_object)->unk_12) = t1 - 1u;
-	if (t1 == 1u)
+	page_frames = OBJECT(current_object)->lcd_race_info.page_frames;
+	OBJECT(current_object)->lcd_race_info.page_frames = page_frames - 1u;
+	if (page_frames == 1u)
 	{
-		r0_2 = (uint8_t)(OBJECT(current_object)->unk_0D + 1u);
+		r0_2 = (uint8_t)(OBJECT(current_object)->lcd_race_info.page + 1u);
 		if ((int8_t)r0_2 >= 5)
 			r0_2 = 0u;
-		OBJECT(current_object)->unk_0D = r0_2;
-		OBJECT(current_object)->unk_0E = 0u;
-		OBJECT(current_object)->unk_12 = 0x96u;
-		OBJECT(current_object)->unk_13 = 0u;
+		OBJECT(current_object)->lcd_race_info.page = r0_2;
+		OBJECT(current_object)->lcd_race_info.page_step = 0u;
+		OBJECT(current_object)->lcd_race_info.page_frames = 0x96u;
 	}
-	switch (OBJECT(current_object)->unk_0D)
+	switch (OBJECT(current_object)->lcd_race_info.page)
 	{
 	case 0:
-		switch (OBJECT(current_object)->unk_0E)
+		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			sub_018C8C();
+			lcd_race_info_time_page();
 			return;
 		case 1:
-			sub_018C99();
+			lcd_race_info_time();
 			return;
 		default:
-			invalid_jump(rom_018C84[OBJECT(current_object)->unk_0E]);
+			invalid_jump(rom_018C84[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
 	case 1:
 		break;
 	case 2:
-		switch (OBJECT(current_object)->unk_0E)
+		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
 			move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-			OBJECT(current_object)->unk_0E++;
+			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		default:
-			invalid_jump(rom_018D5C[OBJECT(current_object)->unk_0E]);
+			invalid_jump(rom_018D5C[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		r10 = screen + 0xF1Cu;
 		r0 = SCREEN(screen)->unk_F50;
-		sub_018DDF(r0, r10);
+		lcd_race_info_write_number(r0, r10);
 		return;
 	case 3:
-		switch (OBJECT(current_object)->unk_0E)
+		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
 			move_string(0x18F48u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-			OBJECT(current_object)->unk_0E++;
+			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		default:
-			invalid_jump(rom_018D88[OBJECT(current_object)->unk_0E]);
+			invalid_jump(rom_018D88[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		r10 = screen + 0xF1Cu;
 		r0 = SCREEN(screen)->unk_F52;
-		sub_018DDF(r0, r10);
+		lcd_race_info_write_number(r0, r10);
 		return;
 	case 4:
-		switch (OBJECT(current_object)->unk_0E)
+		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			sub_018DBC();
+			lcd_race_info_average_page();
 			return;
 		case 1:
-			sub_018DC9();
+			lcd_race_info_average();
 			return;
 		default:
-			invalid_jump(rom_018DB4[OBJECT(current_object)->unk_0E]);
+			invalid_jump(rom_018DB4[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
 	default:
-		invalid_jump(rom_018C64[OBJECT(current_object)->unk_0D]);
+		invalid_jump(rom_018C64[OBJECT(current_object)->lcd_race_info.page]);
 	}
-	switch (OBJECT(current_object)->unk_0E)
+	switch (OBJECT(current_object)->lcd_race_info.page_step)
 	{
 	case 0:
 		if (mem_read8(SCREEN(screen)->unk_308 + 0x1Fu) == 1u)
 		{
-			OBJECT(current_object)->unk_0D++;
-			switch (OBJECT(current_object)->unk_0E)
+			OBJECT(current_object)->lcd_race_info.page++;
+			switch (OBJECT(current_object)->lcd_race_info.page_step)
 			{
 			case 0:
 				move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-				OBJECT(current_object)->unk_0E++;
+				OBJECT(current_object)->lcd_race_info.page_step++;
 				break;
 			case 1:
 				break;
 			default:
-				invalid_jump(rom_018D5C[OBJECT(current_object)->unk_0E]);
+				invalid_jump(rom_018D5C[OBJECT(current_object)->lcd_race_info.page_step]);
 			}
 			r10 = screen + 0xF1Cu;
 			r0 = SCREEN(screen)->unk_F50;
-			sub_018DDF(r0, r10);
+			lcd_race_info_write_number(r0, r10);
 			return;
 		}
 		move_string(0x18F2Cu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-		OBJECT(current_object)->unk_10 = 0u;
-		OBJECT(current_object)->unk_0E++;
+		OBJECT(current_object)->lcd_race_info.frames = 0u;
+		OBJECT(current_object)->lcd_race_info.page_step++;
 		break;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_018CF0[OBJECT(current_object)->unk_0E]);
+		invalid_jump(rom_018CF0[OBJECT(current_object)->lcd_race_info.page_step]);
 	}
 	r10 = screen + 0xF18u;
-	r11 = OBJECT(current_object)->unk_18;
-	r9 = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
+	r11 = OBJECT(current_object)->lcd_race_info.order_list;
+	r9 = OBJECT(current_object)->lcd_race_info.player_count;
 	do
 	{
 		r0 = mem_read8(r11);
 		r11++;
-		if (SCREEN(screen)->unk_01 != r0 || (OBJECT(current_object)->unk_10 & 8u) == 0u)
+		if (SCREEN(screen)->unk_01 != r0 || (OBJECT(current_object)->lcd_race_info.frames & 8u) == 0u)
 			r0_2 = (uint8_t)(unk_20E030[r0] + 0x31u);
 		else
 			r0_2 = 0x20u;
@@ -942,17 +952,20 @@ void sub_018BB2(void)
 		r9--;
 		r10++;
 	} while (r9 != 0u);
-	OBJECT(current_object)->unk_10++;
+	OBJECT(current_object)->lcd_race_info.frames++;
 }
 
-void sub_018C8C(void)
+/* Writes the Time page's label on the LCD, then the time (lcd_race_info_time). */
+void lcd_race_info_time_page(void)
 {
 	move_string(0x18F1Eu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-	OBJECT(current_object)->unk_0E++;
-	sub_018C99();
+	OBJECT(current_object)->lcd_race_info.page_step++;
+	lcd_race_info_time();
 }
 
-void sub_018C99(void)
+/* Writes the race time (the car's unk_04, in thousandths of a second) on the LCD as
+   minutes'seconds"hundredths. */
+void lcd_race_info_time(void)
 {
 	uint32_t r0 = 0, r1 = 0, r10 = 0;
 
@@ -976,14 +989,17 @@ void sub_018C99(void)
 	mem_write8(r10 - 1u - 1u, r0 + 0x30u);
 }
 
-void sub_018DBC(void)
+/* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */
+void lcd_race_info_average_page(void)
 {
 	move_string(0x18F56u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-	OBJECT(current_object)->unk_0E++;
-	sub_018DC9();
+	OBJECT(current_object)->lcd_race_info.page_step++;
+	lcd_race_info_average();
 }
 
-void sub_018DC9(void)
+/* Writes the average speed on the LCD: the sum of the speeds (screen unk_F54) over how many there are
+   (unk_F58), with lcd_race_info_write_number. */
+void lcd_race_info_average(void)
 {
 	uint32_t r0 = 0, r1 = 0, r10 = 0;
 
@@ -992,14 +1008,16 @@ void sub_018DC9(void)
 	r1 = SCREEN(screen)->unk_F58;
 	if (r1 == 0u)
 	{
-		sub_018DDF(r0, r10);
+		lcd_race_info_write_number(r0, r10);
 		return;
 	}
 	r0 = divide_u32(r0, r1);
-	sub_018DDF(r0, r10);
+	lcd_race_info_write_number(r0, r10);
 }
 
-void sub_018DDF(uint32_t r0, uint32_t r10)
+/* Writes a number of up to three digits on the LCD, right-aligned to end before the address it is given
+   (F1C of the screen for the km/h pages), spaces for the leading zeros. */
+void lcd_race_info_write_number(uint32_t r0, uint32_t r10)
 {
 	uint32_t zero = 0;
 	uint8_t r2 = 0;
@@ -1040,72 +1058,79 @@ void sub_018DDF(uint32_t r0, uint32_t r10)
 	AT8(SCREEN(r10 - 0xF1Au)->unk_F18, 1) = r0 + r2;
 }
 
-void sub_018E32(void)
+/* The car has reached the goal: shows */
+void lcd_race_info_finish(void)
 {
-	uint16_t t1 = 0;
+	uint16_t frames = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		move_string(0x18F64u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->unk_F44 == 0u)
 			return;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		if (SCREEN(screen)->unk_F44 == 0u)
 			return;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->unk_F44 != 0u)
 			return;
-		sub_018DBC();
-		OBJECT(current_object)->unk_10 = 0x96u;
-		OBJECT(current_object)->unk_0C++;
-		t1 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t1 - 1u;
-		if (t1 != 1u)
+		lcd_race_info_average_page();
+		OBJECT(current_object)->lcd_race_info.frames = 0x96u;
+		OBJECT(current_object)->state++;
+		frames = OBJECT(current_object)->lcd_race_info.frames;
+		OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+		if (frames != 1u)
 			return;
-		OBJECT(current_object)->unk_00 = 0u;
-		sub_018C8C();
+		OBJECT(current_object)->flags = 0u;
+		lcd_race_info_time_page();
 		return;
 	case 2:
 		break;
 	case 3:
-		t1 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t1 - 1u;
-		if (t1 != 1u)
+		frames = OBJECT(current_object)->lcd_race_info.frames;
+		OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+		if (frames != 1u)
 			return;
-		OBJECT(current_object)->unk_00 = 0u;
-		sub_018C8C();
+		OBJECT(current_object)->flags = 0u;
+		lcd_race_info_time_page();
 		return;
 	default:
-		invalid_jump(rom_018E40[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_018E40[OBJECT(current_object)->state]);
 	}
 	if (SCREEN(screen)->unk_F44 != 0u)
 		return;
-	sub_018DBC();
-	OBJECT(current_object)->unk_10 = 0x96u;
-	OBJECT(current_object)->unk_0C++;
-	t1 = OBJECT(current_object)->unk_10;
-	OBJECT(current_object)->unk_10 = t1 - 1u;
-	if (t1 != 1u)
+	lcd_race_info_average_page();
+	OBJECT(current_object)->lcd_race_info.frames = 0x96u;
+	OBJECT(current_object)->state++;
+	frames = OBJECT(current_object)->lcd_race_info.frames;
+	OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+	if (frames != 1u)
 		return;
-	OBJECT(current_object)->unk_00 = 0u;
-	sub_018C8C();
+	OBJECT(current_object)->flags = 0u;
+	lcd_race_info_time_page();
 }
 
-void sub_018E98(void)
+/* Waits while the LCD scrolls a text (screen unk_F44), then goes back to lcd_race_info_update, which
+   writes the page's label again. */
+void lcd_race_info_paused(void)
 {
 	if (SCREEN(screen)->unk_F44 == 0u)
 	{
-		OBJECT(current_object)->unk_04 = sub_018BB2_ADDRESS;
-		sub_018BB2();
+		OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
+		lcd_race_info_update();
 		return;
 	}
 }
 
-void sub_018F74(void)
+/* Sets up the radio as the race starts: the car each player chose (byte 49 of its race_copy record) by
+   car number in car_models (FF where none) and how many in cars_to_introduce, this screen's car number,
+   clears screen unk_F0F, gives the car the song of its model (car unk_14 = rom_019421 by car unk_60),
+   notes the stage (screen unk_A1), then car_radio_wait_start. */
+void car_radio_start(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0, object = 0;
 
@@ -1116,7 +1141,7 @@ void sub_018F74(void)
 	OBJECT(object - 0x80u)->unk_87 = 0xFFu;
 	r10 = SCREEN(screen)->unk_308 + 0x1Fu;
 	r9 = mem_read8(r10);
-	AS8(OBJECT(current_object)->unk_88) = r9;
+	OBJECT(current_object)->car_radio.cars_to_introduce = r9;
 	r10++;
 	do
 	{
@@ -1125,55 +1150,71 @@ void sub_018F74(void)
 		r9--;
 		r10++;
 	} while (r9 != 0u);
-	AT8(OBJECT(current_object)->unk_08, 1) = unk_20E030[SCREEN(screen)->unk_01];
+	OBJECT(current_object)->car_radio.car_number = unk_20E030[SCREEN(screen)->unk_01];
 	SCREEN(screen)->unk_F0F = 0u;
 	CAR(player_car)->unk_14 = rom_019421[CAR(player_car)->unk_60];
-	AT8(OBJECT(current_object)->unk_08, 2) = SCREEN(screen)->unk_A1;
-	OBJECT(current_object)->unk_04 = sub_018FD3_ADDRESS;
-	sub_018FD3();
+	OBJECT(current_object)->car_radio.stage = SCREEN(screen)->unk_A1;
+	OBJECT(current_object)->handler = car_radio_wait_start_ADDRESS;
+	car_radio_wait_start();
 }
 
-void sub_018FD3(void)
+/* Waits for the start (the car object's unk_10, the frames to it, down to 0), then goes on to
+   car_radio_read_buttons. */
+void car_radio_wait_start(void)
 {
 	if (OBJECT(CAR(player_car)->object)->unk_10 != 0u)
 		return;
-	OBJECT(current_object)->unk_04 = sub_018FE0_ADDRESS;
-	sub_018FE0();
+	OBJECT(current_object)->handler = car_radio_read_buttons_ADDRESS;
+	car_radio_read_buttons();
 }
 
-void sub_018FE0(void)
+/* Each frame of the race: the buttons newly pressed (screen unk_118) into buttons, then
+   car_radio_update. Once the race is over (car unk_181 at the goal, or unk_182) clears them, silences
+   the DJ (talk_step 5), turns the screen's two lamps off (unk_F20) and leaves car_radio_update alone,
+   without the buttons. */
+void car_radio_read_buttons(void)
 {
-	OBJECT(current_object)->unk_2C = (uint16_t)SCREEN(screen)->unk_118;
+	OBJECT(current_object)->car_radio.buttons = (uint16_t)SCREEN(screen)->unk_118;
 	if ((CAR(player_car)->unk_181 | CAR(player_car)->unk_182) == 0u)
 	{
-		sub_01900A();
+		car_radio_update();
 		return;
 	}
-	OBJECT(current_object)->unk_2C = 0u;
-	OBJECT(current_object)->unk_0D = 5u;
+	OBJECT(current_object)->car_radio.buttons = 0u;
+	OBJECT(current_object)->car_radio.talk_step = 5u;
 	SCREEN(screen)->unk_F20 = 0u;
-	OBJECT(current_object)->unk_04 = sub_01900A_ADDRESS;
-	sub_01900A();
+	OBJECT(current_object)->handler = car_radio_update_ADDRESS;
+	car_radio_update();
 }
 
-void sub_01900A(void)
+/* The radio, by state: 0 plays the car's song (car unk_14) with its title; 1 << and >> step through the
+   ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the
+   station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound
+   (rom_019458 by screen unk_A1); 3 the station plays; 4-8 while screen unk_F0F is set (the road object
+   01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (sub_011FEA), sound E0
+   after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message (rom_019571 by
+   screen unk_A4) and sound. On the station: any of the three buttons goes back to the car's song (state
+   0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step: 0 message 0, 1-2
+   each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4 the
+   queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing. */
+void car_radio_update(void)
 {
 	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
-	uint8_t r0 = 0;
-	uint16_t r0_3 = 0;
-	uint32_t r0_2 = 0, r10 = 0, r21 = 0;
-	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+	uint8_t r0 = 0, queued_message = 0;
+	uint16_t buttons = 0;
+	uint32_t r0_2 = 0, r10 = 0, object = 0;
+	uint8_t t1 = 0, timer = 0, timer_2 = 0, timer_3 = 0, cars_to_introduce = 0;
 	uint32_t target1 = 0, target2 = 0;
 
-	r21 = OBJECT(current_object)->unk_18;
-	if (r21 != 0u && (mem_read32(r21) & 1u) == 0u)
-		OBJECT(current_object)->unk_18 = 0u;
+	object = OBJECT(current_object)->car_radio.title;
+	if (object != 0u && (OBJECT(object)->flags & 1u) == 0u)
+		OBJECT(current_object)->car_radio.title = 0u;
 	if (SCREEN(screen)->unk_F0F != 0u)
 	{
 		r0 = SCREEN(screen)->unk_A1;
-		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 16u) != r0)
+		if (OBJECT(current_object)->car_radio.stage != r0)
 		{
-			AT8(OBJECT(current_object)->unk_08, 2) = r0;
+			OBJECT(current_object)->car_radio.stage = r0;
 			SCREEN(screen)->unk_F0F = 0u;
 		}
 	}
@@ -1189,61 +1230,61 @@ void sub_01900A(void)
 					{
 						do
 						{
-							target1 = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : rom_019044[OBJECT(current_object)->unk_0C];
+							target1 = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : rom_019044[OBJECT(current_object)->state];
 							switch (target1)
 							{
 							case 0x019068u:
 								r0_2 = CAR(player_car)->unk_14;
-								r0_2 = sub_0192E5(r0_2);
-								sub_011EB8((uint8_t)r0_2);
-								OBJECT(current_object)->unk_0C++;
+								r0_2 = car_radio_song(r0_2);
+								request_sound((uint8_t)r0_2);
+								OBJECT(current_object)->state++;
 							case 0x019078u:
-								r0_3 = OBJECT(current_object)->unk_2C;
-								if ((r0_3 & 0x100u) != 0u)
+								buttons = OBJECT(current_object)->car_radio.buttons;
+								if ((buttons & 0x100u) != 0u)
 								{
-									OBJECT(current_object)->unk_0C = 2u;
+									OBJECT(current_object)->state = 2u;
 									r0 = 0x1Fu;
-									sub_011EB8(r0);
+									request_sound(r0);
 									return;
 								}
-								if ((r0_3 & 0x200u) != 0u)
+								if ((buttons & 0x200u) != 0u)
 								{
-									if ((r0_3 & 0x400u) != 0u)
+									if ((buttons & 0x400u) != 0u)
 									{
 										r0_2 = 0xAu;
-										r0_2 = sub_0192E5(r0_2);
-										sub_011EB8((uint8_t)r0_2);
+										r0_2 = car_radio_song(r0_2);
+										request_sound((uint8_t)r0_2);
 										return;
 									}
 									r0 = 0x1Fu;
-									sub_011EB8(r0);
+									request_sound(r0);
 									r0_2 = CAR(player_car)->unk_14;
 									t1 = r0_2 - 1u;
 									r0_2 = t1;
 									if ((int8_t)t1 < 0)
 										r0_2 = 9u;
 									CAR(player_car)->unk_14 = r0_2;
-									r0_2 = sub_0192E5(r0_2);
-									sub_011EB8((uint8_t)r0_2);
+									r0_2 = car_radio_song(r0_2);
+									request_sound((uint8_t)r0_2);
 									return;
 								}
-								if ((r0_3 & 0x400u) == 0u && (r0_3 & 0x40u) == 0u)
+								if ((buttons & 0x400u) == 0u && (buttons & 0x40u) == 0u)
 									return;
 								r0 = 0x1Fu;
-								sub_011EB8(r0);
+								request_sound(r0);
 								r0_2 = CAR(player_car)->unk_14;
 								r0_2 = (uint8_t)(r0_2 + 1u);
 								if ((int8_t)r0_2 < 0xA)
 								{
 									CAR(player_car)->unk_14 = r0_2;
-									r0_2 = sub_0192E5(r0_2);
-									sub_011EB8((uint8_t)r0_2);
+									r0_2 = car_radio_song(r0_2);
+									request_sound((uint8_t)r0_2);
 									return;
 								}
 								r0_2 = 0u;
 								CAR(player_car)->unk_14 = r0_2;
-								r0_2 = sub_0192E5(r0_2);
-								sub_011EB8((uint8_t)r0_2);
+								r0_2 = car_radio_song(r0_2);
+								request_sound((uint8_t)r0_2);
 								return;
 							case 0x0190F0u:
 								if (!L_019118)
@@ -1259,8 +1300,8 @@ void sub_01900A(void)
 													if (!L_019180)
 													{
 														r10 = 0x1954Cu;
-														sub_0192F5(r10);
-														AT8(OBJECT(current_object)->unk_08, 3) = 0x29u;
+														car_radio_show_title(r10);
+														OBJECT(current_object)->car_radio.queued_message = 0x29u;
 													}
 												}
 											}
@@ -1281,33 +1322,33 @@ void sub_01900A(void)
 													{
 														L_019137 = false;
 														r0 = 0xE0u;
-														sub_011EB8(r0);
-														AS8(OBJECT(current_object)->unk_10) = 0xB4u;
-														OBJECT(current_object)->unk_0C = 5u;
+														request_sound(r0);
+														OBJECT(current_object)->car_radio.timer = 0xB4u;
+														OBJECT(current_object)->state = 5u;
 													}
 													L_01914C = false;
-													t2 = (uint8_t)OBJECT(current_object)->unk_10;
-													AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+													timer = OBJECT(current_object)->car_radio.timer;
+													OBJECT(current_object)->car_radio.timer = timer - 1u;
 												}
 											}
 										}
-										if (L_019154 || L_019167 || L_019180 || t2 == 1u)
+										if (L_019154 || L_019167 || L_019180 || timer == 1u)
 										{
 											if (L_019154 || !L_019167)
 											{
 												if (L_019154 || !L_019180)
 												{
 													if (!L_019154)
-														OBJECT(current_object)->unk_0C++;
+														OBJECT(current_object)->state++;
 													L_019154 = false;
 												}
 											}
 											if (!L_019167 && !L_019180 && SCREEN(screen)->unk_F0F == 0u)
 											{
-												AT8(OBJECT(current_object)->unk_08, 3) = rom_019571[SCREEN(screen)->unk_A4];
+												OBJECT(current_object)->car_radio.queued_message = rom_019571[SCREEN(screen)->unk_A4];
 												r0 = rom_019458[SCREEN(screen)->unk_A1];
-												sub_011EB8(r0);
-												OBJECT(current_object)->unk_0C = 3u;
+												request_sound(r0);
+												OBJECT(current_object)->state = 3u;
 											}
 											else
 											{
@@ -1316,8 +1357,8 @@ void sub_01900A(void)
 													if (!L_019167)
 													{
 														r0 = 0xEEu;
-														sub_011EB8(r0);
-														OBJECT(current_object)->unk_0C++;
+														request_sound(r0);
+														OBJECT(current_object)->state++;
 													}
 													L_019167 = false;
 												}
@@ -1327,18 +1368,18 @@ void sub_01900A(void)
 													{
 														r0 = 0x7Fu;
 														sub_011FEA(r0);
-														AS8(OBJECT(current_object)->unk_10) = 0x78u;
-														OBJECT(current_object)->unk_0C++;
+														OBJECT(current_object)->car_radio.timer = 0x78u;
+														OBJECT(current_object)->state++;
 													}
 													L_019180 = false;
-													t3 = (uint8_t)OBJECT(current_object)->unk_10;
-													AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
-													if (t3 == 1u)
+													timer_2 = OBJECT(current_object)->car_radio.timer;
+													OBJECT(current_object)->car_radio.timer = timer_2 - 1u;
+													if (timer_2 == 1u)
 													{
-														AT8(OBJECT(current_object)->unk_08, 3) = rom_019571[SCREEN(screen)->unk_A4];
+														OBJECT(current_object)->car_radio.queued_message = rom_019571[SCREEN(screen)->unk_A4];
 														r0 = rom_019458[SCREEN(screen)->unk_A1];
-														sub_011EB8(r0);
-														OBJECT(current_object)->unk_0C = 3u;
+														request_sound(r0);
+														OBJECT(current_object)->state = 3u;
 													}
 												}
 											}
@@ -1351,8 +1392,8 @@ void sub_01900A(void)
 											if (!L_019118)
 											{
 												r0 = rom_019458[SCREEN(screen)->unk_A1];
-												sub_011EB8(r0);
-												OBJECT(current_object)->unk_0C++;
+												request_sound(r0);
+												OBJECT(current_object)->state++;
 											}
 											L_019118 = false;
 										}
@@ -1362,81 +1403,80 @@ void sub_01900A(void)
 											{
 												r0 = 0x3Fu;
 												sub_011FEA(r0);
-												AS8(OBJECT(current_object)->unk_10) = 0x3Cu;
-												OBJECT(current_object)->unk_0C++;
+												OBJECT(current_object)->car_radio.timer = 0x3Cu;
+												OBJECT(current_object)->state++;
 											}
 											L_019132 = false;
-											t4 = (uint8_t)OBJECT(current_object)->unk_10;
-											AS8(OBJECT(current_object)->unk_10) = t4 - 1u;
-											L_019137 = t4 == 1u;
+											timer_3 = OBJECT(current_object)->car_radio.timer;
+											OBJECT(current_object)->car_radio.timer = timer_3 - 1u;
+											L_019137 = timer_3 == 1u;
 										}
 									}
 								} while (L_019137);
-								if ((OBJECT(current_object)->unk_2C & 0x700u) != 0u)
+								if ((OBJECT(current_object)->car_radio.buttons & 0x700u) != 0u)
 								{
-									OBJECT(current_object)->unk_0C = 0u;
-									OBJECT(current_object)->unk_0D = 4u;
+									OBJECT(current_object)->state = 0u;
+									OBJECT(current_object)->car_radio.talk_step = 4u;
 									SCREEN(screen)->unk_F30 = 0u;
 									r0 = 0x1Fu;
-									sub_011EB8(r0);
+									request_sound(r0);
 									return;
 								}
 								if (SCREEN(screen)->unk_F30 != 0u)
 								{
-									AT8(OBJECT(current_object)->unk_08, 3) = 0u;
+									OBJECT(current_object)->car_radio.queued_message = 0u;
 									return;
 								}
-								switch (OBJECT(current_object)->unk_0D)
+								switch (OBJECT(current_object)->car_radio.talk_step)
 								{
 								case 0:
 									r0 = 0u;
-									sub_019402(r0);
-									OBJECT(current_object)->unk_0D++;
+									start_dj_message(r0);
+									OBJECT(current_object)->car_radio.talk_step++;
 									return;
 								case 1:
-									r0_2 = (uint8_t)(OBJECT(current_object)->unk_88 >> 8u);
+									r0_2 = OBJECT(current_object)->car_radio.next_car_number;
 									while ((int8_t)mem_read8(current_object + 0x80u + r0_2) < 0)
 									{
 										r0_2 = (uint8_t)(r0_2 + 1u);
 									}
-									AT8(OBJECT(current_object)->unk_88, 1) = r0_2;
+									OBJECT(current_object)->car_radio.next_car_number = r0_2;
 									r0_2 = (uint8_t)(r0_2 + 9u);
-									sub_019402((uint8_t)r0_2);
-									OBJECT(current_object)->unk_0D++;
+									start_dj_message((uint8_t)r0_2);
+									OBJECT(current_object)->car_radio.talk_step++;
 									return;
 								case 2:
-									r0 = (uint8_t)(mem_read8(current_object + 0x80u + (uint8_t)(OBJECT(current_object)->unk_88 >> 8u)) + 1u);
-									sub_019402(r0);
-									AT8(OBJECT(current_object)->unk_88, 1)++;
-									t5 = (uint8_t)OBJECT(current_object)->unk_88;
-									AS8(OBJECT(current_object)->unk_88) = t5 - 1u;
-									if (t5 == 1u)
+									r0 = (uint8_t)(mem_read8(current_object + 0x80u + OBJECT(current_object)->car_radio.next_car_number) + 1u);
+									start_dj_message(r0);
+									OBJECT(current_object)->car_radio.next_car_number++;
+									cars_to_introduce = OBJECT(current_object)->car_radio.cars_to_introduce;
+									OBJECT(current_object)->car_radio.cars_to_introduce = cars_to_introduce - 1u;
+									if (cars_to_introduce == 1u)
 									{
-										OBJECT(current_object)->unk_0D++;
+										OBJECT(current_object)->car_radio.talk_step++;
 										return;
 									}
-									OBJECT(current_object)->unk_0D--;
+									OBJECT(current_object)->car_radio.talk_step--;
 									return;
 								case 3:
 									r0 = 0x2Au;
-									sub_019402(r0);
-									OBJECT(current_object)->unk_0D++;
+									start_dj_message(r0);
+									OBJECT(current_object)->car_radio.talk_step++;
 									return;
 								case 4:
-									r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 24u);
-									if (r0 != 0u)
+									queued_message = OBJECT(current_object)->car_radio.queued_message;
+									if (queued_message != 0u)
 									{
-										OBJECT(current_object)->unk_38 = 0u;
-										OBJECT(current_object)->unk_3A = 0u;
-										sub_019402(r0);
+										OBJECT(current_object)->car_radio.remark_list = 0u;
+										start_dj_message(queued_message);
 										return;
 									}
-									if (OBJECT(current_object)->unk_0C != 3u)
+									if (OBJECT(current_object)->state != 3u)
 										return;
-									r10 = AS32(OBJECT(current_object)->unk_38);
+									r10 = OBJECT(current_object)->car_radio.remark_list;
 									if (r10 == 0u)
 									{
-										r0_2 = sub_011E45();
+										r0_2 = random_number();
 										r0_2 &= 0x3FFu;
 										if ((int32_t)r0_2 >= 0xE)
 											return;
@@ -1446,30 +1486,30 @@ void sub_01900A(void)
 									r10 += 4u;
 									if (mem_read32(r10) == 0u)
 										r10 = 0u;
-									AS32(OBJECT(current_object)->unk_38) = r10;
+									OBJECT(current_object)->car_radio.remark_list = r10;
 									target2 = r0_2;
 									switch (target2)
 									{
 									case 0x01929Eu:
-										sub_01929E();
+										car_radio_dj_leader();
 										return;
 									case 0x0192B1u:
-										sub_0192B1();
+										car_radio_dj_own_car();
 										return;
 									case 0x0192BCu:
-										sub_0192BC();
+										car_radio_dj_remark_2a();
 										return;
 									case 0x0192C3u:
-										sub_0192C3();
+										car_radio_dj_remark_2b();
 										return;
 									case 0x0192CAu:
-										sub_0192CA();
+										car_radio_dj_remark_2d();
 										return;
 									case 0x0192D1u:
-										sub_0192D1();
+										car_radio_dj_remark_2f();
 										return;
 									case 0x0192D8u:
-										sub_0192D8();
+										car_radio_dj_remark_2c();
 										return;
 									default:
 										invalid_jump(target2);
@@ -1478,7 +1518,7 @@ void sub_01900A(void)
 								case 5:
 									return;
 								default:
-									invalid_jump(rom_0191E0[OBJECT(current_object)->unk_0D]);
+									invalid_jump(rom_0191E0[OBJECT(current_object)->car_radio.talk_step]);
 								}
 								break;
 							case 0x019118u:
@@ -1510,89 +1550,103 @@ void sub_01900A(void)
 	} while (L_019180);
 }
 
-void sub_01929E(void)
+/* A DJ remark: message 11 plus the car number of the car in the lead. */
+void car_radio_dj_leader(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = (uint8_t)(unk_20E030[mem_read8(SCREEN(screen)->unk_308 + 0x20u)] + 0x11u);
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_0192B1(void)
+/* A DJ remark: message 19 plus this screen's car number. */
+void car_radio_dj_own_car(void)
 {
 	uint8_t r0 = 0;
 
-	r0 = (uint8_t)((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) + 0x19u);
-	sub_019402(r0);
+	r0 = (uint8_t)(OBJECT(current_object)->car_radio.car_number + 0x19u);
+	start_dj_message(r0);
 }
 
-void sub_0192BC(void)
+/* A DJ remark: message 2A (also the end of the cars' introduction). */
+void car_radio_dj_remark_2a(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = 0x2Au;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_0192C3(void)
+/* A DJ remark: message 2B. */
+void car_radio_dj_remark_2b(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = 0x2Bu;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_0192CA(void)
+/* A DJ remark: message 2D. */
+void car_radio_dj_remark_2d(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = 0x2Du;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_0192D1(void)
+/* A DJ remark: message 2F. */
+void car_radio_dj_remark_2f(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = 0x2Fu;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_0192D8(void)
+/* A DJ remark: message 2C. */
+void car_radio_dj_remark_2c(void)
 {
 	uint8_t r0 = 0;
 
 	r0 = 0x2Cu;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-uint32_t sub_0192E5(uint32_t r0)
+/* Shows the title of song R0 (rom_01942C: 0 Magical Sound Shower, 1 Passing Breeze, 2 Splash Wave, 3
+   Picture the Rivers, 4 Blow Your Cool, 5 Looking for the Rainbow, 6 Speed King, 7 Adventure, 8 Sonic
+   Control, 9 Last Wave, 10 Jingle Bell) and returns the song's sound. */
+uint32_t car_radio_song(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r10 = 0;
 
 	r10 = rom_01942C[r0];
 	r0_2 = byte_swap32(r10);
 	r10 &= 0xFFFFFFu;
-	sub_0192F5(r10);
+	car_radio_show_title(r10);
 	return r0_2;
 }
 
-void sub_0192F5(uint32_t r10)
+/* Starts a song title (start_song_title) for the record it is given, sends the one shown (title) away
+   and keeps the new one in title. */
+void car_radio_show_title(uint32_t r10)
 {
-	uint32_t r21 = 0;
+	uint32_t r21 = 0, object = 0;
 
-	r21 = OBJECT(current_object)->unk_18;
-	if (r21 != 0u)
-		mem_write16(r21 + 0x10u, 0u);
-	r21 = sub_01930A(r10);
-	OBJECT(current_object)->unk_18 = r21;
+	object = OBJECT(current_object)->car_radio.title;
+	if (object != 0u)
+		OBJECT(object)->unk_10 = 0u;
+	r21 = start_song_title(r10);
+	OBJECT(current_object)->car_radio.title = r21;
 }
 
-uint32_t sub_01930A(uint32_t r10)
+/* Starts an object that shows the song title of record R10 (x, then the text) on the screen and scrolls
+   it on the LCD; returns the object. */
+uint32_t start_song_title(uint32_t r10)
 {
 	uint32_t r21 = 0;
 
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_019322_ADDRESS);
 	mem_write32(r21 + 0x18u, r10);
 	mem_write16(r21 + 0x10u, 0x3Cu);
@@ -1610,7 +1664,7 @@ void sub_019322(void)
 
 	do
 	{
-		target1 = L_01938A ? 0x19369u : rom_019330[OBJECT(current_object)->unk_0C];
+		target1 = L_01938A ? 0x19369u : rom_019330[OBJECT(current_object)->state];
 		switch (target1)
 		{
 		case 0x019344u:
@@ -1624,7 +1678,7 @@ void sub_019322(void)
 			OBJECT(current_object)->unk_23 = 0u;
 			OBJECT(current_object)->unk_12 = 0x14u;
 			OBJECT(current_object)->unk_13 = 0u;
-			OBJECT(current_object)->unk_0C++;
+			OBJECT(current_object)->state++;
 		case 0x019369u:
 			do
 			{
@@ -1633,7 +1687,7 @@ void sub_019322(void)
 					if (L_019387 || !L_01938A)
 					{
 						L_019387 = false;
-						OBJECT(current_object)->unk_0C++;
+						OBJECT(current_object)->state++;
 					}
 					L_01938A = false;
 					t1 = OBJECT(current_object)->unk_10;
@@ -1655,19 +1709,19 @@ void sub_019322(void)
 					}
 					if (negative)
 					{
-						OBJECT(current_object)->unk_0C += 2u;
+						OBJECT(current_object)->state += 2u;
 						r3 = AS32(OBJECT(current_object)->unk_20);
 						r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - 0x28u);
 						AS32(OBJECT(current_object)->unk_20) = r3;
 						if ((int16_t)r3 <= -0xD2)
 						{
-							OBJECT(current_object)->unk_00 = 0u;
+							OBJECT(current_object)->flags = 0u;
 							return;
 						}
 					}
 					else
 					{
-						OBJECT(current_object)->unk_0C++;
+						OBJECT(current_object)->state++;
 						r3 = AS32(OBJECT(current_object)->unk_20);
 						r0 = (uint16_t)(AS16(OBJECT(current_object)->unk_12) + 1u);
 						r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - r0);
@@ -1675,7 +1729,7 @@ void sub_019322(void)
 						AS32(OBJECT(current_object)->unk_20) = r3;
 						if ((int16_t)r3 <= -0xD2)
 						{
-							OBJECT(current_object)->unk_00 = 0u;
+							OBJECT(current_object)->flags = 0u;
 							return;
 						}
 					}
@@ -1702,7 +1756,7 @@ void sub_019322(void)
 			AS32(OBJECT(current_object)->unk_20) = r3;
 			if ((int16_t)r3 <= -0xD2)
 			{
-				OBJECT(current_object)->unk_00 = 0u;
+				OBJECT(current_object)->flags = 0u;
 				return;
 			}
 			r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 + OBJECT(current_object)->unk_30);
@@ -1720,7 +1774,7 @@ void sub_019322(void)
 			AS32(OBJECT(current_object)->unk_20) = r3;
 			if ((int16_t)r3 <= -0xD2)
 			{
-				OBJECT(current_object)->unk_00 = 0u;
+				OBJECT(current_object)->flags = 0u;
 				return;
 			}
 			r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 + OBJECT(current_object)->unk_30);
@@ -1746,22 +1800,25 @@ void sub_019322(void)
 	sub_0119FA(r3, r5_2, r18);
 }
 
-void sub_0193FC(uint8_t r0)
+/* Starts DJ message R0 (start_dj_message) unless one is being said (screen unk_F30). */
+void start_dj_message_if_quiet(uint8_t r0)
 {
 	if (SCREEN(screen)->unk_F30 != 0u)
 		return;
-	sub_019402(r0);
+	start_dj_message(r0);
 }
 
-void sub_019402(uint8_t r0)
+/* Starts DJ message R0 (typed_messages): requests its voice (the sound in the record's top byte) and has
+   the face on the LCD move its mouth by the record's string (screen unk_F30). */
+void start_dj_message(uint8_t r0)
 {
 	uint8_t r0_2 = 0;
 	uint32_t r10 = 0;
 
-	r10 = typed_messages[(uint8_t)r0];
+	r10 = dj_messages[(uint8_t)r0];
 	r0_2 = (uint8_t)byte_swap32(r10);
 	SCREEN(screen)->unk_F30 = r10 & 0xFFFFFFu;
-	sub_011EB8(r0_2);
+	request_sound(r0_2);
 }
 
 void sub_019CAC(void)
@@ -1771,7 +1828,7 @@ void sub_019CAC(void)
 	uint8_t t4 = 0;
 	uint32_t t1 = 0, t2 = 0, t3 = 0, t5 = 0, t6 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		AS8(SCREEN(screen)->unk_5800) = 0u;
@@ -1803,22 +1860,22 @@ void sub_019CAC(void)
 		SCREEN(screen)->unk_9E = (r0 + 1u) & 7u;
 		SCREEN(screen)->unk_41 = SCREEN(screen)->unk_9C;
 		SCREEN(screen)->unk_40 = 5u;
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01AA01_ADDRESS);
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A6CF_ADDRESS);
 		r1 = 8u;
 		r0 = 0u;
 		do
 		{
-			r21 = sub_011D43();
+			r21 = start_object();
 			mem_write32(r21 + 4u, sub_019E6B_ADDRESS);
 			mem_write8(r21 + 9u, r0);
 			r0++;
 			r1--;
 		} while (r1 != 0u);
 		OBJECT(current_object)->unk_10 = 0x2Du;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		return;
 	case 1:
 		sub_01A0A2();
@@ -1830,15 +1887,15 @@ void sub_019CAC(void)
 		AS8(OBJECT(current_object)->unk_10) = t4 - 1u;
 		if (t4 != 1u)
 			return;
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A18C_ADDRESS);
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A29C_ADDRESS);
 		r1 = 3u;
 		r0 = 0u;
 		do
 		{
-			r21 = sub_011D43();
+			r21 = start_object();
 			mem_write32(r21 + 4u, sub_01A329_ADDRESS);
 			mem_write8(r21 + 9u, r0);
 			r0++;
@@ -1848,7 +1905,7 @@ void sub_019CAC(void)
 		r0 = 0u;
 		do
 		{
-			r21 = sub_011D43();
+			r21 = start_object();
 			mem_write32(r21 + 4u, sub_01A3E9_ADDRESS);
 			mem_write8(r21 + 9u, r0);
 			r0++;
@@ -1856,7 +1913,7 @@ void sub_019CAC(void)
 		} while (r1 != 0u);
 		OBJECT(current_object)->unk_80 = 0x1ACC0u;
 		OBJECT(current_object)->unk_10 = 0u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		return;
 	case 2:
 		sub_01A0A2();
@@ -1871,7 +1928,7 @@ void sub_019CAC(void)
 		r0 = 0u;
 		do
 		{
-			r21 = sub_011D43();
+			r21 = start_object();
 			mem_write32(r21 + 4u, sub_01A329_ADDRESS);
 			mem_write8(r21 + 9u, r0);
 			r0++;
@@ -1880,7 +1937,7 @@ void sub_019CAC(void)
 		OBJECT(current_object)->unk_80 += 2u;
 		return;
 	default:
-		invalid_jump(rom_019CB8[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_019CB8[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1888,11 +1945,11 @@ void sub_019E6B(void)
 {
 	uint16_t r2 = 0;
 	uint32_t r0 = 0, r9 = 0, r10 = 0, r21 = 0;
-	uint32_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_019E78[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_019E78[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
@@ -1900,7 +1957,7 @@ void sub_019E6B(void)
 		r0 = mem_read16(r10);
 		r9 = rom_01AC34[r0];
 		r10 += 2u;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = mem_read16(r10);
 		r10 += 2u;
 		OBJECT(current_object)->unk_34 = mem_read16(r10);
@@ -1915,25 +1972,25 @@ void sub_019E6B(void)
 		OBJECT(current_object)->unk_40 = 9u;
 		OBJECT(current_object)->unk_3C = 0x18Fu;
 		OBJECT(current_object)->unk_3C += mem_read16(r10 + 2u);
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_019F60_ADDRESS);
 		mem_write32(r21 + 0x14u, current_object);
 		mem_write8(r21 + 9u, r0);
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_019F4C_ADDRESS);
 		mem_write32(r21 + 0x14u, current_object);
 		mem_write8(r21 + 9u, r0);
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_019E78[t1]);
+		invalid_jump(rom_019E78[state]);
 	}
 	OBJECT(current_object)->unk_20 += OBJECT(current_object)->unk_2C;
 	if ((int16_t)OBJECT(current_object)->unk_20 >= 0x1000)
 	{
-		OBJECT(current_object)->unk_00 &= 0xDFu;
+		OBJECT(current_object)->flags &= 0xDFu;
 		OBJECT(current_object)->unk_20 &= 0xFFFu;
 	}
 	OBJECT(current_object)->unk_30 = OBJECT(current_object)->unk_20;
@@ -1942,7 +1999,7 @@ void sub_019E6B(void)
 	r2 = OBJECT(current_object)->unk_10 & 1u;
 	OBJECT(current_object)->unk_24 = OBJECT(current_object)->unk_32;
 	OBJECT(current_object)->unk_32 -= r2;
-	sub_00EAE4(r0);
+	draw_object(r0);
 	OBJECT(current_object)->unk_32 = OBJECT(current_object)->unk_24;
 }
 
@@ -1950,7 +2007,7 @@ void sub_019F4C(void)
 {
 	uint32_t r0 = 0, r9 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
@@ -1958,8 +2015,8 @@ void sub_019F4C(void)
 		OBJECT(current_object)->unk_10 = rom_01A062[r0];
 		AS16(OBJECT(current_object)->unk_12) = rom_01A072[r0];
 		r9 = rom_01A012[r0];
-		sub_00F366(r9);
-		OBJECT(current_object)->unk_0C++;
+		animation_start(r9);
+		OBJECT(current_object)->state++;
 		OBJECT(current_object)->unk_3E = 0xAu;
 		OBJECT(current_object)->unk_3C = mem_read16(OBJECT(current_object)->unk_14 + 0x3Cu);
 		OBJECT(current_object)->unk_3C++;
@@ -1968,7 +2025,7 @@ void sub_019F4C(void)
 		sub_019FD3();
 		return;
 	default:
-		invalid_jump(rom_019F58[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_019F58[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1976,7 +2033,7 @@ void sub_019F60(void)
 {
 	uint32_t r0 = 0, r9 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
@@ -1984,15 +2041,15 @@ void sub_019F60(void)
 		sub_019FD3();
 		return;
 	default:
-		invalid_jump(rom_019F6C[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_019F6C[OBJECT(current_object)->state]);
 	}
 	r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
 	OBJECT(current_object)->unk_3A = rom_01A042[r0];
 	OBJECT(current_object)->unk_10 = rom_01A082[r0];
 	AS16(OBJECT(current_object)->unk_12) = rom_01A092[r0];
 	r9 = rom_01A022[r0];
-	sub_00F366(r9);
-	OBJECT(current_object)->unk_0C++;
+	animation_start(r9);
+	OBJECT(current_object)->state++;
 	OBJECT(current_object)->unk_3E = 0xAu;
 	OBJECT(current_object)->unk_3C = mem_read16(OBJECT(current_object)->unk_14 + 0x3Cu);
 	OBJECT(current_object)->unk_3C++;
@@ -2008,7 +2065,7 @@ void sub_019FD3(void)
 	OBJECT(current_object)->unk_30 = mem_read16(OBJECT(current_object)->unk_14 + 0x30u) + OBJECT(current_object)->unk_10;
 	r0 = (uint16_t)(mem_read16(OBJECT(current_object)->unk_14 + 0x32u) + AS16(OBJECT(current_object)->unk_12) - (mem_read16(OBJECT(current_object)->unk_14 + 0x10u) & 1u));
 	OBJECT(current_object)->unk_32 = r0;
-	r0 = sub_00EAE4(r0);
+	r0 = draw_object(r0);
 }
 
 void sub_01A0A2(void)
@@ -2018,14 +2075,14 @@ void sub_01A0A2(void)
 	OBJECT(current_object)->unk_12++;
 	if ((OBJECT(current_object)->unk_12 & 7u) == 0u)
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A0E2_ADDRESS);
 		mem_write8(r21 + 9u, 0u);
 		return;
 	}
 	if ((OBJECT(current_object)->unk_12 & 1u) == 0u)
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A0E2_ADDRESS);
 		mem_write8(r21 + 9u, 1u);
 		return;
@@ -2035,16 +2092,16 @@ void sub_01A0A2(void)
 void sub_01A0E2(void)
 {
 	uint32_t r0 = 0, r9 = 0;
-	uint32_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A0F0[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A0F0[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
 		r9 = 0x59u;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = 0x6Du;
 		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) != 0u)
 		{
@@ -2062,66 +2119,66 @@ void sub_01A0E2(void)
 			OBJECT(current_object)->unk_32 = 0xF0u;
 			OBJECT(current_object)->unk_3C = 0x194u;
 		}
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01A0F0[t1]);
+		invalid_jump(rom_01A0F0[state]);
 	}
 	if ((int16_t)OBJECT(current_object)->unk_30 <= -0x30)
 	{
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		return;
 	}
 	if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) != 0u)
 	{
 		OBJECT(current_object)->unk_30 -= 0x12u;
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	}
 	OBJECT(current_object)->unk_30 -= 0x30u;
-	r0 = sub_00EAE4(r0);
+	r0 = draw_object(r0);
 }
 
 void sub_01A18C(void)
 {
 	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r21 = 0;
-	uint8_t t2 = 0, t3 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0, t2 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A198[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A198[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
 		r9 = 0x25Du;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = 0x26Au;
 		OBJECT(current_object)->unk_30 = 0x142u;
 		OBJECT(current_object)->unk_32 = 0x47u;
 		OBJECT(current_object)->unk_3C = 0x199u;
 		AS8(OBJECT(current_object)->unk_10) = 0xBu;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	case 2:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 == 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 == 1u)
 		{
-			OBJECT(current_object)->unk_0C++;
+			OBJECT(current_object)->state++;
 			OBJECT(current_object)->unk_3A = 0x269u;
-			sub_00F30D(0u);
-			r0 = sub_00EAE4(r0);
+			animation_advance(0u);
+			r0 = draw_object(r0);
 			return;
 		}
 		r10 = OBJECT(current_object)->unk_80;
 		OBJECT(current_object)->unk_3A = mem_read16(r10);
 		OBJECT(current_object)->unk_80 = r10 + 2u;
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	case 3:
 		if ((uint8_t)(SCREEN(screen)->unk_5800 >> 8u) != 0u)
@@ -2130,27 +2187,27 @@ void sub_01A18C(void)
 			OBJECT(current_object)->unk_41 = 2u;
 			OBJECT(current_object)->unk_42 = 2u;
 		}
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A198[t1]);
+		invalid_jump(rom_01A198[state]);
 	}
-	t3 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
-	if (t3 != 1u)
+	t2 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+	if (t2 != 1u)
 	{
 		OBJECT(current_object)->unk_30 -= 0x10u;
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	}
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_01A499_ADDRESS);
 	r1 = 2u;
 	r0 &= ~0xFFu;
 	do
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A536_ADDRESS);
 		mem_write8(r21 + 9u, r0);
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
@@ -2160,7 +2217,7 @@ void sub_01A18C(void)
 	r0 &= ~0xFFu;
 	do
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A672_ADDRESS);
 		mem_write8(r21 + 9u, r0);
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
@@ -2168,85 +2225,85 @@ void sub_01A18C(void)
 	} while (r1 != 0u);
 	OBJECT(current_object)->unk_80 = 0x1AC54u;
 	AS8(OBJECT(current_object)->unk_10) = 6u;
-	OBJECT(current_object)->unk_0C++;
-	r0 = sub_00EAE4(r0);
+	OBJECT(current_object)->state++;
+	r0 = draw_object(r0);
 }
 
 void sub_01A29C(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint8_t t2 = 0, t3 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0, t2 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A2A8[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A2A8[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
 		r9 = 0x25Eu;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = 0x26Du;
 		OBJECT(current_object)->unk_30 = 2u;
 		OBJECT(current_object)->unk_32 = 0x47u;
 		OBJECT(current_object)->unk_3C = 0x199u;
 		AS8(OBJECT(current_object)->unk_10) = 0xBu;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	case 2:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 == 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 == 1u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
 		r10 = OBJECT(current_object)->unk_80;
 		OBJECT(current_object)->unk_3A = mem_read16(r10);
 		OBJECT(current_object)->unk_80 = r10 + 2u;
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A2A8[t1]);
+		invalid_jump(rom_01A2A8[state]);
 	}
-	t3 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
-	if (t3 == 1u)
+	t2 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+	if (t2 == 1u)
 	{
 		OBJECT(current_object)->unk_80 = 0x1AC62u;
 		AS8(OBJECT(current_object)->unk_10) = 6u;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	}
 	OBJECT(current_object)->unk_30 += 0x10u;
-	r0 = sub_00EAE4(r0);
+	r0 = draw_object(r0);
 }
 
 void sub_01A329(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint8_t t2 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A334[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A334[state];
+	switch (state)
 	{
 	case 0:
 		AS8(OBJECT(current_object)->unk_10) = ((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 2) + 1u;
-		OBJECT(current_object)->unk_0C++;
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 != 1u)
+		OBJECT(current_object)->state++;
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 != 1u)
 			return;
 		OBJECT(current_object)->unk_3E = 0xAu;
-		r0 = sub_011E45();
+		r0 = random_number();
 		r0 &= 7u;
 		r9 = rom_01AC34[r0];
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = rom_01AC44[r0];
 		r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 2;
 		r10 = 0x1ACB4u + r0;
@@ -2256,19 +2313,19 @@ void sub_01A329(void)
 		OBJECT(current_object)->unk_36 = 0x40u;
 		OBJECT(current_object)->unk_40 = 9u;
 		OBJECT(current_object)->unk_3C = 0x19Au;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	case 1:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 != 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 != 1u)
 			return;
 		OBJECT(current_object)->unk_3E = 0xAu;
-		r0 = sub_011E45();
+		r0 = random_number();
 		r0 &= 7u;
 		r9 = rom_01AC34[r0];
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = rom_01AC44[r0];
 		r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 2;
 		r10 = 0x1ACB4u + r0;
@@ -2278,58 +2335,58 @@ void sub_01A329(void)
 		OBJECT(current_object)->unk_36 = 0x40u;
 		OBJECT(current_object)->unk_40 = 9u;
 		OBJECT(current_object)->unk_3C = 0x19Au;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	case 2:
 		OBJECT(current_object)->unk_30 += 0x10u;
 		if ((int16_t)OBJECT(current_object)->unk_30 <= 0x148)
 		{
-			r0 = sub_00EAE4(r0);
+			r0 = draw_object(r0);
 			return;
 		}
 		if ((uint8_t)(OBJECT(current_object)->unk_08 >> 8u) == 0u)
 			AT8(SCREEN(screen)->unk_5800, 1) = 1u;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	case 3:
 		AT8(SCREEN(screen)->unk_5800, 1) = 0u;
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		return;
 	default:
-		invalid_jump(rom_01A334[t1]);
+		invalid_jump(rom_01A334[state]);
 	}
 }
 
 void sub_01A3E9(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint8_t t2 = 0, t3 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0, t2 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A3F4[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A3F4[state];
+	switch (state)
 	{
 	case 0:
 		AS8(OBJECT(current_object)->unk_10) = ((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 2) + 1u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	case 2:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 == 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 == 1u)
 		{
 			OBJECT(current_object)->unk_3E = 0xAu;
-			OBJECT(current_object)->unk_0C++;
-			r0 = sub_00EAE4(r0);
+			OBJECT(current_object)->state++;
+			r0 = draw_object(r0);
 			return;
 		}
 		OBJECT(current_object)->unk_30 += 0x10u;
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	case 3:
 		if ((uint8_t)(SCREEN(screen)->unk_5800 >> 8u) != 0u)
@@ -2338,19 +2395,19 @@ void sub_01A3E9(void)
 			OBJECT(current_object)->unk_41 = 2u;
 			OBJECT(current_object)->unk_42 = 2u;
 		}
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A3F4[t1]);
+		invalid_jump(rom_01A3F4[state]);
 	}
-	t3 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
-	if (t3 != 1u)
+	t2 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+	if (t2 != 1u)
 		return;
 	OBJECT(current_object)->unk_3E = 0xAu;
 	r9 = 0x25Fu;
-	sub_00F366(r9);
+	animation_start(r9);
 	OBJECT(current_object)->unk_3A = 0x270u;
 	r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 2;
 	r10 = 0x1ACA8u + r0;
@@ -2358,34 +2415,34 @@ void sub_01A3E9(void)
 	OBJECT(current_object)->unk_32 = ROM16(r10 + 2u);
 	OBJECT(current_object)->unk_3C = 0x198u;
 	AS8(OBJECT(current_object)->unk_10) = 0x14u;
-	OBJECT(current_object)->unk_0C++;
-	t2 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-	if (t2 == 1u)
+	OBJECT(current_object)->state++;
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+	if (t1 == 1u)
 	{
 		OBJECT(current_object)->unk_3E = 0xAu;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	}
 	OBJECT(current_object)->unk_30 += 0x10u;
-	r0 = sub_00EAE4(r0);
+	r0 = draw_object(r0);
 }
 
 void sub_01A499(void)
 {
 	uint32_t r0 = 0, r9 = 0;
-	uint8_t t2 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A4A4[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A4A4[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
 		r9 = 0x25Au;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = 0x272u;
 		OBJECT(current_object)->unk_34 = 0xC0u;
 		OBJECT(current_object)->unk_36 = 0xC0u;
@@ -2393,7 +2450,7 @@ void sub_01A499(void)
 		OBJECT(current_object)->unk_32 = 0x4Eu;
 		OBJECT(current_object)->unk_3C = 0x198u;
 		AS8(OBJECT(current_object)->unk_10) = 9u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
@@ -2404,41 +2461,41 @@ void sub_01A499(void)
 			OBJECT(current_object)->unk_41 = 3u;
 			OBJECT(current_object)->unk_42 = 6u;
 		}
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A4A4[t1]);
+		invalid_jump(rom_01A4A4[state]);
 	}
-	t2 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-	if (t2 == 1u)
+	t1 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+	if (t1 == 1u)
 	{
 		OBJECT(current_object)->unk_3E = 0xAu;
-		OBJECT(current_object)->unk_0C++;
-		r0 = sub_00EAE4(r0);
+		OBJECT(current_object)->state++;
+		r0 = draw_object(r0);
 		return;
 	}
 	OBJECT(current_object)->unk_34 += 8u;
 	OBJECT(current_object)->unk_36 += 8u;
-	r0 = sub_00EAE4(r0);
+	r0 = draw_object(r0);
 }
 
 void sub_01A536(void)
 {
 	uint16_t r3 = 0;
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint8_t t2 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A544[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A544[state];
+	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_3E = 0xAu;
 		r9 = 0x25Bu;
-		sub_00F366(r9);
+		animation_start(r9);
 		OBJECT(current_object)->unk_3A = 0x272u;
 		OBJECT(current_object)->unk_34 = 0xC0u;
 		OBJECT(current_object)->unk_36 = 0xC0u;
@@ -2448,10 +2505,10 @@ void sub_01A536(void)
 		OBJECT(current_object)->unk_32 = ROM16(r10 + 2u);
 		OBJECT(current_object)->unk_3C = 0x198u;
 		AS8(OBJECT(current_object)->unk_10) = 9u;
-		OBJECT(current_object)->unk_0C++;
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 == 1u)
+		OBJECT(current_object)->state++;
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 == 1u)
 		{
 			OBJECT(current_object)->unk_3E = 0xAu;
 			r0 = (uint16_t)((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 11);
@@ -2459,22 +2516,22 @@ void sub_01A536(void)
 			AS16(OBJECT(current_object)->unk_98) = r0;
 			AS16(OBJECT(current_object)->unk_8C) = OBJECT(current_object)->unk_30;
 			AS16(OBJECT(current_object)->unk_90) = OBJECT(current_object)->unk_32;
-			OBJECT(current_object)->unk_0C++;
-			sub_00F30D(0u);
-			r0 = sub_00EAE4(r0);
+			OBJECT(current_object)->state++;
+			animation_advance(0u);
+			r0 = draw_object(r0);
 			return;
 		}
 		OBJECT(current_object)->unk_34 += 8u;
 		OBJECT(current_object)->unk_36 += 8u;
 		OBJECT(current_object)->unk_30--;
 		OBJECT(current_object)->unk_32 -= 5u;
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	case 1:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 == 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 == 1u)
 		{
 			OBJECT(current_object)->unk_3E = 0xAu;
 			r0 = (uint16_t)((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 11);
@@ -2482,17 +2539,17 @@ void sub_01A536(void)
 			AS16(OBJECT(current_object)->unk_98) = r0;
 			AS16(OBJECT(current_object)->unk_8C) = OBJECT(current_object)->unk_30;
 			AS16(OBJECT(current_object)->unk_90) = OBJECT(current_object)->unk_32;
-			OBJECT(current_object)->unk_0C++;
-			sub_00F30D(0u);
-			r0 = sub_00EAE4(r0);
+			OBJECT(current_object)->state++;
+			animation_advance(0u);
+			r0 = draw_object(r0);
 			return;
 		}
 		OBJECT(current_object)->unk_34 += 8u;
 		OBJECT(current_object)->unk_36 += 8u;
 		OBJECT(current_object)->unk_30--;
 		OBJECT(current_object)->unk_32 -= 5u;
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	case 2:
 		AS16(OBJECT(current_object)->unk_88) += 0x20u;
@@ -2507,37 +2564,37 @@ void sub_01A536(void)
 		r3 = (uint16_t)((int16_t)rom_100C00[(uint32_t)(int16_t)(uint16_t)OBJECT(current_object)->unk_98] >> 12);
 		OBJECT(current_object)->unk_30 += (int16_t)rom_100C00[r0] >> 9;
 		OBJECT(current_object)->unk_32 += r3;
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A544[t1]);
+		invalid_jump(rom_01A544[state]);
 	}
 }
 
 void sub_01A672(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint32_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A680[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A680[state];
+	switch (state)
 	{
 	case 1:
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	case 0:
 		break;
 	default:
-		invalid_jump(rom_01A680[t1]);
+		invalid_jump(rom_01A680[state]);
 	}
 	OBJECT(current_object)->unk_3E = 0u;
 	r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 4;
 	r10 = 0x1AC70u + r0;
 	r9 = mem_read16(r10);
 	r10 += 2u;
-	sub_00F366(r9);
+	animation_start(r9);
 	OBJECT(current_object)->unk_3A = mem_read16(r10);
 	r10 += 2u;
 	OBJECT(current_object)->unk_34 = mem_read16(r10);
@@ -2548,8 +2605,8 @@ void sub_01A672(void)
 	r10 += 2u;
 	OBJECT(current_object)->unk_32 = mem_read16(r10);
 	OBJECT(current_object)->unk_3C = mem_read16(r10 + 2u);
-	OBJECT(current_object)->unk_0C++;
-	r0 = sub_00EAE4(r0);
+	OBJECT(current_object)->state++;
+	r0 = draw_object(r0);
 }
 
 void sub_01A6CF(void)
@@ -2558,17 +2615,17 @@ void sub_01A6CF(void)
 	uint32_t r1 = 0, r21 = 0;
 	uint8_t t1 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		if ((uint8_t)SCREEN(screen)->unk_80 == 6u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			OBJECT(current_object)->unk_01 = 0u;
 			return;
 		}
 		AT8(OBJECT(current_object)->unk_08, 2) = SCREEN(screen)->unk_02;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		t1 = (uint8_t)OBJECT(current_object)->unk_10;
@@ -2581,11 +2638,11 @@ void sub_01A6CF(void)
 		}
 		break;
 	default:
-		invalid_jump(rom_01A6DC[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_01A6DC[OBJECT(current_object)->state]);
 	}
 	AS8(OBJECT(current_object)->unk_10) = 0x1Eu;
 	AT8(OBJECT(current_object)->unk_08, 3) = (uint8_t)(OBJECT(current_object)->unk_08 >> 16u);
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_01A7C5_ADDRESS);
 	mem_write8(r21 + 0xAu, (uint8_t)(OBJECT(current_object)->unk_08 >> 16u));
 	mem_write8(r21 + 0xBu, (uint8_t)(OBJECT(current_object)->unk_08 >> 16u));
@@ -2629,7 +2686,7 @@ void sub_01A6CF(void)
 			r0 = 1u;
 		else
 			r0 = 0u;
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A834_ADDRESS);
 		mem_write32(r21 + 0x14u, current_object);
 		mem_write8(r21 + 9u, r0);
@@ -2643,16 +2700,16 @@ void sub_01A6CF(void)
 void sub_01A7C5(void)
 {
 	uint32_t r0 = 0, r9 = 0;
-	uint16_t t2 = 0;
-	uint32_t t1 = 0;
+	uint16_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A7D0[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A7D0[state];
+	switch (state)
 	{
 	case 0:
 		r9 = rom_01A986[(uint8_t)(OBJECT(current_object)->unk_08 >> 16u)];
-		sub_00F366(r9);
+		animation_start(r9);
 		r0 = (uint16_t)(rom_01A996[(uint8_t)(OBJECT(current_object)->unk_08 >> 24u)] + 4u);
 		OBJECT(current_object)->unk_3A = r0;
 		OBJECT(current_object)->unk_3E = 0xAu;
@@ -2662,106 +2719,106 @@ void sub_01A7C5(void)
 		OBJECT(current_object)->unk_32 = 0xC0u;
 		OBJECT(current_object)->unk_40 = 4u;
 		OBJECT(current_object)->unk_3C = 0x19Eu;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01A7D0[t1]);
+		invalid_jump(rom_01A7D0[state]);
 	}
-	t2 = OBJECT(current_object)->unk_30 - 0xEu;
-	OBJECT(current_object)->unk_30 = t2;
-	if ((int16_t)t2 >= 0)
+	t1 = OBJECT(current_object)->unk_30 - 0xEu;
+	OBJECT(current_object)->unk_30 = t1;
+	if ((int16_t)t1 >= 0)
 	{
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	}
-	OBJECT(current_object)->unk_00 = 0u;
+	OBJECT(current_object)->flags = 0u;
 }
 
 void sub_01A834(void)
 {
 	uint32_t r0 = 0, r9 = 0;
-	uint8_t t2 = 0, t3 = 0, t4 = 0;
-	uint32_t t1 = 0;
+	uint8_t t1 = 0, t2 = 0, t3 = 0;
+	uint32_t state = 0;
 
 	if (mem_read8(OBJECT(current_object)->unk_14 + 9u) != (uint8_t)(OBJECT(current_object)->unk_08 >> 8u))
 	{
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A84C[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A84C[state];
+	switch (state)
 	{
 	case 0:
 		AS8(OBJECT(current_object)->unk_10) = 6u;
-		OBJECT(current_object)->unk_0C++;
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 != 1u)
+		OBJECT(current_object)->state++;
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 != 1u)
 			return;
 		OBJECT(current_object)->unk_3E = 0u;
 		r9 = rom_01A9A6[(uint8_t)(OBJECT(current_object)->unk_08 >> 8u)];
-		sub_00F366(r9);
+		animation_start(r9);
 		r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 24u);
 		OBJECT(current_object)->unk_3A = rom_01A9AC[r0];
 		OBJECT(current_object)->unk_30 = 0xA0u;
 		OBJECT(current_object)->unk_32 = 0xC0u;
 		OBJECT(current_object)->unk_3C = 0x19Du;
 		AS8(OBJECT(current_object)->unk_10) = 0x16u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 1:
-		t2 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
-		if (t2 != 1u)
+		t1 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t1 - 1u;
+		if (t1 != 1u)
 			return;
 		OBJECT(current_object)->unk_3E = 0u;
 		r9 = rom_01A9A6[(uint8_t)(OBJECT(current_object)->unk_08 >> 8u)];
-		sub_00F366(r9);
+		animation_start(r9);
 		r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 24u);
 		OBJECT(current_object)->unk_3A = rom_01A9AC[r0];
 		OBJECT(current_object)->unk_30 = 0xA0u;
 		OBJECT(current_object)->unk_32 = 0xC0u;
 		OBJECT(current_object)->unk_3C = 0x19Du;
 		AS8(OBJECT(current_object)->unk_10) = 0x16u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		break;
 	case 2:
 		break;
 	case 3:
-		t3 = (uint8_t)OBJECT(current_object)->unk_10;
-		AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
-		if (t3 != 1u)
+		t2 = (uint8_t)OBJECT(current_object)->unk_10;
+		AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+		if (t2 != 1u)
 		{
-			r0 = sub_00EAE4(r0);
+			r0 = draw_object(r0);
 			return;
 		}
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		return;
 	default:
-		invalid_jump(rom_01A84C[t1]);
+		invalid_jump(rom_01A84C[state]);
 	}
-	sub_00F30D(0u);
-	t4 = (uint8_t)OBJECT(current_object)->unk_10;
-	AS8(OBJECT(current_object)->unk_10) = t4 - 1u;
-	if (t4 != 1u)
-	{
-		r0 = sub_00EAE4(r0);
-		return;
-	}
-	OBJECT(current_object)->unk_3C--;
-	AS8(OBJECT(current_object)->unk_10) = 0x1Eu;
-	OBJECT(current_object)->unk_0C++;
+	animation_advance(0u);
 	t3 = (uint8_t)OBJECT(current_object)->unk_10;
 	AS8(OBJECT(current_object)->unk_10) = t3 - 1u;
 	if (t3 != 1u)
 	{
-		r0 = sub_00EAE4(r0);
+		r0 = draw_object(r0);
 		return;
 	}
-	OBJECT(current_object)->unk_00 = 0u;
+	OBJECT(current_object)->unk_3C--;
+	AS8(OBJECT(current_object)->unk_10) = 0x1Eu;
+	OBJECT(current_object)->state++;
+	t2 = (uint8_t)OBJECT(current_object)->unk_10;
+	AS8(OBJECT(current_object)->unk_10) = t2 - 1u;
+	if (t2 != 1u)
+	{
+		r0 = draw_object(r0);
+		return;
+	}
+	OBJECT(current_object)->flags = 0u;
 }
 
 uint32_t sub_01A8CA(uint32_t r1, uint8_t r2)
@@ -2770,7 +2827,7 @@ uint32_t sub_01A8CA(uint32_t r1, uint8_t r2)
 
 	do
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01A8E2_ADDRESS);
 		mem_write8(r21 + 9u, r2);
 		r2++;
@@ -2782,35 +2839,35 @@ uint32_t sub_01A8CA(uint32_t r1, uint8_t r2)
 void sub_01A8E2(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint16_t t2 = 0;
-	uint32_t t1 = 0;
+	uint16_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01A8F0[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01A8F0[state];
+	switch (state)
 	{
 	case 0:
 		break;
 	case 1:
-		t2 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t2 - 1u;
-		if (t2 == 1u)
+		t1 = OBJECT(current_object)->unk_10;
+		OBJECT(current_object)->unk_10 = t1 - 1u;
+		if (t1 == 1u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A8F0[t1]);
+		invalid_jump(rom_01A8F0[state]);
 	}
 	OBJECT(current_object)->unk_3E = 0u;
 	r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 4;
 	r10 = 0x1A95Bu + r0;
 	r9 = mem_read16(r10);
 	r10 += 2u;
-	sub_00F366(r9);
+	animation_start(r9);
 	OBJECT(current_object)->unk_3A = mem_read16(r10);
 	r10 += 2u;
 	OBJECT(current_object)->unk_34 = mem_read16(r10);
@@ -2823,9 +2880,9 @@ void sub_01A8E2(void)
 	r10 += 2u;
 	OBJECT(current_object)->unk_3C = mem_read16(r10);
 	OBJECT(current_object)->unk_10 = mem_read16(r10 + 2u);
-	OBJECT(current_object)->unk_0C++;
-	sub_00F30D(0u);
-	r0 = sub_00EAE4(r0);
+	OBJECT(current_object)->state++;
+	animation_advance(0u);
+	r0 = draw_object(r0);
 }
 
 void sub_01AA01(void)
@@ -2834,31 +2891,31 @@ void sub_01AA01(void)
 	uint32_t r10 = 0, r11 = 0, r19 = 0, ignored = 0;
 	uint32_t stack_10 = 0, stack_14 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		if ((uint8_t)SCREEN(screen)->unk_80 == 6u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			OBJECT(current_object)->unk_01 = 0u;
 		}
 		if (unk_20E615 != 0u)
 		{
-			OBJECT(current_object)->unk_0C++;
+			OBJECT(current_object)->state++;
 			r19 = 0x1AB62u;
-			ignored = sub_011A32(r19);
+			ignored = draw_text(r19);
 			return;
 		}
-		OBJECT(current_object)->unk_0C += 2u;
+		OBJECT(current_object)->state += 2u;
 		break;
 	case 1:
 		r19 = 0x1AB62u;
-		ignored = sub_011A32(r19);
+		ignored = draw_text(r19);
 		return;
 	case 2:
 		break;
 	default:
-		invalid_jump(rom_01AA0C[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_01AA0C[OBJECT(current_object)->state]);
 	}
 	switch (SCREEN(screen)->unk_00)
 	{
@@ -2879,7 +2936,7 @@ void sub_01AA01(void)
 		r19 = 0x1AB80u;
 	stack_10 = r10;
 	stack_14 = r11;
-	sub_011A32(r19);
+	draw_text(r19);
 	r11_2 = (uint8_t)stack_14;
 	r10_2 = (uint8_t)stack_10;
 	r12 = r12 & ~0xFFu;
@@ -2921,10 +2978,10 @@ void sub_01AB20(void)
 	OBJECT(current_object)->unk_3E = 0u;
 	r0 = (uint8_t)(OBJECT(current_object)->unk_08 >> 8u);
 	r9 = rom_01AB98[r0];
-	sub_00F366(r9);
+	animation_start(r9);
 	OBJECT(current_object)->unk_3A = rom_01AB9E[r0];
 	OBJECT(current_object)->unk_40 = (uint8_t)(OBJECT(current_object)->unk_08 >> 16u);
-	sub_00EAE4(r0);
+	draw_object(r0);
 }
 
 void sub_01ADE8(void)
@@ -2933,17 +2990,17 @@ void sub_01ADE8(void)
 	uint32_t r10 = 0;
 	uint32_t t1 = 0, target1 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->unk_80 = timeline_1AFC0_ADDRESS;
 		OBJECT(current_object)->unk_10 = 0u;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		return;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01ADF4[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_01ADF4[OBJECT(current_object)->state]);
 	}
 	OBJECT(current_object)->unk_10++;
 	r10 = OBJECT(current_object)->unk_80;
@@ -2952,7 +3009,7 @@ void sub_01ADE8(void)
 	r10 += 4u;
 	if ((int32_t)t1 < 0)
 	{
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		return;
 	}
 	if (zero)
@@ -2989,7 +3046,7 @@ void sub_01AE2D(void)
 		r0 += unk_20E040;
 	else
 		r0++;
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_01AE8D_ADDRESS);
 	mem_write8(r21 + 9u, r0);
 }
@@ -3020,7 +3077,7 @@ void sub_01AE75(uint8_t r0, uint32_t r1)
 
 	do
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, sub_01AE8D_ADDRESS);
 		mem_write8(r21 + 9u, r0);
 		r0++;
@@ -3031,35 +3088,35 @@ void sub_01AE75(uint8_t r0, uint32_t r1)
 void sub_01AE8D(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0;
-	uint16_t t2 = 0;
-	uint32_t t1 = 0;
+	uint16_t t1 = 0;
+	uint32_t state = 0;
 
-	t1 = OBJECT(current_object)->unk_0C;
-	r0 = rom_01AE98[t1];
-	switch (t1)
+	state = OBJECT(current_object)->state;
+	r0 = rom_01AE98[state];
+	switch (state)
 	{
 	case 0:
 		break;
 	case 1:
-		t2 = OBJECT(current_object)->unk_10;
-		OBJECT(current_object)->unk_10 = t2 - 1u;
-		if (t2 == 1u)
+		t1 = OBJECT(current_object)->unk_10;
+		OBJECT(current_object)->unk_10 = t1 - 1u;
+		if (t1 == 1u)
 		{
-			OBJECT(current_object)->unk_00 = 0u;
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		sub_00F30D(0u);
-		r0 = sub_00EAE4(r0);
+		animation_advance(0u);
+		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01AE98[t1]);
+		invalid_jump(rom_01AE98[state]);
 	}
 	OBJECT(current_object)->unk_3E = 0u;
 	r0 = (uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 4;
 	r10 = 0x1AF00u + r0;
 	r9 = mem_read16(r10);
 	r10 += 2u;
-	sub_00F366(r9);
+	animation_start(r9);
 	OBJECT(current_object)->unk_3A = mem_read16(r10);
 	r10 += 2u;
 	OBJECT(current_object)->unk_34 = mem_read16(r10);
@@ -3072,9 +3129,9 @@ void sub_01AE8D(void)
 	r10 += 2u;
 	OBJECT(current_object)->unk_3C = mem_read16(r10);
 	OBJECT(current_object)->unk_10 = mem_read16(r10 + 2u);
-	OBJECT(current_object)->unk_0C++;
-	sub_00F30D(0u);
-	r0 = sub_00EAE4(r0);
+	OBJECT(current_object)->state++;
+	animation_advance(0u);
+	r0 = draw_object(r0);
 }
 
 void sub_01AFDC(void)
@@ -3082,7 +3139,7 @@ void sub_01AFDC(void)
 	uint16_t r4 = 0;
 	uint32_t r3 = 0, r4_2 = 0, r5 = 0, r10 = 0, r11 = 0;
 
-	switch (OBJECT(current_object)->unk_0C)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		AS8(SCREEN(screen)->unk_B00) = 0u;
@@ -3098,7 +3155,7 @@ void sub_01AFDC(void)
 		SCREEN(screen)->unk_5804 = 0u;
 		SCREEN(screen)->unk_5806 = 0u;
 		OBJECT(current_object)->unk_30 = 0xEu;
-		OBJECT(current_object)->unk_0C++;
+		OBJECT(current_object)->state++;
 		return;
 	case 1:
 		if ((SCREEN(screen)->unk_118 & 8u) != 0u)
@@ -3180,7 +3237,7 @@ void sub_01AFDC(void)
 	case 3:
 		return;
 	default:
-		invalid_jump(rom_01AFE8[OBJECT(current_object)->unk_0C]);
+		invalid_jump(rom_01AFE8[OBJECT(current_object)->state]);
 	}
 }
 
@@ -3448,7 +3505,7 @@ void sub_01C5DB(void)
 	current_object = 0x20E716u;
 	r26 = 0u;
 	set_bytes(WORK_RAM + 0xE716u, 0x19u, r26);
-	OBJECT(current_object)->unk_00 = 1u;
+	OBJECT(current_object)->flags = 1u;
 	OBJECT(current_object)->unk_01 = 1u;
 	sub_01C93B(r0);
 	r10 = 0u;
@@ -3458,7 +3515,7 @@ void sub_01C5DB(void)
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
 	if (rom_03FFF8 != t1)
 		r0_2 = (uint16_t)((r0_2 & ~0xFFu) | 3u);
-	OBJECT(current_object)->unk_00 = (uint8_t)r0_2;
+	OBJECT(current_object)->flags = (uint8_t)r0_2;
 	r0 = (r0_2 & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (rom_03FFFA != (uint16_t)r1)
@@ -3481,7 +3538,7 @@ void sub_01C5DB(void)
 		r0 = (r0 & ~0xFFu) | 3u;
 	AT8(OBJECT(current_object - 0x3u)->unk_02, 1) = r0;
 	current_object = current_object + 1u;
-	OBJECT(current_object - 0x4u)->unk_04 = 0x1010101u;
+	OBJECT(current_object - 0x4u)->handler = 0x1010101u;
 	sub_01C93B(r0);
 	r10 = 0x300000u;
 	r0 = 0x20000u;
@@ -3490,24 +3547,24 @@ void sub_01C5DB(void)
 	r1_2 = 2u;
 	if (t3 != 0u)
 		r1_2 = 3u;
-	AS8(OBJECT(current_object - 0x4u)->unk_04) = r1_2;
+	AS8(OBJECT(current_object - 0x4u)->handler) = r1_2;
 	t4 = r0 & 0xF0u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t4 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x5u)->unk_04, 1) = r1_2;
+	AT8(OBJECT(current_object - 0x5u)->handler, 1) = r1_2;
 	t5 = r0 & 0xF00u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t5 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x6u)->unk_04, 2) = r1_2;
+	AT8(OBJECT(current_object - 0x6u)->handler, 2) = r1_2;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if ((r0 & 0xF000u) != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x7u)->unk_04, 3) = r1_2;
+	AT8(OBJECT(current_object - 0x7u)->handler, 3) = r1_2;
 	current_object = current_object + 1u;
 	r0 = sub_0106AF();
 	OBJECT(current_object - 0x8u)->unk_08 = 0x1010101u;
@@ -3539,7 +3596,7 @@ void sub_01C5DB(void)
 	AT8(OBJECT(current_object - 0xBu)->unk_08, 3) = r1_2;
 	current_object = current_object + 1u;
 	sub_0107F0();
-	OBJECT(current_object - 0xCu)->unk_0C = 1u;
+	OBJECT(current_object - 0xCu)->state = 1u;
 	OBJECT(current_object - 0xCu)->unk_0D = 1u;
 	sub_01C93B(r0);
 	r10 = 0x600000u;
@@ -3548,7 +3605,7 @@ void sub_01C5DB(void)
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
-	OBJECT(current_object - 0xCu)->unk_0C = r1_2;
+	OBJECT(current_object - 0xCu)->state = r1_2;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if ((r0 & 0xFF00u) != 0u)

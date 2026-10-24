@@ -36,7 +36,7 @@ void sub_01DBA9(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->unk_00);
+	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 }
@@ -485,7 +485,7 @@ void sub_01E0B0(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->unk_00);
+	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	sub_01139E();
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
@@ -671,7 +671,7 @@ void sub_01E5F7(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->unk_00);
+	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 }

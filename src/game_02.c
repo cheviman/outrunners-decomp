@@ -365,7 +365,7 @@ void sub_00DDA8(void)
 		r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
 		mem_write32(r10 + 0xC0u, 0u);
 		mem_write32(r10 + 0xC8u, 0u);
-		sub_018AF0();
+		clear_lcd();
 		return;
 	default:
 		invalid_jump(rom_00DDB4[(uint8_t)(SCREEN(screen)->unk_80 >> 16u)]);
@@ -399,12 +399,15 @@ void sub_00DEC2(void)
 	move_string(0x100800u, 0x28u, SCREEN(screen)->race + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
-void sub_00DED2(void)
+/* Marks the screen's player ready in its race record (unk_5C), after its selections. */
+void set_player_ready(void)
 {
 	RACE(SCREEN(screen)->race)->unk_5C = 0xFFu;
 }
 
-uint32_t sub_00DED9(void)
+/* Whether a player of the race has not marked itself ready yet (zero set): byte 5C of each one's
+   race_copy record. */
+uint32_t players_not_ready(void)
 {
 	uint32_t zero = 0;
 	uint32_t r0 = 0, r1 = 0;
@@ -1423,12 +1426,17 @@ void sub_00E8DF(void)
 	}
 }
 
-uint32_t sub_00EAE4(uint32_t r0)
+/* Draws the object's sprite, unless flags bit 1 is set or the screen's sprite list is full: field 3E
+   picks the routine (rom_00EB44): some project the object's road position (1C) with its offsets (20, 24)
+   and set fields 30 and 32 to where it lands and 3C to the road's depth layer there, some draw it at the
+   screen position in 30 and 32, some copy a ready sprite entry from the address in field 38; then links
+   it into the depth list of layer 3C (screen + 5000). */
+uint32_t draw_object(uint32_t r0)
 {
 	uint32_t r2 = 0, r10 = 0, r11 = 0, left_caller = 0;
 	uint32_t target1 = 0;
 
-	if ((OBJECT(current_object)->unk_00 & 2u) != 0u)
+	if ((OBJECT(current_object)->flags & 2u) != 0u)
 		return r0;
 	r0 = rom_00EB44[OBJECT(current_object)->unk_3E];
 	r10 = SCREEN(screen)->unk_C0 + 0x10u;
@@ -1843,7 +1851,7 @@ void sub_00EF4A(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t 
 	r15 = r3;
 	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u);
 	r13 = rom_032BA4[OBJECT(current_object)->unk_3A];
-	r19 = AS16(OBJECT(current_object)->unk_00) & 0xC0u;
+	r19 = AS16(OBJECT(current_object)->flags) & 0xC0u;
 	r26 = r19;
 	r26 = r26 >> 5;
 	r17 = r15 * rom_00F13C[r26];
@@ -1990,8 +1998,8 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 	uint32_t r10 = *p_r10;
 	uint16_t r4 = 0, r9 = 0, r15 = 0, r16 = 0, r19 = 0, r26_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0, r13 = 0, r15_2 = 0, r18 = 0, r26 = 0;
-	uint16_t t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
-	uint32_t t1 = 0;
+	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint32_t flags = 0;
 
 	r28 = OBJECT(current_object)->unk_50;
 	r27 = SCREEN(screen)->unk_B4;
@@ -1999,9 +2007,9 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 	r1 = (uint32_t)(int16_t)OBJECT(current_object)->unk_32 - SCREEN(screen)->unk_16;
 	r2 = OBJECT(current_object)->unk_34;
 	r3 = OBJECT(current_object)->unk_36;
-	t1 = AS32(OBJECT(current_object)->unk_00);
-	AS32(OBJECT(current_object)->unk_00) = t1 | 0x20u;
-	if ((t1 & 0x20u) == 0u)
+	flags = AS32(OBJECT(current_object)->flags);
+	AS32(OBJECT(current_object)->flags) = flags | 0x20u;
+	if ((flags & 0x20u) == 0u)
 	{
 		r4 = (uint16_t)r0;
 		r5 = r1;
@@ -2035,7 +2043,7 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 	SCREEN(screen)->unk_B4 = r27;
 	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u);
 	r13 = rom_032BA4[OBJECT(current_object)->unk_3A];
-	r19 = AS16(OBJECT(current_object)->unk_00) & 0xC0u;
+	r19 = AS16(OBJECT(current_object)->flags) & 0xC0u;
 	r26 = r19;
 	r18 = rom_00F4EC[r26 >> 5];
 	r28 = mem_read16(r12);
@@ -2052,33 +2060,33 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 		r26 = OBJECT(current_object)->unk_43 * 3u;
 		r12 = r12 + 2u;
 		r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
-		t2 = ROM16(r14);
+		t1 = ROM16(r14);
 		r14 = r14 + 2u;
-		r15 = t2;
+		r15 = t1;
 		mem_write16(r10, r15);
 		r10 += 2u;
 		mem_write16(r11, r15);
 		r11 += 2u;
+		t2 = ROM16(r14);
+		r14 = r14 + 2u;
+		r26_2 = t2;
 		t3 = ROM16(r14);
 		r14 = r14 + 2u;
-		r26_2 = t3;
+		r15_2 = t3;
 		t4 = ROM16(r14);
 		r14 = r14 + 2u;
-		r15_2 = t4;
-		t5 = ROM16(r14);
-		r14 = r14 + 2u;
-		r9 = t5;
+		r9 = t4;
 		mem_write16(r10, (((r15_2 * r3) >> 8) & 0x3FFu) | r9);
 		r10 += 2u;
 		mem_write16(r11, (((r15_2 * r7) >> 8) & 0x3FFu) | r9);
 		r11 += 2u;
+		t5 = ROM16(r14);
+		r14 = r14 + 2u;
+		r15_2 = t5;
+		r16 = ((r15_2 * r6) >> 8) & 0x3FFu;
 		t6 = ROM16(r14);
 		r14 = r14 + 2u;
-		r15_2 = t6;
-		r16 = ((r15_2 * r6) >> 8) & 0x3FFu;
-		t7 = ROM16(r14);
-		r14 = r14 + 2u;
-		r9 = t7;
+		r9 = t6;
 		r15_2 = (((r15_2 * r2) >> 8) & 0x3FFu) | r9;
 		r16 |= r9;
 		r9 = SCREEN(screen)->unk_1A;
@@ -2102,9 +2110,9 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 		r10 += 2u;
 		mem_write16(r11, r26_2);
 		r11 += 2u;
-		t8 = mem_read16(r13);
+		t7 = mem_read16(r13);
 		r13 += 2u;
-		r27 = (r27 & ~0xFFFFu) | t8;
+		r27 = (r27 & ~0xFFFFu) | t7;
 		mem_write16(r10, r27);
 		r10 += 2u;
 		mem_write16(r11, r27);
@@ -2116,56 +2124,63 @@ void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10)
 	*p_r10 = r10;
 }
 
-uint32_t sub_00F30D(uint32_t r7)
+/* Steps the object's animation: nothing while frame_time is 0; when frame_countdown runs out (back to
+   frame_time), the next frame. A frame's entry in the record (32 bits at +4 + frame * 4) is the address
+   of its data when positive, else an order: 0 holds the frame before (frame_time 0), -1 goes back to
+   frame 0, -2 starts the animation whose number is the next entry. */
+uint32_t animation_advance(uint32_t r7)
 {
-	uint32_t r7_2 = 0, r8 = 0, r9 = 0;
-	uint8_t t1 = 0;
-	uint32_t t2 = 0;
+	uint32_t r7_2 = 0, r8 = 0, r9 = 0, frame = 0;
+	uint8_t frame_countdown = 0;
+	uint32_t t1 = 0;
 
-	if (OBJECT(current_object)->unk_41 == 0u)
+	if (OBJECT(current_object)->animation.frame_time == 0u)
 		return r7;
-	t1 = OBJECT(current_object)->unk_42;
-	OBJECT(current_object)->unk_42 = t1 - 1u;
-	if ((int8_t)t1 > 1)
+	frame_countdown = OBJECT(current_object)->animation.frame_countdown;
+	OBJECT(current_object)->animation.frame_countdown = frame_countdown - 1u;
+	if ((int8_t)frame_countdown > 1)
 		return r7;
-	OBJECT(current_object)->unk_42 = OBJECT(current_object)->unk_41;
-	OBJECT(current_object)->unk_40++;
-	r9 = OBJECT(current_object)->unk_40;
-	r8 = ROM32(OBJECT(current_object)->unk_38 * 2u * 2u + rom_034138_ADDRESS);
-	if ((int32_t)mem_read32(r8 + 4u + r9 * 4u) > 0)
+	OBJECT(current_object)->animation.frame_countdown = OBJECT(current_object)->animation.frame_time;
+	OBJECT(current_object)->animation.frame++;
+	frame = OBJECT(current_object)->animation.frame;
+	r8 = ROM32(OBJECT(current_object)->animation.animation * 2u * 2u + rom_034138_ADDRESS);
+	if ((int32_t)mem_read32(r8 + 4u + frame * 4u) > 0)
 		return r7;
-	t2 = 0u - mem_read32(r8 + 4u + r9 * 4u);
-	r7_2 = rom_00F34C[t2];
-	switch (t2)
+	t1 = 0u - mem_read32(r8 + 4u + frame * 4u);
+	r7_2 = rom_00F34C[t1];
+	switch (t1)
 	{
 	case 0:
-		OBJECT(current_object)->unk_41 = 0u;
-		OBJECT(current_object)->unk_40--;
+		OBJECT(current_object)->animation.frame_time = 0u;
+		OBJECT(current_object)->animation.frame--;
 		return r7_2;
 	case 2:
-		r9 = mem_read32(r8 + 8u + r9 * 4u);
-		sub_00F366(r9);
+		r9 = mem_read32(r8 + 8u + frame * 4u);
+		animation_start(r9);
 		return r7_2;
 	case 1:
-		OBJECT(current_object)->unk_40 = 0u;
+		OBJECT(current_object)->animation.frame = 0u;
 		return r7_2;
 	default:
-		invalid_jump(rom_00F34C[t2]);
+		invalid_jump(rom_00F34C[t1]);
 	}
 }
 
-void sub_00F366(uint32_t r9)
+/* Starts animation R9 (rom_034138[R9] is its record) at its first frame: frame_time and frame_countdown
+   from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and height zoom of
+   the screen-position drawing, sub_00EF32: 100 the sprite's own size). */
+void animation_start(uint32_t r9)
 {
 	uint8_t r9_2 = 0;
 
-	OBJECT(current_object)->unk_38 = r9;
+	OBJECT(current_object)->animation.animation = r9;
 	r9_2 = mem_read8(rom_034138[r9]);
-	OBJECT(current_object)->unk_41 = r9_2;
-	OBJECT(current_object)->unk_42 = r9_2;
-	OBJECT(current_object)->unk_43 = 0u;
+	OBJECT(current_object)->animation.frame_time = r9_2;
+	OBJECT(current_object)->animation.frame_countdown = r9_2;
+	OBJECT(current_object)->animation.size_step = 0u;
 	OBJECT(current_object)->unk_34 = 0x100u;
 	OBJECT(current_object)->unk_36 = 0x100u;
-	OBJECT(current_object)->unk_40 = 0u;
+	OBJECT(current_object)->animation.frame = 0u;
 }
 
 void sub_00F396(void)
@@ -2296,21 +2311,33 @@ void sub_00F396(void)
 	SCREEN(screen)->unk_B0 = 0u;
 }
 
-void sub_00F5C8(uint32_t r7, uint32_t r15)
+/* Draws the row's items in view: ends the object once end_position is not past the view's start
+   (race_copy unk_46); nothing while first_position is beyond the draw distance (SCREEN(screen)->unk_12
+   >> 7 segments); moves first_position up to the first item in view; for each item (spacing apart, to
+   the draw distance) where the road has a scale: x = (the road's width * side + x_offset) * scale >> 12
+   plus the road's screen x unless screen_centered, y = y_offset * scale >> 12 plus the road's screen y;
+   off the screen (x beyond -1E0..1E0, y beyond -160..80) it is skipped, else the scale shifted by
+   scale_shift picks the size (size_table: a size step and a shift) and a sprite of the animation's frame
+   with its palette (flags bits 6-7 flip it) goes into the screen's sprite list (unk_C0; the copy at
+   +3000 is the halfway point from the item's sprite of the frame before, previous_sprites) and the depth
+   list of its road segment (screen + 5000). Sets flags bit 5 and keeps where its sprites went in
+   previous_sprites. Used by scenery, fork_sign, animated_scenery, flashing_scenery and overhead_scenery
+   (and 01351E). */
+void road_row_draw(uint32_t r7, uint32_t r15)
 {
-	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0;
+	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_table = 0, spacing = 0;
 	uint16_t t1 = 0;
-	uint32_t t2 = 0, t3 = 0;
+	uint32_t flags = 0, t2 = 0;
 
-	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
-	r1 = OBJECT(current_object)->unk_58;
+	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
 	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
-	r4 = OBJECT(current_object)->unk_10;
+	spacing = OBJECT(current_object)->road_row.spacing;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->unk_01 = 0u;
 		return;
 	}
@@ -2318,60 +2345,60 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 		return;
 	while ((int16_t)r0 < (int16_t)r2)
 	{
-		r0 = (uint16_t)(r0 + r4);
+		r0 = (uint16_t)(r0 + spacing);
 	}
 	if ((int16_t)r3 < (int16_t)r1)
 		r1 = r3;
-	r3_2 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
-	AT16(OBJECT(current_object)->unk_54, 2) = r0;
+	first_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	OBJECT(current_object)->road_row.first_position = r0;
 	r1 = (uint16_t)(r1 - r0);
-	r1 = (uint16_t)(r1 + r4);
+	r1 = (uint16_t)(r1 + spacing);
 	r1 = (uint16_t)(r1 - 1u);
-	t1 = divide_u16(r1, r4);
+	t1 = divide_u16(r1, spacing);
 	r1 = t1;
 	if ((int16_t)t1 <= 0)
 		return;
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->unk_B4;
 	r21 = 0xEFFFu;
-	t2 = AS32(OBJECT(current_object)->unk_00);
-	AS32(OBJECT(current_object)->unk_00) = t2 | 0x20u;
-	if ((t2 & 0x20u) != 0u)
+	flags = AS32(OBJECT(current_object)->flags);
+	AS32(OBJECT(current_object)->flags) = flags | 0x20u;
+	if ((flags & 0x20u) != 0u)
 	{
-		r28 = OBJECT(current_object)->unk_50;
-		t3 = r3_2;
-		r3_2 = t3 - r0;
-		if (t3 != r0)
+		r28 = OBJECT(current_object)->road_row.previous_sprites;
+		t2 = first_position;
+		r3_2 = t2 - r0;
+		if (t2 != r0)
 		{
-			r28 = r28 - (divide_s32(r3_2, r4) << 3);
+			r28 = r28 - (divide_s32(r3_2, spacing) << 3);
 			r28 = (r28 & ~0xFFFFu) | (r28 & r21);
 		}
 	}
-	OBJECT(current_object)->unk_50 = r27;
+	OBJECT(current_object)->road_row.previous_sprites = r27;
 	r18 = screen + 0x2000u + ((r0 << 5) & 0xFFFu);
 	r19 = screen + 0x3000u + ((r0 - r2) << 4);
-	r9 = r4 << 4;
-	r8 = r4 << 5;
+	r9 = spacing << 4;
+	r8 = spacing << 5;
 	r17 = r1;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u) + 2u;
-	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->unk_3A]) << 16;
-	r0 = AS16(OBJECT(current_object)->unk_00);
+	r12 = mem_read32(rom_034138[OBJECT(current_object)->road_row.animation] + 4u + OBJECT(current_object)->road_row.frame * 4u) + 2u;
+	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->road_row.palette]) << 16;
+	r0 = AS16(OBJECT(current_object)->flags);
 	r0 = r0 & 0xC0u;
 	r0 = r0 ^ mem_read16(r12);
 	r12 = r12 + 2u;
 	r1 = mem_read16(r12);
 	r13 = 0x122B74u + r1 * 4u;
 	r10 = SCREEN(screen)->unk_C0 + 0x10u;
-	OBJECT(current_object)->unk_43 = 0xFFu;
+	OBJECT(current_object)->road_row.size_step = 0xFFu;
 	r12 = r12 + 2u;
 	for (;;)
 	{
 		r3_2 = mem_read16(r19);
 		if (r3_2 != 0u && r3_2 <= 0x1200u)
 		{
-			r6 = (uint16_t)((int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F + (int16_t)OBJECT(current_object)->unk_20) * r3_2) >> 12);
-			r5 = (uint16_t)(((int32_t)((int16_t)OBJECT(current_object)->unk_24 * r3_2) >> 12) + mem_read16(r19 + 6u));
-			if ((uint8_t)OBJECT(current_object)->unk_5C == 0u)
+			r6 = (uint16_t)((int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->road_row.side + OBJECT(current_object)->road_row.x_offset) * r3_2) >> 12);
+			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->road_row.y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
+			if (OBJECT(current_object)->road_row.screen_centered == 0u)
 				r6 += mem_read16(r19 + 4u);
 			if ((int16_t)r6 > 0x1E0 || (int16_t)r6 < -0x1E0 || (int16_t)r5 > 0x80 || (int16_t)r5 < -0x160)
 			{
@@ -2389,17 +2416,17 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 				SCREEN(screen)->unk_C0 = r10;
 				break;
 			}
-			r3_2 = shift_by(r3_2, OBJECT(current_object)->unk_44, 32);
+			r3_2 = shift_by(r3_2, OBJECT(current_object)->road_row.scale_shift, 32);
 			r4 = r3_2;
 			if (r4 >= 0x1000u)
 				r4 = 0xFFFu;
 			r4 = r4 >> 5;
-			r26 = OBJECT(current_object)->unk_45;
-			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[r26] + r4), 32);
-			r4 = mem_read8(rom_1598CC[r26] + r4);
-			if (r4 != OBJECT(current_object)->unk_43)
+			size_table = OBJECT(current_object)->road_row.size_table;
+			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[size_table] + r4), 32);
+			r4 = mem_read8(rom_1598CC[size_table] + r4);
+			if (r4 != OBJECT(current_object)->road_row.size_step)
 			{
-				OBJECT(current_object)->unk_43 = r4;
+				OBJECT(current_object)->road_row.size_step = r4;
 				r4 = r13 + r4 * 3u * 4u;
 				r0 = (r0 & 0xFFFFu) | ((uint32_t)ROM16(r4) << 16);
 				r4 += 2u;
@@ -2424,24 +2451,24 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 			r10 += 4u;
 			if (mem_read16(r28 + 8u) == (uint16_t)r7)
 			{
-				r26_2 = mem_read16(r28);
+				r26 = mem_read16(r28);
 				mem_write16(r27, r3_2);
-				mem_write16(r10 + 0x3000u, ((uint16_t)(r26_2 + r3_2) >> 1) | r1);
+				mem_write16(r10 + 0x3000u, ((uint16_t)(r26 + r3_2) >> 1) | r1);
 				mem_write16(r10, r3_2 | r1);
-				r26_2 = mem_read16(r28 + 2u);
+				r26 = mem_read16(r28 + 2u);
 				mem_write16(r27 + 2u, r4_2);
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, ((uint16_t)(r26_2 + r4_2) >> 1) | r2);
+				mem_write16(r10 + 0x3000u, ((uint16_t)(r26 + r4_2) >> 1) | r2);
 				mem_write16(r10, r4_2 | r2);
-				r26_2 = mem_read16(r28 + 4u);
+				r26 = mem_read16(r28 + 4u);
 				mem_write16(r27 + 4u, r5);
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, (int16_t)(r26_2 + r5) >> 1);
+				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r5) >> 1);
 				mem_write16(r10, r5);
-				r26_2 = mem_read16(r28 + 6u);
+				r26 = mem_read16(r28 + 6u);
 				mem_write16(r27 + 6u, r6);
 				r10 += 2u;
-				mem_write16(r10 + 0x3000u, (int16_t)(r26_2 + r6) >> 1);
+				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r6) >> 1);
 				mem_write16(r10, r6);
 				r10 += 2u;
 			}
@@ -2493,38 +2520,42 @@ void sub_00F5C8(uint32_t r7, uint32_t r15)
 			break;
 		}
 	}
-	r26 = rom_100000;
-	mem_write32(r27, r26);
+	r26_2 = rom_100000;
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26);
+	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
 	SCREEN(screen)->unk_B4 = r27;
 }
 
-void sub_00F911(uint32_t r7, uint32_t r15)
+/* road_row_draw for the rows drawn in mirrored pairs: each item twice, at the same distance either side
+   of the road's centre, the second with sprite attribute bits 43 toggled (bit 6 flips it, bits 0-1 swap
+   its X alignment); there is no off-screen test and no screen_centered. Used by scenery_pair and
+   animated_scenery_pair. */
+void road_row_pair_draw(uint32_t r7, uint32_t r15)
 {
 	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r21 = 0, r26 = 0, r30 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_table = 0, spacing = 0;
 	uint16_t t1 = 0;
-	uint32_t t2 = 0, t3 = 0;
+	uint32_t flags = 0, t2 = 0;
 
 	r30 = 0x43u;
-	r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
-	r1 = OBJECT(current_object)->unk_58;
+	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
 	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
 	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
-	r4 = OBJECT(current_object)->unk_10;
+	spacing = OBJECT(current_object)->road_row.spacing;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
-		OBJECT(current_object)->unk_00 = 0u;
+		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->unk_01 = 0u;
 		return;
 	}
@@ -2532,74 +2563,74 @@ void sub_00F911(uint32_t r7, uint32_t r15)
 		return;
 	while ((int16_t)r0 < (int16_t)r2)
 	{
-		r0 = (uint16_t)(r0 + r4);
+		r0 = (uint16_t)(r0 + spacing);
 	}
 	if ((int16_t)r3 < (int16_t)r1)
 		r1 = r3;
-	r3_2 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
-	AT16(OBJECT(current_object)->unk_54, 2) = r0;
+	first_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	OBJECT(current_object)->road_row.first_position = r0;
 	r1 = (uint16_t)(r1 - r0);
-	r1 = (uint16_t)(r1 + r4);
+	r1 = (uint16_t)(r1 + spacing);
 	r1 = (uint16_t)(r1 - 1u);
-	t1 = divide_u16(r1, r4);
+	t1 = divide_u16(r1, spacing);
 	r1 = t1;
 	if ((int16_t)t1 <= 0)
 		return;
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->unk_B4;
 	r21 = 0xEFFFu;
-	t2 = AS32(OBJECT(current_object)->unk_00);
-	AS32(OBJECT(current_object)->unk_00) = t2 | 0x20u;
-	if ((t2 & 0x20u) != 0u)
+	flags = AS32(OBJECT(current_object)->flags);
+	AS32(OBJECT(current_object)->flags) = flags | 0x20u;
+	if ((flags & 0x20u) != 0u)
 	{
-		r28 = OBJECT(current_object)->unk_50;
-		t3 = r3_2;
-		r3_2 = t3 - r0;
-		if (t3 != r0)
+		r28 = OBJECT(current_object)->road_row.previous_sprites;
+		t2 = first_position;
+		r3_2 = t2 - r0;
+		if (t2 != r0)
 		{
-			r28 = r28 - (divide_s32(r3_2, r4) << 3);
+			r28 = r28 - (divide_s32(r3_2, spacing) << 3);
 			r28 = (r28 & ~0xFFFFu) | (r28 & r21);
 		}
 	}
-	OBJECT(current_object)->unk_50 = r27;
+	OBJECT(current_object)->road_row.previous_sprites = r27;
 	r18 = screen + 0x2000u + ((r0 << 5) & 0xFFFu);
 	r19 = screen + 0x3000u + ((r0 - r2) << 4);
-	r9 = r4 << 4;
-	r8 = r4 << 5;
+	r9 = spacing << 4;
+	r8 = spacing << 5;
 	r17 = r1;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->unk_38] + 4u + OBJECT(current_object)->unk_40 * 4u) + 2u;
-	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->unk_3A]) << 16;
-	r0 = AS16(OBJECT(current_object)->unk_00);
+	r12 = mem_read32(rom_034138[OBJECT(current_object)->road_row.animation] + 4u + OBJECT(current_object)->road_row.frame * 4u) + 2u;
+	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->road_row.palette]) << 16;
+	r0 = AS16(OBJECT(current_object)->flags);
 	r0 = r0 & 0xC0u;
 	r0 = r0 ^ mem_read16(r12);
 	r12 = r12 + 2u;
 	r1 = mem_read16(r12);
 	r13 = 0x122B74u + r1 * 4u;
 	r10 = SCREEN(screen)->unk_C0 + 0x10u;
-	OBJECT(current_object)->unk_43 = 0xFFu;
+	OBJECT(current_object)->road_row.size_step = 0xFFu;
 	r12 = r12 + 2u;
 	for (;;)
 	{
 		r3_2 = mem_read16(r19);
 		if (r3_2 != 0u && r3_2 <= 0x1200u)
 		{
-			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F + (int16_t)OBJECT(current_object)->unk_20) * r3_2) >> 12;
-			r5 = (uint16_t)(((int32_t)((int16_t)OBJECT(current_object)->unk_24 * r3_2) >> 12) + mem_read16(r19 + 6u));
+			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->road_row.side + OBJECT(current_object)->road_row.x_offset) * r3_2) >> 12;
+			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->road_row.y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
 			r26 = (uint16_t)r6;
 			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
 			r6 = (((r6 << 16) | (r6 >> 16)) & ~0xFFFFu) | (uint16_t)(0u - r26);
 			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
-			r3_2 = shift_by(r3_2, OBJECT(current_object)->unk_44, 32);
+			r3_2 = shift_by(r3_2, OBJECT(current_object)->road_row.scale_shift, 32);
 			r4 = r3_2;
 			if (r4 >= 0x1000u)
 				r4 = 0xFFFu;
 			r4 = r4 >> 5;
-			r26_2 = OBJECT(current_object)->unk_45;
-			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[r26_2] + r4), 32);
-			r4 = mem_read8(rom_1598CC[r26_2] + r4);
-			if (r4 != OBJECT(current_object)->unk_43)
+			size_table = OBJECT(current_object)->road_row.size_table;
+			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[size_table] + r4), 32);
+			r4 = mem_read8(rom_1598CC[size_table] + r4);
+			if (r4 != OBJECT(current_object)->road_row.size_step)
 			{
-				OBJECT(current_object)->unk_43 = r4;
+				OBJECT(current_object)->road_row.size_step = r4;
 				r4 = r13 + r4 * 3u * 4u;
 				r0 = (r0 & 0xFFFFu) | ((uint32_t)ROM16(r4) << 16);
 				r4 += 2u;
@@ -2803,7 +2834,7 @@ void sub_00FD22(void)
 	CAR(player_car)->unk_D0 = r2;
 	CAR(player_car)->unk_CB = 0u;
 	sub_0115B1();
-	r21 = sub_011D43();
+	r21 = start_object();
 	mem_write32(r21 + 4u, sub_00CABC_ADDRESS);
 	for (;;)
 	{
@@ -2816,13 +2847,13 @@ void sub_00FD22(void)
 		switch (0u - r0_2)
 		{
 		case 0:
-			OBJECT(current_object)->unk_0C = 3u;
+			OBJECT(current_object)->state = 3u;
 			OBJECT(current_object)->unk_0D = 0u;
 			OBJECT(current_object)->unk_0E = 0u;
 			OBJECT(current_object)->unk_0F = 0u;
 			return;
 		case 6:
-			r21 = sub_011D43();
+			r21 = start_object();
 			mem_write32(r21 + 4u, sub_00C8B6_ADDRESS);
 			mem_write16(r21 + 0x1Cu, CAR(player_car)->unk_AA);
 			CAR(player_car)->unk_A0 = r11;
@@ -2896,13 +2927,13 @@ void sub_00FD78(uint16_t r5)
 			switch (0u - r0)
 			{
 			case 0:
-				OBJECT(current_object)->unk_0C = 3u;
+				OBJECT(current_object)->state = 3u;
 				OBJECT(current_object)->unk_0D = 0u;
 				OBJECT(current_object)->unk_0E = 0u;
 				OBJECT(current_object)->unk_0F = 0u;
 				return;
 			case 6:
-				r21 = sub_011D43();
+				r21 = start_object();
 				mem_write32(r21 + 4u, sub_00C8B6_ADDRESS);
 				mem_write16(r21 + 0x1Cu, CAR(player_car)->unk_AA);
 				CAR(player_car)->unk_A0 = r11;
@@ -4224,28 +4255,28 @@ void sub_01106C(uint32_t r6)
 	{
 		r0 = 0x4Eu;
 		screen = SCREEN_1;
-		sub_011EDE(r0);
+		queue_sound(r0);
 		unk_20E08C--;
 	}
 	if (unk_20E08D != 0u)
 	{
 		r0 = 0x4Eu;
 		screen = SCREEN_2;
-		sub_011EDE(r0);
+		queue_sound(r0);
 		unk_20E08D--;
 	}
 	if (unk_20E08E != 0u)
 	{
 		r0 = 0x50u;
 		screen = SCREEN_1;
-		sub_011EDE(r0);
+		queue_sound(r0);
 		unk_20E08E--;
 	}
 	if (unk_20E08F != 0u)
 	{
 		r0 = 0x50u;
 		screen = SCREEN_2;
-		sub_011EDE(r0);
+		queue_sound(r0);
 		unk_20E08F--;
 	}
 	screen = saved_screen;
@@ -5118,7 +5149,8 @@ void sub_011958(void)
 	} while (r2 != 0u);
 }
 
-uint32_t sub_011975(uint32_t r0)
+/* Converts R0 into eight decimal digits, one per four bits, the units in the lowest. */
+uint32_t binary_to_bcd(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r3 = 0;
 
@@ -5161,7 +5193,9 @@ void sub_0119FA(uint32_t r3, uint16_t r5, uint32_t r18)
 	r18 = sub_011A72(r1, r2, r3, r4, r5, r10, r11, r18);
 }
 
-uint32_t sub_011A32(uint32_t r19)
+/* Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character
+   and returns the address of the record after it. */
+uint32_t draw_text(uint32_t r19)
 {
 	uint16_t r4 = 0, r5 = 0;
 	uint32_t r1 = 0, r2 = 0, r3 = 0, r10 = 0, r11 = 0, r18 = 0;
@@ -5248,7 +5282,7 @@ void sub_011C60(void)
 	AS16(SCREEN(screen)->unk_900) = 0u;
 }
 
-void sub_011CC0(void)
+void run_objects(void)
 {
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r22 = 0;
 	uint32_t t1 = 0;
@@ -5262,9 +5296,9 @@ void sub_011CC0(void)
 		r22 += 2u;
 		if ((uint16_t)current_object == 0u)
 			break;
-		if ((OBJECT(current_object)->unk_00 & 1u) != 0u)
+		if ((OBJECT(current_object)->flags & 1u) != 0u)
 		{
-			call_code(OBJECT(current_object)->unk_04);
+			call_code(OBJECT(current_object)->handler);
 			t1 = mem_read32(screen - 0x7FF8u);
 			mem_write16(t1, mem_read16(t1) + 1u);
 			mem_write16(mem_read32(screen - 0x7FF8u) + mem_read16(mem_read32(screen - 0x7FF8u)) * 2u, current_object);
@@ -5292,7 +5326,7 @@ void sub_011CC0(void)
 	mem_write32(screen - 0x7FF4u, mem_read32(screen - 0x7FFCu) + r0 * 2u);
 }
 
-uint32_t sub_011D43(void)
+uint32_t start_object(void)
 {
 	uint32_t zero = 0;
 	uint8_t r9 = 0;
@@ -5443,7 +5477,7 @@ uint32_t sub_011E2C(uint32_t r10)
 	r10 += 4u;
 	do
 	{
-		r21 = sub_011D43();
+		r21 = start_object();
 		mem_write32(r21 + 4u, mem_read32(r10));
 		mem_write8(r21 + 9u, r7);
 		r7++;
@@ -5453,7 +5487,8 @@ uint32_t sub_011E2C(uint32_t r10)
 	return r21;
 }
 
-uint32_t sub_011E45(void)
+/* Returns the next pseudo-random number of the screen's sequence (kept in unk_F00). */
+uint32_t random_number(void)
 {
 	uint32_t r0 = 0, r1 = 0;
 
@@ -5478,13 +5513,15 @@ void sub_011E88(void)
 	mem_write8(SOUND_701FFF, 0u);
 }
 
-void sub_011EB8(uint8_t r0)
+/* Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when
+   only the sounds the table at 01202E allows play, and only with unk_20E60D set. */
+void request_sound(uint8_t r0)
 {
 	uint32_t r2 = 0;
 
 	if ((SCREEN(screen)->unk_90 & 0x100u) == 0u)
 	{
-		sub_011EDE(r0);
+		queue_sound(r0);
 		return;
 	}
 	if (unk_20E60D != 0u)
@@ -5492,13 +5529,15 @@ void sub_011EB8(uint8_t r0)
 		r2 = (uint8_t)r0;
 		if ((rom_01202E[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
 		{
-			sub_011EDE(r0);
+			queue_sound(r0);
 			return;
 		}
 	}
 }
 
-void sub_011EDE(uint8_t r0)
+/* Puts sound R0 in the screen's ring of 32 sound requests (801 of the screen: the place, then the
+   requests). */
+void queue_sound(uint8_t r0)
 {
 	uint32_t r1 = 0, r2 = 0;
 
