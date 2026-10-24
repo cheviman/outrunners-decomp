@@ -61,6 +61,9 @@ struct screen 8000
 # Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (stage at
 # 60, node at 62, the race time at 68), and 20FC00 and 20FC80, which the time is copied to
 struct race 80
+field object 00 flags u8               # bit 0: the object is live (run_objects runs it; else it frees its slot)
+field object 04 handler u32            # the code run_objects runs for it each frame ("jsr [4[R20]]", 011CD2)
+field object 0C state u8               # the step its handler is at: most handlers go by it through a table
 field screen 20 race_copy u32 race     # 20FC00 for screen 1, 20FC80 for screen 2
 field screen 24 race u32 race          # 20FB00 for screen 1, 20FB80 for screen 2
 field car 0 object u32 object          # the car's object, in the screen's objects (set as it starts, 0072xx)
@@ -82,6 +85,14 @@ field car 0 object u32 object          # the car's object, in the screen's objec
 task  second_task
 03F5FC  code  task_swap          # 03F5FC-03F608: the running task's stacks go to 0[R24] and 4[R24], the other one's come back
 03F60C  code  task_swap_done     # the handler goes on with the other task's interrupt frame: it returns into that task
+
+# ======== the objects ========
+# Below each screen's block (screen - 8000): this frame's list of objects at -8000 (a count, then the low
+# halves of their addresses), the next frame's at -7FF8 (the two lists, at -7E00 and -7D00, swap every
+# frame), the used slots at -7FF0 (7C bytes, FF used), a spare object at -7F00 and the 124 objects from
+# -7C00, 100 bytes each
+011CC0  func  run_objects        # the object loop: each live object of this frame's list (flags bit 0) has its handler run and goes on the next frame's list; a dead one frees its slot; then this frame's list is cleared and the two swap
+011D43  func  start_object       # the first free slot: its 100 bytes cleared, live (flags bit 0), its slot number at 8, on this frame's list; R21 = the object (the spare at screen - 7F00 when no slot is free)
 
 # ======== object handler lists ========
 # A 32-bit count, then that many handlers: the code takes a list with "movea.b list[PC], R10" and starts an
@@ -114,10 +125,11 @@ task  second_task
 01AFC0  data  timeline_1AFC0  record=8 end=0000FFFF code=4
 01AE24  code  timeline_call  calls=timeline_1AFC0    # "jsr [R1]": the routine of the record the counter reached
 
-# Messages typed out a character at a time: (sound << 24 | address) records; the address is a string of
-# indices into the character table 018AE8, closed by a negative byte. 019402 starts message R0 (the sound
-# through 011EB8, the string's address to F30[R25]); 0189D9 types its next character every third frame
-019576  data  typed_messages  record=4 count=61 data=0
+# The radio DJ's voice lines: (sound << 24 | address) records; the address is a string of mouth shapes
+# (indices into 018AE8, pairs of the LCD's custom characters, shown in its characters 0-1) closed by a
+# negative byte. start_dj_message (019402) starts line R0 (the sound through request_sound, the string's
+# address to F30[R25]); 0189D9 shows its next shape every third frame
+019576  data  dj_messages  record=4 count=61 data=0
 
 # 019266-019294: lists of routines an object runs one after another, a step each time; 019280 picks the list
 # by a number below 14 and keeps its place at 38[R20]
@@ -198,3 +210,302 @@ task  second_task
 030B60  data  unk_030B60         # unused: data before the object data of object_lists_2E1F0
 03F7D8  code  unused_03F7D8      # unused: what the branch before it skips, then on into the code at 03F801
 03F86C  code  link_unused_case   # unused: a case of int_vector_44 (R0 and R1 pushed) its table at 03F85C does not list; it runs into the shared ending at 03F895
+
+# ======== road objects (naming batch A) ========
+00EAE4  func  draw_object
+00F30D  func  animation_advance
+00F366  func  animation_start
+00F5C8  func  road_row_draw
+00F911  func  road_row_pair_draw
+0122E3  func  fork_sign_hit_check
+0122E8  func  road_row_crash_check
+0122EB  func  road_row_hit_check
+0123AF  func  road_row_pair_crash_check
+01287C  func  scenery_update
+012894  func  road_row_start
+012906  func  flashing_scenery_update
+0129AB  func  scenery_pair_update
+0129F4  func  overhead_scenery_update
+012ACF  func  fork_sign_update
+012AF4  func  animated_scenery_update
+012B0C  func  road_row_start_copy
+012B84  func  animated_scenery_pair_update
+012BAE  func  road_crosser_update
+012DB7  func  moving_scenery_update
+013104  func  flagman_update
+comment scenery_update Static scenery along the road (trees, buildings, crowds, banners, signs): a row of identical sprites from its record. By state: 0 road_row_start; 1 road_row_crash_check, then road_row_draw; 2 (a record without a hit box) road_row_draw only. Ends when road_row_draw finds the whole row behind the view.
+comment scenery_pair_update Static scenery drawn twice, at each side of the road, the second mirrored (rows of trees, houses, spectators). By state: 0 road_row_start; 1 road_row_pair_crash_check, then road_row_pair_draw; 2 (no hit box) road_row_pair_draw only.
+comment fork_sign_update The signs on the road where it forks at the end of a stage: a line down the middle before the fork and a line across each branch after it. By state: 0 road_row_start; 1 fork_sign_hit_check, then road_row_draw; 2 road_row_draw only. A car that hits one is slowed, not crashed.
+comment fork_sign_hit_check road_row_hit_check with kind 3 (R27): a car that hits a fork sign is slowed for 15 frames, as off the road (car unk_147), instead of crashing.
+comment animated_scenery_update Scenery that animates in place (the Ferris wheel, windmills; also the scenery of the goal lines). By state: 0 road_row_start_copy; 1 road_row_crash_check; 1 and 2 animation_advance and road_row_draw.
+comment animated_scenery_pair_update Animated scenery drawn twice, at each side of the road, the second mirrored (the people lining the start and the goal, the scenery around the forks). By state: 0 road_row_start_copy; 1 road_row_pair_crash_check; 1 and 2 animation_advance and road_row_pair_draw.
+comment flashing_scenery_update Scenery whose palette cycles a step every frame, for flashing lights (the Christmas trees, the arches over the underwater tunnel, a fairground ride). By state: 0 reads its record as road_row_start does, except that the second and third halfwords are the address of its list of palettes (palette_cycle) instead of a palette; 1 road_row_crash_check; 1 and 2 the next palette from the list into palette (a negative entry goes back that many bytes first), then road_row_draw.
+comment overhead_scenery_update Animated scenery high over the road, drawn from the middle of the screen instead of the road's centre line (screen_centered), so it does not swing with the bends: the schools of fish over the underwater tunnel, the cloud bands of stage 25. By state: 0 screen_centered = FF, then road_row_start (its records have no hit box); 1 and 2 animation_advance and road_row_draw.
+comment flagman_update The man waving a chequered flag at each fork and at the goal. By state: 0 reads the record (animation, in_view_animation, palette, side, x_offset, y_offset), draw_mode 9, scale_shift 1, appear_position = position - draw_distance (and 58 = position - 30, never read); 1 not drawn until the view (race_copy unk_46) passes appear_position, then in_view_animation (06F, the waving; so 06E is never drawn); 1 and 2: ends once the car (car unk_42) reaches its position, else animation_advance and draw_object.
+comment road_crosser_update What walks across the road as the car comes near (the camels of the desert stages). By state: 0 reads the record (animation, crossing_animation, palette, flags, side, x_offset, trigger_distance, x_speed, draw_mode, scale_shift; y_offset -256 for animation 165), trigger_position = position - trigger_distance, appear_position = position - draw_distance; 1 not drawn until the view (race_copy unk_46) passes appear_position; 2 drawn standing (draw_object) until the car (car unk_44) reaches trigger_position, then crossing_animation; 3 while the car (car unk_42) has not reached it: x_offset += x_speed and position + 1 each frame, and while within draw_distance of the car animation_advance and draw_object; it ends when the car reaches it, it gets beyond draw_distance or its screen_x leaves -F0..130.
+comment moving_scenery_update Scenery that travels across the view once the car comes near (helicopters, the roller coaster train, birds, fish over the tunnel, a tanker truck on a bridge). By state: 0 reads the record (animation, palette, flags, draw_mode, scale_shift, side, x_offset, y_offset, trigger_distance + 16, x_speed, y_speed, road_speed), trigger_position = position - trigger_distance; 1 not drawn until the view (race_copy unk_46) passes trigger_position; 1 and 2: while the car (car unk_42) has not reached it, each frame x_offset += x_speed, y_offset += y_speed, position += road_speed, and while within draw_distance of the car animation_advance and draw_object; it ends when the car reaches it, it gets beyond draw_distance or its screen_x leaves -F0..130.
+comment road_row_start Sets up a row of identical sprites along the road from its record (record): animation (animation_start), palette, flags bits to set (bit 6 mirrors the sprites), size_table, scale_shift, side, x_offset, y_offset, spacing, count and the hit box (hit_box points at it; none when its first 32 bits are 0); first_position = position, end_position = position + spacing * (count - 1) + 1. Goes on to the next state, or the one after it (no hit check) without a hit box. Used by scenery, scenery_pair, fork_sign and overhead_scenery.
+comment road_row_start_copy The same code as road_row_start, at another address: the first step of animated_scenery and animated_scenery_pair.
+comment road_row_hit_check Whether the screen's car hits an item of the row, unless the car's object has flags bit 3 set: the car's box (the entry SCREEN(screen)->unk_500 points at: its segments at +6 and +8, along the road +A..+C in 128ths of a segment from its first, across +E..+10) against each item's hit_box (along from (item - the car's first segment) * 128 + position_fraction, across from the road's width * side + x_offset), for the items from first_position to end_position within the car's segments. On the first that overlaps: the car's object gets flags bit 2 and byte 6E = R27, the kind of hit (0 a crash, 3 slowed), and the car's unk_122 and unk_120 half the distances from the car's box to the item's (along, across).
+comment road_row_crash_check road_row_hit_check with kind 0 (R27): hitting an item crashes the car. Used by scenery, animated_scenery and flashing_scenery (and 012FBC).
+comment road_row_pair_crash_check road_row_hit_check for the rows drawn in mirrored pairs, with kind 0 (a crash): each item's hit box is tested as it is and mirrored across the road's centre. Used by scenery_pair and animated_scenery_pair.
+comment road_row_draw Draws the row's items in view: ends the object once end_position is not past the view's start (race_copy unk_46); nothing while first_position is beyond the draw distance (SCREEN(screen)->unk_12 >> 7 segments); moves first_position up to the first item in view; for each item (spacing apart, to the draw distance) where the road has a scale: x = (the road's width * side + x_offset) * scale >> 12 plus the road's screen x unless screen_centered, y = y_offset * scale >> 12 plus the road's screen y; off the screen (x beyond -1E0..1E0, y beyond -160..80) it is skipped, else the scale shifted by scale_shift picks the size (size_table: a size step and a shift) and a sprite of the animation's frame with its palette (flags bits 6-7 flip it) goes into the screen's sprite list (unk_C0; the copy at +3000 is the halfway point from the item's sprite of the frame before, previous_sprites) and the depth list of its road segment (screen + 5000). Sets flags bit 5 and keeps where its sprites went in previous_sprites. Used by scenery, fork_sign, animated_scenery, flashing_scenery and overhead_scenery (and 01351E).
+comment road_row_pair_draw road_row_draw for the rows drawn in mirrored pairs: each item twice, at the same distance either side of the road's centre, the second with sprite attribute bits 43 toggled (bit 6 flips it, bits 0-1 swap its X alignment); there is no off-screen test and no screen_centered. Used by scenery_pair and animated_scenery_pair.
+comment animation_start Starts animation R9 (rom_034138[R9] is its record) at its first frame: frame_time and frame_countdown from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and height zoom of the screen-position drawing, sub_00EF32: 100 the sprite's own size).
+comment animation_advance Steps the object's animation: nothing while frame_time is 0; when frame_countdown runs out (back to frame_time), the next frame. A frame's entry in the record (32 bits at +4 + frame * 4) is the address of its data when positive, else an order: 0 holds the frame before (frame_time 0), -1 goes back to frame 0, -2 starts the animation whose number is the next entry.
+comment draw_object Draws the object's sprite, unless flags bit 1 is set or the screen's sprite list is full: field 3E picks the routine (rom_00EB44): some project the object's road position (1C) with its offsets (20, 24) and set fields 30 and 32 to where it lands and 3C to the road's depth layer there, some draw it at the screen position in 30 and 32, some copy a ready sprite entry from the address in field 38; then links it into the depth list of layer 3C (screen + 5000).
+scoped object flashing_scenery 10 spacing u16
+scoped object flashing_scenery 12 count u16
+scoped object flashing_scenery 18 palette_cycle u32 rom
+scoped object flashing_scenery 1C position s16
+scoped object flashing_scenery 20 x_offset s16
+scoped object flashing_scenery 24 y_offset s16
+scoped object flashing_scenery 3A palette u16
+scoped object flashing_scenery 3F side s8
+scoped object flashing_scenery 44 scale_shift u8
+scoped object flashing_scenery 45 size_table u8
+scoped object flashing_scenery 56 first_position s16
+scoped object flashing_scenery 58 end_position s16
+scoped object flashing_scenery 60 hit_box u32 rom
+scoped object overhead_scenery 5C screen_centered u8
+scoped object flagman 10 draw_distance u16
+scoped object flagman 18 record u32 rom
+scoped object flagman 1C position s16
+scoped object flagman 20 x_offset s16
+scoped object flagman 24 y_offset s16
+scoped object flagman 3A palette u16
+scoped object flagman 3E draw_mode u8
+scoped object flagman 3F side s8
+scoped object flagman 44 scale_shift u8
+scoped object flagman 56 appear_position s16
+scoped object flagman 80 in_view_animation u16
+scoped object road_crosser 10 draw_distance u16
+scoped object road_crosser 18 record u32 rom
+scoped object road_crosser 1C position s16
+scoped object road_crosser 20 x_offset s16
+scoped object road_crosser 24 y_offset s16
+scoped object road_crosser 30 screen_x s16
+scoped object road_crosser 3A palette u16
+scoped object road_crosser 3E draw_mode u8
+scoped object road_crosser 3F side s8
+scoped object road_crosser 44 scale_shift u8
+scoped object road_crosser 56 appear_position s16
+scoped object road_crosser 58 trigger_position s16
+scoped object road_crosser 80 crossing_animation u16
+scoped object road_crosser 82 trigger_distance u16
+scoped object road_crosser 84 x_speed s16
+scoped object moving_scenery 10 draw_distance u16
+scoped object moving_scenery 18 record u32 rom
+scoped object moving_scenery 1C position s16
+scoped object moving_scenery 20 x_offset s16
+scoped object moving_scenery 24 y_offset s16
+scoped object moving_scenery 30 screen_x s16
+scoped object moving_scenery 3A palette u16
+scoped object moving_scenery 3E draw_mode u8
+scoped object moving_scenery 3F side s8
+scoped object moving_scenery 44 scale_shift u8
+scoped object moving_scenery 56 appear_position s16
+scoped object moving_scenery 58 trigger_position s16
+scoped object moving_scenery 80 trigger_distance u16
+scoped object moving_scenery 82 x_speed s16
+scoped object moving_scenery 84 y_speed s16
+scoped object moving_scenery 86 road_speed s16
+scoped object road_row 10 spacing u16
+scoped object road_row 12 count u16
+scoped object road_row 18 record u32 rom
+scoped object road_row 1C position s16
+scoped object road_row 20 x_offset s16
+scoped object road_row 24 y_offset s16
+scoped object road_row 28 position_fraction u16
+scoped object road_row 38 animation u16
+scoped object road_row 3A palette u16
+scoped object road_row 3F side s8
+scoped object road_row 40 frame u8
+scoped object road_row 43 size_step u8
+scoped object road_row 44 scale_shift u8
+scoped object road_row 45 size_table u8
+scoped object road_row 50 previous_sprites u32
+scoped object road_row 56 first_position s16
+scoped object road_row 58 end_position s16
+scoped object road_row 5C screen_centered u8
+scoped object road_row 60 hit_box u32 rom
+scoped object animation 38 animation u16
+scoped object animation 40 frame u8
+scoped object animation 41 frame_time u8
+scoped object animation 42 frame_countdown s8
+scoped object animation 43 size_step u8
+
+# ======== race objects, the LCD and the radio (naming batch B) ========
+001894  func  staff_credits_code_start
+0018A4  func  staff_credits_code_watch
+0018E5  func  staff_credits_code_show
+0018FE  func  staff_credits_code_done
+00190B  func  staff_credits_code_read_controls
+005030  func  car_select_start
+00503D  func  car_select_run
+0053DF  func  car_select_turn_to_choice
+005443  func  car_select_update_rowscroll
+0054BC  func  car_select_skew_floor_next
+0054C1  func  car_select_skew_floor_previous
+0054C4  func  car_select_skew_floor
+005862  func  welcome_letter_start
+005883  func  welcome_letter_show
+005C71  func  transmission_label_start_automatic
+005CA4  func  transmission_label_start_manual
+005CE5  func  transmission_label_follow
+006294  func  car_select_wait_confirm
+006356  func  entry_countdown_start
+0063F9  func  entry_countdown_count
+006463  func  entry_countdown_done
+0064E2  func  entry_banner_start
+006514  func  entry_banner_blink
+00652A  func  entry_car_ring_start
+006560  func  entry_car_ring_draw
+0068FE  func  step_palette
+00C553  func  stage_indicator_start
+00C585  func  stage_indicator_draw
+00DED2  func  set_player_ready
+00DED9  func  players_not_ready
+011975  func  binary_to_bcd
+011A32  func  draw_text
+011E45  func  random_number
+011EB8  func  request_sound
+011EDE  func  queue_sound
+018AF0  func  clear_lcd
+018BA0  func  lcd_race_info_start
+018BB2  func  lcd_race_info_update
+018C8C  func  lcd_race_info_time_page
+018C99  func  lcd_race_info_time
+018DBC  func  lcd_race_info_average_page
+018DC9  func  lcd_race_info_average
+018DDF  func  lcd_race_info_write_number
+018E32  func  lcd_race_info_finish
+018E98  func  lcd_race_info_paused
+018F74  func  car_radio_start
+018FD3  func  car_radio_wait_start
+018FE0  func  car_radio_read_buttons
+01900A  func  car_radio_update
+01929E  func  car_radio_dj_leader
+0192B1  func  car_radio_dj_own_car
+0192BC  func  car_radio_dj_remark_2a
+0192C3  func  car_radio_dj_remark_2b
+0192CA  func  car_radio_dj_remark_2d
+0192D1  func  car_radio_dj_remark_2f
+0192D8  func  car_radio_dj_remark_2c
+0192E5  func  car_radio_song
+0192F5  func  car_radio_show_title
+01930A  func  start_song_title
+0193FC  func  start_dj_message_if_quiet
+019402  func  start_dj_message
+comment lcd_race_info_start Starts the race information on the cabinet LCD: clears it (clear_lcd), shows the DJ's face in its first two characters (screen unk_F35) and goes on to lcd_race_info_update.
+comment lcd_race_info_update Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150 frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, unk_20E030 + 1, in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen unk_F50), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1 updates the number. When the car reaches the goal (car unk_181) goes to lcd_race_info_finish; when the race is over (car unk_182) shows the average and ends; while the LCD scrolls a text (screen unk_F44) waits in lcd_race_info_paused.
+comment lcd_race_info_time_page Writes the Time page's label on the LCD, then the time (lcd_race_info_time).
+comment lcd_race_info_time Writes the race time (the car's unk_04, in thousandths of a second) on the LCD as minutes'seconds"hundredths.
+comment lcd_race_info_average_page Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average).
+comment lcd_race_info_average Writes the average speed on the LCD: the sum of the speeds (screen unk_F54) over how many there are (unk_F58), with lcd_race_info_write_number.
+comment lcd_race_info_write_number Writes a number of up to three digits on the LCD, right-aligned to end before the address it is given (F1C of the screen for the km/h pages), spaces for the leading zeros.
+comment lcd_race_info_finish The car has reached the goal: shows ### FINISH ### on the LCD, waits for a text to scroll across it (screen unk_F44) and out, shows the average speed for 150 frames (frames), then the race time, and ends.
+comment lcd_race_info_paused Waits while the LCD scrolls a text (screen unk_F44), then goes back to lcd_race_info_update, which writes the page's label again.
+comment car_radio_start Sets up the radio as the race starts: the car each player chose (byte 49 of its race_copy record) by car number in car_models (FF where none) and how many in cars_to_introduce, this screen's car number, clears screen unk_F0F, gives the car the song of its model (car unk_14 = rom_019421 by car unk_60), notes the stage (screen unk_A1), then car_radio_wait_start.
+comment car_radio_wait_start Waits for the start (the car object's unk_10, the frames to it, down to 0), then goes on to car_radio_read_buttons.
+comment car_radio_read_buttons Each frame of the race: the buttons newly pressed (screen unk_118) into buttons, then car_radio_update. Once the race is over (car unk_181 at the goal, or unk_182) clears them, silences the DJ (talk_step 5), turns the screen's two lamps off (unk_F20) and leaves car_radio_update alone, without the buttons.
+comment car_radio_update The radio, by state: 0 plays the car's song (car unk_14) with its title; 1 << and >> step through the ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound (rom_019458 by screen unk_A1); 3 the station plays; 4-8 while screen unk_F0F is set (the road object 01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (sub_011FEA), sound E0 after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message (rom_019571 by screen unk_A4) and sound. On the station: any of the three buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step: 0 message 0, 1-2 each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing.
+comment car_radio_dj_leader A DJ remark: message 11 plus the car number of the car in the lead.
+comment car_radio_dj_own_car A DJ remark: message 19 plus this screen's car number.
+comment car_radio_dj_remark_2a A DJ remark: message 2A (also the end of the cars' introduction).
+comment car_radio_dj_remark_2b A DJ remark: message 2B.
+comment car_radio_dj_remark_2d A DJ remark: message 2D.
+comment car_radio_dj_remark_2f A DJ remark: message 2F.
+comment car_radio_dj_remark_2c A DJ remark: message 2C.
+comment car_radio_song Shows the title of song R0 (rom_01942C: 0 Magical Sound Shower, 1 Passing Breeze, 2 Splash Wave, 3 Picture the Rivers, 4 Blow Your Cool, 5 Looking for the Rainbow, 6 Speed King, 7 Adventure, 8 Sonic Control, 9 Last Wave, 10 Jingle Bell) and returns the song's sound.
+comment car_radio_show_title Starts a song title (start_song_title) for the record it is given, sends the one shown (title) away and keeps the new one in title.
+comment staff_credits_code_start Starts watching for the secret code during the presentation of the cars: takes the controls held (staff_credits_code_read_controls), puts code_place at the start of the code (001ADC) and goes on to staff_credits_code_watch.
+comment staff_credits_code_watch Watches the controls for the code (001ADC: shift down twice, shift up twice, the wheel left, right, left, right, the brake, the gas; a wrong one starts over); when it is complete: sound 9, the presentation 1200 frames longer (screen unk_88 and the presentation's unk_10), and staff_credits_code_show.
+comment staff_credits_code_show Shows the staff credits (the texts at 001AE8, draw_text) for 1200 frames, then sub_011FE6 and staff_credits_code_done.
+comment staff_credits_code_done Does nothing: the code has been used; the object stays until the presentation's objects are cleared.
+comment staff_credits_code_read_controls Reads the controls as bits (0 shift up, 1 shift down, 2 the wheel right, 3 the wheel left, 4 the brake, 5 the gas, each with less needed to stay on), keeps them in controls_held and returns the ones newly on (zero set when there are none).
+comment transmission_label_start_automatic Sets up the label of the automatic transmission's panel (sprite set 2C1, 24 below the panel's place; the frames show NOVICE there), then transmission_label_follow.
+comment transmission_label_start_manual Sets up the label of the manual transmission's panel (sprite set 2C9, its unk_40 from rom_006E78 by the car's model; the frames show 5 SPEED there for the car coin_start takes), then transmission_label_follow.
+comment transmission_label_follow Keeps the label on its panel (the panel's place plus its offsets, the panel's palette) and draws it; ends when the panel ends.
+comment entry_countdown_start Sets up the invitation to join, on a seat with no player while the entry time of a game runs: the screen (sub_0179AC, sub_0184D0), clears the LCD (clear_lcd) with the DJ's face, the music (sound F, Mega Driver) and DJ message 3B, marks the screen (unk_E2) so the car select does not start them again, starts the WAITING YOUR ENTRY banner (entry_banner), the ring of cars (entry_car_ring, in car_ring) and sub_00660F's cars, and goes on to entry_countdown_count.
+comment entry_countdown_count Shows the entry time left (unk_20FC1A, frames): the seconds as the big number (its unk_40), the frames into the second to the ring of cars, and on the LCD a shrinking bar (rom_006464) with the seconds; when it is over clears the screen's unk_E2, sub_011FE6, and goes on to entry_countdown_done.
+comment entry_countdown_done Does nothing (the number is no longer drawn): the entry time is over.
+comment entry_banner_start Sets up the WAITING YOUR ENTRY banner (sprite set 287) at the centre of the screen, then entry_banner_blink.
+comment entry_banner_blink Draws the banner 16 frames out of every 32.
+comment entry_car_ring_start Sets up the ring of cars around the entry countdown with the first car's sprite (rom_0069B8), then entry_car_ring_draw.
+comment entry_car_ring_draw Draws a ring of as many copies of a car around the countdown as frames have gone in the second (copies, set by entry_countdown_count, at most 16); with a new second, the next of the eight cars (car).
+comment stage_indicator_start Sets up the STAGE label at the top left of the race screen (sprite set 2E), then stage_indicator_draw.
+comment stage_indicator_draw Draws the stage's name after the label (rom_00D034 by the forks taken, screen unk_A5: PRE-STAGE, 1 to 4, FINAL STAGE) and the label itself.
+comment car_select_start Starts the car select with 630 frames (21 seconds) to choose, then car_select_run.
+comment car_select_run The car select, by state: 0 sets the screen up (unless screen unk_E2 says the entry countdown did: clears the LCD, the title Mega Driver, sound F, DJ message 3B), the tile layer's tables from 006920, the WELCOME! letters; 1 when the screen's data is unpacked (unk_B00) starts the eight cars on the turntable and the rest, the default car (rom_0069B0 by the player's place in the race), the time display (sub_00C68E); 2 30 frames; 3 the screen's unk_F04 up to 0, then the instructions (sub_005908, sub_005D5C); 4 the wheel turns the turntable (turn, turn_delay, angle; car unk_60 is the car in front) until the gas or START confirms or time_left runs out: race unk_49 = the car, unk_48 = the car + 1, the car's sound (rom_006DEE), at least 180 frames left, the transmission choice (sub_005A1D); 5 the wheel picks the transmission (car unk_61 = rom_006DA4 by the wheel: 0 automatic, 1 manual) until confirmed or out of time; 6-8 when the entry time is over (entry_over) marks the player ready (set_player_ready) and waits for the race's other players (players_not_ready), DJ message 3C; 9 60 frames, then sub_011FE6 and the game's next step (screen unk_80 byte 2); 10 stays. Every frame from 4 on: car_select_turn_to_choice and car_select_update_rowscroll; time_left down by one and shown in seconds.
+comment car_select_turn_to_choice Once the car is chosen (car_chosen), turns the turntable the short way round until the chosen car (car unk_60) is in front, 20 a frame, skewing the floor as it goes.
+comment car_select_update_rowscroll Writes the line scroll of the tile layer for the next frames: the top 104 lines all at top_scroll, which moves one more each frame, and while rowscroll_copies says, the floor's 120 lines from their offsets at 3800 of the screen.
+comment car_select_skew_floor_next Skews the turntable's floor for a step toward the next car (car_select_skew_floor with 6).
+comment car_select_skew_floor_previous Skews the turntable's floor for a step toward the previous car (car_select_skew_floor with -6).
+comment car_select_skew_floor Adds a step that grows line by line (by R0) to the floor's 120 line offsets at 3800 of the screen, writes them to the next two pages of the line scroll and has car_select_update_rowscroll copy them to the others (rowscroll_copies).
+comment car_select_wait_confirm Whether the player has not confirmed yet (zero set): confirming is pressing the gas pedal down (screen unk_101 from C0, after letting it up under 40) or START, once confirm_delay has run out.
+comment welcome_letter_start Starts the eight letters of WELCOME! (itself the first), then welcome_letter_show.
+comment welcome_letter_show Shows its letter of WELCOME! (font 346): appears 2 frames after the one before it, cycles its colours (step_palette, from 006DCC) and ends 45 frames after the start.
+comment clear_lcd Clears the cabinet's LCD: sixteen spaces, no DJ message (screen unk_F30), no scrolling text (unk_F40, unk_F44), the DJ's face off (unk_F35).
+comment start_dj_message Starts DJ message R0 (typed_messages): requests its voice (the sound in the record's top byte) and has the face on the LCD move its mouth by the record's string (screen unk_F30).
+comment start_dj_message_if_quiet Starts DJ message R0 (start_dj_message) unless one is being said (screen unk_F30).
+comment start_song_title Starts an object that shows the song title of record R10 (x, then the text) on the screen and scrolls it on the LCD; returns the object.
+comment random_number Returns the next pseudo-random number of the screen's sequence (kept in unk_F00).
+comment request_sound Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when only the sounds the table at 01202E allows play, and only with unk_20E60D set.
+comment queue_sound Puts sound R0 in the screen's ring of 32 sound requests (801 of the screen: the place, then the requests).
+comment draw_text Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character and returns the address of the record after it.
+comment step_palette Gives the object the next palette (unk_3A, an index into the sprites' palette words, rom_032BA4) of its palette list (unk_18); a negative entry goes back by that many bytes, to loop.
+comment binary_to_bcd Converts R0 into eight decimal digits, one per four bits, the units in the lowest.
+comment set_player_ready Marks the screen's player ready in its race record (unk_5C), after its selections.
+comment players_not_ready Whether a player of the race has not marked itself ready yet (zero set): byte 5C of each one's race_copy record.
+scoped object lcd_race_info 09 player_count u8
+scoped object lcd_race_info 0D page u8
+scoped object lcd_race_info 0E page_step u8
+scoped object lcd_race_info 10 frames u16
+scoped object lcd_race_info 12 page_frames u16
+scoped object lcd_race_info 18 order_list u32
+scoped object car_radio 09 car_number u8
+scoped object car_radio 0A stage u8
+scoped object car_radio 0B queued_message u8
+scoped object car_radio 0D talk_step u8
+scoped object car_radio 10 timer u8
+scoped object car_radio 18 title u32 object
+scoped object car_radio 2C buttons u16
+scoped object car_radio 38 remark_list u32 rom
+scoped object car_radio 80 car_models u8
+scoped object car_radio 88 cars_to_introduce u8
+scoped object car_radio 89 next_car_number u8
+scoped object staff_credits_code 09 controls_held u8
+scoped object staff_credits_code 10 frames_left u16
+scoped object staff_credits_code 14 presentation u32 object
+scoped object staff_credits_code 18 code_place u32 rom
+scoped object transmission_label 14 panel u32 object
+scoped object transmission_label 20 x_offset s16
+scoped object transmission_label 24 y_offset s16
+scoped object entry_countdown 14 car_ring u32 object
+scoped object entry_banner 10 blink u8
+scoped object entry_car_ring 10 copies u8
+scoped object entry_car_ring 12 car u8
+scoped object car_select 09 turn s8
+scoped object car_select 0A turn_delay s8
+scoped object car_select 0B confirm_delay u8
+scoped object car_select 0D gas_down u8
+scoped object car_select 0E rowscroll_copies u8
+scoped object car_select 0F choice_turn u8
+scoped object car_select 10 timer u16
+scoped object car_select 1C time_left u16
+scoped object car_select 24 angle u16
+scoped object car_select 28 top_scroll u16
+scoped object car_select 2C car_chosen u8
+scoped object car_select 2D transmission_chosen u8
+scoped object car_select 98 scroll_x_address u32
+scoped object car_select 9C scroll_y_address u32
+scoped object car_select A0 rowscroll_address u32
+scoped object car_select A4 rowselect_address u32
+scoped object car_select A8 second_scroll_x_address u32
+scoped object car_select AC second_scroll_y_address u32
+scoped object car_select B0 entry_over u8
+scoped object welcome_letter 09 index u8
+scoped object welcome_letter 10 delay s16
+scoped object welcome_letter 12 frames_left u16
+scoped object welcome_letter 18 palette_list u32 rom
