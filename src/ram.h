@@ -14,7 +14,12 @@
 
 /* the game's variables in work RAM; SCREEN_1 and SCREEN_2 are the blocks of the two screens,
    which the code reaches through screen (R25 of the task that runs each) */
+#define GAME_VARIABLES 0x20E000u
 #define SCREEN_1 0x208000u
+#define RACE_1 0x20FB00u
+#define RACE_2 0x20FB80u
+#define RACE_COPY_1 0x20FC00u
+#define RACE_COPY_2 0x20FC80u
 #define SCREEN_2 0x218000u
 #define unk_208001_ADDRESS 0x208001u
 #define unk_208001 RAM8(unk_208001_ADDRESS)
@@ -52,26 +57,26 @@
 #define unk_208F1C RAM32(unk_208F1C_ADDRESS)
 #define unk_208F20_ADDRESS 0x208F20u
 #define unk_208F20 RAM16(unk_208F20_ADDRESS)
-#define unk_20E000_ADDRESS 0x20E000u
-#define unk_20E000 RAM32(unk_20E000_ADDRESS)
+#define waiting_task_frame_ADDRESS 0x20E000u
+#define waiting_task_frame RAM32(waiting_task_frame_ADDRESS)
 #define waiting_task_stack_ADDRESS 0x20E004u
 #define waiting_task_stack RAM32(waiting_task_stack_ADDRESS)
 #define vblanks_since_start_ADDRESS 0x20E00Au
 #define vblanks_since_start RAM16(vblanks_since_start_ADDRESS)
-#define unk_20E00E_ADDRESS 0x20E00Eu
-#define unk_20E00E RAM8(unk_20E00E_ADDRESS)
+#define debug_timer_rounds_ADDRESS 0x20E00Eu
+#define debug_timer_rounds RAM8(debug_timer_rounds_ADDRESS)
 #define sprite_list_buffers_ADDRESS 0x20E020u
 #define sprite_list_buffers RAM16(sprite_list_buffers_ADDRESS)
-#define unk_20E022_ADDRESS 0x20E022u
-#define unk_20E022 RAM8(unk_20E022_ADDRESS)
+#define sprite_lists_set_up_ADDRESS 0x20E022u
+#define sprite_lists_set_up RAM8(sprite_lists_set_up_ADDRESS)
 #define frame_ready_ADDRESS 0x20E023u
 #define frame_ready RAM8(frame_ready_ADDRESS)
 #define single_task_ADDRESS 0x20E024u
 #define single_task RAM8(single_task_ADDRESS)
 #define game_frame_count_ADDRESS 0x20E026u
 #define game_frame_count RAM8(game_frame_count_ADDRESS)
-#define unk_20E027_ADDRESS 0x20E027u
-#define unk_20E027 RAM8(unk_20E027_ADDRESS)
+#define send_video_registers_ADDRESS 0x20E027u
+#define send_video_registers RAM8(send_video_registers_ADDRESS)
 #define task_swapping_ADDRESS 0x20E028u
 #define task_swapping RAM8(task_swapping_ADDRESS)
 #define second_task_waiting_ADDRESS 0x20E02Bu
@@ -80,12 +85,12 @@
 #define timer_interrupts_left RAM8(timer_interrupts_left_ADDRESS)
 #define vblank_counter_ADDRESS 0x20E02Du
 #define vblank_counter RAM8(vblank_counter_ADDRESS)
-#define unk_20E02E_ADDRESS 0x20E02Eu
-#define unk_20E02E RAM8(unk_20E02E_ADDRESS)
+#define cleared_on_race_over_ADDRESS 0x20E02Eu
+#define cleared_on_race_over RAM8(cleared_on_race_over_ADDRESS)
 #define car_numbers_ADDRESS 0x20E030u
 #define car_numbers ((uint8_t *)ram(car_numbers_ADDRESS))
-#define unk_20E038_ADDRESS 0x20E038u
-#define unk_20E038 RAM16(unk_20E038_ADDRESS)
+#define link_wait_frames_start_ADDRESS 0x20E038u
+#define link_wait_frames_start RAM16(link_wait_frames_start_ADDRESS)
 #define total_time_count_ADDRESS 0x20E03Au
 #define total_time_count RAM16(total_time_count_ADDRESS)
 #define machine_count_ADDRESS 0x20E040u
@@ -120,22 +125,20 @@
 #define chute_entry_offset RAM8(chute_entry_offset_ADDRESS)
 #define port_d_outputs_ADDRESS 0x20E092u
 #define port_d_outputs ((uint8_t *)ram(port_d_outputs_ADDRESS))
-#define unk_20E093_ADDRESS 0x20E093u
-#define unk_20E093 RAM8(unk_20E093_ADDRESS)
-#define unk_20E094_ADDRESS 0x20E094u
-#define unk_20E094 RAM16(unk_20E094_ADDRESS)
+#define port_g_outputs_ADDRESS 0x20E094u
+#define port_g_outputs ((uint8_t *)ram(port_g_outputs_ADDRESS))
 #define seat1_credits_ADDRESS 0x20E0A0u
 #define seat1_credits RAM8(seat1_credits_ADDRESS)
 #define seat1_coin_units_ADDRESS 0x20E0A1u
 #define seat1_coin_units RAM8(seat1_coin_units_ADDRESS)
-#define unk_20E0A4_ADDRESS 0x20E0A4u
-#define unk_20E0A4 RAM8(unk_20E0A4_ADDRESS)
+#define seat1_bookkeeping_byte_ADDRESS 0x20E0A4u
+#define seat1_bookkeeping_byte RAM8(seat1_bookkeeping_byte_ADDRESS)
 #define seat2_credits_ADDRESS 0x20E0A8u
 #define seat2_credits RAM8(seat2_credits_ADDRESS)
 #define seat2_coin_units_ADDRESS 0x20E0A9u
 #define seat2_coin_units RAM8(seat2_coin_units_ADDRESS)
-#define unk_20E0AC_ADDRESS 0x20E0ACu
-#define unk_20E0AC RAM8(unk_20E0AC_ADDRESS)
+#define seat2_bookkeeping_byte_ADDRESS 0x20E0ACu
+#define seat2_bookkeeping_byte RAM8(seat2_bookkeeping_byte_ADDRESS)
 #define checkpoint_lamp_ADDRESS 0x20E0C0u
 #define checkpoint_lamp ((uint8_t *)ram(checkpoint_lamp_ADDRESS))
 #define checkpoint_lamp_blinks_ADDRESS 0x20E0C1u
@@ -168,18 +171,16 @@
 #define leader_lamp_2_period RAM8(leader_lamp_2_period_ADDRESS)
 #define leader_lamp_2_timer_ADDRESS 0x20E0CFu
 #define leader_lamp_2_timer RAM8(leader_lamp_2_timer_ADDRESS)
-#define unk_20E0D0_ADDRESS 0x20E0D0u
-#define unk_20E0D0 ((uint8_t *)ram(unk_20E0D0_ADDRESS))
-#define unk_20E0D1_ADDRESS 0x20E0D1u
-#define unk_20E0D1 RAM8(unk_20E0D1_ADDRESS)
+#define wheel_motor_ADDRESS 0x20E0D0u
+#define wheel_motor ((uint8_t *)ram(wheel_motor_ADDRESS))
 #define screen_2_vblanks_ADDRESS 0x20E0FCu
 #define screen_2_vblanks RAM8(screen_2_vblanks_ADDRESS)
-#define unk_20E0FD_ADDRESS 0x20E0FDu
-#define unk_20E0FD RAM8(unk_20E0FD_ADDRESS)
+#define screen_2_vblanks_high_ADDRESS 0x20E0FDu
+#define screen_2_vblanks_high RAM8(screen_2_vblanks_high_ADDRESS)
 #define screen_1_vblanks_ADDRESS 0x20E0FEu
 #define screen_1_vblanks RAM8(screen_1_vblanks_ADDRESS)
-#define unk_20E0FF_ADDRESS 0x20E0FFu
-#define unk_20E0FF RAM8(unk_20E0FF_ADDRESS)
+#define screen_1_vblanks_high_ADDRESS 0x20E0FFu
+#define screen_1_vblanks_high RAM8(screen_1_vblanks_high_ADDRESS)
 #define switches_ADDRESS 0x20E100u
 #define switches RAM8(switches_ADDRESS)
 #define previous_switches_ADDRESS 0x20E101u
@@ -188,8 +189,8 @@
 #define switches_pressed RAM8(switches_pressed_ADDRESS)
 #define switches_released_ADDRESS 0x20E103u
 #define switches_released RAM8(switches_released_ADDRESS)
-#define unk_20E104_ADDRESS 0x20E104u
-#define unk_20E104 RAM8(unk_20E104_ADDRESS)
+#define second_io_chip_port_f_ADDRESS 0x20E104u
+#define second_io_chip_port_f RAM8(second_io_chip_port_f_ADDRESS)
 #define analog_raw_ADDRESS 0x20E110u
 #define analog_raw RAM8(analog_raw_ADDRESS)
 #define analog_inputs_ADDRESS 0x20E116u
@@ -225,65 +226,19 @@
 #define seat_2_brake_ADDRESS 0x20E129u
 #define seat_2_brake RAM8(seat_2_brake_ADDRESS)
 #define video_registers_ADDRESS 0x20E200u
-#define video_registers RAM16(video_registers_ADDRESS)
-#define unk_20E202_ADDRESS 0x20E202u
-#define unk_20E202 RAM16(unk_20E202_ADDRESS)
-#define unk_20E204_ADDRESS 0x20E204u
-#define unk_20E204 RAM16(unk_20E204_ADDRESS)
-#define unk_20E210_ADDRESS 0x20E210u
-#define unk_20E210 ((uint32_t *)ram(unk_20E210_ADDRESS))
-#define unk_20E214_ADDRESS 0x20E214u
-#define unk_20E214 ((uint32_t *)ram(unk_20E214_ADDRESS))
-#define unk_20E220_ADDRESS 0x20E220u
-#define unk_20E220 ((uint32_t *)ram(unk_20E220_ADDRESS))
-#define unk_20E224_ADDRESS 0x20E224u
-#define unk_20E224 ((uint32_t *)ram(unk_20E224_ADDRESS))
-#define unk_20E240_ADDRESS 0x20E240u
-#define unk_20E240 ((uint32_t *)ram(unk_20E240_ADDRESS))
-#define unk_20E248_ADDRESS 0x20E248u
-#define unk_20E248 ((uint32_t *)ram(unk_20E248_ADDRESS))
-#define unk_20E288_ADDRESS 0x20E288u
-#define unk_20E288 RAM16(unk_20E288_ADDRESS)
-#define unk_20E28A_ADDRESS 0x20E28Au
-#define unk_20E28A RAM16(unk_20E28A_ADDRESS)
-#define unk_20E28C_ADDRESS 0x20E28Cu
-#define unk_20E28C RAM16(unk_20E28C_ADDRESS)
-#define unk_20E290_ADDRESS 0x20E290u
-#define unk_20E290 ((uint32_t *)ram(unk_20E290_ADDRESS))
-#define unk_20E294_ADDRESS 0x20E294u
-#define unk_20E294 ((uint32_t *)ram(unk_20E294_ADDRESS))
-#define unk_20E2A0_ADDRESS 0x20E2A0u
-#define unk_20E2A0 ((uint32_t *)ram(unk_20E2A0_ADDRESS))
-#define unk_20E2A4_ADDRESS 0x20E2A4u
-#define unk_20E2A4 ((uint32_t *)ram(unk_20E2A4_ADDRESS))
-#define unk_20E2B0_ADDRESS 0x20E2B0u
-#define unk_20E2B0 RAM8(unk_20E2B0_ADDRESS)
-#define unk_20E2B1_ADDRESS 0x20E2B1u
-#define unk_20E2B1 RAM8(unk_20E2B1_ADDRESS)
-#define unk_20E2B2_ADDRESS 0x20E2B2u
-#define unk_20E2B2 RAM8(unk_20E2B2_ADDRESS)
-#define unk_20E2B3_ADDRESS 0x20E2B3u
-#define unk_20E2B3 RAM8(unk_20E2B3_ADDRESS)
+#define video_registers ((uint16_t *)ram(video_registers_ADDRESS))
+#define scroll_targets_ADDRESS 0x20E290u
+#define scroll_targets ((uint32_t *)ram(scroll_targets_ADDRESS))
+#define tile_banks_ADDRESS 0x20E2B0u
+#define tile_banks ((uint8_t *)ram(tile_banks_ADDRESS))
 #define course_records_ADDRESS 0x20E300u
 #define course_records ((uint8_t *)ram(course_records_ADDRESS))
 #define course_record_times_ADDRESS 0x20E304u
 #define course_record_times ((uint16_t *)ram(course_record_times_ADDRESS))
 #define lcd_send_buffer_1_ADDRESS 0x20E3C0u
 #define lcd_send_buffer_1 ((uint8_t *)ram(lcd_send_buffer_1_ADDRESS))
-#define unk_20E3C4_ADDRESS 0x20E3C4u
-#define unk_20E3C4 RAM32(unk_20E3C4_ADDRESS)
-#define unk_20E3C8_ADDRESS 0x20E3C8u
-#define unk_20E3C8 RAM32(unk_20E3C8_ADDRESS)
-#define unk_20E3CC_ADDRESS 0x20E3CCu
-#define unk_20E3CC RAM32(unk_20E3CC_ADDRESS)
 #define lcd_send_buffer_2_ADDRESS 0x20E3D0u
 #define lcd_send_buffer_2 ((uint8_t *)ram(lcd_send_buffer_2_ADDRESS))
-#define unk_20E3D4_ADDRESS 0x20E3D4u
-#define unk_20E3D4 RAM32(unk_20E3D4_ADDRESS)
-#define unk_20E3D8_ADDRESS 0x20E3D8u
-#define unk_20E3D8 RAM32(unk_20E3D8_ADDRESS)
-#define unk_20E3DC_ADDRESS 0x20E3DCu
-#define unk_20E3DC RAM32(unk_20E3DC_ADDRESS)
 #define lcd_restart_frames_ADDRESS 0x20E3F0u
 #define lcd_restart_frames RAM16(lcd_restart_frames_ADDRESS)
 #define lcd_send_step_ADDRESS 0x20E3F2u
@@ -329,9 +284,7 @@
 #define game_difficulty_ADDRESS 0x20E630u
 #define game_difficulty RAM8(game_difficulty_ADDRESS)
 #define time_difficulty_ADDRESS 0x20E632u
-#define time_difficulty RAM8S(time_difficulty_ADDRESS)
-#define unk_20E634_ADDRESS 0x20E634u
-#define unk_20E634 RAM32(unk_20E634_ADDRESS)
+#define time_difficulty ((int8_t *)ram(time_difficulty_ADDRESS))
 #define volume_ranges_ADDRESS 0x20E638u
 #define volume_ranges RAM8(volume_ranges_ADDRESS)
 #define backup_settings_checksum_ADDRESS 0x20E644u
@@ -382,62 +335,20 @@
 #define unk_20FB01 RAM8(unk_20FB01_ADDRESS)
 #define unk_20FB02_ADDRESS 0x20FB02u
 #define unk_20FB02 RAM8(unk_20FB02_ADDRESS)
-#define unk_20FB03_ADDRESS 0x20FB03u
-#define unk_20FB03 RAM8(unk_20FB03_ADDRESS)
-#define unk_20FB04_ADDRESS 0x20FB04u
-#define unk_20FB04 RAM8(unk_20FB04_ADDRESS)
-#define unk_20FB05_ADDRESS 0x20FB05u
-#define unk_20FB05 RAM8(unk_20FB05_ADDRESS)
-#define unk_20FB06_ADDRESS 0x20FB06u
-#define unk_20FB06 RAM8(unk_20FB06_ADDRESS)
-#define unk_20FB07_ADDRESS 0x20FB07u
-#define unk_20FB07 RAM8(unk_20FB07_ADDRESS)
-#define unk_20FB08_ADDRESS 0x20FB08u
-#define unk_20FB08 RAM8(unk_20FB08_ADDRESS)
-#define unk_20FB09_ADDRESS 0x20FB09u
-#define unk_20FB09 RAM8(unk_20FB09_ADDRESS)
-#define unk_20FB0A_ADDRESS 0x20FB0Au
-#define unk_20FB0A RAM8(unk_20FB0A_ADDRESS)
-#define unk_20FB0B_ADDRESS 0x20FB0Bu
-#define unk_20FB0B RAM16(unk_20FB0B_ADDRESS)
-#define unk_20FB0D_ADDRESS 0x20FB0Du
-#define unk_20FB0D RAM32(unk_20FB0D_ADDRESS)
 #define unk_20FB80_ADDRESS 0x20FB80u
 #define unk_20FB80 RAM8(unk_20FB80_ADDRESS)
 #define unk_20FB81_ADDRESS 0x20FB81u
 #define unk_20FB81 RAM8(unk_20FB81_ADDRESS)
 #define unk_20FB82_ADDRESS 0x20FB82u
 #define unk_20FB82 RAM8(unk_20FB82_ADDRESS)
-#define unk_20FC03_ADDRESS 0x20FC03u
-#define unk_20FC03 RAM8(unk_20FC03_ADDRESS)
-#define unk_20FC04_ADDRESS 0x20FC04u
-#define unk_20FC04 RAM8(unk_20FC04_ADDRESS)
-#define unk_20FC05_ADDRESS 0x20FC05u
-#define unk_20FC05 RAM8(unk_20FC05_ADDRESS)
-#define unk_20FC06_ADDRESS 0x20FC06u
-#define unk_20FC06 RAM8(unk_20FC06_ADDRESS)
-#define unk_20FC07_ADDRESS 0x20FC07u
-#define unk_20FC07 RAM8(unk_20FC07_ADDRESS)
 #define unk_20FC08_ADDRESS 0x20FC08u
 #define unk_20FC08 RAM8(unk_20FC08_ADDRESS)
-#define unk_20FC09_ADDRESS 0x20FC09u
-#define unk_20FC09 RAM8(unk_20FC09_ADDRESS)
-#define unk_20FC0A_ADDRESS 0x20FC0Au
-#define unk_20FC0A RAM8(unk_20FC0A_ADDRESS)
-#define unk_20FC0B_ADDRESS 0x20FC0Bu
-#define unk_20FC0B ((uint8_t *)ram(unk_20FC0B_ADDRESS))
-#define unk_20FC0D_ADDRESS 0x20FC0Du
-#define unk_20FC0D RAM32(unk_20FC0D_ADDRESS)
+#define master_time_difficulty_ADDRESS 0x20FC0Bu
+#define master_time_difficulty ((int8_t *)ram(master_time_difficulty_ADDRESS))
 #define unk_20FC1A_ADDRESS 0x20FC1Au
 #define unk_20FC1A RAM16(unk_20FC1A_ADDRESS)
-#define unk_20FC1C_ADDRESS 0x20FC1Cu
-#define unk_20FC1C RAM8(unk_20FC1C_ADDRESS)
-#define unk_20FC1D_ADDRESS 0x20FC1Du
-#define unk_20FC1D RAM8(unk_20FC1D_ADDRESS)
-#define unk_20FC1E_ADDRESS 0x20FC1Eu
-#define unk_20FC1E RAM8(unk_20FC1E_ADDRESS)
-#define unk_20FC46_ADDRESS 0x20FC46u
-#define unk_20FC46 ((uint16_t *)ram(unk_20FC46_ADDRESS))
+#define race_copy_window_segments_ADDRESS 0x20FC46u
+#define race_copy_window_segments ((uint16_t *)ram(race_copy_window_segments_ADDRESS))
 #define unk_218001_ADDRESS 0x218001u
 #define unk_218001 RAM8(unk_218001_ADDRESS)
 #define unk_218002_ADDRESS 0x218002u
@@ -896,8 +807,8 @@
 #define rom_00D0C0 ((const uint8_t *)rom(rom_00D0C0_ADDRESS))
 #define rom_00DDB4_ADDRESS 0x00DDB4u
 #define rom_00DDB4 ((const uint32_t *)rom(rom_00DDB4_ADDRESS))
-#define rom_00E0A0_ADDRESS 0x00E0A0u
-#define rom_00E0A0 ((const uint32_t *)rom(rom_00E0A0_ADDRESS))
+#define race_copy_offsets_ADDRESS 0x00E0A0u
+#define race_copy_offsets ((const uint32_t *)rom(race_copy_offsets_ADDRESS))
 #define rom_00E0C4_ADDRESS 0x00E0C4u
 #define rom_00E0C4 ((const uint32_t *)rom(rom_00E0C4_ADDRESS))
 #define rom_00E4D0_ADDRESS 0x00E4D0u
@@ -1495,14 +1406,17 @@
 struct object
 {
 	uint8_t flags;
-	uint8_t unk_01;
+	uint8_t flags_high;
 	union
 	{
 		struct
 		{
 			uint16_t unk_02;
 			uint32_t handler;
-			uint32_t unk_08;
+			uint8_t slot;
+			uint8_t unk_09;
+			uint8_t unk_0A;
+			uint8_t unk_0B;
 			uint8_t state;
 			uint8_t unk_0D;
 			uint8_t unk_0E;
@@ -1512,14 +1426,15 @@ struct object
 			uint8_t unk_13;
 			uint32_t unk_14;
 			uint32_t unk_18;
-			uint16_t unk_1C;
+			int16_t position;
 			uint8_t unk_1E;
 			uint8_t pad_1F[0x1];
-			uint16_t unk_20;
+			int16_t x_offset;
 			uint8_t pad_22[0x2];
-			uint16_t unk_24;
+			int16_t y_offset;
 			uint8_t pad_26[0x2];
-			uint32_t unk_28;
+			uint16_t position_fraction;
+			uint8_t pad_2A[0x2];
 			uint16_t unk_2C;
 			uint16_t unk_2E;
 			uint16_t x;
@@ -1530,15 +1445,15 @@ struct object
 			uint16_t palette;
 			uint16_t depth_layer;
 			uint8_t draw_mode;
-			uint8_t unk_3F;
+			int8_t side;
 			uint8_t frame;
-			uint8_t unk_41;
-			uint8_t unk_42;
+			uint8_t frame_time;
+			int8_t frame_countdown;
 			uint8_t size_step;
 			uint8_t scale_shift;
 			uint8_t unk_45;
 			uint8_t pad_46[0xA];
-			uint32_t unk_50;
+			uint32_t previous_place;
 			uint32_t unk_54;
 			uint16_t unk_58;
 			uint8_t pad_5A[0x2];
@@ -1582,12 +1497,12 @@ struct object
 			uint8_t unk_D0;
 			uint8_t unk_D1;
 			uint8_t unk_D2;
-			uint8_t pad_D3[0x6];
-			uint8_t unk_D9;
-			uint8_t unk_DA;
-			uint8_t unk_DB;
+			uint8_t pad_D3[0x1];
+			uint32_t unk_D4;
+			uint32_t unk_D8;
 			uint8_t unk_DC;
-			uint8_t pad_DD[0x3];
+			uint8_t unk_DD;
+			uint8_t pad_DE[0x2];
 			uint8_t unk_E0;
 			uint8_t unk_E1;
 			uint16_t unk_E2;
@@ -1841,6 +1756,8 @@ struct object
 			uint32_t passing_order;
 			uint32_t checkpoint_count;
 			uint16_t leader_time;
+			uint8_t pad_1E[0xD2];
+			uint8_t row_steps;
 		} checkpoint_board;
 		struct
 		{
@@ -1977,7 +1894,8 @@ struct object
 			int8_t side;
 			uint8_t pad_40[0x16];
 			int16_t appear_position;
-			uint8_t pad_58[0x28];
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
 			uint16_t in_view_animation;
 		} flagman;
 		struct
@@ -2075,7 +1993,8 @@ struct object
 			int8_t side;
 			uint8_t pad_40[0x16];
 			int16_t appear_position;
-			uint8_t pad_58[0x28];
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
 			int16_t x_speed;
 		} goal_parade;
 		struct
@@ -2085,6 +2004,11 @@ struct object
 			uint8_t pad_0A[0x6];
 			uint16_t frames_left;
 		} ignition_key_prompt;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t blink_counter;
+		} isdn_status;
 		struct
 		{
 			uint8_t pad_02[0xE];
@@ -2247,7 +2171,9 @@ struct object
 			uint32_t to;
 			uint32_t colour_place;
 			uint32_t difference_place;
-			uint8_t pad_28[0x8];
+			uint16_t upload_length;
+			uint8_t pad_2A[0x2];
+			uint32_t upload_colours;
 			uint16_t palette_offset;
 			uint16_t blocks;
 		} palette_fade;
@@ -2283,7 +2209,7 @@ struct object
 		{
 			uint8_t pad_02[0xB];
 			uint8_t step;
-			uint8_t pad_0E[0x2];
+			uint16_t state_high;
 			uint16_t timer;
 			uint8_t pad_12[0xE];
 			int32_t world_x;
@@ -2299,7 +2225,8 @@ struct object
 			uint8_t pad_6A[0x4];
 			uint8_t hit_kind;
 			uint8_t hit_guard;
-			uint8_t pad_70[0x1E];
+			uint8_t pad_70[0x1C];
+			uint16_t pitch;
 			uint16_t heading;
 			uint16_t previous_heading;
 			uint8_t pad_92[0x2];
@@ -2311,7 +2238,7 @@ struct object
 			int32_t view_target_z;
 			uint8_t pad_AC[0x4];
 			uint16_t brake_force;
-			uint8_t pad_B2[0x2];
+			uint16_t last_negated_speed;
 			int32_t previous_world_y;
 			int16_t slide;
 			uint8_t pad_BA[0x6];
@@ -2345,6 +2272,8 @@ struct object
 			uint8_t pad_02[0x12];
 			uint32_t leader;
 			uint32_t record;
+			uint8_t pad_1C[0x68];
+			uint16_t stop_distance;
 		} pulled_vehicle;
 		struct
 		{
@@ -2395,9 +2324,27 @@ struct object
 			uint8_t special_body;
 			uint8_t pad_2F[0x51];
 			uint32_t record;
-			uint8_t pad_84[0x4];
+			uint16_t body_attributes;
+			uint8_t pad_86[0x2];
 			uint32_t wheel_turn;
-			uint8_t pad_8C[0x24];
+			uint16_t first_body_piece;
+			uint16_t first_body_animation;
+			uint32_t driver_places;
+			uint16_t driver_animation;
+			uint16_t driver_palette;
+			uint8_t driver_gesture_mask;
+			uint8_t pad_99[0x1];
+			uint8_t driver_frame;
+			uint8_t driver_frames;
+			uint8_t pad_9C[0x4];
+			uint32_t passenger_places;
+			uint16_t passenger_animation;
+			uint16_t passenger_palette;
+			uint8_t passenger_gesture_mask;
+			uint8_t pad_A9[0x1];
+			uint8_t passenger_frame;
+			uint8_t passenger_frames;
+			uint8_t pad_AC[0x4];
 			int16_t crash_text_y;
 			uint8_t crash_text_frames;
 			uint8_t crash_text_rise;
@@ -2407,6 +2354,25 @@ struct object
 			uint16_t tag_animation;
 			uint8_t blink_counter;
 			uint8_t rival;
+			uint8_t pad_BE[0x1];
+			uint8_t hard_acceleration_frame;
+			uint32_t spray_2_animations;
+			uint32_t spray_2_places;
+			uint32_t spray_2_effect;
+			uint8_t spray_2_frame;
+			uint8_t spray_2_side;
+			uint8_t spray_2_kind;
+			uint8_t pad_CF[0x1];
+			uint32_t spray_1_animations;
+			uint32_t spray_1_places;
+			uint32_t spray_1_effect;
+			uint8_t spray_1_frame;
+			uint8_t spray_1_side;
+			uint8_t spray_1_kind;
+			uint8_t pad_DF[0x2];
+			uint8_t gesture_shown;
+			uint8_t last_place;
+			uint8_t view;
 		} race_car;
 		struct
 		{
@@ -2456,7 +2422,8 @@ struct object
 			uint32_t zoom_y_address;
 			uint32_t zoom_center_x_address;
 			uint32_t zoom_center_y_address;
-			uint8_t pad_A0[0x8];
+			uint32_t cleared_scroll_x_address;
+			uint32_t cleared_scroll_y_address;
 			uint32_t second_scroll_x_address;
 			uint32_t second_scroll_y_address;
 			uint32_t page_list;
@@ -2467,6 +2434,8 @@ struct object
 			uint8_t course;
 			uint8_t pad_0A[0x6];
 			uint16_t frames_left;
+			uint8_t pad_12[0x2];
+			uint32_t ranking;
 		} ranking_course_banner;
 		struct
 		{
@@ -2631,7 +2600,7 @@ struct object
 			uint8_t pad_0C[0x4];
 			uint8_t timer;
 			int8_t leg_frames;
-			uint8_t pad_12[0x1];
+			uint8_t first_legs_left;
 			uint8_t checkpoint_legs_left;
 			uint8_t pad_14[0x4];
 			uint32_t sea_colour_address;
@@ -2647,12 +2616,13 @@ struct object
 			uint32_t zoom_center_y_address;
 			uint32_t register_scroll_x_address;
 			uint32_t register_scroll_y_address;
-			uint8_t pad_A4[0x4];
+			uint32_t tile_bank_address;
 			uint32_t second_pages_address;
 			uint32_t second_scroll_x_address;
 			uint32_t second_scroll_y_address;
 			uint32_t second_register_scroll_x_address;
 			uint32_t second_register_scroll_y_address;
+			uint32_t second_tile_bank_address;
 		} route_map;
 		struct
 		{
@@ -2679,7 +2649,9 @@ struct object
 		} route_map_direction_sign;
 		struct
 		{
-			uint8_t pad_02[0xE];
+			uint8_t pad_02[0x7];
+			uint8_t index_then_half_rate;
+			uint8_t pad_0A[0x6];
 			uint8_t toggle;
 			uint8_t pad_11[0x3];
 			uint32_t route_map;
@@ -2737,7 +2709,8 @@ struct object
 			int8_t side;
 			uint8_t pad_40[0x16];
 			int16_t appear_position;
-			uint8_t pad_58[0x2A];
+			int16_t trigger_position;
+			uint8_t pad_5A[0x28];
 			int16_t x_speed;
 			uint16_t sound;
 		} santa_sleigh;
@@ -2797,7 +2770,9 @@ struct object
 			uint8_t pad_46[0x10];
 			int16_t first_position;
 			int16_t end_position;
-			uint8_t pad_5A[0x26];
+			uint8_t pad_5A[0x6];
+			uint32_t sound_entry;
+			uint8_t pad_64[0x1C];
 			uint16_t sound;
 			uint8_t sound_countdown;
 		} sounding_scenery;
@@ -2906,6 +2881,11 @@ struct object
 		} start_message;
 		struct
 		{
+			uint8_t pad_02[0x16];
+			uint32_t palette_list;
+		} step_palette;
+		struct
+		{
 			uint8_t pad_02[0xE];
 			uint32_t count;
 			uint8_t pad_14[0x4];
@@ -2943,6 +2923,24 @@ struct object
 			uint8_t pad_89[0x1];
 			int16_t dive_y_speed;
 		} swooping_helicopter;
+		struct
+		{
+			uint8_t pad_02[0x1E];
+			uint16_t units_x;
+			uint8_t pad_22[0x5E];
+			int8_t units_flip;
+			uint8_t units_digit;
+			uint16_t units_width;
+			uint32_t units_remaining;
+			int8_t tens_flip;
+			uint8_t tens_digit;
+			uint16_t tens_width;
+			uint32_t tens_remaining;
+			int8_t hundreds_flip;
+			uint8_t hundreds_digit;
+			uint16_t hundreds_width;
+			uint32_t hundreds_remaining;
+		} time_digits;
 		struct
 		{
 			uint8_t pad_02[0xE];
@@ -3019,15 +3017,26 @@ struct object
 		} title_picture;
 		struct
 		{
+			uint8_t pad_02[0x7];
+			uint8_t model;
+			uint8_t pad_0A[0x6];
+			int16_t x_offset;
+			int16_t y_offset;
+			uint32_t car;
+		} title_rider;
+		struct
+		{
 			uint8_t pad_02[0xE];
 			uint16_t frames;
 			uint16_t palm_frames;
 			uint8_t pad_14[0x6C];
 			uint32_t wave_times;
-			uint8_t pad_84[0x8];
+			uint32_t tile_bank_address;
+			uint32_t pages_address;
 			uint32_t scroll_x_address;
 			uint32_t scroll_y_address;
-			uint8_t pad_94[0x8];
+			uint32_t second_tile_bank_address;
+			uint32_t second_pages_address;
 			uint32_t second_scroll_x_address;
 			uint32_t second_scroll_y_address;
 		} title_screen;
@@ -3060,7 +3069,7 @@ struct object
 			uint16_t position_fraction;
 			uint8_t pad_2A[0x2];
 			int16_t speed;
-			uint8_t pad_2E[0x2];
+			int16_t sideways_speed;
 			int16_t screen_x;
 			uint8_t pad_32[0xD];
 			int8_t side;
@@ -3082,6 +3091,8 @@ struct object
 			uint8_t pad_02[0x12];
 			uint32_t leader;
 			uint32_t record;
+			uint8_t pad_1C[0x68];
+			uint16_t stop_distance;
 		} traffic_follower;
 		struct
 		{
@@ -3121,6 +3132,11 @@ struct object
 			uint8_t pad_22[0x2];
 			int16_t y_offset;
 		} transmission_label;
+		struct
+		{
+			uint8_t pad_02[0x1A];
+			uint16_t size;
+		} turntable;
 		struct
 		{
 			uint8_t pad_02[0x7];
@@ -3247,14 +3263,14 @@ struct car
 	uint16_t road_width;
 	int16_t road_width_step;
 	uint16_t road_width_target;
-	uint16_t unk_C2;
+	uint16_t course_records_read;
 	uint8_t pad_C4[0x5];
 	uint8_t branch;
-	uint8_t unk_CA;
+	uint8_t new_branch;
 	uint8_t at_fork;
 	uint8_t forks_reached;
 	uint8_t extensions_shown;
-	uint8_t unk_CE;
+	uint8_t road_event;
 	uint8_t pad_CF[0x1];
 	uint8_t forks_taken;
 	uint8_t stage_history;
@@ -3293,7 +3309,7 @@ struct car
 	uint8_t crash_sound;
 	uint8_t crash_sound_delay;
 	uint8_t crash_text;
-	uint8_t unk_137;
+	uint8_t crash_body_shown;
 	uint8_t pad_138[0x8];
 	uint8_t wheel_effect_sides;
 	uint8_t wheel_effect_1;
@@ -3321,32 +3337,34 @@ struct screen
 	uint32_t palette_ram;
 	uint32_t mixer;
 	uint32_t io_chip;
-	uint16_t unk_10;
-	uint16_t unk_12;
+	uint16_t eye_distance;
+	uint16_t draw_distance;
 	uint16_t sprite_origin_x;
 	uint16_t sprite_origin_y;
-	uint16_t unk_18;
+	uint16_t view_pitch_base;
 	uint16_t sprite_screen_bit;
 	uint8_t pad_1C[0x4];
 	uint32_t race_copy;
 	uint32_t race;
 	uint8_t pad_28[0x18];
 	uint8_t link_event;
-	uint8_t unk_41;
-	uint8_t pad_42[0x3];
+	uint8_t link_event_data_1;
+	uint8_t link_event_data_2;
+	uint8_t link_event_data_3;
+	uint8_t link_event_data_4;
 	uint8_t link_status;
 	uint8_t link_status_set;
 	uint8_t link_status_cleared;
 	uint8_t link_status_changed;
 	uint8_t pad_49[0x17];
-	uint32_t unk_60;
-	uint32_t unk_64;
-	uint32_t unk_68;
-	uint32_t unk_6C;
-	uint8_t unk_70;
-	uint8_t unk_71;
-	uint8_t unk_72;
-	uint8_t unk_73;
+	uint32_t leader_record;
+	uint32_t last_record;
+	uint32_t ahead_record;
+	uint32_t behind_record;
+	uint8_t leader_player;
+	uint8_t last_player;
+	uint8_t ahead_player;
+	uint8_t behind_player;
 	uint8_t pad_74[0xC];
 	uint8_t game_mode;
 	uint8_t mode_step;
@@ -3359,27 +3377,27 @@ struct screen
 	uint32_t game_start_time;
 	uint8_t attract_car;
 	uint8_t record_course;
-	uint8_t unk_9E;
+	uint8_t next_attract_car;
 	uint8_t pad_9F[0x1];
-	uint8_t unk_A0;
-	uint8_t unk_A1;
-	uint8_t unk_A2;
-	uint8_t unk_A3;
-	uint8_t unk_A4;
-	uint8_t unk_A5;
-	uint8_t unk_A6;
+	uint8_t first_stage;
+	uint8_t route_stage;
+	uint8_t built_stage_level;
+	uint8_t built_stage;
+	uint8_t current_stage_level;
+	uint8_t route_stage_level;
+	uint8_t current_stage;
 	uint8_t skip_scroll_update;
 	uint8_t pad_A8[0x8];
 	uint16_t sprite_groups;
 	uint8_t pad_B2[0x2];
 	uint32_t next_sprite_place;
-	uint16_t unk_B8;
+	uint16_t horizon_line;
 	uint8_t pad_BA[0x6];
 	uint32_t sprite_list_last;
 	uint32_t sprite_list_limit;
 	uint8_t pad_C8[0x8];
-	uint32_t unk_D0;
-	uint8_t unk_D4;
+	uint32_t shown_view;
+	uint8_t view_ring_slot;
 	uint8_t pad_D5[0xC];
 	uint8_t start_lamp_blink;
 	uint8_t entry_countdown_shown;
@@ -3404,30 +3422,30 @@ struct screen
 	uint8_t pad_155[0xB];
 	uint16_t mixer_values;
 	uint8_t pad_162[0x3D];
-	uint8_t unk_19F;
+	uint8_t colour_offset_mode;
 	uint8_t pad_1A0[0x10];
 	uint16_t mixer_defaults;
 	uint8_t pad_1B2[0x4E];
-	uint16_t unk_200;
-	uint8_t unk_202;
-	uint8_t unk_203;
-	uint8_t unk_204;
-	uint8_t unk_205;
-	uint8_t unk_206;
-	uint8_t unk_207;
-	uint32_t unk_208;
-	uint16_t unk_20C;
+	uint16_t road_top_line;
+	uint8_t background_changing;
+	uint8_t stage_background_change;
+	uint8_t stage_background_branch;
+	uint8_t backdrops_leaving;
+	uint8_t background_fading;
+	uint8_t background_at_start;
+	uint32_t road_palette_fades;
+	uint16_t background_scroll_y;
 	uint8_t pad_20E[0xF2];
 	uint8_t accepted_players;
 	uint8_t pad_301[0x3];
-	uint32_t unk_304;
+	uint32_t last_four_accepted_players;
 	uint32_t host_record;
 	uint8_t host_player;
 	uint8_t pad_30D[0x2];
 	uint8_t entrant_count;
 	uint8_t entrants;
 	uint8_t pad_311[0x3];
-	uint32_t unk_314;
+	uint32_t last_four_entrants;
 	uint8_t is_host;
 	uint8_t entry_accepted;
 	uint8_t in_game;
@@ -3470,23 +3488,23 @@ struct screen
 	uint8_t pad_4B1[0x41];
 	uint8_t demo_stage;
 	uint8_t pad_4F3[0xD];
-	uint32_t unk_500;
+	uint32_t own_hit_box;
 	uint8_t pad_504[0xC];
-	uint32_t unk_510;
+	uint32_t hit_box_count;
 	uint8_t pad_514[0x1EC];
 	uint16_t stage_lengths;
 	uint8_t pad_702[0x3C];
-	uint16_t unk_73E;
+	uint16_t branch_road_length;
 	uint8_t pad_740[0xC0];
 	uint8_t sound_queue_read;
 	uint8_t sound_queue_write;
 	uint8_t pad_802[0x20];
-	uint8_t unk_822;
+	uint8_t sound_start_cleared;
 	uint8_t pad_823[0x1D];
 	uint8_t second_sound_queue_read;
 	uint8_t second_sound_queue_write;
 	uint8_t pad_842[0xBE];
-	uint32_t unk_900;
+	uint32_t palette_upload_count;
 	uint8_t pad_904[0x1FC];
 	uint16_t unpack_state;
 	uint8_t unpack_read_place;
@@ -3500,17 +3518,17 @@ struct screen
 	uint8_t pad_B13[0xED];
 	uint32_t unpack_queue;
 	uint8_t pad_C04[0x2FC];
-	uint32_t unk_F00;
-	uint32_t unk_F04;
-	uint32_t unk_F08;
+	uint32_t random_state;
+	int32_t turntable_depth_offset;
+	int32_t turntable_radius_offset;
 	uint8_t pad_F0C[0x2];
-	uint8_t unk_F0E;
-	uint8_t unk_F0F;
+	uint8_t palette_fades_started;
+	uint8_t nearing_fork;
 	uint8_t lcd_text;
 	uint8_t pad_F11[0x3];
-	uint32_t unk_F14;
-	uint32_t unk_F18;
-	uint32_t unk_F1C;
+	uint32_t lcd_text_4_to_7;
+	uint32_t lcd_text_8_to_11;
+	uint32_t lcd_text_12_to_15;
 	uint16_t button_lamps;
 	uint8_t music_lamp_mode;
 	uint8_t arrows_lamp_mode;
@@ -3526,16 +3544,16 @@ struct screen
 	uint8_t lcd_scroll_step;
 	uint8_t lcd_scroll_frames;
 	uint8_t pad_F4A[0x6];
-	uint16_t unk_F50;
-	uint16_t unk_F52;
-	uint32_t unk_F54;
-	uint16_t unk_F58;
+	uint16_t shown_speed;
+	int16_t maximum_speed;
+	uint32_t speed_sum;
+	uint16_t speed_samples;
 	uint8_t pad_F5A[0x26];
-	uint32_t unk_F80;
-	uint16_t unk_F84;
+	uint32_t traffic_racer_list;
+	uint16_t visible_stretch_count;
 	uint8_t pad_F86[0x20];
-	uint16_t unk_FA6;
-	uint8_t unk_FA8;
+	uint16_t traffic_draw_distance;
+	uint8_t traffic_count;
 	uint8_t pad_FA9[0xF57];
 	uint8_t crest_count;
 	uint8_t pad_1F01[0xF];
@@ -3545,13 +3563,33 @@ struct screen
 	uint8_t pad_1F32[0x30CE];
 	uint16_t depth_lists;
 	uint8_t pad_5002[0x676];
-	uint16_t unk_5678;
-	uint16_t unk_567A;
+	uint16_t text_depth_list_head;
+	uint16_t text_depth_list_tail;
 	uint8_t pad_567C[0x184];
-	uint32_t unk_5800;
-	uint16_t unk_5804;
-	uint16_t unk_5806;
+	union
+	{
+		uint32_t route_map_signals;
+		uint16_t kanji_text_number;
+		struct
+		{
+			uint8_t pad_5800[0x1];
+			uint8_t title_logo_shine;
+			int16_t kanji_text_units;
+		};
+	};
+	int16_t kanji_text_tens;
+	int16_t kanji_text_hundreds;
 	uint8_t pad_5808[0x27F8];
+};
+
+struct object_area
+{
+	uint32_t list;
+	uint32_t list_first;
+	uint32_t next_list;
+	uint32_t list_end;
+	uint8_t slots;
+	uint8_t pad_11[0x7FEF];
 };
 
 struct race
@@ -3559,11 +3597,21 @@ struct race
 	uint8_t machine;
 	uint8_t player;
 	uint8_t car_number;
-	uint8_t pad_03[0xE];
+	uint8_t master_advertise_sound;
+	uint8_t master_steering_wheel_reaction;
+	uint8_t master_coins_per_credit;
+	uint8_t master_first_chute_multiplier;
+	uint8_t master_bonus_adder;
+	uint8_t master_coin_setting;
+	uint8_t master_free_play;
+	uint8_t master_game_difficulty;
+	int8_t master_time_difficulty_0;
+	uint8_t unk_0C;
+	uint32_t master_time_difficulty_2_5;
 	uint8_t record_serial;
 	uint8_t record_model;
 	uint8_t record_name;
-	uint16_t unk_14;
+	uint16_t record_name_rest;
 	uint16_t finish_time;
 	uint8_t record_course;
 	uint8_t entry_request;
@@ -3573,39 +3621,45 @@ struct race
 	uint8_t entrant;
 	uint8_t racer_count;
 	uint8_t race_order;
-	uint8_t pad_21[0x3];
-	uint32_t unk_24;
+	uint8_t race_order_1;
+	uint8_t race_order_2;
+	uint8_t race_order_3;
+	uint32_t race_order_4_7;
 	uint8_t game_over;
-	uint8_t unk_29;
-	uint8_t unk_2A;
-	uint8_t unk_2B;
-	uint8_t pad_2C[0x4];
-	uint32_t unk_30;
-	uint32_t unk_34;
-	uint32_t unk_38;
-	uint16_t unk_3C;
-	uint16_t unk_3E;
-	uint16_t unk_40;
-	uint16_t unk_42;
-	uint16_t unk_44;
-	uint16_t unk_46;
-	uint8_t unk_48;
-	uint8_t unk_49;
-	uint8_t unk_4A;
-	uint8_t unk_4B;
-	uint16_t unk_4C;
-	uint16_t unk_4E;
-	uint8_t unk_50;
-	uint8_t unk_51;
-	uint8_t unk_52;
-	uint8_t unk_53;
-	uint16_t unk_54;
-	uint16_t unk_56;
-	uint16_t unk_58;
-	uint8_t pad_5A[0x2];
+	uint8_t players_this_side;
+	uint8_t players_other_side;
+	uint8_t link_status;
+	uint8_t link_buttons;
+	uint8_t link_wheel;
+	uint8_t link_gas;
+	uint8_t link_brake;
+	int32_t world_x;
+	int32_t world_y;
+	int32_t world_z;
+	uint16_t animation;
+	uint16_t palette;
+	uint16_t segment_fraction;
+	uint16_t segment;
+	int16_t road_x;
+	uint16_t window_segment;
+	uint8_t car_choice;
+	uint8_t model;
+	uint8_t frame;
+	uint8_t view_slot;
+	uint16_t speed;
+	int16_t sideways_speed;
+	uint8_t wheel_effect_sides;
+	uint8_t wheel_effect_1;
+	uint8_t wheel_effect_2;
+	uint8_t hard_acceleration;
+	uint16_t segment_pitch;
+	int16_t bounce_height;
+	uint16_t car_flags;
+	uint8_t unk_5A;
+	uint8_t unk_5B;
 	uint8_t ready;
-	uint8_t unk_5D;
-	uint8_t unk_5E;
+	uint8_t started;
+	uint8_t finished;
 	uint8_t published;
 	uint8_t stage_count;
 	uint8_t pass_seen;
@@ -3621,16 +3675,26 @@ struct race
 	uint8_t pad_70[0x10];
 };
 
+struct object_list
+{
+	uint16_t count;
+	uint8_t pad_02[0xFE];
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
 _Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
 _Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of the game's blocks");
+_Static_assert(sizeof(struct object_area) == 0x8000, "struct object_area has the size of the game's blocks");
 _Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
+_Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
 #define SCREEN(address) ((struct screen *)ram(address))
+#define OBJECT_AREA(address) ((struct object_area *)ram(address))
 #define RACE(address) ((struct race *)ram(address))
+#define OBJECT_LIST(address) ((struct object_list *)ram(address))
 
 #endif

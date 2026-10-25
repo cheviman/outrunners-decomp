@@ -197,11 +197,13 @@ class Names(NamedTuple):
                         # 'offset' is the variable (a list's head), as the code that walks the list starts there
     comments: dict      # function name -> what the C says above it (comment lines)
     tasks: set          # functions a task starts at: the runtime runs them by address (task lines)
+    counts: dict        # work RAM address -> how many elements the variable there has (var NAME[COUNT])
 
 
 def load_names(path, registers=None):
     """Read the var, io, table, struct and field lines of symbols.txt:
-        ADDRESS  var    NAME  TYPE [STRUCT]  a variable in work RAM (TYPE: u8 s8 u16 s16 u32 s32)
+        ADDRESS  var    NAME  TYPE [STRUCT]  a variable in work RAM (TYPE: u8 s8 u16 s16 u32 s32); NAME[COUNT]:
+                                         an array of COUNT of them, which the C reads as NAME[n]
         ADDRESS  io     NAME  TYPE       a hardware register
         ADDRESS  table  NAME  TYPE [STRUCT]  data in the program ROM the code reads by index, TYPE per element
         struct   NAME   SIZE             a structure in work RAM (SIZE in hexadecimal)
@@ -239,7 +241,7 @@ def load_names(path, registers=None):
                                          runtime runs it by its address)
     'registers' ({name: number}) lets param and local lines name a register by its name (hl, iy) on a
     processor whose registers have names; RN works on any."""
-    names = Names({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, set(), {}, {}, {}, {}, set())
+    names = Names({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, set(), {}, {}, {}, {}, set(), {})
     registers = registers or {}
 
     def register_number(text):
@@ -360,6 +362,13 @@ def load_names(path, registers=None):
             raise SystemExit(f"{where}: expected 'ADDRESS {parts[1]} NAME TYPE' with TYPE in {VALUE_TYPES}")
         address = int(parts[0], 16)
         target = {"var": names.variables, "io": names.hardware, "table": names.tables}[parts[1]]
+        if parts[1] == "var" and "[" in parts[2]:
+            # an array: NAME[COUNT], its elements one after another
+            name, _, count = parts[2].partition("[")
+            if not count.endswith("]") or not count[:-1].isdigit() or not name.isidentifier():
+                raise SystemExit(f"{where}: expected 'ADDRESS var NAME[COUNT] TYPE'")
+            parts[2] = name
+            names.counts[address] = int(count[:-1])
         if parts[1] == "var":
             declare(target, address, ("global", address), parts[2], parts[3], where)
         else:

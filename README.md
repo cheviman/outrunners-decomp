@@ -51,12 +51,17 @@ the tools verify it, extract the assets and build your own executable.
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
       says so (`left_caller`). The registers the whole program shares are globals, a copy for each task:
       `current_object`, `player_car` and `screen` (named by `symbols.txt`), and R12, R14, R27 and R28,
-      scratch registers whose last value the next function may read, still named after them (1,485 uses,
+      scratch registers whose last value the next function may read, still named after them (1,490 uses,
       which `tools/noise_report.py` counts). The game's structures are typed (`tools/decompiler/pointers.py`):
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
       1000 of the block) and the block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as
-      `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, and each player's race record
-      (`RACE(p)`, which `symbols.txt` declares with the fields that point at it). The objects' code is
+      `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, each player's race record
+      (`RACE(p)`, which `symbols.txt` declares with the fields that point at it) and the objects' area
+      below each screen's block (`OBJECT_AREA(screen - 0x8000u)`: the lists of the objects, their slots);
+      what the code reaches by its own address in the screens' blocks and the race records reads as their
+      fields (`SCREEN(SCREEN_1)->game_mode`, `RACE(RACE_COPY_1)->entry_frames`), an object whose handler
+      is set to a family's function as that family's, and the variables' arrays by element
+      (`time_difficulty[2]`, `video_registers[8 + r0 * 2]`). The objects' code is
       named and commented, family by family (the scenery and traffic along the road, the player's car and
       the race display, the radio and its DJ, the title, attract and select screens, the route map, the
       name entry), with each family's own fields, and so is the rest of the game's code: the boot and the
@@ -67,8 +72,10 @@ the tools verify it, extract the assets and build your own executable.
       program is named in `sound_symbols.txt`: one driver for both screens, each with its page of commands,
       eight sequence players and a queue of MIDI messages, played on 24 MultiPCM voices and the YM3438's
       six channels, and the engine and tyre noise the game drives through the page (the game's side of the
-      shared RAM has the same names). Still named after their addresses: the variables and fields no
-      named code explains yet (counted by `tools/noise_report.py`)
+      shared RAM has the same names). Every variable has a name; 56 uses of fields are still named after
+      their offset (`tools/noise_report.py`, unk_fields): the memory test walking the RAM byte by byte with
+      the object register, pointers that may be either of two families, the bytes of a family's arrays,
+      and two bytes of the race record nothing reads
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

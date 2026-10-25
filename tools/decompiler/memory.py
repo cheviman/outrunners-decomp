@@ -5,7 +5,7 @@ Description: the game's variables, tables and hardware registers by name: work R
              named addresses
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    23-10-2026
+Modified:    25-10-2026
 Author:      Sebastian Toyos
 
 Work RAM (0x200000-0x20FFFF) stays the board's byte array, so the state compares byte for byte with the
@@ -58,9 +58,11 @@ TYPES = {8: "uint8_t", 16: "uint16_t", 32: "uint32_t"}
 SIGNED = {"u8": (8, False), "s8": (8, True), "u16": (16, False), "s16": (16, True),
           "u32": (32, False), "s32": (32, True)}
 BUS_ONLY = []    # writes a device on the bus watches in work RAM (SegaSonic: its protection)
-VARIABLES = None        # where the game's variables start, as a constant base (SegaSonic's R25); none
-# work RAM addresses with a name of their own: the blocks of the two screens (R25 of each task)
-NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2"}
+VARIABLES = 0x20E000    # where the game's variables start, as a constant base (R24: GAME_VARIABLES)
+# work RAM addresses with a name of their own: the blocks of the two screens (R25 of each task) and the race
+# records (each screen's, and the copy of them each screen keeps)
+NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2", 0x20FB00: "RACE_1", 0x20FB80: "RACE_2",
+               0x20FC00: "RACE_COPY_1", 0x20FC80: "RACE_COPY_2"}
 HARDWARE = [(0x300000, 0x320000, "VIDEO"), (0x400000, 0x420000, "SPRITE_RAM"), (0x500000, 0x500010, "SPRITE_CONTROL"),
             (0x600000, 0x610000, "PALETTE"), (0x610000, 0x620000, "MIXER"), (0x700000, 0x702000, "SOUND"),
             (0xC00000, 0xC00080, "IO"), (0xD00000, 0xD00010, "IRQ"), (0xD80000, 0xD80010, "RANDOM")]
@@ -178,6 +180,7 @@ class Item:
         self.bits = bits
         self.signed = signed
         self.indexed = False
+        self.count = None     # an array's number of elements (symbols.txt: var NAME[COUNT])
 
 
 class Memory:
@@ -209,6 +212,10 @@ class Memory:
         for address, (name, kind) in names.variables.items():
             bits, signed = SIGNED[kind]
             self.variables[address] = Item(address, name, bits, signed)
+            count = getattr(names, "counts", {}).get(address)
+            if count is not None:
+                self.variables[address].count = count
+                self.variables[address].indexed = True
         for address, (name, kind) in names.tables.items():
             bits, signed = SIGNED[kind]
             self.tables[address] = Item(address, name, bits, signed)
@@ -257,10 +264,19 @@ class Memory:
 
     def add_unnamed(self, items, widths, name_of):
         for address, counts in sorted(widths.items()):
-            if address in items or self.inside(items, address) is not None:
+            if address in items or self.inside(items, address) is not None or self.element(items, address):
                 continue
             bits = max(counts, key=lambda width: (counts[width], -width))
             items[address] = Item(address, name_of(address), bits)
+
+    @staticmethod
+    def element(items, address):
+        """(array, element number, byte into it) when 'address' falls in an array symbols.txt gives the number
+        of elements of (var NAME[COUNT]), past its first element's start; or None."""
+        for item in items.values():
+            if item.count is not None and item.address < address < item.address + item.count * (item.bits // 8):
+                return (item,) + divmod(address - item.address, item.bits // 8)
+        return None
 
     @staticmethod
     def inside(items, address):
@@ -284,6 +300,11 @@ class Memory:
         outer = self.inside(items, address)
         if outer is not None:
             return cprint.part(bits, outer.name, address - outer.address, outer.bits)
+        found = self.element(items, address)
+        if found is not None:
+            array, number, byte = found
+            name = f"{array.name}[{number}]"
+            return name if byte == 0 and bits == array.bits else cprint.part(bits, name, byte, array.bits)
         return None
 
     def access(self, address, bits, index_text):
@@ -323,13 +344,24 @@ class Memory:
         loaded = rest
         while isinstance(loaded, ir.Op) and loaded.name in ("zext", "fits"):
             loaded = loaded.args[0]
-        if base == VARIABLES and isinstance(loaded, ir.Load) and base not in items:
+        if base == VARIABLES and isinstance(loaded, ir.Load):
             # R25 plus an offset the code reads from a table (direction_to_player_offsets): the variable
             # that many bytes into the variables
             return f"RAM{bits}(GAME_VARIABLES + {index_text(rest)})", False, True
         if base not in items:
-            return None
+            found = self.element(items, base)
+            if found is None:
+                return None
+            # an index from an element of an array past its first (the scrolls of the second tile layer)
+            array, number, byte = found
+            if byte == 0 and index is not None and array.bits == bits:
+                return f"{array.name}[{number} + {index_text(index)}]", array.signed, ram
+            macro = (RAM_MACRO if ram else ROM_MACRO) + str(bits)
+            return f"{macro}({array.name}_ADDRESS + 0x{base - array.address:X}u + {index_text(rest)})", False, ram
         item = items[base]
+        if base == VARIABLES:
+            macro = (RAM_MACRO if ram else ROM_MACRO) + str(bits)
+            return f"{macro}(GAME_VARIABLES + {index_text(rest)})", False, ram
         if index is not None and item.bits == bits:
             return f"{item.name}[{index_text(index)}]", item.signed, ram
         macro = (RAM_MACRO if ram else ROM_MACRO) + str(bits)

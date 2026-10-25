@@ -44,6 +44,7 @@ def use_memory_map(names, arrays):
     memory.HARDWARE = [(0xA000, 0xC000, "SAMPLE_BANK"), (0xC000, 0xE000, "MULTIPCM")]
     memory.BUS_ONLY = []
     memory.BYTE_INDEXES = True
+    memory.NAMED_BASES = {}
     memory.NOTES = {
         "variables": ["/* the sound program's variables, in the RAM it shares with the V70 (E000-FFFF) */"],
         "scoped": ["/* shared RAM as one family of functions uses it */"],
@@ -55,12 +56,15 @@ def use_memory_map(names, arrays):
     pointers.VARIABLES = None
     pointers.CONTEXT_KINDS = {}
     pointers.OBJECT_REGISTERS = ()
+    pointers.HANDLER_FIELD = None
     pointers.WORK_RAM = SHARED_RAM
     pointers.ADDRESS_MASK = 0xFFFF
     pointers.POINTER_BITS = 16
     pointers.PAGE_LINKS = False
     pointers.ROM_DATA = (0x0100, PROGRAM_ROM[1])
     pointers.ARRAYS = dict(arrays)
+    pointers.INSTANCES = {}
+    pointers.VARIABLE_BLOCKS = {}
     pointers.STRUCT_FUNCTION = "sound_ram_at"
     pointers.ROM_STRUCTS = set(names.rom_structs)    # records of the sound program's ROM: read only
     pointers.ROM_FUNCTION = "sound_rom_at"

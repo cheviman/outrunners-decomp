@@ -40,7 +40,7 @@ Forward over each function's blocks, a register keeps the kind of what it was se
     page of r's leads to (a screen's objects are in the page of its block);
   - the first of a run of players (PLAYERS) plus a multiple of their size: a player (none in OutRunners);
   - a word read from a variable that holds a pointer (GLOBAL_KINDS: the ends of the object list);
-  - the variables' base (VARIABLES, none in OutRunners) plus a word read from a table of offsets
+  - the variables' base (VARIABLES) plus a word read from a table of offsets
     symbols.txt says lead to a structure.
 Across functions: what a function finds in its registers when it starts is what its callers have there
 (through calls of any kind), and what a call leaves in the registers it hands back is what the callee
@@ -58,9 +58,9 @@ names below (tools/decompile_sound.py: the Z80's sound channels in its shared RA
 """
 from v60 import ir
 
-STRUCTS = {"object": 0x100, "car": 0x200, "screen": 0x8000}
-VARIABLES = None              # a constant base of the game's variables (SegaSonic's R25); OutRunners' R25 is the
-                              # block of the screen each task runs
+STRUCTS = {"object": 0x100, "car": 0x200, "screen": 0x8000, "object_area": 0x8000}
+VARIABLES = 0x20E000          # the base of the game's variables (R24, which the code adds offsets to: the race
+                              # records' copies from rom_00E0A0); R25 is the block of the screen each task runs
 PLAYERS = (0, 0, 0)           # first, size, count of a run of player blocks (SegaSonic's); none
 # (struct, offset) or ("global", address) -> (struct, bits): what a field or variable points at (Program)
 TARGETS = {}
@@ -71,6 +71,8 @@ GLOBAL_FAMILY = None          # the family whose own names of the work RAM the f
 CONTEXT_KINDS = {20: ("object", 0), 23: ("car", 0), 25: ("screen", 0)}
 OBJECT_REGISTERS = (20,)      # what the game keeps here it reads as objects, wherever it put them
 OWN_REGISTERS = (20,)         # what points at the object a function runs on when it starts (the object loop's)
+HANDLER_FIELD = ("object", 4)  # where an object keeps the code the object loop runs for it: set to a function of a
+                               # family, the object is that family's
 # blocks of the work RAM the object registers walk as variables, not as objects: start -> size (the test
 # mode reads and writes the settings, 0x20E600-0x20E67F, through R20)
 VARIABLE_BLOCKS = {0x20E600: 0x80}
@@ -98,7 +100,17 @@ BASE_KINDS = {0x208000: ("screen", 0), 0x218000: ("screen", 0)}
 # the objects of a screen are in the page of its block (0x200400-0x207FFF, 0x210400-0x217FFF)
 PAGE_LINK_KINDS = {"screen": ("object", 0)}
 # structures inside others: struct -> (offset, size, inner struct); a pointer into one is a pointer to it
-NESTED = {"screen": ((0x1000, 0x200, "car"),)}
+NESTED = {"screen": ((0x1000, 0x200, "car"),),
+          "object_area": ((0x100, 0x100, "object"), (0x200, 0x100, "object_list"), (0x300, 0x100, "object_list"))
+          + tuple((0x400 + 0x100 * n, 0x100, "object") for n in range(124))}
+# structures right below others: struct -> (size, the structure below it): below each screen's block, its
+# objects' area (the lists of the objects, their slots, the spare object and the 124 objects)
+BELOW = {"screen": (0x8000, "object_area")}
+# structures at fixed addresses, whose fields the code also reaches by their own address: start -> (struct,
+# how far into it): the blocks of the two screens (up to the game's variables at 0x20E000) and the race
+# records (each screen's, and the copy of them each screen keeps)
+INSTANCES = {0x208000: ("screen", 0x6000), 0x218000: ("screen", 0x6000), 0x20FB00: ("race", 0x80),
+             0x20FB80: ("race", 0x80), 0x20FC00: ("race", 0x80), 0x20FC80: ("race", 0x80)}
 RUNS = set()                   # structures laid one after another wherever a pointer starts (no fixed base,
                                # unlike ARRAYS): a pointer moved past one points into the next
 
@@ -171,6 +183,33 @@ def page_parts(node, state, zeros):
             inner = kind_of(kept, state, zeros)
             if paged(inner) and inner[1] == 0:
                 return inner[0], low.value, kept
+    return None
+
+
+def below(struct, offset):
+    """(struct, offset) of a place before the start of 'struct' that BELOW says is another structure (or one
+    inside that, NESTED), or None."""
+    if struct not in BELOW or offset >= 0:
+        return None
+    size, under = BELOW[struct]
+    if offset < -size or under not in STRUCTS:
+        return None
+    offset += size
+    for start, length, nested in NESTED.get(under, ()):
+        if start <= offset < start + length and nested in STRUCTS:
+            return nested, offset - start
+    return under, offset
+
+
+def instance_of(value):
+    """(start, struct, offset) when 'value' is the address of a field of a structure at a fixed address
+    (INSTANCES), or None; a structure inside it (NESTED) is left to the pointers that reach it."""
+    for start, (struct, extent) in INSTANCES.items():
+        if start <= value < start + extent:
+            offset = value - start
+            if any(inner <= offset < inner + size for inner, size, _ in NESTED.get(struct, ())):
+                return None
+            return start, struct, offset
     return None
 
 
@@ -301,6 +340,10 @@ def kind_of(node, state, zeros):
     if isinstance(node, ir.Const):
         value = node.value & ADDRESS_MASK
         found = BASE_KINDS.get(value) or player_constant(value)
+        if found is None:
+            instance = instance_of(value)
+            if instance is not None:
+                found = instance[1], instance[2]    # a place in a structure at a fixed address (INSTANCES)
         if found is None and in_work_ram(value):
             found = ("global", value)
         if found is None and rom_address(value):
@@ -341,6 +384,9 @@ def kind_of(node, state, zeros):
                     if start <= offset < start + size:
                         return nested, offset - start
                 return (inner[0], offset) + tuple(inner[2:])
+            found = below(inner[0], offset)
+            if found is not None:
+                return found
             if inner[0] in RUNS or (inner[0] in ARRAYS and offset >= 0):
                 return inner[0], offset % STRUCTS[inner[0]]    # into the next (or the one before) of the array
             return None
@@ -475,6 +521,9 @@ def access(address, state):
         kind = state.get(address.index)
         return (kind[0], kind[1], address, kind[1], family_of(kind)) if kind is not None and kind[0] in STRUCTS \
             else None
+    if isinstance(address, ir.Const):
+        found = instance_of(address.value & ADDRESS_MASK)
+        return (found[1], found[2], ir.Const(found[0], 32), 0, None) if found is not None else None
     base, displacement = address, 0
     if isinstance(address, ir.Op) and address.name in ("add", "sub") and isinstance(address.args[1], ir.Const):
         base = address.args[0]
@@ -492,6 +541,10 @@ def access(address, state):
     offset = signed(kind[1] + displacement)
     if 0 <= offset < STRUCTS[kind[0]]:
         return kind[0], offset, base, kind[1], family_of(kind)
+    found = below(kind[0], offset)
+    if found is not None:
+        # the base points that far past the start of the structure below (screen - 0x8000u: its objects' area)
+        return found[0], found[1], base, found[1] - (offset - kind[1]), None
     return None
 
 
@@ -689,6 +742,15 @@ class Program:
             for index in written:
                 state.pop(index, None)
                 zeros.pop(index, None)
+        elif isinstance(statement, ir.Store) and isinstance(statement.value, ir.Const) and HANDLER_FIELD is not None:
+            # an object whose handler is set to a function of a family is that family's: what start_object
+            # hands back, once its handler is set, reads as the family's code reads it (not the function's own
+            # object: a handler that hands over to another family's goes on with its own fields)
+            family = self.families.get(statement.value.value & ADDRESS_MASK)
+            hit = access(statement.address, state) if family is not None else None
+            if hit is not None and hit[:2] == HANDLER_FIELD and hit[3] == 0 and isinstance(hit[2], ir.Reg) \
+                    and hit[2].index not in OWN_REGISTERS:
+                state[hit[2].index] = (hit[0], 0, family)
 
     def note(self, statement, state, record):
         found, accesses = record

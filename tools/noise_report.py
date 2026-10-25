@@ -4,7 +4,7 @@ Description: counts what is left of the CPU and of the decompiler in the C (src/
              with the counts last saved
 Version:     0.1.0
 Created:     17-10-2026
-Modified:    23-10-2026
+Modified:    25-10-2026
 Author:      Sebastian Toyos
 
 Every kind of leftover the C can still have, counted in one pass over the generated C, so a round of work
@@ -34,7 +34,9 @@ KINDS = {
     "goto": ("goto statements", re.compile(r"\bgoto\b")),
     "control_variables": ("functions with bool control variables", None),
     "sub_functions": ("functions named after their address (sub_XXXXXX, the sound program's sound_XXXX)", None),
-    "unk_names": ("memory named after its address (unk_XXXXXX)", re.compile(r"\bunk_[0-9A-F]{4,6}\b")),
+    "unk_names": ("memory named after its address (unk_XXXXXX)", re.compile(r"(?<!->)(?<!\.)\bunk_[0-9A-F]{4,6}\b")),
+    "unk_fields": ("fields of a structure named after their offset (->unk_XX)",
+                   re.compile(r"(?:->|\.)unk_[0-9A-F]{2,4}\b")),
     "register_names": ("parameters and locals named after a register (r1, p_r4, r0_2)", None),
     "context_registers": ("uses of the registers the C keeps as globals, still named after them (src/game.h)", None),
     "var_fields": ("object fields without a name (var_XX)", re.compile(r"\bvar_[0-9A-F]{2}\b")),

@@ -1212,8 +1212,10 @@ class FunctionWriter:
                 if overlay is not None:
                     return f"{pointer}->{view}.{overlay[0]}", overlay[1]
                 # bytes of the family's field: a part of it, whatever the structure calls them; an access
-                # that reaches past it is the structure's if the structure has a name for all of it
-                if generic[2] and (offset - scoped_offset) * 8 + bits > scoped_bits:
+                # that reaches past it is the structure's if the structure has a name for all of it (one of
+                # its own, not one made of the offset: then the family's field names its start)
+                if generic[2] and (offset - scoped_offset) * 8 + bits > scoped_bits \
+                        and not generic[0].split("->")[-1].startswith("unk_"):
                     return generic[:2]
                 return cprint.part(bits, text, offset - scoped_offset, scoped_bits), False
         self.note_missing(struct, offset, bits, base, base_offset, generic)
@@ -2264,6 +2266,11 @@ class Emitter:
             item = self.memory.variables.get(address)
             if item is None and address == 0x200000:
                 return "WORK_RAM", cprint.PRIMARY
+            if item is None:
+                found = self.memory.element(self.memory.variables, address)
+                if found is not None:
+                    # a place inside an array (symbols.txt: var NAME[COUNT]): its address plus how far in
+                    return f"{found[0].name}_ADDRESS + 0x{address - found[0].address:X}u", cprint.ADD
             return (f"{item.name}_ADDRESS", cprint.PRIMARY) if item is not None else None
         if memory.program_rom(address):
             if address < memory.ROM_NAMES_FROM:

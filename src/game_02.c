@@ -17,37 +17,37 @@
    entry_serial + 1, and the first one starts entry_frames at 600 (rom_00E614), cut to 40 once every
    player is in; entry_frames counting down to 0 closes the entries (entrant FF, entry_serial + 1,
    accepted_players cleared, 1 to the link board's 80000A). Every screen: when some player's race is over
-   (race unk_28) an idle screen (game steps 1-5) goes to step 5 (unk_20E02E cleared), and while player
-   0's entry_frames runs to step 7 (entry_invitation_step); each new entry_serial of player 0's record
-   (entry_serial_seen) adds its entrant to the screen's entrants (entrant_count), or the close clears
-   them (and entry_accepted); the screen's own player accepted: its entry_request cleared,
+   (race game_over) an idle screen (game steps 1-5) goes to step 5 (cleared_on_race_over cleared), and
+   while player 0's entry_frames runs to step 7 (entry_invitation_step); each new entry_serial of player
+   0's record (entry_serial_seen) adds its entrant to the screen's entrants (entrant_count), or the close
+   clears them (and entry_accepted); the screen's own player accepted: its entry_request cleared,
    entry_accepted, the first entrant into host_player and is_host when that is itself; the host keeps
    racer_count and race_order in its record from the entrants. */
 void race_entries_update(void)
 {
 	uint32_t zero = 0;
-	uint8_t r0_2 = 0, entrants = 0, entry_serial = 0;
+	uint8_t entrant = 0, entrants = 0, entry_serial = 0;
 	uint16_t r2 = 0, r9 = 0;
-	uint32_t r0 = 0, r1 = 0, r3 = 0, r13 = 0, race = 0;
-	uint8_t t2 = 0;
+	uint32_t r0 = 0, r1 = 0, r3 = 0, r13 = 0, race = 0, race_2 = 0;
+	uint8_t game_over = 0;
 	uint16_t t1 = 0;
-	uint32_t t3 = 0;
+	uint32_t last_four_entrants = 0;
 
 	race = SCREEN(screen)->race;
-	r12 = 0x20FC00u;
+	r12 = RACE_COPY_1;
 	if (SCREEN(screen)->player == 0u)
 	{
 		r1 = player_count;
 		r2 = 0x80u;
 		entry_serial = RACE(race)->entry_serial;
-		r13 = r12 + 0x1Cu;
+		race_2 = r12 + 0x1Cu;
 		r14 = screen + 0x300u;
 		r0 = RACE(race)->entry_frames;
 		do
 		{
 			r1--;
-		} while ((r1 != 0u) & (unk_20FC1C == entry_serial));
-		if (unk_20FC1C == entry_serial)
+		} while ((r1 != 0u) & (RACE(race_2 - 0x1Cu)->entry_serial_seen == entry_serial));
+		if (RACE(race_2 - 0x1Cu)->entry_serial_seen == entry_serial)
 		{
 			if (r0 == 0u)
 			{
@@ -116,7 +116,7 @@ void race_entries_update(void)
 					RACE(race)->entrant = 0xFFu;
 					AS32(SCREEN(r14 - 0x300u)->accepted_players) = 0u;
 					r14 = r14 + 4u;
-					SCREEN(r14 - 0x304u)->unk_304 = 0u;
+					SCREEN(r14 - 0x304u)->last_four_accepted_players = 0u;
 					mem_write8(0x80000Au, 1u);
 					r14 = r14 + 4u;
 				}
@@ -125,31 +125,31 @@ void race_entries_update(void)
 		RACE(race)->entry_frames = r0;
 	}
 	r1 = player_count;
-	r13 = r12 + 0x28u;
+	race_2 = r12 + 0x28u;
 	do
 	{
-		t2 = mem_read8(r13);
-		zero = t2 == 0u;
-		r13 += 0x80u;
+		game_over = RACE(race_2 - 0x28u)->game_over;
+		zero = game_over == 0u;
+		race_2 += 0x80u;
 		r1--;
-	} while ((r1 != 0u) & (t2 == 0u));
+	} while ((r1 != 0u) & (game_over == 0u));
 	if (zero)
 	{
-		if (unk_20FC1A != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
+		if (RACE(r12)->entry_frames != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
 			AS32(SCREEN(screen)->game_mode) = 7u;
 	}
 	else if (SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
 	{
 		AS32(SCREEN(screen)->game_mode) = 5u;
-		unk_20E02E = 0u;
-		if (unk_20FC1A != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
+		cleared_on_race_over = 0u;
+		if (RACE(r12)->entry_frames != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
 			AS32(SCREEN(screen)->game_mode) = 7u;
 	}
-	if (unk_20FC1D == RACE(race)->entry_serial_seen)
+	if (RACE(r12)->entry_serial == RACE(race)->entry_serial_seen)
 		return;
-	RACE(race)->entry_serial_seen = unk_20FC1D;
-	r0_2 = unk_20FC1E;
-	if ((int8_t)r0_2 < 0)
+	RACE(race)->entry_serial_seen = RACE(r12)->entry_serial;
+	entrant = RACE(r12)->entrant;
+	if ((int8_t)entrant < 0)
 	{
 		SCREEN(screen)->entrant_count = 0u;
 		SCREEN(screen)->entry_accepted = 0u;
@@ -159,8 +159,8 @@ void race_entries_update(void)
 	r1 = SCREEN(r13 - 0x30Fu)->entrant_count;
 	r1 = (uint8_t)(r1 + 1u);
 	SCREEN(r13 - 0x30Fu)->entrant_count = r1;
-	mem_write8(r13 + r1, r0_2);
-	if (SCREEN(screen)->player == r0_2)
+	mem_write8(r13 + r1, entrant);
+	if (SCREEN(screen)->player == entrant)
 	{
 		RACE(race)->entry_request = 0u;
 		SCREEN(screen)->entry_accepted = 0xFFu;
@@ -175,25 +175,25 @@ void race_entries_update(void)
 		RACE(r14 - 0x1Fu)->racer_count = SCREEN(r13 - 0x30Fu)->entrant_count;
 		r14 = r14 + 1u;
 		r13++;
-		t3 = SCREEN(r13 - 0x310u)->unk_314;
+		last_four_entrants = SCREEN(r13 - 0x310u)->last_four_entrants;
 		AS32(RACE(r14 - 0x20u)->race_order) = AS32(SCREEN(r13 - 0x310u)->entrants);
-		RACE(r14 - 0x20u)->unk_24 = t3;
+		RACE(r14 - 0x20u)->race_order_4_7 = last_four_entrants;
 		r14 = r14 + 8u;
 	}
 }
 
-/* The race's progress, each frame of a race (screen unk_31A). The host (is_host) runs it in its record:
+/* The race's progress, each frame of a race (screen in_game). The host (is_host) runs it in its record:
    once every racer has taken the last pass (pass_seen = pass_count), a racer whose stage_count changed
    (against counted_stages) has passed a checkpoint (stage_count - 1): pass_player, pass_checkpoint,
-   pass_order (counted_passes), pass_branch (the side of the road it was on: race unk_44 bit 15),
+   pass_order (counted_passes), pass_branch (the side of the road it was on: race road_x bit 15),
    pass_time (race_time in hundredths plus the order), pass_count + 1; the first to pass a checkpoint
    before the goal adds the time of the stage its branch leads to (rom_00E5B3 by rom_00E5D3[stage * 2 +
-   branch]) plus the setting for that checkpoint (unk_20FC0B) to time_left. Once the race has started
-   (race_started) race_time + 34 and time_left - 1 a frame, and one pass of sorting race_order: the
-   finished (race unk_5E) first by finish_time, then by distance (race unk_40-43). Every screen from the
-   host's record (host_record): the leader's segment and stage (leader_window_segment, leader_stage),
-   each player's place (places, its own in place); each new pass: pass_seen (screen and race),
-   checkpoints_passed, checkpoint_passes, the order and the time by player and by order
+   branch]) plus the setting for that checkpoint (master_time_difficulty) to time_left. Once the race has
+   started (race_started) race_time + 34 and time_left - 1 a frame, and one pass of sorting race_order:
+   the finished (race finished) first by finish_time, then by distance (race segment_fraction-43). Every
+   screen from the host's record (host_record): the leader's segment and stage (leader_window_segment,
+   leader_stage), each player's place (places, its own in place); each new pass: pass_seen (screen and
+   race), checkpoints_passed, checkpoint_passes, the order and the time by player and by order
    (checkpoint_orders, checkpoint_order, checkpoint_times_by_player, checkpoint_times); the first car
    past a fork decides the route: forks_decided + 1, its branch in route_branches and the stage it leads
    to in route_stages. */
@@ -201,7 +201,7 @@ void race_progress_update(void)
 {
 	uint8_t r1 = 0, r5 = 0, pass_branch = 0, pass_count = 0, pass_count_2 = 0, player = 0;
 	uint16_t r4 = 0, pass_time = 0;
-	uint32_t r0 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r13 = 0, r15 = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, race = 0, race_2 = 0, race_3 = 0, race_4 = 0, racer_count = 0, racer_count_2 = 0;
+	uint32_t r0 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r13 = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, race = 0, race_2 = 0, race_3 = 0, race_4 = 0, race_5 = 0, race_6 = 0, racer_count = 0, racer_count_2 = 0;
 	uint8_t t2 = 0;
 	uint32_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
 
@@ -211,33 +211,33 @@ void race_progress_update(void)
 		return;
 	if (SCREEN(screen)->is_host != 0u)
 	{
-		race_3 = r12 + 0x1Fu;
-		racer_count_2 = RACE(race_3 - 0x1Fu)->racer_count;
+		race_4 = r12 + 0x1Fu;
+		racer_count_2 = RACE(race_4 - 0x1Fu)->racer_count;
 		pass_count_2 = RACE(race)->pass_count;
-		race_3++;
-		r13 = race_3;
+		race_4++;
+		r13 = race_4;
 		r0 = racer_count_2;
 		do
 		{
-			r2 = rom_00E0A0[mem_read8(r13)] + unk_20E000_ADDRESS;
+			race_3 = race_copy_offsets[mem_read8(r13)] + GAME_VARIABLES;
 			r0--;
 			r13++;
-		} while ((r0 != 0u) & (mem_read8(r2 + 0x61u) == pass_count_2));
-		if (mem_read8(r2 + 0x61u) == pass_count_2)
+		} while ((r0 != 0u) & (RACE(race_3)->pass_seen == pass_count_2));
+		if (RACE(race_3)->pass_seen == pass_count_2)
 		{
-			r13 = race_3;
+			r13 = race_4;
 			r14 = screen + 0x330u;
 			r0 = racer_count_2;
 			do
 			{
 				r2 = mem_read8(r13);
-				r15 = rom_00E0A0[r2] + unk_20E000_ADDRESS;
+				race_5 = race_copy_offsets[r2] + GAME_VARIABLES;
 				r0--;
 				r13++;
-			} while ((r0 != 0u) & (mem_read8(r14 + r2) == mem_read8(r15 + 0x60u)));
-			if (mem_read8(r14 + r2) != mem_read8(r15 + 0x60u))
+			} while ((r0 != 0u) & (mem_read8(r14 + r2) == RACE(race_5)->stage_count));
+			if (mem_read8(r14 + r2) != RACE(race_5)->stage_count)
 			{
-				r3 = mem_read8(r15 + 0x60u);
+				r3 = RACE(race_5)->stage_count;
 				mem_write8(r14 + r2, r3);
 				RACE(race)->pass_player = r2;
 				r3 = (uint8_t)(r3 - 1u);
@@ -246,16 +246,16 @@ void race_progress_update(void)
 				t1 = screen + 0x338u + r3;
 				mem_write8(t1, mem_read8(t1) + 1u);
 				RACE(race)->pass_order = (uint8_t)r4;
-				r5 = (uint8_t)(mem_read16(r15 + 0x44u) >> 15);
+				r5 = (uint8_t)((uint16_t)RACE(race_5)->road_x >> 15);
 				RACE(race)->pass_branch = r5;
 				RACE(race)->pass_time = RACE(race)->race_time / 0xAu + r4;
 				RACE(race)->pass_count++;
 				if (r4 == 0u && r3 != 5u)
 				{
-					r0 = mem_read8(r15 + 0x62u);
+					r0 = RACE(race_5)->stage;
 					r0 = (uint8_t)(r0 * 2u);
 					r0 = (uint8_t)(r0 + r5);
-					RACE(race)->time_left += (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + unk_20FC0B[r3]) * 0x1Eu;
+					RACE(race)->time_left += (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + master_time_difficulty[r3]) * 0x1Eu;
 				}
 			}
 		}
@@ -265,44 +265,44 @@ void race_progress_update(void)
 			if (RACE(race)->time_left != 0u)
 				RACE(race)->time_left--;
 		}
-		race_4 = race + 0x1Fu;
-		racer_count = RACE(race_4 - 0x1Fu)->racer_count;
+		race_6 = race + 0x1Fu;
+		racer_count = RACE(race_6 - 0x1Fu)->racer_count;
 		t2 = racer_count;
 		r0 = (uint8_t)(t2 - 1u);
-		race_4++;
+		race_6++;
 		if ((int8_t)t2 > 1)
 		{
-			r4_2 = RACE(race_4 - 0x20u)->race_order;
-			r13 = rom_00E0A0[r4_2] + unk_20E000_ADDRESS;
-			race_4++;
+			r4_2 = RACE(race_6 - 0x20u)->race_order;
+			race_2 = race_copy_offsets[r4_2] + GAME_VARIABLES;
+			race_6++;
 			if (SCREEN(screen)->race_started != 0u)
 			{
 				do
 				{
-					r6 = mem_read8(race_4);
-					r14 = rom_00E0A0[r6] + unk_20E000_ADDRESS;
-					race_4++;
-					if (mem_read8(r13 + 0x5Eu) != 0u)
+					r6 = mem_read8(race_6);
+					r14 = race_copy_offsets[r6] + GAME_VARIABLES;
+					race_6++;
+					if (RACE(race_2)->finished != 0u)
 					{
-						if (mem_read8(r14 + 0x5Eu) == 0u || mem_read16(r13 + 0x16u) <= mem_read16(r14 + 0x16u))
+						if (RACE(r14)->finished == 0u || RACE(race_2)->finish_time <= RACE(r14)->finish_time)
 						{
 							t3 = r6;
 							r6 = r4_2;
 							r4_2 = t3;
-							r13 = r14;
+							race_2 = r14;
 						}
 					}
-					else if (mem_read32(r14 + 0x40u) <= mem_read32(r13 + 0x40u))
+					else if (AS32(RACE(r14)->segment_fraction) <= AS32(RACE(race_2)->segment_fraction))
 					{
 						t3 = r6;
 						r6 = r4_2;
 						r4_2 = t3;
-						r13 = r14;
+						race_2 = r14;
 					}
-					mem_write8(race_4 - 2u, r6);
+					mem_write8(race_6 - 2u, r6);
 					r0--;
 				} while (r0 != 0u);
-				mem_write8(race_4 - 1u, r4_2);
+				mem_write8(race_6 - 1u, r4_2);
 			}
 		}
 	}
@@ -312,9 +312,9 @@ void race_progress_update(void)
 	race_2++;
 	r2 = RACE(race_2 - 0x20u)->race_order;
 	player = SCREEN(screen)->player;
-	r14 = rom_00E0A0[r2] + unk_20E000_ADDRESS;
-	SCREEN(screen)->leader_window_segment = mem_read16(r14 + 0x46u);
-	SCREEN(screen)->leader_stage = mem_read8(r14 + 0x62u);
+	r14 = race_copy_offsets[r2] + GAME_VARIABLES;
+	SCREEN(screen)->leader_window_segment = RACE(r14)->window_segment;
+	SCREEN(screen)->leader_stage = RACE(r14)->stage;
 	race_2++;
 	do
 	{
@@ -350,7 +350,7 @@ void race_progress_update(void)
 		{
 			SCREEN(screen)->forks_decided++;
 			mem_write8(screen + 0x34Au + pass_checkpoint, pass_branch);
-			r0 = mem_read8(rom_00E0A0[pass_player] + 0x20E062u);
+			r0 = mem_read8(race_copy_offsets[pass_player] + 0x20E062u);
 			r0 = (uint8_t)(r0 * 2u);
 			mem_write8(screen + 0x344u + pass_checkpoint, rom_00E5D3[(uint8_t)(r0 + pass_branch)]);
 		}
@@ -358,15 +358,15 @@ void race_progress_update(void)
 }
 
 /* Game step 7, an idle seat while another one's game takes entries (race_entries_update sends it here),
-   by screen unk_80's byte 2: 0 screen unk_153 = 0 and unk_94 bit 0; 1 once that bit has cleared: the
-   seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count (010889)
-   and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear), not the
-   demo (unk_90 bit 8), the wheel motor off (unk_20E0D0), both of the seat's lamps blinking (bytes C0-C3
-   and C8-CB of its entry at checkpoint_lamp); 2 starts object_handlers_DF74 (entry_countdown_start,
-   credit_display_update, coin_prompt_update): the invitation to join with the entry time left; 3 the
-   seat's screen on (its I/O chip's CNT, 6 or 86), unk_153 = 1, unk_94 bit 0; 4 once player 0's
-   entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD cleared
-   (clear_lcd). */
+   by screen game_mode's byte 2: 0 screen fade_kind = 0 and unk_94 bit 0; 1 once that bit has cleared:
+   the seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count
+   (010889) and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear),
+   not the demo (unk_90 bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking
+   (bytes C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts object_handlers_DF74
+   (entry_countdown_start, credit_display_update, coin_prompt_update): the invitation to join with the
+   entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), unk_153 = 1, unk_94 bit 0; 4
+   once player 0's entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD
+   cleared (clear_lcd). */
 void entry_invitation_step(void)
 {
 	uint32_t r10 = 0, ignored = 0, index = 0;
@@ -395,11 +395,11 @@ void entry_invitation_step(void)
 		SCREEN(screen)->game_step++;
 		return;
 	case 4:
-		if (unk_20FC1A != 0u)
+		if (RACE(RACE_COPY_1)->entry_frames != 0u)
 			return;
 		reset_screen_sound();
 		AS32(SCREEN(screen)->game_mode) = 2u;
-		r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
+		r10 = GAME_VARIABLES + SCREEN(screen)->index * 4u;
 		mem_write32(r10 + 0xC0u, 0u);
 		mem_write32(r10 + 0xC8u, 0u);
 		clear_lcd();
@@ -418,8 +418,8 @@ void entry_invitation_step(void)
 		race_record_clear();
 		SCREEN(screen)->demo_flags &= ~0x100u;
 		index = SCREEN(screen)->index;
-		unk_20E0D0[index] = 0u;
-		r10 = unk_20E000_ADDRESS + index * 4u;
+		wheel_motor[index] = 0u;
+		r10 = GAME_VARIABLES + index * 4u;
 		mem_write8(r10 + 0xC0u, 2u);
 		mem_write8(r10 + 0xC8u, 8u);
 		mem_write8(r10 + 0xC1u, 0xFFu);
@@ -468,35 +468,35 @@ uint32_t players_not_ready(void)
 /* Takes the players' new course records, each frame: when a player's record_serial changes (against
    name_entries_seen), its time (finish_time) on its course (record_course) at or under the course's
    record (course_records, 6 bytes a course: model, the three letters of the name, the time) replaces it
-   with its record_model and record_name, also in the two copies in the backup (701F32 with its checksum,
-   011418, and 701FAE). */
+   with its record_model and record_name (the first letter) and record_name_rest (the other two), also in
+   the two copies in the backup (701F32 with its checksum, 011418, and 701FAE). */
 void course_records_update(void)
 {
-	uint16_t r1 = 0;
-	uint32_t r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, ignored = 0;
+	uint16_t finish_time = 0;
+	uint32_t r8 = 0, r9 = 0, r10 = 0, r13 = 0, ignored = 0, race = 0;
 	uint8_t t1 = 0;
 
 	r10 = screen + 0x328u;
 	r9 = player_count;
-	r11 = unk_20FB80_ADDRESS;
+	race = RACE_2;
 	do
 	{
-		r11 += 0x80u;
+		race += 0x80u;
 		t1 = mem_read8(r10);
 		r10++;
-		if (mem_read8(r11 + 0x11u) != t1)
+		if (RACE(race)->record_serial != t1)
 		{
-			mem_write8(r10 - 1u, mem_read8(r11 + 0x11u));
-			r1 = mem_read16(r11 + 0x16u);
-			r8 = mem_read8(r11 + 0x18u);
+			mem_write8(r10 - 1u, RACE(race)->record_serial);
+			finish_time = RACE(race)->finish_time;
+			r8 = RACE(race)->record_course;
 			r8 = (uint8_t)(r8 * 6u);
 			r12 = course_records_ADDRESS + r8;
-			if (r1 <= mem_read16(r12 + 4u))
+			if (finish_time <= mem_read16(r12 + 4u))
 			{
-				mem_write16(r12 + 4u, r1);
-				mem_write8(r12, mem_read8(r11 + 0x12u));
-				mem_write8(r12 + 1u, mem_read8(r11 + 0x13u));
-				mem_write16(r12 + 2u, mem_read16(r11 + 0x14u));
+				mem_write16(r12 + 4u, finish_time);
+				mem_write8(r12, RACE(race)->record_model);
+				mem_write8(r12 + 1u, RACE(race)->record_name);
+				mem_write16(r12 + 2u, RACE(race)->record_name_rest);
 				r13 = SOUND_RAM + 0x1F32u + r8;
 				mem_write32(r13, mem_read32(r12));
 				mem_write16(r13 + 4u, mem_read16(r12 + 4u));
@@ -529,8 +529,8 @@ void link_receive_records(void)
 			{
 				if (!L_00E854)
 				{
-					r10 = unk_20FB00_ADDRESS;
-					r11 = 0x20FC00u;
+					r10 = RACE_1;
+					r11 = RACE_COPY_1;
 					r1 = 1u;
 				}
 				do
@@ -738,7 +738,7 @@ void link_receive_records(void)
 				return;
 			}
 			r10 = 0x800020u;
-			r11 = 0x20FC00u;
+			r11 = RACE_COPY_1;
 			r1 = 8u;
 			t66 = mem_read8(0x80000Eu);
 			if (t66 == 0u)
@@ -751,7 +751,7 @@ void link_receive_records(void)
 			return;
 		}
 		r10 = 0x21E000u;
-		r11 = 0x20FC00u;
+		r11 = RACE_COPY_1;
 		r1 = 4u;
 		L_00E854 = true;
 	}
@@ -1117,15 +1117,16 @@ void link_copy_records_in(uint32_t r1, uint32_t r10, uint32_t r11)
 
 /* Sends this machine's two race records to the link board, each frame (not in ISDN mode, nor alone):
    their first 70 bytes to 800E20 and 800F00 (a byte in each halfword), then FF to its byte 800006;
-   link_lost when its error byte 80000C is set. link_wait_frames from unk_20E038 (which nothing sets). */
+   link_lost when its error byte 80000C is set. link_wait_frames from link_wait_frames_start (which
+   nothing sets). */
 void link_send_records(void)
 {
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
+	uint32_t r1 = 0, r11 = 0, race = 0;
 	uint8_t t1 = 0;
 
 	if (isdn_mode == 0u)
 	{
-		link_wait_frames = unk_20E038;
+		link_wait_frames = link_wait_frames_start;
 		if (link_failed != 0u || link_off != 0u)
 			return;
 		t1 = mem_read8(0x80000Cu);
@@ -1134,347 +1135,347 @@ void link_send_records(void)
 			link_lost();
 			return;
 		}
-		r10 = 0x20FC00u;
+		race = RACE_COPY_1;
 		r11 = 0x800FE0u;
 		r1 = 2u;
 		do
 		{
-			r10 = r10 - 0x10u - 1u;
+			race = race - 0x10u - 1u;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x6Fu)->race_time >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x6Eu)->race_time >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x6Du)->race_time >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x6Cu)->race_time);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x6Bu)->time_left >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x6Au)->time_left);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x69u)->pass_time >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x68u)->pass_time);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x67u)->pass_branch);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x66u)->pass_order);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x65u)->pass_checkpoint);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x64u)->pass_player);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x63u)->pass_count);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x62u)->stage);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x61u)->pass_seen);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x60u)->stage_count);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Fu)->published);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Eu)->finished);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Du)->started);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Cu)->ready);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Bu)->unk_5B);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5Au)->unk_5A);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x59u)->car_flags >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x58u)->car_flags);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x57u)->bounce_height >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x56u)->bounce_height);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x55u)->segment_pitch >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x54u)->segment_pitch);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x53u)->hard_acceleration);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x52u)->wheel_effect_2);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x51u)->wheel_effect_1);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x50u)->wheel_effect_sides);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x4Fu)->sideways_speed >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x4Eu)->sideways_speed);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x4Du)->speed >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x4Cu)->speed);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x4Bu)->view_slot);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x4Au)->frame);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x49u)->model);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x48u)->car_choice);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x47u)->window_segment >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x46u)->window_segment);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x45u)->road_x >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x44u)->road_x);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x43u)->segment >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x42u)->segment);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x41u)->segment_fraction >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x40u)->segment_fraction);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x3Fu)->palette >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x3Eu)->palette);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x3Du)->animation >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x3Cu)->animation);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x3Bu)->world_z >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x3Au)->world_z >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x39u)->world_z >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x38u)->world_z);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x37u)->world_y >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x36u)->world_y >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x35u)->world_y >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x34u)->world_y);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x33u)->world_x >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x32u)->world_x >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x31u)->world_x >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x30u)->world_x);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Fu)->link_brake);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Eu)->link_gas);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Du)->link_wheel);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Cu)->link_buttons);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Bu)->link_status);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2Au)->players_other_side);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x29u)->players_this_side);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x28u)->game_over);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x27u)->race_order_4_7 >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x26u)->race_order_4_7 >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x25u)->race_order_4_7 >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x24u)->race_order_4_7);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x23u)->race_order_3);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x22u)->race_order_2);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x21u)->race_order_1);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x20u)->race_order);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x1Fu)->racer_count);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x1Eu)->entrant);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x1Du)->entry_serial);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x1Cu)->entry_serial_seen);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x1Bu)->entry_frames >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x1Au)->entry_frames);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x19u)->entry_request);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x18u)->record_course);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x17u)->finish_time >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x16u)->finish_time);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x15u)->record_name_rest >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0x14u)->record_name_rest);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x13u)->record_name);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x12u)->record_model);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x11u)->record_serial);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0x10u)->master_time_difficulty_2_5 >> 24u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0xFu)->master_time_difficulty_2_5 >> 16u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)(RACE(race - 0xEu)->master_time_difficulty_2_5 >> 8u));
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0xDu)->master_time_difficulty_2_5);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0xCu)->unk_0C);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, (uint8_t)RACE(race - 0xBu)->master_time_difficulty_0);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0xAu)->master_game_difficulty);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x9u)->master_free_play);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x8u)->master_coin_setting);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x7u)->master_bonus_adder);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x6u)->master_first_chute_multiplier);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x5u)->master_coins_per_credit);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x4u)->master_steering_wheel_reaction);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x3u)->master_advertise_sound);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x2u)->car_number);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
-			r10--;
+			mem_write16(r11, RACE(race - 0x1u)->player);
+			race--;
 			r11 -= 2u;
-			mem_write16(r11, mem_read8(r10));
+			mem_write16(r11, RACE(race)->machine);
 			r1--;
 		} while (r1 != 0u);
 		mem_write8(0x800006u, 0xFFu);
@@ -1559,20 +1560,20 @@ uint32_t draw_object(uint32_t r0)
 }
 
 /* Draw mode 2: the object between the road's segment at its position (field 1C, counted from the view
-   drawn: race_copy unk_46) and the next, by the fraction in field 28 (80ths), offset across and up by
-   fields 20 and 24 scaled by each segment's scale (draw_object_at_scale). Its size, meant as the two
-   segments' scales by the fraction, multiplies them by the second point's offsets instead (R4 and R5
+   drawn: race_copy window_segment) and the next, by the fraction in field 28 (80ths), offset across and
+   up by fields 20 and 24 scaled by each segment's scale (draw_object_at_scale). Its size, meant as the
+   two segments' scales by the fraction, multiplies them by the second point's offsets instead (R4 and R5
    used twice): a slip in the game's code; nothing in the scenarios draws with it. */
 void draw_object_between_segments(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r11 = 0, position = 0, position_fraction = 0;
+	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
-	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
+	position = (uint16_t)OBJECT(current_object)->position;
+	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	t1 = position;
+	r0 = (uint16_t)(t1 - window_segment);
+	if ((int16_t)t1 < (int16_t)window_segment)
 	{
 		*p_left_caller = 1u;
 		*p_r0 = r0;
@@ -1596,15 +1597,15 @@ void draw_object_between_segments(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_l
 		*p_r0 = r0;
 		return;
 	}
-	r0 = (int32_t)((int16_t)OBJECT(current_object)->unk_20 * r2) >> 12;
-	r1 = (int32_t)((int16_t)OBJECT(current_object)->unk_24 * r2) >> 12;
-	r4 = (int32_t)((int16_t)OBJECT(current_object)->unk_20 * r3) >> 12;
-	r5 = (int32_t)((int16_t)OBJECT(current_object)->unk_24 * r3) >> 12;
-	r7 = (uint16_t)OBJECT(current_object)->unk_28;
-	r6 = (uint16_t)(0x80u - r7);
-	r4 = ((r4 & ~0xFFFFu) | (uint16_t)(r4 + mem_read16(r12 + 4u))) * r7;
+	r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
+	r1 = (int32_t)(OBJECT(current_object)->y_offset * r2) >> 12;
+	r4 = (int32_t)(OBJECT(current_object)->x_offset * r3) >> 12;
+	r5 = (int32_t)(OBJECT(current_object)->y_offset * r3) >> 12;
+	position_fraction = OBJECT(current_object)->position_fraction;
+	r6 = (uint16_t)(0x80u - position_fraction);
+	r4 = ((r4 & ~0xFFFFu) | (uint16_t)(r4 + mem_read16(r12 + 4u))) * position_fraction;
 	r0 = (int32_t)(((r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u))) * r6 + r4) >> 7;
-	r5 = ((r5 & ~0xFFFFu) | (uint16_t)(r5 + mem_read16(r12 + 6u))) * r7;
+	r5 = ((r5 & ~0xFFFFu) | (uint16_t)(r5 + mem_read16(r12 + 6u))) * position_fraction;
 	r1 = (int32_t)(((r1 & ~0xFFFFu) | (uint16_t)(r1 + mem_read16(r11 + 6u))) * r6 + r5) >> 7;
 	r2 = (r2 * r4 + r3 * r5) >> 7;
 	draw_object_at_scale((uint16_t)r1, r2, r11, &r0, p_r10, p_left_caller);
@@ -1618,15 +1619,15 @@ void draw_object_between_segments(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_l
 void draw_object_from_road_edge(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
+	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
-	r1 = r0;
-	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
+	position = (uint16_t)OBJECT(current_object)->position;
+	r1 = position;
+	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	t1 = position;
+	r0 = (uint16_t)(t1 - window_segment);
+	if ((int16_t)t1 < (int16_t)window_segment)
 	{
 		*p_left_caller = 1u;
 		*p_r0 = r0;
@@ -1651,12 +1652,12 @@ void draw_object_from_road_edge(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_lef
 		return;
 	}
 	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(current_object)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(current_object)->unk_20 + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (r2 * r4 + r3 * r5) >> 7;
+	position_fraction = OBJECT(current_object)->position_fraction;
+	r4 = (uint16_t)(0x80u - position_fraction);
+	r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+	r2 = (r2 * r4 + r3 * position_fraction) >> 7;
 	draw_object_at_shifted_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
 	*p_r0 = r0;
 }
@@ -1665,15 +1666,15 @@ void draw_object_from_road_edge(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_lef
 void draw_object_from_road_edge_unshifted(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
+	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
-	r1 = r0;
-	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
+	position = (uint16_t)OBJECT(current_object)->position;
+	r1 = position;
+	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	t1 = position;
+	r0 = (uint16_t)(t1 - window_segment);
+	if ((int16_t)t1 < (int16_t)window_segment)
 	{
 		*p_left_caller = 1u;
 		*p_r0 = r0;
@@ -1698,12 +1699,12 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_r0, uint32_t *p_r10, uint3
 		return;
 	}
 	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(current_object)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(current_object)->unk_20 + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (int32_t)(r2 * r4 + r3 * r5) >> 11;
+	position_fraction = OBJECT(current_object)->position_fraction;
+	r4 = (uint16_t)(0x80u - position_fraction);
+	r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+	r2 = (int32_t)(r2 * r4 + r3 * position_fraction) >> 11;
 	draw_object_at_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
 	*p_r0 = r0;
 }
@@ -1713,15 +1714,15 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_r0, uint32_t *p_r10, uint3
 void draw_object_from_road_edge_doubled(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
+	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
-	r1 = r0;
-	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
+	position = (uint16_t)OBJECT(current_object)->position;
+	r1 = position;
+	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	t1 = position;
+	r0 = (uint16_t)(t1 - window_segment);
+	if ((int16_t)t1 < (int16_t)window_segment)
 	{
 		*p_left_caller = 1u;
 		*p_r0 = r0;
@@ -1746,27 +1747,27 @@ void draw_object_from_road_edge_doubled(uint32_t *p_r0, uint32_t *p_r10, uint32_
 		return;
 	}
 	r1 = (uint16_t)(r1 << 5);
-	r5 = (uint16_t)OBJECT(current_object)->unk_28;
-	r4 = (uint16_t)(0x80u - r5);
-	r0 = (int16_t)OBJECT(current_object)->unk_20 + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * (int8_t)OBJECT(current_object)->unk_3F;
-	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * r5) >> 7;
-	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * r5) >> 7);
-	r2 = (int32_t)(r2 * r4 + r3 * r5) >> 10;
+	position_fraction = OBJECT(current_object)->position_fraction;
+	r4 = (uint16_t)(0x80u - position_fraction);
+	r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+	r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+	r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+	r2 = (int32_t)(r2 * r4 + r3 * position_fraction) >> 10;
 	draw_object_at_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
 	*p_r0 = r0;
 }
 
 /* Draw mode 4: as draw_object_at_segment, but the segment counted from the screen car's own
-   window_segment instead of the view drawn (race_copy unk_46). */
+   window_segment instead of the view drawn (race_copy window_segment). */
 void draw_object_at_car_window_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0;
+	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
 	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
+	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = CAR(player_car)->window_segment;
-	t1 = r0;
+	t1 = position;
 	r0 = (uint16_t)(t1 - window_segment);
 	if ((int16_t)t1 < (int16_t)window_segment)
 	{
@@ -1783,27 +1784,27 @@ void draw_object_at_car_window_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t
 		*p_r0 = r0;
 		return;
 	}
-	r0 = (int32_t)((int16_t)OBJECT(current_object)->unk_20 * r2) >> 12;
+	r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
-	r1 = (uint16_t)(((int32_t)((int16_t)OBJECT(current_object)->unk_24 * r2) >> 12) + mem_read16(r11 + 6u));
+	r1 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r2) >> 12) + mem_read16(r11 + 6u));
 	draw_object_at_segment_scale(r1, r11, &r0, p_r10, p_left_caller);
 	*p_r0 = r0;
 }
 
 /* Draw mode 9: the object at the road's segment of its position (field 1C, counted from the view drawn:
-   race_copy unk_46), offset across and up by fields 20 and 24 scaled by the segment's scale, its size
-   that scale shifted by scale_shift; not drawn when the segment is behind or not projected. */
+   race_copy window_segment), offset across and up by fields 20 and 24 scaled by the segment's scale, its
+   size that scale shifted by scale_shift; not drawn when the segment is behind or not projected. */
 void draw_object_at_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
+	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
-	t1 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	t2 = r0;
-	r0 = (uint16_t)(t2 - t1);
-	if ((int16_t)t2 < (int16_t)t1)
+	position = (uint16_t)OBJECT(current_object)->position;
+	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	t1 = position;
+	r0 = (uint16_t)(t1 - window_segment);
+	if ((int16_t)t1 < (int16_t)window_segment)
 	{
 		*p_left_caller = 1u;
 		*p_r0 = r0;
@@ -1818,9 +1819,9 @@ void draw_object_at_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_ca
 		*p_r0 = r0;
 		return;
 	}
-	r0 = (int32_t)((int16_t)OBJECT(current_object)->unk_20 * r2) >> 12;
+	r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
-	r1 = (uint16_t)(((int32_t)((int16_t)OBJECT(current_object)->unk_24 * r2) >> 12) + mem_read16(r11 + 6u));
+	r1 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r2) >> 12) + mem_read16(r11 + 6u));
 	r2 = shift_by(r2, OBJECT(current_object)->scale_shift, 32) >> 4;
 	draw_object_at_scale(r1, r2, r11, &r0, p_r10, p_left_caller);
 	*p_r0 = r0;
@@ -1830,12 +1831,12 @@ void draw_object_at_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_ca
 void draw_object_at_car_window_segment_on_road(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
 {
 	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0;
+	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
 	uint16_t window_segment = 0, t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_1C;
+	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = CAR(player_car)->window_segment;
-	t1 = r0;
+	t1 = position;
 	r0 = (uint16_t)(t1 - window_segment);
 	if ((int16_t)t1 < (int16_t)window_segment)
 	{
@@ -1852,7 +1853,7 @@ void draw_object_at_car_window_segment_on_road(uint32_t *p_r0, uint32_t *p_r10, 
 		*p_r0 = r0;
 		return;
 	}
-	r0 = (int32_t)((int16_t)OBJECT(current_object)->unk_20 * r2) >> 12;
+	r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
 	r1 = mem_read16(r11 + 6u);
 	draw_object_at_segment_scale(r1, r11, &r0, p_r10, p_left_caller);
@@ -1903,8 +1904,8 @@ void draw_object_at_scale(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0
 	*p_r0 = (*p_r0 & 0xFFFF0000u) | (r0 & 0xFFFFu);
 }
 
-/* Draw mode 0: the object at x, y on the screen, less the screen's scroll (screen unk_14, unk_16), at
-   its width_scale and height_scale (put_object_sprites). */
+/* Draw mode 0: the object at x, y on the screen, less the screen's scroll (screen sprite_origin_x,
+   unk_16), at its width_scale and height_scale (put_object_sprites). */
 void draw_object_on_screen(uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint16_t r1 = 0;
@@ -2103,7 +2104,7 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
 	uint32_t flags = 0;
 
-	r28 = OBJECT(current_object)->unk_50;
+	r28 = OBJECT(current_object)->previous_place;
 	r27 = SCREEN(screen)->next_sprite_place;
 	r0 = (uint32_t)(int16_t)OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x;
 	r1 = (uint32_t)(int16_t)OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y;
@@ -2131,7 +2132,7 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 		r6 = (r6 + width_scale) >> 1;
 		r7 = (r7 + height_scale) >> 1;
 	}
-	OBJECT(current_object)->unk_50 = r27;
+	OBJECT(current_object)->previous_place = r27;
 	mem_write16(r27, height_scale);
 	r27 = r27 + 2u;
 	mem_write16(r27, width_scale);
@@ -2236,13 +2237,13 @@ uint32_t animation_advance(uint32_t r7)
 	uint8_t frame_countdown = 0;
 	uint32_t t1 = 0;
 
-	if (OBJECT(current_object)->animation_view.frame_time == 0u)
+	if (OBJECT(current_object)->frame_time == 0u)
 		return r7;
-	frame_countdown = OBJECT(current_object)->animation_view.frame_countdown;
-	OBJECT(current_object)->animation_view.frame_countdown = frame_countdown - 1u;
+	frame_countdown = OBJECT(current_object)->frame_countdown;
+	OBJECT(current_object)->frame_countdown = frame_countdown - 1u;
 	if ((int8_t)frame_countdown > 1)
 		return r7;
-	OBJECT(current_object)->animation_view.frame_countdown = OBJECT(current_object)->animation_view.frame_time;
+	OBJECT(current_object)->frame_countdown = OBJECT(current_object)->frame_time;
 	OBJECT(current_object)->frame++;
 	frame = OBJECT(current_object)->frame;
 	r8 = ROM32(OBJECT(current_object)->animation * 2u * 2u + rom_034138_ADDRESS);
@@ -2253,7 +2254,7 @@ uint32_t animation_advance(uint32_t r7)
 	switch (t1)
 	{
 	case 0:
-		OBJECT(current_object)->animation_view.frame_time = 0u;
+		OBJECT(current_object)->frame_time = 0u;
 		OBJECT(current_object)->frame--;
 		return r7_2;
 	case 2:
@@ -2277,8 +2278,8 @@ void animation_start(uint32_t r9)
 
 	OBJECT(current_object)->animation = r9;
 	r9_2 = mem_read8(rom_034138[r9]);
-	OBJECT(current_object)->animation_view.frame_time = r9_2;
-	OBJECT(current_object)->animation_view.frame_countdown = r9_2;
+	OBJECT(current_object)->frame_time = r9_2;
+	OBJECT(current_object)->frame_countdown = r9_2;
 	OBJECT(current_object)->size_step = 0u;
 	OBJECT(current_object)->width_scale = 0x100u;
 	OBJECT(current_object)->height_scale = 0x100u;
@@ -2422,17 +2423,17 @@ void finish_sprite_list(void)
 }
 
 /* Draws the row's items in view: ends the object once end_position is not past the view's start
-   (race_copy unk_46); nothing while first_position is beyond the draw distance (SCREEN(screen)->unk_12
-   >> 7 segments); moves first_position up to the first item in view; for each item (spacing apart, to
-   the draw distance) where the road has a scale: x = (the road's width * side + x_offset) * scale >> 12
-   plus the road's screen x unless screen_centered, y = y_offset * scale >> 12 plus the road's screen y;
-   off the screen (x beyond -1E0..1E0, y beyond -160..80) it is skipped, else the scale shifted by
-   scale_shift picks the size (size_table: a size step and a shift) and a sprite of the animation's frame
-   with its palette (flags bits 6-7 flip it) goes into the screen's sprite list (unk_C0; the copy at
-   +3000 is the halfway point from the item's sprite of the frame before, previous_sprites) and the depth
-   list of its road segment (screen + 5000). Sets flags bit 5 and keeps where its sprites went in
-   previous_sprites. Used by scenery, fork_sign, animated_scenery, flashing_scenery and overhead_scenery
-   (and 01351E). */
+   (race_copy window_segment); nothing while first_position is beyond the draw distance
+   (SCREEN(screen)->unk_12 >> 7 segments); moves first_position up to the first item in view; for each
+   item (spacing apart, to the draw distance) where the road has a scale: x = (the road's width * side +
+   x_offset) * scale >> 12 plus the road's screen x unless screen_centered, y = y_offset * scale >> 12
+   plus the road's screen y; off the screen (x beyond -1E0..1E0, y beyond -160..80) it is skipped, else
+   the scale shifted by scale_shift picks the size (size_table: a size step and a shift) and a sprite of
+   the animation's frame with its palette (flags bits 6-7 flip it) goes into the screen's sprite list
+   (unk_C0; the copy at +3000 is the halfway point from the item's sprite of the frame before,
+   previous_sprites) and the depth list of its road segment (screen + 5000). Sets flags bit 5 and keeps
+   where its sprites went in previous_sprites. Used by scenery, fork_sign, animated_scenery,
+   flashing_scenery and overhead_scenery (and 01351E). */
 void road_row_draw(uint32_t r7, uint32_t r15)
 {
 	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26 = 0;
@@ -2442,13 +2443,13 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 
 	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
 	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
-	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
+	r2 = RACE(SCREEN(screen)->race_copy)->window_segment;
+	r3 = (uint16_t)(r2 + (SCREEN(screen)->draw_distance >> 7));
 	spacing = OBJECT(current_object)->road_row.spacing;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
 		OBJECT(current_object)->flags = 0u;
-		OBJECT(current_object)->unk_01 = 0u;
+		OBJECT(current_object)->flags_high = 0u;
 		return;
 	}
 	if ((int16_t)r3 <= (int16_t)r0)
@@ -2506,8 +2507,8 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 		r3_2 = mem_read16(r19);
 		if (r3_2 != 0u && r3_2 <= 0x1200u)
 		{
-			r6 = (uint16_t)((int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->road_row.side + OBJECT(current_object)->road_row.x_offset) * r3_2) >> 12);
-			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->road_row.y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
+			r6 = (uint16_t)((int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * r3_2) >> 12);
+			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
 			if (OBJECT(current_object)->road_row.screen_centered == 0u)
 				r6 += mem_read16(r19 + 4u);
 			if ((int16_t)r6 > 0x1E0 || (int16_t)r6 < -0x1E0 || (int16_t)r5 > 0x80 || (int16_t)r5 < -0x160)
@@ -2660,13 +2661,13 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 	r30 = 0x43u;
 	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
 	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
-	r2 = RACE(SCREEN(screen)->race_copy)->unk_46;
-	r3 = (uint16_t)(r2 + (SCREEN(screen)->unk_12 >> 7));
+	r2 = RACE(SCREEN(screen)->race_copy)->window_segment;
+	r3 = (uint16_t)(r2 + (SCREEN(screen)->draw_distance >> 7));
 	spacing = OBJECT(current_object)->road_row.spacing;
 	if ((int16_t)r1 <= (int16_t)r2)
 	{
 		OBJECT(current_object)->flags = 0u;
-		OBJECT(current_object)->unk_01 = 0u;
+		OBJECT(current_object)->flags_high = 0u;
 		return;
 	}
 	if ((int16_t)r3 <= (int16_t)r0)
@@ -2724,8 +2725,8 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 		r3_2 = mem_read16(r19);
 		if (r3_2 != 0u && r3_2 <= 0x1200u)
 		{
-			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->road_row.side + OBJECT(current_object)->road_row.x_offset) * r3_2) >> 12;
-			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->road_row.y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
+			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * r3_2) >> 12;
+			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
 			r26 = (uint16_t)r6;
 			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
 			r6 = (((r6 << 16) | (r6 >> 16)) & ~0xFFFFu) | (uint16_t)(0u - r26);
@@ -2882,8 +2883,8 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 	SCREEN(screen)->next_sprite_place = r27;
 }
 
-/* Starts the race's course (rom_03CC00 by screen unk_A0, car unk_A0): clears the ring of segments, the
-   first road width, and builds the segments as far as the view reaches (screen unk_12 >> 7,
+/* Starts the race's course (rom_03CC00 by screen first_stage, car course): clears the ring of segments,
+   the first road width, and builds the segments as far as the view reaches (screen draw_distance >> 7,
    prebuilt_segments); the first stage into the stage history. */
 void player_car_start_course(void)
 {
@@ -2891,31 +2892,31 @@ void player_car_start_course(void)
 	uint32_t r11 = 0;
 
 	move_string(0x100800u, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
-	r11 = rom_03CC00[SCREEN(screen)->unk_A0];
+	r11 = rom_03CC00[SCREEN(screen)->first_stage];
 	CAR(player_car)->course = r11;
 	r0 = mem_read8(r11 + 8u);
 	CAR(player_car)->width_code = (uint8_t)r0;
 	CAR(player_car)->road_width = r0 * 0xB0u;
-	CAR(player_car)->prebuilt_segments = SCREEN(screen)->unk_12 >> 7;
+	CAR(player_car)->prebuilt_segments = SCREEN(screen)->draw_distance >> 7;
 	r5 = 0xFFFu;
 	do
 	{
 		player_car_build_segment(r5);
 	} while ((int16_t)CAR(player_car)->built_segments < (int16_t)CAR(player_car)->prebuilt_segments);
-	SCREEN(screen)->unk_A4 = SCREEN(screen)->unk_A2;
-	CAR(player_car)->stage_history = SCREEN(screen)->unk_A1;
+	SCREEN(screen)->current_stage_level = SCREEN(screen)->built_stage_level;
+	CAR(player_car)->stage_history = SCREEN(screen)->route_stage;
 }
 
 /* Keeps the course built 104 segments past the window's start (window_record, build_end_offset). At a
-   fork the building waits (at_fork) until the checkpoint is passed (screen unk_349): then the branch
-   taken (screen 349 + the fork) goes on: branch, the course of that branch (car unk_A0), its stage
-   (screen unk_A1, stage indicator A5), the stage and branch histories and forks_taken, the stage's data
-   queued (queue_stage_load) and the branch_arrow. */
+   fork the building waits (at_fork) until the checkpoint is passed (screen forks_decided): then the
+   branch taken (screen 349 + the fork) goes on: branch, the course of that branch (car course), its
+   stage (screen route_stage, stage indicator A5), the stage and branch histories and forks_taken, the
+   stage's data queued (queue_stage_load) and the branch_arrow. */
 void player_car_extend_course(void)
 {
 	uint8_t r1_2 = 0;
 	uint16_t r1 = 0, r5 = 0, window_offset = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0, r21 = 0, course = 0, forks_reached = 0, race = 0;
+	uint32_t r0 = 0, r2 = 0, r11 = 0, course = 0, forks_reached = 0, object = 0, race = 0;
 
 	r5 = 0xFFFu;
 	if (CAR(player_car)->at_fork == 0u)
@@ -2942,9 +2943,9 @@ void player_car_extend_course(void)
 	CAR(player_car)->branch = r0;
 	r1_2 = ROM8(course + r0);
 	CAR(player_car)->course = ROM32(course + 2u + r0 * 4u);
-	SCREEN(screen)->unk_A1 = r1_2;
-	CAR(player_car)->unk_CA = 0xFFu;
-	SCREEN(screen)->unk_A5++;
+	SCREEN(screen)->route_stage = r1_2;
+	CAR(player_car)->new_branch = 0xFFu;
+	SCREEN(screen)->route_stage_level++;
 	r2 = CAR(player_car)->forks_taken;
 	mem_write8(player_car + 0xD7u + r2, r0);
 	r2 = (uint8_t)(r2 + 1u);
@@ -2952,11 +2953,11 @@ void player_car_extend_course(void)
 	CAR(player_car)->forks_taken = r2;
 	CAR(player_car)->at_fork = 0u;
 	queue_stage_load();
-	r21 = start_object();
-	mem_write32(r21 + 4u, branch_arrow_update_ADDRESS);
+	object = start_object();
+	OBJECT(object)->handler = branch_arrow_update_ADDRESS;
 	for (;;)
 	{
-		CAR(player_car)->unk_C2++;
+		CAR(player_car)->course_records_read++;
 		r11 = CAR(player_car)->course;
 		r0 = (int16_t)ROM16(r11);
 		r11 += 2u;
@@ -2967,13 +2968,12 @@ void player_car_extend_course(void)
 		case 0:
 			OBJECT(current_object)->state = 3u;
 			OBJECT(current_object)->player_car.step = 0u;
-			OBJECT(current_object)->unk_0E = 0u;
-			OBJECT(current_object)->unk_0F = 0u;
+			OBJECT(current_object)->player_car.state_high = 0u;
 			return;
 		case 6:
-			r21 = start_object();
-			mem_write32(r21 + 4u, goal_update_ADDRESS);
-			mem_write16(r21 + 0x1Cu, CAR(player_car)->built_segments);
+			object = start_object();
+			OBJECT(object)->handler = goal_update_ADDRESS;
+			OBJECT(object)->position = CAR(player_car)->built_segments;
 			CAR(player_car)->course = r11;
 			continue;
 		case 1:
@@ -2991,9 +2991,9 @@ void player_car_extend_course(void)
 			CAR(player_car)->course = r11 + 4u;
 			continue;
 		case 4:
-			SCREEN(screen)->unk_A2 = ROM8(r11);
+			SCREEN(screen)->built_stage_level = ROM8(r11);
 			r11++;
-			SCREEN(screen)->unk_A3 = ROM8(r11);
+			SCREEN(screen)->built_stage = ROM8(r11);
 			CAR(player_car)->stage_segments = 0xFFFFu;
 			CAR(player_car)->course = r11 + 1u;
 			CAR(player_car)->stage_start = CAR(player_car)->built_segments;
@@ -3013,7 +3013,7 @@ void player_car_extend_course(void)
 	r11++;
 	r1 = ROM8(r11);
 	r11++;
-	CAR(player_car)->unk_CE = ROM8(r11);
+	CAR(player_car)->road_event = ROM8(r11);
 	CAR(player_car)->course = r11 + 1u;
 	CAR(player_car)->width_code = (uint8_t)r1;
 	r1 = (uint16_t)(r1 * 0xB0u);
@@ -3022,17 +3022,17 @@ void player_car_extend_course(void)
 	player_car_build_segment(r5);
 }
 
-/* Builds the next segment of the road from the course (car unk_A0): at the end of a run reads the next
+/* Builds the next segment of the road from the course (car course): at the end of a run reads the next
    records: 0 the course ends (the car's state 3), 1 a jump to another part, 2 a fork (forks_reached, the
    race's stage count, at_fork), 3 and 5 the pitch and the heading back to 0, 4 a new stage (screen
-   unk_A2, unk_A3; stage_segments, stage_start), 6 the goal (a goal object at this segment), else a run
-   (its length, pitch and heading steps, road width, a byte for the segments). The segment: heading and
-   pitch turned by the run's steps, the position moved along them (next_x/y/z), the width eased toward
-   the run's; written at build_offset, then built_segments and stage_segments count up. */
+   built_stage_level, unk_A3; stage_segments, stage_start), 6 the goal (a goal object at this segment),
+   else a run (its length, pitch and heading steps, road width, a byte for the segments). The segment:
+   heading and pitch turned by the run's steps, the position moved along them (next_x/y/z), the width
+   eased toward the run's; written at build_offset, then built_segments and stage_segments count up. */
 void player_car_build_segment(uint16_t r5)
 {
 	uint16_t r1_2 = 0, road_width = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, r21 = 0, race = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, object = 0, race = 0;
 	uint16_t run_left = 0;
 
 	for (;;)
@@ -3043,7 +3043,7 @@ void player_car_build_segment(uint16_t r5)
 			break;
 		for (;;)
 		{
-			CAR(player_car)->unk_C2++;
+			CAR(player_car)->course_records_read++;
 			r11 = CAR(player_car)->course;
 			r0 = (int16_t)ROM16(r11);
 			r11 += 2u;
@@ -3054,13 +3054,12 @@ void player_car_build_segment(uint16_t r5)
 			case 0:
 				OBJECT(current_object)->state = 3u;
 				OBJECT(current_object)->player_car.step = 0u;
-				OBJECT(current_object)->unk_0E = 0u;
-				OBJECT(current_object)->unk_0F = 0u;
+				OBJECT(current_object)->player_car.state_high = 0u;
 				return;
 			case 6:
-				r21 = start_object();
-				mem_write32(r21 + 4u, goal_update_ADDRESS);
-				mem_write16(r21 + 0x1Cu, CAR(player_car)->built_segments);
+				object = start_object();
+				OBJECT(object)->handler = goal_update_ADDRESS;
+				OBJECT(object)->position = CAR(player_car)->built_segments;
 				CAR(player_car)->course = r11;
 				continue;
 			case 1:
@@ -3078,9 +3077,9 @@ void player_car_build_segment(uint16_t r5)
 				CAR(player_car)->course = r11 + 4u;
 				continue;
 			case 4:
-				SCREEN(screen)->unk_A2 = ROM8(r11);
+				SCREEN(screen)->built_stage_level = ROM8(r11);
 				r11++;
-				SCREEN(screen)->unk_A3 = ROM8(r11);
+				SCREEN(screen)->built_stage = ROM8(r11);
 				CAR(player_car)->stage_segments = 0xFFFFu;
 				CAR(player_car)->course = r11 + 1u;
 				CAR(player_car)->stage_start = CAR(player_car)->built_segments;
@@ -3100,7 +3099,7 @@ void player_car_build_segment(uint16_t r5)
 		r11++;
 		r1_2 = ROM8(r11);
 		r11++;
-		CAR(player_car)->unk_CE = ROM8(r11);
+		CAR(player_car)->road_event = ROM8(r11);
 		CAR(player_car)->course = r11 + 1u;
 		CAR(player_car)->width_code = (uint8_t)r1_2;
 		r1_2 = (uint16_t)(r1_2 * 0xB0u);
@@ -3153,7 +3152,7 @@ void player_car_build_segment(uint16_t r5)
 	mem_write32(r11 + 4u, CAR(player_car)->next_x);
 	mem_write32(r11 + 8u, CAR(player_car)->next_z);
 	mem_write32(r11 + 0xCu, CAR(player_car)->next_y);
-	mem_write8(r11 + 0x15u, CAR(player_car)->unk_CE);
+	mem_write8(r11 + 0x15u, CAR(player_car)->road_event);
 	road_width = CAR(player_car)->road_width;
 	mem_write16(r11 + 0x10u, road_width);
 	mem_write16(r11 + 0x12u, road_width >> 1);
@@ -3166,7 +3165,7 @@ void player_car_build_segment(uint16_t r5)
 	CAR(player_car)->stage_segments++;
 }
 
-/* Projects the road for the view of screen unk_D0 (player_car_publish): its rotation (view_matrix_*,
+/* Projects the road for the view of screen shown_view (player_car_publish): its rotation (view_matrix_*,
    from the view's pitch and yaw), then each segment from the window's start out to the view's distance
    turned into the view and scaled by its depth into the screen's list at screen + 3000 (scale, width, x,
    y, the segment's byte), segments behind the view or too far left out. */
@@ -3174,13 +3173,13 @@ void player_car_project_road(void)
 {
 	uint32_t carry = 0;
 	uint16_t r5 = 0, r21 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, r29 = 0, car = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, r29 = 0, car = 0, draw_distance = 0;
 	uint8_t t1 = 0;
 	uint16_t t4 = 0;
 	uint32_t t2 = 0, t3 = 0;
 
-	r1 = mem_read16(SCREEN(screen)->unk_D0 + 0xCu);
-	r2 = mem_read16(SCREEN(screen)->unk_D0 + 0xEu);
+	r1 = mem_read16(SCREEN(screen)->shown_view + 0xCu);
+	r2 = mem_read16(SCREEN(screen)->shown_view + 0xEu);
 	r16 = (int16_t)rom_100C00[r1];
 	r15 = (int16_t)rom_100C00[r2];
 	r13 = (int16_t)rom_101400[r1];
@@ -3217,16 +3216,16 @@ void player_car_project_road(void)
 	car += 4u;
 	CAR(car - 0xF8u)->view_matrix_zy = r16;
 	CAR(car - 0xF8u)->view_matrix_zz = r17;
-	r0 = 0u - mem_read32(SCREEN(screen)->unk_D0);
-	r1 = 0u - mem_read32(SCREEN(screen)->unk_D0 + 4u);
-	r2 = 0u - mem_read32(SCREEN(screen)->unk_D0 + 8u);
-	r3 = SCREEN(screen)->unk_10;
+	r0 = 0u - mem_read32(SCREEN(screen)->shown_view);
+	r1 = 0u - mem_read32(SCREEN(screen)->shown_view + 4u);
+	r2 = 0u - mem_read32(SCREEN(screen)->shown_view + 8u);
+	r3 = SCREEN(screen)->eye_distance;
 	r3 = r3 >> 1;
-	r4 = SCREEN(screen)->unk_12;
+	draw_distance = SCREEN(screen)->draw_distance;
 	r5 = (uint16_t)(0u - SCREEN(screen)->sprite_origin_y);
-	r18 = screen + 0x1FE0u + mem_read16(SCREEN(screen)->unk_D0 + 0x10u);
+	r18 = screen + 0x1FE0u + mem_read16(SCREEN(screen)->shown_view + 0x10u);
 	r19 = screen + 0x2FF0u;
-	r9 = r4 >> 7;
+	r9 = draw_distance >> 7;
 	SCREEN(screen)->crest_count = 0u;
 	r21 = 0x7FFFu;
 	SCREEN(screen)->crest_heights = r5 + 0xE0u;
@@ -3274,7 +3273,7 @@ void player_car_project_road(void)
 		r27 = r27 + r8;
 		r27 = (int32_t)r27 >> 14;
 		r26 = (int32_t)(r26 * r10 + r7 * r11 + r8) >> 14;
-		if ((int32_t)r4 <= (int32_t)r28 || (int32_t)r28 <= (int32_t)r3)
+		if ((int32_t)draw_distance <= (int32_t)r28 || (int32_t)r28 <= (int32_t)r3)
 		{
 			mem_write16(r19, 0u);
 			r9--;
@@ -3367,12 +3366,12 @@ void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32
 }
 
 /* Sets up the constants of the screen's block at boot: index (0 for the block at 208000, 1 at 218000)
-   and by it (rom_010BA0) sprite_screen_bit, palette_ram, mixer and io_chip; unk_10, unk_12 (the second
-   of the draw distances at 010BE2), sprite_origin_x, sprite_origin_y and unk_18 from 010BC8; and
-   stage_lengths: for each of the 31 roads of rom_03CC00 (the courses player_car_start_course starts by
-   screen unk_A0) the sum of its sections' lengths (the first halfword of each 6-byte record; the
-   negative ones are commands: -1 goes on at the address it holds, -4 is 4 bytes long, -2 and -6 end it),
-   and 14A after them. */
+   and by it (rom_010BA0) sprite_screen_bit, palette_ram, mixer and io_chip; eye_distance, draw_distance
+   (the second of the draw distances at 010BE2), sprite_origin_x, sprite_origin_y and view_pitch_base
+   from 010BCC (010BC8 holds the draw distances' address); and stage_lengths: for each of the 31 roads of
+   rom_03CC00 (the courses player_car_start_course starts by screen first_stage) the sum of its sections'
+   lengths (the first halfword of each 6-byte record; the negative ones are commands: -1 goes on at the
+   address it holds, -4 is 4 bytes long, -2 and -6 end it), and branch_road_length (14A) after them. */
 uint32_t init_screen(void)
 {
 	bool L_013DB6 = false;
@@ -3390,11 +3389,11 @@ uint32_t init_screen(void)
 	r2 += 4u;
 	SCREEN(screen)->mixer = mem_read32(r2);
 	SCREEN(screen)->io_chip = mem_read32(r2 + 4u);
-	SCREEN(screen)->unk_12 = mem_read16(rom_010BC8 + 2u);
-	SCREEN(screen)->unk_10 = rom_010BCC;
+	SCREEN(screen)->draw_distance = mem_read16(rom_010BC8 + 2u);
+	SCREEN(screen)->eye_distance = rom_010BCC;
 	SCREEN(screen)->sprite_origin_x = rom_010BCE;
 	SCREEN(screen)->sprite_origin_y = rom_010BD0;
-	SCREEN(screen)->unk_18 = rom_010BD2[0];
+	SCREEN(screen)->view_pitch_base = rom_010BD2[0];
 	r10 = rom_03CC00_ADDRESS;
 	r11 = screen + 0x700u;
 	r9 = 0x1Fu;
@@ -3467,43 +3466,43 @@ void clear_screen_ram(void)
 
 /* Sets up video RAM: cleared (clear_video_ram), the text font (load_text_font), the video control
    register 31FF00 (0800; 0A00 flipped, flip_screen) and the registers 31FF02-31FF8F from 010B12, with
-   their copy at video_registers, the four tile layers' scroll targets (unk_20E290-20E2AF) cleared, then
-   reset_tile_layers. */
+   their copy at video_registers, the four tile layers' scroll targets (scroll_targets-20E2AF) cleared,
+   then reset_tile_layers. */
 uint32_t init_video(void)
 {
 	clear_video_ram();
 	load_text_font();
 	mem_write16(VIDEO_31FF00, rom_010B10);
-	video_registers = rom_010B10;
+	video_registers[0] = rom_010B10;
 	if (flip_screen != 0u)
 	{
 		mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) | 0x200u);
-		video_registers |= 0x200u;
+		video_registers[0] |= 0x200u;
 	}
-	move_halfwords(unk_20E290_ADDRESS, 0x100800u, 0x10u);
+	move_halfwords(scroll_targets_ADDRESS, 0x100800u, 0x10u);
 	move_halfwords(VIDEO_RAM + 0x1FF02u, 0x10B12u, 0x47u);
-	move_string(0x10B12u, 0x47u, unk_20E202_ADDRESS, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(0x10B12u, 0x47u, video_registers_ADDRESS + 0x2u, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
 	return reset_tile_layers();
 }
 
 /* Puts the screen's two tile layers (NBG0 and NBG2 for screen 1, NBG1 and NBG3 for screen 2) back at
-   page 0 and scroll 0: their page selects (unk_20E240, unk_20E248) and scroll targets (unk_20E290,
-   unk_20E2A0) cleared, and bits 12-15 of the video control register (31FF00, video_registers) cleared.
-   Used as the game modes start. */
+   page 0 and scroll 0: their page selects (video_registers[32], video_registers[36]) and scroll targets
+   (scroll_targets, scroll_targets[4]) cleared, and bits 12-15 of the video control register (31FF00,
+   video_registers) cleared. Used as the game modes start. */
 uint32_t reset_tile_layers(void)
 {
 	uint32_t index = 0;
 	uint32_t t1 = 0, t2 = 0;
 
 	mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) & 0xFFFu);
-	video_registers &= 0xFFFu;
+	video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
-	unk_20E240[index] = 0u;
-	unk_20E248[index] = 0u;
-	t1 = unk_20E290_ADDRESS + index * 8u;
+	RAM32(video_registers_ADDRESS + 0x40u + index * 4u) = 0u;
+	RAM32(video_registers_ADDRESS + 0x48u + index * 4u) = 0u;
+	t1 = scroll_targets_ADDRESS + index * 8u;
 	mem_write32(t1, 0u);
 	mem_write32(t1 + 4u, 0u);
-	t2 = unk_20E2A0_ADDRESS + index * 8u;
+	t2 = scroll_targets_ADDRESS + 0x10u + index * 8u;
 	mem_write32(t2, 0u);
 	mem_write32(t2 + 4u, 0u);
 	return index;
@@ -3598,14 +3597,14 @@ void init_sprite_chip(void)
    screen 1's and screen 2's lists, and 4 an end), an end at the start of the eight list buffers (404000,
    40A000, 414000, 41A000 and their halfway copies 3000 on), each screen's list at its first buffer
    (sprite_list_last 404000 and 414000, sprite_list_buffers 0), its ring of sprite places at 20C000 and
-   21C000 (next_sprite_place), sprite_groups 0, and unk_20E022 = 1 (nothing reads it). */
+   21C000 (next_sprite_place), sprite_groups 0, and sprite_lists_set_up = 1 (nothing reads it). */
 void init_sprite_lists(void)
 {
 	move_string(0x10BF4u, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
-	unk_2080C0 = SPRITE_RAM_404000;
-	unk_2180C0 = SPRITE_RAM_414000;
-	unk_2080B4 = 0x20C000u;
-	unk_2180B4 = 0x21C000u;
+	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_RAM_404000;
+	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_RAM_414000;
+	SCREEN(SCREEN_1)->next_sprite_place = 0x20C000u;
+	SCREEN(SCREEN_2)->next_sprite_place = 0x21C000u;
 	mem_write16(SPRITE_RAM_404000, 0xFFFFu);
 	mem_write16(SPRITE_RAM_407000, 0xFFFFu);
 	mem_write16(SPRITE_RAM_40A000, 0xFFFFu);
@@ -3614,10 +3613,10 @@ void init_sprite_lists(void)
 	mem_write16(SPRITE_RAM_417000, 0xFFFFu);
 	mem_write16(SPRITE_RAM_41A000, 0xFFFFu);
 	mem_write16(SPRITE_RAM_41D000, 0xFFFFu);
-	unk_20E022 = 1u;
+	sprite_lists_set_up = 1u;
 	sprite_list_buffers = 0u;
-	unk_2080B0 = 0u;
-	unk_2180B0 = 0u;
+	AS8(SCREEN(SCREEN_1)->sprite_groups) = 0u;
+	AS8(SCREEN(SCREEN_2)->sprite_groups) = 0u;
 }
 
 /* Sets the count of sprite groups drawn this frame (sprite_groups) to 0: unless something is drawn after
@@ -4441,20 +4440,20 @@ void queue_tile_pages(uint32_t r10)
    first's, on its meter) when not on free play and both chutes give the same units
    (first_chute_multiplier = second_chute_multiplier), else 0; the seats' credits back from the
    bookkeeping (701F74-701F7A, bytes); and the low four bits of I/O chip 1's port F, inverted, into
-   unk_20E104 (nothing reads it). */
+   second_io_chip_port_f (nothing reads it). */
 void init_coins(void)
 {
 	uint8_t t1 = 0;
 
 	t1 = mem_read8(0xC8000Au);
-	unk_20E104 = ~t1 & 0xFu;
+	second_io_chip_port_f = ~t1 & 0xFu;
 	chute_entry_offset = 0u;
 	if (free_play == 0u && second_chute_multiplier == first_chute_multiplier)
 		chute_entry_offset = 0x14u;
 	seat1_credits = mem_read8(SOUND_701F74);
-	unk_20E0A4 = mem_read8(SOUND_701F76);
+	seat1_bookkeeping_byte = mem_read8(SOUND_701F76);
 	seat2_credits = mem_read8(SOUND_701F78);
-	unk_20E0AC = mem_read8(SOUND_701F7A);
+	seat2_bookkeeping_byte = mem_read8(SOUND_701F7A);
 }
 
 /* The coins and service credits, in the vertical blank unless on free play (free_play): queues each
@@ -4559,12 +4558,12 @@ void update_coins(uint32_t r6)
 	{
 		r7 = 0x20E089u;
 		r1 = 1u;
-		r12 = unk_20E093_ADDRESS;
+		r12 = port_d_outputs_ADDRESS + 0x1u;
 		pulse_coin_meter(r1, r7);
 	}
 	r7 = 0x20E086u;
 	r1 = 0u;
-	r12 = unk_20E093_ADDRESS;
+	r12 = port_d_outputs_ADDRESS + 0x1u;
 	pulse_coin_meter(r1, r7);
 }
 
@@ -4624,17 +4623,17 @@ void pulse_coin_meter(uint8_t r1, uint32_t r7)
 	write_bookkeeping_credits();
 }
 
-/* Writes the seats' credits (the halfwords at seat1_credits, unk_20E0A4, seat2_credits, unk_20E0AC) at
-   R12: 701F74 in the bookkeeping or 701FF0 in its backup. */
+/* Writes the seats' credits (the halfwords at seat1_credits, seat1_bookkeeping_byte, seat2_credits,
+   seat2_bookkeeping_byte) at R12: 701F74 in the bookkeeping or 701FF0 in its backup. */
 void write_bookkeeping_credits(void)
 {
 	mem_write16(r12, AS16(seat1_credits));
 	r12 = r12 + 2u;
-	mem_write16(r12, AS16(unk_20E0A4));
+	mem_write16(r12, AS16(seat1_bookkeeping_byte));
 	r12 = r12 + 2u;
 	mem_write16(r12, AS16(seat2_credits));
 	r12 = r12 + 2u;
-	mem_write16(r12, AS16(unk_20E0AC));
+	mem_write16(r12, AS16(seat2_bookkeeping_byte));
 	r12 = r12 + 2u;
 }
 
@@ -4977,13 +4976,14 @@ void upload_boot_palettes(void)
 	upload_palette(r19);
 }
 
-/* Queues the palette of the stage the screen goes to (rom_031DDC by screen unk_A1) through queue_palette
-   (the palette queue at screen + 900). Used by player_car_extend_course and the game's code (002E74). */
+/* Queues the palette of the stage the screen goes to (rom_031DDC by screen route_stage) through
+   queue_palette (the palette queue at screen + 900). Used by player_car_extend_course and the game's
+   code (002E74). */
 void queue_stage_load(void)
 {
 	uint32_t r19 = 0;
 
-	r19 = rom_031DDC[SCREEN(screen)->unk_A1];
+	r19 = rom_031DDC[SCREEN(screen)->route_stage];
 	queue_palette(r19);
 }
 
@@ -5015,11 +5015,11 @@ void queue_palette_upload(uint32_t r8, uint32_t r19)
 	uint32_t r9 = 0, r18 = 0;
 
 	r18 = screen + 0x900u;
-	if ((int32_t)SCREEN(r18 - 0x900u)->unk_900 < 0x80)
+	if ((int32_t)SCREEN(r18 - 0x900u)->palette_upload_count < 0x80)
 	{
-		r9 = SCREEN(r18 - 0x900u)->unk_900 + 1u;
+		r9 = SCREEN(r18 - 0x900u)->palette_upload_count + 1u;
 		mem_write32(r18 + r9 * 4u, r19 | r8);
-		SCREEN(r18 - 0x900u)->unk_900 = r9;
+		SCREEN(r18 - 0x900u)->palette_upload_count = r9;
 	}
 }
 
@@ -5031,7 +5031,7 @@ void upload_queued_palettes(void)
 	uint32_t t1 = 0;
 
 	r10 = screen + 0x900u;
-	r0 = SCREEN(r10 - 0x900u)->unk_900;
+	r0 = SCREEN(r10 - 0x900u)->palette_upload_count;
 	r10 += 4u;
 	for (;;)
 	{
@@ -5051,7 +5051,7 @@ void upload_queued_palettes(void)
 		if (r0 == 0u)
 			break;
 	}
-	SCREEN(screen)->unk_900 = r0;
+	SCREEN(screen)->palette_upload_count = r0;
 }
 
 /* Copies a block of colours (place, length in bytes, colours) into the screen's palette RAM (600000 for
@@ -5224,7 +5224,7 @@ void step_screen_fade(void)
 	r9 = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
 	SCREEN(screen)->fade_level = (uint8_t)r9;
 	r19 = screen + 0x19Fu;
-	SCREEN(r19 - 0x19Fu)->unk_19F = 0xC0u;
+	SCREEN(r19 - 0x19Fu)->colour_offset_mode = 0xC0u;
 	r0 = SCREEN(screen)->fade_channels;
 	r1 = 3u;
 	r19++;
@@ -5562,7 +5562,7 @@ uint32_t draw_text(uint32_t r19)
 uint32_t draw_text_sprites(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t r5, uint32_t r10, uint32_t r11, uint32_t r18)
 {
 	uint16_t r0 = 0;
-	uint32_t r1_2 = 0, r2_2 = 0, r3_2 = 0, r6 = 0;
+	uint32_t r1_2 = 0, r2_2 = 0, r6 = 0, text_depth_list_head = 0;
 	uint8_t t1 = 0;
 
 	r0 = mem_read8(r18);
@@ -5597,14 +5597,14 @@ uint32_t draw_text_sprites(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, u
 		r10 += 2u;
 	} while (r0 != 0u);
 	r1_2 = screen + 0x5678u;
-	r3_2 = SCREEN(r1_2 - 0x5678u)->unk_5678;
-	if (r3_2 == 0u)
-		SCREEN(r1_2 - 0x5678u)->unk_567A = r10;
+	text_depth_list_head = SCREEN(r1_2 - 0x5678u)->text_depth_list_head;
+	if (text_depth_list_head == 0u)
+		SCREEN(r1_2 - 0x5678u)->text_depth_list_tail = r10;
 	r2_2 = SCREEN(screen)->sprite_list_last + 0x10u;
-	mem_write32(r10, r3_2);
-	mem_write32(r11, (uint16_t)(r3_2 + 0x300u));
+	mem_write32(r10, text_depth_list_head);
+	mem_write32(r11, (uint16_t)(text_depth_list_head + 0x300u));
 	SCREEN(screen)->sprite_list_last = r10;
-	SCREEN(r1_2 - 0x5678u)->unk_5678 = (r2_2 >> 4) | 0x8000u;
+	SCREEN(r1_2 - 0x5678u)->text_depth_list_head = (r2_2 >> 4) | 0x8000u;
 	SCREEN(screen)->sprite_groups++;
 	return r18;
 }
@@ -5618,17 +5618,17 @@ void clear_objects(void)
 	uint32_t r0 = 0;
 
 	move_halfwords(screen - 0x7FF0u, 0x100800u, 0x7Cu);
-	mem_write32(screen - 0x8000u, screen - 0x7E00u);
-	mem_write32(screen - 0x7FFCu, screen - 0x7DFEu);
-	mem_write32(screen - 0x7FF4u, screen - 0x7DFEu);
-	mem_write32(screen - 0x7FF8u, screen - 0x7D00u);
-	r0 = mem_read8(screen - 0x7E00u);
+	OBJECT_AREA(screen - 0x8000u)->list = screen - 0x7E00u;
+	OBJECT_AREA(screen - 0x8000u)->list_first = screen - 0x7DFEu;
+	OBJECT_AREA(screen - 0x8000u)->list_end = screen - 0x7DFEu;
+	OBJECT_AREA(screen - 0x8000u)->next_list = screen - 0x7D00u;
+	r0 = (uint8_t)OBJECT_LIST(screen - 0x7E00u)->count;
 	r0 = (uint16_t)(r0 + 1u);
 	move_halfwords(screen - 0x7E00u, 0x100800u, r0);
-	r0 = mem_read8(screen - 0x7D00u);
+	r0 = (uint8_t)OBJECT_LIST(screen - 0x7D00u)->count;
 	r0 = (uint16_t)(r0 + 1u);
 	move_string(0x100800u, r0, screen - 0x7D00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
-	AS16(SCREEN(screen)->unk_900) = 0u;
+	AS16(SCREEN(screen)->palette_upload_count) = 0u;
 }
 
 /* The object loop, once a frame for the screen: each live object (flags bit 0) of this frame's list
@@ -5637,12 +5637,12 @@ void clear_objects(void)
    and the two lists swap. */
 void run_objects(void)
 {
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r22 = 0;
-	uint32_t t1 = 0;
+	uint32_t r0 = 0, r2 = 0, r3 = 0, r22 = 0, count = 0, object_list = 0;
+	uint32_t next_list = 0;
 
 	current_object = screen;
-	r22 = mem_read32(screen - 0x8000u) + 2u;
-	mem_write16(mem_read32(screen - 0x7FF8u), 0u);
+	r22 = OBJECT_AREA(screen - 0x8000u)->list + 2u;
+	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
 		current_object = (current_object & ~0xFFFFu) | mem_read16(r22);
@@ -5652,31 +5652,31 @@ void run_objects(void)
 		if ((OBJECT(current_object)->flags & 1u) != 0u)
 		{
 			call_code(OBJECT(current_object)->handler);
-			t1 = mem_read32(screen - 0x7FF8u);
-			mem_write16(t1, mem_read16(t1) + 1u);
-			mem_write16(mem_read32(screen - 0x7FF8u) + mem_read16(mem_read32(screen - 0x7FF8u)) * 2u, current_object);
+			next_list = OBJECT_AREA(screen - 0x8000u)->next_list;
+			mem_write16(next_list, mem_read16(next_list) + 1u);
+			mem_write16(OBJECT_AREA(screen - 0x8000u)->next_list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count * 2u, current_object);
 			continue;
 		}
-		mem_write8(screen - 0x7FF0u + (uint8_t)OBJECT(current_object)->unk_08, 0u);
+		mem_write8(screen - 0x7FF0u + OBJECT(current_object)->slot, 0u);
 	}
-	r1 = mem_read32(screen - 0x8000u);
-	r0 = mem_read16(r1);
+	object_list = OBJECT_AREA(screen - 0x8000u)->list;
+	r0 = OBJECT_LIST(object_list)->count;
 	r0 = (uint16_t)(r0 + 4u);
 	r0 = r0 >> 2;
 	r2 = 0u;
 	r3 = 0u;
 	do
 	{
-		mem_write32(r1, r2);
-		mem_write32(r1 + 4u, r3);
+		mem_write32(object_list, r2);
+		mem_write32(object_list + 4u, r3);
 		r0--;
-		r1 += 8u;
+		object_list += 8u;
 	} while (r0 != 0u);
-	mem_write16(screen - 0x8000u, mem_read16(screen - 0x8000u) ^ 0x100u);
-	mem_write16(screen - 0x7FF8u, mem_read16(screen - 0x7FF8u) ^ 0x100u);
-	r0 = mem_read16(mem_read32(screen - 0x8000u));
-	mem_write32(screen - 0x7FFCu, mem_read32(screen - 0x8000u) + 2u);
-	mem_write32(screen - 0x7FF4u, mem_read32(screen - 0x7FFCu) + r0 * 2u);
+	OBJECT_AREA(screen - 0x8000u)->list ^= 0x100u;
+	OBJECT_AREA(screen - 0x8000u)->next_list ^= 0x100u;
+	count = OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count;
+	OBJECT_AREA(screen - 0x8000u)->list_first = OBJECT_AREA(screen - 0x8000u)->list + 2u;
+	OBJECT_AREA(screen - 0x8000u)->list_end = OBJECT_AREA(screen - 0x8000u)->list_first + count * 2u;
 }
 
 /* Takes the first free object slot of the screen (FF into its byte at screen - 7FF0), clears its 100
@@ -5687,7 +5687,7 @@ uint32_t start_object(void)
 	uint32_t zero = 0;
 	uint8_t r9 = 0;
 	uint32_t r21 = 0, r26 = 0;
-	uint32_t t1 = 0;
+	uint32_t list = 0;
 
 	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
 	zero = r27 == 0x7Cu;
@@ -5800,9 +5800,9 @@ uint32_t start_object(void)
 	mem_write32(r26 + 4u, 0u);
 	mem_write8(r21, mem_read8(r21) | 1u);
 	mem_write8(r21 + 8u, r9);
-	t1 = mem_read32(screen - 0x8000u);
-	mem_write16(t1, mem_read16(t1) + 1u);
-	mem_write16(mem_read32(screen - 0x8000u) + mem_read16(mem_read32(screen - 0x8000u)) * 2u, r21);
+	list = OBJECT_AREA(screen - 0x8000u)->list;
+	mem_write16(list, mem_read16(list) + 1u);
+	mem_write16(OBJECT_AREA(screen - 0x8000u)->list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count * 2u, r21);
 	return r21;
 }
 
@@ -5844,21 +5844,21 @@ void free_object_slot(uint16_t r21)
 uint32_t start_object_list(uint32_t r10)
 {
 	uint8_t r7 = 0;
-	uint32_t r8 = 0, r21 = 0;
+	uint32_t r8 = 0, object = 0;
 
 	r8 = mem_read32(r10);
 	r7 = 0u;
 	r10 += 4u;
 	do
 	{
-		r21 = start_object();
-		mem_write32(r21 + 4u, mem_read32(r10));
-		mem_write8(r21 + 9u, r7);
+		object = start_object();
+		OBJECT(object)->handler = mem_read32(r10);
+		OBJECT(object)->unk_09 = r7;
 		r7++;
 		r8--;
 		r10 += 4u;
 	} while (r8 != 0u);
-	return r21;
+	return object;
 }
 
 /* Returns the next pseudo-random number of the screen's sequence (kept in unk_F00). */
@@ -5866,7 +5866,7 @@ uint32_t random_number(void)
 {
 	uint32_t r0 = 0, r1 = 0;
 
-	r1 = SCREEN(screen)->unk_F00;
+	r1 = SCREEN(screen)->random_state;
 	if ((uint16_t)r1 == 0u)
 		r1 ^= 0x2A6D365Bu;
 	r0 = r1;
@@ -5875,7 +5875,7 @@ uint32_t random_number(void)
 	r1 = (r1 << 16) | (r1 >> 16);
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + r1);
 	r1 = (r1 & ~0xFFFFu) | (uint16_t)r0;
-	SCREEN(screen)->unk_F00 = (r1 << 16) | (r1 >> 16);
+	SCREEN(screen)->random_state = (r1 << 16) | (r1 >> 16);
 	return r0;
 }
 
@@ -5887,7 +5887,7 @@ void start_sound_program(void)
 {
 	AS32(SCREEN(screen)->sound_queue_read) = 0x100u;
 	mem_write8(IO_C0001C, 6u);
-	SCREEN(screen)->unk_822 = 0u;
+	SCREEN(screen)->sound_start_cleared = 0u;
 	mem_write8(SOUND_701FFF, 0u);
 }
 

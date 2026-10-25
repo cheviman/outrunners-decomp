@@ -30,8 +30,6 @@
 #define IRQ_CONTROL_D8 0xD8u
 
 /* the sound program's variables, in the RAM it shares with the V70 (E000-FFFF) */
-#define SCREEN_1 0x208000u
-#define SCREEN_2 0x218000u
 #define shared_ram_start_ADDRESS 0xE000u
 #define shared_ram_start SOUND_RAM8(shared_ram_start_ADDRESS)
 #define screen_1_midi_read_ADDRESS 0xE002u

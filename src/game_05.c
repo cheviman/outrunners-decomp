@@ -1633,16 +1633,16 @@ void test_mode_queue_sound(uint16_t r0)
 /* The vertical blank interrupt (IRQ 0), every video frame: counts vblank_counter and
    vblanks_since_start, starts timer 0 for the LCD (int_vector_43, 34 times: timer_interrupts_left); when
    it interrupted screen 2's task: both screens' mixers and palettes (vblank_update_mixer), the video
-   registers (all 72 halfwords from video_registers when unk_20E027 asks for them, which it clears, else
-   the 8 at unk_20E220 and the 8 at unk_20E240) and the external tile banks of chip 0's port H (2 bits
-   each of unk_20E2B0-unk_20E2B3); then for the interrupted task's screen the sprite list
-   (finish_sprite_list), send_sound_requests, and vblank_update_scrolls unless the screen's
-   skip_scroll_update is set (cleared here); outside the test mode the inputs (read_switches_and_analog),
-   pack_seat_inputs (screen 1) or queue_seat_inputs (screen 2), check_test_button and, without free play,
-   the coins (update_coins); then update_lamps, the LCD (lcd_refresh), count_total_time; sets
-   frame_ready; swaps the tasks (task_swap) unless single_task is set, when task_swapping is set or when
-   the test mode is on and screen 1's task is running; counts the frame for the running task's screen
-   (screen_1_vblanks, screen_2_vblanks). */
+   registers (all 72 halfwords from video_registers when send_video_registers asks for them, which it
+   clears, else the 8 at video_registers[16] and the 8 at video_registers[32]) and the external tile
+   banks of chip 0's port H (2 bits each of tile_banks-tile_banks[3]); then for the interrupted task's
+   screen the sprite list (finish_sprite_list), send_sound_requests, and vblank_update_scrolls unless the
+   screen's skip_scroll_update is set (cleared here); outside the test mode the inputs
+   (read_switches_and_analog), pack_seat_inputs (screen 1) or queue_seat_inputs (screen 2),
+   check_test_button and, without free play, the coins (update_coins); then update_lamps, the LCD
+   (lcd_refresh), count_total_time; sets frame_ready; swaps the tasks (task_swap) unless single_task is
+   set, when task_swapping is set or when the test mode is on and screen 1's task is running; counts the
+   frame for the running task's screen (screen_1_vblanks, screen_2_vblanks). */
 void int_vector_40(void)
 {
 	uint32_t r0 = 0, r6 = 0;
@@ -1656,7 +1656,7 @@ void int_vector_40(void)
 	vblanks_since_start++;
 	mem_write16(IRQ_D00008, rom_03F82A);
 	timer_interrupts_left = 0x22u;
-	unk_20E00E--;
+	debug_timer_rounds--;
 	if (SCREEN(screen)->index != 0u)
 	{
 		saved_screen_2 = screen;
@@ -1665,20 +1665,20 @@ void int_vector_40(void)
 		screen = SCREEN_2;
 		vblank_update_mixer();
 		screen = saved_screen_2;
-		if (unk_20E027 == 0u)
+		if (send_video_registers == 0u)
 		{
-			move_halfwords(VIDEO_RAM + 0x1FF20u, unk_20E220_ADDRESS, 8u);
-			move_halfwords(VIDEO_RAM + 0x1FF40u, unk_20E240_ADDRESS, 8u);
+			move_halfwords(VIDEO_RAM + 0x1FF20u, video_registers_ADDRESS + 0x20u, 8u);
+			move_halfwords(VIDEO_RAM + 0x1FF40u, video_registers_ADDRESS + 0x40u, 8u);
 		}
 		else
 		{
-			unk_20E027 = 0u;
+			send_video_registers = 0u;
 			move_halfwords(VIDEO_31FF00, video_registers_ADDRESS, 0x48u);
 		}
-		r0 = unk_20E2B0;
-		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | unk_20E2B1);
-		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | unk_20E2B2);
-		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | unk_20E2B3);
+		r0 = tile_banks[0];
+		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | tile_banks[1]);
+		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | tile_banks[2]);
+		r0 = (uint8_t)((r0 << 6) | (r0 >> 2) | tile_banks[3]);
 		mem_write8(IO_C0000E, (r0 << 6) | (r0 >> 2));
 	}
 	finish_sprite_list();
@@ -1752,50 +1752,50 @@ void vblank_update_mixer(void)
 		move_halfwords(mixer, screen + 0x1B0u, 0x1Fu);
 		move_string(screen + 0x1FCu, 2u, mixer + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
-	if (SCREEN(screen)->unk_900 != 0u)
+	if (SCREEN(screen)->palette_upload_count != 0u)
 		upload_queued_palettes();
 }
 
 /* In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was
-   running from unk_20E210 and unk_20E220 as they are; those of the other screen half-way between the
-   values they have (unk_20E210, unk_20E220 by screen) and the new ones (unk_20E290, unk_20E2A0), which
-   become their values: the in-between frame of the screen whose task did not run (each task's scrolls
-   change every other frame); and the byte at 31FF05 from unk_20E204's second byte, which steps by 4
-   (bits 2-3). */
+   running from video_registers[8] and video_registers[16] as they are; those of the other screen
+   half-way between the values they have (video_registers[8], video_registers[16] by screen) and the new
+   ones (scroll_targets, scroll_targets[4]), which become their values: the in-between frame of the
+   screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05
+   from video_registers[2]'s second byte, which steps by 4 (bits 2-3). */
 void vblank_update_scrolls(void)
 {
 	uint8_t r0_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0;
 
 	r0 = SCREEN(screen)->index * 2u;
-	mem_write32(VIDEO_RAM + 0x1FF10u + r0 * 4u, unk_20E210[r0]);
-	mem_write32(VIDEO_RAM + 0x1FF14u + r0 * 4u, unk_20E214[r0]);
+	mem_write32(VIDEO_RAM + 0x1FF10u + r0 * 4u, RAM32(video_registers_ADDRESS + 0x10u + r0 * 4u));
+	mem_write32(VIDEO_RAM + 0x1FF14u + r0 * 4u, RAM32(video_registers_ADDRESS + 0x14u + r0 * 4u));
 	r1 = 0u - r0 + 2u;
-	r2 = unk_20E210[r1];
-	r3 = unk_20E290[r1];
-	unk_20E210[r1] = r3;
+	r2 = RAM32(video_registers_ADDRESS + 0x10u + r1 * 4u);
+	r3 = scroll_targets[r1];
+	RAM32(video_registers_ADDRESS + 0x10u + r1 * 4u) = r3;
 	r3 = r3 << 6;
 	mem_write32(VIDEO_RAM + 0x1FF10u + r1 * 4u, (((int32_t)((r2 << 6) - r3) >> 1) + r3) >> 6);
-	r2 = unk_20E214[r1];
-	r3 = unk_20E294[r1];
-	unk_20E214[r1] = r3;
+	r2 = RAM32(video_registers_ADDRESS + 0x14u + r1 * 4u);
+	r3 = scroll_targets[1 + r1];
+	RAM32(video_registers_ADDRESS + 0x14u + r1 * 4u) = r3;
 	r3 = r3 << 7;
 	mem_write32(VIDEO_RAM + 0x1FF14u + r1 * 4u, (((int32_t)((r2 << 7) - r3) >> 1) + r3) >> 7);
-	mem_write32(VIDEO_RAM + 0x1FF20u + r0 * 4u, unk_20E220[r0]);
-	mem_write32(VIDEO_RAM + 0x1FF24u + r0 * 4u, unk_20E224[r0]);
-	r2 = unk_20E220[r1];
-	r3 = unk_20E2A0[r1];
-	unk_20E220[r1] = r3;
+	mem_write32(VIDEO_RAM + 0x1FF20u + r0 * 4u, RAM32(video_registers_ADDRESS + 0x20u + r0 * 4u));
+	mem_write32(VIDEO_RAM + 0x1FF24u + r0 * 4u, RAM32(video_registers_ADDRESS + 0x24u + r0 * 4u));
+	r2 = RAM32(video_registers_ADDRESS + 0x20u + r1 * 4u);
+	r3 = scroll_targets[4 + r1];
+	RAM32(video_registers_ADDRESS + 0x20u + r1 * 4u) = r3;
 	r3 = r3 << 6;
 	mem_write32(VIDEO_RAM + 0x1FF20u + r1 * 4u, (((int32_t)((r2 << 6) - r3) >> 1) + r3) >> 6);
-	r2 = unk_20E224[r1];
-	r3 = unk_20E2A4[r1];
-	unk_20E224[r1] = r3;
+	r2 = RAM32(video_registers_ADDRESS + 0x24u + r1 * 4u);
+	r3 = scroll_targets[5 + r1];
+	RAM32(video_registers_ADDRESS + 0x24u + r1 * 4u) = r3;
 	r3 = r3 << 7;
 	mem_write32(VIDEO_RAM + 0x1FF24u + r1 * 4u, (((int32_t)((r2 << 7) - r3) >> 1) + r3) >> 7);
-	r0_2 = (uint8_t)(unk_20E204 >> 8u);
+	r0_2 = (uint8_t)(video_registers[2] >> 8u);
 	mem_write8(VIDEO_31FF05, r0_2);
-	AT8(unk_20E204, 1) = (r0_2 + 4u) & 0xECu;
+	AT8(video_registers[2], 1) = (r0_2 + 4u) & 0xECu;
 }
 
 /* The end of the vertical blank (IRQ 1): only acknowledged. */
@@ -1813,7 +1813,8 @@ void int_vector_42(void)
 /* Timer 0 (IRQ 3), which int_vector_40 starts each frame at its shortest period: sends the LCD its next
    piece (lcd_send_next_nibble) and starts the timer again until timer_interrupts_left runs out, 34 times
    a frame. When it runs out it tests the screen's byte 1 and test_mode_on but goes the same way; the
-   code after them (unused_03F7D8: counts unk_20E00E and shows it on the text layer) is never reached. */
+   code after them (unused_03F7D8: counts debug_timer_rounds and shows it on the text layer) is never
+   reached. */
 void int_vector_43(void)
 {
 	uint8_t t1 = 0;
@@ -1989,9 +1990,9 @@ void count_total_time(void)
    checkpoint_lamp, checkpoint_lamp_2) and RACE LEADER lamp (bit 3: leader_lamp, leader_lamp_2), each
    with a blinks, a period and a timer byte after it: while blinks is not 0 the timer counts the vertical
    blanks and at 0 toggles the lamp, starts again from period and takes one off blinks; writes output
-   port D of each I/O chip from port_d_outputs or unk_20E093 with those lamps and, when the seat is not
-   in the attract mode (screen unk_90 bit 8) and the STEERING WHEEL REACTION setting
-   (steering_wheel_reaction) is on, the wheel motor's bits (unk_20E0D0 by seat); then the music and
+   port D of each I/O chip from port_d_outputs or port_d_outputs[1] with those lamps and, when the seat
+   is not in the attract mode (screen demo_flags bit 8) and the STEERING WHEEL REACTION setting
+   (steering_wheel_reaction) is on, the wheel motor's bits (wheel_motor by seat); then the music and
    arrows lamps (update_button_lamps). */
 void update_lamps(void)
 {
@@ -2022,8 +2023,8 @@ void update_lamps(void)
 		}
 	}
 	r0 = port_d_outputs[0] | checkpoint_lamp[0] | leader_lamp[0];
-	if ((unk_208090 & 0x100u) == 0u && steering_wheel_reaction != 0u)
-		r0 |= unk_20E0D0[0];
+	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
+		r0 |= wheel_motor[0];
 	mem_write8(IO_C00006, r0);
 	if (checkpoint_lamp_2_blinks != 0u)
 	{
@@ -2047,21 +2048,21 @@ void update_lamps(void)
 			leader_lamp_2_blinks--;
 		}
 	}
-	r0 = unk_20E093 | checkpoint_lamp_2 | leader_lamp_2;
-	if ((unk_218090 & 0x100u) == 0u && steering_wheel_reaction != 0u)
-		r0 |= unk_20E0D1;
+	r0 = port_d_outputs[1] | checkpoint_lamp_2 | leader_lamp_2;
+	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
+		r0 |= wheel_motor[1];
 	mem_write8(0xC80006u, r0);
 	r10 = SCREEN_1;
-	r11 = unk_20E094_ADDRESS;
+	r11 = port_g_outputs_ADDRESS;
 	update_button_lamps(r10, r11);
 	r10 = SCREEN_2;
-	r11 = 0x20E095u;
+	r11 = port_g_outputs_ADDRESS + 0x1u;
 	update_button_lamps(r10, r11);
 }
 
-/* A screen's two button lamps, in its port G image (R11: unk_20E094 or unk_20E095, which the LCD's
-   output sends): the DJ/MUSIC lamp (bit 0) by the low byte of button_lamps and the << >> lamp (bit 1) by
-   its high byte: 0 off, negative on, n blinking every n vertical blanks (music_lamp_timer,
+/* A screen's two button lamps, in its port G image (R11: port_g_outputs or port_g_outputs[1], which the
+   LCD's output sends): the DJ/MUSIC lamp (bit 0) by the low byte of button_lamps and the << >> lamp (bit
+   1) by its high byte: 0 off, negative on, n blinking every n vertical blanks (music_lamp_timer,
    arrows_lamp_timer), each mode taken when it changes (music_lamp_mode, arrows_lamp_mode). */
 void update_button_lamps(uint32_t r10, uint32_t r11)
 {
