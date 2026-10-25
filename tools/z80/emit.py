@@ -5,14 +5,14 @@ Name:        emit.py
 Description: writes the sound program's functions as C, through the decompiler's writer
 Version:     0.1.0
 Created:     13-10-2026
-Modified:    16-10-2026
+Modified:    25-10-2026
 Author:      Sebastian Toyos
 
 The decompiler's FunctionWriter does the work (decompiler/emit.py); this gives it the Z80's memory and
 effects. MEMORY_MAP is the Z80's for decompiler/memory.py and decompiler/pointers.py: the RAM it shares
-with the V60 (E000-FFFF) holds the variables and the structures sound_symbols.txt names, read and written
-as lvalues over those bytes (SOUND_RAM8, CHANNEL(p)->field); the program ROM (0000-9FFF) the tables; the
-sample bank's window (A000-BFFF) and the RF5C68 (C000-DFFF) are the board's, reached through its bus by
+with the V70 (E000-FFFF) holds the variables and the structures sound_symbols.txt names, read and written
+as lvalues over those bytes (SOUND_RAM8, VOICE(p)->field); the program ROM (0000-9FFF) the tables; the
+banked page of the sound ROM (A000-BFFF) and the MultiPCM (C000-DFFF) are the board's, reached through its bus by
 name. A computed address no structure explains goes over the bus, z80_read8/16() and z80_write8/16()
 (runtime/include/sound/support.h). The timing model's Effects (z80_block, z80_cycles), DI and EI, OUT and
 the block moves print as calls of that header, the ports by the names sound_symbols.txt gives them.
@@ -41,14 +41,14 @@ def use_memory_map(names, arrays):
     memory.CANONICAL = lambda address: address
     memory.ROM_NAMES_FROM = 0x0100    # the restarts and the interrupt's code are below
     memory.VARIABLES = None
-    memory.HARDWARE = [(0xA000, 0xC000, "SAMPLE_BANK"), (0xC000, 0xD000, "PCM"), (0xD000, 0xE000, "PCM_RAM")]
+    memory.HARDWARE = [(0xA000, 0xC000, "SAMPLE_BANK"), (0xC000, 0xE000, "MULTIPCM")]
     memory.BUS_ONLY = []
     memory.BYTE_INDEXES = True
     memory.NOTES = {
-        "variables": ["/* the sound program's variables, in the RAM it shares with the V60 (E000-FFFF) */"],
+        "variables": ["/* the sound program's variables, in the RAM it shares with the V70 (E000-FFFF) */"],
         "scoped": ["/* shared RAM as one family of functions uses it */"],
         "tables": ["/* data in the program ROM the code reads */"],
-        "hardware": ["/* the sample bank's window and the RF5C68 (read and written through the bus) */"],
+        "hardware": ["/* the banked page of the sound ROM and the MultiPCM (read and written through the bus) */"],
     }
     pointers.STRUCTS = dict(names.structs)
     pointers.PLAYERS = (0, 0, 0)

@@ -3277,7 +3277,18 @@ void demo_caption_update(void)
 	r0 = draw_object(r0);
 }
 
-void sub_01AFDC(void)
+/* Unused object handler: shows the Japanese texts of the table at 01B254 (1000 of them) by number, a
+   three-digit number chosen with the buttons. By state: 0 stops the tile unpacking (unpack_state), sets
+   up video RAM (init_video) with the tilemaps off and the bitmap layer on at 4 bits a pixel, scroll 0,
+   palette FF (video_registers bit B cleared, unk_20E202 = F, unk_20E288, unk_20E28A, unk_20E28C: words
+   00, 02, 88, 8A and 8C of the video registers' copy, sent as unk_20E027 asks), the number 0 (screen
+   unk_5800-5806), the cursor (x) on the units; 1 buttons_pressed bits 3 and 2 move the cursor over the
+   three digits, bits 1 and 0 step the digit under it (0-9, wrapping); on screen 1 the number is written
+   at text cell (5,10) (kanji_text_viewer_draw_number) with the cursor's digit blinking as '*'
+   (blink_count), and the text drawn on the bitmap a line at a time (kanji_text_viewer_draw_line) from 16
+   rows and 128 pixels in, 16 rows a line; 2 draws the text only; 3 nothing (nothing sets states 2 and
+   3). */
+void kanji_text_viewer_update(void)
 {
 	uint16_t r4 = 0;
 	uint32_t r3 = 0, r4_2 = 0, r5 = 0, r10 = 0, r11 = 0;
@@ -3347,9 +3358,9 @@ void sub_01AFDC(void)
 			r4 = (uint16_t)((uint16_t)(SCREEN(screen)->unk_5800 >> 16u) + SCREEN(screen)->unk_5804 * 0xAu + SCREEN(screen)->unk_5806 * 0x64u);
 			AS16(SCREEN(screen)->unk_5800) = r4;
 			r3 = TEXT_CELL(5, 10);
-			sub_01B20C(r3, r4);
-			AS8(OBJECT(current_object)->unk_10)++;
-			if ((OBJECT(current_object)->unk_10 & 3u) == 0u)
+			kanji_text_viewer_draw_number(r3, r4);
+			OBJECT(current_object)->kanji_text_viewer.blink_count++;
+			if ((OBJECT(current_object)->kanji_text_viewer.blink_count & 3u) == 0u)
 				mem_write16(TEXT_CELL(0, 10) + OBJECT(current_object)->x, 0x602Au);
 		}
 		if (SCREEN(screen)->index != 0u)
@@ -3360,7 +3371,7 @@ void sub_01AFDC(void)
 		do
 		{
 			r11 = VIDEO_RAM + 0x1040u + r5 * 0x1000u;
-			sub_01B1B1(r11, &r4_2, &r10);
+			kanji_text_viewer_draw_line(r11, &r4_2, &r10);
 			r5++;
 		} while (r4_2 == 0u);
 		return;
@@ -3373,7 +3384,7 @@ void sub_01AFDC(void)
 		do
 		{
 			r11 = VIDEO_RAM + 0x1040u + r5 * 0x1000u;
-			sub_01B1B1(r11, &r4_2, &r10);
+			kanji_text_viewer_draw_line(r11, &r4_2, &r10);
 			r5++;
 		} while (r4_2 == 0u);
 		return;
@@ -3384,7 +3395,10 @@ void sub_01AFDC(void)
 	}
 }
 
-void sub_01B1B1(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10)
+/* Only unused code reaches it (kanji_text_viewer_update): draws a line of the text at R10 on the bitmap
+   layer from R11: each halfword a character (kanji_text_viewer_character_address,
+   kanji_text_viewer_draw_character, 16 pixels on); 0 ends the line, a negative one the text (R4 = -1). */
+void kanji_text_viewer_draw_line(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10)
 {
 	uint32_t r13 = 0;
 
@@ -3398,26 +3412,32 @@ void sub_01B1B1(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10)
 		{
 			return;
 		}
-		r13 = sub_01B200(r13);
-		sub_01B1CD(r11, r13);
+		r13 = kanji_text_viewer_character_address(r13);
+		kanji_text_viewer_draw_character(r11, r13);
 		r11 += 8u;
 	}
 	*p_r4 = 0xFFFFFFFFu;
 }
 
-void sub_01B1CD(uint32_t r11, uint32_t r13)
+/* Only unused code reaches it (kanji_text_viewer_draw_line): draws a 16x16 character on the bitmap layer
+   at R11 from its 32 bytes at R13: four 8x8 quarters (kanji_text_viewer_draw_quarter), upper left, upper
+   right, lower left, lower right. */
+void kanji_text_viewer_draw_character(uint32_t r11, uint32_t r13)
 {
 	r12 = r11;
-	r13 = sub_01B1E7(r13);
+	r13 = kanji_text_viewer_draw_quarter(r13);
 	r12 = r11 + 4u;
-	r13 = sub_01B1E7(r13);
+	r13 = kanji_text_viewer_draw_quarter(r13);
 	r12 = r11 + 0x800u;
-	r13 = sub_01B1E7(r13);
+	r13 = kanji_text_viewer_draw_quarter(r13);
 	r12 = r11 + 0x804u;
-	r13 = sub_01B1E7(r13);
+	r13 = kanji_text_viewer_draw_quarter(r13);
 }
 
-uint32_t sub_01B1E7(uint32_t r13)
+/* Only unused code reaches it (kanji_text_viewer_draw_character): draws eight rows of eight one-bit
+   pixels (a byte each, from R13) at R12 on the bitmap layer, 100 bytes a row, each byte spread by the
+   table at 1A6340 into eight 4-bit pixels of pen 1. */
+uint32_t kanji_text_viewer_draw_quarter(uint32_t r13)
 {
 	uint32_t r1 = 0;
 
@@ -3432,13 +3452,17 @@ uint32_t sub_01B1E7(uint32_t r13)
 	return r13;
 }
 
-uint32_t sub_01B200(uint32_t r13)
+/* Only unused code reaches it (kanji_text_viewer_draw_line): the address of character R13 of the kanji
+   font at 1CF000 (8 bytes a step: a character is 32). */
+uint32_t kanji_text_viewer_character_address(uint32_t r13)
 {
 	r13 = 0x1CF000u + r13 * 2u * 4u;
 	return r13;
 }
 
-void sub_01B20C(uint32_t r3, uint16_t r4)
+/* Only unused code reaches it (kanji_text_viewer_update): writes R4 (0-999) as three decimal digits on
+   the text layer from cell R3 (attribute 60). */
+void kanji_text_viewer_draw_number(uint32_t r3, uint16_t r4)
 {
 	uint16_t r5 = 0, r6 = 0;
 
@@ -3501,10 +3525,10 @@ void test_mode_start(void)
 	r0 = 0x1Fu;
 	test_mode_queue_sound(r0);
 	test_mode_queue_sound_screen_2(r0);
-	mem_write8(SOUND_700710, 0u);
-	mem_write8(SOUND_700712, mem_read8(SOUND_700712) | 0x20u);
-	mem_write8(SOUND_700810, 0u);
-	mem_write8(SOUND_700812, mem_read8(SOUND_700812) | 0x20u);
+	mem_write8(SOUND_ENGINE_REVS_1, 0u);
+	mem_write8(SOUND_ENGINE_REQUESTS_1, mem_read8(SOUND_ENGINE_REQUESTS_1) | 0x20u);
+	mem_write8(SOUND_ENGINE_REVS_2, 0u);
+	mem_write8(SOUND_ENGINE_REQUESTS_2, mem_read8(SOUND_ENGINE_REQUESTS_2) | 0x20u);
 	unk_20E0D0[0] = 0u;
 	unk_20E0D1 = 0u;
 	checkpoint_lamp[0] = 0u;
@@ -5048,7 +5072,8 @@ void test_mode_sound_test_draw(void)
 
 /* Plays monitor A's sound number sound_test_number_a from the list of 121 sound codes at 01D7C6
    (test_mode_queue_sound) and steps to the next; from number 40 on it first sends command D6 (DA from
-   66, D8 from 6B); past the list's end (its closing 0) the number goes back to 0 without a sound. */
+   66, D8 from 6B), which selects sound set 6 (A, 8): the music parts' templates and the screen's
+   MultiPCM sample bank; past the list's end (its closing 0) the number goes back to 0 without a sound. */
 void test_mode_sound_test_play_a(void)
 {
 	uint16_t r0 = 0;
@@ -5412,7 +5437,7 @@ uint32_t test_mode_game_assignments_draw(void)
 	r0 = game_difficulty + 1u;
 	test_mode_draw_number(r2, &r0, &r1, &r10);
 	r10 = (r10 & ~0xFFFFu) | 0xF3A8u;
-	t1 = (uint8_t)OBJECT(current_object)->x * 2u;
+	t1 = game_difficulty * 2u;
 	r9 = t1;
 	if (t1 != 0u)
 	{
@@ -5468,11 +5493,11 @@ uint32_t test_mode_game_assignments_draw(void)
 		r9--;
 		r11 += 0x80u;
 	} while (r9 != 0u);
-	r0 = (uint8_t)OBJECT(current_object)->unk_24;
+	r0 = steering_wheel_reaction;
 	r0 = r0 & 1u;
 	r10 = rom_01DCE4[r0];
 	test_mode_draw_texts(r0, r10);
-	r0 = OBJECT(current_object)->unk_0D;
+	r0 = advertise_sound;
 	r0 = r0 & 1u;
 	r10 = rom_01DCEC[r0];
 	return test_mode_draw_texts(r0, r10);
@@ -5483,7 +5508,7 @@ void test_mode_game_assignments_difficulty(void)
 {
 	uint32_t ignored = 0;
 
-	AS8(OBJECT(current_object)->x) = ((uint8_t)OBJECT(current_object)->x + 1u) & 7u;
+	game_difficulty = (game_difficulty + 1u) & 7u;
 	ignored = test_mode_game_assignments_draw();
 }
 
@@ -5508,7 +5533,7 @@ void test_mode_game_assignments_steering(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = (uint8_t)OBJECT(current_object)->unk_24 > 0u;
-	AS8(OBJECT(current_object)->unk_24) = 1u - carry;
+	carry = steering_wheel_reaction > 0u;
+	steering_wheel_reaction = 1u - carry;
 	ignored = test_mode_game_assignments_draw();
 }

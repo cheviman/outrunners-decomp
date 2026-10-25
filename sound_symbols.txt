@@ -33,6 +33,592 @@
 0100  code  sound_main           # IM 1, SP = FDFF, clears E000-FDFF, maps the interrupt inputs (D0-D2), sound_init, EI, then the loop
 012D  loop  sound_main_loop      # waits while FFFF is not 0, then the main loop's calls (name kept: sound_cpu.c calls it)
 
-# Jump tables
-401E  jumps  table_401E 16
-3FCB  via    table_401E
+# ======== the sound program's names (naming batch S) ========
+#
+# What the program is (read from build/sound/listing.s, the C and the ROM's tables): one driver for the two
+# screens. Screen 1's sound commands (the V70's 700700, Z80 E700) start sequences on screen 1's eight sequence
+# players (E900 the music, EA00-F000 the effects), which write MIDI messages into screen 1's queue E100-E1FF;
+# screen 2's (700800, E800) do the same with the players F100-F800 and the queue E200-E2FF. Two copies of the
+# MIDI handlers (screen 1's at 0372/03D3, screen 2's at 0BAD/0C0E) play both queues on one pool of 30 voice
+# records (E410-E51D: 24 MultiPCM voices, then the YM3438's 6 channels), flags bit 3 marking screen 2's;
+# screen 1's sound goes out on the right (MultiPCM pan 70, YM3438 B4 40), screen 2's on the left (pan 90,
+# B4 80), screen 2's notes playing the samples from 100 on. Each screen also has an engine (MultiPCM voices 26
+# and 27) and a tyre noise (24 and 25) the V70 drives itself through its page (E710-E71D, E810-E81D).
+# "Screen 1" and "screen 2" are the game's words (symbols.txt: SOUND_700700 for screen 1, 700800 for
+# screen 2); the test mode calls them MONITOR A and B.
+
+# ======== functions (the 57 sound_XXXX) ========
+
+0158  func  drum_timeout_tick
+comment drum_timeout_tick The drum notes' time-out, on every timer tick: drum_timeout_wait counts 140 ticks, then a pass (drum_timeout_pass bit 0) visits the 24 MultiPCM voices, one a tick (drum_timeout_cursor, drum_timeout_voices_left): each one's drum_timeout goes down by one, and a sounding drum note (flags bits 6 and 4) whose count runs out, and that is not being stopped already, gets the stop flag (flags bit 0) for stop_flagged_voices. Instrument notes are counted down too, but never stopped by it.
+
+01B4  func  sound_init
+comment sound_init Sets the sound up at reset: the MultiPCM (init_pcm_chip) and the YM3438 (init_fm_chip); both screens' MIDI queues empty (screen_1_midi_write 0, screen_1_midi_read and screen_2_midi_read FF), next_voice the first voice, screen_1_tick_countdown 1, drum_timeout_wait 140 ticks, both music volumes FF; the voices' chip channels (init_voice_channels) and both screens' parts (init_parts); last, YM3438 register 27 = 15: timer A loaded and its interrupt on.
+
+01ED  func  init_fm_chip
+comment init_fm_chip Sets the YM3438 up: fm_global_init's 11 pairs on part I (the LFO on, timer A 3F0 and timer B FF, all six channels keyed off, the DAC off), then fm_operator_init's 36 pairs on both parts (every operator silent: total level 7F, release FF, no SSG-EG). Hands back the last register written in last_register.
+
+0212  func  write_fm_channel
+comment write_fm_channel Writes value to the YM3438 register fm_register on the part fm_channel's bit 2 picks (write_fm_part2 when it is set, else write_fm); hands fm_register back with value in its high byte.
+
+021C  func  write_fm
+comment write_fm Writes value to the YM3438's register fm_register on part I (FM_ADDRESS, then FM_DATA), with the interrupts off between the two.
+
+0228  func  write_fm_part2
+comment write_fm_part2 Writes value to the YM3438's register fm_register on part II (FM_PART2_ADDRESS, then FM_PART2_DATA), with the interrupts off between the two.
+
+0292  func  init_pcm_chip
+comment init_pcm_chip Sets the MultiPCM up: 3 into its place C009 before and after (what for is not known: the chip as MAME has it ignores it), PCM_BANKS 1A (the first sample window on bank 2, the second on bank 3), then for the first 28 entries of voice_chip_channels: the voice selected, pan 80, keyed off, level FE (silent). The last 4 of those 28 are YM3438 codes (80-82, 84), so MultiPCM voices 0-2 and 4 are set up twice and voices 24-27 (the tyre noises' and the engines') not at all.
+
+02CA  func  write_pcm_register
+comment write_pcm_register Writes value to the register pcm_register of the MultiPCM voice selected in pcm_voice_select: waits while the chip is busy (pcm_data bit 0), puts the register number in pcm_register_select, waits again, then the value in pcm_data.
+
+0302  func  init_voice_channels
+comment init_voice_channels Gives the 30 voices their chip_channel from voice_chip_channels: voices 0-23 the MultiPCM voices (00-06, 08-0E, 10-16, 18-1A), voices 24-29 the YM3438's channels (80-82 on part I, 84-86 on part II).
+
+0316  func  init_parts
+comment init_parts Sets both screens' 13 parts from sound set 0 (part_templates[0]): its 8 music parts and, after its bank byte, the 5 parts of MIDI channels A-E (the effects' and the fades'), for screen 1 (midi_part 0-12) and screen 2 (midi_part 13-25); then every part's effective_volume: volume x (FF with flags bit 0, else screen_1_music_volume, for screen 2's parts too) / 256, + 1 if not 0. The set's bank byte does not go to PCM_BANKS here.
+
+0366  func  read_table_word
+comment read_table_word Hands back the 16-bit entry 'entry' of the table of words at 'table'.
+
+0372  func  handle_midi_message_screen_1
+comment handle_midi_message_screen_1 Takes one message off screen 1's MIDI queue each main loop pass, while screen_1_midi_count is not 0: its first byte (read_midi_byte_screen_1) is a new screen_1_midi_status, or a data byte under the last one; every part of screen 1 that plays (flags bit 7) on the message's channel gets it (play_midi_message_screen_1), each reading from the same place (screen_1_midi_read is put back after each); then skip_midi_data_screen_1 moves past the message.
+
+03B7  func  skip_midi_data_screen_1
+comment skip_midi_data_screen_1 Moves screen_1_midi_read to the last byte of the message that starts with first_byte: past a status byte, then past one data byte for C0 and D0 (program change, channel pressure) and two for the others. play_midi_message_screen_1 does the same for A0 and D0, which play nothing (handle_midi_message_screen_1 puts the place back and skips the message itself).
+
+03D3  func  play_midi_message_screen_1
+comment play_midi_message_screen_1 Plays one MIDI message of screen 1's queue for part, by screen_1_midi_status: 90 note on (velocity 0: note off): note_number (+ transpose) and its note_code, note_level from the velocity; a drum kit (program F0 on, drum_kits) gives drum_pitch, the drum_timeout and the sample (FF: no sound), and on channel 15 notes 2A and 2C (closed and pedal hi-hat) stop screen 1's open hi-hat (note code CA); an FM instrument (instruments' flags bit 1) takes a free FM voice for start_fm_note; else the instrument's key split for note_number gives sample_or_patch, split_tune and split_octave; the MultiPCM voice is the next free one from next_voice, or the oldest (allocation_order 0) taken over; its record (flags 40, + 10 for a drum note), then the pitch, the sample, the level (x the part's effective_volume), pan 70 (right) and key on. 80 note off: drum notes ignore it; the sounding voice of the note on the channel gets the stop flag (an FM one is freed and keyed off), or is held (flags bit 1) while the sustain pedal is down. E0 pitch bend: through bend_range_tables[bend_range] into pitch_bend and screen_1_pitch_bends, the channel's sounding voices retuned. B0 control change: 1 modulation (set_voice_modulation_screen_1), 7 the part's volume, 10 screen_1_music_volume for the 8 music parts, 40 sustain pedal, 7B all notes off, 50 stops all of the screen's MultiPCM voices (7E: all but drum notes on channels other than 15) and clears its channels' controls and half of their pitch bends, 20 a sound set (part_templates: the 8 music parts and screen 1's sample bank), 51 stops one note; a new volume reaches the sounding voices at once. C0 program change. A0 and D0 skipped.
+
+06E3  func  retune_voice_screen_1
+comment retune_voice_screen_1 Retunes a sounding voice after a pitch bend of screen 1: an FM voice through retune_fm_voice; a MultiPCM voice gets its note's pitch again from pcm_pitch_tables[semitone] at pitch_bend + its tune, its octave + octave_shift (registers 3 and 2). The same code as retune_voice_screen_2.
+
+07BC  func  set_voice_modulation_screen_1
+comment set_voice_modulation_screen_1 CC 1 of screen 1 for a sounding voice of the channel: a MultiPCM voice gets register 6 = voice_modulation | the part's lfo_frequency. For an FM voice the program means B4 = 40 | the depth, but takes the channel from voices_left, the caller's count of voices left, instead of the voice's chip_channel, and write_fm_channel hands the value back where that count was, so the caller's walk goes on past the 30 voices.
+
+0A39  func  read_midi_byte_screen_1
+comment read_midi_byte_screen_1 Moves screen_1_midi_read on by one and hands back the byte of screen_1_midi_queue there.
+
+0A43  func  stop_flagged_voices
+comment stop_flagged_voices Stops the MultiPCM voices flagged to stop (flags bit 0), first thing each main loop pass: the voice is freed (flags and midi_channel 0) and keyed off; unless it was a drum note on a channel other than 15 (which has no allocation order), pcm_voices_used goes down by one and the voices allocated after it move one down.
+
+0B77  func  multiply_bytes
+comment multiply_bytes Hands back the high byte of value times the low byte of factor (8 x 8 bits, shift and add); the callers keep the product's high byte: a level or a volume scaled by another.
+
+0BA6  func  reset_next_voice
+comment reset_next_voice Puts next_voice back on the first voice and hands it back: the free voice search wraps after the 24 MultiPCM voices.
+
+0BAD  func  handle_midi_message_screen_2
+comment handle_midi_message_screen_2 As handle_midi_message_screen_1 for screen 2: screen_2_midi_count, screen_2_midi_status, screen_2_midi_read, screen 2's parts (midi_part 13-25), play_midi_message_screen_2 and skip_midi_data_screen_2.
+
+0BF2  func  skip_midi_data_screen_2
+comment skip_midi_data_screen_2 As skip_midi_data_screen_1 on screen_2_midi_read and screen_2_midi_status.
+
+0C0E  func  play_midi_message_screen_2
+comment play_midi_message_screen_2 As play_midi_message_screen_1 for screen 2's queue and parts: its voices get flags bit 3 (48), and it only touches voices with that bit (screen 1's only those without); its notes play the samples from 100 on (MultiPCM register 2 bit 0) on the left (pan 90; FM B4 80); its channels' state is screen_2_channel_controls and screen_2_pitch_bends; CC 10 sets screen_2_music_volume and CC 20 screen 2's sample bank (pcm_banks bits 3-5).
+
+0F20  func  retune_voice_screen_2
+comment retune_voice_screen_2 The same code as retune_voice_screen_1, for screen 2's pitch bend.
+
+0FF8  func  set_voice_modulation_screen_2
+comment set_voice_modulation_screen_2 As set_voice_modulation_screen_1 for screen 2 (FM: 80 | the depth, with the same mistake over the channel and the caller's count).
+
+127B  func  read_midi_byte_screen_2
+comment read_midi_byte_screen_2 Moves screen_2_midi_read on by one and hands back the byte of screen_2_midi_queue there.
+
+12E0  func  start_fm_note
+comment start_fm_note The FM note on's chip side: the F-number of the note's semitone from fm_fnum_tables at the channel's pitch bend (pitch_bends[midi_channel]) and the block from its octave (A4, A0); the patch (load_fm_patch, or load_fm_patch_part2 for a channel of part II); the 4 operators' total levels (fm_level_registers): a patch level with bit 7 as it is, the others plus note_level; B4 = voice_modulation (the output side and the modulation depth); all four operators keyed on (28 = F0 | fm_channel).
+
+13D8  func  retune_fm_voice
+comment retune_fm_voice Retunes an FM voice after a pitch bend: fm_channel from its chip_channel, the F-number of its note from fm_fnum_tables at pitch_bend and the block from its octave (A4, then A0, on its part).
+
+1449  func  stop_fm_voice
+comment stop_fm_voice Frees an FM voice (flags and midi_channel 0) and keys its channel off (28): the sustain pedal's release of an FM note it held.
+
+145A  func  apply_fm_music_volume
+comment apply_fm_music_volume CC 10 for a sounding FM voice (part in iy): note_level = 7F - its level x the part's effective_volume / 2, then the patch's operator levels without bit 7 plus note_level (write_fm_channel); those with bit 7 are left alone. It reads the patch number from the instrument's byte 1, where every FM instrument has 7F (the note on reads byte 2), so the levels come from past the 32 patches of fm_patches.
+
+14A8  func  apply_fm_channel_volume
+comment apply_fm_channel_volume As apply_fm_music_volume for CC 7 (part in ix), with the same patch number mistake.
+
+14F6  func  load_fm_patch
+comment load_fm_patch Writes the 21 registers of fm_patches[sample_or_patch] (fm_patch_registers plus the channel within the part) on part I; hands back the channel in channel_in_part, fm_level_registers in register_list and the patch's 4 operator levels in patch_data.
+
+1515  func  load_fm_patch_part2
+comment load_fm_patch_part2 As load_fm_patch on part II.
+
+36AD  func  update_engine_screen_1
+comment update_engine_screen_1 Screen 1's engine on MultiPCM voice 26 (selected as 1D), each main loop pass while screen_1_engine_requests is set: revs 0 key it off (when screen_1_engine_state bit 7 says it is on) and clear the requests; else it is keyed on first (pan 70, key_on_with_pan), then the requests are done and cleared: bit 6 nothing on screen 1, bit 7 the sample (set_engine_sample with screen_1_engine_sample), bit 5 the pitch and level for screen_1_engine_revs (set_engine_pitch with screen_1_engine_loudness).
+
+36F6  func  update_engine_screen_2
+comment update_engine_screen_2 As update_engine_screen_1 for screen 2 on voice 27 (1E), pan 90; its bit 6 sets the level to screen_2_engine_loudness x 2.
+
+3748  func  key_on_with_pan
+comment key_on_with_pan Sets the selected MultiPCM voice's pan (register 0) and keys it on.
+
+376D  func  set_engine_pitch
+comment set_engine_pitch The engine's sound for the revs (high byte of revs_and_loudness): the pitch engine_pitches[revs] (registers 3 and 2), with a random amount (the refresh register) added where its octave is negative (revs below A2); the level engine_levels[revs] - the loudness (low byte); a random LFO (register 6) and tremolo depth 1 (register 0A).
+
+37B5  func  set_engine_sample
+comment set_engine_sample Gives the selected MultiPCM voice its sample (register 1, which loads the sample's envelope and LFO), register 2 cleared first so that it is one of the first 256.
+
+3AF3  func  engine_sweep_tick
+comment engine_sweep_tick On every timer tick: while engine_sweep_on is set, every 65 ticks screen 1's engine plays the next revs of engine_sweep_revs (screen_1_engine_revs with a pitch request), up the table, then back down (engine_sweep_down turns at its ends). Nothing sets engine_sweep_on, so in the game it only turns engine_sweep_down and the position over every tick.
+
+3DE6  func  update_tyre_noise_screen_1
+comment update_tyre_noise_screen_1 Screen 1's tyre noise on MultiPCM voice 24 (selected as 1B), each main loop pass: a request (screen_1_tyre_noise, 1-8) is taken and cleared: screen_1_tyre_noise_time = the noise's duration and, unless its sample plays already (screen_1_tyre_noise_sample), start_tyre_noise with pan 70; without one, unless the noise is off (screen_1_tyre_noise_off), the time counts down by one a pass and at 0 the noise is keyed off.
+
+3E36  func  update_tyre_noise_screen_2
+comment update_tyre_noise_screen_2 As update_tyre_noise_screen_1 for screen 2 on voice 25 (1C), pan 90.
+
+3E86  func  start_tyre_noise
+comment start_tyre_noise Starts a tyre noise on the selected MultiPCM voice: the page's tyre_noise_off cleared, the noise's sample (register 1, also into tyre_noise_sample), level, pan, pitch (register 3) and key on.
+
+3EED  func  sequence_tick
+comment sequence_tick The sequence players' step, on every timer tick: screen_1_tick_countdown runs 4 to 1 and picks a group, each stepped once in four ticks (step_player): at its wrap screen 2's seven effect players (fade_player_volume on the first of them before), at 3 screen 2's music player (fade_music_volume before), at 2 screen 1's seven effect players, at 1 screen 1's music player; a group waits while its screen's MIDI queue holds 64 messages or more.
+
+3FC2  func  playlist_command
+comment playlist_command A playlist byte F0-FF, through playlist_command_table by its low nibble: F0 (and F3-FD) jumps to the playlist address that follows and hands back the byte there (the next song); F1 and F2 hand back song 90 + (playlist_choice_1 or playlist_choice_2 & 7); FE clears the player (it stops); FF clears all 8 of the screen's players (the screen by the queue's page) and hands back 0, which stops it.
+
+403E  func  step_player
+comment step_player Steps a playing sequence player (flags bit 7): its delta time (delta_time_high, delta_time_low) counts down, and at 0 the events from position on, in its bank (ROM_BANK), go into the screen's MIDI queue at queue_pointer, one more in the page's midi_count for each: a status byte is kept in running_status (a data byte reuses it); 80 note off with velocity 7F; B0 control change, controller 10's value kept in fade_volume or, while a fade runs, replaced by it; C0 and D0 two bytes; 90, A0 and E0 three. FF meta events: 2F ends the sequence, 51 its value into meta_51_value, the others are skipped; F0 and F7 system exclusive are skipped but counted as a message; F1-FE end the sequence. After an event a data byte with bit 7 (chain_next_event) or a delta of 0 reads the next one at once; else the delta (one byte, or two with bit 7: 7 bits each) waits. At the end a player with a playlist (flags bit 5) starts its next playlist entry at once (playlist_command for F0-FF; start_song, or start_sound with flags bit 4); 0, or no playlist, stops it.
+
+4097  func  chain_next_event
+comment chain_next_event A data byte with bit 7 set: hands it back without the bit and sets the player's flags bit 6, so that the next event is read at once, with no delta time.
+
+41D2  func  clear_player_end_flag
+comment clear_player_end_flag Clears the screen page's player_end_flag as a player with flags bit 4 stops; nothing reads it, nothing sets it.
+
+41F2  func  poll_sound_commands
+comment poll_sound_commands Each main loop pass: a sound command in screen_1_command starts from screen 1's music player, one in screen_2_command from screen 2's (take_sound_command).
+
+420F  func  take_sound_command
+comment take_sound_command Clears the screen's command byte and starts the command (start_sound).
+
+4211  func  start_sound
+comment start_sound Starts sound command 'command' (sound_commands) from the screen's music player at player_address, by its header's flags: an effect (bit 7) goes to the screen's effect player two pages on or, with bit 6, to the channel player its first event's channel picks (select_channel_player), unless that player plays one of higher priority (flags bits 0-3): it is cleared, takes the header's flags and plays the sequence right after them; bit 6 alone plays that on the music player as it is (no command has it); bit 5 a sequence (start_sequence: the header's bank and address); else a playlist: the player cleared, flags bit 5, the playlist after its first song, which start_song starts. The game's commands: 00-1D and E0-FB playlists, 1E stops the music, 1F silences the screen, 20-8F an effect note on channel E, 90-BF the channel players' effects, C0-CF sequences, D0-DB a sound set (CC 20), DC-DF and FC-FE channel A's and stop controls.
+
+4238  func  start_song
+comment start_song Starts song 'song' (songs) on the player: start_sequence with its record.
+
+4256  func  start_sequence
+comment start_sequence The player plays the sequence of a song record or of a sound header (its flags byte skipped): its bank (byte 1) and address (bytes 2-3), delta_time_low 1, flags bit 7; nothing else of the player changes.
+
+42C8  func  select_channel_player
+comment select_channel_player Moves player_address from the first channel player to the one of the effect's channel: as many pages on as the low nibble of the header's first event (its status byte, channel A-E) less 0A.
+
+42D3  func  clear_player
+comment clear_player Clears the player's bytes 00-30 (flags to playlist_high) and hands back its address.
+
+42E2  func  fade_music_volume
+comment fade_music_volume The music player's fade, while its fade_speed is set (the V70's fade_out_music_at writes it): every fade_speed + 1 calls (fade_wait) fade_volume goes down by one and out as CC 10 on channel E (the screen's music volume); at 0 the player stops (flags bit 7), fade_speed is cleared, and CC 50 7E (the music's voices stop) and CC 79 0 (which nothing handles) go out on channel E.
+
+433A  func  fade_player_volume
+comment fade_player_volume The same for the player after the music player, with fade_channel_volume going out as CC 7 on channel A; at 0 the player is cleared (flags 0) and CC 7B 0 (all notes off) goes out on channel A. Nothing sets that player's fade_speed, and no command starts that player.
+
+4387  func  next_sequence_byte
+comment next_sequence_byte Moves the sequence position on by one; past the bank window (C000) the player's bank goes one on (ROM_BANK) and the position back to A000.
+
+comment sound_reset The sound CPU's start: interrupts off, the shared RAM E000-FDFF cleared (from shared_ram_start), the interrupt inputs mapped (IRQ_VECTOR0_INPUT-IRQ_VECTOR2_INPUT: 0 the YM3438's timers, 1 the V70's request, 2), the pending ones cleared, none masked, sound_init, then interrupts on.
+comment sound_irq The timer interrupt (the YM3438's timer A): acknowledges the pending inputs, rearms the timer (register 27 = 15), then sequence_tick, drum_timeout_tick and engine_sweep_tick.
+comment sound_main_loop One pass of the main loop: waits, interrupts off, while sound_cpu_hold is set; then stop_flagged_voices, one message of each screen's MIDI queue (handle_midi_message_screen_1 and _screen_2), both engines, both tyre noises and poll_sound_commands.
+
+# ======== code labels (the handlers inside the functions; the listing and the C's labels) ========
+
+017B  code  drum_timeout_step
+03FC  code  note_on_screen_1
+0461  code  cut_open_hi_hat_screen_1
+0493  code  find_key_split_screen_1
+04B7  code  take_voice_screen_1
+04D9  code  steal_oldest_voice_screen_1
+04FD  code  start_voice_screen_1
+054A  code  start_instrument_voice_screen_1
+05AD  code  write_note_registers_screen_1
+05E1  code  note_off_screen_1
+05FC  code  release_note_screen_1
+065C  code  pitch_bend_screen_1
+0730  code  program_change_screen_1
+073C  code  control_change_screen_1
+0772  code  modulation_screen_1
+07DB  code  sustain_pedal_screen_1
+0838  code  music_volume_screen_1
+08BB  code  channel_volume_screen_1
+092F  code  stop_voices_screen_1
+0961  code  stop_music_voices_screen_1
+098C  code  select_sound_set_screen_1
+09D1  code  stop_note_screen_1
+0A0C  code  all_notes_off_screen_1
+0A7D  code  renumber_voice_orders
+0C37  code  note_on_screen_2
+0C9C  code  cut_open_hi_hat_screen_2
+0CCE  code  find_key_split_screen_2
+0CF2  code  take_voice_screen_2
+0D14  code  steal_oldest_voice_screen_2
+0D38  code  start_voice_screen_2
+0D85  code  start_instrument_voice_screen_2
+0DE8  code  write_note_registers_screen_2
+0E1E  code  note_off_screen_2
+0E39  code  release_note_screen_2
+0E99  code  pitch_bend_screen_2
+0F6C  code  program_change_screen_2
+0F78  code  control_change_screen_2
+0FAE  code  modulation_screen_2
+1017  code  sustain_pedal_screen_2
+1074  code  music_volume_screen_2
+10F7  code  channel_volume_screen_2
+116B  code  stop_voices_screen_2
+119D  code  stop_music_voices_screen_2
+11C8  code  select_sound_set_screen_2
+1213  code  stop_note_screen_2
+124E  code  all_notes_off_screen_2
+1289  code  fm_note_on_screen_1
+137D  code  fm_note_off_screen_1
+1434  code  fm_modulation_screen_1
+177D  code  fm_note_on_screen_2
+17D7  code  fm_note_off_screen_2
+1832  code  fm_modulation_screen_2
+37C3  code  engine_off_screen_1
+37DB  code  engine_off_screen_2
+3B35  code  engine_sweep_turn
+3EB3  code  key_off_tyre_noise_screen_1
+3ED0  code  key_off_tyre_noise_screen_2
+3F04  code  step_music_screen_1
+3F21  code  step_effects_screen_1
+3F62  code  step_music_screen_2
+3F7F  code  step_effects_screen_2
+3FCC  code  playlist_jump
+3FD4  code  playlist_chosen_song_1
+3FDD  code  playlist_chosen_song_2
+3FE6  code  playlist_stop_player
+3FF7  code  playlist_clear_all_players
+4056  code  read_events
+4066  code  next_event
+409E  code  control_change_event
+40D4  code  note_off_event
+40EF  code  three_byte_event
+40F6  code  two_byte_event
+410D  code  system_event
+411B  code  unknown_system_event
+4134  code  running_status_event
+413B  code  meta_event
+4158  code  read_delta_time
+418A  code  end_of_sequence
+41C3  code  stop_at_end
+41D7  code  meta_51_event
+4243  code  start_playlist
+426D  code  start_effect
+427E  code  start_header_sequence
+428D  code  start_channel_effect
+
+# ======== jump table (renamed) ========
+
+401E  jumps  playlist_command_table 16
+3FCB  via    playlist_command_table
+
+# ======== data ========
+
+3B5D  data  engine_sweep_revs
+479F  data  playlist_stop_music
+47A3  data  playlist_silence_screen
+595D  data  stop_music_sequence
+596E  data  stop_screen_voices_sequence
+
+# ======== ports ========
+
+0080  port  FM_ADDRESS
+0081  port  FM_DATA
+0082  port  FM_PART2_ADDRESS
+0083  port  FM_PART2_DATA
+00A0  port  ROM_BANK
+00B0  port  PCM_BANKS
+00C0  port  IRQ_CONTROL
+00C1  port  IRQ_ACKNOWLEDGE
+00D0  port  IRQ_VECTOR0_INPUT
+00D1  port  IRQ_VECTOR1_INPUT
+00D2  port  IRQ_VECTOR2_INPUT
+00D3  port  IRQ_MASK
+00D8  port  IRQ_CONTROL_D8
+
+# ======== the MultiPCM's places (io) ========
+
+C000  io  pcm_data              u8
+C001  io  pcm_voice_select      u8
+C002  io  pcm_register_select   u8
+# C009 left unnamed: init_pcm_chip writes 3 there before and after its loop (0294, 02C6); the chip as MAME has it ignores offset 9, so what it is for is not known.
+
+# ======== tables of the program ROM ========
+
+0234  table  fm_global_init      u8
+024A  table  fm_operator_init    u8
+02E4  table  voice_chip_channels u8
+1534  table  fm_patch_registers  u8
+1549  table  fm_level_registers  u8
+1565  table  fm_fnum_tables      u16
+1847  table  part_templates      u16
+1BC2  table  instruments         u16
+1F62  table  note_codes          u8
+2016  table  velocity_levels     u8
+20AE  table  pcm_pitch_tables    u16
+2546  table  bend_range_tables   u16
+2A5E  table  fm_patches          u16
+2DA5  table  drum_kits           u16
+37F3  table  engine_levels       u8
+38F3  table  engine_pitches      u16
+3DC6  table  tyre_noises         u8
+439B  table  songs               u16
+44DB  table  sound_commands      u16
+
+# ======== variables in the shared RAM ========
+
+E000  var  shared_ram_start              u8
+E002  var  screen_1_midi_read            u8
+E008  var  screen_1_midi_status          u8
+E00D  var  sample_or_patch               u8
+E010  var  drum_timeout_wait             u8
+E012  var  note_code                     u8
+E013  var  note_level                    u8
+E014  var  pitch_bend                    s16
+E017  var  drum_timeout_pass             u8
+E018  var  drum_timeout_cursor           u16
+E01A  var  drum_timeout_voices_left      u8
+E01B  var  voice_modulation              u8
+E01C  var  screen_1_music_volume         u8
+E01D  var  drum_pitch                    u8
+E01E  var  fm_channel                    u8
+E01F  var  pcm_voices_used               u8
+E028  var  next_voice                    u16 voice
+E02A  var  pcm_banks                     u8
+E02B  var  split_tune                    u8
+E02C  var  split_octave                  u8
+E02D  var  note_number                   u8
+E040  var  screen_1_pitch_bends          u16
+E060  var  screen_1_channel_controls     u8
+E082  var  screen_2_midi_read            u8
+E088  var  screen_2_midi_status          u8
+E09C  var  screen_2_music_volume         u8
+E0C0  var  screen_2_pitch_bends          u16
+E0E0  var  screen_2_channel_controls     u8
+E100  var  screen_1_midi_queue           u8
+E200  var  screen_2_midi_queue           u8
+E411  var  voice_0_chip_channel          u8
+E412  var  voice_0_note                  u8
+E413  var  voice_0_midi_channel          u8
+E414  var  voice_0_drum_timeout          u8
+E416  var  voice_0_allocation_order      u8
+E700  var  screen_1_command              u8
+E710  var  screen_1_engine_revs          u8
+E711  var  screen_1_engine_state         u8
+E712  var  screen_1_engine_requests      u8
+E713  var  screen_1_engine_sample        u8
+E714  var  screen_1_engine_loudness      u8
+E718  var  screen_1_tyre_noise           u8
+E719  var  screen_1_tyre_noise_sample    u8
+E71C  var  screen_1_tyre_noise_time      u8
+E71D  var  screen_1_tyre_noise_off       u8
+E740  var  screen_1_tick_countdown  u8
+E758  var  screen_1_midi_write           u8
+E759  var  screen_1_midi_count           u8
+E780  var  engine_sweep_on               u8
+E781  var  engine_sweep_wait             u8
+E784  var  engine_sweep_position_low     u8
+E785  var  engine_sweep_position_high    u8
+E786  var  engine_sweep_down             u8
+E800  var  screen_2_command              u8
+E810  var  screen_2_engine_revs          u8
+E811  var  screen_2_engine_state         u8
+E812  var  screen_2_engine_requests      u8
+E813  var  screen_2_engine_sample        u8
+E814  var  screen_2_engine_loudness      u8
+E818  var  screen_2_tyre_noise           u8
+E819  var  screen_2_tyre_noise_sample    u8
+E81C  var  screen_2_tyre_noise_time      u8
+E81D  var  screen_2_tyre_noise_off       u8
+E858  var  screen_2_midi_write           u8
+E859  var  screen_2_midi_count           u8
+E900  var  screen_1_music_flags          u8
+F100  var  screen_2_music_flags          u8
+FFFF  var  sound_cpu_hold                u8
+
+# ======== structures in the shared RAM ========
+
+struct  midi_part        A
+array   midi_part        E300  26
+struct  voice            9
+array   voice            E410  30
+struct  sequence_player  100
+array   sequence_player  E900  16
+struct  screen_page      100
+array   screen_page      E700  2
+struct  tyre_noise       4  rom
+
+field  midi_part  00  flags             u8
+field  midi_part  01  midi_channel      u8
+field  midi_part  02  volume            u8
+field  midi_part  03  program           u8
+field  midi_part  04  transpose         u8
+field  midi_part  06  lfo_frequency     u8
+field  midi_part  08  effective_volume  u8
+field  midi_part  09  bend_range        u8
+field  voice  00  flags                 u8
+field  voice  01  chip_channel          u8
+field  voice  02  note                  u8
+field  voice  03  midi_channel          u8
+field  voice  04  drum_timeout          u8
+field  voice  05  level                 u8
+field  voice  06  allocation_order      u8
+field  voice  07  tune                  u8
+field  voice  08  octave_shift          u8
+field  sequence_player  00  flags              u8
+field  sequence_player  02  position           u16
+field  sequence_player  02  position_low       u8
+field  sequence_player  03  position_high      u8
+field  sequence_player  06  delta_time_high    u8
+field  sequence_player  07  delta_time_low     u8
+field  sequence_player  0A  meta_51_value      u8
+field  sequence_player  14  running_status     u8
+field  sequence_player  15  fade_volume        u8
+field  sequence_player  18  fade_speed         u8
+field  sequence_player  19  fade_wait          u8
+field  sequence_player  1A  fade_channel_volume  u8
+field  sequence_player  1B  bank               u8
+field  sequence_player  20  playlist           u16
+field  sequence_player  20  playlist_low       u8
+field  sequence_player  21  playlist_high      u8
+field  screen_page  00  command            u8
+field  screen_page  09  playlist_choice_1  u8
+field  screen_page  0A  playlist_choice_2  u8
+field  screen_page  0B  player_end_flag    u8
+field  screen_page  10  engine_revs        u8
+field  screen_page  11  engine_state       u8
+field  screen_page  12  engine_requests    u8
+field  screen_page  13  engine_sample      u8
+field  screen_page  14  engine_loudness    u8
+field  screen_page  18  tyre_noise         u8
+field  screen_page  19  tyre_noise_sample  u8
+field  screen_page  1C  tyre_noise_time    u8
+field  screen_page  1D  tyre_noise_off     u8
+field  screen_page  40  tick_countdown     u8
+field  screen_page  58  midi_write         u8
+field  screen_page  59  midi_count         u8
+field  tyre_noise  00  sample              u8
+field  tyre_noise  01  pitch               u8
+field  tyre_noise  02  level               u8
+field  tyre_noise  03  duration            u8
+
+# ======== parameters ========
+
+param  init_fm_chip              bc  last_register
+param  write_fm_channel          bc  fm_register
+param  write_fm_channel          a   value
+param  write_fm                  bc  fm_register
+param  write_fm                  a   value
+param  write_fm_part2            bc  fm_register
+param  write_fm_part2            a   value
+param  write_pcm_register        bc  pcm_register
+param  write_pcm_register        a   value
+param  init_voice_channels       bc  unused_c
+param  read_table_word           hl  table
+param  read_table_word           a   entry
+param  skip_midi_data_screen_1   bc  first_byte
+param  play_midi_message_screen_1  bc  message_byte
+param  play_midi_message_screen_1  ix  part  midi_part
+param  retune_voice_screen_1     iy  voice  voice
+param  set_voice_modulation_screen_1  ix  part  midi_part
+param  set_voice_modulation_screen_1  bc  voices_left
+param  set_voice_modulation_screen_1  hl  voice
+param  read_midi_byte_screen_1   a   midi_byte
+param  read_midi_byte_screen_1   bc  midi_byte_copy
+param  multiply_bytes            hl  value
+param  multiply_bytes            de  factor
+param  reset_next_voice          hl  first_voice
+param  skip_midi_data_screen_2   bc  first_byte
+param  play_midi_message_screen_2  bc  message_byte
+param  play_midi_message_screen_2  ix  part  midi_part
+param  retune_voice_screen_2     iy  voice  voice
+param  set_voice_modulation_screen_2  ix  part  midi_part
+param  set_voice_modulation_screen_2  bc  voices_left
+param  set_voice_modulation_screen_2  hl  voice
+param  read_midi_byte_screen_2   a   midi_byte
+param  read_midi_byte_screen_2   bc  midi_byte_copy
+param  start_fm_note             bc  note
+param  start_fm_note             de  midi_channel
+param  start_fm_note             hl  pitch_bends
+param  retune_fm_voice           iy  voice  voice
+param  retune_fm_voice           a   chip_channel
+param  stop_fm_voice             iy  voice  voice
+param  apply_fm_music_volume     bc  chip_channel
+param  apply_fm_music_volume     hl  voice_field
+param  apply_fm_music_volume     iy  part  midi_part
+param  apply_fm_channel_volume   bc  chip_channel
+param  apply_fm_channel_volume   hl  voice_field
+param  apply_fm_channel_volume   ix  part  midi_part
+param  load_fm_patch             a   channel_code
+param  load_fm_patch             bc  channel_in_part
+param  load_fm_patch             de  register_list
+param  load_fm_patch             hl  patch_data
+param  load_fm_patch_part2       a   channel_code
+param  load_fm_patch_part2       bc  channel_in_part
+param  load_fm_patch_part2       de  register_list
+param  load_fm_patch_part2       hl  patch_data
+param  key_on_with_pan           de  pan
+param  set_engine_pitch          de  revs_and_loudness
+param  set_engine_sample         a   sample
+param  start_tyre_noise          de  pan
+param  start_tyre_noise          ix  page  screen_page
+param  start_tyre_noise          iy  noise  tyre_noise
+param  playlist_command          a   playlist_byte
+param  playlist_command          hl  playlist
+param  playlist_command          de  queue_pointer
+param  playlist_command          ix  player  sequence_player
+param  playlist_command          iy  page  screen_page
+param  step_player               hl  player_address
+param  step_player               de  queue_pointer
+param  step_player               iy  page  screen_page
+param  chain_next_event          a   data_byte
+param  chain_next_event          ix  player  sequence_player
+param  clear_player_end_flag     iy  page  screen_page
+param  take_sound_command        a   command
+param  take_sound_command        de  player_address
+param  take_sound_command        hl  page  screen_page
+param  start_sound               a   command
+param  start_sound               de  player_address
+param  start_song                a   song
+param  start_song                de  player  sequence_player
+param  start_sequence            de  header
+param  start_sequence            hl  player  sequence_player
+param  select_channel_player     de  header
+param  select_channel_player     hl  player_address
+param  clear_player              hl  player  sequence_player
+param  fade_music_volume         hl  player  sequence_player
+param  fade_music_volume         de  queue_pointer
+param  fade_music_volume         iy  page  screen_page
+param  fade_player_volume        hl  player  sequence_player
+param  fade_player_volume        de  queue_pointer
+param  fade_player_volume        iy  page  screen_page
+param  next_sequence_byte        hl  position
+param  next_sequence_byte        ix  player  sequence_player
+
+# ======== local variables ========
+
+local  handle_midi_message_screen_1  0393,03B3  ix  part  midi_part
+local  handle_midi_message_screen_2  0BCE,0BEE  ix  part  midi_part
+local  init_parts                    033C,0361  iy  part  midi_part
+local  play_midi_message_screen_1    060D,063E  iy  voice  voice
+local  play_midi_message_screen_1    06BB,06DE  iy  voice  voice
+local  play_midi_message_screen_1    07F0,0825  iy  voice  voice
+local  play_midi_message_screen_1    0841,08B6  iy  music_part  midi_part
+local  play_midi_message_screen_1    09A7,09CC  iy  music_part  midi_part
+local  play_midi_message_screen_1    137D,13AE  iy  voice  voice
+local  play_midi_message_screen_2    0E4A,0E7B  iy  voice  voice
+local  play_midi_message_screen_2    0EF8,0F1B  iy  voice  voice
+local  play_midi_message_screen_2    102C,1061  iy  voice  voice
+local  play_midi_message_screen_2    107D,10F2  iy  music_part  midi_part
+local  play_midi_message_screen_2    11E9,120E  iy  music_part  midi_part
+local  play_midi_message_screen_2    17D7,1808  iy  voice  voice
+local  update_tyre_noise_screen_1    3E06,3E10  iy  noise  tyre_noise
+local  update_tyre_noise_screen_1    3DED,3E02  ix  page  screen_page
+local  update_tyre_noise_screen_2    3E56,3E60  iy  noise  tyre_noise
+local  update_tyre_noise_screen_2    3E3D,3E52  ix  page  screen_page
+local  sequence_tick                 3F04,3F21,3F62,3F81  iy  page  screen_page
+local  step_player                   4059  ix  player  sequence_player

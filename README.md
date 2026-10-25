@@ -63,9 +63,12 @@ the tools verify it, extract the assets and build your own executable.
       two tasks' frame loops, the game's modes and steps, the race's logic and the link between cabinets,
       the sprite lists and the board's services (sound requests, palettes, text, the EEPROM, coins and
       bookkeeping), the test mode and the interrupt hooks, with the work RAM variables and screen fields
-      they use. Still named after their addresses: the sound program's functions, the functions only
-      unused code reaches, and the variables and fields no named code explains yet (all counted by
-      `tools/noise_report.py`)
+      they use; the code nothing that runs reaches is named and commented as well ("Unused:"). The sound
+      program is named in `sound_symbols.txt`: one driver for both screens, each with its page of commands,
+      eight sequence players and a queue of MIDI messages, played on 24 MultiPCM voices and the YM3438's
+      six channels, and the engine and tyre noise the game drives through the page (the game's side of the
+      shared RAM has the same names). Still named after their addresses: the variables and fields no
+      named code explains yet (counted by `tools/noise_report.py`)
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

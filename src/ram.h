@@ -1432,12 +1432,16 @@
 #define MIXER_610040 0x610040u
 #define MIXER_610044 0x610044u
 #define MIXER_610048 0x610048u
-#define SOUND_700700 0x700700u
-#define SOUND_700710 0x700710u
-#define SOUND_700712 0x700712u
-#define SOUND_700800 0x700800u
-#define SOUND_700810 0x700810u
-#define SOUND_700812 0x700812u
+#define SOUND_COMMAND_1 0x700700u
+#define SOUND_SECOND_COMMAND_1 0x700708u
+#define SOUND_ENGINE_REVS_1 0x700710u
+#define SOUND_ENGINE_REQUESTS_1 0x700712u
+#define SOUND_ENGINE_SAMPLE_1 0x700713u
+#define SOUND_ENGINE_LOUDNESS_1 0x700714u
+#define SOUND_TYRE_NOISE_1 0x700718u
+#define SOUND_COMMAND_2 0x700800u
+#define SOUND_ENGINE_REVS_2 0x700810u
+#define SOUND_ENGINE_REQUESTS_2 0x700812u
 #define SOUND_701F00 0x701F00u
 #define SOUND_701F06 0x701F06u
 #define SOUND_701F10 0x701F10u
@@ -1512,8 +1516,7 @@ struct object
 			uint8_t unk_1E;
 			uint8_t pad_1F[0x1];
 			uint16_t unk_20;
-			uint8_t unk_22;
-			uint8_t unk_23;
+			uint8_t pad_22[0x2];
 			uint16_t unk_24;
 			uint8_t pad_26[0x2];
 			uint32_t unk_28;
@@ -1649,6 +1652,21 @@ struct object
 			uint8_t pad_02[0xB];
 			uint8_t leaving;
 			uint8_t pad_0E[0x2];
+			uint16_t other_palette;
+			uint8_t pad_12[0xE];
+			uint16_t panorama_x;
+			uint8_t pad_22[0x2];
+			uint16_t height;
+			uint8_t pad_26[0x2];
+			uint16_t half_width;
+			uint8_t pad_2A[0x56];
+			uint32_t data;
+		} backdrop_flashing;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t leaving;
+			uint8_t pad_0E[0x2];
 			uint16_t approach_start;
 			uint8_t pad_12[0xE];
 			uint16_t panorama_x;
@@ -1674,6 +1692,16 @@ struct object
 			uint8_t pad_2A[0x56];
 			uint32_t data;
 		} backdrop_translucent;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			int16_t speed_x;
+			int16_t speed_y;
+			uint8_t pad_14[0x6C];
+			int16_t target_x;
+			int16_t target_y;
+			uint32_t scales;
+		} bar_picture;
 		struct
 		{
 			uint8_t pad_02[0xE];
@@ -2080,6 +2108,11 @@ struct object
 			uint16_t trigger_distance;
 			int16_t x_speed;
 		} kangaroo;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t blink_count;
+		} kanji_text_viewer;
 		struct
 		{
 			uint8_t pad_02[0x8];

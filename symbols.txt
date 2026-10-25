@@ -31,6 +31,7 @@
 
 # ======== entry points ========
 03FFF0  func  reset              # V70 reset vector (0xFFFFFFF0 on a 24-bit bus): "jmp 6"
+comment reset The V70's reset vector, at the top of the program's address space: a jump to boot.
 000006  func  boot               # sets SBR to 03F000, the stack to 21FC00, and copies blocks to E00000 and E80000
 03F000  data  vector_table       # 256 x 32-bit entries, base loaded into SBR by boot
 03F8B4  func  int_default        # target of 250 of the 256 vector table entries
@@ -106,6 +107,8 @@ task  second_task
 # -7C00, 100 bytes each
 011CC0  func  run_objects        # the object loop: each live object of this frame's list (flags bit 0) has its handler run and goes on the next frame's list; a dead one frees its slot; then this frame's list is cleared and the two swap
 011D43  func  start_object       # the first free slot: its 100 bytes cleared, live (flags bit 0), its slot number at 8, on this frame's list; R21 = the object (the spare at screen - 7F00 when no slot is free)
+comment run_objects The object loop, once a frame for the screen: each live object (flags bit 0) of this frame's list (screen - 8000) has its handler run and goes on the next frame's list (screen - 7FF8); a dead one frees its slot (its byte at screen - 7FF0, by its slot number at 8). Then this frame's list is cleared and the two lists swap.
+comment start_object Takes the first free object slot of the screen (FF into its byte at screen - 7FF0), clears its 100 bytes, makes it live (flags bit 0) with its slot number at 8, puts it on this frame's list and returns it; with no slot free, it returns the spare object at screen - 7F00 without any of that.
 
 # ======== object handler lists ========
 # A 32-bit count, then that many handlers: the code takes a list with "movea.b list[PC], R10" and starts an
@@ -163,43 +166,43 @@ task  second_task
 000327  func  reload_settings         # unused: what the branch before it skips
 000354  func  eeprom_write_one_word         # unused
 000EA4  func  isdn_status_update         # the handler of object_handlers_F70, which game mode 8 (the ISDN connection) starts
-0010CD  func  sub_0010CD         # unused: starts objects (011D43)
+0010CD  func  bar_picture_start         # unused: starts objects (011D43)
 001737  code  unused_001737      # unused object set-up; its handler (001820) calls into 011EB8 at 011EC0
 001783  code  unused_001783      # unused object set-up, like unused_001737
 0017CF  code  unused_0017CF      # unused object set-up, like unused_001737
 00183B  data  unk_00183B         # unused: bytes 60-67
-004578  func  sub_004578         # unused: after a jump that always leaves (to 00EAE4)
+004578  func  route_map_leg_car_end         # unused: after a jump that always leaves (to 00EAE4)
 009EFC  data  unk_009EFC         # unused: 16-bit words 0DC6-0DCD
 009FE4  data  unk_009FE4         # unused: 32-bit numbers
 00A337  code  unused_00A337      # unused: what the branch before it skips, then on into the code at 00A373
 00AB04  data  unk_00AB04  record=4 count=8 code=0   # unused: the addresses of the code after it (00AB24, 00AB36)
 00AB66  code  unused_00AB66      # unused: the code of unk_00AB04, on into the code at 00A71B
-00C552  func  sub_00C552         # unused: an rsr after a jump that always leaves (to 00EAE4)
-00C8B5  func  sub_00C8B5         # unused: an rsr after the function's own rsr
-00CEA4  func  sub_00CEA4         # unused: what the branch before it skips
-00D658  func  sub_00D658         # unused
+00C552  func  lap_timer_spare_return         # unused: an rsr after a jump that always leaves (to 00EAE4)
+00C8B5  func  stage_entry_spare_return         # unused: an rsr after the function's own rsr
+00CEA4  func  time_to_text_thousandths         # unused: what the branch before it skips
+00D658  func  network_check_delay         # unused
 00D797  code  unused_00D797      # unused: what the branch before it skips, then on into 00D7CB
 00D7B1  code  unused_00D7B1      # unused: what the branch before it skips, then on into 00D7CB
 010309  data  unk_010309         # unused: bytes
 010425  data  unk_010425         # unused: bytes
-01078F  func  sub_01078F         # unused
-010996  func  sub_010996         # unused: copies by jumping into an unrolled run of moves
-010F66  func  sub_010F66         # unused
-010FA6  func  sub_010FA6         # unused
-011314  func  sub_011314         # unused
-011362  func  sub_011362         # unused
-011388  func  sub_011388         # unused
-011393  func  sub_011393         # unused
-01142A  func  sub_01142A         # unused
-0117FE  func  sub_0117FE         # unused
+01078F  func  clear_tile_pages         # unused
+010996  func  unrolled_copy         # unused: copies by jumping into an unrolled run of moves
+010F66  func  unpack_list         # unused
+010FA6  func  queue_unpack_list         # unused
+011314  func  bookkeeping_increment8         # unused
+011362  func  bookkeeping_add8         # unused
+011388  func  bookkeeping_set32         # unused
+011393  func  bookkeeping_set8         # unused
+01142A  func  bookkeeping_check_block         # unused
+0117FE  func  load_shadowed_text_font         # unused
 011896  code  unused_011896      # unused: calls into 011874 at 011884
-0118BD  func  sub_0118BD         # unused
-0118D2  func  sub_0118D2         # unused
-0118F7  func  sub_0118F7         # unused
-011914  func  sub_011914         # unused: what the branch before it skips
-01191C  func  sub_01191C         # unused: what the branch before it skips
-011928  func  sub_011928         # unused: what the branch before it skips
-011958  func  sub_011958         # unused
+0118BD  func  erase_text_layer_to_blank_character         # unused
+0118D2  func  print_text_layer_halfwords         # unused
+0118F7  func  erase_text_layer_to_blank_cell         # unused
+011914  func  print_hex_halfword         # unused: what the branch before it skips
+01191C  func  print_hex_24_bits         # unused: what the branch before it skips
+011928  func  print_hex_word         # unused: what the branch before it skips
+011958  func  bcd_to_binary         # unused
 0119B1  code  unused_0119B1      # unused: on into the code at 011A7C
 011AAD  code  unused_011AAD      # unused: what the branch before it skips, then on into the code at 011C27
 011B29  code  unused_011B29      # unused: an entry into the code at 011B9D, on into 011C27
@@ -210,17 +213,17 @@ task  second_task
 011B74  code  unused_011B74      # unused: an entry into the code at 011B9D, on into 011C27
 011B84  code  unused_011B84      # unused: an entry into the code at 011B9D, on into 011C27
 011B93  code  unused_011B93      # unused: an entry into the code at 011B9D, on into 011C27
-011DEB  func  sub_011DEB         # unused
-011E1D  func  sub_011E1D         # unused
-011EF4  func  sub_011EF4         # unused
-01248C  func  sub_01248C         # unused: called only by unused_0129D0
+011DEB  func  reserve_object_slot         # unused
+011E1D  func  free_object_slot         # unused
+011EF4  func  request_second_sound         # unused
+01248C  func  road_row_pair_crash_check_unflipped         # unused: called only by unused_0129D0
 0129D0  code  unused_0129D0      # unused object handler: goes by its state (C[R20]) through the table after it, into 00F911 at 00F916
-017D70  func  sub_017D70         # unused object handler
-018009  func  sub_018009         # unused object handler
-01AFDC  func  sub_01AFDC         # unused object handler: goes by its state (C[R20]) through the table after it
+017D70  func  backdrop_far_start         # unused object handler
+018009  func  backdrop_flashing_start         # unused object handler
+01AFDC  func  kanji_text_viewer_update         # unused object handler: goes by its state (C[R20]) through the table after it
 01B248  data  unk_01B248         # unused: 16-bit words
-01EA14  func  sub_01EA14         # unused: what the branch before it skips
-01EA4B  func  sub_01EA4B         # unused
+01EA14  func  test_mode_duration_to_seconds         # unused: what the branch before it skips
+01EA4B  func  test_mode_split_minutes_seconds         # unused
 030B60  data  unk_030B60         # unused: data before the object data of object_lists_2E1F0
 03F7D8  code  unused_03F7D8      # unused: what the branch before it skips, then on into the code at 03F801
 03F86C  code  link_unused_case   # unused: a case of int_vector_44 (R0 and R1 pushed) its table at 03F85C does not list; it runs into the shared ending at 03F895
@@ -614,9 +617,9 @@ comment sunset_fade_wait Waits for its palette fades to finish, then ends; if th
 comment backdrop_near_start Sets up a sprite on the background a little nearer than the panorama (the hill of the Acropolis with the Parthenon, stages 14 and 19): from its data the animation, palette, panorama_x, height and half_width; draw_mode A, layer 1; straight to state 1 when the background is being set up (screen unk_207); then backdrop_near_update.
 comment backdrop_near_update Keeps the sprite on the background, moving with its panorama a quarter faster (nearer): x from the car's heading (car unk_2E, a quarter of it until screen unk_202 is set) less panorama_x, y from the background's height (screen unk_20C) and height, but not below screen unk_200's line. By state: 0 waits until it is off the screen (so it does not pop up in view); 1 draw_object while on the screen; off it, it ends once leaving.
 comment backdrop_landmark_start Sets up a landmark on the horizon that grows as the car approaches (Tiananmen in stage 10, the castle of stages 16 and 17...): as backdrop_near_start, layer 2, and approach_start = the car's segment (car unk_42) less the distance in its data; then backdrop_landmark_update.
-comment backdrop_landmark_update Keeps the landmark on the background's panorama (as backdrop_near_update, the same speed as the panorama) and grows it with the distance travelled: its scale (width_scale, height_scale) follows the sine of (car unk_42 - approach_start) / 2 (rom_100C00) up to full size (100, state 2). By state: 0 waits until it is off the screen; 1 and 2 drawn while on the screen; off it, it ends once leaving.
+comment backdrop_landmark_update Keeps the landmark on the background's panorama (as backdrop_near_update, a quarter faster than the panorama) and grows it with the distance travelled: its scale (width_scale, height_scale) follows the sine of (car unk_42 - approach_start) / 2 (rom_100C00) up to full size (100, state 2). By state: 0 waits until it is off the screen; 1 and 2 drawn while on the screen; off it, it ends once leaving.
 comment backdrop_translucent_start Sets up a sprite on the background that is drawn every other frame, so it looks faint (the pyramids of stages 13 and 20, the spray of stage 4's falls): as backdrop_near_start, layer 1, frame_count 0; then backdrop_translucent_update.
-comment backdrop_translucent_update Keeps the sprite on the background's panorama (as backdrop_landmark_update), animates it and draws it only on even frames (frame_count), so it looks faint. By state: 0 waits until it is off the screen; 1 drawn while on the screen; off it, it ends once leaving.
+comment backdrop_translucent_update Keeps the sprite on the background's panorama at the panorama's own speed (as backdrop_far_update), animates it and draws it only on even frames (frame_count), so it looks faint. By state: 0 waits until it is off the screen; 1 drawn while on the screen; off it, it ends once leaving.
 comment backdrop_off_screen Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x (field 30) more than half_width beyond the screen's edges (0..140).
 scoped object road_object_stream 80 stream u32 rom
 scoped object road_object_stream 84 stage_start u16
@@ -892,7 +895,7 @@ comment player_car_start_course Starts the race's course (rom_03CC00 by screen u
 comment player_car_extend_course Keeps the course built 104 segments past the window's start (window_record, build_end_offset). At a fork the building waits (at_fork) until the checkpoint is passed (screen unk_349): then the branch taken (screen 349 + the fork) goes on: branch, the course of that branch (car unk_A0), its stage (screen unk_A1, stage indicator A5), the stage and branch histories and forks_taken, the stage's data queued (queue_stage_load) and the branch_arrow.
 comment player_car_build_segment Builds the next segment of the road from the course (car unk_A0): at the end of a run reads the next records: 0 the course ends (the car's state 3), 1 a jump to another part, 2 a fork (forks_reached, the race's stage count, at_fork), 3 and 5 the pitch and the heading back to 0, 4 a new stage (screen unk_A2, unk_A3; stage_segments, stage_start), 6 the goal (a goal object at this segment), else a run (its length, pitch and heading steps, road width, a byte for the segments). The segment: heading and pitch turned by the run's steps, the position moved along them (next_x/y/z), the width eased toward the run's; written at build_offset, then built_segments and stage_segments count up.
 comment player_car_project_road Projects the road for the view of screen unk_D0 (player_car_publish): its rotation (view_matrix_*, from the view's pitch and yaw), then each segment from the window's start out to the view's distance turned into the view and scaled by its depth into the screen's list at screen + 3000 (scale, width, x, y, the segment's byte), segments behind the view or too far left out.
-comment player_car_start_engine_sound Starts the car's engine sound on the screen's channel of the sound board: the model's engine (rom_012026) and the transmission's; silent in the demo without sound.
+comment player_car_start_engine_sound Starts the car's engine sound on the screen's channel of the sound board: the model's engine sample (rom_012026) and the engine's loudness by the transmission (10, or 30, 6 dB louder, with the transmission's value set), then the revs on (1) and the requests for the sample and the pitch (A0); silent in the demo without sound.
 comment player_car_engine_sound Sets the engine's pitch from the revs (car unk_70) each frame, or silences it in the demo without sound.
 comment player_car_build_hit_boxes Builds the hit boxes of the race's cars at screen + 510: how many, then for each its player, race record and box (player_car_write_hit_box from its segment, model, place along and across; screen unk_500 the screen's own), and the screen's car's box from its own fields at screen + 5B0.
 comment player_car_write_hit_box Writes a car's hit box: its record, its first and last segment (4 on), and its box along and across from the model's size (rom_0126BC).
@@ -901,7 +904,7 @@ comment vector_angle Returns the 12-bit angle of the vector (R0 - R2, R1 - R3). 
 comment vector_angles Returns the angles from a point (R3, R4, R5: x, y, z) toward another (R0, R1, R2): the pitch in R0, the yaw in R1. Used by player_car_place_view.
 comment rotate_offset Turns an offset (R1 across, R2 along, R0 up) by a heading (R3) and a pitch (R4) into the world's axes. Used by player_car_world_position and player_car_place_view.
 comment angles_to_offset Returns the offset of length R2 along pitch R0 and yaw R1 (R3, R4, R5: x, y, z). Used by player_car_place_view for the eye behind the view's target.
-comment set_tyre_noise Sets the noise of the screen's car's tyres on the sound board (byte 718 of the screen's page): wheelspin, skids, off-road rumble. In the demo without sound it mutes the engine instead. Used by player_car (player_car_engine, player_car_off_road_shake, the goal) and 00664E.
+comment set_tyre_noise Sets the noise of the screen's car's tyres on the sound board (byte 718 of the screen's page; the sound program keeps it while the game keeps writing it and keys it off 255 of its main loop's passes after the last): wheelspin, skids, off-road rumble. In the demo without sound it mutes the engine instead. Used by player_car (player_car_engine, player_car_off_road_shake, the goal) and 00664E.
 comment set_tyre_noise_on_road set_tyre_noise, unless the car is off the road (car unk_7C), where the off-road noise plays. Used by player_car_drive, player_car_engine and gear_indicator_update.
 comment queue_stage_load Queues the palette of the stage the screen goes to (rom_031DDC by screen unk_A1) through queue_palette (the palette queue at screen + 900). Used by player_car_extend_course and the game's code (002E74).
 comment rev_meter_update The rev meter, the bar left of the speed at the bottom right: state 0 sets it up (animation 6, at F2, D6), 1 draws the frame of the revs (car unk_70 >> 11, 32 steps).
@@ -2178,7 +2181,7 @@ comment clear_text_layer Clears the text layer's first 30 rows (64 cells each, 3
 comment load_text_font Copies the text layer's characters (3000 bytes, 384 characters of 8x8 pixels) from 104020 into video RAM at 318000.
 comment print_text_layer Writes a string on the text layer: from the record R19, the cell's address (310000 + its first halfword), an attribute byte (the cells' high byte: palette) and the characters, closed by 0; returns the address after it.
 comment print_hex_byte Never runs in the scenarios (ISDN only): writes a number's low byte as two hex digits on the text layer, ending before the cell it is given, with the attribute byte it is given (print_hex_digits).
-comment print_hex_digits Writes a number in hex on the text layer, in as many cells as it is told, ending before the cell it is given, the lowest digit last: each digit a character ('0'-'9', 'A'-'F') with the attribute byte it is given; when the number runs out, the cells left before it are cleared (0). Only print_hex_byte runs it; the entries for four, six and eight digits before it are unused.
+comment print_hex_digits Writes a number in hex on the text layer, in as many cells as it is told, ending before the cell it is given, the lowest digit last: each digit a character ('0'-'9', 'A'-'F') with the attribute byte it is given; when the number runs out, the cells left before it are cleared (0). Only print_hex_byte runs it; the entries for four, six and eight digits before it (print_hex_halfword, print_hex_24_bits, print_hex_word) are unused.
 comment print_text_layer_list Writes the strings of the list R19 on the text layer (print_text_layer each) until an FFFF halfword. Not run in the scenarios.
 comment unpack Unpacks the packed data at R10 into R11: flag bits read the highest first, 8 to a byte as needed; 1 copies a byte; 01 takes a halfword (an offset back of its value >> 3, -1 to -8192, and a length of its low three bits + 2, or when they are 0 the next byte + 1; a 0 byte ends the data); 00 takes two bits more (a length of 2-5) and a byte (an offset back of -1 to -256); a length copies that many bytes from that far back in what has been unpacked.
 comment unpack_queued_step Unpacks a little of the screen's queued tile pages (queue_tile_pages), from the frame loop's wait while unpack_state says there is work: with none under way, takes the next request of the ring unpack_queue (unpack_read_place; unpack_state 0 when it is empty); else goes on where it stopped, by unpack_state's second byte: FF one byte of a match (unpack_copy_source, unpack_copy_count), 1 one step of unpack's format (unpack_flags, unpack_flags_left, unpack_source, unpack_destination): a byte, or a match's first byte.
@@ -2186,9 +2189,9 @@ comment unpack_tile_pages Unpacks a list of tilemap pages into video RAM at once
 comment step_screen_fade Steps the screen's fade while unk_94 bit 0 is set (vblank_update_mixer, every other vertical blank): a fade asked for by fade_kind (0 to black, 1 from black, 2 to white, 3 from white, 4 to a red tint, 5 back from it; records at 01173A) sets fade_level, fade_step, fade_end and fade_channels and fade_kind 6 (under way); then each time the level moves a step (6 bits: 20 is -32, black; 1F is +31, white) and goes into the mixer's colour offset 0 in mixer_values (registers 40-44: red, green, blue, those fade_channels has; register 3E's high byte C0), which vblank_update_mixer copies to the mixer; unk_94 bit 0 is cleared when the level reaches fade_end.
 comment clear_objects Ends all of the screen's objects at once: every slot free (screen - 7FF0), both object lists empty (this frame's at - 7E00, the next one's at - 7D00, with run_objects' pointers to them at - 8000, - 7FFC, - 7FF4 and - 7FF8), and the queue of palette uploads (unk_900) emptied. At boot and as each game mode starts.
 comment start_sound_program Starts the sound at boot: the screen's ring of sound requests with one request of sound 0 waiting (800 the place read, 801 the place written, the requests from 802), I/O chip 0's CNT 6 (its screen on, the sound CPU out of reset), screen byte 822 cleared, and 701FFF cleared, which lets the sound program's main loop run.
-comment fade_out_music Fades out the screen's music, a step every 20 of the sound program's ticks (fade_out_music_at).
-comment fade_out_music_at Fades out the screen's music: R0 into byte 18 of the screen's first track in the shared sound RAM (700918 for screen 1, 701118 for screen 2; rom_011FFC), which has the sound program lower the track's volume by one every R0 of its ticks and stop it at 0. 20 from fade_out_music, 3F and 7F from car_radio_update, 7F from goal_update.
-comment reset_screen_sound Sends sound command 1F straight to the screen's request byte in the shared sound RAM (700700 + 100 * screen, without going through the ring of requests) and mutes the car's engine (710 = 0, 712 bit 5, as set_tyre_noise does in the silent demo). As the game modes start. What 1F does in the sound program was not followed.
+comment fade_out_music Fades out the screen's music with 20 (fade_out_music_at): a step every 4 x (20 + 1) of the sound program's ticks.
+comment fade_out_music_at Fades out the screen's music: R0 into byte 18 of the screen's first track in the shared sound RAM (700918 for screen 1, 701118 for screen 2; rom_011FFC), which has the sound program lower the music's volume, from its last CC 10, by one every 4 x (R0 + 1) of its ticks; at 0 it stops the music's player and its MultiPCM voices (CC 50 7E). 20 from fade_out_music, 3F and 7F from car_radio_update, 7F from goal_update.
+comment reset_screen_sound Sends sound command 1F straight to the screen's request byte in the shared sound RAM (700700 + 100 * screen, without going through the ring of requests) and mutes the car's engine (710 = 0, 712 bit 5, as set_tyre_noise does in the silent demo). As the game modes start. Command 1F plays song 03, then FF: song 03 sends CC 50 7F on channel E, which stops every MultiPCM voice of the screen, and FF clears the screen's eight sequence players (music and effects); FM notes go on.
 comment update_coins The coins and service credits, in the vertical blank unless on free play (free_play): queues each seat's pending coin sound (4E, seat1_coin_sounds, seat2_coin_sounds) and service sound (50, seat1_service_sounds, seat2_service_sounds), one each vertical blank; SERVICE newly pressed (switches_pressed bits 0-1) gives that seat a credit (add_service_credit), counted in the bookkeeping's service credits (701F04); a coin chute let go (switches_released bits 2-3 seat 1's two chutes, 4-5 seat 2's) counts its coin (insert_coin, entries at 0114D4) and the credits it gives in the bookkeeping (701F02); then drives the coin meters (pulse_coin_meter: each seat's first, and its second unless the chutes are shared, chute_entry_offset).
 comment pulse_coin_meter Drives coin meter R1 (its bit in the port D outputs at R12, port_d_outputs: bit 0 a seat's first chute's meter, bit 1 its second's) from its record R7 in coin_meters (frames on, frames off, pulses owed): when idle with a pulse owed, the bit goes on for 6 vertical blanks and off for 6. Then writes the credits into the bookkeeping and its backup (write_bookkeeping_credits) with the checksum.
 comment write_bookkeeping_credits Writes the seats' credits (the halfwords at seat1_credits, unk_20E0A4, seat2_credits, unk_20E0AC) at R12: 701F74 in the bookkeeping or 701FF0 in its backup.
@@ -2340,7 +2343,7 @@ comment test_mode_output_test_exit The output test's EXIT: turns the lamps and t
 comment test_mode_sound_test Starts the SOUND TEST: MONITOR A No., MONITOR B No. (the numbers of the next sounds, both 0: sound_test_number_a, sound_test_number_b), EXIT with the cursor on it (test_mode_page_cursor 2) and the prompt; then test_mode_sound_test_run.
 comment test_mode_sound_test_run The sound test, each frame: SERVICE moves the cursor through the three items; TEST stops both monitors' sounds (command 1F to each), then plays monitor A's next sound (test_mode_sound_test_play_a), monitor B's (test_mode_sound_test_play_b) or goes back to the menu (test_mode_sound_test_exit), and redraws the numbers; the arrow blinks.
 comment test_mode_sound_test_draw Draws the two monitors' sound numbers (sound_test_number_a, sound_test_number_b), 3 digits each.
-comment test_mode_sound_test_play_a Plays monitor A's sound number sound_test_number_a from the list of 121 sound codes at 01D7C6 (test_mode_queue_sound) and steps to the next; from number 40 on it first sends command D6 (DA from 66, D8 from 6B); past the list's end (its closing 0) the number goes back to 0 without a sound.
+comment test_mode_sound_test_play_a Plays monitor A's sound number sound_test_number_a from the list of 121 sound codes at 01D7C6 (test_mode_queue_sound) and steps to the next; from number 40 on it first sends command D6 (DA from 66, D8 from 6B), which selects sound set 6 (A, 8): the music parts' templates and the screen's MultiPCM sample bank; past the list's end (its closing 0) the number goes back to 0 without a sound.
 comment test_mode_sound_test_play_b test_mode_sound_test_play_a for monitor B: sound_test_number_b, sent through test_mode_queue_sound_screen_2.
 comment test_mode_sound_test_exit The sound test's EXIT: back to the menu.
 comment test_mode_crt_test Starts the C.R.T. TEST's first page: a black background (the background colour of both palettes, 609C00 and 689C00), C.R.T. TEST 1/2, the colour bars (test_mode_crt_test_draw_bars) and the blinking PUSH TEST BUTTON TO CONTINUE; then test_mode_crt_test_bars_run.
@@ -2485,19 +2488,19 @@ comment test_mode_draw_hex_number test_mode_draw_number in hexadecimal (digits 0
 comment test_mode_colour_line Gives the text from cell R10 up to the next empty cell the colour R0 (60 grey, 6A white, 6E hidden...).
 comment test_mode_clear_text Clears the text layer (30 rows of 64 cells).
 comment test_mode_read_controls The test mode's controls, each frame: test_mode_buttons (SERVICE bit 0, TEST bit 1, START bit 4 and bit 5 of input port E, of either seat; bits 4-5 of port F count as SERVICE and TEST too), test_mode_buttons_previous, test_mode_buttons_pressed and test_mode_buttons_released; and the analog inputs into test_mode_analog_inputs, alternately (test_mode_flags bit 2, which also sets the converter's input bank): the first four (seat A's wheel, gas and brake, seat B's wheel) one frame, seat B's gas and brake the next.
-comment test_mode_send_sound Sends the test mode's next queued sound request (test_mode_sound_queue, test_mode_sound_queue_read) to the sound CPU, one a frame: to screen 2's command byte (SOUND_700800) when the request has its high byte set, else to screen 1's (SOUND_700700).
+comment test_mode_send_sound Sends the test mode's next queued sound request (test_mode_sound_queue, test_mode_sound_queue_read) to the sound CPU, one a frame: to screen 2's command byte (SOUND_COMMAND_2) when the request has its high byte set, else to screen 1's (SOUND_COMMAND_1).
 comment test_mode_queue_sound_screen_2 test_mode_queue_sound for screen 2's sound CPU commands (the high byte set).
 comment test_mode_queue_sound Puts sound request R0 in the test mode's ring of 16 (test_mode_sound_queue at test_mode_sound_queue_write) for test_mode_send_sound: screen 1's, or screen 2's with the high byte set (test_mode_queue_sound_screen_2).
 comment vblank_update_mixer In the vertical blank, a screen's mixer and colours: while the screen's unk_94 bit 0 is set, a step of its colour offsets (step_screen_fade) into the mixer's colour offset registers (3E-4B); unk_94 bit 2 (cleared) sends the mixer settings at 160 of the screen (registers 00-3D and 4C-4F); unk_94 bit 3 (cleared) makes the set at 1B0 the current one and sends it; then the queued palettes (upload_queued_palettes).
 comment vblank_update_scrolls In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was running from unk_20E210 and unk_20E220 as they are; those of the other screen half-way between the values they have (unk_20E210, unk_20E220 by screen) and the new ones (unk_20E290, unk_20E2A0), which become their values: the in-between frame of the screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05 from unk_20E204's second byte, which steps by 4 (bits 2-3).
 comment check_test_button Turns the test mode on (test_mode_on FF) when TEST has just been pressed (bit 7 of switches_pressed, the inputs newly pressed); the boot task's loop then runs the test mode.
-comment send_sound_requests In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32 (queue_sound's: sound_queue_read, sound_queue_write, the requests after them) to its command byte (SOUND_700700 for screen 1, 700800 for screen 2), and one from its second ring at 840 (second_sound_queue_read, second_sound_queue_write; only the unused sub_011EF4 fills it) to the byte 8 after it.
+comment send_sound_requests In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32 (queue_sound's: sound_queue_read, sound_queue_write, the requests after them) to its command byte (SOUND_COMMAND_1 for screen 1, SOUND_COMMAND_2 for screen 2), and one from its second ring at 840 (second_sound_queue_read, second_sound_queue_write; only the unused request_second_sound fills it) to the byte 8 after it, which the sound program never reads.
 comment count_total_time Counts the bookkeeping's TOTAL TIME (701F10, seconds, kept with its copy and checksum), outside the test mode only: total_time_count gains 17 every vertical blank and a second passes at each 1000 (2000 for every 73rd second).
 comment update_lamps In the vertical blank, the cabinet's lamps: blinks each seat's CHECK POINT lamp (output port D bit 1: checkpoint_lamp, checkpoint_lamp_2) and RACE LEADER lamp (bit 3: leader_lamp, leader_lamp_2), each with a blinks, a period and a timer byte after it: while blinks is not 0 the timer counts the vertical blanks and at 0 toggles the lamp, starts again from period and takes one off blinks; writes output port D of each I/O chip from port_d_outputs or unk_20E093 with those lamps and, when the seat is not in the attract mode (screen unk_90 bit 8) and the STEERING WHEEL REACTION setting (steering_wheel_reaction) is on, the wheel motor's bits (unk_20E0D0 by seat); then the music and arrows lamps (update_button_lamps).
 comment update_button_lamps A screen's two button lamps, in its port G image (R11: unk_20E094 or unk_20E095, which the LCD's output sends): the DJ/MUSIC lamp (bit 0) by the low byte of button_lamps and the << >> lamp (bit 1) by its high byte: 0 off, negative on, n blinking every n vertical blanks (music_lamp_timer, arrows_lamp_timer), each mode taken when it changes (music_lamp_mode, arrows_lamp_mode).
 comment int_vector_40 The vertical blank interrupt (IRQ 0), every video frame: counts vblank_counter and vblanks_since_start, starts timer 0 for the LCD (int_vector_43, 34 times: timer_interrupts_left); when it interrupted screen 2's task: both screens' mixers and palettes (vblank_update_mixer), the video registers (all 72 halfwords from video_registers when unk_20E027 asks for them, which it clears, else the 8 at unk_20E220 and the 8 at unk_20E240) and the external tile banks of chip 0's port H (2 bits each of unk_20E2B0-unk_20E2B3); then for the interrupted task's screen the sprite list (finish_sprite_list), send_sound_requests, and vblank_update_scrolls unless the screen's skip_scroll_update is set (cleared here); outside the test mode the inputs (read_switches_and_analog), pack_seat_inputs (screen 1) or queue_seat_inputs (screen 2), check_test_button and, without free play, the coins (update_coins); then update_lamps, the LCD (lcd_refresh), count_total_time; sets frame_ready; swaps the tasks (task_swap) unless single_task is set, when task_swapping is set or when the test mode is on and screen 1's task is running; counts the frame for the running task's screen (screen_1_vblanks, screen_2_vblanks).
 comment int_vector_41 The end of the vertical blank (IRQ 1): only acknowledged.
-comment int_vector_42 The sound CPU's interrupt (IRQ 2): only acknowledged.
+comment int_vector_42 The sound CPU's interrupt (IRQ 2): only acknowledged. The sound program never raises it.
 comment int_vector_43 Timer 0 (IRQ 3), which int_vector_40 starts each frame at its shortest period: sends the LCD its next piece (lcd_send_next_nibble) and starts the timer again until timer_interrupts_left runs out, 34 times a frame. When it runs out it tests the screen's byte 1 and test_mode_on but goes the same way; the code after them (unused_03F7D8: counts unk_20E00E and shows it on the text layer) is never reached.
 comment int_vector_44 Timer 1 (IRQ 4), the link board's: outside the ISDN mode (isdn_mode) only acknowledged, which leaves the timer stopped; in it counts link_wait_count and takes the kind of the link board's message (its byte at 800010, cleared as it is read): 3, a message, is copied out of the board (link_isdn_receive_records: 800600 on to 21E000), link_wait_count cleared and the timer started at 168; any other kind polls again at the shortest period. link_unused_case is a fourth case (the controls, pack_seat_inputs, then 96) its table does not list.
 comment int_default The vectors no interrupt uses (250 of the 256): halt instructions, on into int_vector_02's.
@@ -2549,3 +2552,87 @@ field screen F25 arrows_lamp_timer u8
 20E0CD  var  leader_lamp_2_blinks u8
 20E0CE  var  leader_lamp_2_period u8
 20E0CF  var  leader_lamp_2_timer u8
+
+# ======== the code nothing that runs reaches (naming batch U) ========
+0010EB  func  bar_picture_bar_start
+001141  func  bar_picture_bar_fly
+0011AB  func  bar_picture_bar_draw
+0107A0  func  clear_tile_page
+017DB0  func  backdrop_far_update
+018050  func  backdrop_flashing_update
+01B1B1  func  kanji_text_viewer_draw_line
+01B1CD  func  kanji_text_viewer_draw_character
+01B1E7  func  kanji_text_viewer_draw_quarter
+01B200  func  kanji_text_viewer_character_address
+01B20C  func  kanji_text_viewer_draw_number
+comment bar_picture_start Unused: starts the 81 bars of a picture, an object each (start_object, handler bar_picture_bar_start) from the 8-byte records at 0011B1 (ended by a negative first word): its place on the screen into target_x, target_y and its two scales into scales. The places make two rows across the screen (y 19-107 and 139-195); what the bars show cannot be told without drawing them.
+comment bar_picture_bar_start Only unused code reaches it (bar_picture_start): sets up a bar of the picture: drawn on the screen (draw_mode 0) with animation 0 and palette 25, its width_scale and height_scale from scales, depth layer 3, at the middle of the screen (x A0, y 70), with a random speed_x and speed_y (-8 to 7: a byte of RANDOM_D80000 shifted right 4); then bar_picture_bar_fly.
+comment bar_picture_bar_fly Only unused code reaches it (bar_picture_start): each frame the bar's speed_x and speed_y grow by 1 toward its place (target_x, target_y) and it moves by them, swinging about it; an axis whose next step lands exactly on the place is put there for that frame. When both land on the same frame it shows frame D and stays (bar_picture_bar_draw). Drawn every frame (draw_object).
+comment bar_picture_bar_draw Only unused code reaches it (bar_picture_start): the bar in its place: draws it (draw_object) each frame.
+comment route_map_leg_car_end Unused: ends the object (flags 0). It follows the code of route_map_leg_car_show's last state (draw_object), whose state table lists only states 0 and 1.
+comment lap_timer_spare_return Unused: does nothing (a lone return after lap_timer_update's last jump to draw_object).
+comment stage_entry_spare_return Unused: does nothing (a second return after stage_entry_update's).
+comment time_to_text_thousandths Unused: time_to_text for a time in thousandths of a second: R0 / 10 (into hundredths), then time_to_text at R10 (it runs on into it).
+comment network_check_delay Unused: a busy wait: counts 3000 down to 0 and returns. It sits between network_check_wait_isdn and network_check_greeting.
+comment clear_tile_pages Unused: clears the tilemap pages from the one at R9 (its offset in video RAM) down to the first, 400 bytes apart (clear_tile_page each).
+comment clear_tile_page Only unused code reaches it (clear_tile_pages): clears the tilemap page at R9 (300000 + R9: 200 halfwords copied from the zeros at 100800).
+comment unrolled_copy Unused: meant to copy R0 & 3F8 bytes from R10 to R11 by jumping into a run of 8-byte moves at 0109B4, but the jump (200 less half the count from the run's start) is worked out for 128 moves and the run has 64: it copies the count less 200 bytes, nothing for 200, and for less it jumps past the run into the data at 010AB5.
+comment unpack_list Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address and where to unpack it, closed by a negative entry (the first is taken without the check). unpack_tile_pages does the same for a list of tile pages.
+comment queue_unpack_list Unused: queues the entries of an unpack_list list (the packed data's address, where to unpack it; closed by a negative entry, the first taken unchecked) as they are in the screen's ring unpack_queue (unpack_write_place), with unpack_state set to say there is work, for unpack_queued_step. queue_tile_pages does the same for a list of tile pages.
+comment bookkeeping_increment8 Unused: adds one to the 8-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FF, with the checksum (bookkeeping_update_checksum).
+comment bookkeeping_add8 Unused: adds R9 to the 8-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum; past FF it stays at FF (and the backup's is left as it was: the code writes R7 twice), as bookkeeping_add16 does.
+comment bookkeeping_set32 Unused: sets the 32-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum.
+comment bookkeeping_set8 Unused: sets the 8-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum.
+comment bookkeeping_check_block Unused: checks the bookkeeping block (701F02) against its checksum (701F00) and resets both it and its backup (bookkeeping_reset) when they differ; unlike bookkeeping_check it does not try the backup.
+comment load_shadowed_text_font Unused: builds the text layer's first 128 characters (318000, where load_text_font puts its 384) from the one-bit font at 103C20 (8 bytes a character, a bit a pixel): the character's pixels in pen 1, and a shadow in pen 2 one pixel right and one row down under them.
+comment erase_text_layer_to_blank_character Unused: erases a string from the text layer: from the cell of the print_text_layer record R19, writes 0 cells until the next cell's character is 0.
+comment print_text_layer_halfwords Unused: print_text_layer with the characters as halfwords: from the record R19, the cell's address (310000 + its first halfword), the attribute byte, then the characters, 16 bits each (ORed with the attribute << 8, so they can reach past 255: the font has 384), closed by a 0 halfword.
+comment erase_text_layer_to_blank_cell Unused: erases a string from the text layer as erase_text_layer_to_blank_character does, but until the next cell is all 0 (character and attribute).
+comment print_hex_halfword Unused: writes a number's low halfword as four hex digits on the text layer, ending before the cell it is given, with the attribute byte it is given (print_hex_digits).
+comment print_hex_24_bits Unused: writes a number's low 24 bits as six hex digits on the text layer, as print_hex_halfword does (print_hex_digits).
+comment print_hex_word Unused: writes a 32-bit number as eight hex digits on the text layer, as print_hex_halfword does (print_hex_digits, which it runs on into).
+comment bcd_to_binary Unused: converts R0's eight decimal digits (four bits each, the highest first) into a number, returned in R0: eight times, the result so far times 10 plus the next digit. The inverse of binary_to_bcd.
+result bcd_to_binary R0 value
+comment reserve_object_slot Unused: takes the first free object slot as start_object does (FF into its byte of the 7C at screen - 7FF0) and clears 100 bytes for it, but at the slot byte's address with its low half shifted 8 left (201000 + 100 * slot for screen 1), not where start_object puts slot n (screen - 7C00 + 100 * n), and without making it live, its slot number or the frame's list; with no slot free, the spare object at screen - 7F00. Returns the object.
+result reserve_object_slot R21 object object
+comment free_object_slot Unused: frees the slot of the object R21: clears the slot byte (screen - 7FF0) numbered by bits 8-15 of the object's address, which is not the object's own slot: for start_object's slot n it clears slot n + 4, for reserve_object_slot's slot n slot n + 10.
+comment request_second_sound Unused: puts sound R0 in the screen's second ring of 32 sound requests (second_sound_queue_write, the requests from 842; send_sound_requests sends them to the command byte 8 after the first ring's), as request_sound does for the first: while demo_flags bit 8 is set only the sounds the table at 01204E allows, and only with advertise_sound set.
+comment road_row_pair_crash_check_unflipped Unused (called only by unused_0129D0, an unused handler that goes on into road_row_pair_draw's code): road_row_pair_crash_check with kind 0 (a crash), but the mirrored item's hit_box is only moved across the road's centre, not flipped: its offsets are added to the mirrored place as they are. For a box even about its middle the two are the same.
+comment backdrop_far_start Unused object handler: sets up a sprite on the background as backdrop_near_start does (from its data the animation, palette, panorama_x, height and half_width; draw_mode A, layer 1; straight to state 1 when screen unk_207 is set); then backdrop_far_update.
+comment backdrop_far_update Only unused code reaches it (backdrop_far_start): keeps the sprite on the background's panorama at the panorama's own speed (x from the car's view_yaw, a quarter of it until screen unk_202 is set, less panorama_x), y from the background's height (screen unk_20C) and height. By state: 0 waits until it is off the screen; 1 draw_object while on the screen; off it, it ends once leaving.
+comment backdrop_flashing_start Unused object handler: sets up a sprite on the background as backdrop_far_start does, with other_palette 120; then backdrop_flashing_update.
+comment backdrop_flashing_update Only unused code reaches it (backdrop_flashing_start): as backdrop_far_update (on the panorama at its speed), animated (animation_advance), and each frame its palette swaps with other_palette, so it flashes between its own palette and palette 120.
+comment kanji_text_viewer_update Unused object handler: shows the Japanese texts of the table at 01B254 (1000 of them) by number, a three-digit number chosen with the buttons. By state: 0 stops the tile unpacking (unpack_state), sets up video RAM (init_video) with the tilemaps off and the bitmap layer on at 4 bits a pixel, scroll 0, palette FF (video_registers bit B cleared, unk_20E202 = F, unk_20E288, unk_20E28A, unk_20E28C: words 00, 02, 88, 8A and 8C of the video registers' copy, sent as unk_20E027 asks), the number 0 (screen unk_5800-5806), the cursor (x) on the units; 1 buttons_pressed bits 3 and 2 move the cursor over the three digits, bits 1 and 0 step the digit under it (0-9, wrapping); on screen 1 the number is written at text cell (5,10) (kanji_text_viewer_draw_number) with the cursor's digit blinking as '*' (blink_count), and the text drawn on the bitmap a line at a time (kanji_text_viewer_draw_line) from 16 rows and 128 pixels in, 16 rows a line; 2 draws the text only; 3 nothing (nothing sets states 2 and 3).
+comment kanji_text_viewer_draw_line Only unused code reaches it (kanji_text_viewer_update): draws a line of the text at R10 on the bitmap layer from R11: each halfword a character (kanji_text_viewer_character_address, kanji_text_viewer_draw_character, 16 pixels on); 0 ends the line, a negative one the text (R4 = -1).
+comment kanji_text_viewer_draw_character Only unused code reaches it (kanji_text_viewer_draw_line): draws a 16x16 character on the bitmap layer at R11 from its 32 bytes at R13: four 8x8 quarters (kanji_text_viewer_draw_quarter), upper left, upper right, lower left, lower right.
+comment kanji_text_viewer_draw_quarter Only unused code reaches it (kanji_text_viewer_draw_character): draws eight rows of eight one-bit pixels (a byte each, from R13) at R12 on the bitmap layer, 100 bytes a row, each byte spread by the table at 1A6340 into eight 4-bit pixels of pen 1.
+comment kanji_text_viewer_character_address Only unused code reaches it (kanji_text_viewer_draw_line): the address of character R13 of the kanji font at 1CF000 (8 bytes a step: a character is 32).
+comment kanji_text_viewer_draw_number Only unused code reaches it (kanji_text_viewer_update): writes R4 (0-999) as three decimal digits on the text layer from cell R3 (attribute 60).
+comment test_mode_duration_to_seconds Unused: turns a duration kept as five bytes at R10 (seconds, minutes and hours a byte each, then days a halfword) into seconds: ((days * 24 + hours) * 60 + minutes) * 60 + seconds, in R0 (R1 the carry).
+result test_mode_duration_to_seconds R0 seconds
+comment test_mode_split_minutes_seconds Unused: writes a time of R0 seconds at R10 as two bytes: the seconds (R0 mod 60), then the minutes (R0 / 60).
+scoped object bar_picture 10 speed_x s16
+scoped object bar_picture 12 speed_y s16
+scoped object bar_picture 80 target_x s16
+scoped object bar_picture 82 target_y s16
+scoped object bar_picture 84 scales u32
+scoped object backdrop_flashing 0D leaving u8
+scoped object backdrop_flashing 10 other_palette u16
+scoped object backdrop_flashing 20 panorama_x u16
+scoped object backdrop_flashing 24 height u16
+scoped object backdrop_flashing 28 half_width u16
+scoped object backdrop_flashing 80 data u32 rom
+scoped object kanji_text_viewer 10 blink_count u8
+
+# ======== the sound board's shared RAM as the game uses it (the sound program's names: sound_symbols.txt) ========
+# Each screen has a page: 700700 screen 1's, 700800 screen 2's (the sound program's E700 and E800).
+700700  io  SOUND_COMMAND_1  u8
+700800  io  SOUND_COMMAND_2  u8
+700708  io  SOUND_SECOND_COMMAND_1  u8
+700710  io  SOUND_ENGINE_REVS_1  u8
+700712  io  SOUND_ENGINE_REQUESTS_1  u8
+700713  io  SOUND_ENGINE_SAMPLE_1  u8
+700714  io  SOUND_ENGINE_LOUDNESS_1  u8
+700718  io  SOUND_TYRE_NOISE_1  u8
+700810  io  SOUND_ENGINE_REVS_2  u8
+700812  io  SOUND_ENGINE_REQUESTS_2  u8

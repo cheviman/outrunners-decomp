@@ -20,13 +20,13 @@ void player_car_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
 		r10 = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(r10 + SOUND_700710, CAR(player_car)->revs >> 8);
-		mem_write8(r10 + SOUND_700712, 0x20u);
+		mem_write8(r10 + SOUND_ENGINE_REVS_1, CAR(player_car)->revs >> 8);
+		mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, 0x20u);
 		return;
 	}
 	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + SOUND_700710, 0u);
-	mem_write8(r10 + SOUND_700712, mem_read8(r10 + SOUND_700712) | 0x20u);
+	mem_write8(r10 + SOUND_ENGINE_REVS_1, 0u);
+	mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, mem_read8(r10 + SOUND_ENGINE_REQUESTS_1) | 0x20u);
 }
 
 /* set_tyre_noise, unless the car is off the road (car unk_7C), where the off-road noise plays. Used by
@@ -40,24 +40,26 @@ void set_tyre_noise_on_road(uint8_t r0)
 	}
 }
 
-/* Sets the noise of the screen's car's tyres on the sound board (byte 718 of the screen's page):
-   wheelspin, skids, off-road rumble. In the demo without sound it mutes the engine instead. Used by
-   player_car (player_car_engine, player_car_off_road_shake, the goal) and 00664E. */
+/* Sets the noise of the screen's car's tyres on the sound board (byte 718 of the screen's page; the
+   sound program keeps it while the game keeps writing it and keys it off 255 of its main loop's passes
+   after the last): wheelspin, skids, off-road rumble. In the demo without sound it mutes the engine
+   instead. Used by player_car (player_car_engine, player_car_off_road_shake, the goal) and 00664E. */
 void set_tyre_noise(uint8_t r0)
 {
 	uint32_t r10 = 0;
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
-		mem_write8(((uint32_t)SCREEN(screen)->index << 8) + (SOUND_RAM + 0x718u), r0);
+		mem_write8(((uint32_t)SCREEN(screen)->index << 8) + SOUND_TYRE_NOISE_1, r0);
 		return;
 	}
 	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + SOUND_700710, 0u);
-	mem_write8(r10 + SOUND_700712, mem_read8(r10 + SOUND_700712) | 0x20u);
+	mem_write8(r10 + SOUND_ENGINE_REVS_1, 0u);
+	mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, mem_read8(r10 + SOUND_ENGINE_REQUESTS_1) | 0x20u);
 }
 
-/* Fades out the screen's music, a step every 20 of the sound program's ticks (fade_out_music_at). */
+/* Fades out the screen's music with 20 (fade_out_music_at): a step every 4 x (20 + 1) of the sound
+   program's ticks. */
 void fade_out_music(void)
 {
 	uint8_t r0 = 0;
@@ -67,9 +69,10 @@ void fade_out_music(void)
 }
 
 /* Fades out the screen's music: R0 into byte 18 of the screen's first track in the shared sound RAM
-   (700918 for screen 1, 701118 for screen 2; rom_011FFC), which has the sound program lower the track's
-   volume by one every R0 of its ticks and stop it at 0. 20 from fade_out_music, 3F and 7F from
-   car_radio_update, 7F from goal_update. */
+   (700918 for screen 1, 701118 for screen 2; rom_011FFC), which has the sound program lower the music's
+   volume, from its last CC 10, by one every 4 x (R0 + 1) of its ticks; at 0 it stops the music's player
+   and its MultiPCM voices (CC 50 7E). 20 from fade_out_music, 3F and 7F from car_radio_update, 7F from
+   goal_update. */
 void fade_out_music_at(uint8_t r0)
 {
 	mem_write8(rom_011FFC[SCREEN(screen)->index], r0);
@@ -77,16 +80,17 @@ void fade_out_music_at(uint8_t r0)
 
 /* Sends sound command 1F straight to the screen's request byte in the shared sound RAM (700700 + 100 *
    screen, without going through the ring of requests) and mutes the car's engine (710 = 0, 712 bit 5, as
-   set_tyre_noise does in the silent demo). As the game modes start. What 1F does in the sound program
-   was not followed. */
+   set_tyre_noise does in the silent demo). As the game modes start. Command 1F plays song 03, then FF:
+   song 03 sends CC 50 7F on channel E, which stops every MultiPCM voice of the screen, and FF clears the
+   screen's eight sequence players (music and effects); FM notes go on. */
 void reset_screen_sound(void)
 {
 	uint32_t r10 = 0;
 
 	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + SOUND_700700, 0x1Fu);
-	mem_write8(r10 + SOUND_700710, 0u);
-	mem_write8(r10 + SOUND_700712, mem_read8(r10 + SOUND_700712) | 0x20u);
+	mem_write8(r10 + SOUND_COMMAND_1, 0x1Fu);
+	mem_write8(r10 + SOUND_ENGINE_REVS_1, 0u);
+	mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, mem_read8(r10 + SOUND_ENGINE_REQUESTS_1) | 0x20u);
 }
 
 /* Returns the 12-bit angle of the vector (R0 - R2, R1 - R3). Used by player_car_drive. */
@@ -451,7 +455,11 @@ void road_row_pair_crash_check(uint32_t *p_r7, uint32_t *p_r15)
 	*p_r15 = r15_2;
 }
 
-void sub_01248C(void)
+/* Unused (called only by unused_0129D0, an unused handler that goes on into road_row_pair_draw's code):
+   road_row_pair_crash_check with kind 0 (a crash), but the mirrored item's hit_box is only moved across
+   the road's centre, not flipped: its offsets are added to the mirrored place as they are. For a box
+   even about its middle the two are the same. */
+void road_row_pair_crash_check_unflipped(void)
 {
 	uint16_t r4 = 0, r6 = 0, r7_2 = 0, r8 = 0, r9 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0;
 	uint32_t r0 = 0, r7 = 0, r10 = 0, r15 = 0;
@@ -461,7 +469,7 @@ void sub_01248C(void)
 	r27 = 0u;
 	if ((OBJECT(CAR(player_car)->object)->flags & 8u) == 0u)
 	{
-		r0 = (uint16_t)(OBJECT(current_object)->unk_54 >> 16u);
+		r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
 		r15 = SCREEN(screen)->unk_500 + 6u;
 		r12 = (r12 & ~0xFFFFu) | mem_read16(r15);
 		r15 += 2u;
@@ -473,9 +481,9 @@ void sub_01248C(void)
 		r15 += 2u;
 		r18 = mem_read16(r15);
 		r19 = mem_read16(r15 + 2u);
-		if ((int16_t)((r12 - OBJECT(current_object)->unk_58) ^ (r13 - r0)) >= 0)
+		if ((int16_t)((r12 - OBJECT(current_object)->road_row.end_position) ^ (r13 - r0)) >= 0)
 			return;
-		r4 = (uint8_t)OBJECT(current_object)->unk_10;
+		r4 = (uint8_t)OBJECT(current_object)->road_row.spacing;
 		if (r0 < (uint16_t)r12)
 		{
 			do
@@ -491,23 +499,23 @@ void sub_01248C(void)
 			r6 = (uint16_t)(r0 - r12);
 			r0 = (uint16_t)(r0 + r4);
 			r7 = (uint16_t)(r7 << 4);
-			r10 = OBJECT(current_object)->unk_60;
-			r8 = (uint16_t)((uint32_t)(int8_t)OBJECT(current_object)->unk_3F * mem_read16(screen + 0x2012u + (r7 & 0x7FFu) * 2u) + OBJECT(current_object)->unk_20);
-			r6 = (uint16_t)(((uint32_t)r6 << 7) + (uint16_t)OBJECT(current_object)->unk_28);
+			r10 = OBJECT(current_object)->road_row.hit_box;
+			r8 = (uint16_t)((uint32_t)OBJECT(current_object)->road_row.side * mem_read16(screen + 0x2012u + (r7 & 0x7FFu) * 2u) + OBJECT(current_object)->road_row.x_offset);
+			r6 = (uint16_t)(((uint32_t)r6 << 7) + OBJECT(current_object)->road_row.position_fraction);
 			r7_2 = (uint16_t)r6;
 			r9 = (uint16_t)r8;
 			r26 = (uint16_t)(0u - r8);
 			r28 = (r28 & ~0xFFFFu) | (uint16_t)(0u - r9);
-			r6 += mem_read16(r10);
+			r6 += ROM16(r10);
 			r10 += 2u;
-			r7_2 += mem_read16(r10);
+			r7_2 += ROM16(r10);
 			r10 += 2u;
-			r8 += mem_read16(r10);
-			r26 += mem_read16(r10);
+			r8 += ROM16(r10);
+			r26 += ROM16(r10);
 			r10 += 2u;
-			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + mem_read16(r10));
+			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + ROM16(r10));
 			r7_2 -= r16;
-			r9 = (uint16_t)(r9 + mem_read16(r10) - r18);
+			r9 = (uint16_t)(r9 + ROM16(r10) - r18);
 			r6 = (uint16_t)((r6 - r17) ^ r7_2);
 			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 - r18);
 			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 ^ (r26 - r19));
@@ -6227,40 +6235,47 @@ void sunset_fade_wait(void)
 	OBJECT(current_object)->flags = 0u;
 }
 
-void sub_017D70(void)
+/* Unused object handler: sets up a sprite on the background as backdrop_near_start does (from its data
+   the animation, palette, panorama_x, height and half_width; draw_mode A, layer 1; straight to state 1
+   when screen unk_207 is set); then backdrop_far_update. */
+void backdrop_far_start(void)
 {
 	uint32_t r9 = 0, r10 = 0;
 
 	if (SCREEN(screen)->unk_207 != 0u)
 		OBJECT(current_object)->state++;
-	OBJECT(current_object)->unk_0D = 0u;
-	r10 = OBJECT(current_object)->unk_80;
-	r9 = mem_read32(r10);
+	OBJECT(current_object)->backdrop.leaving = 0u;
+	r10 = OBJECT(current_object)->backdrop.data;
+	r9 = ROM32(r10);
 	r10 += 4u;
-	OBJECT(current_object)->palette = mem_read16(r10);
+	OBJECT(current_object)->palette = ROM16(r10);
 	r10 += 2u;
-	OBJECT(current_object)->unk_20 = mem_read16(r10);
+	OBJECT(current_object)->backdrop.panorama_x = ROM16(r10);
 	r10 += 2u;
-	OBJECT(current_object)->unk_24 = mem_read16(r10);
-	AS16(OBJECT(current_object)->unk_28) = mem_read16(r10 + 2u);
+	OBJECT(current_object)->backdrop.height = ROM16(r10);
+	OBJECT(current_object)->backdrop.half_width = ROM16(r10 + 2u);
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 1u;
 	animation_start(r9);
-	OBJECT(current_object)->handler = sub_017DB0_ADDRESS;
-	sub_017DB0();
+	OBJECT(current_object)->handler = backdrop_far_update_ADDRESS;
+	backdrop_far_update();
 }
 
-void sub_017DB0(void)
+/* Only unused code reaches it (backdrop_far_start): keeps the sprite on the background's panorama at the
+   panorama's own speed (x from the car's view_yaw, a quarter of it until screen unk_202 is set, less
+   panorama_x), y from the background's height (screen unk_20C) and height. By state: 0 waits until it is
+   off the screen; 1 draw_object while on the screen; off it, it ends once leaving. */
+void backdrop_far_update(void)
 {
 	uint32_t zero = 0;
 	uint16_t r0 = 0;
 	uint32_t r0_2 = 0;
 
-	OBJECT(current_object)->unk_0D |= SCREEN(screen)->unk_205;
+	OBJECT(current_object)->backdrop.leaving |= SCREEN(screen)->unk_205;
 	r0 = CAR(player_car)->view_yaw;
 	if (SCREEN(screen)->unk_202 == 0u)
 		r0 = r0 >> 2;
-	OBJECT(current_object)->x = 0u - (((r0 - OBJECT(current_object)->unk_20) & 0x3FFu) - 0x2A0u);
+	OBJECT(current_object)->x = 0u - (((r0 - OBJECT(current_object)->backdrop.panorama_x) & 0x3FFu) - 0x2A0u);
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
@@ -6277,12 +6292,12 @@ void sub_017DB0(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		r0_2 = (uint16_t)(SCREEN(screen)->unk_20C - 0xFFu - OBJECT(current_object)->unk_24);
+		r0_2 = (uint16_t)(SCREEN(screen)->unk_20C - 0xFFu - OBJECT(current_object)->backdrop.height);
 		OBJECT(current_object)->y = 0u - r0_2;
 		r0_2 = draw_object(r0_2);
 		return;
 	}
-	if (OBJECT(current_object)->unk_0D != 0u)
+	if (OBJECT(current_object)->backdrop.leaving != 0u)
 		OBJECT(current_object)->flags = 0u;
 }
 
@@ -6389,7 +6404,7 @@ void backdrop_landmark_start(void)
 	backdrop_landmark_update();
 }
 
-/* Keeps the landmark on the background's panorama (as backdrop_near_update, the same speed as the
+/* Keeps the landmark on the background's panorama (as backdrop_near_update, a quarter faster than the
    panorama) and grows it with the distance travelled: its scale (width_scale, height_scale) follows the
    sine of (car unk_42 - approach_start) / 2 (rom_100C00) up to full size (100, state 2). By state: 0
    waits until it is off the screen; 1 and 2 drawn while on the screen; off it, it ends once leaving. */
@@ -6458,47 +6473,52 @@ void backdrop_landmark_update(void)
 	r0_2 = draw_object(r0_2);
 }
 
-void sub_018009(void)
+/* Unused object handler: sets up a sprite on the background as backdrop_far_start does, with
+   other_palette 120; then backdrop_flashing_update. */
+void backdrop_flashing_start(void)
 {
 	uint32_t r9 = 0, r10 = 0;
 
 	if (SCREEN(screen)->unk_207 != 0u)
 		OBJECT(current_object)->state++;
-	OBJECT(current_object)->unk_0D = 0u;
-	r10 = OBJECT(current_object)->unk_80;
-	r9 = mem_read32(r10);
+	OBJECT(current_object)->backdrop_flashing.leaving = 0u;
+	r10 = OBJECT(current_object)->backdrop_flashing.data;
+	r9 = ROM32(r10);
 	r10 += 4u;
-	OBJECT(current_object)->palette = mem_read16(r10);
+	OBJECT(current_object)->palette = ROM16(r10);
 	r10 += 2u;
-	OBJECT(current_object)->unk_20 = mem_read16(r10);
+	OBJECT(current_object)->backdrop_flashing.panorama_x = ROM16(r10);
 	r10 += 2u;
-	OBJECT(current_object)->unk_24 = mem_read16(r10);
-	AS16(OBJECT(current_object)->unk_28) = mem_read16(r10 + 2u);
+	OBJECT(current_object)->backdrop_flashing.height = ROM16(r10);
+	OBJECT(current_object)->backdrop_flashing.half_width = ROM16(r10 + 2u);
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 1u;
 	animation_start(r9);
-	OBJECT(current_object)->unk_10 = 0x120u;
-	OBJECT(current_object)->handler = sub_018050_ADDRESS;
-	sub_018050();
+	OBJECT(current_object)->backdrop_flashing.other_palette = 0x120u;
+	OBJECT(current_object)->handler = backdrop_flashing_update_ADDRESS;
+	backdrop_flashing_update();
 }
 
-void sub_018050(void)
+/* Only unused code reaches it (backdrop_flashing_start): as backdrop_far_update (on the panorama at its
+   speed), animated (animation_advance), and each frame its palette swaps with other_palette, so it
+   flashes between its own palette and palette 120. */
+void backdrop_flashing_update(void)
 {
 	uint32_t zero = 0;
 	uint16_t r0 = 0, palette = 0;
 	uint32_t r0_2 = 0;
-	uint16_t t1 = 0;
+	uint16_t other_palette = 0;
 
-	OBJECT(current_object)->unk_0D |= SCREEN(screen)->unk_205;
+	OBJECT(current_object)->backdrop_flashing.leaving |= SCREEN(screen)->unk_205;
 	r0 = CAR(player_car)->view_yaw;
 	if (SCREEN(screen)->unk_202 == 0u)
 		r0 = r0 >> 2;
-	OBJECT(current_object)->x = 0u - (((r0 - OBJECT(current_object)->unk_20) & 0x3FFu) - 0x2A0u);
+	OBJECT(current_object)->x = 0u - (((r0 - OBJECT(current_object)->backdrop_flashing.panorama_x) & 0x3FFu) - 0x2A0u);
 	animation_advance(0u);
-	t1 = OBJECT(current_object)->unk_10;
+	other_palette = OBJECT(current_object)->backdrop_flashing.other_palette;
 	palette = OBJECT(current_object)->palette;
-	OBJECT(current_object)->palette = t1;
-	OBJECT(current_object)->unk_10 = palette;
+	OBJECT(current_object)->palette = other_palette;
+	OBJECT(current_object)->backdrop_flashing.other_palette = palette;
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
@@ -6515,12 +6535,12 @@ void sub_018050(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		r0_2 = (uint16_t)(SCREEN(screen)->unk_20C - 0xFFu - OBJECT(current_object)->unk_24);
+		r0_2 = (uint16_t)(SCREEN(screen)->unk_20C - 0xFFu - OBJECT(current_object)->backdrop_flashing.height);
 		OBJECT(current_object)->y = 0u - r0_2;
 		r0_2 = draw_object(r0_2);
 		return;
 	}
-	if (OBJECT(current_object)->unk_0D != 0u)
+	if (OBJECT(current_object)->backdrop_flashing.leaving != 0u)
 		OBJECT(current_object)->flags = 0u;
 }
 
@@ -6551,9 +6571,9 @@ void backdrop_translucent_start(void)
 	backdrop_translucent_update();
 }
 
-/* Keeps the sprite on the background's panorama (as backdrop_landmark_update), animates it and draws it
-   only on even frames (frame_count), so it looks faint. By state: 0 waits until it is off the screen; 1
-   drawn while on the screen; off it, it ends once leaving. */
+/* Keeps the sprite on the background's panorama at the panorama's own speed (as backdrop_far_update),
+   animates it and draws it only on even frames (frame_count), so it looks faint. By state: 0 waits until
+   it is off the screen; 1 drawn while on the screen; off it, it ends once leaving. */
 void backdrop_translucent_update(void)
 {
 	uint32_t zero = 0;

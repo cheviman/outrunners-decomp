@@ -4377,7 +4377,8 @@ void lap_timer_update(void)
 	} while (L_00C4B3);
 }
 
-void sub_00C552(void)
+/* Unused: does nothing (a lone return after lap_timer_update's last jump to draw_object). */
+void lap_timer_spare_return(void)
 {
 }
 
@@ -4820,7 +4821,8 @@ void stage_entry_update(void)
 	}
 }
 
-void sub_00C8B5(void)
+/* Unused: does nothing (a second return after stage_entry_update's). */
+void stage_entry_spare_return(void)
 {
 }
 
@@ -5410,7 +5412,9 @@ void checkpoint_board_leader_time(uint32_t r0, uint32_t r1)
 	time_to_text(r0, r10);
 }
 
-void sub_00CEA4(uint32_t r0, uint32_t r10)
+/* Unused: time_to_text for a time in thousandths of a second: R0 / 10 (into hundredths), then
+   time_to_text at R10 (it runs on into it). */
+void time_to_text_thousandths(uint32_t r0, uint32_t r10)
 {
 	r0 = r0 / 0xAu;
 	time_to_text(r0, r10);
@@ -6065,7 +6069,9 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 	return left_caller;
 }
 
-void sub_00D658(void)
+/* Unused: a busy wait: counts 3000 down to 0 and returns. It sits between network_check_wait_isdn and
+   network_check_greeting. */
+void network_check_delay(void)
 {
 	uint32_t r0 = 0;
 

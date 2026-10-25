@@ -3542,7 +3542,9 @@ void clear_text_layer(void)
 	} while (r0 != 0u);
 }
 
-void sub_01078F(uint16_t r9)
+/* Unused: clears the tilemap pages from the one at R9 (its offset in video RAM) down to the first, 400
+   bytes apart (clear_tile_page each). */
+void clear_tile_pages(uint16_t r9)
 {
 	uint16_t r7 = 0, r9_2 = 0;
 	uint16_t t1 = 0;
@@ -3551,13 +3553,15 @@ void sub_01078F(uint16_t r9)
 	do
 	{
 		r9_2 = (uint16_t)r7;
-		sub_0107A0(r9_2);
+		clear_tile_page(r9_2);
 		t1 = r7;
 		r7 = (uint16_t)(t1 - 0x400u);
 	} while ((int16_t)t1 >= 0x400);
 }
 
-void sub_0107A0(uint16_t r9)
+/* Only unused code reaches it (clear_tile_pages): clears the tilemap page at R9 (300000 + R9: 200
+   halfwords copied from the zeros at 100800). */
+void clear_tile_page(uint16_t r9)
 {
 	move_string(0x100800u, 0x200u, 0x300000u | (uint16_t)r9, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
@@ -3675,7 +3679,11 @@ void load_sprite_ram_tables(void)
 	move_string(0x10C44u, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
-void sub_010996(uint16_t r0, uint32_t r10, uint32_t r11)
+/* Unused: meant to copy R0 & 3F8 bytes from R10 to R11 by jumping into a run of 8-byte moves at 0109B4,
+   but the jump (200 less half the count from the run's start) is worked out for 128 moves and the run
+   has 64: it copies the count less 200 bytes, nothing for 200, and for less it jumps past the run into
+   the data at 010AB5. */
+void unrolled_copy(uint16_t r0, uint32_t r10, uint32_t r11)
 {
 	uint32_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0, t64 = 0, t65 = 0, t66 = 0, t67 = 0, t68 = 0, t69 = 0, t70 = 0, t71 = 0, t72 = 0, t73 = 0, t74 = 0, t75 = 0, t76 = 0, t77 = 0, t78 = 0, t79 = 0, t80 = 0, t81 = 0, t82 = 0, t83 = 0, t84 = 0, t85 = 0, t86 = 0, t87 = 0, t88 = 0, t89 = 0, t90 = 0, t91 = 0, t92 = 0, t93 = 0, t94 = 0, t95 = 0, t96 = 0, t97 = 0, t98 = 0, t99 = 0, t100 = 0, t101 = 0, t102 = 0, t103 = 0, t104 = 0, t105 = 0, t106 = 0, t107 = 0, t108 = 0, t109 = 0, t110 = 0, t111 = 0, t112 = 0, t113 = 0, t114 = 0, t115 = 0, t116 = 0, t117 = 0, t118 = 0, t119 = 0, t120 = 0, t121 = 0, t122 = 0, t123 = 0, t124 = 0, t125 = 0, t126 = 0, t127 = 0;
 
@@ -4340,7 +4348,10 @@ uint32_t unpack_queued_step(uint32_t r2)
 	return r2;
 }
 
-void sub_010F66(uint32_t r10)
+/* Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address
+   and where to unpack it, closed by a negative entry (the first is taken without the check).
+   unpack_tile_pages does the same for a list of tile pages. */
+void unpack_list(uint32_t r10)
 {
 	uint32_t r10_2 = 0, r11 = 0;
 	uint32_t t1 = 0;
@@ -4380,7 +4391,11 @@ void unpack_tile_pages(uint32_t r10)
 	}
 }
 
-void sub_010FA6(uint32_t r10)
+/* Unused: queues the entries of an unpack_list list (the packed data's address, where to unpack it;
+   closed by a negative entry, the first taken unchecked) as they are in the screen's ring unpack_queue
+   (unpack_write_place), with unpack_state set to say there is work, for unpack_queued_step.
+   queue_tile_pages does the same for a list of tile pages. */
+void queue_unpack_list(uint32_t r10)
 {
 	uint32_t r11 = 0, unpack_write_place = 0;
 	uint32_t t1 = 0;
@@ -4733,7 +4748,9 @@ void bookkeeping_increment16(uint32_t r7)
 	}
 }
 
-void sub_011314(uint32_t r7)
+/* Unused: adds one to the 8-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FF,
+   with the checksum (bookkeeping_update_checksum). */
+void bookkeeping_increment8(uint32_t r7)
 {
 	if (mem_read8(r7) != 0xFFu)
 	{
@@ -4786,7 +4803,10 @@ void bookkeeping_add32(uint32_t r7, uint32_t r9)
 	mem_write32(r7 + 0x7Cu, mem_read32(r7 + 0x7Cu) + r9);
 }
 
-void sub_011362(uint32_t r7, uint8_t r9)
+/* Unused: adds R9 to the 8-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum;
+   past FF it stays at FF (and the backup's is left as it was: the code writes R7 twice), as
+   bookkeeping_add16 does. */
+void bookkeeping_add8(uint32_t r7, uint8_t r9)
 {
 	uint32_t carry = 0;
 	uint8_t t1 = 0;
@@ -4814,14 +4834,16 @@ void bookkeeping_set16(uint32_t r7, uint16_t r9)
 	mem_write16(r7 + 0x7Cu, r9);
 }
 
-void sub_011388(uint32_t r7, uint32_t r9)
+/* Unused: sets the 32-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
+void bookkeeping_set32(uint32_t r7, uint32_t r9)
 {
 	mem_write32(r7, r9);
 	bookkeeping_update_checksum(0u);
 	mem_write32(r7 + 0x7Cu, r9);
 }
 
-void sub_011393(uint32_t r7, uint8_t r9)
+/* Unused: sets the 8-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
+void bookkeeping_set8(uint32_t r7, uint8_t r9)
 {
 	mem_write8(r7, r9);
 	bookkeeping_update_checksum(0u);
@@ -4904,7 +4926,9 @@ uint32_t bookkeeping_update_checksum(uint32_t r0)
 	return r0;
 }
 
-void sub_01142A(void)
+/* Unused: checks the bookkeeping block (701F02) against its checksum (701F00) and resets both it and its
+   backup (bookkeeping_reset) when they differ; unlike bookkeeping_check it does not try the backup. */
+void bookkeeping_check_block(void)
 {
 	uint32_t r0 = 0, r2 = 0;
 
@@ -5226,7 +5250,10 @@ void load_text_font(void)
 	move_string(0x104020u, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
-void sub_0117FE(void)
+/* Unused: builds the text layer's first 128 characters (318000, where load_text_font puts its 384) from
+   the one-bit font at 103C20 (8 bytes a character, a bit a pixel): the character's pixels in pen 1, and
+   a shadow in pen 2 one pixel right and one row down under them. */
+void load_shadowed_text_font(void)
 {
 	uint32_t carry = 0;
 	uint8_t r0 = 0;
@@ -5306,7 +5333,9 @@ uint32_t print_text_layer(uint32_t r19)
 	return r19;
 }
 
-void sub_0118BD(uint32_t r19)
+/* Unused: erases a string from the text layer: from the cell of the print_text_layer record R19, writes
+   0 cells until the next cell's character is 0. */
+void erase_text_layer_to_blank_character(uint32_t r19)
 {
 	uint16_t r9 = 0;
 	uint32_t r18 = 0;
@@ -5320,7 +5349,10 @@ void sub_0118BD(uint32_t r19)
 	} while (mem_read8(r18) != 0u);
 }
 
-void sub_0118D2(uint32_t r19)
+/* Unused: print_text_layer with the characters as halfwords: from the record R19, the cell's address
+   (310000 + its first halfword), the attribute byte, then the characters, 16 bits each (ORed with the
+   attribute << 8, so they can reach past 255: the font has 384), closed by a 0 halfword. */
+void print_text_layer_halfwords(uint32_t r19)
 {
 	uint16_t r8 = 0, r9 = 0;
 	uint32_t r18 = 0;
@@ -5343,7 +5375,9 @@ void sub_0118D2(uint32_t r19)
 	}
 }
 
-void sub_0118F7(uint32_t r19)
+/* Unused: erases a string from the text layer as erase_text_layer_to_blank_character does, but until the
+   next cell is all 0 (character and attribute). */
+void erase_text_layer_to_blank_cell(uint32_t r19)
 {
 	uint16_t r9 = 0;
 	uint32_t r18 = 0;
@@ -5368,7 +5402,9 @@ void print_hex_byte(uint32_t r0, uint16_t r1, uint32_t r11)
 	print_hex_digits(r0, r1, r2, r11);
 }
 
-void sub_011914(uint32_t r0, uint16_t r1, uint32_t r11)
+/* Unused: writes a number's low halfword as four hex digits on the text layer, ending before the cell it
+   is given, with the attribute byte it is given (print_hex_digits). */
+void print_hex_halfword(uint32_t r0, uint16_t r1, uint32_t r11)
 {
 	uint32_t r2 = 0;
 
@@ -5377,7 +5413,9 @@ void sub_011914(uint32_t r0, uint16_t r1, uint32_t r11)
 	print_hex_digits(r0, r1, r2, r11);
 }
 
-void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11)
+/* Unused: writes a number's low 24 bits as six hex digits on the text layer, as print_hex_halfword does
+   (print_hex_digits). */
+void print_hex_24_bits(uint32_t r0, uint16_t r1, uint32_t r11)
 {
 	uint32_t r2 = 0;
 
@@ -5386,7 +5424,9 @@ void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11)
 	print_hex_digits(r0, r1, r2, r11);
 }
 
-void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11)
+/* Unused: writes a 32-bit number as eight hex digits on the text layer, as print_hex_halfword does
+   (print_hex_digits, which it runs on into). */
+void print_hex_word(uint32_t r0, uint16_t r1, uint32_t r11)
 {
 	uint32_t r2 = 0;
 
@@ -5397,7 +5437,8 @@ void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11)
 /* Writes a number in hex on the text layer, in as many cells as it is told, ending before the cell it is
    given, the lowest digit last: each digit a character ('0'-'9', 'A'-'F') with the attribute byte it is
    given; when the number runs out, the cells left before it are cleared (0). Only print_hex_byte runs
-   it; the entries for four, six and eight digits before it are unused. */
+   it; the entries for four, six and eight digits before it (print_hex_halfword, print_hex_24_bits,
+   print_hex_word) are unused. */
 void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11)
 {
 	uint32_t t1 = 0;
@@ -5427,15 +5468,22 @@ void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11)
 	}
 }
 
-void sub_011958(void)
+/* Unused: converts R0's eight decimal digits (four bits each, the highest first) into a number, returned
+   in R0: eight times, the result so far times 10 plus the next digit. The inverse of binary_to_bcd. */
+uint32_t bcd_to_binary(uint32_t value)
 {
-	uint32_t r2 = 0;
+	uint32_t r0 = 0, r2 = 0, r3 = 0;
 
 	r2 = 8u;
+	r3 = 0u;
 	do
 	{
+		value = (value << 4) | (value >> 28);
+		r3 = r3 * 0xAu + (0xFu & value);
 		r2--;
 	} while (r2 != 0u);
+	r0 = r3;
+	return r0;
 }
 
 /* Converts R0 into eight decimal digits, one per four bits, the units in the lowest. */
@@ -5583,6 +5631,10 @@ void clear_objects(void)
 	AS16(SCREEN(screen)->unk_900) = 0u;
 }
 
+/* The object loop, once a frame for the screen: each live object (flags bit 0) of this frame's list
+   (screen - 8000) has its handler run and goes on the next frame's list (screen - 7FF8); a dead one
+   frees its slot (its byte at screen - 7FF0, by its slot number at 8). Then this frame's list is cleared
+   and the two lists swap. */
 void run_objects(void)
 {
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r22 = 0;
@@ -5627,6 +5679,9 @@ void run_objects(void)
 	mem_write32(screen - 0x7FF4u, mem_read32(screen - 0x7FFCu) + r0 * 2u);
 }
 
+/* Takes the first free object slot of the screen (FF into its byte at screen - 7FF0), clears its 100
+   bytes, makes it live (flags bit 0) with its slot number at 8, puts it on this frame's list and returns
+   it; with no slot free, it returns the spare object at screen - 7F00 without any of that. */
 uint32_t start_object(void)
 {
 	uint32_t zero = 0;
@@ -5751,19 +5806,33 @@ uint32_t start_object(void)
 	return r21;
 }
 
-void sub_011DEB(void)
+/* Unused: takes the first free object slot as start_object does (FF into its byte of the 7C at screen -
+   7FF0) and clears 100 bytes for it, but at the slot byte's address with its low half shifted 8 left
+   (201000 + 100 * slot for screen 1), not where start_object puts slot n (screen - 7C00 + 100 * n), and
+   without making it live, its slot number or the frame's list; with no slot free, the spare object at
+   screen - 7F00. Returns the object. */
+uint32_t reserve_object_slot(void)
 {
 	uint32_t zero = 0;
+	uint32_t r21 = 0;
 
 	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
 	zero = r27 == 0x7Cu;
 	if (zero)
-		return;
+	{
+		r21 = screen - 0x7F00u;
+		return r21;
+	}
 	mem_write8(r28, 0xFFu);
-	move_string(0x100800u, 0x80u, (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8), 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
+	r21 = (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8);
+	move_string(0x100800u, 0x80u, r21, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
+	return r21;
 }
 
-void sub_011E1D(uint16_t r21)
+/* Unused: frees the slot of the object R21: clears the slot byte (screen - 7FF0) numbered by bits 8-15
+   of the object's address, which is not the object's own slot: for start_object's slot n it clears slot
+   n + 4, for reserve_object_slot's slot n slot n + 10. */
+void free_object_slot(uint16_t r21)
 {
 	mem_write8(screen - 0x7FF0u + ((uint16_t)r21 >> 8), 0u);
 }
@@ -5857,7 +5926,11 @@ void queue_sound(uint8_t r0)
 	SCREEN(r2 - 0x802u)->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
 }
 
-void sub_011EF4(uint8_t r0)
+/* Unused: puts sound R0 in the screen's second ring of 32 sound requests (second_sound_queue_write, the
+   requests from 842; send_sound_requests sends them to the command byte 8 after the first ring's), as
+   request_sound does for the first: while demo_flags bit 8 is set only the sounds the table at 01204E
+   allows, and only with advertise_sound set. */
+void request_second_sound(uint8_t r0)
 {
 	uint32_t r2 = 0, second_sound_queue_write = 0;
 
@@ -5884,8 +5957,10 @@ void sub_011EF4(uint8_t r0)
 	}
 }
 
-/* Starts the car's engine sound on the screen's channel of the sound board: the model's engine
-   (rom_012026) and the transmission's; silent in the demo without sound. */
+/* Starts the car's engine sound on the screen's channel of the sound board: the model's engine sample
+   (rom_012026) and the engine's loudness by the transmission (10, or 30, 6 dB louder, with the
+   transmission's value set), then the revs on (1) and the requests for the sample and the pitch (A0);
+   silent in the demo without sound. */
 void player_car_start_engine_sound(void)
 {
 	uint8_t r0 = 0;
@@ -5894,16 +5969,16 @@ void player_car_start_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) != 0u && advertise_sound == 0u)
 	{
 		r10 = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(r10 + SOUND_700710, 0u);
-		mem_write8(r10 + SOUND_700712, mem_read8(r10 + SOUND_700712) | 0x20u);
+		mem_write8(r10 + SOUND_ENGINE_REVS_1, 0u);
+		mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, mem_read8(r10 + SOUND_ENGINE_REQUESTS_1) | 0x20u);
 		return;
 	}
 	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + (SOUND_RAM + 0x713u), rom_012026[CAR(player_car)->model]);
+	mem_write8(r10 + SOUND_ENGINE_SAMPLE_1, rom_012026[CAR(player_car)->model]);
 	r0 = 0x10u;
 	if (CAR(player_car)->transmission != 0u)
 		r0 = 0x30u;
-	mem_write8(r10 + (SOUND_RAM + 0x714u), r0);
-	mem_write8(r10 + SOUND_700710, 1u);
-	mem_write8(r10 + SOUND_700712, 0xA0u);
+	mem_write8(r10 + SOUND_ENGINE_LOUDNESS_1, r0);
+	mem_write8(r10 + SOUND_ENGINE_REVS_1, 1u);
+	mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, 0xA0u);
 }

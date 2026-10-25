@@ -17,8 +17,8 @@ void test_mode_game_assignments_advertise(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = OBJECT(current_object)->unk_0D > 0u;
-	OBJECT(current_object)->unk_0D = 1u - carry;
+	carry = advertise_sound > 0u;
+	advertise_sound = 1u - carry;
 	ignored = test_mode_game_assignments_draw();
 }
 
@@ -41,7 +41,7 @@ void test_mode_game_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
+	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
 	test_mode_flags |= 2u;
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -155,7 +155,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 	r2 = 2u;
 	r0 = coin_setting + 1u;
 	test_mode_draw_number(r2, &r0, &r1, &r10);
-	r11 = rom_01E220[(uint8_t)OBJECT(current_object)->unk_14];
+	r11 = rom_01E220[coin_setting];
 	r26 = 0u;
 	r12 = TEXT_CELL(17, 10);
 	r9 = 5u;
@@ -231,30 +231,30 @@ void test_mode_coin_assignments_next_setting(void)
 
 	do
 	{
-		r0 = (uint8_t)OBJECT(current_object)->unk_14;
+		r0 = coin_setting;
 		r0 = (uint8_t)(r0 + 1u);
 		if ((int8_t)r0 >= 0x1A)
 			r0 = 0u;
-		AS8(OBJECT(current_object)->unk_14) = r0;
+		coin_setting = r0;
 		r10 = 0x1E3E8u + r0 * 4u;
 		if ((int8_t)ROM8(r10) < 0)
 		{
-			AS8(OBJECT(current_object)->unk_10) = 1u;
-			OBJECT(current_object)->unk_13 = 0xFFu;
-			AT8(OBJECT(current_object)->unk_10, 1) = 1u;
-			OBJECT(current_object)->unk_12 = 1u;
-			AT8(OBJECT(current_object)->unk_14, 1) = 0xFFu;
+			coins_per_credit = 1u;
+			bonus_adder = 0xFFu;
+			first_chute_multiplier = 1u;
+			second_chute_multiplier = 1u;
+			free_play = 0xFFu;
 			test_mode_coin_assignments_draw(&ignored, &ignored);
 			return;
 		}
-	} while (r0 != 0u && (uint8_t)OBJECT(current_object)->unk_10 == ROM8(r10) && OBJECT(current_object)->unk_13 == ROM8(r10 + 1u) && (uint8_t)(OBJECT(current_object)->unk_10 >> 8u) == ROM8(r10 + 2u));
-	AS8(OBJECT(current_object)->unk_10) = ROM8(r10);
+	} while (r0 != 0u && coins_per_credit == ROM8(r10) && bonus_adder == ROM8(r10 + 1u) && first_chute_multiplier == ROM8(r10 + 2u));
+	coins_per_credit = ROM8(r10);
 	r10++;
-	OBJECT(current_object)->unk_13 = ROM8(r10);
+	bonus_adder = ROM8(r10);
 	r10++;
-	AT8(OBJECT(current_object)->unk_10, 1) = ROM8(r10);
-	OBJECT(current_object)->unk_12 = ROM8(r10 + 1u);
-	AT8(OBJECT(current_object)->unk_14, 1) = 0u;
+	first_chute_multiplier = ROM8(r10);
+	second_chute_multiplier = ROM8(r10 + 1u);
+	free_play = 0u;
 	test_mode_coin_assignments_draw(&ignored, &ignored);
 }
 
@@ -354,7 +354,7 @@ uint32_t test_mode_coin_assignments_manual_draw(uint32_t r1)
 	r2 = 1u;
 	r3 = 6u;
 	test_mode_draw_count(r0, r2, r3, &r1_2, &r10);
-	r0 = OBJECT(current_object)->unk_13;
+	r0 = bonus_adder;
 	if ((int8_t)r0 > 0)
 	{
 		r10 = (r10 & ~0xFFFFu) | 0xF51Eu;
@@ -375,15 +375,15 @@ uint32_t test_mode_coin_assignments_manual_draw(uint32_t r1)
 		test_mode_draw_texts(r0, r10);
 	}
 	r10 = TEXT_CELL(32, 12);
-	r0 = (uint8_t)(OBJECT(current_object)->unk_10 >> 8u);
+	r0 = first_chute_multiplier;
 	r1_2 = (r1_2 & ~0xFFFFu) | 0x6464u;
 	r2 = 1u;
 	r3 = 6u;
 	test_mode_draw_count(r0, r2, r3, &r1_2, &r10);
 	r10 = (r10 & ~0xFFFFu) | 0xF784u;
-	r0 = (uint8_t)OBJECT(current_object)->unk_10;
-	r1_2 = (int8_t)OBJECT(current_object)->unk_13;
-	r2 = (uint8_t)(OBJECT(current_object)->unk_10 >> 8u);
+	r0 = coins_per_credit;
+	r1_2 = (int8_t)bonus_adder;
+	r2 = first_chute_multiplier;
 	r3 = 0u;
 	r4 = 0u;
 	r9 = 9u;
@@ -472,8 +472,8 @@ void test_mode_coin_assignments_step_value(uint32_t r0, uint32_t r1)
 	if ((uint8_t)r1_2 >= 0xAu)
 		r1_2 = (r1_2 & ~0xFFu) | 1u;
 	mem_write8(current_object + r0, r1_2);
-	if ((uint8_t)(OBJECT(current_object)->unk_14 >> 8u) == 0u)
-		AS8(OBJECT(current_object)->unk_14) = 0x1Au;
+	if (free_play == 0u)
+		coin_setting = 0x1Au;
 	ignored = test_mode_coin_assignments_manual_draw(r1_2);
 }
 
@@ -485,17 +485,17 @@ void test_mode_coin_assignments_step_bonus_adder(uint32_t r1)
 	uint32_t ignored = 0;
 	uint8_t t1 = 0;
 
-	r0 = OBJECT(current_object)->unk_13;
+	r0 = bonus_adder;
 	if (r0 == 0u)
 		r0++;
 	t1 = r0 + 1u;
 	r0 = t1;
 	if (t1 == 0u)
-		AT8(OBJECT(current_object)->unk_14, 1) = 0u;
+		free_play = 0u;
 	if (r0 >= 0xAu)
 		r0 = 0u;
-	OBJECT(current_object)->unk_13 = r0;
-	AS8(OBJECT(current_object)->unk_14) = 0x1Au;
+	bonus_adder = r0;
+	coin_setting = 0x1Au;
 	ignored = test_mode_coin_assignments_manual_draw(r1);
 }
 
@@ -535,7 +535,7 @@ void test_mode_coin_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
+	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
 	test_mode_flags |= 2u;
 	bookkeeping_clear_credits();
 	test_mode_routine = test_mode_menu_ADDRESS;
@@ -562,7 +562,7 @@ void test_mode_network_assignments_start(void)
 		r0 = 0x6Eu;
 		test_mode_colour_line(r0, r10);
 	}
-	test_mode_privilege_mode = (uint8_t)(OBJECT(current_object)->unk_20 >> 8u) & 1u;
+	test_mode_privilege_mode = link_master & 1u;
 	r0 = test_mode_network_assignments_draw();
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 3u;
@@ -654,9 +654,9 @@ uint32_t test_mode_network_assignments_draw(void)
 	r10 = TEXT_CELL(33, 14);
 	r1 = 0x64u;
 	r2 = 1u;
-	r0 = OBJECT(current_object)->unk_22 + 1u;
+	r0 = cabinet_id + 1u;
 	test_mode_draw_number(r2, &r0, &r1, &r10);
-	if ((uint8_t)OBJECT(current_object)->unk_20 != 0u)
+	if (stand_alone != 0u)
 	{
 		r10 = TEXT_CELL(28, 12);
 		r0 = (r0 & ~0xFFu) | 0x6Eu;
@@ -678,13 +678,13 @@ void test_mode_network_assignments_toggle_communication(uint32_t r0)
 	uint32_t stack_4 = 0;
 	uint8_t t1 = 0;
 
-	carry = (uint8_t)OBJECT(current_object)->unk_20 > 0u;
+	carry = stand_alone > 0u;
 	r0_2 = (r0 & ~0xFFu) | 1u;
 	t1 = r0_2;
 	r0_2 = (r0_2 & ~0xFFu) | (uint8_t)(t1 - carry);
-	AS8(OBJECT(current_object)->unk_20) = r0_2;
-	AT8(OBJECT(current_object)->unk_20, 1) = 1u;
-	OBJECT(current_object)->unk_23 = 0u;
+	stand_alone = r0_2;
+	link_master = 1u;
+	isdn_mode = 0u;
 	test_mode_privilege_mode = 1u;
 	r0_2 = (r0_2 & ~0xFFu) | 0x60u;
 	if (t1 != carry)
@@ -713,8 +713,8 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 		r0 = 1u;
 	test_mode_privilege_mode = r0;
 	r10 = 0x1E6E5u + r0 * 2u;
-	AT8(OBJECT(current_object)->unk_20, 1) = ROM8(r10);
-	OBJECT(current_object)->unk_23 = ROM8(r10 + 1u);
+	link_master = ROM8(r10);
+	isdn_mode = ROM8(r10 + 1u);
 	ignored = test_mode_network_assignments_draw();
 }
 
@@ -723,7 +723,7 @@ void test_mode_network_assignments_step_cabinet_id(void)
 {
 	uint32_t ignored = 0;
 
-	OBJECT(current_object)->unk_22 = (OBJECT(current_object)->unk_22 + 1u) & 3u;
+	cabinet_id = (cabinet_id + 1u) & 3u;
 	ignored = test_mode_network_assignments_draw();
 }
 
@@ -744,7 +744,7 @@ void test_mode_network_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
+	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
 	test_mode_flags |= 2u;
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -1064,11 +1064,24 @@ void test_mode_draw_minutes_seconds(uint32_t *p_r0, uint32_t *p_r11)
 	*p_r11 = r11;
 }
 
-void sub_01EA14(void)
+/* Unused: turns a duration kept as five bytes at R10 (seconds, minutes and hours a byte each, then days
+   a halfword) into seconds: ((days * 24 + hours) * 60 + minutes) * 60 + seconds, in R0 (R1 the carry). */
+uint32_t test_mode_duration_to_seconds(uint32_t r10)
 {
+	uint32_t r0 = 0;
+
+	r10 = r10 + 5u - 2u;
+	r0 = mem_read16(r10) * 0x18u;
+	r10--;
+	r0 = (r0 + mem_read8(r10)) * 0x3Cu;
+	r10--;
+	r0 = (r0 + mem_read8(r10)) * 0x3Cu + mem_read8(r10 - 1u);
+	return r0;
 }
 
-void sub_01EA4B(uint32_t r0, uint32_t r10)
+/* Unused: writes a time of R0 seconds at R10 as two bytes: the seconds (R0 mod 60), then the minutes (R0
+   / 60). */
+void test_mode_split_minutes_seconds(uint32_t r0, uint32_t r10)
 {
 	uint32_t r1 = 0;
 
@@ -1578,8 +1591,8 @@ void test_mode_read_controls(void)
 }
 
 /* Sends the test mode's next queued sound request (test_mode_sound_queue, test_mode_sound_queue_read) to
-   the sound CPU, one a frame: to screen 2's command byte (SOUND_700800) when the request has its high
-   byte set, else to screen 1's (SOUND_700700). */
+   the sound CPU, one a frame: to screen 2's command byte (SOUND_COMMAND_2) when the request has its high
+   byte set, else to screen 1's (SOUND_COMMAND_1). */
 void test_mode_send_sound(void)
 {
 	uint8_t r1 = 0;
@@ -1592,9 +1605,9 @@ void test_mode_send_sound(void)
 	t1 = ~test_mode_sound_queue[r0];
 	r1 = (uint8_t)t1;
 	if ((int16_t)t1 >= 0)
-		mem_write8(SOUND_700800, ~r1);
+		mem_write8(SOUND_COMMAND_2, ~r1);
 	else
-		mem_write8(SOUND_700700, ~r1);
+		mem_write8(SOUND_COMMAND_1, ~r1);
 	test_mode_sound_queue_read = (r0 + 1u) & 0xFu;
 }
 
@@ -1791,7 +1804,7 @@ void int_vector_41(void)
 	mem_write8(IRQ_D00007, 0xFDu);
 }
 
-/* The sound CPU's interrupt (IRQ 2): only acknowledged. */
+/* The sound CPU's interrupt (IRQ 2): only acknowledged. The sound program never raises it. */
 void int_vector_42(void)
 {
 	mem_write8(IRQ_D00007, 0xFBu);
@@ -1899,9 +1912,9 @@ void check_test_button(uint32_t r0)
 
 /* In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32
    (queue_sound's: sound_queue_read, sound_queue_write, the requests after them) to its command byte
-   (SOUND_700700 for screen 1, 700800 for screen 2), and one from its second ring at 840
-   (second_sound_queue_read, second_sound_queue_write; only the unused sub_011EF4 fills it) to the byte 8
-   after it. */
+   (SOUND_COMMAND_1 for screen 1, SOUND_COMMAND_2 for screen 2), and one from its second ring at 840
+   (second_sound_queue_read, second_sound_queue_write; only the unused request_second_sound fills it) to
+   the byte 8 after it, which the sound program never reads. */
 void send_sound_requests(void)
 {
 	uint32_t r0 = 0, r10 = 0, second_sound_queue_read = 0, sound_queue_read = 0;
@@ -1915,7 +1928,7 @@ void send_sound_requests(void)
 	r0++;
 	if (sound_queue_read != sound_queue_write)
 	{
-		mem_write8(r10 + SOUND_700700, mem_read8(r0 + sound_queue_read));
+		mem_write8(r10 + SOUND_COMMAND_1, mem_read8(r0 + sound_queue_read));
 		SCREEN(r0 - 0x802u)->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
 	}
 	r0 = screen + 0x840u;
@@ -1925,7 +1938,7 @@ void send_sound_requests(void)
 	r0++;
 	if (second_sound_queue_read != second_sound_queue_write)
 	{
-		mem_write8(r10 + (SOUND_RAM + 0x708u), mem_read8(r0 + second_sound_queue_read));
+		mem_write8(r10 + SOUND_SECOND_COMMAND_1, mem_read8(r0 + second_sound_queue_read));
 		SCREEN(r0 - 0x842u)->second_sound_queue_read = (second_sound_queue_read + 1u) & 0x1Fu;
 	}
 }
@@ -2114,6 +2127,7 @@ void update_button_lamps(uint32_t r10, uint32_t r11)
 	mem_write8(r11, r0);
 }
 
+/* The V70's reset vector, at the top of the program's address space: a jump to boot. */
 void reset(void)
 {
 	boot();

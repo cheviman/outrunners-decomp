@@ -1179,7 +1179,16 @@ class FunctionWriter:
             f"{struct.upper()}({start} - 0x{base_offset:X}u)"
         found = layouts.lookup(struct, offset)
         if found is None:
-            raise EmitError(f"{self.function.name}: no field of {struct} at {offset:X}")
+            # a place only the family's own fields name: a wider access the C writes as the fields it holds
+            # (song_title_show's slide and y, one 32-bit write)
+            scoped = layouts.scoped_field(struct, family, offset) if family is not None else None
+            if scoped is None:
+                raise EmitError(f"{self.function.name}: no field of {struct} at {offset:X}")
+            view, scoped_name, scoped_offset, scoped_bits, scoped_signed = scoped
+            text = f"{pointer}->{view}.{scoped_name}"
+            if scoped_offset == offset and scoped_bits == bits:
+                return text, scoped_signed
+            return cprint.part(bits, text, offset - scoped_offset, scoped_bits), False
         field_offset, field_bits = found
         name = f"{pointer}->{layouts.names[struct][field_offset]}"
         overlay = layouts.overlay(struct, offset, bits) if field_offset == offset else None

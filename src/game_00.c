@@ -1431,7 +1431,11 @@ void game_mode_title(void)
 	}
 }
 
-void sub_0010CD(void)
+/* Unused: starts the 81 bars of a picture, an object each (start_object, handler bar_picture_bar_start)
+   from the 8-byte records at 0011B1 (ended by a negative first word): its place on the screen into
+   target_x, target_y and its two scales into scales. The places make two rows across the screen (y
+   19-107 and 139-195); what the bars show cannot be told without drawing them. */
+void bar_picture_start(void)
 {
 	uint32_t r19 = 0, r21 = 0;
 	uint32_t t1 = 0;
@@ -1440,7 +1444,7 @@ void sub_0010CD(void)
 	do
 	{
 		r21 = start_object();
-		mem_write32(r21 + 4u, sub_0010EB_ADDRESS);
+		mem_write32(r21 + 4u, bar_picture_bar_start_ADDRESS);
 		t1 = ROM32(r19 + 4u);
 		mem_write32(r21 + 0x80u, ROM32(r19));
 		mem_write32(r21 + 0x84u, t1);
@@ -1448,7 +1452,11 @@ void sub_0010CD(void)
 	} while ((int32_t)ROM32(r19) >= 0);
 }
 
-void sub_0010EB(void)
+/* Only unused code reaches it (bar_picture_start): sets up a bar of the picture: drawn on the screen
+   (draw_mode 0) with animation 0 and palette 25, its width_scale and height_scale from scales, depth
+   layer 3, at the middle of the screen (x A0, y 70), with a random speed_x and speed_y (-8 to 7: a byte
+   of RANDOM_D80000 shifted right 4); then bar_picture_bar_fly. */
+void bar_picture_bar_start(void)
 {
 	uint32_t r9 = 0;
 	uint8_t t1 = 0, t2 = 0;
@@ -1457,53 +1465,57 @@ void sub_0010EB(void)
 	r9 = 0u;
 	animation_start(r9);
 	OBJECT(current_object)->palette = 0x25u;
-	AS32(OBJECT(current_object)->width_scale) = AS32(OBJECT(current_object)->unk_84);
+	AS32(OBJECT(current_object)->width_scale) = OBJECT(current_object)->bar_picture.scales;
 	OBJECT(current_object)->depth_layer = 3u;
 	OBJECT(current_object)->x = 0xA0u;
 	OBJECT(current_object)->y = 0x70u;
 	t1 = mem_read8(RANDOM_D80000);
-	OBJECT(current_object)->unk_10 = (int16_t)(int8_t)t1 >> 4;
+	OBJECT(current_object)->bar_picture.speed_x = (int16_t)(int8_t)t1 >> 4;
 	t2 = mem_read8(RANDOM_D80000);
-	AS16(OBJECT(current_object)->unk_12) = (int16_t)(int8_t)t2 >> 4;
-	OBJECT(current_object)->handler = sub_001141_ADDRESS;
+	OBJECT(current_object)->bar_picture.speed_y = (int16_t)(int8_t)t2 >> 4;
+	OBJECT(current_object)->handler = bar_picture_bar_fly_ADDRESS;
 }
 
-void sub_001141(void)
+/* Only unused code reaches it (bar_picture_start): each frame the bar's speed_x and speed_y grow by 1
+   toward its place (target_x, target_y) and it moves by them, swinging about it; an axis whose next step
+   lands exactly on the place is put there for that frame. When both land on the same frame it shows
+   frame D and stays (bar_picture_bar_draw). Drawn every frame (draw_object). */
+void bar_picture_bar_fly(void)
 {
 	uint32_t zero = 0, negative = 0, overflow = 0;
 	uint16_t r0 = 0, r1 = 0;
 	uint32_t r0_2 = 0, r2 = 0;
-	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+	uint16_t target_x = 0, t1 = 0, target_y = 0, t2 = 0;
 
 	r2 = 0xFFFFFFFFu;
-	r0 = OBJECT(current_object)->unk_10;
+	r0 = (uint16_t)OBJECT(current_object)->bar_picture.speed_x;
 	r1 = (uint16_t)r0;
 	r0 += OBJECT(current_object)->x;
-	t1 = (uint16_t)OBJECT(current_object)->unk_80;
-	t2 = t1 - r0;
-	overflow = (uint32_t)(int16_t)t1 - (int16_t)r0 != (uint32_t)(int16_t)(t1 - r0);
-	zero = t2 == 0u;
-	negative = t2 >> 15;
-	if (t1 != r0)
+	target_x = OBJECT(current_object)->bar_picture.target_x;
+	t1 = target_x - r0;
+	overflow = (uint32_t)(int16_t)target_x - (int16_t)r0 != (uint32_t)(int16_t)(target_x - r0);
+	zero = t1 == 0u;
+	negative = t1 >> 15;
+	if (target_x != r0)
 	{
 		r0 = 1u;
 		if ((negative ^ overflow) | zero)
 			r0 = 0xFFFFu;
 		r0 += r1;
-		OBJECT(current_object)->unk_10 = r0;
+		OBJECT(current_object)->bar_picture.speed_x = r0;
 		r0 += OBJECT(current_object)->x;
 		r2 = 0u;
 	}
 	OBJECT(current_object)->x = r0;
-	r0_2 = AS16(OBJECT(current_object)->unk_12);
+	r0_2 = (uint16_t)OBJECT(current_object)->bar_picture.speed_y;
 	r1 = (uint16_t)r0_2;
 	r0_2 = (uint16_t)(r0_2 + OBJECT(current_object)->y);
-	t3 = (uint16_t)(OBJECT(current_object)->unk_80 >> 16u);
-	t4 = t3 - r0_2;
-	overflow = (uint32_t)(int16_t)t3 - (int16_t)r0_2 != (uint32_t)(int16_t)(t3 - r0_2);
-	zero = t4 == 0u;
-	negative = t4 >> 15;
-	if (t3 == r0_2)
+	target_y = OBJECT(current_object)->bar_picture.target_y;
+	t2 = target_y - r0_2;
+	overflow = (uint32_t)(int16_t)target_y - (int16_t)r0_2 != (uint32_t)(int16_t)(target_y - r0_2);
+	zero = t2 == 0u;
+	negative = t2 >> 15;
+	if (target_y == r0_2)
 	{
 		OBJECT(current_object)->y = r0_2;
 		if (r2 == 0u)
@@ -1511,7 +1523,7 @@ void sub_001141(void)
 			r0_2 = draw_object(r0_2);
 			return;
 		}
-		OBJECT(current_object)->handler = sub_0011AB_ADDRESS;
+		OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
 		OBJECT(current_object)->frame = 0xDu;
 		r0_2 = draw_object(r0_2);
 		return;
@@ -1520,7 +1532,7 @@ void sub_001141(void)
 	if ((negative ^ overflow) | zero)
 		r0_2 = 0xFFFFu;
 	r0_2 = (uint16_t)(r0_2 + r1);
-	AS16(OBJECT(current_object)->unk_12) = r0_2;
+	OBJECT(current_object)->bar_picture.speed_y = r0_2;
 	r0_2 = (uint16_t)(r0_2 + OBJECT(current_object)->y);
 	r2 = 0u;
 	OBJECT(current_object)->y = r0_2;
@@ -1529,12 +1541,14 @@ void sub_001141(void)
 		r0_2 = draw_object(r0_2);
 		return;
 	}
-	OBJECT(current_object)->handler = sub_0011AB_ADDRESS;
+	OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
 	OBJECT(current_object)->frame = 0xDu;
 	r0_2 = draw_object(r0_2);
 }
 
-void sub_0011AB(void)
+/* Only unused code reaches it (bar_picture_start): the bar in its place: draws it (draw_object) each
+   frame. */
+void bar_picture_bar_draw(void)
 {
 	uint32_t ignored = 0;
 
@@ -5249,7 +5263,9 @@ void route_map_leg_car_show(void)
 	}
 }
 
-void sub_004578(void)
+/* Unused: ends the object (flags 0). It follows the code of route_map_leg_car_show's last state
+   (draw_object), whose state table lists only states 0 and 1. */
+void route_map_leg_car_end(void)
 {
 	OBJECT(current_object)->flags = 0u;
 }

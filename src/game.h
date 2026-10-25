@@ -20,9 +20,9 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 
 /* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
    addresses: what it stores and compares, and what call_code() runs */
-#define sub_0010EB_ADDRESS 0x0010EBu
-#define sub_001141_ADDRESS 0x001141u
-#define sub_0011AB_ADDRESS 0x0011ABu
+#define bar_picture_bar_start_ADDRESS 0x0010EBu
+#define bar_picture_bar_fly_ADDRESS 0x001141u
+#define bar_picture_bar_draw_ADDRESS 0x0011ABu
 #define car_presentation_update_ADDRESS 0x001687u
 #define staff_credits_code_start_ADDRESS 0x001894u
 #define staff_credits_code_watch_ADDRESS 0x0018A4u
@@ -182,12 +182,12 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define palette_cycle_update_ADDRESS 0x017BFBu
 #define sunset_fade_start_ADDRESS 0x017CAAu
 #define sunset_fade_wait_ADDRESS 0x017D1Fu
-#define sub_017DB0_ADDRESS 0x017DB0u
+#define backdrop_far_update_ADDRESS 0x017DB0u
 #define backdrop_near_start_ADDRESS 0x017E1Bu
 #define backdrop_near_update_ADDRESS 0x017E5Bu
 #define backdrop_landmark_start_ADDRESS 0x017EF2u
 #define backdrop_landmark_update_ADDRESS 0x017F3Du
-#define sub_018050_ADDRESS 0x018050u
+#define backdrop_flashing_update_ADDRESS 0x018050u
 #define backdrop_translucent_start_ADDRESS 0x0180CBu
 #define backdrop_translucent_update_ADDRESS 0x018110u
 #define race_background_fade_watch_update_ADDRESS 0x01854Au
@@ -298,10 +298,10 @@ void isdn_count_players(void);
 void game_mode_isdn_connection(void);
 void isdn_status_update(void);
 void game_mode_title(void);
-void sub_0010CD(void);
-void sub_0010EB(void);
-void sub_001141(void);
-void sub_0011AB(void);
+void bar_picture_start(void);
+void bar_picture_bar_start(void);
+void bar_picture_bar_fly(void);
+void bar_picture_bar_draw(void);
 void game_mode_power_on(void);
 void game_mode_restart(void);
 void game_mode_car_presentation(void);
@@ -354,7 +354,7 @@ void map_depth_from_y(void);
 void stage_result_line_draw(void);
 void route_map_leg_show(void);
 void route_map_leg_car_show(void);
-void sub_004578(void);
+void route_map_leg_car_end(void);
 void route_map_checkpoint_show(void);
 void route_map_direction_sign_show(void);
 void route_map_wait_banner_show(void);
@@ -460,7 +460,7 @@ void shift_up_hint_update(void);
 void place_count_update(void);
 void place_number_update(void);
 void lap_timer_update(void);
-void sub_00C552(void);
+void lap_timer_spare_return(void);
 void stage_indicator_start(void);
 void stage_indicator_draw(void);
 void start_message_update(void);
@@ -471,7 +471,7 @@ void time_left_display_check_extension(void);
 void extend_time_message_start(void);
 void extend_time_message_blink(uint32_t r0);
 void stage_entry_update(void);
-void sub_00C8B5(void);
+void stage_entry_spare_return(void);
 void goal_update(void);
 void race_result_start(void);
 void race_result_hold(void);
@@ -481,7 +481,7 @@ void branch_arrow_update(void);
 void checkpoint_board_update(void);
 void checkpoint_board_draw_row(uint32_t r21);
 void checkpoint_board_leader_time(uint32_t r0, uint32_t r1);
-void sub_00CEA4(uint32_t r0, uint32_t r10);
+void time_to_text_thousandths(uint32_t r0, uint32_t r10);
 void time_to_text(uint32_t r0, uint32_t r10);
 void checkpoint_board_gap_time(uint32_t r0, uint32_t r1);
 void network_check_again(void);
@@ -495,7 +495,7 @@ uint32_t network_check_board_memory(uint32_t left_caller);
 uint32_t network_check_memory_test(uint32_t r0, uint32_t r10);
 void network_check_wait_board(uint32_t *p_r2, uint32_t *p_left_caller);
 uint32_t network_check_wait_isdn(uint32_t left_caller);
-void sub_00D658(void);
+void network_check_delay(void);
 void network_check_greeting(uint32_t *p_r2, uint32_t *p_left_caller);
 uint32_t network_check_five_ics(uint32_t r2, uint32_t left_caller);
 void network_check_four_ics(uint32_t *p_r2, uint32_t *p_left_caller);
@@ -553,20 +553,20 @@ uint32_t init_video(void);
 uint32_t reset_tile_layers(void);
 void clear_video_ram(void);
 void clear_text_layer(void);
-void sub_01078F(uint16_t r9);
-void sub_0107A0(uint16_t r9);
+void clear_tile_pages(uint16_t r9);
+void clear_tile_page(uint16_t r9);
 void init_sprite_chip(void);
 void init_sprite_lists(void);
 void clear_sprite_group_count(void);
 void init_mixer(void);
 void init_io_chips(void);
 void load_sprite_ram_tables(void);
-void sub_010996(uint16_t r0, uint32_t r10, uint32_t r11);
+void unrolled_copy(uint16_t r0, uint32_t r10, uint32_t r11);
 void unpack(uint32_t r10, uint32_t r11);
 uint32_t unpack_queued_step(uint32_t r2);
-void sub_010F66(uint32_t r10);
+void unpack_list(uint32_t r10);
 void unpack_tile_pages(uint32_t r10);
-void sub_010FA6(uint32_t r10);
+void queue_unpack_list(uint32_t r10);
 void queue_tile_pages(uint32_t r10);
 void init_coins(void);
 void update_coins(uint32_t r6);
@@ -576,19 +576,19 @@ uint32_t add_service_credit(uint32_t r9, uint32_t r10, uint32_t r11);
 uint32_t insert_coin(uint32_t r6, uint32_t r9, uint32_t r19);
 void show_title_on_credit(void);
 void bookkeeping_increment16(uint32_t r7);
-void sub_011314(uint32_t r7);
+void bookkeeping_increment8(uint32_t r7);
 void bookkeeping_add16(uint32_t r7, uint16_t r9);
 void bookkeeping_add32(uint32_t r7, uint32_t r9);
-void sub_011362(uint32_t r7, uint8_t r9);
+void bookkeeping_add8(uint32_t r7, uint8_t r9);
 void bookkeeping_set16(uint32_t r7, uint16_t r9);
-void sub_011388(uint32_t r7, uint32_t r9);
-void sub_011393(uint32_t r7, uint8_t r9);
+void bookkeeping_set32(uint32_t r7, uint32_t r9);
+void bookkeeping_set8(uint32_t r7, uint8_t r9);
 void bookkeeping_clear_credits(void);
 void bookkeeping_check(void);
 uint32_t bookkeeping_reset(uint32_t r0);
 uint32_t bookkeeping_copy(uint32_t r0, uint32_t r2, uint32_t r3);
 uint32_t bookkeeping_update_checksum(uint32_t r0);
-void sub_01142A(void);
+void bookkeeping_check_block(void);
 uint32_t bookkeeping_checksum(uint32_t r0, uint32_t r2);
 void upload_boot_palettes(void);
 void queue_stage_load(void);
@@ -600,18 +600,18 @@ void upload_palette(uint32_t r19);
 void upload_palette_list(uint32_t r19);
 void step_screen_fade(void);
 void load_text_font(void);
-void sub_0117FE(void);
+void load_shadowed_text_font(void);
 void print_text_layer_list(uint32_t r19);
 uint32_t print_text_layer(uint32_t r19);
-void sub_0118BD(uint32_t r19);
-void sub_0118D2(uint32_t r19);
-void sub_0118F7(uint32_t r19);
+void erase_text_layer_to_blank_character(uint32_t r19);
+void print_text_layer_halfwords(uint32_t r19);
+void erase_text_layer_to_blank_cell(uint32_t r19);
 void print_hex_byte(uint32_t r0, uint16_t r1, uint32_t r11);
-void sub_011914(uint32_t r0, uint16_t r1, uint32_t r11);
-void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11);
-void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11);
+void print_hex_halfword(uint32_t r0, uint16_t r1, uint32_t r11);
+void print_hex_24_bits(uint32_t r0, uint16_t r1, uint32_t r11);
+void print_hex_word(uint32_t r0, uint16_t r1, uint32_t r11);
 void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11);
-void sub_011958(void);
+uint32_t bcd_to_binary(uint32_t value);
 uint32_t binary_to_bcd(uint32_t r0);
 void draw_text_at(uint32_t r3, uint16_t r5, uint32_t r18);
 uint32_t draw_text(uint32_t r19);
@@ -619,14 +619,14 @@ uint32_t draw_text_sprites(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, u
 void clear_objects(void);
 void run_objects(void);
 uint32_t start_object(void);
-void sub_011DEB(void);
-void sub_011E1D(uint16_t r21);
+uint32_t reserve_object_slot(void);
+void free_object_slot(uint16_t r21);
 uint32_t start_object_list(uint32_t r10);
 uint32_t random_number(void);
 void start_sound_program(void);
 void request_sound(uint8_t r0);
 void queue_sound(uint8_t r0);
-void sub_011EF4(uint8_t r0);
+void request_second_sound(uint8_t r0);
 void player_car_start_engine_sound(void);
 
 /* game_03.c: the game's functions, part 03 (in the order of their V60 addresses) */
@@ -644,7 +644,7 @@ void fork_sign_hit_check(uint32_t *p_r7, uint32_t *p_r15);
 void road_row_crash_check(uint32_t *p_r7, uint32_t *p_r15);
 void road_row_hit_check(uint32_t *p_r7, uint32_t *p_r15);
 void road_row_pair_crash_check(uint32_t *p_r7, uint32_t *p_r15);
-void sub_01248C(void);
+void road_row_pair_crash_check_unflipped(void);
 void player_car_check_car_hits(void);
 uint32_t traffic_hit_check(void);
 void road_object_stream_read(void);
@@ -736,14 +736,14 @@ void race_background_start_objects(uint32_t r0);
 void palette_cycle_update(void);
 void sunset_fade_start(void);
 void sunset_fade_wait(void);
-void sub_017D70(void);
-void sub_017DB0(void);
+void backdrop_far_start(void);
+void backdrop_far_update(void);
 void backdrop_near_start(void);
 void backdrop_near_update(void);
 void backdrop_landmark_start(void);
 void backdrop_landmark_update(void);
-void sub_018009(void);
-void sub_018050(void);
+void backdrop_flashing_start(void);
+void backdrop_flashing_update(void);
 void backdrop_translucent_start(void);
 void backdrop_translucent_update(void);
 uint32_t backdrop_off_screen(void);
@@ -819,12 +819,12 @@ void demo_captions_checkpoint(void);
 void demo_captions_music_select(void);
 void demo_captions_start(uint8_t r0, uint32_t r1);
 void demo_caption_update(void);
-void sub_01AFDC(void);
-void sub_01B1B1(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10);
-void sub_01B1CD(uint32_t r11, uint32_t r13);
-uint32_t sub_01B1E7(uint32_t r13);
-uint32_t sub_01B200(uint32_t r13);
-void sub_01B20C(uint32_t r3, uint16_t r4);
+void kanji_text_viewer_update(void);
+void kanji_text_viewer_draw_line(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10);
+void kanji_text_viewer_draw_character(uint32_t r11, uint32_t r13);
+uint32_t kanji_text_viewer_draw_quarter(uint32_t r13);
+uint32_t kanji_text_viewer_character_address(uint32_t r13);
+void kanji_text_viewer_draw_number(uint32_t r3, uint16_t r4);
 void test_mode_start(void);
 void test_mode_frame(void);
 void test_mode_menu(void);
@@ -906,8 +906,8 @@ uint32_t test_mode_bookkeeping_draw_totals(void);
 uint32_t test_mode_bookkeeping_draw_histogram(void);
 uint32_t test_mode_draw_duration(uint32_t r0, uint32_t r11);
 void test_mode_draw_minutes_seconds(uint32_t *p_r0, uint32_t *p_r11);
-void sub_01EA14(void);
-void sub_01EA4B(uint32_t r0, uint32_t r10);
+uint32_t test_mode_duration_to_seconds(uint32_t r10);
+void test_mode_split_minutes_seconds(uint32_t r0, uint32_t r10);
 void test_mode_backup_data_clear_start(void);
 void test_mode_backup_data_clear_run(void);
 void test_mode_backup_data_clear_wait(void);

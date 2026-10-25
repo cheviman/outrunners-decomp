@@ -4,7 +4,7 @@ Description: works out which registers point at which of the game's structures, 
              through them reads as a field: OBJECT(r20)->unk_30 instead of mem_read32(r20 + 0x30u)
 Version:     0.1.0
 Created:     12-10-2026
-Modified:    23-10-2026
+Modified:    25-10-2026
 Author:      Sebastian Toyos
 
 The structures (STRUCTS) are OutRunners': the game objects (0x100 bytes, 124 of them below each screen's
@@ -46,8 +46,10 @@ Across functions: what a function finds in its registers when it starts is what 
 (through calls of any kind), and what a call leaves in the registers it hands back is what the callee
 has there when it returns. A caller that does not know says nothing; two that know different things make
 it unknown. The context registers start as the game keeps them (CONTEXT_KINDS: R20 an object, R23 the
-car, R25 the screen's block) unless the callers say otherwise. Inside a function, where paths meet, a kind
-holds only if it is the same on all of them. Repeated until it settles.
+car, R25 the screen's block) unless the callers say otherwise. R20 holds an object wherever the game puts
+it, except in the blocks of variables it walks (VARIABLE_BLOCKS: the test mode's settings), which read as
+those variables. Inside a function, where paths meet, a kind holds only if it is the same on all of them.
+Repeated until it settles.
 
 This only decides how accesses are written, never what they do: the C reads and writes the same bytes.
 
@@ -69,6 +71,9 @@ GLOBAL_FAMILY = None          # the family whose own names of the work RAM the f
 CONTEXT_KINDS = {20: ("object", 0), 23: ("car", 0), 25: ("screen", 0)}
 OBJECT_REGISTERS = (20,)      # what the game keeps here it reads as objects, wherever it put them
 OWN_REGISTERS = (20,)         # what points at the object a function runs on when it starts (the object loop's)
+# blocks of the work RAM the object registers walk as variables, not as objects: start -> size (the test
+# mode reads and writes the settings, 0x20E600-0x20E67F, through R20)
+VARIABLE_BLOCKS = {0x20E600: 0x80}
 REGIONS = {"rom"}             # kinds that are a memory, not a structure
 OFFSET = ("offset", 0)        # not a pointer: a value below 0x10000 (a halfword read, a mask...), an offset
 CONFLICT = ("conflict", 0)    # callers that know different things: nothing is known
@@ -182,6 +187,20 @@ def player_constant(value):
 
 def in_work_ram(value):
     return WORK_RAM[0] <= value < WORK_RAM[1]
+
+
+def in_variable_block(kind):
+    """True for a pointer to a variable of one of VARIABLE_BLOCKS."""
+    return kind is not None and kind[0] == "global" and \
+        any(start <= kind[1] < start + size for start, size in VARIABLE_BLOCKS.items())
+
+
+def walks_variable_block(node, state):
+    """True when 'node' is worked out from a register that points into one of VARIABLE_BLOCKS (the test
+    mode picks a setting by the low byte of R20: what it reaches is no variable known in advance)."""
+    if isinstance(node, ir.Reg):
+        return in_variable_block(state.get(node.index))
+    return isinstance(node, ir.Op) and any(walks_variable_block(arg, state) for arg in node.args)
 
 
 def merge(a, b):
@@ -634,9 +653,11 @@ class Program:
             if hinted is not None:
                 kind = hinted
             if statement.index in OBJECT_REGISTERS and (kind is None or kind[0] == "global") \
-                    and not (kind is None and isinstance(statement.value, ir.Const)):
+                    and not (kind is None and isinstance(statement.value, ir.Const)) \
+                    and not in_variable_block(kind) and not walks_variable_block(statement.value, state):
                 # whatever the object registers are set to is used as an object, except an address outside
-                # the work RAM (test_bookkeeping walks the bookkeeping block at 701F02 with R20)
+                # the work RAM (test_bookkeeping walks the bookkeeping block at 701F02 with R20) and the
+                # blocks of variables they walk (VARIABLE_BLOCKS)
                 kind = ("object", 0)
             zeros[statement.index] = low_zeros(statement.value, zeros)
             if kind is None:
