@@ -56,8 +56,11 @@ the tools verify it, extract the assets and build your own executable.
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
       1000 of the block) and the block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as
       `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, and each player's race record
-      (`RACE(p)`, which `symbols.txt` declares with the fields that point at it). Most names are still
-      addresses and offsets
+      (`RACE(p)`, which `symbols.txt` declares with the fields that point at it). The objects' code is
+      named and commented, family by family (the scenery and traffic along the road, the player's car and
+      the race display, the radio and its DJ, the title, attract and select screens, the route map, the
+      name entry), with each family's own fields; the rest of the game's code (the frame loops, the game's
+      modes, the board's housekeeping) and most variables are still named after their addresses
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

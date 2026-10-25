@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    23-10-2026
+ *    Modified:    24-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1471,12 +1471,12 @@ struct object
 {
 	uint8_t flags;
 	uint8_t unk_01;
-	uint16_t unk_02;
-	uint32_t handler;
 	union
 	{
 		struct
 		{
+			uint16_t unk_02;
+			uint32_t handler;
 			uint32_t unk_08;
 			uint8_t state;
 			uint8_t unk_0D;
@@ -1498,20 +1498,20 @@ struct object
 			uint32_t unk_28;
 			uint16_t unk_2C;
 			uint16_t unk_2E;
-			uint16_t unk_30;
-			uint16_t unk_32;
-			uint16_t unk_34;
-			uint16_t unk_36;
-			uint16_t unk_38;
-			uint16_t unk_3A;
-			uint16_t unk_3C;
-			uint8_t unk_3E;
+			uint16_t x;
+			uint16_t y;
+			uint16_t width_scale;
+			uint16_t height_scale;
+			uint16_t animation;
+			uint16_t palette;
+			uint16_t depth_layer;
+			uint8_t draw_mode;
 			uint8_t unk_3F;
-			uint8_t unk_40;
+			uint8_t frame;
 			uint8_t unk_41;
 			uint8_t unk_42;
-			uint8_t unk_43;
-			uint8_t unk_44;
+			uint8_t size_step;
+			uint8_t scale_shift;
 			uint8_t unk_45;
 			uint8_t pad_46[0xA];
 			uint32_t unk_50;
@@ -1579,17 +1579,138 @@ struct object
 		};
 		struct
 		{
-			uint8_t pad_08[0x30];
-			uint16_t animation;
-			uint8_t pad_3A[0x6];
-			uint8_t frame;
-			uint8_t frame_time;
-			int8_t frame_countdown;
-			uint8_t size_step;
-		} animation;
+			uint8_t pad_02[0xE];
+			int16_t end_position;
+			uint8_t countdown;
+			uint8_t pad_13[0x5];
+			uint32_t length;
+		} ambient_sound;
 		struct
 		{
-			uint8_t pad_08[0x1];
+			uint8_t pad_02[0x3F];
+			uint8_t frame_time;
+			int8_t frame_countdown;
+		} animation_view;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t animation_frames;
+			uint8_t pad_0A[0x6];
+			uint8_t countdown;
+			uint8_t pad_11[0x7];
+			uint32_t animation_list;
+		} aurora;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t choice;
+			uint32_t palette_list;
+			uint8_t pad_1C[0x4];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+		} automatic_panel;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t leaving;
+			uint8_t pad_0E[0x12];
+			uint16_t panorama_x;
+			uint8_t pad_22[0x2];
+			uint16_t height;
+			uint8_t pad_26[0x2];
+			uint16_t half_width;
+			uint8_t pad_2A[0x56];
+			uint32_t data;
+		} backdrop;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t leaving;
+			uint8_t pad_0E[0x2];
+			uint16_t approach_start;
+			uint8_t pad_12[0xE];
+			uint16_t panorama_x;
+			uint8_t pad_22[0x2];
+			uint16_t height;
+			uint8_t pad_26[0x2];
+			uint16_t half_width;
+			uint8_t pad_2A[0x56];
+			uint32_t data;
+		} backdrop_landmark;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t leaving;
+			uint8_t pad_0E[0x2];
+			uint8_t frame_count;
+			uint8_t pad_11[0xF];
+			uint16_t panorama_x;
+			uint8_t pad_22[0x2];
+			uint16_t height;
+			uint8_t pad_26[0x2];
+			uint16_t half_width;
+			uint8_t pad_2A[0x56];
+			uint32_t data;
+		} backdrop_translucent;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t leave_segment;
+			uint8_t pad_12[0x6];
+			uint32_t palette_list;
+		} branch_arrow;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t car_select;
+			uint8_t pad_18[0x4];
+			uint16_t size;
+			uint8_t pad_1E[0x2];
+			int16_t side_offset;
+			uint8_t pad_22[0xA];
+			uint16_t angle;
+			uint16_t radius;
+		} car_attendant;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t shown_car;
+			uint8_t pad_0A[0x6];
+			uint16_t timer;
+			uint8_t pad_12[0x2];
+			uint32_t car_select;
+		} car_caption;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t shown_car;
+			uint8_t pad_0A[0x6];
+			uint16_t timer;
+			uint8_t pad_12[0x2];
+			uint32_t car_select;
+		} car_gears_caption;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t character;
+			uint8_t pad_0A[0x6];
+			uint8_t delay;
+			uint8_t slide_frames;
+			uint16_t frames_left;
+			uint8_t pad_14[0x4];
+			uint32_t palette_list;
+		} car_name_letter;
+		struct
+		{
+			uint8_t pad_02[0x10];
+			uint8_t palette_step;
+			uint8_t pad_13[0x1];
+			uint32_t staff_credits_code;
+		} car_presentation;
+		struct
+		{
+			uint8_t pad_02[0x7];
 			uint8_t car_number;
 			uint8_t stage;
 			uint8_t queued_message;
@@ -1611,7 +1732,7 @@ struct object
 		} car_radio;
 		struct
 		{
-			uint8_t pad_08[0x1];
+			uint8_t pad_02[0x7];
 			int8_t turn;
 			int8_t turn_delay;
 			uint8_t confirm_delay;
@@ -1640,24 +1761,161 @@ struct object
 		} car_select;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0x7];
+			uint8_t own_number;
+			uint8_t digit_toggle;
+			uint8_t blink_timer;
+			uint8_t pad_0C[0x4];
+			uint8_t frames;
+			uint8_t pad_11[0x1];
+			uint8_t flags_visible;
+			uint8_t pad_13[0x1];
+			uint32_t car_select;
+			uint32_t race_order;
+			uint8_t pad_1C[0x24];
+			uint32_t shown_players;
+			uint8_t pad_44[0x3C];
+			uint32_t car_flags;
+		} car_select_entries;
+		struct
+		{
+			uint8_t pad_02[0x8];
+			uint8_t checkpoints_seen;
+			uint8_t checkpoint;
+			uint8_t pad_0C[0x1];
+			uint8_t blink_timer;
+			uint8_t blink_on;
+			uint8_t rows_shown;
+			uint16_t leave_segment;
+			uint8_t row;
+			uint8_t rows_left;
+			uint32_t passing_order;
+			uint32_t checkpoint_count;
+			uint16_t leader_time;
+		} checkpoint_board;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t player;
+			uint8_t car;
+			uint8_t pad_0B[0x7];
+			uint8_t visible;
+			uint8_t pad_13[0x1];
+			uint32_t entries;
+			uint32_t top_flag;
+			uint8_t pad_1C[0x8];
+			uint16_t angle;
+		} choice_flag;
+		struct
+		{
+			uint8_t pad_02[0x10];
+			uint8_t visible;
+			uint8_t pad_13[0x1];
+			uint32_t flag;
+		} choice_flag_number;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t message;
+			uint8_t next_car;
+			uint8_t car;
+			uint8_t pad_0C[0x4];
+			uint8_t round_frames;
+		} coin_prompt;
+		struct
+		{
+			uint8_t pad_02[0x8];
+			uint8_t car;
+			uint8_t car_colour;
+		} coin_prompt_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t message;
+			uint8_t pad_0A[0x1];
+			uint8_t car_colour;
+			uint8_t pad_0C[0x4];
+			uint8_t frames;
+			uint8_t pad_11[0x3];
+			uint32_t prompt;
+		} coin_prompt_message;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t digit_kind;
+			uint8_t digit;
+		} credit_display;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t crest;
+			uint8_t pad_11[0x27];
+			uint32_t clip_entry;
+			uint8_t pad_3C[0x44];
+			uint16_t clip_command;
+			uint16_t clip_bottom;
+			uint16_t clip_left;
+			uint16_t clip_right;
+		} crest_clip;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t record;
+			uint8_t pad_0A[0x6];
+			uint16_t frames_left;
+		} demo_caption;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint32_t frames;
+			uint8_t pad_14[0x6C];
+			uint32_t timeline;
+		} demo_captions;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t left_side;
+		} driver_couple;
+		struct
+		{
+			uint8_t pad_02[0xE];
 			uint8_t blink;
 		} entry_banner;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0xE];
 			uint8_t copies;
 			uint8_t pad_11[0x1];
 			uint8_t car;
 		} entry_car_ring;
 		struct
 		{
-			uint8_t pad_08[0xC];
+			uint8_t pad_02[0x12];
 			uint32_t car_ring;
 		} entry_countdown;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0xE];
+			uint16_t delay;
+		} entry_traffic;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t car;
+			uint8_t pad_0A[0x6];
+			uint16_t path_step;
+			uint16_t spin_delay;
+		} entry_traffic_car;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+			uint8_t pad_11[0x1];
+			uint8_t blink;
+		} extend_time_message;
+		struct
+		{
+			uint8_t pad_02[0xE];
 			uint16_t draw_distance;
 			uint8_t pad_12[0x6];
 			uint32_t record;
@@ -1666,21 +1924,16 @@ struct object
 			int16_t x_offset;
 			uint8_t pad_22[0x2];
 			int16_t y_offset;
-			uint8_t pad_26[0x14];
-			uint16_t palette;
-			uint8_t pad_3C[0x2];
-			uint8_t draw_mode;
+			uint8_t pad_26[0x19];
 			int8_t side;
-			uint8_t pad_40[0x4];
-			uint8_t scale_shift;
-			uint8_t pad_45[0x11];
+			uint8_t pad_40[0x16];
 			int16_t appear_position;
 			uint8_t pad_58[0x28];
 			uint16_t in_view_animation;
 		} flagman;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0xE];
 			uint16_t spacing;
 			uint16_t count;
 			uint8_t pad_14[0x4];
@@ -1690,12 +1943,9 @@ struct object
 			int16_t x_offset;
 			uint8_t pad_22[0x2];
 			int16_t y_offset;
-			uint8_t pad_26[0x14];
-			uint16_t palette;
-			uint8_t pad_3C[0x3];
+			uint8_t pad_26[0x19];
 			int8_t side;
-			uint8_t pad_40[0x4];
-			uint8_t scale_shift;
+			uint8_t pad_40[0x5];
 			uint8_t size_table;
 			uint8_t pad_46[0x10];
 			int16_t first_position;
@@ -1705,7 +1955,124 @@ struct object
 		} flashing_scenery;
 		struct
 		{
-			uint8_t pad_08[0x1];
+			uint8_t pad_02[0x1A];
+			int16_t position;
+			uint8_t pad_1E[0x38];
+			int16_t start_position;
+			int16_t end_position;
+			uint8_t pad_5A[0x26];
+			int32_t direction;
+		} fork_branch;
+		struct
+		{
+			uint8_t pad_02[0x1A];
+			int16_t position;
+			uint8_t pad_1E[0x62];
+			uint16_t lift_step;
+			uint16_t tilt_step;
+			uint16_t lift_height;
+			uint16_t lower_position;
+		} fork_camera;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t timer;
+		} game_over_banner;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t redline_frames;
+			uint8_t pad_12[0x6E];
+			uint8_t hint_started;
+		} gear_indicator;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t timer;
+			uint8_t pad_12[0xA];
+			int16_t position;
+			uint8_t pad_1E[0x62];
+			uint16_t text_x;
+			uint16_t text_y;
+			uint16_t text_attribute;
+		} goal;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t counter;
+			uint8_t pad_12[0x2];
+			uint32_t scene;
+			uint8_t pad_18[0x29];
+			uint8_t frame_time;
+			int8_t frame_countdown;
+			uint8_t pad_43[0x3D];
+			uint32_t script;
+			uint32_t step;
+		} goal_actor;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t draw_distance;
+			uint8_t pad_12[0x6];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0xA];
+			int16_t screen_x;
+			uint8_t pad_32[0xD];
+			int8_t side;
+			uint8_t pad_40[0x16];
+			int16_t appear_position;
+			uint8_t pad_58[0x28];
+			int16_t x_speed;
+		} goal_parade;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t piece;
+			uint8_t pad_0A[0x6];
+			uint16_t frames_left;
+		} ignition_key_prompt;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t draw_distance;
+			uint8_t pad_12[0x6];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x6];
+			uint16_t position_fraction;
+			uint8_t pad_2A[0x6];
+			int16_t screen_x;
+			uint8_t pad_32[0xD];
+			int8_t side;
+			uint8_t pad_40[0x16];
+			int16_t appear_position;
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
+			uint16_t hop_animation;
+			uint16_t trigger_distance;
+			int16_t x_speed;
+		} kangaroo;
+		struct
+		{
+			uint8_t pad_02[0x8];
+			uint8_t checkpoints;
+			uint8_t pad_0B[0x5];
+			uint16_t split_frames;
+			uint8_t pad_12[0x6E];
+			uint16_t text_x;
+			uint16_t text_y;
+			uint16_t text_attribute;
+		} lap_timer;
+		struct
+		{
+			uint8_t pad_02[0x7];
 			uint8_t player_count;
 			uint8_t pad_0A[0x3];
 			uint8_t page;
@@ -1718,7 +2085,17 @@ struct object
 		} lcd_race_info;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0x12];
+			uint32_t choice;
+			uint32_t palette_list;
+			uint8_t pad_1C[0x4];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+		} manual_panel;
+		struct
+		{
+			uint8_t pad_02[0xE];
 			uint16_t draw_distance;
 			uint8_t pad_12[0x6];
 			uint32_t record;
@@ -1729,14 +2106,9 @@ struct object
 			int16_t y_offset;
 			uint8_t pad_26[0xA];
 			int16_t screen_x;
-			uint8_t pad_32[0x8];
-			uint16_t palette;
-			uint8_t pad_3C[0x2];
-			uint8_t draw_mode;
+			uint8_t pad_32[0xD];
 			int8_t side;
-			uint8_t pad_40[0x4];
-			uint8_t scale_shift;
-			uint8_t pad_45[0x11];
+			uint8_t pad_40[0x16];
 			int16_t appear_position;
 			int16_t trigger_position;
 			uint8_t pad_5A[0x26];
@@ -1747,12 +2119,353 @@ struct object
 		} moving_scenery;
 		struct
 		{
-			uint8_t pad_08[0x54];
+			uint8_t pad_02[0x7];
+			uint8_t open;
+			uint8_t letter;
+			uint8_t place;
+			uint8_t pad_0C[0x1];
+			uint8_t gas_step;
+			uint8_t pad_0E[0x2];
+			uint16_t timer;
+			uint16_t spin_frames;
+			uint8_t pad_14[0x18];
+			uint16_t wheel_angle;
+			uint8_t pad_2E[0x6A];
+			int8_t turn_steps;
+			int8_t turn_delay;
+			uint16_t name_x;
+			uint16_t name_y;
+			uint16_t name_attribute;
+			uint8_t name;
+			uint8_t pad_A1[0x3];
+			uint16_t time_x;
+			uint16_t time_y;
+			uint16_t time_attribute;
+			uint8_t time_text;
+		} name_entry;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t name_entry;
+		} name_entry_lcd;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t pad_0A[0x8];
+			uint16_t spin_frames;
+			uint32_t name_entry;
+			uint8_t pad_18[0x4];
+			int32_t width_factor;
+			int32_t x_offset;
+			int32_t y_offset;
+			int32_t depth;
+			uint16_t angle;
+		} name_entry_letter;
+		struct
+		{
+			uint8_t pad_02[0x5A];
 			uint8_t screen_centered;
 		} overhead_scenery;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0xB];
+			uint8_t running;
+			uint8_t pad_0E[0x2];
+			uint16_t delay;
+			uint16_t frames_left;
+			uint16_t step_frames;
+			uint16_t step_countdown;
+			uint8_t pad_18[0x20];
+			uint32_t palette_list;
+			uint8_t pad_3C[0x44];
+			uint32_t data;
+		} palette_cycle;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t delay;
+			uint8_t pad_11[0x1];
+			uint8_t period;
+			uint8_t colours_left;
+			uint8_t pad_14[0x4];
+			uint32_t from;
+			uint32_t to;
+			uint32_t colour_place;
+			uint32_t difference_place;
+			uint8_t pad_28[0x8];
+			uint16_t palette_offset;
+			uint16_t blocks;
+		} palette_fade;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			int16_t step;
+		} passing_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t path_steps;
+			uint8_t pad_0A[0x6];
+			uint16_t wait;
+		} passing_traffic;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t place;
+			uint8_t pad_0A[0xA];
+			uint32_t number;
+		} place_count;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t place;
+			uint8_t pad_0A[0x6];
+			uint8_t frames;
+			uint8_t pad_11[0x1];
+			uint8_t blink_timer;
+		} place_number;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t step;
+			uint8_t pad_0E[0x2];
+			uint16_t timer;
+			uint8_t pad_12[0xE];
+			int32_t world_x;
+			int32_t world_y;
+			int32_t world_z;
+			uint16_t speed;
+			int16_t sideways_speed;
+			uint8_t pad_30[0x11];
+			uint8_t frame_time;
+			int8_t frame_countdown;
+			uint8_t pad_43[0x25];
+			uint16_t hit_other;
+			uint8_t pad_6A[0x4];
+			uint8_t hit_kind;
+			uint8_t hit_guard;
+			uint8_t pad_70[0x1E];
+			uint16_t heading;
+			uint16_t previous_heading;
+			uint8_t pad_92[0x2];
+			int16_t acceleration;
+			int16_t steering;
+			uint8_t pad_98[0x8];
+			int32_t view_target_x;
+			int32_t view_target_y;
+			int32_t view_target_z;
+			uint8_t pad_AC[0x4];
+			uint16_t brake_force;
+			uint8_t pad_B2[0x2];
+			int32_t previous_world_y;
+			int16_t slide;
+			uint8_t pad_BA[0x6];
+			uint32_t impact_speed;
+			int32_t speed_change;
+			int32_t bounce_height;
+			int16_t bounce_speed;
+			int16_t sideways_push;
+			uint8_t gas;
+			uint8_t brake;
+			uint8_t wheel;
+			uint8_t pad_D3[0x6];
+			uint8_t view_height;
+			uint8_t place;
+			uint8_t steer_frame;
+			uint8_t pad_DC[0x4];
+			uint8_t rival_step;
+			uint8_t rival_near;
+			int16_t nod;
+			uint8_t rival_hold;
+			uint8_t pad_E5[0xB];
+			uint16_t stop_position;
+			int16_t stop_x;
+			uint16_t stop_speed;
+			uint8_t stop_wheel;
+			uint8_t stop_gas;
+			uint8_t finished;
+		} player_car;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t leader;
+			uint32_t record;
+		} pulled_vehicle;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t change_step;
+			uint8_t page_half;
+			uint8_t background;
+			uint8_t pad_10[0x8];
+			uint32_t scroll_x_address;
+			uint32_t scroll_y_address;
+			uint32_t page_word_address;
+			uint32_t tile_bank_address;
+			uint32_t next_page_words;
+			uint32_t page_list;
+		} race_background;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint32_t count;
+			uint32_t background;
+			uint8_t pad_18[0x68];
+			uint32_t fades;
+		} race_background_fade_watch;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t delay;
+			uint8_t pad_11[0x1];
+			uint8_t step;
+			uint8_t pad_13[0xD];
+			uint32_t page_word_address;
+		} race_background_lower_animation;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t delay;
+			uint8_t pad_11[0x1];
+			uint8_t step;
+			uint8_t pad_13[0xD];
+			uint32_t page_word_address;
+		} race_background_upper_animation;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t player;
+			uint8_t model;
+			uint8_t pad_0B[0x23];
+			uint8_t special_body;
+			uint8_t pad_2F[0x51];
+			uint32_t record;
+			uint8_t pad_84[0x4];
+			uint32_t wheel_turn;
+			uint8_t pad_8C[0x24];
+			int16_t crash_text_y;
+			uint8_t crash_text_frames;
+			uint8_t crash_text_rise;
+			uint16_t crash_text_animation;
+			uint16_t crash_text_palette;
+			uint16_t tag_palette;
+			uint16_t tag_animation;
+			uint8_t blink_counter;
+			uint8_t rival;
+		} race_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t occupant;
+			uint8_t body_back;
+			uint8_t pad_0B[0x9];
+			uint16_t car;
+		} race_car_occupant;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t sound_step;
+			uint8_t camera_step;
+			uint8_t pad_0F[0x1];
+			uint8_t count;
+			uint8_t pad_11[0x1];
+			uint8_t next_count;
+			uint8_t pad_13[0x5];
+			uint32_t sound_list;
+		} race_opening;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t frames;
+		} race_result;
+		struct
+		{
+			uint16_t course_over;
+			uint8_t pad_04[0xC];
+			uint8_t courses_shown;
+			uint8_t pad_11[0x1];
+			uint16_t frames_left;
+		} ranking;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t courses_shown;
+			uint8_t pad_11[0x3];
+			uint32_t ranking;
+			uint8_t pad_18[0x68];
+			uint32_t tile_bank_address;
+			uint32_t pages_address;
+			uint32_t scroll_x_address;
+			uint32_t scroll_y_address;
+			uint32_t zoom_x_address;
+			uint32_t zoom_y_address;
+			uint32_t zoom_center_x_address;
+			uint32_t zoom_center_y_address;
+			uint8_t pad_A0[0x8];
+			uint32_t second_scroll_x_address;
+			uint32_t second_scroll_y_address;
+			uint32_t page_list;
+		} ranking_background;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t course;
+			uint8_t pad_0A[0x6];
+			uint16_t frames_left;
+		} ranking_course_banner;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t course;
+			uint8_t pad_0A[0x76];
+			uint8_t text;
+		} ranking_record;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t course;
+			uint8_t pad_0A[0x6];
+			uint16_t wait_frames;
+		} ranking_record_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t course;
+			uint8_t pad_0B[0x5];
+			uint8_t slide_steps;
+			uint8_t pad_11[0x1];
+			uint8_t colour_delay;
+			uint8_t pad_13[0x1];
+			uint32_t ranking_record;
+			uint8_t pad_18[0x6A];
+			uint16_t frames_left;
+		} ranking_record_character;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t rider;
+			uint8_t model;
+			uint8_t player;
+			uint8_t pad_0C[0x8];
+			uint16_t car;
+		} rider_gesture;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+		} rival_alarm;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+			uint8_t pad_11[0x1];
+			uint8_t blinks;
+		} rival_warning;
+		struct
+		{
+			uint8_t pad_02[0xE];
 			uint16_t draw_distance;
 			uint8_t pad_12[0x6];
 			uint32_t record;
@@ -1763,14 +2476,9 @@ struct object
 			int16_t y_offset;
 			uint8_t pad_26[0xA];
 			int16_t screen_x;
-			uint8_t pad_32[0x8];
-			uint16_t palette;
-			uint8_t pad_3C[0x2];
-			uint8_t draw_mode;
+			uint8_t pad_32[0xD];
 			int8_t side;
-			uint8_t pad_40[0x4];
-			uint8_t scale_shift;
-			uint8_t pad_45[0x11];
+			uint8_t pad_40[0x16];
 			int16_t appear_position;
 			int16_t trigger_position;
 			uint8_t pad_5A[0x26];
@@ -1780,7 +2488,14 @@ struct object
 		} road_crosser;
 		struct
 		{
-			uint8_t pad_08[0x8];
+			uint8_t pad_02[0x7E];
+			uint32_t stream;
+			uint16_t stage_start;
+			uint8_t stage;
+		} road_object_stream;
+		struct
+		{
+			uint8_t pad_02[0xE];
 			uint16_t spacing;
 			uint16_t count;
 			uint8_t pad_14[0x4];
@@ -1792,15 +2507,9 @@ struct object
 			int16_t y_offset;
 			uint8_t pad_26[0x2];
 			uint16_t position_fraction;
-			uint8_t pad_2A[0xE];
-			uint16_t animation;
-			uint16_t palette;
-			uint8_t pad_3C[0x3];
+			uint8_t pad_2A[0x15];
 			int8_t side;
-			uint8_t frame;
-			uint8_t pad_41[0x2];
-			uint8_t size_step;
-			uint8_t scale_shift;
+			uint8_t pad_40[0x5];
 			uint8_t size_table;
 			uint8_t pad_46[0xA];
 			uint32_t previous_sprites;
@@ -1814,7 +2523,250 @@ struct object
 		} road_row;
 		struct
 		{
-			uint8_t pad_08[0x1];
+			uint8_t pad_02[0x8];
+			uint8_t first_tiles_flag;
+			uint8_t second_tiles_flag;
+			uint8_t pad_0C[0x1];
+			uint8_t page_set;
+			uint8_t segment_page_set;
+			uint8_t points_buffer;
+			uint16_t near_scroll;
+			uint8_t event;
+			uint8_t last_event;
+			uint16_t segment;
+			uint16_t last_segment;
+			uint8_t page_table;
+			uint8_t pad_19[0x3B];
+			uint32_t page_register;
+			uint32_t line_scroll_table;
+			uint32_t line_select_table;
+			uint32_t skipped_line;
+			uint32_t skipped_x;
+			uint32_t skipped_depth;
+			uint32_t skipped_x_step;
+			uint32_t skipped_depth_step;
+			uint32_t skipped_scroll_place;
+			uint32_t skipped_select_place;
+			uint32_t skipped_stripe;
+			uint8_t event_delay;
+		} road_surface;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t table_half;
+			uint8_t page_set;
+			uint8_t pad_0B[0x5];
+			uint8_t step;
+			uint8_t pad_11[0x1];
+			uint8_t pages_left;
+			uint8_t pad_13[0x1];
+			uint32_t road;
+			uint32_t source_pages;
+			uint8_t pad_1C[0xC];
+			uint32_t target_pages;
+			uint8_t pad_2C[0xC];
+			uint32_t data;
+			uint32_t flag;
+		} road_tiles_change;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t first_branch;
+			uint8_t pad_0A[0x1];
+			uint8_t last_leg_progress;
+			uint8_t pad_0C[0x4];
+			uint8_t timer;
+			int8_t leg_frames;
+			uint8_t pad_12[0x1];
+			uint8_t checkpoint_legs_left;
+			uint8_t pad_14[0x4];
+			uint32_t sea_colour_address;
+			uint8_t pad_1C[0xC];
+			uint32_t stage;
+			uint8_t pad_2C[0x54];
+			uint32_t pages_address;
+			uint32_t scroll_x_address;
+			uint32_t scroll_y_address;
+			uint32_t zoom_x_address;
+			uint32_t zoom_y_address;
+			uint32_t zoom_center_x_address;
+			uint32_t zoom_center_y_address;
+			uint32_t register_scroll_x_address;
+			uint32_t register_scroll_y_address;
+			uint8_t pad_A4[0x4];
+			uint32_t second_pages_address;
+			uint32_t second_scroll_x_address;
+			uint32_t second_scroll_y_address;
+			uint32_t second_register_scroll_x_address;
+			uint32_t second_register_scroll_y_address;
+		} route_map;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t model;
+			uint8_t pad_0A[0xA];
+			uint32_t route_map;
+		} route_map_car;
+		struct
+		{
+			uint8_t pad_02[0x8];
+			uint8_t kind;
+			uint8_t pad_0B[0x5];
+			uint16_t blink;
+			uint8_t pad_12[0x2];
+			uint32_t leg;
+		} route_map_checkpoint;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t colour_timer;
+			uint8_t pad_12[0xAE];
+			uint16_t palette_base;
+		} route_map_direction_sign;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t toggle;
+			uint8_t pad_11[0x3];
+			uint32_t route_map;
+			uint8_t pad_18[0x6C];
+			int16_t x_offset;
+			uint8_t pad_86[0x2];
+			int16_t y_offset;
+		} route_map_landmark;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t leg;
+			uint8_t progress;
+			uint8_t pad_0B[0x9];
+			uint32_t map;
+		} route_map_leg;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t leg;
+		} route_map_leg_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t kind;
+			uint8_t pad_0A[0x6];
+			uint16_t blink;
+			uint8_t pad_12[0x2];
+			uint32_t route_map;
+			uint8_t pad_18[0x6C];
+			int16_t x_offset;
+			uint8_t pad_86[0x2];
+			int16_t y_offset;
+		} route_map_sign;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t timer;
+		} route_map_wait_banner;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t draw_distance;
+			uint8_t sound_countdown;
+			uint8_t pad_13[0x5];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0xA];
+			int16_t screen_x;
+			uint8_t pad_32[0xD];
+			int8_t side;
+			uint8_t pad_40[0x16];
+			int16_t appear_position;
+			uint8_t pad_58[0x2A];
+			int16_t x_speed;
+			uint16_t sound;
+		} santa_sleigh;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t timer;
+			uint8_t pad_12[0x2];
+			uint32_t car_select;
+		} select_car_heading;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t timer;
+			uint8_t pad_12[0x2];
+			uint32_t car_select;
+			uint16_t piece_animation;
+		} select_instruction;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t gear;
+			uint8_t pad_0A[0x6];
+			uint8_t blink;
+			uint8_t pad_11[0x3];
+			uint32_t indicator;
+		} shift_up_hint;
+		struct
+		{
+			uint8_t pad_02[0xB];
+			uint8_t colour_step;
+			uint8_t pad_0E[0x2];
+			int16_t time_left;
+			uint16_t speed;
+			uint8_t pad_14[0x4];
+			uint32_t text;
+			uint8_t pad_1C[0x4];
+			int16_t slide;
+			uint16_t y;
+		} song_title;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t spacing;
+			uint16_t count;
+			uint8_t pad_14[0x4];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x19];
+			int8_t side;
+			uint8_t pad_40[0x5];
+			uint8_t size_table;
+			uint8_t pad_46[0x10];
+			int16_t first_position;
+			int16_t end_position;
+			uint8_t pad_5A[0x26];
+			uint16_t sound;
+			uint8_t sound_countdown;
+		} sounding_scenery;
+		struct
+		{
+			uint8_t pad_02[0x1E];
+			uint16_t units_x;
+			uint8_t pad_22[0x2];
+			uint16_t digits_y;
+		} speedometer;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t player;
+			uint8_t car;
+			uint8_t pad_0B[0x7];
+			uint8_t visible;
+			uint8_t pad_13[0x1];
+			uint32_t below;
+		} stacked_choice_flag;
+		struct
+		{
+			uint8_t pad_02[0x7];
 			uint8_t controls_held;
 			uint8_t pad_0A[0x6];
 			uint16_t frames_left;
@@ -1824,7 +2776,291 @@ struct object
 		} staff_credits_code;
 		struct
 		{
-			uint8_t pad_08[0xC];
+			uint8_t pad_02[0x7];
+			uint8_t stage;
+			uint8_t pad_0A[0x6];
+			uint8_t countdown;
+			uint8_t pad_11[0x7];
+			uint32_t sound_list;
+		} stage_end_sounds;
+		struct
+		{
+			uint8_t pad_02[0x1A];
+			int16_t position;
+		} stage_entry;
+		struct
+		{
+			uint8_t pad_02[0x8];
+			uint8_t last;
+			uint8_t pad_0B[0x15];
+			uint32_t place_address;
+			uint8_t pad_24[0x4];
+			uint32_t stage;
+		} stage_result_line;
+		struct
+		{
+			uint8_t pad_02[0x10];
+			uint16_t rise_speed;
+			uint8_t pad_14[0x4];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x19];
+			int8_t side;
+		} start_balloon;
+		struct
+		{
+			uint8_t pad_02[0x16];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x19];
+			int8_t side;
+			uint8_t pad_40[0x40];
+			uint16_t go_animation;
+		} start_flagman;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t spacing;
+			uint16_t count;
+			uint8_t pad_14[0x4];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x19];
+			int8_t side;
+			uint8_t pad_40[0x16];
+			int16_t first_position;
+			int16_t end_position;
+			uint8_t pad_5A[0x6];
+			uint32_t hit_box;
+		} start_gate;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+		} start_message;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint32_t count;
+			uint8_t pad_14[0x4];
+			uint32_t fades;
+			uint8_t pad_1C[0x1C];
+			uint32_t fade_list;
+			uint8_t pad_3C[0x44];
+			uint32_t data;
+		} sunset_fade;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t draw_distance;
+			uint8_t dive_countdown;
+			uint8_t pad_13[0x5];
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0xA];
+			int16_t screen_x;
+			uint8_t pad_32[0xD];
+			int8_t side;
+			uint8_t pad_40[0x16];
+			int16_t appear_position;
+			int16_t trigger_position;
+			uint8_t pad_5A[0x26];
+			uint16_t trigger_distance;
+			int16_t x_speed;
+			int16_t y_speed;
+			int16_t road_speed;
+			uint8_t dive_frames;
+			uint8_t pad_89[0x1];
+			int16_t dive_y_speed;
+		} swooping_helicopter;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+		} title_board_palms;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t pad_0A[0x6];
+			uint16_t frames;
+			uint8_t pad_12[0xE];
+			int16_t position;
+			uint8_t pad_22[0x2];
+			uint16_t rest_y;
+			uint8_t pad_26[0x6];
+			uint16_t speed;
+		} title_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t model;
+			uint8_t pad_0A[0x6];
+			int16_t x_offset;
+			int16_t y_offset;
+			uint32_t car;
+		} title_car_driver;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t model;
+			uint8_t pad_0A[0x6];
+			int16_t x_offset;
+			int16_t y_offset;
+			uint32_t car;
+		} title_car_passenger;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+			uint8_t pad_11[0x6F];
+			uint32_t palette_list;
+		} title_logo;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t pad_0A[0x6];
+			uint8_t delay;
+		} title_logo_car;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t frames;
+			uint8_t pad_11[0x6F];
+			uint32_t palette_list;
+		} title_logo_copy;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t pad_0A[0x6];
+			uint8_t frames;
+		} title_logo_stripe;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t near_or_far;
+		} title_palm_tree;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+		} title_picture;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t frames;
+			uint16_t palm_frames;
+			uint8_t pad_14[0x6C];
+			uint32_t wave_times;
+			uint8_t pad_84[0x8];
+			uint32_t scroll_x_address;
+			uint32_t scroll_y_address;
+			uint8_t pad_94[0x8];
+			uint32_t second_scroll_x_address;
+			uint32_t second_scroll_y_address;
+		} title_screen;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t index;
+			uint8_t pad_0A[0x6];
+			uint8_t frames;
+			uint8_t pad_11[0x77];
+			int16_t x_angle;
+			uint8_t pad_8A[0x2];
+			int16_t centre_x;
+			uint8_t pad_8E[0x2];
+			int16_t centre_y;
+			uint8_t pad_92[0x6];
+			int16_t y_angle;
+		} title_seagull;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t leader;
+			uint32_t record;
+			int16_t position;
+			uint8_t pad_1E[0x2];
+			int16_t x_offset;
+			uint8_t pad_22[0x2];
+			int16_t y_offset;
+			uint8_t pad_26[0x2];
+			uint16_t position_fraction;
+			uint8_t pad_2A[0x2];
+			int16_t speed;
+			uint8_t pad_2E[0x2];
+			int16_t screen_x;
+			uint8_t pad_32[0xD];
+			int8_t side;
+			uint8_t pad_40[0x20];
+			uint32_t hit_box;
+			uint8_t pad_64[0x6];
+			uint16_t weight;
+			uint8_t pad_6C[0x14];
+			uint8_t passed;
+			uint8_t passing_sound;
+			uint8_t hit_sound;
+			uint8_t pad_83[0x1];
+			uint16_t stop_distance;
+			uint8_t stopping;
+			uint8_t shake;
+		} traffic;
+		struct
+		{
+			uint8_t pad_02[0x12];
+			uint32_t leader;
+			uint32_t record;
+		} traffic_follower;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t delay;
+			uint8_t pad_11[0x1];
+			uint8_t sound;
+		} traffic_hit_sound;
+		struct
+		{
+			uint8_t pad_02[0x16];
+			uint32_t list;
+			int16_t stage_start;
+			uint8_t stage;
+			uint8_t pad_1F[0xD];
+			uint16_t traffic_level;
+		} traffic_spawner;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t shown_transmission;
+			uint8_t pad_0A[0x6];
+			uint8_t manual_cycle;
+			uint8_t pad_11[0x1];
+			uint8_t automatic_cycle;
+			uint8_t slide_frames;
+			uint32_t car_select;
+			uint8_t pad_18[0x14];
+			int16_t slide_step;
+		} transmission_choice;
+		struct
+		{
+			uint8_t pad_02[0x12];
 			uint32_t panel;
 			uint8_t pad_18[0x8];
 			int16_t x_offset;
@@ -1833,7 +3069,38 @@ struct object
 		} transmission_label;
 		struct
 		{
-			uint8_t pad_08[0x1];
+			uint8_t pad_02[0x7];
+			uint8_t car;
+			uint8_t pad_0A[0xA];
+			uint32_t car_select;
+			uint8_t pad_18[0x4];
+			uint16_t size;
+		} turntable_car;
+		struct
+		{
+			uint8_t pad_02[0x7];
+			uint8_t group;
+			uint8_t pad_0A[0xA];
+			uint32_t car_select;
+			uint32_t item_list;
+			uint16_t size;
+			uint8_t pad_1E[0xE];
+			uint16_t angle;
+			uint8_t pad_2E[0x22];
+			uint32_t previous_place;
+			uint8_t pad_54[0x2C];
+			uint16_t item_places;
+		} turntable_scenery;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint8_t timer;
+			uint8_t pad_11[0x3];
+			uint32_t car_select;
+		} waiting_banner;
+		struct
+		{
+			uint8_t pad_02[0x7];
 			uint8_t index;
 			uint8_t pad_0A[0x6];
 			int16_t delay;
@@ -1841,143 +3108,153 @@ struct object
 			uint8_t pad_14[0x4];
 			uint32_t palette_list;
 		} welcome_letter;
+		struct
+		{
+			uint8_t pad_02[0xE];
+			uint16_t colour_count;
+			uint8_t pad_12[0x6E];
+			uint16_t base_palette;
+		} west_east_panel;
 	};
 };
 
 struct car
 {
 	uint32_t object;
-	uint32_t unk_04;
-	uint32_t unk_08;
+	uint32_t race_time;
+	uint32_t checkpoint_time;
 	uint8_t pad_0C[0x6];
-	uint16_t unk_12;
-	uint8_t unk_14;
+	uint16_t time_left;
+	uint8_t song;
 	uint8_t pad_15[0xB];
-	uint32_t unk_20;
-	uint32_t unk_24;
-	uint32_t unk_28;
-	uint16_t unk_2C;
-	uint16_t unk_2E;
-	uint16_t unk_30;
-	uint16_t unk_32;
-	uint32_t unk_34;
-	uint16_t unk_38;
-	uint16_t unk_3A;
-	uint32_t unk_3C;
-	uint16_t unk_40;
-	uint16_t unk_42;
-	uint16_t unk_44;
-	uint16_t unk_46;
-	uint16_t unk_48;
-	uint16_t unk_4A;
-	uint16_t unk_4C;
-	uint16_t unk_4E;
-	uint32_t unk_50;
-	uint32_t unk_54;
-	uint32_t unk_58;
+	int32_t view_x;
+	int32_t view_y;
+	int32_t view_z;
+	uint16_t view_pitch;
+	uint16_t view_yaw;
+	uint16_t road_pitch;
+	uint16_t segment_fraction;
+	uint32_t segment_progress;
+	int16_t road_x;
+	uint16_t segment_remaining;
+	uint32_t window_record;
+	uint16_t segment_offset;
+	uint16_t window_segment;
+	uint16_t segment;
+	uint16_t stage_segments;
+	uint16_t stage_start;
+	uint16_t reached_stage_start;
+	uint16_t surface_next_start;
+	uint16_t surface_start;
+	uint32_t torque_curves;
+	uint32_t gear_ratios;
+	uint32_t handling;
 	uint8_t pad_5C[0x4];
-	uint8_t unk_60;
-	uint8_t unk_61;
-	uint8_t unk_62;
-	uint8_t unk_63;
-	uint8_t unk_64;
-	uint8_t unk_65;
-	uint8_t unk_66;
-	uint8_t unk_67;
-	uint16_t unk_68;
-	uint16_t unk_6A;
+	uint8_t model;
+	uint8_t transmission;
+	uint8_t gear;
+	uint8_t top_gear;
+	uint8_t gear_ratio;
+	uint8_t wheel_slip;
+	uint8_t moving;
+	uint8_t skidding;
+	uint16_t catch_up_target;
+	uint16_t catch_up;
 	uint8_t pad_6C[0x4];
-	uint16_t unk_70;
+	uint16_t revs;
 	uint8_t pad_72[0x2];
-	uint16_t unk_74;
+	uint16_t speed;
 	uint8_t pad_76[0x6];
-	uint8_t unk_7C;
+	uint8_t off_road;
 	uint8_t pad_7D[0x1];
-	uint16_t unk_7E;
-	uint32_t unk_80;
-	uint32_t unk_84;
-	uint32_t unk_88;
+	uint8_t brake_lights;
+	uint8_t pad_7F[0x1];
+	uint32_t next_x;
+	uint32_t next_y;
+	uint32_t next_z;
 	uint8_t pad_8C[0x4];
-	uint32_t unk_90;
-	uint32_t unk_94;
-	uint32_t unk_98;
-	uint8_t unk_9C;
-	uint8_t unk_9D;
+	uint32_t next_x_fine;
+	uint32_t next_y_fine;
+	uint32_t next_z_fine;
+	uint8_t width_code;
+	uint8_t width_changing;
 	uint8_t pad_9E[0x2];
-	uint32_t unk_A0;
-	uint16_t unk_A4;
-	uint16_t unk_A6;
-	uint16_t unk_A8;
-	uint16_t unk_AA;
-	uint16_t unk_AC;
-	uint16_t unk_AE;
-	uint32_t unk_B0;
-	uint32_t unk_B4;
-	uint16_t unk_B8;
-	uint16_t unk_BA;
-	uint16_t unk_BC;
-	uint16_t unk_BE;
-	uint16_t unk_C0;
+	uint32_t course;
+	uint16_t window_offset;
+	uint16_t build_offset;
+	uint16_t build_end_offset;
+	uint16_t built_segments;
+	uint16_t prebuilt_segments;
+	uint16_t run_left;
+	uint32_t pitch_angle;
+	uint32_t heading_angle;
+	uint16_t pitch_step;
+	uint16_t heading_step;
+	uint16_t road_width;
+	int16_t road_width_step;
+	uint16_t road_width_target;
 	uint16_t unk_C2;
 	uint8_t pad_C4[0x5];
-	uint8_t unk_C9;
+	uint8_t branch;
 	uint8_t unk_CA;
-	uint8_t unk_CB;
-	uint8_t unk_CC;
-	uint8_t unk_CD;
+	uint8_t at_fork;
+	uint8_t forks_reached;
+	uint8_t extensions_shown;
 	uint8_t unk_CE;
 	uint8_t pad_CF[0x1];
-	uint8_t unk_D0;
-	uint8_t unk_D1;
-	uint8_t pad_D2[0xA];
-	uint32_t unk_DC;
-	uint32_t unk_E0;
-	uint32_t unk_E4;
-	uint32_t unk_E8;
-	uint32_t unk_EC;
-	uint32_t unk_F0;
-	uint32_t unk_F4;
-	uint32_t unk_F8;
-	uint32_t unk_FC;
-	uint16_t unk_100;
-	uint16_t unk_102;
-	uint16_t unk_104;
-	uint16_t unk_106;
-	uint16_t unk_108;
-	uint16_t unk_10A;
-	uint16_t unk_10C;
-	uint16_t unk_10E;
-	uint16_t unk_110;
-	uint16_t unk_112;
+	uint8_t forks_taken;
+	uint8_t stage_history;
+	uint8_t pad_D2[0x5];
+	uint8_t branch_history;
+	uint8_t pad_D8[0x4];
+	int32_t view_matrix_xx;
+	int32_t view_matrix_xy;
+	int32_t view_matrix_xz;
+	int32_t view_matrix_yx;
+	int32_t view_matrix_yy;
+	int32_t view_matrix_yz;
+	int32_t view_matrix_zx;
+	int32_t view_matrix_zy;
+	int32_t view_matrix_zz;
+	uint16_t view_shift_nod;
+	uint16_t view_pitch_nod;
+	uint16_t view_rise;
+	uint16_t view_side;
+	uint16_t view_shift_lift;
+	uint16_t view_pitch_lift;
+	uint16_t view_shift_intro;
+	uint16_t view_pitch_intro;
+	uint16_t view_shift_rival;
+	uint16_t view_pitch_rival;
 	uint8_t pad_114[0xC];
-	uint16_t unk_120;
-	uint16_t unk_122;
+	uint16_t hit_across;
+	uint16_t hit_along;
 	uint8_t pad_124[0x2];
-	uint16_t unk_126;
-	uint16_t unk_128;
-	uint16_t unk_12A;
-	uint16_t unk_12C;
+	uint16_t bounce_damping;
+	uint16_t push_decay;
+	uint16_t gravity;
+	uint16_t speed_change_decay;
 	uint8_t pad_12E[0x2];
-	uint32_t unk_130;
-	uint8_t unk_134;
-	uint8_t unk_135;
-	uint8_t unk_136;
+	uint32_t crash_table;
+	uint8_t crash_sound;
+	uint8_t crash_sound_delay;
+	uint8_t crash_text;
 	uint8_t unk_137;
 	uint8_t pad_138[0x8];
-	uint8_t unk_140;
-	uint8_t unk_141;
-	uint8_t unk_142;
+	uint8_t wheel_effect_sides;
+	uint8_t wheel_effect_1;
+	uint8_t wheel_effect_2;
 	uint8_t pad_143[0x1];
-	uint8_t unk_144;
-	uint8_t unk_145;
-	uint8_t unk_146;
-	uint8_t unk_147;
-	uint32_t unk_148;
-	uint32_t unk_14C;
+	uint8_t shift_spin;
+	uint8_t hard_acceleration;
+	uint8_t surface_stage;
+	uint8_t slowed_frames;
+	uint32_t surface_entry_1;
+	uint32_t surface_entry_2;
 	uint8_t pad_150[0x30];
-	uint8_t unk_180;
-	uint8_t unk_181;
-	uint8_t unk_182;
+	uint8_t time_up;
+	uint8_t at_goal;
+	uint8_t race_over;
 	uint8_t pad_183[0x7D];
 };
 

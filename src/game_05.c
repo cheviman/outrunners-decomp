@@ -3,7 +3,7 @@
  *    Description: the game's functions, part 05 (in the order of their V60 addresses)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    23-10-2026
+ *    Modified:    24-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -36,7 +36,7 @@ void sub_01DBA9(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
+	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 }
@@ -485,7 +485,7 @@ void sub_01E0B0(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
+	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	sub_01139E();
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
@@ -671,7 +671,7 @@ void sub_01E5F7(void)
 			AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 			return;
 		}
-	} while ((uint8_t)OBJECT(current_object)->unk_3C == OBJECT(current_object)->flags);
+	} while ((uint8_t)OBJECT(current_object)->depth_layer == OBJECT(current_object)->flags);
 	unk_20E701 |= 2u;
 	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
 }
@@ -1566,7 +1566,7 @@ void sub_03F62A(void)
 		move_string(screen + 0x1FCu, 2u, r0 + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
 	}
 	if (SCREEN(screen)->unk_900 != 0u)
-		sub_0115EB();
+		upload_queued_palettes();
 }
 
 void sub_03F6A0(void)

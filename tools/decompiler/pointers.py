@@ -8,8 +8,8 @@ Modified:    23-10-2026
 Author:      Sebastian Toyos
 
 The structures (STRUCTS) are OutRunners': the game objects (0x100 bytes, 124 of them below each screen's
-block, run by the object loop with R20 pointing at each), the screen's car (0x200 bytes at 1000 of the
-screen's block, R23; an object in its first 0x100 bytes) and the block of the screen a task runs (from
+block, run by the object loop with R20 pointing at each), the screen's car block (0x200 bytes at 1000 of
+the screen's block, R23; its field 0 is the car's object) and the block of the screen a task runs (from
 0x208000 or 0x218000, R25). A kind is (structure, offset): a pointer to a structure, or into it; or
 ("global", address): a pointer to a variable in work RAM, so that what is reached through it reads as
 that variable.
