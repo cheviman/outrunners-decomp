@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -98,8 +98,8 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define rival_alarm_update_ADDRESS 0x007C9Eu
 #define race_cars_start_ADDRESS 0x009590u
 #define race_car_draw_ADDRESS 0x00974Cu
-#define sub_00AB24_ADDRESS 0x00AB24u
-#define sub_00AB36_ADDRESS 0x00AB36u
+#define distance_offset_from_x_ADDRESS 0x00AB24u
+#define distance_offset_from_z_ADDRESS 0x00AB36u
 #define rev_meter_update_ADDRESS 0x00BFC1u
 #define speedometer_update_ADDRESS 0x00C017u
 #define speed_unit_update_ADDRESS 0x00C0C6u
@@ -221,42 +221,42 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 #define credit_display_update_ADDRESS 0x01AA01u
 #define demo_captions_run_ADDRESS 0x01ADE8u
 #define demo_caption_update_ADDRESS 0x01AE8Du
-#define sub_01C392_ADDRESS 0x01C392u
-#define sub_01C3E6_ADDRESS 0x01C3E6u
-#define sub_01C5BA_ADDRESS 0x01C5BAu
-#define sub_01C5DB_ADDRESS 0x01C5DBu
-#define sub_01C928_ADDRESS 0x01C928u
-#define sub_01CDE0_ADDRESS 0x01CDE0u
-#define sub_01CE15_ADDRESS 0x01CE15u
-#define sub_01CE97_ADDRESS 0x01CE97u
-#define sub_01D111_ADDRESS 0x01D111u
-#define sub_01D126_ADDRESS 0x01D126u
-#define sub_01D13B_ADDRESS 0x01D13Bu
-#define sub_01D3E4_ADDRESS 0x01D3E4u
-#define sub_01D419_ADDRESS 0x01D419u
-#define sub_01D620_ADDRESS 0x01D620u
-#define sub_01D661_ADDRESS 0x01D661u
-#define sub_01D840_ADDRESS 0x01D840u
-#define sub_01D868_ADDRESS 0x01D868u
-#define sub_01D87A_ADDRESS 0x01D87Au
-#define sub_01D88F_ADDRESS 0x01D88Fu
-#define sub_01D9F3_ADDRESS 0x01D9F3u
-#define sub_01DA28_ADDRESS 0x01DA28u
-#define sub_01DD1E_ADDRESS 0x01DD1Eu
-#define sub_01DD2B_ADDRESS 0x01DD2Bu
-#define sub_01DD58_ADDRESS 0x01DD58u
-#define sub_01DEFD_ADDRESS 0x01DEFDu
-#define sub_01E453_ADDRESS 0x01E453u
-#define sub_01E4BA_ADDRESS 0x01E4BAu
-#define sub_01E6EB_ADDRESS 0x01E6EBu
-#define sub_01E703_ADDRESS 0x01E703u
-#define sub_01E715_ADDRESS 0x01E715u
-#define sub_01E72D_ADDRESS 0x01E72Du
-#define sub_01EDC4_ADDRESS 0x01EDC4u
-#define sub_01EDF1_ADDRESS 0x01EDF1u
-#define sub_01EE66_ADDRESS 0x01EE66u
-#define sub_01EEC1_ADDRESS 0x01EEC1u
-#define sub_01EEEF_ADDRESS 0x01EEEFu
+#define test_mode_menu_ADDRESS 0x01C392u
+#define test_mode_menu_run_ADDRESS 0x01C3E6u
+#define test_mode_menu_toggle_continue_ADDRESS 0x01C5BAu
+#define test_mode_memory_test_ADDRESS 0x01C5DBu
+#define test_mode_memory_test_run_ADDRESS 0x01C928u
+#define test_mode_volume_adjustment_ADDRESS 0x01CDE0u
+#define test_mode_volume_adjustment_select_ADDRESS 0x01CE15u
+#define test_mode_volume_adjustment_adjust_ADDRESS 0x01CE97u
+#define test_mode_input_test_ADDRESS 0x01D111u
+#define test_mode_input_test_run_ADDRESS 0x01D126u
+#define test_mode_input_test_release_ADDRESS 0x01D13Bu
+#define test_mode_output_test_ADDRESS 0x01D3E4u
+#define test_mode_output_test_run_ADDRESS 0x01D419u
+#define test_mode_sound_test_ADDRESS 0x01D620u
+#define test_mode_sound_test_run_ADDRESS 0x01D661u
+#define test_mode_crt_test_ADDRESS 0x01D840u
+#define test_mode_crt_test_bars_run_ADDRESS 0x01D868u
+#define test_mode_crt_test_grid_ADDRESS 0x01D87Au
+#define test_mode_crt_test_grid_run_ADDRESS 0x01D88Fu
+#define test_mode_game_assignments_ADDRESS 0x01D9F3u
+#define test_mode_game_assignments_run_ADDRESS 0x01DA28u
+#define test_mode_coin_assignments_ADDRESS 0x01DD1Eu
+#define test_mode_coin_assignments_show_ADDRESS 0x01DD2Bu
+#define test_mode_coin_assignments_run_ADDRESS 0x01DD58u
+#define test_mode_coin_assignments_manual_run_ADDRESS 0x01DEFDu
+#define test_mode_network_assignments_start_ADDRESS 0x01E453u
+#define test_mode_network_assignments_run_ADDRESS 0x01E4BAu
+#define test_mode_bookkeeping_start_ADDRESS 0x01E6EBu
+#define test_mode_bookkeeping_wait_ADDRESS 0x01E703u
+#define test_mode_bookkeeping_second_page_start_ADDRESS 0x01E715u
+#define test_mode_bookkeeping_second_page_wait_ADDRESS 0x01E72Du
+#define test_mode_backup_data_clear_start_ADDRESS 0x01EDC4u
+#define test_mode_backup_data_clear_run_ADDRESS 0x01EDF1u
+#define test_mode_backup_data_clear_wait_ADDRESS 0x01EE66u
+#define test_mode_exit_ADDRESS 0x01EEC1u
+#define test_mode_exit_caution_wait_ADDRESS 0x01EEEFu
 #define int_vector_40_ADDRESS 0x03F500u
 #define int_vector_41_ADDRESS 0x03F794u
 #define int_vector_42_ADDRESS 0x03F7A0u
@@ -265,65 +265,65 @@ extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_po
 
 /* game_00.c: the game's functions, part 00 (in the order of their V60 addresses) */
 void boot(void);
-uint32_t sub_0000C4(uint32_t r10, uint32_t r11);
-uint32_t sub_0000FC(void);
-void sub_00013C(uint32_t r0);
-void sub_0002CA(void);
-void sub_0002E1(void);
-void sub_000310(uint8_t r4);
-void sub_000327(uint32_t r0);
-void sub_000337(uint32_t r0);
-void sub_000354(uint16_t r0, uint8_t r4);
-void sub_00036B(void);
-void sub_000372(void);
-void sub_000375(void);
-void sub_0003BA(uint8_t r4, uint32_t r13, uint32_t *p_r0, uint32_t *p_r2);
-uint32_t sub_0003ED(uint32_t r0, uint32_t r2, uint8_t r4, uint32_t r13);
-uint32_t sub_000451(uint32_t r2, uint8_t r4, uint32_t r13);
-void sub_0004A1(uint32_t *p_r2, uint32_t *p_r13);
-uint32_t sub_0004B8(uint32_t r2, uint32_t r13);
+uint32_t crc16(uint32_t r10, uint32_t r11);
+uint32_t signature_checksum(void);
+void load_settings(uint32_t r0);
+void count_eeprom_write(void);
+void eeprom_lock(void);
+void eeprom_read_one_word(uint8_t r4);
+void reload_settings(uint32_t r0);
+void eeprom_read_settings(uint32_t r0);
+void eeprom_write_one_word(uint16_t r0, uint8_t r4);
+void save_settings(void);
+void eeprom_write_settings_counted(void);
+void eeprom_write_settings(void);
+void eeprom_read_word(uint8_t r4, uint32_t r13, uint32_t *p_r0, uint32_t *p_r2);
+uint32_t eeprom_write_word(uint32_t r0, uint32_t r2, uint8_t r4, uint32_t r13);
+uint32_t eeprom_send_command(uint32_t r2, uint8_t r4, uint32_t r13);
+void eeprom_begin(uint32_t *p_r2, uint32_t *p_r13);
+uint32_t eeprom_set_lines(uint32_t r2, uint32_t r13);
 void second_task(uint32_t entry_point);
-uint32_t sub_000848(uint32_t r0, uint32_t r2);
-uint32_t sub_0008F0(uint32_t r2);
-void sub_000913(void);
-void sub_000976(void);
-void sub_000995(uint32_t r0);
-uint32_t sub_0009F9(void);
-void sub_000B16(void);
-void sub_000BBC(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p_r11);
-uint32_t sub_000BF3(void);
-uint32_t sub_000C1C(uint32_t r10, uint32_t r11);
-uint32_t sub_000C5A(void);
-void sub_000D7D(void);
-void sub_000D9F(void);
-void sub_000EA4(void);
-void sub_001000(void);
+uint32_t check_game_start(uint32_t r0, uint32_t r2);
+uint32_t wait_for_frame(uint32_t r2);
+void initialise_game(void);
+void initialise_screen(void);
+void initialise_board(uint32_t r0);
+uint32_t read_switches_and_analog(void);
+void pack_seat_inputs(void);
+void link_send_seat_inputs(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p_r11);
+uint32_t queue_seat_inputs(void);
+uint32_t queue_screen_inputs(uint32_t r10, uint32_t r11);
+uint32_t take_screen_inputs(void);
+void isdn_count_players(void);
+void game_mode_isdn_connection(void);
+void isdn_status_update(void);
+void game_mode_title(void);
 void sub_0010CD(void);
 void sub_0010EB(void);
 void sub_001141(void);
 void sub_0011AB(void);
-void sub_001440(void);
-void sub_00144C(void);
-void sub_001458(void);
-void sub_001516(void);
-uint32_t sub_001544(void);
-void sub_001577(void);
-void sub_001594(void);
-void sub_0015A9(void);
-uint32_t sub_0015C0(uint32_t left_caller);
-void sub_0015D8(void);
+void game_mode_power_on(void);
+void game_mode_restart(void);
+void game_mode_car_presentation(void);
+void game_mode_demo_race(void);
+uint32_t demo_race_set_up(void);
+void demo_race_fade_in(void);
+void demo_race_start_timer(void);
+void demo_race_count_down(void);
+uint32_t demo_race_end(uint32_t left_caller);
+void attract_lamps_update(void);
 void car_presentation_update(void);
 void staff_credits_code_start(void);
 void staff_credits_code_watch(uint32_t r0, uint32_t r2);
 void staff_credits_code_show(void);
 void staff_credits_code_done(void);
 void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_zero);
-uint32_t sub_001969(uint32_t r0, uint32_t r1, uint8_t r2, uint32_t r3);
+uint32_t staff_credits_code_control_bit(uint32_t r0, uint32_t r1, uint8_t r2, uint32_t r3);
 void car_name_start(void);
 void car_name_letter_update(void);
-void sub_001D84(void);
-void sub_001DCC(void);
-uint32_t sub_001E89(void);
+void load_course_records(void);
+void game_mode_ranking(void);
+uint32_t course_record_beaten(void);
 void name_entry_update(void);
 void name_entry_letter_update(void);
 void name_entry_lcd_update(void);
@@ -342,10 +342,10 @@ void passing_traffic_start(void);
 void passing_traffic_update(void);
 void passing_car_update(void);
 void ranking_background_load(void);
-void sub_002E74(void);
-void sub_003407(void);
-void sub_00340D(void);
-void sub_003425(void);
+void game_mode_play(void);
+void silence_and_clear_screen(void);
+void clear_screen(void);
+void clear_race_state(void);
 void route_map_update(void);
 void route_map_car_update(void);
 void route_map_sign_update(void);
@@ -409,7 +409,7 @@ void player_car_move(void);
 void player_car_steer_to_stop(void);
 void player_car_check_place(void);
 void player_car_publish(void);
-void sub_007677(void);
+void clear_published_car(void);
 void player_car_set_horizon(void);
 void player_car_place_on_road(void);
 void player_car_clear_hit(void);
@@ -436,21 +436,21 @@ void player_car_world_position(uint32_t r11, uint32_t r13, uint32_t r15, uint32_
 void player_car_place_view(uint32_t r11, uint32_t r13, uint32_t r15, uint32_t r17);
 void player_car_engine(uint32_t r7, uint32_t r8, uint32_t r9, uint32_t r19);
 void angles_to_offset(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t *p_r3, uint32_t *p_r4, uint32_t *p_r5);
-void sub_00AB24(void);
-void sub_00AB36(void);
-void sub_00AB46(void);
+void distance_offset_from_x(void);
+void distance_offset_from_z(void);
+void distance_offset_at_angle(void);
 void player_car_next_surfaces(void);
 uint32_t player_car_road_drag(uint32_t r0, uint16_t r1, uint16_t r2, uint16_t r3);
-void sub_00B65F(void);
-void sub_00B660(uint32_t r13);
-void sub_00B66E(uint32_t r13);
-void sub_00B67C(void);
-void sub_00B68A(void);
-void sub_00B698(void);
-void sub_00B699(uint32_t r13);
-void sub_00B6A7(uint32_t r13);
-void sub_00B6B5(void);
-void sub_00B6C3(void);
+void wheel_effect_1_none(void);
+void wheel_effect_1_surface_1_inner(uint32_t r13);
+void wheel_effect_1_surface_1_outer(uint32_t r13);
+void wheel_effect_1_surface_2_inner(void);
+void wheel_effect_1_surface_2_outer(void);
+void wheel_effect_2_none(void);
+void wheel_effect_2_surface_1_inner(uint32_t r13);
+void wheel_effect_2_surface_1_outer(uint32_t r13);
+void wheel_effect_2_surface_2_inner(void);
+void wheel_effect_2_surface_2_outer(void);
 void player_car_off_road_shake(void);
 void rev_meter_update(void);
 void speedometer_update(void);
@@ -484,113 +484,113 @@ void checkpoint_board_leader_time(uint32_t r0, uint32_t r1);
 void sub_00CEA4(uint32_t r0, uint32_t r10);
 void time_to_text(uint32_t r0, uint32_t r10);
 void checkpoint_board_gap_time(uint32_t r0, uint32_t r1);
-void sub_00D0C8(void);
-void sub_00D13A(void);
-void sub_00D298(void);
-void sub_00D2BE(void);
-void sub_00D2EB(void);
-void sub_00D2F0(void);
-void sub_00D341(uint32_t r0);
-uint32_t sub_00D524(uint32_t left_caller);
-uint32_t sub_00D544(uint32_t r0, uint32_t r10);
-void sub_00D5E0(uint32_t *p_r2, uint32_t *p_left_caller);
-uint32_t sub_00D612(uint32_t left_caller);
+void network_check_again(void);
+void network_check(void);
+void network_check_join(void);
+void network_check_isdn(void);
+void link_lost(void);
+void network_check_stand_alone(void);
+void network_check_result(uint32_t r0);
+uint32_t network_check_board_memory(uint32_t left_caller);
+uint32_t network_check_memory_test(uint32_t r0, uint32_t r10);
+void network_check_wait_board(uint32_t *p_r2, uint32_t *p_left_caller);
+uint32_t network_check_wait_isdn(uint32_t left_caller);
 void sub_00D658(void);
-void sub_00D664(uint32_t *p_r2, uint32_t *p_left_caller);
-uint32_t sub_00D6AD(uint32_t r2, uint32_t left_caller);
-void sub_00D6BB(uint32_t *p_r2, uint32_t *p_left_caller);
-void sub_00D6C7(uint32_t r0, uint32_t r2);
-void sub_00D6EC(void);
-void sub_00D716(void);
-void sub_00D72D(void);
-void sub_00D7CB(uint32_t r19, uint32_t *p_r2, uint32_t *p_left_caller);
-void sub_00D884(uint32_t *p_r2, uint32_t *p_left_caller);
-void sub_00D8A5(void);
+void network_check_greeting(uint32_t *p_r2, uint32_t *p_left_caller);
+uint32_t network_check_five_ics(uint32_t r2, uint32_t left_caller);
+void network_check_four_ics(uint32_t *p_r2, uint32_t *p_left_caller);
+void network_check_show_ics(uint32_t r0, uint32_t r2);
+void network_check_blink_text(void);
+void network_check_clear_status_line(void);
+void network_check_toggle_memory_text(void);
+void network_check_error(uint32_t r19, uint32_t *p_r2, uint32_t *p_left_caller);
+void network_check_halt(uint32_t *p_r2, uint32_t *p_left_caller);
+void link_take_master_settings(void);
 
 /* game_02.c: the game's functions, part 02 (in the order of their V60 addresses) */
-void sub_00D9F3(void);
-void sub_00DB6D(void);
-void sub_00DDA8(void);
-void sub_00DEC2(void);
+void race_entries_update(void);
+void race_progress_update(void);
+void entry_invitation_step(void);
+void race_record_clear(void);
 void set_player_ready(void);
 uint32_t players_not_ready(void);
-void sub_00DEF8(void);
-void sub_00E620(void);
-void sub_00E638(void);
-void sub_00E67C(uint32_t r1, uint32_t r10, uint32_t r11);
-void sub_00E8DF(void);
+void course_records_update(void);
+void link_receive_records(void);
+void link_isdn_receive_records(void);
+void link_copy_records_in(uint32_t r1, uint32_t r10, uint32_t r11);
+void link_send_records(void);
 uint32_t draw_object(uint32_t r0);
-void sub_00EB74(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EC1B(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00ECCD(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00ED82(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EE37(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EE75(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EEBF(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EEF0(uint16_t r1, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EEF4(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EEFF(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
-void sub_00EF32(uint32_t *p_r0, uint32_t *p_r10);
-void sub_00EF4A(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t *p_r10);
-void sub_00F04E(uint32_t *p_r0, uint32_t *p_r10);
-uint32_t sub_00F104(uint32_t r10);
-uint32_t sub_00F126(uint32_t r10);
-void sub_00F15C(uint32_t *p_r0, uint32_t *p_r10);
+void draw_object_between_segments(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_from_road_edge(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_from_road_edge_unshifted(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_from_road_edge_doubled(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_car_window_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_car_window_segment_on_road(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_segment_scale(uint16_t r1, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_shifted_scale(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_at_scale(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller);
+void draw_object_on_screen(uint32_t *p_r0, uint32_t *p_r10);
+void put_object_sprites(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t *p_r10);
+void draw_object_one_piece(uint32_t *p_r0, uint32_t *p_r10);
+uint32_t draw_object_entry(uint32_t r10);
+uint32_t draw_object_command(uint32_t r10);
+void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10);
 uint32_t animation_advance(uint32_t r7);
 void animation_start(uint32_t r9);
-void sub_00F396(void);
+void finish_sprite_list(void);
 void road_row_draw(uint32_t r7, uint32_t r15);
 void road_row_pair_draw(uint32_t r7, uint32_t r15);
 void player_car_start_course(void);
 void player_car_extend_course(void);
 void player_car_build_segment(uint16_t r5);
 void player_car_project_road(void);
-void sub_010243(void);
+void note_road_crest(void);
 void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32_t *p_r2);
-uint32_t sub_010634(void);
-void sub_010688(void);
-uint32_t sub_0106AF(void);
-uint32_t sub_01070C(void);
-void sub_010741(void);
-void sub_01076A(void);
+uint32_t init_screen(void);
+void clear_screen_ram(void);
+uint32_t init_video(void);
+uint32_t reset_tile_layers(void);
+void clear_video_ram(void);
+void clear_text_layer(void);
 void sub_01078F(uint16_t r9);
 void sub_0107A0(uint16_t r9);
-void sub_0107BC(void);
-void sub_0107F0(void);
-void sub_010889(void);
-void sub_010890(void);
-void sub_0108EA(void);
-void sub_010936(void);
+void init_sprite_chip(void);
+void init_sprite_lists(void);
+void clear_sprite_group_count(void);
+void init_mixer(void);
+void init_io_chips(void);
+void load_sprite_ram_tables(void);
 void sub_010996(uint16_t r0, uint32_t r10, uint32_t r11);
-void sub_010DC4(uint32_t r10, uint32_t r11);
-uint32_t sub_010E42(uint32_t r2);
+void unpack(uint32_t r10, uint32_t r11);
+uint32_t unpack_queued_step(uint32_t r2);
 void sub_010F66(uint32_t r10);
-void sub_010FA1(uint32_t r10);
+void unpack_tile_pages(uint32_t r10);
 void sub_010FA6(uint32_t r10);
 void queue_tile_pages(uint32_t r10);
-void sub_011018(void);
-void sub_01106C(uint32_t r6);
-void sub_0111CB(uint8_t r1, uint32_t r7);
-void sub_011213(void);
-uint32_t sub_01122C(uint32_t r9, uint32_t r10, uint32_t r11);
-uint32_t sub_011252(uint32_t r6, uint32_t r9, uint32_t r19);
-void sub_0112D9(void);
-void sub_0112F0(uint32_t r7);
+void init_coins(void);
+void update_coins(uint32_t r6);
+void pulse_coin_meter(uint8_t r1, uint32_t r7);
+void write_bookkeeping_credits(void);
+uint32_t add_service_credit(uint32_t r9, uint32_t r10, uint32_t r11);
+uint32_t insert_coin(uint32_t r6, uint32_t r9, uint32_t r19);
+void show_title_on_credit(void);
+void bookkeeping_increment16(uint32_t r7);
 void sub_011314(uint32_t r7);
-void sub_011324(uint32_t r7, uint16_t r9);
-void sub_011341(uint32_t r7, uint32_t r9);
+void bookkeeping_add16(uint32_t r7, uint16_t r9);
+void bookkeeping_add32(uint32_t r7, uint32_t r9);
 void sub_011362(uint32_t r7, uint8_t r9);
-void sub_01137D(uint32_t r7, uint16_t r9);
+void bookkeeping_set16(uint32_t r7, uint16_t r9);
 void sub_011388(uint32_t r7, uint32_t r9);
 void sub_011393(uint32_t r7, uint8_t r9);
-void sub_01139E(void);
-void sub_0113C0(void);
-uint32_t sub_0113E5(uint32_t r0);
-uint32_t sub_01140E(uint32_t r0, uint32_t r2, uint32_t r3);
-uint32_t sub_011418(uint32_t r0);
+void bookkeeping_clear_credits(void);
+void bookkeeping_check(void);
+uint32_t bookkeeping_reset(uint32_t r0);
+uint32_t bookkeeping_copy(uint32_t r0, uint32_t r2, uint32_t r3);
+uint32_t bookkeeping_update_checksum(uint32_t r0);
 void sub_01142A(void);
-uint32_t sub_01143E(uint32_t r0, uint32_t r2);
-void sub_011594(void);
+uint32_t bookkeeping_checksum(uint32_t r0, uint32_t r2);
+void upload_boot_palettes(void);
 void queue_stage_load(void);
 void queue_palette(uint32_t r19);
 void queue_palette_list(uint32_t r19);
@@ -598,32 +598,32 @@ void queue_palette_upload(uint32_t r8, uint32_t r19);
 void upload_queued_palettes(void);
 void upload_palette(uint32_t r19);
 void upload_palette_list(uint32_t r19);
-void sub_01167E(void);
-void sub_0117E4(void);
+void step_screen_fade(void);
+void load_text_font(void);
 void sub_0117FE(void);
-void sub_011868(uint32_t r19);
-uint32_t sub_011874(uint32_t r19);
+void print_text_layer_list(uint32_t r19);
+uint32_t print_text_layer(uint32_t r19);
 void sub_0118BD(uint32_t r19);
 void sub_0118D2(uint32_t r19);
 void sub_0118F7(uint32_t r19);
-void sub_01190C(uint32_t r0, uint16_t r1, uint32_t r11);
+void print_hex_byte(uint32_t r0, uint16_t r1, uint32_t r11);
 void sub_011914(uint32_t r0, uint16_t r1, uint32_t r11);
 void sub_01191C(uint32_t r0, uint16_t r1, uint32_t r11);
 void sub_011928(uint32_t r0, uint16_t r1, uint32_t r11);
-void sub_01192B(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11);
+void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11);
 void sub_011958(void);
 uint32_t binary_to_bcd(uint32_t r0);
 void draw_text_at(uint32_t r3, uint16_t r5, uint32_t r18);
 uint32_t draw_text(uint32_t r19);
-uint32_t sub_011A72(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t r5, uint32_t r10, uint32_t r11, uint32_t r18);
-void sub_011C60(void);
+uint32_t draw_text_sprites(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t r5, uint32_t r10, uint32_t r11, uint32_t r18);
+void clear_objects(void);
 void run_objects(void);
 uint32_t start_object(void);
 void sub_011DEB(void);
 void sub_011E1D(uint16_t r21);
 uint32_t start_object_list(uint32_t r10);
 uint32_t random_number(void);
-void sub_011E88(void);
+void start_sound_program(void);
 void request_sound(uint8_t r0);
 void queue_sound(uint8_t r0);
 void sub_011EF4(uint8_t r0);
@@ -633,9 +633,9 @@ void player_car_start_engine_sound(void);
 void player_car_engine_sound(void);
 void set_tyre_noise_on_road(uint8_t r0);
 void set_tyre_noise(uint8_t r0);
-void sub_011FE6(void);
-void sub_011FEA(uint8_t r0);
-void sub_012004(void);
+void fade_out_music(void);
+void fade_out_music_at(uint8_t r0);
+void reset_screen_sound(void);
 uint32_t vector_angle(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3);
 void vector_angles(uint32_t r2, uint32_t r3, uint32_t r4, uint32_t r5, uint32_t *p_r0, uint32_t *p_r1);
 void player_car_build_hit_boxes(void);
@@ -756,15 +756,15 @@ void race_background_fade_watch_update(void);
 uint32_t start_palette_fade(uint8_t r0, uint8_t r1, uint32_t r10, uint32_t r11);
 void palette_fade_prepare(void);
 void palette_fade_step(uint32_t r0);
-void sub_0186FC(void);
-uint32_t sub_0187A3(uint32_t r0);
-void sub_0187C1(uint8_t r0);
-void sub_0187F0(uint8_t r0);
-void sub_0187F8(uint8_t r0);
-void sub_018827(void);
-void sub_018863(void);
-void sub_0188BE(void);
-void sub_0189D9(void);
+void lcd_start(void);
+uint32_t lcd_write_character(uint32_t r0);
+void lcd_write_data_nibble(uint8_t r0);
+void lcd_command_nibble_after_pause(uint8_t r0);
+void lcd_write_command_nibble(uint8_t r0);
+void lcd_reset(void);
+void lcd_refresh(void);
+void lcd_send_next_nibble(void);
+void lcd_update(void);
 void clear_lcd(void);
 void lcd_race_info_start(void);
 void lcd_race_info_update(void);
@@ -825,125 +825,125 @@ void sub_01B1CD(uint32_t r11, uint32_t r13);
 uint32_t sub_01B1E7(uint32_t r13);
 uint32_t sub_01B200(uint32_t r13);
 void sub_01B20C(uint32_t r3, uint16_t r4);
-void sub_01C241(void);
-void sub_01C388(void);
-void sub_01C392(void);
-void sub_01C3E6(void);
-uint32_t sub_01C435(uint32_t r0);
-void sub_01C5BA(void);
-void sub_01C5DB(void);
-void sub_01C928(uint16_t r0);
-uint32_t sub_01C93B(uint32_t r0);
-void sub_01C98E(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1);
-uint32_t sub_01C9BE(uint32_t r0, uint32_t r10);
-uint32_t sub_01CA5D(uint32_t r0, uint32_t r10);
-uint32_t sub_01CAF8(uint32_t r0, uint32_t r10);
-uint32_t sub_01CB8F(uint32_t r0, uint32_t r10);
-void sub_01CC80(void);
-void sub_01CDE0(void);
-void sub_01CE15(uint32_t r0);
-void sub_01CE97(void);
-uint32_t sub_01CEDB(uint32_t r0);
-void sub_01D111(void);
-void sub_01D126(uint32_t r0);
-void sub_01D13B(void);
-uint32_t sub_01D151(uint32_t r0);
-void sub_01D3E4(void);
-void sub_01D419(void);
-void sub_01D49A(void);
-void sub_01D4C7(void);
-void sub_01D4DF(void);
-void sub_01D620(void);
-void sub_01D661(void);
-void sub_01D6BD(void);
-void sub_01D6E7(void);
-void sub_01D72C(void);
-void sub_01D771(void);
-void sub_01D840(void);
-void sub_01D868(uint16_t r0);
-void sub_01D87A(void);
-void sub_01D88F(uint32_t r0);
-uint32_t sub_01D8B9(uint32_t r0);
-uint32_t sub_01D927(uint16_t r0, uint32_t r10);
-uint32_t sub_01D957(uint32_t r0);
-void sub_01D9F3(void);
-void sub_01DA28(void);
-uint32_t sub_01DA7C(void);
-void sub_01DB58(void);
-void sub_01DB68(void);
-void sub_01DB85(void);
+void test_mode_start(void);
+void test_mode_frame(void);
+void test_mode_menu(void);
+void test_mode_menu_run(void);
+uint32_t test_mode_menu_show_write_count(uint32_t r0);
+void test_mode_menu_toggle_continue(void);
+void test_mode_memory_test(void);
+void test_mode_memory_test_run(uint16_t r0);
+uint32_t test_mode_memory_test_draw(uint32_t r0);
+void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1);
+uint32_t test_mode_memory_test_words(uint32_t r0, uint32_t r10);
+uint32_t test_mode_memory_test_halfwords(uint32_t r0, uint32_t r10);
+uint32_t test_mode_memory_test_bytes(uint32_t r0, uint32_t r10);
+uint32_t test_mode_memory_test_nibbles(uint32_t r0, uint32_t r10);
+void test_mode_memory_test_blink(void);
+void test_mode_volume_adjustment(void);
+void test_mode_volume_adjustment_select(uint32_t r0);
+void test_mode_volume_adjustment_adjust(void);
+uint32_t test_mode_volume_adjustment_draw(uint32_t r0);
+void test_mode_input_test(void);
+void test_mode_input_test_run(uint32_t r0);
+void test_mode_input_test_release(void);
+uint32_t test_mode_input_test_draw(uint32_t r0);
+void test_mode_output_test(void);
+void test_mode_output_test_run(void);
+void test_mode_output_test_draw(void);
+void test_mode_output_test_toggle(void);
+void test_mode_output_test_exit(void);
+void test_mode_sound_test(void);
+void test_mode_sound_test_run(void);
+void test_mode_sound_test_draw(void);
+void test_mode_sound_test_play_a(void);
+void test_mode_sound_test_play_b(void);
+void test_mode_sound_test_exit(void);
+void test_mode_crt_test(void);
+void test_mode_crt_test_bars_run(uint16_t r0);
+void test_mode_crt_test_grid(void);
+void test_mode_crt_test_grid_run(uint32_t r0);
+uint32_t test_mode_crt_test_draw_bars(uint32_t r0);
+uint32_t test_mode_crt_test_draw_bar(uint16_t r0, uint32_t r10);
+uint32_t test_mode_crt_test_draw_grid(uint32_t r0);
+void test_mode_game_assignments(void);
+void test_mode_game_assignments_run(void);
+uint32_t test_mode_game_assignments_draw(void);
+void test_mode_game_assignments_difficulty(void);
+void test_mode_game_assignments_time(void);
+void test_mode_game_assignments_steering(void);
 
 /* game_05.c: the game's functions, part 05 (in the order of their V60 addresses) */
-void sub_01DB97(void);
-void sub_01DBA9(void);
-void sub_01DD1E(void);
-void sub_01DD2B(void);
-void sub_01DD58(uint32_t r1);
-void sub_01DDAC(uint32_t *p_r0, uint32_t *p_r1);
-void sub_01DE56(void);
-void sub_01DEC7(uint32_t r1);
-void sub_01DEFD(void);
-uint32_t sub_01DF51(uint32_t r1);
-uint32_t sub_01E02E(uint32_t r5, uint32_t r10);
-void sub_01E04F(uint32_t r1);
-void sub_01E053(uint32_t r0, uint32_t r1);
-void sub_01E073(uint32_t r1);
-void sub_01E09B(uint32_t r1);
-void sub_01E0A1(void);
-void sub_01E0B0(void);
-void sub_01E453(void);
-void sub_01E4BA(void);
-uint32_t sub_01E523(void);
-void sub_01E57F(uint32_t r0);
-void sub_01E5C3(void);
-void sub_01E5E7(void);
-void sub_01E5F7(void);
-void sub_01E6EB(void);
-void sub_01E703(uint16_t r0);
-void sub_01E715(void);
-void sub_01E72D(uint16_t r0);
-uint32_t sub_01E740(void);
-uint32_t sub_01E862(void);
-uint32_t sub_01E9A4(uint32_t r0, uint32_t r11);
-void sub_01E9E6(uint32_t *p_r0, uint32_t *p_r11);
+void test_mode_game_assignments_advertise(void);
+void test_mode_game_assignments_exit(void);
+void test_mode_coin_assignments(void);
+void test_mode_coin_assignments_show(void);
+void test_mode_coin_assignments_run(uint32_t r1);
+void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1);
+void test_mode_coin_assignments_next_setting(void);
+void test_mode_coin_assignments_manual_start(uint32_t r1);
+void test_mode_coin_assignments_manual_run(void);
+uint32_t test_mode_coin_assignments_manual_draw(uint32_t r1);
+uint32_t test_mode_draw_two_digits(uint32_t r5, uint32_t r10);
+void test_mode_coin_assignments_step_coin_to_credit(uint32_t r1);
+void test_mode_coin_assignments_step_value(uint32_t r0, uint32_t r1);
+void test_mode_coin_assignments_step_bonus_adder(uint32_t r1);
+void test_mode_coin_assignments_step_multiplier(uint32_t r1);
+void test_mode_coin_assignments_manual_exit(void);
+void test_mode_coin_assignments_exit(void);
+void test_mode_network_assignments_start(void);
+void test_mode_network_assignments_run(void);
+uint32_t test_mode_network_assignments_draw(void);
+void test_mode_network_assignments_toggle_communication(uint32_t r0);
+void test_mode_network_assignments_toggle_privilege_mode(void);
+void test_mode_network_assignments_step_cabinet_id(void);
+void test_mode_network_assignments_exit(void);
+void test_mode_bookkeeping_start(void);
+void test_mode_bookkeeping_wait(uint16_t r0);
+void test_mode_bookkeeping_second_page_start(void);
+void test_mode_bookkeeping_second_page_wait(uint16_t r0);
+uint32_t test_mode_bookkeeping_draw_totals(void);
+uint32_t test_mode_bookkeeping_draw_histogram(void);
+uint32_t test_mode_draw_duration(uint32_t r0, uint32_t r11);
+void test_mode_draw_minutes_seconds(uint32_t *p_r0, uint32_t *p_r11);
 void sub_01EA14(void);
 void sub_01EA4B(uint32_t r0, uint32_t r10);
-void sub_01EDC4(void);
-void sub_01EDF1(void);
-void sub_01EE66(void);
-void sub_01EEC1(void);
-void sub_01EEEF(void);
-uint32_t sub_01EF6E(void);
-void sub_01F02C(uint32_t r0);
-void sub_01F034(void);
-void sub_01F043(void);
-void sub_01F052(uint32_t r0);
-uint32_t sub_01F085(uint32_t r0, uint32_t r10);
-void sub_01F09A(void);
-uint32_t sub_01F0CA(uint32_t r0, uint32_t r10);
-void sub_01F0ED(uint32_t r0, uint32_t r2, uint32_t r3, uint32_t *p_r1, uint32_t *p_r10);
-void sub_01F103(uint32_t r2, uint32_t *p_r0, uint32_t *p_r1, uint32_t *p_r10);
-uint32_t sub_01F131(uint32_t r0, uint8_t r1, uint32_t r2, uint32_t r10);
-uint32_t sub_01F16C(uint32_t r0, uint32_t r10);
-uint32_t sub_01F17D(void);
-void sub_01F190(void);
-void sub_01F237(void);
-void sub_01F266(uint16_t r0);
-void sub_01F26B(uint16_t r0);
+void test_mode_backup_data_clear_start(void);
+void test_mode_backup_data_clear_run(void);
+void test_mode_backup_data_clear_wait(void);
+void test_mode_exit(void);
+void test_mode_exit_caution_wait(void);
+uint32_t test_mode_set_up_colours(void);
+void test_mode_draw_instructions(uint32_t r0);
+void test_mode_show_exit_prompt(void);
+void test_mode_show_continue_prompt(void);
+void test_mode_blink_prompt(uint32_t r0);
+uint32_t test_mode_set_cursor(uint32_t r0, uint32_t r10);
+void test_mode_clear_cursor(void);
+uint32_t test_mode_draw_texts(uint32_t r0, uint32_t r10);
+void test_mode_draw_count(uint32_t r0, uint32_t r2, uint32_t r3, uint32_t *p_r1, uint32_t *p_r10);
+void test_mode_draw_number(uint32_t r2, uint32_t *p_r0, uint32_t *p_r1, uint32_t *p_r10);
+uint32_t test_mode_draw_hex_number(uint32_t r0, uint8_t r1, uint32_t r2, uint32_t r10);
+uint32_t test_mode_colour_line(uint32_t r0, uint32_t r10);
+uint32_t test_mode_clear_text(void);
+void test_mode_read_controls(void);
+void test_mode_send_sound(void);
+void test_mode_queue_sound_screen_2(uint16_t r0);
+void test_mode_queue_sound(uint16_t r0);
 void int_vector_40(void);
-void sub_03F62A(void);
-void sub_03F6A0(void);
+void vblank_update_mixer(void);
+void vblank_update_scrolls(void);
 void int_vector_41(void);
 void int_vector_42(void);
 void int_vector_43(void);
 void int_vector_44(void);
 void int_default(void);
 void int_vector_02(void);
-void sub_03F8C9(uint32_t r0);
-void sub_03F8DA(void);
-void sub_03F922(void);
-void sub_03F96B(void);
-void sub_03FA54(uint32_t r10, uint32_t r11);
+void check_test_button(uint32_t r0);
+void send_sound_requests(void);
+void count_total_time(void);
+void update_lamps(void);
+void update_button_lamps(uint32_t r10, uint32_t r11);
 void reset(void);
 
 #endif

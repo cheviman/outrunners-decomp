@@ -3,7 +3,7 @@
  *    Description: the game's functions, part 04 (in the order of their V60 addresses)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -122,9 +122,9 @@ void palette_fade_step(uint32_t r0)
 	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0;
 	uint8_t delay = 0;
 
-	if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+	if ((SCREEN(screen)->flags & 1u) != 0u)
 	{
-		r0_2 = (r0 & ~0xFFu) | SCREEN(screen)->unk_153;
+		r0_2 = (r0 & ~0xFFu) | SCREEN(screen)->fade_kind;
 		if ((int8_t)r0_2 <= 5 && (r0_2 & 1u) == 0u)
 		{
 			OBJECT(current_object)->flags = 0u;
@@ -332,38 +332,42 @@ void palette_fade_step(uint32_t r0)
 	OBJECT(current_object)->flags = 0u;
 }
 
-void sub_0186FC(void)
+/* Starts the cabinets' LCDs at boot (both, through port G of the two I/O chips): the 4-bit start
+   (command nibbles 3, 3, 3, 2), display on (0C), SEGA Enterprises as both screens' text (lcd_text),
+   command 40 then the eight custom characters (rom_018B4E: the DJ's face among them); the screens' lamps
+   off (screen unk_F20), lcd_restart_frames E10. */
+void lcd_start(void)
 {
 	uint8_t r0 = 0;
 	uint32_t r0_2 = 0, r1 = 0, r9 = 0, r10 = 0;
 
-	unk_20E3F2 = 0u;
-	unk_20E3F3 = 0u;
-	unk_20E3F0 = 0xE10u;
+	lcd_send_step = 0u;
+	lcd_busy = 0u;
+	lcd_restart_frames = 0xE10u;
 	unk_208F20 = 0u;
 	unk_218F20 = 0u;
 	r0 = 0x30u;
-	sub_0187F8(r0);
+	lcd_write_command_nibble(r0);
 	r9 = 0x2008u;
 	do
 	{
 		r9--;
 	} while (r9 != 0u);
 	r0 = 0x30u;
-	sub_0187F8(r0);
+	lcd_write_command_nibble(r0);
 	r9 = 0xC8u;
 	do
 	{
 		r9--;
 	} while (r9 != 0u);
 	r0 = 0x30u;
-	sub_0187F8(r0);
+	lcd_write_command_nibble(r0);
 	r0 = 0x20u;
-	sub_0187F0(r0);
+	lcd_command_nibble_after_pause(r0);
 	r0 = 0u;
-	sub_0187F0(r0);
+	lcd_command_nibble_after_pause(r0);
 	r0 = 0xC0u;
-	sub_0187F0(r0);
+	lcd_command_nibble_after_pause(r0);
 	r0_2 = rom_018B90;
 	r1 = rom_018B94;
 	unk_208F10 = r0_2;
@@ -378,9 +382,9 @@ void sub_0186FC(void)
 	unk_218F1C = r1;
 	r0_2 = (r0_2 & ~0xFFu) | 0x40u;
 	r12 = unk_218F20_ADDRESS;
-	sub_0187F0((uint8_t)r0_2);
+	lcd_command_nibble_after_pause((uint8_t)r0_2);
 	r0_2 &= ~0xFFu;
-	sub_0187F0((uint8_t)r0_2);
+	lcd_command_nibble_after_pause((uint8_t)r0_2);
 	r10 = 0x18B4Eu;
 	for (;;)
 	{
@@ -388,11 +392,13 @@ void sub_0186FC(void)
 		r10++;
 		if ((int8_t)r0_2 < 0)
 			break;
-		r0_2 = sub_0187A3(r0_2);
+		r0_2 = lcd_write_character(r0_2);
 	}
 }
 
-uint32_t sub_0187A3(uint32_t r0)
+/* Writes the data byte R0 to both LCDs, its high nibble then its low one (lcd_write_data_nibble), with
+   pauses. */
+uint32_t lcd_write_character(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r9 = 0;
 	uint32_t stack_4 = 0;
@@ -404,18 +410,20 @@ uint32_t sub_0187A3(uint32_t r0)
 	} while (r9 != 0u);
 	stack_4 = r0;
 	r0 = r0 & 0xF0u;
-	sub_0187C1((uint8_t)r0);
+	lcd_write_data_nibble((uint8_t)r0);
 	r9 = 0x50u;
 	do
 	{
 		r9--;
 	} while (r9 != 0u);
 	r0_2 = (stack_4 & ~0xFFu) | (uint8_t)(stack_4 << 4);
-	sub_0187C1((uint8_t)r0_2);
+	lcd_write_data_nibble((uint8_t)r0_2);
 	return r0_2;
 }
 
-void sub_0187C1(uint8_t r0)
+/* Writes the high nibble of R0 to both LCDs as data (port G of the two I/O chips, inverted: the data
+   lines, register select set, then the enable strobe bit 3 dropped). */
+void lcd_write_data_nibble(uint8_t r0)
 {
 	uint32_t r9 = 0;
 
@@ -432,7 +440,8 @@ void sub_0187C1(uint8_t r0)
 	mem_write8(0xC8000Cu, ~r0);
 }
 
-void sub_0187F0(uint8_t r0)
+/* A pause, then lcd_write_command_nibble. */
+void lcd_command_nibble_after_pause(uint8_t r0)
 {
 	uint32_t r9 = 0;
 
@@ -441,10 +450,12 @@ void sub_0187F0(uint8_t r0)
 	{
 		r9--;
 	} while (r9 != 0u);
-	sub_0187F8(r0);
+	lcd_write_command_nibble(r0);
 }
 
-void sub_0187F8(uint8_t r0)
+/* Writes the high nibble of R0 to both LCDs as a command (register select clear), then drops the enable
+   strobe (bit 3). */
+void lcd_write_command_nibble(uint8_t r0)
 {
 	uint32_t r9 = 0;
 
@@ -461,11 +472,13 @@ void sub_0187F8(uint8_t r0)
 	mem_write8(0xC8000Cu, ~r0);
 }
 
-void sub_018827(void)
+/* After the test mode: both screens' LCD text back to SEGA Enterprises (lcd_text), their lamps off
+   (screen unk_F20), and lcd_restart_frames 0 so that the next VBLANK starts the LCDs again. */
+void lcd_reset(void)
 {
 	uint32_t r0 = 0, r1 = 0;
 
-	unk_20E3F0 = 0u;
+	lcd_restart_frames = 0u;
 	unk_208F20 = 0u;
 	unk_218F20 = 0u;
 	r0 = rom_018B90;
@@ -483,7 +496,12 @@ void sub_018827(void)
 	r12 = unk_218F20_ADDRESS;
 }
 
-void sub_018863(void)
+/* Each VBLANK: counts lcd_restart_frames down and, when it runs out, has the LCDs started again
+   (lcd_init_step 2C, E10 VBLANKs to the next, a minute); else, unless a nibble is being written
+   (lcd_busy), after a byte cut in half (an odd lcd_send_step) writes one more command nibble (0 or 4) to
+   keep the LCDs in step, takes both screens' lcd_text into lcd_send_buffer_1 and lcd_send_buffer_2 and
+   starts sending them (lcd_send_step 0). */
+void lcd_refresh(void)
 {
 	uint32_t carry = 0;
 	uint8_t r0 = 0;
@@ -491,30 +509,30 @@ void sub_018863(void)
 	uint16_t t1 = 0;
 	uint32_t t2 = 0, t3 = 0, t4 = 0, t5 = 0;
 
-	t1 = unk_20E3F0;
-	unk_20E3F0 = t1 - 1u;
+	t1 = lcd_restart_frames;
+	lcd_restart_frames = t1 - 1u;
 	if ((int16_t)t1 <= 1)
 	{
-		unk_20E3F4 = 0x2Cu;
-		unk_20E3F0 = 0xE10u;
+		lcd_init_step = 0x2Cu;
+		lcd_restart_frames = 0xE10u;
 		return;
 	}
-	if (unk_20E3F3 != 0u)
+	if (lcd_busy != 0u)
 		return;
-	r0 = unk_20E3F2;
+	r0 = lcd_send_step;
 	carry = r0 & 1u;
 	r0 = r0 >> 1;
 	if (carry == 0u)
 	{
-		unk_20E3F2 = 0u;
+		lcd_send_step = 0u;
 		t2 = unk_208F14;
-		AS32(unk_20E3C0[0]) = unk_208F10;
+		AS32(lcd_send_buffer_1[0]) = unk_208F10;
 		unk_20E3C4 = t2;
 		t3 = unk_208F1C;
 		unk_20E3C8 = unk_208F18;
 		unk_20E3CC = t3;
 		t4 = unk_218F14;
-		AS32(unk_20E3D0[0]) = unk_218F10;
+		AS32(lcd_send_buffer_2[0]) = unk_218F10;
 		unk_20E3D4 = t4;
 		t5 = unk_218F1C;
 		unk_20E3D8 = unk_218F18;
@@ -525,50 +543,55 @@ void sub_018863(void)
 	r0 = (uint8_t)(t6 - 1u);
 	if (t6 != 1u)
 		r0 = 4u;
-	sub_0187F8(r0);
-	unk_20E3F2 = 0u;
+	lcd_write_command_nibble(r0);
+	lcd_send_step = 0u;
 	t2 = unk_208F14;
-	AS32(unk_20E3C0[0]) = unk_208F10;
+	AS32(lcd_send_buffer_1[0]) = unk_208F10;
 	unk_20E3C4 = t2;
 	t3 = unk_208F1C;
 	unk_20E3C8 = unk_208F18;
 	unk_20E3CC = t3;
 	t4 = unk_218F14;
-	AS32(unk_20E3D0[0]) = unk_218F10;
+	AS32(lcd_send_buffer_2[0]) = unk_218F10;
 	unk_20E3D4 = t4;
 	t5 = unk_218F1C;
 	unk_20E3D8 = unk_218F18;
 	unk_20E3DC = t5;
 }
 
-void sub_0188BE(void)
+/* One nibble to the LCDs each timer interrupt (int_vector_43), with the other bits of port G
+   (unk_20E094, the lamps): while lcd_init_step counts, the start sequence (rom_018B21, from the end),
+   then idle (lcd_send_step 22); else by lcd_send_step: the cursor home command (80), then the 16
+   characters of lcd_send_buffer_1 to screen 1's LCD and of lcd_send_buffer_2 to screen 2's, a nibble at
+   a time; lcd_busy while it writes the port. */
+void lcd_send_next_nibble(void)
 {
 	uint32_t carry = 0;
 	uint8_t r0_2 = 0, r1 = 0;
 	uint32_t r0 = 0, r9 = 0;
 	uint8_t t1 = 0, t2 = 0;
 
-	if (unk_20E3F4 != 0u)
+	if (lcd_init_step != 0u)
 	{
-		unk_20E3F3 = 0xFFu;
-		r0_2 = (uint8_t)~rom_018B21[unk_20E3F4];
+		lcd_busy = 0xFFu;
+		r0_2 = (uint8_t)~rom_018B21[lcd_init_step];
 		r1 = r0_2 | (uint8_t)(unk_20E094 >> 8u);
 		mem_write8(IO_C0000C, r0_2 | (uint8_t)unk_20E094);
 		mem_write8(0xC8000Cu, r1);
-		t1 = unk_20E3F4;
-		unk_20E3F4 = t1 - 1u;
+		t1 = lcd_init_step;
+		lcd_init_step = t1 - 1u;
 		if (t1 == 1u)
 		{
-			unk_20E3F2 = 0x22u;
-			unk_20E3F3 = 0u;
+			lcd_send_step = 0x22u;
+			lcd_busy = 0u;
 		}
 		return;
 	}
-	r0 = unk_20E3F2;
+	r0 = lcd_send_step;
 	if (r0 >= 0x22u)
 		return;
-	unk_20E3F3 = 0xFFu;
-	unk_20E3F2++;
+	lcd_busy = 0xFFu;
+	lcd_send_step++;
 	t2 = r0;
 	r0 = (uint8_t)(t2 - 2u);
 	if ((int8_t)t2 < 2)
@@ -587,13 +610,13 @@ void sub_0188BE(void)
 		} while (r9 != 0u);
 		mem_write8(IO_C0000C, r0 | 8u);
 		mem_write8(0xC8000Cu, r1 | 8u);
-		unk_20E3F3 = 0u;
+		lcd_busy = 0u;
 		return;
 	}
 	carry = r0 & 1u;
 	r0 = r0 >> 1;
-	r1 = unk_20E3D0[r0];
-	r0_2 = unk_20E3C0[r0];
+	r1 = lcd_send_buffer_2[r0];
+	r0_2 = lcd_send_buffer_1[r0];
 	if (carry)
 	{
 		r0_2 = (uint8_t)((uint32_t)r0_2 << 4);
@@ -615,140 +638,146 @@ void sub_0188BE(void)
 	} while (r9 != 0u);
 	mem_write8(IO_C0000C, r0_2 | 8u);
 	mem_write8(0xC8000Cu, r1 | 8u);
-	unk_20E3F3 = 0u;
+	lcd_busy = 0u;
 }
 
-void sub_0189D9(void)
+/* The screen's LCD, each frame. With the DJ's face on (dj_face) its first two characters are the face,
+   its mouth the next shape of dj_mouth_shapes every third frame (dj_mouth_frames; rom_018AE8, pairs of
+   custom characters), closed when the string ends (a negative byte); the rest of the line (all 16
+   without the face) scrolls a text: a new lcd_scroll_request clears the line and starts lcd_scroll,
+   which shifts the text in from the right a character every 5 frames (lcd_scroll_frames; ` shows custom
+   character 7), then shifts spaces in until the text has gone (lcd_scroll_step 0-3). */
+void lcd_update(void)
 {
-	uint8_t r1_2 = 0, r26 = 0;
-	uint32_t r0 = 0, r1 = 0, r10 = 0, r11 = 0;
-	uint8_t t1 = 0, t2 = 0, t3 = 0;
+	uint8_t r1 = 0, r26 = 0;
+	uint32_t r0 = 0, r10 = 0, r11 = 0, lcd_scroll = 0, lcd_scroll_request = 0;
+	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
 	r10 = screen + 0xF10u;
-	if (SCREEN(screen)->unk_F35 == 0u)
+	if (SCREEN(screen)->dj_face == 0u)
 		r0 = 0xFu;
 	else
 	{
-		r11 = SCREEN(screen)->unk_F30;
+		r11 = SCREEN(screen)->dj_mouth_shapes;
 		if (r11 == 0u)
 		{
-			SCREEN(r10 - 0xF10u)->unk_F10 = rom_018AE8[0];
-			SCREEN(screen)->unk_F34 = 3u;
+			AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[0];
+			SCREEN(screen)->dj_mouth_frames = 3u;
 			r0 = 0xDu;
 			r10 += 2u;
 		}
 		else
 		{
-			t1 = SCREEN(screen)->unk_F34;
-			SCREEN(screen)->unk_F34 = t1 - 1u;
-			if (t1 != 1u)
+			dj_mouth_frames = SCREEN(screen)->dj_mouth_frames;
+			SCREEN(screen)->dj_mouth_frames = dj_mouth_frames - 1u;
+			if (dj_mouth_frames != 1u)
 			{
 				r10 += 2u;
 				r0 = 0xDu;
 			}
 			else
 			{
-				r0 = mem_read8(r11);
+				r0 = ROM8(r11);
 				r11++;
 				if ((int8_t)r0 < 0)
 				{
-					SCREEN(screen)->unk_F30 = 0u;
-					SCREEN(r10 - 0xF10u)->unk_F10 = rom_018AE8[0];
-					SCREEN(screen)->unk_F34 = 3u;
+					SCREEN(screen)->dj_mouth_shapes = 0u;
+					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[0];
+					SCREEN(screen)->dj_mouth_frames = 3u;
 					r0 = 0xDu;
 					r10 += 2u;
 				}
 				else
 				{
-					SCREEN(r10 - 0xF10u)->unk_F10 = rom_018AE8[r0];
-					SCREEN(screen)->unk_F30 = r11;
-					SCREEN(screen)->unk_F34 = 3u;
+					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[r0];
+					SCREEN(screen)->dj_mouth_shapes = r11;
+					SCREEN(screen)->dj_mouth_frames = 3u;
 					r0 = 0xDu;
 					r10 += 2u;
 				}
 			}
 		}
 	}
-	r1 = SCREEN(screen)->unk_F40;
-	if (r1 != 0u)
+	lcd_scroll_request = SCREEN(screen)->lcd_scroll_request;
+	if (lcd_scroll_request != 0u)
 	{
-		SCREEN(screen)->unk_F44 = r1;
-		SCREEN(screen)->unk_F40 = 0u;
-		SCREEN(screen)->unk_F48 = 0u;
+		SCREEN(screen)->lcd_scroll = lcd_scroll_request;
+		SCREEN(screen)->lcd_scroll_request = 0u;
+		SCREEN(screen)->lcd_scroll_step = 0u;
 		r26 = 0x20u;
 		move_string(r10, 0u, r10, r0 + 1u, 1u, 1u, 0u, r26, &r27, &r28);
 	}
-	r11 = SCREEN(screen)->unk_F44;
-	if (r11 == 0u)
+	lcd_scroll = SCREEN(screen)->lcd_scroll;
+	if (lcd_scroll == 0u)
 		return;
-	switch (SCREEN(screen)->unk_F48)
+	switch (SCREEN(screen)->lcd_scroll_step)
 	{
 	case 0:
-		r1_2 = mem_read8(r11);
-		SCREEN(screen)->unk_F44 = r11 + 1u;
-		if (r1_2 == 0x60u)
-			r1_2 = 7u;
+		r1 = mem_read8(lcd_scroll);
+		SCREEN(screen)->lcd_scroll = lcd_scroll + 1u;
+		if (r1 == 0x60u)
+			r1 = 7u;
 		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
-		mem_write8(r27, r1_2);
-		SCREEN(screen)->unk_F49 = 5u;
-		SCREEN(screen)->unk_F48++;
-		t2 = SCREEN(screen)->unk_F49;
-		SCREEN(screen)->unk_F49 = t2 - 1u;
-		if (t2 != 1u)
+		mem_write8(r27, r1);
+		SCREEN(screen)->lcd_scroll_frames = 5u;
+		SCREEN(screen)->lcd_scroll_step++;
+		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
+		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
+		if (lcd_scroll_frames != 1u)
 			return;
-		if (mem_read8(SCREEN(screen)->unk_F44) != 0u)
+		if (mem_read8(SCREEN(screen)->lcd_scroll) != 0u)
 		{
-			SCREEN(screen)->unk_F48--;
+			SCREEN(screen)->lcd_scroll_step--;
 			return;
 		}
-		SCREEN(screen)->unk_F44 = r0 + 1u;
-		SCREEN(screen)->unk_F48++;
+		SCREEN(screen)->lcd_scroll = r0 + 1u;
+		SCREEN(screen)->lcd_scroll_step++;
 		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
-		SCREEN(screen)->unk_F49 = 5u;
-		SCREEN(screen)->unk_F48++;
+		SCREEN(screen)->lcd_scroll_frames = 5u;
+		SCREEN(screen)->lcd_scroll_step++;
 		break;
 	case 1:
-		t2 = SCREEN(screen)->unk_F49;
-		SCREEN(screen)->unk_F49 = t2 - 1u;
-		if (t2 != 1u)
+		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
+		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
+		if (lcd_scroll_frames != 1u)
 			return;
-		if (mem_read8(SCREEN(screen)->unk_F44) != 0u)
+		if (mem_read8(SCREEN(screen)->lcd_scroll) != 0u)
 		{
-			SCREEN(screen)->unk_F48--;
+			SCREEN(screen)->lcd_scroll_step--;
 			return;
 		}
-		SCREEN(screen)->unk_F44 = r0 + 1u;
-		SCREEN(screen)->unk_F48++;
+		SCREEN(screen)->lcd_scroll = r0 + 1u;
+		SCREEN(screen)->lcd_scroll_step++;
 		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
-		SCREEN(screen)->unk_F49 = 5u;
-		SCREEN(screen)->unk_F48++;
+		SCREEN(screen)->lcd_scroll_frames = 5u;
+		SCREEN(screen)->lcd_scroll_step++;
 		break;
 	case 2:
 		move_string(r10 + 1u, r0, r10, r0, 1u, 0u, 0u, 0u, &r27, &r28);
 		mem_write8(r27, 0x20u);
-		SCREEN(screen)->unk_F49 = 5u;
-		SCREEN(screen)->unk_F48++;
-		t3 = SCREEN(screen)->unk_F49;
-		SCREEN(screen)->unk_F49 = t3 - 1u;
-		if (t3 == 1u)
+		SCREEN(screen)->lcd_scroll_frames = 5u;
+		SCREEN(screen)->lcd_scroll_step++;
+		lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
+		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
+		if (lcd_scroll_frames_2 == 1u)
 		{
-			SCREEN(screen)->unk_F44--;
-			SCREEN(screen)->unk_F48--;
+			SCREEN(screen)->lcd_scroll--;
+			SCREEN(screen)->lcd_scroll_step--;
 		}
 		return;
 	case 3:
 		break;
 	default:
-		invalid_jump(rom_018A70[SCREEN(screen)->unk_F48]);
+		invalid_jump(rom_018A70[SCREEN(screen)->lcd_scroll_step]);
 	}
-	t3 = SCREEN(screen)->unk_F49;
-	SCREEN(screen)->unk_F49 = t3 - 1u;
-	if (t3 != 1u)
+	lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
+	SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
+	if (lcd_scroll_frames_2 != 1u)
 		return;
-	SCREEN(screen)->unk_F44--;
-	SCREEN(screen)->unk_F48--;
+	SCREEN(screen)->lcd_scroll--;
+	SCREEN(screen)->lcd_scroll_step--;
 }
 
 /* Clears the cabinet's LCD: sixteen spaces, no DJ message (screen unk_F30), no scrolling text (unk_F40,
@@ -758,17 +787,17 @@ void clear_lcd(void)
 	uint32_t r10 = 0;
 
 	r10 = screen + 0xF10u;
-	AS32(SCREEN(r10 - 0xF10u)->unk_F10) = 0x20202020u;
+	AS32(SCREEN(r10 - 0xF10u)->lcd_text) = 0x20202020u;
 	r10 += 4u;
 	SCREEN(r10 - 0xF14u)->unk_F14 = 0x20202020u;
 	r10 += 4u;
 	SCREEN(r10 - 0xF18u)->unk_F18 = 0x20202020u;
 	SCREEN(r10 - 0xF18u)->unk_F1C = 0x20202020u;
-	SCREEN(screen)->unk_F30 = 0u;
-	SCREEN(screen)->unk_F34 = 3u;
-	SCREEN(screen)->unk_F35 = 0u;
-	SCREEN(screen)->unk_F40 = 0u;
-	SCREEN(screen)->unk_F44 = 0u;
+	SCREEN(screen)->dj_mouth_shapes = 0u;
+	SCREEN(screen)->dj_mouth_frames = 3u;
+	SCREEN(screen)->dj_face = 0u;
+	SCREEN(screen)->lcd_scroll_request = 0u;
+	SCREEN(screen)->lcd_scroll = 0u;
 }
 
 /* Starts the race information on the cabinet LCD: clears it (clear_lcd), shows the DJ's face in its
@@ -776,14 +805,14 @@ void clear_lcd(void)
 void lcd_race_info_start(void)
 {
 	clear_lcd();
-	SCREEN(screen)->unk_F35 = 0xFFu;
+	SCREEN(screen)->dj_face = 0xFFu;
 	OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
 	lcd_race_info_update();
 }
 
 /* Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames
    to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150
-   frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, unk_20E030 + 1,
+   frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, car_numbers + 1,
    in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen
    unk_F50), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1 updates
    the number. When the car reaches the goal (car unk_181) goes to lcd_race_info_finish; when the race is
@@ -808,7 +837,7 @@ void lcd_race_info_update(void)
 		lcd_race_info_average_page();
 		return;
 	}
-	if (SCREEN(screen)->unk_F44 != 0u)
+	if (SCREEN(screen)->lcd_scroll != 0u)
 	{
 		OBJECT(current_object)->state = 1u;
 		OBJECT(current_object)->handler = lcd_race_info_paused_ADDRESS;
@@ -827,8 +856,8 @@ void lcd_race_info_update(void)
 			AT8(SCREEN(screen)->unk_F18, 1) = r0 + 0x31u;
 			return;
 		}
-		OBJECT(current_object)->lcd_race_info.player_count = mem_read8(SCREEN(screen)->unk_308 + 0x1Fu);
-		OBJECT(current_object)->lcd_race_info.order_list = SCREEN(screen)->unk_308 + 0x20u;
+		OBJECT(current_object)->lcd_race_info.racer_count = RACE(SCREEN(screen)->host_record)->racer_count;
+		OBJECT(current_object)->lcd_race_info.order_list = SCREEN(screen)->host_record + 0x20u;
 		OBJECT(current_object)->lcd_race_info.page_frames = 0x96u;
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->lcd_race_info.page_step = 0u;
@@ -922,7 +951,7 @@ void lcd_race_info_update(void)
 	switch (OBJECT(current_object)->lcd_race_info.page_step)
 	{
 	case 0:
-		if (mem_read8(SCREEN(screen)->unk_308 + 0x1Fu) == 1u)
+		if (RACE(SCREEN(screen)->host_record)->racer_count == 1u)
 		{
 			OBJECT(current_object)->lcd_race_info.page++;
 			switch (OBJECT(current_object)->lcd_race_info.page_step)
@@ -952,13 +981,13 @@ void lcd_race_info_update(void)
 	}
 	r10 = screen + 0xF18u;
 	r11 = OBJECT(current_object)->lcd_race_info.order_list;
-	r9 = OBJECT(current_object)->lcd_race_info.player_count;
+	r9 = OBJECT(current_object)->lcd_race_info.racer_count;
 	do
 	{
 		r0 = mem_read8(r11);
 		r11++;
-		if (SCREEN(screen)->unk_01 != r0 || (OBJECT(current_object)->lcd_race_info.frames & 8u) == 0u)
-			r0_2 = (uint8_t)(unk_20E030[r0] + 0x31u);
+		if (SCREEN(screen)->player != r0 || (OBJECT(current_object)->lcd_race_info.frames & 8u) == 0u)
+			r0_2 = (uint8_t)(car_numbers[r0] + 0x31u);
 		else
 			r0_2 = 0x20u;
 		mem_write8(r10, r0_2);
@@ -1081,15 +1110,15 @@ void lcd_race_info_finish(void)
 	case 0:
 		move_string(0x18F64u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->state++;
-		if (SCREEN(screen)->unk_F44 == 0u)
+		if (SCREEN(screen)->lcd_scroll == 0u)
 			return;
 		OBJECT(current_object)->state++;
 		break;
 	case 1:
-		if (SCREEN(screen)->unk_F44 == 0u)
+		if (SCREEN(screen)->lcd_scroll == 0u)
 			return;
 		OBJECT(current_object)->state++;
-		if (SCREEN(screen)->unk_F44 != 0u)
+		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
 		lcd_race_info_average_page();
 		OBJECT(current_object)->lcd_race_info.frames = 0x96u;
@@ -1114,7 +1143,7 @@ void lcd_race_info_finish(void)
 	default:
 		invalid_jump(rom_018E40[OBJECT(current_object)->state]);
 	}
-	if (SCREEN(screen)->unk_F44 != 0u)
+	if (SCREEN(screen)->lcd_scroll != 0u)
 		return;
 	lcd_race_info_average_page();
 	OBJECT(current_object)->lcd_race_info.frames = 0x96u;
@@ -1131,7 +1160,7 @@ void lcd_race_info_finish(void)
    writes the page's label again. */
 void lcd_race_info_paused(void)
 {
-	if (SCREEN(screen)->unk_F44 == 0u)
+	if (SCREEN(screen)->lcd_scroll == 0u)
 	{
 		OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
 		lcd_race_info_update();
@@ -1145,25 +1174,25 @@ void lcd_race_info_paused(void)
    notes the stage (screen unk_A1), then car_radio_wait_start. */
 void car_radio_start(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0, object = 0;
+	uint32_t r0 = 0, r9 = 0, object = 0, race = 0;
 
 	object = current_object + 0x80u;
 	OBJECT(object - 0x80u)->unk_80 = 0xFFFFFFFFu;
 	OBJECT(object - 0x80u)->unk_84 = 0xFFFFu;
 	OBJECT(object - 0x80u)->unk_86 = 0xFFu;
 	OBJECT(object - 0x80u)->unk_87 = 0xFFu;
-	r10 = SCREEN(screen)->unk_308 + 0x1Fu;
-	r9 = mem_read8(r10);
+	race = SCREEN(screen)->host_record + 0x1Fu;
+	r9 = RACE(race - 0x1Fu)->racer_count;
 	OBJECT(current_object)->car_radio.cars_to_introduce = r9;
-	r10++;
+	race++;
 	do
 	{
-		r0 = mem_read8(r10);
-		mem_write8(current_object + 0x80u + unk_20E030[r0], mem_read8(0x20FC49u + (r0 << 7)));
+		r0 = mem_read8(race);
+		mem_write8(current_object + 0x80u + car_numbers[r0], mem_read8(0x20FC49u + (r0 << 7)));
 		r9--;
-		r10++;
+		race++;
 	} while (r9 != 0u);
-	OBJECT(current_object)->car_radio.car_number = unk_20E030[SCREEN(screen)->unk_01];
+	OBJECT(current_object)->car_radio.car_number = car_numbers[SCREEN(screen)->player];
 	SCREEN(screen)->unk_F0F = 0u;
 	CAR(player_car)->song = rom_019421[CAR(player_car)->model];
 	OBJECT(current_object)->car_radio.stage = SCREEN(screen)->unk_A1;
@@ -1187,7 +1216,7 @@ void car_radio_wait_start(void)
    without the buttons. */
 void car_radio_read_buttons(void)
 {
-	OBJECT(current_object)->car_radio.buttons = (uint16_t)SCREEN(screen)->unk_118;
+	OBJECT(current_object)->car_radio.buttons = (uint16_t)SCREEN(screen)->buttons_pressed;
 	if ((CAR(player_car)->at_goal | CAR(player_car)->race_over) == 0u)
 	{
 		car_radio_update();
@@ -1195,7 +1224,7 @@ void car_radio_read_buttons(void)
 	}
 	OBJECT(current_object)->car_radio.buttons = 0u;
 	OBJECT(current_object)->car_radio.talk_step = 5u;
-	SCREEN(screen)->unk_F20 = 0u;
+	SCREEN(screen)->button_lamps = 0u;
 	OBJECT(current_object)->handler = car_radio_update_ADDRESS;
 	car_radio_update();
 }
@@ -1204,12 +1233,12 @@ void car_radio_read_buttons(void)
    ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the
    station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound
    (rom_019458 by screen unk_A1); 3 the station plays; 4-8 while screen unk_F0F is set (the road object
-   01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (sub_011FEA), sound E0
-   after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message (rom_019571 by
-   screen unk_A4) and sound. On the station: any of the three buttons goes back to the car's song (state
-   0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step: 0 message 0, 1-2
-   each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4 the
-   queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing. */
+   01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (fade_out_music_at),
+   sound E0 after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message
+   (rom_019571 by screen unk_A4) and sound. On the station: any of the three buttons goes back to the
+   car's song (state 0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step:
+   0 message 0, 1-2 each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4
+   the queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing. */
 void car_radio_update(void)
 {
 	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
@@ -1380,7 +1409,7 @@ void car_radio_update(void)
 													if (!L_019180)
 													{
 														r0 = 0x7Fu;
-														sub_011FEA(r0);
+														fade_out_music_at(r0);
 														OBJECT(current_object)->car_radio.timer = 0x78u;
 														OBJECT(current_object)->state++;
 													}
@@ -1415,7 +1444,7 @@ void car_radio_update(void)
 											if (!L_019132)
 											{
 												r0 = 0x3Fu;
-												sub_011FEA(r0);
+												fade_out_music_at(r0);
 												OBJECT(current_object)->car_radio.timer = 0x3Cu;
 												OBJECT(current_object)->state++;
 											}
@@ -1430,12 +1459,12 @@ void car_radio_update(void)
 								{
 									OBJECT(current_object)->state = 0u;
 									OBJECT(current_object)->car_radio.talk_step = 4u;
-									SCREEN(screen)->unk_F30 = 0u;
+									SCREEN(screen)->dj_mouth_shapes = 0u;
 									r0 = 0x1Fu;
 									request_sound(r0);
 									return;
 								}
-								if (SCREEN(screen)->unk_F30 != 0u)
+								if (SCREEN(screen)->dj_mouth_shapes != 0u)
 								{
 									OBJECT(current_object)->car_radio.queued_message = 0u;
 									return;
@@ -1568,7 +1597,7 @@ void car_radio_dj_leader(void)
 {
 	uint8_t r0 = 0;
 
-	r0 = (uint8_t)(unk_20E030[mem_read8(SCREEN(screen)->unk_308 + 0x20u)] + 0x11u);
+	r0 = (uint8_t)(car_numbers[RACE(SCREEN(screen)->host_record)->race_order] + 0x11u);
 	start_dj_message(r0);
 }
 
@@ -1691,7 +1720,7 @@ void song_title_show(void)
 			OBJECT(current_object)->x = ROM16(r10);
 			r10 += 2u;
 			OBJECT(current_object)->song_title.text = r10;
-			SCREEN(screen)->unk_F40 = r10;
+			SCREEN(screen)->lcd_scroll_request = r10;
 			OBJECT(current_object)->song_title.slide = 0xD2;
 			OBJECT(current_object)->song_title.y = 0xC8u;
 			OBJECT(current_object)->song_title.speed = 0x14u;
@@ -1820,7 +1849,7 @@ void song_title_show(void)
 /* Starts DJ message R0 (start_dj_message) unless one is being said (screen unk_F30). */
 void start_dj_message_if_quiet(uint8_t r0)
 {
-	if (SCREEN(screen)->unk_F30 != 0u)
+	if (SCREEN(screen)->dj_mouth_shapes != 0u)
 		return;
 	start_dj_message(r0);
 }
@@ -1834,7 +1863,7 @@ void start_dj_message(uint8_t r0)
 
 	r10 = dj_messages[(uint8_t)r0];
 	r0_2 = (uint8_t)byte_swap32(r10);
-	SCREEN(screen)->unk_F30 = r10 & 0xFFFFFFu;
+	SCREEN(screen)->dj_mouth_shapes = r10 & 0xFFFFFFu;
 	request_sound(r0_2);
 }
 
@@ -1860,7 +1889,7 @@ void title_screen_update(void)
 	case 0:
 		AS8(SCREEN(screen)->unk_5800) = 0u;
 		AT8(SCREEN(screen)->unk_5800, 1) = 0u;
-		r19 = 0x1ACCCu + ((uint32_t)SCREEN(screen)->unk_00 << 3) * 4u;
+		r19 = 0x1ACCCu + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
 		AS32(OBJECT(current_object)->unk_84) = ROM32(r19);
 		r19 += 4u;
 		OBJECT(current_object)->unk_88 = ROM32(r19);
@@ -1875,18 +1904,18 @@ void title_screen_update(void)
 		r19 += 4u;
 		OBJECT(current_object)->title_screen.second_scroll_x_address = ROM32(r19);
 		OBJECT(current_object)->title_screen.second_scroll_y_address = ROM32(r19 + 4u);
-		r19 = 0x1AD0Cu + SCREEN(screen)->unk_00 * 5u * 4u;
+		r19 = 0x1AD0Cu + SCREEN(screen)->index * 5u * 4u;
 		set_up_background(r19);
 		mem_write16(OBJECT(current_object)->title_screen.second_scroll_y_address, 0xFFF0u);
 		mem_write16(OBJECT(current_object)->title_screen.scroll_x_address, 0x360u);
 		scroll_x_address = OBJECT(current_object)->title_screen.scroll_x_address;
-		mem_write16(scroll_x_address, mem_read16(scroll_x_address) + ((SCREEN(screen)->unk_02 * 5u) << 6));
+		mem_write16(scroll_x_address, mem_read16(scroll_x_address) + ((SCREEN(screen)->car_number * 5u) << 6));
 		mem_write16(OBJECT(current_object)->title_screen.scroll_y_address, 0x72u);
 		r0 = SCREEN(screen)->unk_9E;
-		SCREEN(screen)->unk_9C = r0;
+		SCREEN(screen)->attract_car = r0;
 		SCREEN(screen)->unk_9E = (r0 + 1u) & 7u;
-		SCREEN(screen)->unk_41 = SCREEN(screen)->unk_9C;
-		SCREEN(screen)->unk_40 = 5u;
+		SCREEN(screen)->unk_41 = SCREEN(screen)->attract_car;
+		SCREEN(screen)->link_event = 5u;
 		r21 = start_object();
 		mem_write32(r21 + 4u, credit_display_update_ADDRESS);
 		r21 = start_object();
@@ -2028,7 +2057,7 @@ void title_car_drive(void)
 		OBJECT(current_object)->title_car.position &= 0xFFFu;
 	}
 	OBJECT(current_object)->x = OBJECT(current_object)->title_car.position;
-	OBJECT(current_object)->x -= rom_01ABA4[SCREEN(screen)->unk_02];
+	OBJECT(current_object)->x -= rom_01ABA4[SCREEN(screen)->car_number];
 	OBJECT(current_object)->title_car.frames++;
 	r2 = OBJECT(current_object)->title_car.frames & 1u;
 	OBJECT(current_object)->title_car.rest_y = OBJECT(current_object)->y;
@@ -2682,12 +2711,12 @@ void title_picture_draw(void)
 /* The prompt at the bottom of the title, the car presentations and the demo races, and its text on the
    cabinet's LCD; ends at once in game mode 6 (screen unk_80). Every 30 frames (round_frames): a little
    car crosses the message (coin_prompt_car with this round's car; next_car then steps through the eight,
-   from screen unk_02) and the message by the seat (unk_20E0A0 and unk_20E0A1 for screen 1, unk_20E0A8
-   and unk_20E0A9 for screen 2): with free play (unk_20E615) or a credit message 2, TURN THE IGNITION KEY
-   (coin_prompt_start_key_prompt); else message 1 with coins in toward a credit or 0, a
-   coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to scroll (screen
-   unk_F40) is the message's (rom_01A9BC: Insert Coin(s), Insert More Coin(s), Turn the Ignition Key),
-   except in game modes 6 and 7 or while a text scrolls (unk_F44). */
+   from screen unk_02) and the message by the seat (seat1_credits and seat1_coin_units for screen 1,
+   seat2_credits and seat2_coin_units for screen 2): with free play (free_play) or a credit message 2,
+   TURN THE IGNITION KEY (coin_prompt_start_key_prompt); else message 1 with coins in toward a credit or
+   0, a coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to scroll
+   (screen unk_F40) is the message's (rom_01A9BC: Insert Coin(s), Insert More Coin(s), Turn the Ignition
+   Key), except in game modes 6 and 7 or while a text scrolls (unk_F44). */
 void coin_prompt_update(void)
 {
 	uint8_t r0 = 0, r2 = 0, r10 = 0, r11 = 0;
@@ -2697,13 +2726,13 @@ void coin_prompt_update(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		if ((uint8_t)SCREEN(screen)->unk_80 == 6u)
+		if (SCREEN(screen)->game_mode == 6u)
 		{
 			OBJECT(current_object)->flags = 0u;
 			OBJECT(current_object)->unk_01 = 0u;
 			return;
 		}
-		OBJECT(current_object)->coin_prompt.next_car = SCREEN(screen)->unk_02;
+		OBJECT(current_object)->coin_prompt.next_car = SCREEN(screen)->car_number;
 		OBJECT(current_object)->state++;
 		break;
 	case 1:
@@ -2711,8 +2740,8 @@ void coin_prompt_update(void)
 		OBJECT(current_object)->coin_prompt.round_frames = round_frames - 1u;
 		if (round_frames != 1u)
 		{
-			if ((uint8_t)SCREEN(screen)->unk_80 != 6u && (uint8_t)SCREEN(screen)->unk_80 != 7u && SCREEN(screen)->unk_F44 == 0u)
-				SCREEN(screen)->unk_F40 = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
+				SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
 			return;
 		}
 		break;
@@ -2727,7 +2756,7 @@ void coin_prompt_update(void)
 	mem_write8(r21 + 0xBu, OBJECT(current_object)->coin_prompt.next_car);
 	OBJECT(current_object)->coin_prompt.next_car++;
 	OBJECT(current_object)->coin_prompt.next_car &= 7u;
-	if (unk_20E615 != 0u)
+	if (free_play != 0u)
 	{
 		r0 = 2u;
 		r1 = 2u;
@@ -2736,18 +2765,18 @@ void coin_prompt_update(void)
 	}
 	else
 	{
-		switch (SCREEN(screen)->unk_00)
+		switch (SCREEN(screen)->index)
 		{
 		case 0:
-			r10 = unk_20E0A0;
-			r11 = unk_20E0A1;
+			r10 = seat1_credits;
+			r11 = seat1_coin_units;
 			break;
 		case 1:
-			r10 = unk_20E0A8;
-			r11 = unk_20E0A9;
+			r10 = seat2_credits;
+			r11 = seat2_coin_units;
 			break;
 		default:
-			invalid_jump(rom_01A744[SCREEN(screen)->unk_00]);
+			invalid_jump(rom_01A744[SCREEN(screen)->index]);
 		}
 		if (r10 != 0u)
 		{
@@ -2757,8 +2786,8 @@ void coin_prompt_update(void)
 			r21 = coin_prompt_start_key_prompt(r1, r2);
 			OBJECT(current_object)->coin_prompt.message = r0;
 			mem_write8(r21 + 0xBu, OBJECT(current_object)->coin_prompt.car);
-			if ((uint8_t)SCREEN(screen)->unk_80 != 6u && (uint8_t)SCREEN(screen)->unk_80 != 7u && SCREEN(screen)->unk_F44 == 0u)
-				SCREEN(screen)->unk_F40 = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
+				SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
 			return;
 		}
 		if (r11 != 0u)
@@ -2772,8 +2801,8 @@ void coin_prompt_update(void)
 	}
 	OBJECT(current_object)->coin_prompt.message = r0;
 	mem_write8(r21 + 0xBu, OBJECT(current_object)->coin_prompt.car);
-	if ((uint8_t)SCREEN(screen)->unk_80 != 6u && (uint8_t)SCREEN(screen)->unk_80 != 7u && SCREEN(screen)->unk_F44 == 0u)
-		SCREEN(screen)->unk_F40 = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+	if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
+		SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
 }
 
 /* The little car that drives across the prompt from right to left each round (coin_prompt starts it):
@@ -2977,11 +3006,11 @@ void ignition_key_prompt_update(void)
 }
 
 /* The credits line under the prompt (title, car presentations, demo races); ends in game mode 6. With
-   free play (unk_20E615) FREE PLAY; otherwise, for the screen's seat (unk_20E0A0 and unk_20E0A1 for
-   screen 1, unk_20E0A8 and unk_20E0A9 for screen 2): Credit (0 or 1) or Credits and the number of
-   credits in the font's digits (tens at x AC when there are, units at B4), and while coins are in toward
-   the next credit the coins and the coins a credit costs (unk_20E610) as a fraction (C0 and C8), each
-   drawn with credit_display_digit. */
+   free play (free_play) FREE PLAY; otherwise, for the screen's seat (seat1_credits and seat1_coin_units
+   for screen 1, seat2_credits and seat2_coin_units for screen 2): Credit (0 or 1) or Credits and the
+   number of credits in the font's digits (tens at x AC when there are, units at B4), and while coins are
+   in toward the next credit the coins and the coins a credit costs (coins_per_credit) as a fraction (C0
+   and C8), each drawn with credit_display_digit. */
 void credit_display_update(void)
 {
 	uint8_t r10_2 = 0, r11_2 = 0;
@@ -2991,12 +3020,12 @@ void credit_display_update(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		if ((uint8_t)SCREEN(screen)->unk_80 == 6u)
+		if (SCREEN(screen)->game_mode == 6u)
 		{
 			OBJECT(current_object)->flags = 0u;
 			OBJECT(current_object)->unk_01 = 0u;
 		}
-		if (unk_20E615 != 0u)
+		if (free_play != 0u)
 		{
 			OBJECT(current_object)->state++;
 			r19 = 0x1AB62u;
@@ -3014,18 +3043,18 @@ void credit_display_update(void)
 	default:
 		invalid_jump(rom_01AA0C[OBJECT(current_object)->state]);
 	}
-	switch (SCREEN(screen)->unk_00)
+	switch (SCREEN(screen)->index)
 	{
 	case 0:
-		r10 = unk_20E0A0;
-		r11 = unk_20E0A1;
+		r10 = seat1_credits;
+		r11 = seat1_coin_units;
 		break;
 	case 1:
-		r10 = unk_20E0A8;
-		r11 = unk_20E0A9;
+		r10 = seat2_credits;
+		r11 = seat2_coin_units;
 		break;
 	default:
-		invalid_jump(rom_01AA4C[SCREEN(screen)->unk_00]);
+		invalid_jump(rom_01AA4C[SCREEN(screen)->index]);
 	}
 	if (r10 < 2u)
 		r19 = 0x1AB72u;
@@ -3062,7 +3091,7 @@ void credit_display_update(void)
 		OBJECT(current_object)->x = 0xC0u;
 		credit_display_digit();
 		OBJECT(current_object)->credit_display.digit_kind = 2u;
-		OBJECT(current_object)->credit_display.digit = unk_20E610;
+		OBJECT(current_object)->credit_display.digit = coins_per_credit;
 		OBJECT(current_object)->x = 0xC8u;
 		credit_display_digit();
 	}
@@ -3138,7 +3167,7 @@ void demo_captions_run(void)
 }
 
 /* Frame 30 of the demo captions: HEAD TO HEAD! 2 PLAYER RACING (demo_caption records 0, 1 and 3 +
-   unk_20E040, or 4 when unk_20E620 is set; 4 in attract.txt). */
+   machine_count, or 4 when stand_alone is set; 4 in attract.txt). */
 void demo_captions_head_to_head(void)
 {
 	uint8_t r0 = 0;
@@ -3148,8 +3177,8 @@ void demo_captions_head_to_head(void)
 	r0 = 0u;
 	demo_captions_start(r0, r1);
 	r0 = 3u;
-	if (unk_20E620 == 0u)
-		r0 += unk_20E040;
+	if (stand_alone == 0u)
+		r0 += machine_count;
 	else
 		r0++;
 	r21 = start_object();
@@ -3256,9 +3285,9 @@ void sub_01AFDC(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		AS8(SCREEN(screen)->unk_B00) = 0u;
-		sub_0106AF();
-		unk_20E200 &= 0xF7FFu;
+		AS8(SCREEN(screen)->unpack_state) = 0u;
+		init_video();
+		video_registers &= 0xF7FFu;
 		unk_20E202 = 0xFu;
 		unk_20E28C = 0xFFu;
 		unk_20E288 = 0u;
@@ -3272,9 +3301,9 @@ void sub_01AFDC(void)
 		OBJECT(current_object)->state++;
 		return;
 	case 1:
-		if ((SCREEN(screen)->unk_118 & 8u) != 0u)
+		if ((SCREEN(screen)->buttons_pressed & 8u) != 0u)
 			OBJECT(current_object)->x -= 2u;
-		if ((SCREEN(screen)->unk_118 & 4u) != 0u)
+		if ((SCREEN(screen)->buttons_pressed & 4u) != 0u)
 			OBJECT(current_object)->x += 2u;
 		if ((int16_t)OBJECT(current_object)->x < 0xA)
 			OBJECT(current_object)->x = 0xEu;
@@ -3282,9 +3311,9 @@ void sub_01AFDC(void)
 			OBJECT(current_object)->x = 0xAu;
 		if (OBJECT(current_object)->x == 0xAu)
 		{
-			if ((SCREEN(screen)->unk_118 & 2u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 2u) != 0u)
 				SCREEN(screen)->unk_5806++;
-			if ((SCREEN(screen)->unk_118 & 1u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 1u) != 0u)
 				SCREEN(screen)->unk_5806--;
 			if ((int16_t)SCREEN(screen)->unk_5806 < 0)
 				SCREEN(screen)->unk_5806 = 9u;
@@ -3293,9 +3322,9 @@ void sub_01AFDC(void)
 		}
 		else if (OBJECT(current_object)->x == 0xCu)
 		{
-			if ((SCREEN(screen)->unk_118 & 2u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 2u) != 0u)
 				SCREEN(screen)->unk_5804++;
-			if ((SCREEN(screen)->unk_118 & 1u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 1u) != 0u)
 				SCREEN(screen)->unk_5804--;
 			if ((int16_t)SCREEN(screen)->unk_5804 < 0)
 				SCREEN(screen)->unk_5804 = 9u;
@@ -3304,16 +3333,16 @@ void sub_01AFDC(void)
 		}
 		else
 		{
-			if ((SCREEN(screen)->unk_118 & 2u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 2u) != 0u)
 				AT16(SCREEN(screen)->unk_5800, 2)++;
-			if ((SCREEN(screen)->unk_118 & 1u) != 0u)
+			if ((SCREEN(screen)->buttons_pressed & 1u) != 0u)
 				AT16(SCREEN(screen)->unk_5800, 2)--;
 			if ((int16_t)(uint16_t)(SCREEN(screen)->unk_5800 >> 16u) < 0)
 				AT16(SCREEN(screen)->unk_5800, 2) = 9u;
 			if ((int16_t)(uint16_t)(SCREEN(screen)->unk_5800 >> 16u) > 9)
 				AT16(SCREEN(screen)->unk_5800, 2) = 0u;
 		}
-		if (SCREEN(screen)->unk_00 == 0u)
+		if (SCREEN(screen)->index == 0u)
 		{
 			r4 = (uint16_t)((uint16_t)(SCREEN(screen)->unk_5800 >> 16u) + SCREEN(screen)->unk_5804 * 0xAu + SCREEN(screen)->unk_5806 * 0x64u);
 			AS16(SCREEN(screen)->unk_5800) = r4;
@@ -3323,7 +3352,7 @@ void sub_01AFDC(void)
 			if ((OBJECT(current_object)->unk_10 & 3u) == 0u)
 				mem_write16(TEXT_CELL(0, 10) + OBJECT(current_object)->x, 0x602Au);
 		}
-		if (SCREEN(screen)->unk_00 != 0u)
+		if (SCREEN(screen)->index != 0u)
 			return;
 		r4_2 = 0u;
 		r5 = 0u;
@@ -3336,7 +3365,7 @@ void sub_01AFDC(void)
 		} while (r4_2 == 0u);
 		return;
 	case 2:
-		if (SCREEN(screen)->unk_00 != 0u)
+		if (SCREEN(screen)->index != 0u)
 			return;
 		r4_2 = 0u;
 		r5 = 0u;
@@ -3431,15 +3460,25 @@ void sub_01B20C(uint32_t r3, uint16_t r4)
 	mem_write16(r3 + 2u, r4 + 0x6030u);
 }
 
-void sub_01C241(void)
+/* Enters the test mode (reset calls it once when test_mode_on says the test mode is on): turns the link
+   board off, clears the tilemaps and the sprite lists (init_video, init_sprite_lists), clears both
+   screens' pending tile unpacking (screen unk_B00), demo flag (unk_90 bit 8) and unk_94 bit 0, the
+   mixers' registers 40-4A, turns both screens on (the I/O chips' CNT), sets up the test mode's palettes
+   and font (test_mode_set_up_colours), test_mode_flags 0 (INDIVIDUAL) and the cursor on EXIT, stops both
+   monitors' sounds (command 1F through the sound command queue, test_mode_queue_sound and
+   test_mode_queue_sound_screen_2), turns the lamps and the wheel motor off (checkpoint_lamp-unk_20E0D1,
+   screen unk_F20, port_d_outputs, unk_20E094), writes " LCD status OK! " on both cabinets' LCDs (the 16
+   bytes at F10 of each screen's block), sets test_mode_routine to test_mode_menu and reads the controls
+   (test_mode_read_controls). */
+void test_mode_start(void)
 {
 	uint16_t r0 = 0;
 	uint32_t r0_2 = 0, r1 = 0;
 
 	mem_write16(0x801000u, 0u);
 	mem_write8(IO_C00074, 0x1Fu);
-	sub_0106AF();
-	sub_0107F0();
+	init_video();
+	init_sprite_lists();
 	unk_208B00 = 0u;
 	unk_218B00 = 0u;
 	unk_208090 &= ~0x100u;
@@ -3454,39 +3493,39 @@ void sub_01C241(void)
 	mem_write32(0x690048u, 0u);
 	mem_write8(IO_C0001C, 6u);
 	mem_write8(0xC8001Cu, 0x86u);
-	sub_01EF6E();
-	AS8(unk_20E701) = 0u;
-	AT8(unk_20E701, 1) = 0xCu;
-	unk_20E732 = 0u;
-	unk_20E733 = 0u;
+	test_mode_set_up_colours();
+	test_mode_flags = 0u;
+	test_mode_cursor = 0xCu;
+	test_mode_sound_queue_write = 0u;
+	test_mode_sound_queue_read = 0u;
 	r0 = 0x1Fu;
-	sub_01F26B(r0);
-	sub_01F266(r0);
+	test_mode_queue_sound(r0);
+	test_mode_queue_sound_screen_2(r0);
 	mem_write8(SOUND_700710, 0u);
 	mem_write8(SOUND_700712, mem_read8(SOUND_700712) | 0x20u);
 	mem_write8(SOUND_700810, 0u);
 	mem_write8(SOUND_700812, mem_read8(SOUND_700812) | 0x20u);
 	unk_20E0D0[0] = 0u;
 	unk_20E0D1 = 0u;
-	unk_20E0C0[0] = 0u;
-	unk_20E0C1 = 0u;
-	unk_20E0C2 = 0u;
-	unk_20E0C3 = 0u;
-	unk_20E0C4 = 0u;
-	unk_20E0C5 = 0u;
-	unk_20E0C6 = 0u;
-	unk_20E0C7 = 0u;
-	unk_20E0C8[0] = 0u;
-	unk_20E0C9 = 0u;
-	unk_20E0CA = 0u;
-	unk_20E0CB = 0u;
-	unk_20E0CC = 0u;
-	unk_20E0CD = 0u;
-	unk_20E0CE = 0u;
-	unk_20E0CF = 0u;
+	checkpoint_lamp[0] = 0u;
+	checkpoint_lamp_blinks = 0u;
+	checkpoint_lamp_period = 0u;
+	checkpoint_lamp_timer = 0u;
+	checkpoint_lamp_2 = 0u;
+	checkpoint_lamp_2_blinks = 0u;
+	checkpoint_lamp_2_period = 0u;
+	checkpoint_lamp_2_timer = 0u;
+	leader_lamp[0] = 0u;
+	leader_lamp_blinks = 0u;
+	leader_lamp_period = 0u;
+	leader_lamp_timer = 0u;
+	leader_lamp_2 = 0u;
+	leader_lamp_2_blinks = 0u;
+	leader_lamp_2_period = 0u;
+	leader_lamp_2_timer = 0u;
 	unk_208F20 = 0u;
 	unk_218F20 = 0u;
-	unk_20E092[0] &= 0xE0E1u;
+	AS16(port_d_outputs[0]) &= 0xE0E1u;
 	unk_20E094 &= ~0x403u;
 	r0_2 = rom_01C378;
 	r1 = rom_01C37C;
@@ -3500,111 +3539,144 @@ void sub_01C241(void)
 	unk_208F1C = r1;
 	unk_218F18 = r0_2;
 	unk_218F1C = r1;
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+	test_mode_routine = test_mode_menu_ADDRESS;
 	r12 = unk_218F20_ADDRESS;
-	sub_01F190();
+	test_mode_read_controls();
 }
 
-void sub_01C388(void)
+/* The test mode's frame, which reset runs every video frame while the test mode is on: reads the buttons
+   and the analog inputs (test_mode_read_controls), sends the sound board the next queued sound command
+   (test_mode_send_sound) and runs test_mode_routine, the step of the menu or page being shown. */
+void test_mode_frame(void)
 {
-	sub_01F190();
-	sub_01F237();
-	call_code(AT32(unk_20E701, 3));
+	test_mode_read_controls();
+	test_mode_send_sound();
+	call_code(test_mode_routine);
 }
 
-void sub_01C392(void)
+/* Shows the test mode's menu, where every page returns: in CONTINUE mode (test_mode_flags bit 0) the
+   cursor first moves on to the next item; clears the text layer, shows the E2PROM write count while
+   SERVICE is held (test_mode_menu_show_write_count), draws TEST MODE, the heading (INDIVIDUAL or
+   CONTINUE), the twelve items and SELECT BY SERVICE BUTTON AND PUSH TEST BUTTON, puts the cursor on
+   test_mode_cursor (test_mode_set_cursor) and goes on to test_mode_menu_run. With the cursor on the
+   heading (after test_mode_menu_toggle_continue has redrawn it) it goes straight on. */
+void test_mode_menu(void)
 {
 	uint32_t carry = 0;
 	uint32_t r0 = 0, r10 = 0;
 
-	if ((uint8_t)(unk_20E701 >> 8u) == 0u)
+	if (test_mode_cursor == 0u)
 	{
-		AT32(unk_20E701, 3) = sub_01C3E6_ADDRESS;
-		sub_01C3E6();
+		test_mode_routine = test_mode_menu_run_ADDRESS;
+		test_mode_menu_run();
 		return;
 	}
-	if ((unk_20E701 & 1u) != 0u)
-		AT8(unk_20E701, 1)++;
-	r0 = sub_01F17D();
-	r0 = sub_01C435(r0);
+	if ((test_mode_flags & 1u) != 0u)
+		test_mode_cursor++;
+	r0 = test_mode_clear_text();
+	r0 = test_mode_menu_show_write_count(r0);
 	r10 = 0x1C490u;
-	sub_01F0CA(r0, r10);
-	carry = (unk_20E701 & 1u) != 0u;
+	test_mode_draw_texts(r0, r10);
+	carry = (test_mode_flags & 1u) != 0u;
 	r0 = carry;
 	r10 = rom_01C560[r0];
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F02C(r0);
-	r10 = 0x310000u | rom_01C588[(uint8_t)(unk_20E701 >> 8u)];
-	sub_01F085(r0, r10);
-	AT32(unk_20E701, 3) = sub_01C3E6_ADDRESS;
-	sub_01C3E6();
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_draw_instructions(r0);
+	r10 = 0x310000u | rom_01C588[test_mode_cursor];
+	test_mode_set_cursor(r0, r10);
+	test_mode_routine = test_mode_menu_run_ADDRESS;
+	test_mode_menu_run();
 }
 
-void sub_01C3E6(void)
+/* The menu, each frame: SERVICE moves the cursor (test_mode_cursor) down, from EXIT back to the heading;
+   TEST starts the item's page (rom_01C45C: test_mode_menu_toggle_continue, test_mode_memory_test,
+   test_mode_volume_adjustment, test_mode_input_test, test_mode_output_test, test_mode_sound_test,
+   test_mode_crt_test, test_mode_game_assignments, test_mode_coin_assignments, then the network
+   assignments, bookkeeping, backup data clear and exit pages, test_mode_network_assignments_start,
+   test_mode_bookkeeping_start, test_mode_backup_data_clear_start, test_mode_exit); the cursor's arrow
+   blinks (test_mode_blink_address, test_mode_blink_timer: 11 frames shown, 6 hidden). */
+void test_mode_menu_run(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 	uint8_t t1 = 0;
 	uint16_t t3 = 0;
 	uint32_t t2 = 0;
 
-	if ((unk_20E70E & 1u) != 0u)
+	if ((test_mode_buttons_pressed & 1u) != 0u)
 	{
-		sub_01F09A();
-		r0 = (uint8_t)(unk_20E701 >> 8u);
+		test_mode_clear_cursor();
+		r0 = test_mode_cursor;
 		r0 = (uint8_t)(r0 + 1u);
 		if ((int8_t)r0 >= 0xD)
 			r0 = 0u;
-		AT8(unk_20E701, 1) = r0;
+		test_mode_cursor = r0;
 		r10 = 0x310000u | rom_01C588[r0];
-		sub_01F085(r0, r10);
+		test_mode_set_cursor(r0, r10);
 	}
-	if ((unk_20E70E & 2u) != 0u)
-		AT32(unk_20E701, 3) = rom_01C45C[(uint8_t)(unk_20E701 >> 8u)];
-	t1 = unk_20E72F - 1u;
-	unk_20E72F = t1;
+	if ((test_mode_buttons_pressed & 2u) != 0u)
+		test_mode_routine = rom_01C45C[test_mode_cursor];
+	t1 = test_mode_blink_timer - 1u;
+	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
 	{
-		unk_20E72F = 5u;
-		t2 = unk_20E708;
+		test_mode_blink_timer = 5;
+		t2 = test_mode_blink_address;
 		t3 = mem_read16(t2) ^ 0x6A7Fu;
 		mem_write16(t2, t3);
 		if (t3 != 0u)
-			unk_20E72F = (uint32_t)unk_20E72F << 1;
+			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
 }
 
-uint32_t sub_01C435(uint32_t r0)
+/* While SERVICE is held as the menu is drawn: E2PROM WRITE COUNT and the count (eeprom_write_count, 5
+   digits) at the bottom of the menu. */
+uint32_t test_mode_menu_show_write_count(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r10 = 0;
 
-	if ((unk_20E70C & 1u) == 0u)
+	if ((test_mode_buttons & 1u) == 0u)
 		return r0;
 	r10 = 0x1C5A2u;
-	sub_01F0CA(r0, r10);
+	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(27, 26);
-	r0_2 = unk_20E60A;
+	r0_2 = eeprom_write_count;
 	r1 = 0x64u;
 	r2 = 5u;
-	sub_01F103(r2, &r0_2, &r1, &r10);
+	test_mode_draw_number(r2, &r0_2, &r1, &r10);
 	return r0_2;
 }
 
-void sub_01C5BA(void)
+/* The menu's heading: TEST switches between INDIVIDUAL and CONTINUE (test_mode_flags bit 0) and redraws
+   it, then back to test_mode_menu. In CONTINUE mode each return to the menu moves the cursor to the next
+   item, so the pages run one after another with TEST alone. */
+void test_mode_menu_toggle_continue(void)
 {
 	uint32_t carry = 0;
 	uint32_t r0 = 0, r10 = 0;
 	uint32_t t1 = 0;
 
-	t1 = unk_20E701;
+	t1 = AS32(test_mode_flags);
 	carry = (t1 & 1u) != 0u;
-	unk_20E701 = t1 ^ 1u;
+	AS32(test_mode_flags) = t1 ^ 1u;
 	r0 = 0u - (0xFFFFFFFFu + carry);
 	r10 = rom_01C560[r0];
-	sub_01F0CA(r0, r10);
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+	test_mode_draw_texts(r0, r10);
+	test_mode_routine = test_mode_menu_ADDRESS;
 }
 
-void sub_01C5DB(void)
+/* The MEMORY TEST, all at once with the interrupts off and the sound program held in its wait loop
+   (sound RAM 1FFF = 1): each chip's result shows TEST while it is tested, then GOOD or BAD
+   (memory_test_results, test_mode_memory_test_draw). The program ROM's two halves by
+   test_mode_memory_test_checksum against the sums at 03FFF8-03FFFF (IC37, IC40: 000000-03FFF7; IC36,
+   IC39: 100000-1FEFFF); the video RAM (IC60, IC58, IC57, IC54) and the sprite RAM (IC61, IC67, IC68,
+   IC70) by 4-bit lanes (test_mode_memory_test_nibbles); the palette RAMs' four 16 KB blocks by byte
+   (IC1, IC3, IC2, IC4, IC120, IC121, IC122, IC123; test_mode_memory_test_halfwords); the work RAM
+   (IC115-IC118, test_mode_memory_test_words) and the sound RAM (IC21, test_mode_memory_test_bytes) each
+   saved in the sprite RAM and put back. The tilemaps, sprite lists and palettes it overwrites are set up
+   again (init_video, init_sprite_lists, test_mode_set_up_colours). IC70 always shows GOOD: the test of
+   its lane has no branch to BAD. Ends with the blinking PUSH TEST BUTTON TO EXIT
+   (test_mode_show_exit_prompt) and test_mode_memory_test_run. */
+void test_mode_memory_test(void)
 {
 	uint8_t r1_2 = 0, r26 = 0;
 	uint16_t r0_2 = 0;
@@ -3614,17 +3686,17 @@ void sub_01C5DB(void)
 	uint32_t t11 = 0, t12 = 0;
 
 	interrupts_off();
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	mem_write8(SOUND_701FFF, 1u);
-	current_object = 0x20E716u;
+	current_object = memory_test_results_ADDRESS;
 	r26 = 0u;
-	set_bytes(WORK_RAM + 0xE716u, 0x19u, r26);
+	set_bytes(memory_test_results_ADDRESS, 0x19u, r26);
 	OBJECT(current_object)->flags = 1u;
 	OBJECT(current_object)->unk_01 = 1u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0u;
 	r0 = rom_03FFF8_ADDRESS;
-	sub_01C98E(r10, &r0, &r1);
+	test_mode_memory_test_checksum(r10, &r0, &r1);
 	t1 = r0;
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
 	if (rom_03FFF8 != t1)
@@ -3637,10 +3709,10 @@ void sub_01C5DB(void)
 	OBJECT(current_object - 0x1u)->unk_01 = r0;
 	current_object = current_object + 1u;
 	OBJECT(current_object - 0x2u)->unk_02 = 0x101u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x100000u;
 	r0 = 0xFF000u;
-	sub_01C98E(r10, &r0, &r1);
+	test_mode_memory_test_checksum(r10, &r0, &r1);
 	t2 = r0;
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
 	if (rom_03FFFC != t2)
@@ -3653,10 +3725,10 @@ void sub_01C5DB(void)
 	AT8(OBJECT(current_object - 0x3u)->unk_02, 1) = r0;
 	current_object = current_object + 1u;
 	OBJECT(current_object - 0x4u)->handler = 0x1010101u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x300000u;
 	r0 = 0x20000u;
-	r0 = sub_01CB8F(r0, r10);
+	r0 = test_mode_memory_test_nibbles(r0, r10);
 	t3 = r0 & 0xFu;
 	r1_2 = 2u;
 	if (t3 != 0u)
@@ -3680,12 +3752,12 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	AT8(OBJECT(current_object - 0x7u)->handler, 3) = r1_2;
 	current_object = current_object + 1u;
-	r0 = sub_0106AF();
+	r0 = init_video();
 	OBJECT(current_object - 0x8u)->unk_08 = 0x1010101u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x400000u;
 	r0 = 0x20000u;
-	r0 = sub_01CB8F(r0, r10);
+	r0 = test_mode_memory_test_nibbles(r0, r10);
 	t6 = r0 & 0xFu;
 	r1_2 = 2u;
 	if (t6 != 0u)
@@ -3709,13 +3781,13 @@ void sub_01C5DB(void)
 	current_object = current_object + 1u;
 	AT8(OBJECT(current_object - 0xBu)->unk_08, 3) = r1_2;
 	current_object = current_object + 1u;
-	sub_0107F0();
+	init_sprite_lists();
 	OBJECT(current_object - 0xCu)->state = 1u;
 	OBJECT(current_object - 0xCu)->unk_0D = 1u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x600000u;
 	r0 = 0x4000u;
-	r0 = sub_01CA5D(r0, r10);
+	r0 = test_mode_memory_test_halfwords(r0, r10);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
@@ -3726,13 +3798,13 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	OBJECT(current_object - 0xDu)->unk_0D = r1_2;
 	current_object = current_object + 1u;
-	r0 = sub_01EF6E();
+	r0 = test_mode_set_up_colours();
 	OBJECT(current_object - 0xEu)->unk_0E = 1u;
 	OBJECT(current_object - 0xEu)->unk_0F = 1u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = PALETTE_RAM + 0x4000u;
 	r0 = 0x4000u;
-	r0 = sub_01CA5D(r0, r10);
+	r0 = test_mode_memory_test_halfwords(r0, r10);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
@@ -3743,12 +3815,12 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	OBJECT(current_object - 0xFu)->unk_0F = r1_2;
 	current_object = current_object + 1u;
-	r0 = sub_01EF6E();
+	r0 = test_mode_set_up_colours();
 	OBJECT(current_object - 0x10u)->unk_10 = 0x101u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x680000u;
 	r0 = 0x4000u;
-	r0 = sub_01CA5D(r0, r10);
+	r0 = test_mode_memory_test_halfwords(r0, r10);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
@@ -3759,13 +3831,13 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	AT8(OBJECT(current_object - 0x11u)->unk_10, 1) = r1_2;
 	current_object = current_object + 1u;
-	r0 = sub_01EF6E();
+	r0 = test_mode_set_up_colours();
 	OBJECT(current_object - 0x12u)->unk_12 = 1u;
 	OBJECT(current_object - 0x12u)->unk_13 = 1u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	r10 = 0x684000u;
 	r0 = 0x4000u;
-	r0 = sub_01CA5D(r0, r10);
+	r0 = test_mode_memory_test_halfwords(r0, r10);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
@@ -3776,13 +3848,13 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	OBJECT(current_object - 0x13u)->unk_13 = r1_2;
 	current_object = current_object + 1u;
-	r0 = sub_01EF6E();
+	r0 = test_mode_set_up_colours();
 	OBJECT(current_object - 0x14u)->unk_14 = 0x1010101u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	move_halfwords(SPRITE_RAM, WORK_RAM, 0x10000u);
 	r10 = 0x200000u;
 	r0 = 0x20000u;
-	r0 = sub_01C9BE(r0, r10);
+	r0 = test_mode_memory_test_words(r0, r10);
 	move_halfwords(WORK_RAM, SPRITE_RAM, 0x10000u);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
@@ -3808,44 +3880,49 @@ void sub_01C5DB(void)
 		r1_2 = 3u;
 	AT8(OBJECT(current_object - 0x17u)->unk_14, 3) = r1_2;
 	current_object = current_object + 1u;
-	sub_0107F0();
+	init_sprite_lists();
 	AS8(OBJECT(current_object - 0x18u)->unk_18) = 1u;
-	sub_01C93B(r0);
+	test_mode_memory_test_draw(r0);
 	move_halfwords(SPRITE_RAM, SOUND_RAM, 0x1000u);
 	r10 = 0x700000u;
 	r0 = 0x1FFFu;
-	r0 = sub_01CAF8(r0, r10);
+	r0 = test_mode_memory_test_bytes(r0, r10);
 	move_halfwords(SOUND_RAM, SPRITE_RAM, 0x1000u);
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
 	AS8(OBJECT(current_object - 0x18u)->unk_18) = r1_2;
 	current_object = current_object + 1u;
-	sub_0107F0();
-	r0 = sub_01C93B(r0);
+	init_sprite_lists();
+	r0 = test_mode_memory_test_draw(r0);
 	mem_write8(SOUND_701FFF, 0u);
 	interrupts_on();
-	sub_01F034();
-	AT32(unk_20E701, 3) = sub_01C928_ADDRESS;
-	sub_01C928((uint16_t)r0);
+	test_mode_show_exit_prompt();
+	test_mode_routine = test_mode_memory_test_run_ADDRESS;
+	test_mode_memory_test_run((uint16_t)r0);
 }
 
-void sub_01C928(uint16_t r0)
+/* The memory test's results, each frame: TEST goes back to the menu; PUSH TEST BUTTON TO EXIT blinks
+   (test_mode_blink_prompt). */
+void test_mode_memory_test_run(uint16_t r0)
 {
-	if ((unk_20E70E & 2u) != 0u)
-		AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
-	sub_01F052(r0);
+	if ((test_mode_buttons_pressed & 2u) != 0u)
+		test_mode_routine = test_mode_menu_ADDRESS;
+	test_mode_blink_prompt(r0);
 }
 
-uint32_t sub_01C93B(uint32_t r0)
+/* Draws the memory test's page (MEMORY TEST, 837-8890 <ROM> and its four chips, 837-8676 <RAM> and its
+   21, NOW TESTING) and each chip's result from memory_test_results beside its name: ---- (not yet),
+   TEST, GOOD or BAD. */
+uint32_t test_mode_memory_test_draw(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
 	uint8_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
 	uint16_t t2 = 0;
 
 	r10 = 0x1CC9Cu;
-	sub_01F0CA(r0, r10);
-	r10 = 0x20E716u;
+	test_mode_draw_texts(r0, r10);
+	r10 = memory_test_results_ADDRESS;
 	r11 = 0x1CD96u;
 	r12 = TEXT_CELL(0, 0);
 	r9 = 0x19u;
@@ -3882,7 +3959,10 @@ uint32_t sub_01C93B(uint32_t r0)
 	return r0_2;
 }
 
-void sub_01C98E(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
+/* Sums a stretch of the program ROM as two 16-bit checks, one of the even halfwords (the chip of the low
+   half of each 32-bit word: IC37 or IC36) and one of the odd (IC40 or IC39): each halfword is xored in,
+   the sum shifted right by one and xored with 8810 when a 1 falls out (a CRC); both start at 1. */
+void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
 {
 	uint32_t r0 = *p_r0;
 	uint32_t carry = 0;
@@ -3915,7 +3995,13 @@ void sub_01C98E(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
 	*p_r1 = (*p_r1 & 0xFFFF0000u) | r1;
 }
 
-uint32_t sub_01C9BE(uint32_t r0, uint32_t r10)
+/* Tests RAM 32 bits at a time (the work RAM, in place: it takes its return address off the stack into a
+   register and jumps back through it, so that it needs no stack in the RAM it overwrites): 8 passes,
+   each writing a walking pattern (01010101 the first pass, one bit further each pass, turned by a few
+   bits from word to word by the word's address) and reading it back; returns the bits found wrong (each
+   mismatch's expected ^ read, xored together), a byte per chip; NOW TESTING blinks once a pass
+   (test_mode_memory_test_blink). */
+uint32_t test_mode_memory_test_words(uint32_t r0, uint32_t r10)
 {
 	uint32_t carry = 0;
 	uint8_t r6 = 0;
@@ -4003,14 +4089,16 @@ uint32_t sub_01C9BE(uint32_t r0, uint32_t r10)
 			r3 = rotate_by(r3, r6, 32);
 			r4--;
 		} while (r4 != 0u);
-		sub_01CC80();
+		test_mode_memory_test_blink();
 		carry = v60_rot_cy(r2, 1u, 32);
 		r2 = (r2 << 1) | (r2 >> 31);
 	} while (carry == 0u);
 	return r0_2;
 }
 
-uint32_t sub_01CA5D(uint32_t r0, uint32_t r10)
+/* test_mode_memory_test_words 16 bits at a time (the palette RAMs: a chip for each byte), with the
+   pattern 0101; returns the bits found wrong. */
+uint32_t test_mode_memory_test_halfwords(uint32_t r0, uint32_t r10)
 {
 	uint32_t carry = 0;
 	uint8_t r6 = 0;
@@ -4100,14 +4188,16 @@ uint32_t sub_01CA5D(uint32_t r0, uint32_t r10)
 			r3 = rotate_by(r3, r6, 16);
 			r4--;
 		} while (r4 != 0u);
-		sub_01CC80();
+		test_mode_memory_test_blink();
 		carry = v60_rot_cy(r2, 1u, 16);
 		r2 = (uint16_t)(((uint32_t)r2 << 1) | (r2 >> 15));
 	} while (carry == 0u);
 	return r0;
 }
 
-uint32_t sub_01CAF8(uint32_t r0, uint32_t r10)
+/* test_mode_memory_test_words a byte at a time (the sound RAM, all but its last byte, which holds the
+   sound program), with the pattern 01; returns the bits found wrong. */
+uint32_t test_mode_memory_test_bytes(uint32_t r0, uint32_t r10)
 {
 	uint32_t carry = 0;
 	uint8_t r2 = 0, r3 = 0, r6 = 0;
@@ -4200,14 +4290,17 @@ uint32_t sub_01CAF8(uint32_t r0, uint32_t r10)
 			r3 = rotate_by(r3, r6, 8);
 			r4--;
 		} while (r4 != 0u);
-		sub_01CC80();
+		test_mode_memory_test_blink();
 		carry = v60_rot_cy(r2, 1u, 8);
 		r2 = (uint8_t)(((uint32_t)r2 << 1) | (r2 >> 7));
 	} while (carry == 0u);
 	return r0;
 }
 
-uint32_t sub_01CB8F(uint32_t r0, uint32_t r10)
+/* test_mode_memory_test_words for RAM of 4-bit chips, 16 bits at a time (the video RAM and the sprite
+   RAM): 4 passes with the pattern 1111 (a bit per chip); returns the bits found wrong, a nibble per
+   chip. */
+uint32_t test_mode_memory_test_nibbles(uint32_t r0, uint32_t r10)
 {
 	uint32_t carry = 0;
 	uint8_t r6 = 0;
@@ -4336,14 +4429,16 @@ uint32_t sub_01CB8F(uint32_t r0, uint32_t r10)
 			r3 = rotate_by(r3, r6, 16);
 			r4--;
 		} while (r4 != 0u);
-		sub_01CC80();
+		test_mode_memory_test_blink();
 		carry = v60_rot_cy(r2, 1u, 16);
 		r2 = (uint16_t)(((uint32_t)r2 << 1) | (r2 >> 15));
 	} while (carry == 0u);
 	return r0;
 }
 
-void sub_01CC80(void)
+/* Shows or hides NOW TESTING (each of its cells xored with its character in palette 66): the RAM tests
+   call it after each pass. */
+void test_mode_memory_test_blink(void)
 {
 	uint16_t r26 = 0;
 	uint32_t t1 = 0;
@@ -4361,24 +4456,31 @@ void sub_01CC80(void)
 	} while (ROM8(r28) != 0u);
 }
 
-void sub_01CDE0(void)
+/* Starts the VOLUME ADJUSTMENT, the calibration of the wheels' and pedals' potentiometers: draws ADJUST
+   and CANCEL with the cursor on CANCEL (test_mode_page_cursor 1), the six controls' names (MONITOR A and
+   B: STEERING WHEEL, ACCELERATOR, BRAKE) and the prompt; then test_mode_volume_adjustment_select. */
+void test_mode_volume_adjustment(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	r10 = 0x1CF71u;
-	r0 = sub_01F0CA(r0, r10);
+	r0 = test_mode_draw_texts(r0, r10);
 	r10 = 0x1CFA0u;
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F02C(r0);
-	AT8(unk_20E701, 2) = 1u;
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_draw_instructions(r0);
+	test_mode_page_cursor = 1u;
 	r10 = 0x310000u | rom_01CF9E;
-	r0 = sub_01F085(r0, r10);
-	AT32(unk_20E701, 3) = sub_01CE15_ADDRESS;
-	sub_01CE15(r0);
+	r0 = test_mode_set_cursor(r0, r10);
+	test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
+	test_mode_volume_adjustment_select(r0);
 }
 
-void sub_01CE15(uint32_t r0)
+/* Each frame: the bars (test_mode_volume_adjustment_draw); SERVICE moves the cursor between ADJUST and
+   CANCEL; TEST on CANCEL goes back to the menu; TEST on ADJUST starts the adjustment: ADJUSTING, PUSH
+   TEST BUTTON TO EXIT, each control's range (volume_ranges) narrowed to where it is now, then
+   test_mode_volume_adjustment_adjust. */
+void test_mode_volume_adjustment_select(uint32_t r0)
 {
 	uint8_t r0_3 = 0;
 	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0;
@@ -4386,40 +4488,40 @@ void sub_01CE15(uint32_t r0)
 	uint16_t t3 = 0;
 	uint32_t t2 = 0;
 
-	sub_01CEDB(r0);
-	if ((unk_20E70E & 1u) != 0u)
+	test_mode_volume_adjustment_draw(r0);
+	if ((test_mode_buttons_pressed & 1u) != 0u)
 	{
-		sub_01F09A();
-		r0_2 = (uint8_t)(unk_20E701 >> 16u) ^ 1u;
-		AT8(unk_20E701, 2) = r0_2;
+		test_mode_clear_cursor();
+		r0_2 = test_mode_page_cursor ^ 1u;
+		test_mode_page_cursor = r0_2;
 		r10 = 0x310000u | rom_01CF9C[r0_2];
-		sub_01F085(r0_2, r10);
+		test_mode_set_cursor(r0_2, r10);
 	}
-	if ((unk_20E70E & 2u) == 0u)
+	if ((test_mode_buttons_pressed & 2u) == 0u)
 	{
-		t1 = unk_20E72F - 1u;
-		unk_20E72F = t1;
+		t1 = test_mode_blink_timer - 1u;
+		test_mode_blink_timer = t1;
 		if ((int8_t)t1 < 0)
 		{
-			unk_20E72F = 5u;
-			t2 = unk_20E708;
+			test_mode_blink_timer = 5;
+			t2 = test_mode_blink_address;
 			t3 = mem_read16(t2) ^ 0x6A7Fu;
 			mem_write16(t2, t3);
 			if (t3 != 0u)
-				unk_20E72F = (uint32_t)unk_20E72F << 1;
+				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 		}
 		return;
 	}
-	if ((uint8_t)(unk_20E701 >> 16u) == 0u)
+	if (test_mode_page_cursor == 0u)
 	{
-		r0_2 = sub_01F17D();
+		r0_2 = test_mode_clear_text();
 		r10 = 0x1D021u;
-		r0_2 = sub_01F0CA(r0_2, r10);
+		r0_2 = test_mode_draw_texts(r0_2, r10);
 		r10 = 0x1CFA0u;
-		sub_01F0CA(r0_2, r10);
-		sub_01F034();
-		r10 = 0x20E638u;
-		r11 = 0x20E710u;
+		test_mode_draw_texts(r0_2, r10);
+		test_mode_show_exit_prompt();
+		r10 = volume_ranges_ADDRESS;
+		r11 = test_mode_analog_inputs_ADDRESS;
 		r9 = 6u;
 		do
 		{
@@ -4431,29 +4533,33 @@ void sub_01CE15(uint32_t r0)
 			r11++;
 			r10++;
 		} while (r9 != 0u);
-		AT32(unk_20E701, 3) = sub_01CE97_ADDRESS;
+		test_mode_routine = test_mode_volume_adjustment_adjust_ADDRESS;
 		return;
 	}
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
-	t1 = unk_20E72F - 1u;
-	unk_20E72F = t1;
+	test_mode_routine = test_mode_menu_ADDRESS;
+	t1 = test_mode_blink_timer - 1u;
+	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
 	{
-		unk_20E72F = 5u;
-		t2 = unk_20E708;
+		test_mode_blink_timer = 5;
+		t2 = test_mode_blink_address;
 		t3 = mem_read16(t2) ^ 0x6A7Fu;
 		mem_write16(t2, t3);
 		if (t3 != 0u)
-			unk_20E72F = (uint32_t)unk_20E72F << 1;
+			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
 }
 
-void sub_01CE97(void)
+/* The adjustment, each frame: each control's range (volume_ranges) widens to take its position
+   (test_mode_analog_inputs), as the operator turns the wheels and presses the pedals all the way; the
+   bars; TEST marks the settings changed (test_mode_flags bit 1) and goes back to the menu; PUSH TEST
+   BUTTON TO EXIT blinks. */
+void test_mode_volume_adjustment_adjust(void)
 {
 	uint32_t r0 = 0, r9 = 0, r10 = 0, r11 = 0;
 
-	r10 = 0x20E710u;
-	r11 = 0x20E638u;
+	r10 = test_mode_analog_inputs_ADDRESS;
+	r11 = volume_ranges_ADDRESS;
 	r9 = 6u;
 	do
 	{
@@ -4467,26 +4573,28 @@ void sub_01CE97(void)
 		r11++;
 		r9--;
 	} while (r9 != 0u);
-	r0 = sub_01CEDB(r0);
-	if ((unk_20E70E & 2u) != 0u)
+	r0 = test_mode_volume_adjustment_draw(r0);
+	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
-		unk_20E701 |= 2u;
-		AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+		test_mode_flags |= 2u;
+		test_mode_routine = test_mode_menu_ADDRESS;
 	}
-	sub_01F052(r0);
+	test_mode_blink_prompt(r0);
 }
 
-uint32_t sub_01CEDB(uint32_t r0)
+/* Draws the six controls' bars (32 cells, a cell for 8 steps): the range of volume_ranges in green and
+   the control's position (test_mode_analog_inputs) in red. */
+uint32_t test_mode_volume_adjustment_draw(uint32_t r0)
 {
 	uint16_t r0_3 = 0;
 	uint32_t r0_2 = 0, r1 = 0, r9 = 0, r10 = 0, r11 = 0;
 	uint16_t t1 = 0, t2 = 0, t3 = 0;
 
 	r10 = 0x1D03Cu;
-	sub_01F0CA(r0, r10);
+	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(0, 0);
 	r11 = 0x1D030u;
-	r12 = 0x20E638u;
+	r12 = volume_ranges_ADDRESS;
 	r9 = 3u;
 	do
 	{
@@ -4534,7 +4642,7 @@ uint32_t sub_01CEDB(uint32_t r0)
 		r9--;
 	} while (r9 != 0u);
 	r11 = 0x1D030u;
-	r12 = 0x20E710u;
+	r12 = test_mode_analog_inputs_ADDRESS;
 	r9 = 6u;
 	do
 	{
@@ -4549,45 +4657,57 @@ uint32_t sub_01CEDB(uint32_t r0)
 	return r0_2;
 }
 
-void sub_01D111(void)
+/* Starts the INPUT TEST: clears the text layer, draws the inputs' names and the blinking PUSH TEST
+   BUTTON TO EXIT, then test_mode_input_test_run. */
+void test_mode_input_test(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	r10 = 0x1D26Cu;
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F034();
-	AT32(unk_20E701, 3) = sub_01D126_ADDRESS;
-	sub_01D126(r0);
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_show_exit_prompt();
+	test_mode_routine = test_mode_input_test_run_ADDRESS;
+	test_mode_input_test_run(r0);
 }
 
-void sub_01D126(uint32_t r0)
+/* The input test, each frame: the inputs (test_mode_input_test_draw); TEST goes on to
+   test_mode_input_test_release, so that the press shows as TEST On before the page ends; PUSH TEST
+   BUTTON TO EXIT blinks (test_mode_blink_prompt). */
+void test_mode_input_test_run(uint32_t r0)
 {
-	r0 = sub_01D151(r0);
-	if ((unk_20E70E & 2u) == 0u)
+	r0 = test_mode_input_test_draw(r0);
+	if ((test_mode_buttons_pressed & 2u) == 0u)
 	{
-		sub_01F052(r0);
+		test_mode_blink_prompt(r0);
 		return;
 	}
-	AT32(unk_20E701, 3) = sub_01D13B_ADDRESS;
-	sub_01F052(r0);
+	test_mode_routine = test_mode_input_test_release_ADDRESS;
+	test_mode_blink_prompt(r0);
 }
 
-void sub_01D13B(void)
+/* The input test once TEST is pressed: the inputs each frame until TEST is let go, then back to the
+   menu. */
+void test_mode_input_test_release(void)
 {
 	uint32_t r0 = 0;
 
-	r0 = sub_01D151(0u);
-	if ((unk_20E70E & 0x200u) == 0u)
+	r0 = test_mode_input_test_draw(0u);
+	if ((test_mode_buttons_released & 2u) == 0u)
 	{
-		sub_01F052(r0);
+		test_mode_blink_prompt(r0);
 		return;
 	}
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
-	sub_01F052(r0);
+	test_mode_routine = test_mode_menu_ADDRESS;
+	test_mode_blink_prompt(r0);
 }
 
-uint32_t sub_01D151(uint32_t r0)
+/* Draws the inputs of both monitors (cabinets): the wheel, accelerator and brake as the game sees them
+   through the calibration (test_mode_analog_inputs clamped to volume_ranges and scaled to 0-FF), as a
+   mark on a bar of 16 cells and a hexadecimal number; SHIFT UP, SHIFT DOWN, START, DJ/MUSIC, <<, >>,
+   COIN and SERVICE On or Off, read from each I/O chip's ports (active low); TEST On when either
+   monitor's is pressed. */
+uint32_t test_mode_input_test_draw(uint32_t r0)
 {
 	uint32_t carry = 0;
 	uint8_t r1_2 = 0;
@@ -4595,11 +4715,11 @@ uint32_t sub_01D151(uint32_t r0)
 	uint32_t r0_2 = 0, r2_2 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
 
 	r10 = 0x1D30Au;
-	sub_01F0CA(r0, r10);
+	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(0, 0);
 	r11 = 0x1D380u;
-	r12 = 0x20E710u;
-	r13 = 0x20E638u;
+	r12 = test_mode_analog_inputs_ADDRESS;
+	r13 = volume_ranges_ADDRESS;
 	r14 = 0x1D3D8u;
 	r9 = 6u;
 	do
@@ -4627,7 +4747,7 @@ uint32_t sub_01D151(uint32_t r0)
 		r10 = (r10 & ~0xFFFFu) | ROM16(r11);
 		r14 = r14 + 2u;
 		r11 += 2u;
-		r10 = sub_01F131(r0_2, r1_2, r2_2, r10);
+		r10 = test_mode_draw_hex_number(r0_2, r1_2, r2_2, r10);
 		r9--;
 	} while (r9 != 0u);
 	r12 = 0xC00000u;
@@ -4668,32 +4788,39 @@ uint32_t sub_01D151(uint32_t r0)
 	return r0_2;
 }
 
-void sub_01D3E4(void)
+/* Starts the OUTPUT TEST: the ten outputs of the two monitors (cabinets) with their state
+   (test_mode_output_test_draw), EXIT and the prompt, the cursor on EXIT (test_mode_page_cursor 10); then
+   test_mode_output_test_run. */
+void test_mode_output_test(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	r10 = 0x1D4F8u;
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F02C(r0);
-	AT8(unk_20E701, 2) = 0xAu;
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_draw_instructions(r0);
+	test_mode_page_cursor = 0xAu;
 	r10 = 0x310000u | rom_01D5BE;
-	sub_01F085(r0, r10);
-	sub_01D49A();
-	AT32(unk_20E701, 3) = sub_01D419_ADDRESS;
-	sub_01D419();
+	test_mode_set_cursor(r0, r10);
+	test_mode_output_test_draw();
+	test_mode_routine = test_mode_output_test_run_ADDRESS;
+	test_mode_output_test_run();
 }
 
-void sub_01D419(void)
+/* The output test, each frame: TEST turns the output under the cursor on and letting go of it turns it
+   off again (test_mode_output_test_toggle both times), so it is on while TEST is held; TEST on EXIT runs
+   test_mode_output_test_exit; SERVICE, while TEST is not held, moves the cursor through the eleven
+   items; the arrow blinks. */
+void test_mode_output_test_run(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 	uint8_t t1 = 0;
 	uint16_t t3 = 0;
 	uint32_t t2 = 0;
 
-	if ((unk_20E70E & 2u) != 0u)
+	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
-		switch ((uint8_t)(unk_20E701 >> 16u))
+		switch (test_mode_page_cursor)
 		{
 		case 0:
 		case 1:
@@ -4705,19 +4832,19 @@ void sub_01D419(void)
 		case 7:
 		case 8:
 		case 9:
-			sub_01D4C7();
+			test_mode_output_test_toggle();
 			break;
 		case 10:
-			sub_01D4DF();
+			test_mode_output_test_exit();
 			break;
 		default:
-			invalid_jump(rom_01D5EC[(uint8_t)(unk_20E701 >> 16u)]);
+			invalid_jump(rom_01D5EC[test_mode_page_cursor]);
 		}
-		sub_01D49A();
+		test_mode_output_test_draw();
 	}
-	if ((unk_20E70E & 0x200u) != 0u)
+	if ((test_mode_buttons_released & 2u) != 0u)
 	{
-		r0 = (uint8_t)(unk_20E701 >> 16u);
+		r0 = test_mode_page_cursor;
 		if (r0 != 0xAu)
 		{
 			switch (r0)
@@ -4732,54 +4859,58 @@ void sub_01D419(void)
 			case 7:
 			case 8:
 			case 9:
-				sub_01D4C7();
+				test_mode_output_test_toggle();
 				break;
 			case 10:
-				sub_01D4DF();
+				test_mode_output_test_exit();
 				break;
 			default:
 				invalid_jump(rom_01D5EC[r0]);
 			}
-			sub_01D49A();
+			test_mode_output_test_draw();
 		}
 	}
-	if ((unk_20E70E & 1u) == 0u || (unk_20E70C & 2u) != 0u)
+	if ((test_mode_buttons_pressed & 1u) == 0u || (test_mode_buttons & 2u) != 0u)
 	{
-		t1 = unk_20E72F - 1u;
-		unk_20E72F = t1;
+		t1 = test_mode_blink_timer - 1u;
+		test_mode_blink_timer = t1;
 		if ((int8_t)t1 < 0)
 		{
-			unk_20E72F = 5u;
-			t2 = unk_20E708;
+			test_mode_blink_timer = 5;
+			t2 = test_mode_blink_address;
 			t3 = mem_read16(t2) ^ 0x6A7Fu;
 			mem_write16(t2, t3);
 			if (t3 != 0u)
-				unk_20E72F = (uint32_t)unk_20E72F << 1;
+				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 		}
 		return;
 	}
-	sub_01F09A();
-	r0 = (uint8_t)(unk_20E701 >> 16u);
+	test_mode_clear_cursor();
+	r0 = test_mode_page_cursor;
 	r0 = (uint8_t)(r0 + 1u);
 	if ((int8_t)r0 >= 0xB)
 		r0 = 0u;
-	AT8(unk_20E701, 2) = r0;
+	test_mode_page_cursor = r0;
 	r10 = 0x310000u | rom_01D5AA[r0];
-	sub_01F085(r0, r10);
-	t1 = unk_20E72F - 1u;
-	unk_20E72F = t1;
+	test_mode_set_cursor(r0, r10);
+	t1 = test_mode_blink_timer - 1u;
+	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
 	{
-		unk_20E72F = 5u;
-		t2 = unk_20E708;
+		test_mode_blink_timer = 5;
+		t2 = test_mode_blink_address;
 		t3 = mem_read16(t2) ^ 0x6A7Fu;
 		mem_write16(t2, t3);
 		if (t3 != 0u)
-			unk_20E72F = (uint32_t)unk_20E72F << 1;
+			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
 }
 
-void sub_01D49A(void)
+/* Draws On or Off for the ten outputs, from their bits in the game's output bytes: monitor A's CHECK
+   POINT and RACE LEADER lamps (port_d_outputs bits 1 and 3), the steering wheel's motor (port_d_outputs
+   bit 4), the DJ/MUSIC and << >> lamps (unk_20E094 bits 0 and 1); monitor B's the same bits of 20E093
+   and 20E095. */
+void test_mode_output_test_draw(void)
 {
 	uint32_t carry = 0;
 	uint32_t r10 = 0, r11 = 0;
@@ -4799,41 +4930,53 @@ void sub_01D49A(void)
 	} while (ROM16(r11) != 0u);
 }
 
-void sub_01D4C7(void)
+/* Turns the output under the cursor (test_mode_page_cursor) on or off: flips its bit in the game's
+   output bytes (the list at 01D5C0). */
+void test_mode_output_test_toggle(void)
 {
 	uint32_t r10 = 0, r11 = 0;
 
-	r10 = 0x1D5C2u + (uint8_t)(unk_20E701 >> 16u) * 4u;
+	r10 = 0x1D5C2u + test_mode_page_cursor * 4u;
 	r11 = ROM8(r10) + unk_20E000_ADDRESS;
 	mem_write32(r11, mem_read32(r11) ^ shl32(1u, (int)(ROM8(r10 + 1u))));
 }
 
-void sub_01D4DF(void)
+/* The output test's EXIT: turns the lamps and the wheel motor off (port_d_outputs &= E0E1, unk_20E094 &=
+   FBFC: monitor B's DJ/MUSIC and << >> bits, 20E095 bits 0-1, are not among them) and goes back to the
+   menu. */
+void test_mode_output_test_exit(void)
 {
-	unk_20E092[0] &= 0xE0E1u;
+	AS16(port_d_outputs[0]) &= 0xE0E1u;
 	unk_20E094 &= ~0x403u;
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+	test_mode_routine = test_mode_menu_ADDRESS;
 }
 
-void sub_01D620(void)
+/* Starts the SOUND TEST: MONITOR A No., MONITOR B No. (the numbers of the next sounds, both 0:
+   sound_test_number_a, sound_test_number_b), EXIT with the cursor on it (test_mode_page_cursor 2) and
+   the prompt; then test_mode_sound_test_run. */
+void test_mode_sound_test(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	r10 = 0x1D788u;
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F02C(r0);
-	AT8(unk_20E701, 2) = 2u;
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_draw_instructions(r0);
+	test_mode_page_cursor = 2u;
 	r10 = 0x310000u | rom_01D7C4;
-	sub_01F085(r0, r10);
-	unk_20E730 = 0u;
-	unk_20E731 = 0u;
-	sub_01D6BD();
-	AT32(unk_20E701, 3) = sub_01D661_ADDRESS;
-	sub_01D661();
+	test_mode_set_cursor(r0, r10);
+	sound_test_number_a = 0u;
+	sound_test_number_b = 0u;
+	test_mode_sound_test_draw();
+	test_mode_routine = test_mode_sound_test_run_ADDRESS;
+	test_mode_sound_test_run();
 }
 
-void sub_01D661(void)
+/* The sound test, each frame: SERVICE moves the cursor through the three items; TEST stops both
+   monitors' sounds (command 1F to each), then plays monitor A's next sound
+   (test_mode_sound_test_play_a), monitor B's (test_mode_sound_test_play_b) or goes back to the menu
+   (test_mode_sound_test_exit), and redraws the numbers; the arrow blinks. */
+void test_mode_sound_test_run(void)
 {
 	uint16_t r0_2 = 0;
 	uint32_t r0 = 0, r10 = 0;
@@ -4841,84 +4984,88 @@ void sub_01D661(void)
 	uint16_t t3 = 0;
 	uint32_t t2 = 0;
 
-	if ((unk_20E70E & 1u) != 0u)
+	if ((test_mode_buttons_pressed & 1u) != 0u)
 	{
-		sub_01F09A();
-		r0 = (uint8_t)(unk_20E701 >> 16u);
+		test_mode_clear_cursor();
+		r0 = test_mode_page_cursor;
 		r0 = (uint8_t)(r0 + 1u);
 		if ((int8_t)r0 >= 3)
 			r0 = 0u;
-		AT8(unk_20E701, 2) = r0;
+		test_mode_page_cursor = r0;
 		r10 = 0x310000u | rom_01D7C0[r0];
-		sub_01F085(r0, r10);
+		test_mode_set_cursor(r0, r10);
 	}
-	if ((unk_20E70E & 2u) != 0u)
+	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
 		r0_2 = 0x1Fu;
-		sub_01F26B(r0_2);
-		sub_01F266(r0_2);
-		switch ((uint8_t)(unk_20E701 >> 16u))
+		test_mode_queue_sound(r0_2);
+		test_mode_queue_sound_screen_2(r0_2);
+		switch (test_mode_page_cursor)
 		{
 		case 0:
-			sub_01D6E7();
+			test_mode_sound_test_play_a();
 			break;
 		case 1:
-			sub_01D72C();
+			test_mode_sound_test_play_b();
 			break;
 		case 2:
-			sub_01D771();
+			test_mode_sound_test_exit();
 			break;
 		default:
-			invalid_jump(rom_01D77C[(uint8_t)(unk_20E701 >> 16u)]);
+			invalid_jump(rom_01D77C[test_mode_page_cursor]);
 		}
-		sub_01D6BD();
+		test_mode_sound_test_draw();
 	}
-	t1 = unk_20E72F - 1u;
-	unk_20E72F = t1;
+	t1 = test_mode_blink_timer - 1u;
+	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
 	{
-		unk_20E72F = 5u;
-		t2 = unk_20E708;
+		test_mode_blink_timer = 5;
+		t2 = test_mode_blink_address;
 		t3 = mem_read16(t2) ^ 0x6A7Fu;
 		mem_write16(t2, t3);
 		if (t3 != 0u)
-			unk_20E72F = (uint32_t)unk_20E72F << 1;
+			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
 }
 
-void sub_01D6BD(void)
+/* Draws the two monitors' sound numbers (sound_test_number_a, sound_test_number_b), 3 digits each. */
+void test_mode_sound_test_draw(void)
 {
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r10 = 0;
 
 	r10 = TEXT_CELL(28, 11);
-	r0 = unk_20E730;
+	r0 = sound_test_number_a;
 	r1 = 0x64u;
 	r2 = 3u;
-	sub_01F103(r2, &r0, &r1, &r10);
+	test_mode_draw_number(r2, &r0, &r1, &r10);
 	r10 = (r10 & ~0xFFFFu) | 0xF6B8u;
-	r0 = unk_20E731;
+	r0 = sound_test_number_b;
 	r1 = 0x64u;
 	r2 = 3u;
-	sub_01F103(r2, &r0, &r1, &r10);
+	test_mode_draw_number(r2, &r0, &r1, &r10);
 }
 
-void sub_01D6E7(void)
+/* Plays monitor A's sound number sound_test_number_a from the list of 121 sound codes at 01D7C6
+   (test_mode_queue_sound) and steps to the next; from number 40 on it first sends command D6 (DA from
+   66, D8 from 6B); past the list's end (its closing 0) the number goes back to 0 without a sound. */
+void test_mode_sound_test_play_a(void)
 {
 	uint16_t r0 = 0;
 	uint32_t r0_2 = 0, r1 = 0;
 	uint32_t stack_4 = 0;
 
-	r1 = unk_20E730;
+	r1 = sound_test_number_a;
 	if (r1 < 0x40u)
 	{
 		r0_2 = mem_read8(0x1D7C6u + r1);
 		if (r0_2 == 0u)
 		{
-			unk_20E730 = 0u;
+			sound_test_number_a = 0u;
 			return;
 		}
-		unk_20E730 = r1 + 1u;
-		sub_01F26B((uint16_t)r0_2);
+		sound_test_number_a = r1 + 1u;
+		test_mode_queue_sound((uint16_t)r0_2);
 		return;
 	}
 	r0 = 0xD6u;
@@ -4929,35 +5076,37 @@ void sub_01D6E7(void)
 			r0 = 0xD8u;
 	}
 	stack_4 = r1;
-	sub_01F26B(r0);
+	test_mode_queue_sound(r0);
 	r1 = stack_4;
 	r0_2 = mem_read8(0x1D7C6u + r1);
 	if (r0_2 == 0u)
 	{
-		unk_20E730 = 0u;
+		sound_test_number_a = 0u;
 		return;
 	}
-	unk_20E730 = r1 + 1u;
-	sub_01F26B((uint16_t)r0_2);
+	sound_test_number_a = r1 + 1u;
+	test_mode_queue_sound((uint16_t)r0_2);
 }
 
-void sub_01D72C(void)
+/* test_mode_sound_test_play_a for monitor B: sound_test_number_b, sent through
+   test_mode_queue_sound_screen_2. */
+void test_mode_sound_test_play_b(void)
 {
 	uint16_t r0 = 0;
 	uint32_t r0_2 = 0, r1 = 0;
 	uint32_t stack_4 = 0;
 
-	r1 = unk_20E731;
+	r1 = sound_test_number_b;
 	if (r1 < 0x40u)
 	{
 		r0_2 = mem_read8(0x1D7C6u + r1);
 		if (r0_2 == 0u)
 		{
-			unk_20E731 = 0u;
+			sound_test_number_b = 0u;
 			return;
 		}
-		unk_20E731 = r1 + 1u;
-		sub_01F266((uint16_t)r0_2);
+		sound_test_number_b = r1 + 1u;
+		test_mode_queue_sound_screen_2((uint16_t)r0_2);
 		return;
 	}
 	r0 = 0xD6u;
@@ -4968,70 +5117,82 @@ void sub_01D72C(void)
 			r0 = 0xD8u;
 	}
 	stack_4 = r1;
-	sub_01F266(r0);
+	test_mode_queue_sound_screen_2(r0);
 	r1 = stack_4;
 	r0_2 = mem_read8(0x1D7C6u + r1);
 	if (r0_2 == 0u)
 	{
-		unk_20E731 = 0u;
+		sound_test_number_b = 0u;
 		return;
 	}
-	unk_20E731 = r1 + 1u;
-	sub_01F266((uint16_t)r0_2);
+	sound_test_number_b = r1 + 1u;
+	test_mode_queue_sound_screen_2((uint16_t)r0_2);
 }
 
-void sub_01D771(void)
+/* The sound test's EXIT: back to the menu. */
+void test_mode_sound_test_exit(void)
 {
-	AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+	test_mode_routine = test_mode_menu_ADDRESS;
 }
 
-void sub_01D840(void)
+/* Starts the C.R.T. TEST's first page: a black background (the background colour of both palettes,
+   609C00 and 689C00), C.R.T. TEST 1/2, the colour bars (test_mode_crt_test_draw_bars) and the blinking
+   PUSH TEST BUTTON TO CONTINUE; then test_mode_crt_test_bars_run. */
+void test_mode_crt_test(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	mem_write16(PALETTE_609C00, 0u);
 	mem_write16(0x689C00u, 0u);
 	r10 = 0x1D9C7u;
-	sub_01F0CA(r0, r10);
-	r0 = sub_01D8B9(r0);
-	sub_01F043();
-	AT32(unk_20E701, 3) = sub_01D868_ADDRESS;
-	sub_01D868((uint16_t)r0);
+	test_mode_draw_texts(r0, r10);
+	r0 = test_mode_crt_test_draw_bars(r0);
+	test_mode_show_continue_prompt();
+	test_mode_routine = test_mode_crt_test_bars_run_ADDRESS;
+	test_mode_crt_test_bars_run((uint16_t)r0);
 }
 
-void sub_01D868(uint16_t r0)
+/* The colour bars, each frame: TEST goes on to the second page (test_mode_crt_test_grid); the message
+   blinks. */
+void test_mode_crt_test_bars_run(uint16_t r0)
 {
-	if ((unk_20E70E & 2u) != 0u)
-		AT32(unk_20E701, 3) = sub_01D87A_ADDRESS;
-	sub_01F052(r0);
+	if ((test_mode_buttons_pressed & 2u) != 0u)
+		test_mode_routine = test_mode_crt_test_grid_ADDRESS;
+	test_mode_blink_prompt(r0);
 }
 
-void sub_01D87A(void)
+/* The C.R.T. test's second page: the crosshatch (test_mode_crt_test_draw_grid), C.R.T. TEST 2/2 and the
+   blinking PUSH TEST BUTTON TO EXIT; then test_mode_crt_test_grid_run. */
+void test_mode_crt_test_grid(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01D957(0u);
+	r0 = test_mode_crt_test_draw_grid(0u);
 	r10 = 0x1D9DCu;
-	r0 = sub_01F0CA(r0, r10);
-	sub_01F034();
-	AT32(unk_20E701, 3) = sub_01D88F_ADDRESS;
-	sub_01D88F(r0);
+	r0 = test_mode_draw_texts(r0, r10);
+	test_mode_show_exit_prompt();
+	test_mode_routine = test_mode_crt_test_grid_run_ADDRESS;
+	test_mode_crt_test_grid_run(r0);
 }
 
-void sub_01D88F(uint32_t r0)
+/* The crosshatch, each frame: TEST clears the text layer, gives the background back its blue (733) and
+   goes back to the menu; the message blinks. */
+void test_mode_crt_test_grid_run(uint32_t r0)
 {
-	if ((unk_20E70E & 2u) != 0u)
+	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
-		r0 = sub_01F17D();
+		r0 = test_mode_clear_text();
 		mem_write16(PALETTE_609C00, 0x733u);
 		mem_write16(0x689C00u, 0x733u);
-		AT32(unk_20E701, 3) = sub_01C392_ADDRESS;
+		test_mode_routine = test_mode_menu_ADDRESS;
 	}
-	sub_01F052(r0);
+	test_mode_blink_prompt(r0);
 }
 
-uint32_t sub_01D8B9(uint32_t r0)
+/* Draws the first page on the text layer: a frame around the screen and four bars of 32 steps
+   (test_mode_crt_test_draw_bar, characters 8001-8004: red, green, blue and white). */
+uint32_t test_mode_crt_test_draw_bars(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r9 = 0, r10 = 0;
 
@@ -5066,17 +5227,19 @@ uint32_t sub_01D8B9(uint32_t r0)
 	mem_write16(r10 + 0xDCEu, r0_2);
 	r10 = (r10 & ~0xFFFFu) | 0xF208u;
 	r0_2 = (r0_2 & ~0xFFFFu) | 0x8001u;
-	r10 = sub_01D927((uint16_t)r0_2, r10);
+	r10 = test_mode_crt_test_draw_bar((uint16_t)r0_2, r10);
 	r0_2 = (r0_2 & ~0xFFFFu) | (uint16_t)(r0_2 + 1u);
-	r10 = sub_01D927((uint16_t)r0_2, r10);
+	r10 = test_mode_crt_test_draw_bar((uint16_t)r0_2, r10);
 	r0_2 = (r0_2 & ~0xFFFFu) | (uint16_t)(r0_2 + 1u);
-	r10 = sub_01D927((uint16_t)r0_2, r10);
+	r10 = test_mode_crt_test_draw_bar((uint16_t)r0_2, r10);
 	r0_2 = (r0_2 & ~0xFFFFu) | (uint16_t)(r0_2 + 1u);
-	r10 = sub_01D927((uint16_t)r0_2, r10);
+	r10 = test_mode_crt_test_draw_bar((uint16_t)r0_2, r10);
 	return r0_2;
 }
 
-uint32_t sub_01D927(uint16_t r0, uint32_t r10)
+/* Draws one colour bar: 5 rows of 32 cells of character R0, each column with the next palette (the cell
+   + 200), so that the colour steps up across it; returns the place 5 rows down for the next bar. */
+uint32_t test_mode_crt_test_draw_bar(uint16_t r0, uint32_t r10)
 {
 	uint16_t r1 = 0;
 	uint32_t r9 = 0, r11 = 0;
@@ -5099,7 +5262,9 @@ uint32_t sub_01D927(uint16_t r0, uint32_t r10)
 	return r10;
 }
 
-uint32_t sub_01D957(uint32_t r0)
+/* Draws the crosshatch of the second page over the whole text layer (characters 6C1B-6C1F: the edges and
+   the inside), and blanks the cell after the exit message. */
+uint32_t test_mode_crt_test_draw_grid(uint32_t r0)
 {
 	uint16_t r1 = 0;
 	uint32_t r0_2 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0;
@@ -5148,47 +5313,54 @@ uint32_t sub_01D957(uint32_t r0)
 	return r0_2;
 }
 
-void sub_01D9F3(void)
+/* Starts the GAME ASSIGNMENTS: the settings' names and values (test_mode_game_assignments_draw), EXIT,
+   the prompt, the cursor on EXIT (test_mode_page_cursor 9); then test_mode_game_assignments_run. */
+void test_mode_game_assignments(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 
-	r0 = sub_01F17D();
+	r0 = test_mode_clear_text();
 	r10 = 0x1DBF8u;
-	sub_01F0CA(r0, r10);
-	r0 = sub_01DA7C();
-	sub_01F02C(r0);
-	AT8(unk_20E701, 2) = 9u;
+	test_mode_draw_texts(r0, r10);
+	r0 = test_mode_game_assignments_draw();
+	test_mode_draw_instructions(r0);
+	test_mode_page_cursor = 9u;
 	r10 = 0x310000u | rom_01DCE0;
-	sub_01F085(r0, r10);
-	AT32(unk_20E701, 3) = sub_01DA28_ADDRESS;
-	sub_01DA28();
+	test_mode_set_cursor(r0, r10);
+	test_mode_routine = test_mode_game_assignments_run_ADDRESS;
+	test_mode_game_assignments_run();
 }
 
-void sub_01DA28(void)
+/* The game assignments, each frame: SERVICE moves the cursor through the ten items; TEST changes the
+   setting under it: the game difficulty (test_mode_game_assignments_difficulty), a stage's time
+   (test_mode_game_assignments_time), the steering wheel reaction (test_mode_game_assignments_steering),
+   the advertise sound (test_mode_game_assignments_advertise), or EXIT (test_mode_game_assignments_exit);
+   the arrow blinks. */
+void test_mode_game_assignments_run(void)
 {
 	uint32_t r0 = 0, r10 = 0;
 	uint8_t t1 = 0;
 	uint16_t t3 = 0;
 	uint32_t t2 = 0;
 
-	if ((unk_20E70E & 1u) != 0u)
+	if ((test_mode_buttons_pressed & 1u) != 0u)
 	{
-		sub_01F09A();
-		r0 = (uint8_t)(unk_20E701 >> 16u);
+		test_mode_clear_cursor();
+		r0 = test_mode_page_cursor;
 		r0 = (uint8_t)(r0 + 1u);
 		if ((int8_t)r0 >= 0xA)
 			r0 = 0u;
-		AT8(unk_20E701, 2) = r0;
+		test_mode_page_cursor = r0;
 		r10 = 0x310000u | rom_01DCCE[r0];
-		sub_01F085(r0, r10);
+		test_mode_set_cursor(r0, r10);
 	}
-	if ((unk_20E70E & 2u) != 0u)
+	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = unk_20E600_ADDRESS;
-		switch ((uint8_t)(unk_20E701 >> 16u))
+		current_object = settings_magic_ADDRESS;
+		switch (test_mode_page_cursor)
 		{
 		case 0:
-			sub_01DB58();
+			test_mode_game_assignments_difficulty();
 			break;
 		case 1:
 		case 2:
@@ -5196,46 +5368,49 @@ void sub_01DA28(void)
 		case 4:
 		case 5:
 		case 6:
-			sub_01DB68();
+			test_mode_game_assignments_time();
 			break;
 		case 7:
-			sub_01DB85();
+			test_mode_game_assignments_steering();
 			break;
 		case 8:
-			sub_01DB97();
+			test_mode_game_assignments_advertise();
 			break;
 		case 9:
-			sub_01DBA9();
+			test_mode_game_assignments_exit();
 			break;
 		default:
-			invalid_jump(rom_01DBD0[(uint8_t)(unk_20E701 >> 16u)]);
+			invalid_jump(rom_01DBD0[test_mode_page_cursor]);
 		}
 	}
-	t1 = unk_20E72F - 1u;
-	unk_20E72F = t1;
+	t1 = test_mode_blink_timer - 1u;
+	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
 	{
-		unk_20E72F = 5u;
-		t2 = unk_20E708;
+		test_mode_blink_timer = 5;
+		t2 = test_mode_blink_address;
 		t3 = mem_read16(t2) ^ 0x6A7Fu;
 		mem_write16(t2, t3);
 		if (t3 != 0u)
-			unk_20E72F = (uint32_t)unk_20E72F << 1;
+			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
 }
 
-uint32_t sub_01DA7C(void)
+/* Draws the game settings: game_difficulty + 1 (1-8) and its bar from EASY to HARD (two cells a level),
+   the six stages' time_difficulty (NORMAL, or +n SEC / -n SEC), and steering_wheel_reaction and
+   advertise_sound (bit 0) as On or Off. */
+uint32_t test_mode_game_assignments_draw(void)
 {
 	uint16_t r1_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r9 = 0, r10 = 0, r11 = 0;
 	uint32_t t1 = 0;
 
-	current_object = unk_20E600_ADDRESS;
+	current_object = settings_magic_ADDRESS;
 	r10 = TEXT_CELL(32, 5);
 	r1 = 0x64u;
 	r2 = 2u;
-	r0 = unk_20E630 + 1u;
-	sub_01F103(r2, &r0, &r1, &r10);
+	r0 = game_difficulty + 1u;
+	test_mode_draw_number(r2, &r0, &r1, &r10);
 	r10 = (r10 & ~0xFFFFu) | 0xF3A8u;
 	t1 = (uint8_t)OBJECT(current_object)->x * 2u;
 	r9 = t1;
@@ -5249,7 +5424,7 @@ uint32_t sub_01DA7C(void)
 		} while (r9 != 0u);
 	}
 	r0 = 0x60u;
-	sub_01F16C(r0, r10);
+	test_mode_colour_line(r0, r10);
 	r11 = TEXT_CELL(28, 10);
 	r12 = current_object + 0x32u;
 	r9 = 6u;
@@ -5283,7 +5458,7 @@ uint32_t sub_01DA7C(void)
 			r1 = 0x64u;
 			r2 = 2u;
 			r10 += 2u;
-			sub_01F103(r2, &r0, &r1, &r10);
+			test_mode_draw_number(r2, &r0, &r1, &r10);
 			r10 += 4u;
 			mem_write16(r10, 0x6653u);
 			r10 += 2u;
@@ -5296,40 +5471,44 @@ uint32_t sub_01DA7C(void)
 	r0 = (uint8_t)OBJECT(current_object)->unk_24;
 	r0 = r0 & 1u;
 	r10 = rom_01DCE4[r0];
-	sub_01F0CA(r0, r10);
+	test_mode_draw_texts(r0, r10);
 	r0 = OBJECT(current_object)->unk_0D;
 	r0 = r0 & 1u;
 	r10 = rom_01DCEC[r0];
-	return sub_01F0CA(r0, r10);
+	return test_mode_draw_texts(r0, r10);
 }
 
-void sub_01DB58(void)
+/* GAME DIFFICULTY: game_difficulty one level harder, after the eighth back to the first; redraws. */
+void test_mode_game_assignments_difficulty(void)
 {
 	uint32_t ignored = 0;
 
 	AS8(OBJECT(current_object)->x) = ((uint8_t)OBJECT(current_object)->x + 1u) & 7u;
-	ignored = sub_01DA7C();
+	ignored = test_mode_game_assignments_draw();
 }
 
-void sub_01DB68(void)
+/* TIME DIFFICULTY: the time_difficulty of the stage under the cursor (items 1-6: PRE-STAGE, STAGE 1-4,
+   FINAL STAGE) one second more, from +5 back to -5; redraws. */
+void test_mode_game_assignments_time(void)
 {
 	uint8_t r0 = 0;
 	uint32_t r1 = 0, ignored = 0;
 
-	r1 = (uint8_t)(unk_20E701 >> 16u);
+	r1 = test_mode_page_cursor;
 	r0 = (uint8_t)(mem_read8(current_object + 0x31u + r1) + 1u);
 	if ((int8_t)r0 > 5)
 		r0 = 0xFBu;
 	mem_write8(current_object + 0x31u + r1, r0);
-	ignored = sub_01DA7C();
+	ignored = test_mode_game_assignments_draw();
 }
 
-void sub_01DB85(void)
+/* STEERING WHEEL REACTION: steering_wheel_reaction on or off (1 or 0); redraws. */
+void test_mode_game_assignments_steering(void)
 {
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
 	carry = (uint8_t)OBJECT(current_object)->unk_24 > 0u;
 	AS8(OBJECT(current_object)->unk_24) = 1u - carry;
-	ignored = sub_01DA7C();
+	ignored = test_mode_game_assignments_draw();
 }

@@ -59,8 +59,13 @@ the tools verify it, extract the assets and build your own executable.
       (`RACE(p)`, which `symbols.txt` declares with the fields that point at it). The objects' code is
       named and commented, family by family (the scenery and traffic along the road, the player's car and
       the race display, the radio and its DJ, the title, attract and select screens, the route map, the
-      name entry), with each family's own fields; the rest of the game's code (the frame loops, the game's
-      modes, the board's housekeeping) and most variables are still named after their addresses
+      name entry), with each family's own fields, and so is the rest of the game's code: the boot and the
+      two tasks' frame loops, the game's modes and steps, the race's logic and the link between cabinets,
+      the sprite lists and the board's services (sound requests, palettes, text, the EEPROM, coins and
+      bookkeeping), the test mode and the interrupt hooks, with the work RAM variables and screen fields
+      they use. Still named after their addresses: the sound program's functions, the functions only
+      unused code reaches, and the variables and fields no named code explains yet (all counted by
+      `tools/noise_report.py`)
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

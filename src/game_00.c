@@ -3,7 +3,7 @@
  *    Description: the game's functions, part 00 (in the order of their V60 addresses)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -11,6 +11,14 @@
  */
 #include "game.h"
 
+/* The reset's code (000006): SBR to the vector table, the stack 21FC00, 16 bytes from 0000A4 to E00000
+   and 4 from 0000B4 to E80000 (which the board does not map), the interrupt controller's registers from
+   0000B8, privilege level 0 with the stack 21F400 and a delay; then clears 21E000-21E3FF, turns the link
+   board off (801000), clears 21F000-21FFFF, sets the I/O chips up (init_io_chips), clears the game's
+   variables (20E000-20FFFF), writes the second task's first interrupt frame (000C98 to 21FF84: its PC
+   0006B0) and its stack pointers (unk_20E000, waiting_task_stack), initialise_game, lcd_start (the LCD),
+   the interrupts on, the link's check (network_check), and goes on as the boot task's frame loop
+   (second_task(1), screen 2's). */
 void boot(void)
 {
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r10 = 0, r11 = 0;
@@ -105,7 +113,7 @@ void boot(void)
 		r10 += 8u;
 		r2--;
 	} while (r2 != 0u);
-	sub_0108EA();
+	init_io_chips();
 	r0 = 0u;
 	r1 = 0u;
 	r2 = 0x100u;
@@ -129,17 +137,21 @@ void boot(void)
 	move_halfwords(WORK_RAM + 0x1FF84u, 0xC98u, 0x3Eu);
 	player_car = 0x219000u;
 	unk_20E000 = 0x21FF84u;
-	unk_20E004 = 0x21F800u;
-	sub_000913();
-	sub_0186FC();
+	waiting_task_stack = 0x21F800u;
+	initialise_game();
+	lcd_start();
 	mem_write8(IRQ_D00007, 0u);
 	mem_write8(IRQ_D00005, 0u);
 	interrupts_on();
-	sub_00D13A();
+	network_check();
 	second_task(1u);
 }
 
-uint32_t sub_0000C4(uint32_t r10, uint32_t r11)
+/* Returns the CRC-16 (polynomial 1021) of the R11 bytes at R10, worked out in the top half of a 32-bit
+   register that starts at DEBDEB00, each byte entering its low byte, with eight more shifts after the
+   last. Used for the EEPROM's settings (load_settings, eeprom_write_settings) and the program's
+   signature (signature_checksum). */
+uint32_t crc16(uint32_t r10, uint32_t r11)
 {
 	uint32_t carry = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0;
@@ -174,191 +186,211 @@ uint32_t sub_0000C4(uint32_t r10, uint32_t r11)
 	return r0;
 }
 
-uint32_t sub_0000FC(void)
+/* Returns the crc16 of the program's 48-byte signature text at 00010C (OUTRUNNERS EUROPA and its build
+   date, 93.4.21), which the EEPROM keeps in settings_signature so that a new program is noticed
+   (load_settings). */
+uint32_t signature_checksum(void)
 {
 	uint32_t r10 = 0, r11 = 0;
 
 	r10 = 0x10Cu;
 	r11 = 0x30u;
-	return sub_0000C4(r10, r11);
+	return crc16(r10, r11);
 }
 
-void sub_00013C(uint32_t r0)
+/* Loads the settings from the EEPROM at start-up (eeprom_read_settings into 20E600-20E67F) and repairs
+   them: a block marked SEGA gets the defaults (0004C0, marked S32A) with eeprom_write_count 100; one
+   without the S32A mark the defaults; with it, a new program (signature_checksum unlike
+   settings_signature) gets the defaults keeping the eeprom_write_count of a sound copy (the settings or
+   their backup, each checked with its crc16); with the same program a bad copy (or a backup unlike the
+   settings) is rewritten from the other, both bad the defaults. Every repair but rewriting a copy also
+   resets the backup RAM's data (bookkeeping_reset); each one saves the result (eeprom_write_settings). */
+void load_settings(uint32_t r0)
 {
 	uint16_t r0_3 = 0;
 	uint32_t r0_2 = 0, r10 = 0, r11 = 0;
 
-	sub_000337(r0);
-	if (unk_20E600 == 0x41474553u)
+	eeprom_read_settings(r0);
+	if (settings_magic == 0x41474553u)
 	{
-		sub_0113E5(r0);
-		move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-		unk_20E60A = 0x64u;
-		unk_20E646 = 0x64u;
-		r0_2 = sub_0000FC();
-		unk_20E604 = r0_2;
-		r10 = unk_20E60A_ADDRESS;
+		bookkeeping_reset(r0);
+		move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+		eeprom_write_count = 0x64u;
+		backup_eeprom_write_count = 0x64u;
+		r0_2 = signature_checksum();
+		settings_signature = r0_2;
+		r10 = eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0_2 = sub_0000C4(r10, r11);
-		unk_20E608 = r0_2;
-		unk_20E644 = r0_2;
-		sub_000375();
+		r0_2 = crc16(r10, r11);
+		settings_checksum = r0_2;
+		backup_settings_checksum = r0_2;
+		eeprom_write_settings();
 		return;
 	}
-	if (unk_20E600 != 0x41323353u)
+	if (settings_magic != 0x41323353u)
 	{
-		sub_0113E5(r0);
-		move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-		r0_2 = sub_0000FC();
-		unk_20E604 = r0_2;
-		r10 = unk_20E60A_ADDRESS;
+		bookkeeping_reset(r0);
+		move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+		r0_2 = signature_checksum();
+		settings_signature = r0_2;
+		r10 = eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0_2 = sub_0000C4(r10, r11);
-		unk_20E608 = r0_2;
-		unk_20E644 = r0_2;
-		sub_000375();
+		r0_2 = crc16(r10, r11);
+		settings_checksum = r0_2;
+		backup_settings_checksum = r0_2;
+		eeprom_write_settings();
 		return;
 	}
-	r0_2 = sub_0000FC();
-	if (unk_20E604 != (uint16_t)r0_2 || unk_20E604 != (uint16_t)r0_2)
+	r0_2 = signature_checksum();
+	if (settings_signature != (uint16_t)r0_2 || settings_signature != (uint16_t)r0_2)
 	{
-		unk_20E604 = r0_2;
-		sub_0113E5(r0_2);
-		r10 = unk_20E60A_ADDRESS;
+		settings_signature = r0_2;
+		bookkeeping_reset(r0_2);
+		r10 = eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0_2 = sub_0000C4(r10, r11);
-		r10 = unk_20E608_ADDRESS;
-		if (unk_20E608 == (uint16_t)r0_2)
+		r0_2 = crc16(r10, r11);
+		r10 = settings_checksum_ADDRESS;
+		if (settings_checksum == (uint16_t)r0_2)
 		{
 			r0_3 = mem_read16(r10 + 2u);
-			move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-			unk_20E60A = r0_3;
-			unk_20E646 = r0_3;
-			r0_2 = sub_0000FC();
-			unk_20E604 = r0_2;
-			r10 = unk_20E60A_ADDRESS;
+			move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+			eeprom_write_count = r0_3;
+			backup_eeprom_write_count = r0_3;
+			r0_2 = signature_checksum();
+			settings_signature = r0_2;
+			r10 = eeprom_write_count_ADDRESS;
 			r11 = 0x3Au;
-			r0_2 = sub_0000C4(r10, r11);
-			unk_20E608 = r0_2;
-			unk_20E644 = r0_2;
-			sub_000375();
+			r0_2 = crc16(r10, r11);
+			settings_checksum = r0_2;
+			backup_settings_checksum = r0_2;
+			eeprom_write_settings();
 			return;
 		}
-		r10 = unk_20E646_ADDRESS;
+		r10 = backup_eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0 = sub_0000C4(r10, r11);
-		r10 = unk_20E644_ADDRESS;
-		if (unk_20E644 != (uint16_t)r0)
+		r0 = crc16(r10, r11);
+		r10 = backup_settings_checksum_ADDRESS;
+		if (backup_settings_checksum != (uint16_t)r0)
 		{
-			sub_0113E5(r0);
-			move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-			r0_2 = sub_0000FC();
-			unk_20E604 = r0_2;
-			r10 = unk_20E60A_ADDRESS;
+			bookkeeping_reset(r0);
+			move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+			r0_2 = signature_checksum();
+			settings_signature = r0_2;
+			r10 = eeprom_write_count_ADDRESS;
 			r11 = 0x3Au;
-			r0_2 = sub_0000C4(r10, r11);
-			unk_20E608 = r0_2;
-			unk_20E644 = r0_2;
-			sub_000375();
+			r0_2 = crc16(r10, r11);
+			settings_checksum = r0_2;
+			backup_settings_checksum = r0_2;
+			eeprom_write_settings();
 			return;
 		}
 		r0_3 = mem_read16(r10 + 2u);
-		move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-		unk_20E60A = r0_3;
-		unk_20E646 = r0_3;
-		r0_2 = sub_0000FC();
-		unk_20E604 = r0_2;
-		r10 = unk_20E60A_ADDRESS;
+		move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+		eeprom_write_count = r0_3;
+		backup_eeprom_write_count = r0_3;
+		r0_2 = signature_checksum();
+		settings_signature = r0_2;
+		r10 = eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0_2 = sub_0000C4(r10, r11);
-		unk_20E608 = r0_2;
-		unk_20E644 = r0_2;
-		sub_000375();
+		r0_2 = crc16(r10, r11);
+		settings_checksum = r0_2;
+		backup_settings_checksum = r0_2;
+		eeprom_write_settings();
 		return;
 	}
-	r10 = unk_20E60A_ADDRESS;
+	r10 = eeprom_write_count_ADDRESS;
 	r11 = 0x3Au;
-	r0_2 = sub_0000C4(r10, r11);
-	if (unk_20E608 != (uint16_t)r0_2)
+	r0_2 = crc16(r10, r11);
+	if (settings_checksum != (uint16_t)r0_2)
 	{
-		r10 = unk_20E646_ADDRESS;
+		r10 = backup_eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0 = sub_0000C4(r10, r11);
-		if (unk_20E644 == (uint16_t)r0)
+		r0 = crc16(r10, r11);
+		if (backup_settings_checksum == (uint16_t)r0)
 		{
-			move_halfwords(unk_20E608_ADDRESS, unk_20E644_ADDRESS, 0x1Eu);
-			sub_000375();
+			move_halfwords(settings_checksum_ADDRESS, backup_settings_checksum_ADDRESS, 0x1Eu);
+			eeprom_write_settings();
 			return;
 		}
-		sub_0113E5(r0);
-		move_halfwords(unk_20E600_ADDRESS, 0x4C0u, 0x40u);
-		r0_2 = sub_0000FC();
-		unk_20E604 = r0_2;
-		r10 = unk_20E60A_ADDRESS;
+		bookkeeping_reset(r0);
+		move_halfwords(settings_magic_ADDRESS, 0x4C0u, 0x40u);
+		r0_2 = signature_checksum();
+		settings_signature = r0_2;
+		r10 = eeprom_write_count_ADDRESS;
 		r11 = 0x3Au;
-		r0_2 = sub_0000C4(r10, r11);
-		unk_20E608 = r0_2;
-		unk_20E644 = r0_2;
-		sub_000375();
+		r0_2 = crc16(r10, r11);
+		settings_checksum = r0_2;
+		backup_settings_checksum = r0_2;
+		eeprom_write_settings();
 		return;
 	}
-	r10 = unk_20E646_ADDRESS;
+	r10 = backup_eeprom_write_count_ADDRESS;
 	r11 = 0x3Au;
-	r0_2 = sub_0000C4(r10, r11);
-	if (unk_20E608 != (uint16_t)r0_2 || unk_20E644 != (uint16_t)r0_2)
+	r0_2 = crc16(r10, r11);
+	if (settings_checksum != (uint16_t)r0_2 || backup_settings_checksum != (uint16_t)r0_2)
 	{
-		move_halfwords(unk_20E644_ADDRESS, unk_20E608_ADDRESS, 0x1Eu);
-		sub_000375();
+		move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
+		eeprom_write_settings();
 		return;
 	}
 }
 
-void sub_0002CA(void)
+/* Counts a save of the settings in eeprom_write_count, up to 10000 (the test mode warns when the
+   EEPROM's limit of 10,000 writes is reached). */
+void count_eeprom_write(void)
 {
-	unk_20E60A++;
-	if (unk_20E60A >= 0x2710u)
-		unk_20E60A = 0x2710u;
+	eeprom_write_count++;
+	if (eeprom_write_count >= 0x2710u)
+		eeprom_write_count = 0x2710u;
 }
 
-void sub_0002E1(void)
+/* Locks the EEPROM against writes (command 00, the 93C46's write disable) and turns the interrupts back
+   on. */
+void eeprom_lock(void)
 {
 	uint8_t r4 = 0;
 	uint32_t r2 = 0, r13 = 0;
 
 	r4 = 0u;
-	sub_0004A1(&r2, &r13);
-	sub_000451(r2, r4, r13);
+	eeprom_begin(&r2, &r13);
+	eeprom_send_command(r2, r4, r13);
 	interrupts_on();
 }
 
-void sub_000310(uint8_t r4)
+/* Unused: reads the EEPROM's word R4 (its read command, R4 | 80) into R0 and turns the interrupts back
+   on. */
+void eeprom_read_one_word(uint8_t r4)
 {
 	uint32_t r2 = 0, r13 = 0, ignored = 0;
 
 	r4 |= 0x80u;
-	sub_0004A1(&r2, &r13);
-	sub_0003BA(r4, r13, &ignored, &r2);
+	eeprom_begin(&r2, &r13);
+	eeprom_read_word(r4, r13, &ignored, &r2);
 	interrupts_on();
 }
 
-void sub_000327(uint32_t r0)
+/* Unused: reads the settings from the EEPROM again (eeprom_read_settings) and turns the interrupts back
+   on. */
+void reload_settings(uint32_t r0)
 {
-	sub_000337(r0);
+	eeprom_read_settings(r0);
 	interrupts_on();
 }
 
-void sub_000337(uint32_t r0)
+/* Reads the EEPROM's 64 words into 20E600-20E67F (settings_magic, settings_signature, the settings from
+   settings_checksum on, their backup from backup_settings_checksum on), with the interrupts off. */
+void eeprom_read_settings(uint32_t r0)
 {
 	uint8_t r4 = 0;
 	uint32_t r2 = 0, r5 = 0, r11 = 0, r13 = 0;
 
-	r11 = unk_20E600_ADDRESS;
+	r11 = settings_magic_ADDRESS;
 	r4 = 0x80u;
 	r5 = 0x40u;
-	sub_0004A1(&r2, &r13);
+	eeprom_begin(&r2, &r13);
 	do
 	{
-		sub_0003BA(r4, r13, &r0, &r2);
+		eeprom_read_word(r4, r13, &r0, &r2);
 		r4++;
 		mem_write16(r11, r0);
 		r5--;
@@ -366,89 +398,103 @@ void sub_000337(uint32_t r0)
 	} while (r5 != 0u);
 }
 
-void sub_000354(uint16_t r0, uint8_t r4)
+/* Unused: writes R0 into the EEPROM's word R4 (its write command, R4 | 40) without unlocking it first,
+   and turns the interrupts back on. */
+void eeprom_write_one_word(uint16_t r0, uint8_t r4)
 {
 	uint32_t r2 = 0, r13 = 0;
 
 	r4 |= 0x40u;
-	sub_0004A1(&r2, &r13);
-	sub_0003ED(r0, r2, r4, r13);
+	eeprom_begin(&r2, &r13);
+	eeprom_write_word(r0, r2, r4, r13);
 	interrupts_on();
 }
 
-void sub_00036B(void)
+/* Saves the settings into the EEPROM after they changed (the link's, link_take_master_settings; the test
+   mode's, test_mode_exit): eeprom_write_settings_counted, then eeprom_lock. */
+void save_settings(void)
 {
-	sub_000372();
-	sub_0002E1();
+	eeprom_write_settings_counted();
+	eeprom_lock();
 }
 
-void sub_000372(void)
+/* Counts the save (count_eeprom_write) and writes the settings (eeprom_write_settings). */
+void eeprom_write_settings_counted(void)
 {
-	sub_0002CA();
-	sub_000375();
+	count_eeprom_write();
+	eeprom_write_settings();
 }
 
-void sub_000375(void)
+/* Writes the settings into the EEPROM: their checksum (crc16 of the 3A bytes from eeprom_write_count)
+   into settings_checksum, checksum and settings copied over the backup (backup_settings_checksum on),
+   the EEPROM unlocked (command 30, write enable) and its 64 words written from 20E600
+   (eeprom_write_word). Leaves the interrupts off and the EEPROM unlocked (save_settings locks it). */
+void eeprom_write_settings(void)
 {
 	uint8_t r4 = 0;
 	uint16_t r0_2 = 0;
 	uint32_t r0 = 0, r2 = 0, r5 = 0, r10 = 0, r11 = 0, r13 = 0;
 
-	r10 = unk_20E60A_ADDRESS;
+	r10 = eeprom_write_count_ADDRESS;
 	r11 = 0x3Au;
-	r0 = sub_0000C4(r10, r11);
-	unk_20E608 = r0;
-	move_string(unk_20E608_ADDRESS, 0x1Eu, unk_20E644_ADDRESS, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	r0 = crc16(r10, r11);
+	settings_checksum = r0;
+	move_string(settings_checksum_ADDRESS, 0x1Eu, backup_settings_checksum_ADDRESS, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
 	r4 = 0x30u;
-	sub_0004A1(&r2, &r13);
-	sub_000451(r2, r4, r13);
-	r10 = unk_20E600_ADDRESS;
+	eeprom_begin(&r2, &r13);
+	eeprom_send_command(r2, r4, r13);
+	r10 = settings_magic_ADDRESS;
 	r4 = 0x40u;
 	r5 = 0x40u;
-	sub_0004A1(&r2, &r13);
+	eeprom_begin(&r2, &r13);
 	do
 	{
 		r0_2 = mem_read16(r10);
 		r10 += 2u;
-		r2 = sub_0003ED(r0_2, r2, r4, r13);
+		r2 = eeprom_write_word(r0_2, r2, r4, r13);
 		r4++;
 		r5--;
 	} while (r5 != 0u);
 }
 
-void sub_0003BA(uint8_t r4, uint32_t r13, uint32_t *p_r0, uint32_t *p_r2)
+/* Reads the EEPROM word of read command R4 (eeprom_send_command): 18 clock pulses collecting the data
+   out (bit 7 of R12, port F of the second I/O chip), the 16-bit word into R0; then chip select off. */
+void eeprom_read_word(uint8_t r4, uint32_t r13, uint32_t *p_r0, uint32_t *p_r2)
 {
 	uint32_t r0 = *p_r0;
 	uint32_t r2 = *p_r2;
 	uint32_t r3 = 0;
 
-	r2 = sub_000451(r2, r4, r13);
+	r2 = eeprom_send_command(r2, r4, r13);
 	r2 = (r2 & 0x3Fu) | 0x20u;
 	r3 = 0x12u;
 	do
 	{
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r0 = ((r0 & ~0xFFu) | mem_read8(r12)) * 2u;
 		r2 = (uint8_t)(r2 ^ 0x40u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r2 = (uint8_t)(r2 ^ 0x40u);
 		r3--;
 	} while (r3 != 0u);
 	r2 = r2 & 0x1Fu;
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r0 = r0 >> 9;
 	*p_r0 = r0;
 	*p_r2 = (*p_r2 & 0xFFFFFF00u) | (r2 & 0xFFu);
 }
 
-uint32_t sub_0003ED(uint32_t r0, uint32_t r2, uint8_t r4, uint32_t r13)
+/* Writes R0 into the EEPROM word of write command R4 (eeprom_send_command): its 16 bits high first, chip
+   select dropped to start the write, then waits, clocking, until the data out (bit 7 of R12) says it is
+   done. */
+uint32_t eeprom_write_word(uint32_t r0, uint32_t r2, uint8_t r4, uint32_t r13)
 {
 	uint8_t r0_2 = 0;
 	uint16_t r6 = 0;
 	uint32_t r3 = 0;
 
 	r6 = (uint16_t)r0;
-	r2 = sub_000451(r2, r4, r13);
+	r2 = eeprom_send_command(r2, r4, r13);
 	r6 = (uint16_t)(((uint32_t)r6 << 8) | (r6 >> 8));
 	r3 = 0x10u;
 	do
@@ -457,52 +503,56 @@ uint32_t sub_0003ED(uint32_t r0, uint32_t r2, uint8_t r4, uint32_t r13)
 		r0 = (r0 & ~0xFFu) | (r0 & 0x80u);
 		r6 = (uint16_t)(((uint32_t)r6 << 1) | (r6 >> 15));
 		r2 = ((r2 & ~0xFFu) | (r2 & 0x1Fu)) + 0x20u + r0;
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r3--;
 	} while (r3 != 0u);
 	r3 = 2u;
 	do
 	{
 		r2 = (r2 & ~0xFFu) | (r2 & 0x1Fu);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r3--;
 	} while (r3 != 0u);
 	r2 = (r2 & ~0xFFu) | (r2 & 0x1Fu);
 	do
 	{
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 | 0x20u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r0_2 = mem_read8(r12);
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 	} while ((int8_t)r0_2 >= 0);
 	r2 = (r2 & ~0xFFu) | (r2 & 0x1Fu);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	return r2;
 }
 
-uint32_t sub_000451(uint32_t r2, uint8_t r4, uint32_t r13)
+/* Sends command R4 to the EEPROM (a 93C46 on port H of the second I/O chip, R13: bit 7 data in, 6 clock,
+   5 chip select): chip select, a start bit, then the 8 bits of R4 high first (two of opcode: 2 read, 1
+   write, 0 with the address's top bits 3 write enable or 0 write disable; six of address), each with a
+   clock pulse. */
+uint32_t eeprom_send_command(uint32_t r2, uint8_t r4, uint32_t r13)
 {
 	uint8_t r0 = 0, r1 = 0;
 	uint32_t r3 = 0;
 
 	r1 = (uint8_t)r4;
 	r2 = (r2 & ~0xFFu) | (r2 & 0x1Fu);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x60u);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0xC0u);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-	r2 = sub_0004B8(r2, r13);
+	r2 = eeprom_set_lines(r2, r13);
 	r3 = 8u;
 	do
 	{
@@ -510,15 +560,17 @@ uint32_t sub_000451(uint32_t r2, uint8_t r4, uint32_t r13)
 		r1 = (uint8_t)(r1 * 2u);
 		r2 = (r2 & ~0xFFu) | (r2 & 0x3Fu);
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 | (r0 & 0x80u));
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 ^ 0x40u);
-		r2 = sub_0004B8(r2, r13);
+		r2 = eeprom_set_lines(r2, r13);
 		r3--;
 	} while (r3 != 0u);
 	return r2;
 }
 
-void sub_0004A1(uint32_t *p_r2, uint32_t *p_r13)
+/* Starts an EEPROM access: the interrupts off, R13 the EEPROM's lines (C8000E, port H of the second I/O
+   chip), R12 its data out (C8000A, port F, bit 7), R2 the lines' present value. */
+void eeprom_begin(uint32_t *p_r2, uint32_t *p_r13)
 {
 	uint8_t r2 = 0;
 
@@ -529,13 +581,32 @@ void sub_0004A1(uint32_t *p_r2, uint32_t *p_r13)
 	*p_r2 = (*p_r2 & 0xFFFFFF00u) | r2;
 }
 
-uint32_t sub_0004B8(uint32_t r2, uint32_t r13)
+/* Writes R2 to the EEPROM's lines (R13), with bit 4 set too. */
+uint32_t eeprom_set_lines(uint32_t r2, uint32_t r13)
 {
 	r2 = (r2 & ~0xFFu) | (uint8_t)(r2 | 0x10u);
 	mem_write8(r13, r2);
 	return r2;
 }
 
+/* The two tasks' frame loops, one function in the C: second_task(0) is the second task (from 0006B0),
+   which runs screen 1; second_task(1) the boot task after boot (from 000637), which first sets up the
+   link's race (link_take_master_settings), the interrupt controller's timer (D00008, D0000A),
+   task_swapping, each screen's first attract car (screen unk_9E from rom_000D14 by machine_count and the
+   screen's car number) and the screens on (C0001C, C8001C), then runs screen 2. A frame of either:
+   wait_for_frame (the VBLANK swaps the tasks meanwhile; the second task calls link_send_records before
+   it with second_task_waiting set, and the boot task calls link_send_records and link_receive_records
+   only while that is clear), the test mode when test_mode_on is set, link_receive_records,
+   race_entries_update, race_progress_update and course_records_update (the link and the race records),
+   game_frame_count + 1 (screen 1's loop), take_screen_inputs, check_game_start, the game mode's code
+   (the table at 0008CC by game_mode: game_mode_power_on, game_mode_restart, game_mode_title,
+   game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_play,
+   entry_invitation_step (the entry countdown on a seat without a player), game_mode_isdn_connection),
+   run_objects and lcd_update; with single_task set it goes on with the other screen's frame instead of
+   waiting. The test mode: task_swapping off, test_mode_start, then test_mode_frame each frame while
+   test_mode_on lasts; then the screens off, the variables cleared, the second task's frame written
+   again, initialise_game, lcd_reset, both screens in game mode 1 with a fade in (fade 1),
+   network_check_again, and the boot task's part again. */
 void second_task(uint32_t entry_point)
 {
 	bool L_000637 = false, L_000719 = false, L_00077F = false;
@@ -555,16 +626,16 @@ void second_task(uint32_t entry_point)
 				if (!L_000719)
 				{
 					L_000637 = false;
-					sub_00D8A5();
+					link_take_master_settings();
 					mem_write16(IRQ_D00008, 0x39u);
 					mem_write16(IRQ_D0000A, 1u);
 					unk_20E0FD = 0u;
-					unk_20E0FC = 0u;
+					screen_2_vblanks = 0u;
 					unk_20E0FF = 0u;
-					unk_20E0FE = 0u;
-					unk_20E00A = 0u;
-					unk_20E028 = 0xFFu;
-					r0 = rom_000D14[unk_20E040];
+					screen_1_vblanks = 0u;
+					vblanks_since_start = 0u;
+					task_swapping = 0xFFu;
+					r0 = rom_000D14[machine_count];
 					r2 = unk_218002;
 					unk_20809E = mem_read8(r0 + unk_208002);
 					unk_21809E = mem_read8(r0 + r2);
@@ -574,57 +645,57 @@ void second_task(uint32_t entry_point)
 				do
 				{
 					L_000719 = false;
-					if (unk_20E02B == 0u)
-						sub_00E8DF();
-					r2 = sub_0008F0(r2);
-					L_00077F = unk_20E700 != 0u;
+					if (second_task_waiting == 0u)
+						link_send_records();
+					r2 = wait_for_frame(r2);
+					L_00077F = test_mode_on != 0u;
 					if (L_00077F)
 						break;
-					if (unk_20E02B == 0u)
-						sub_00E620();
-					sub_00D9F3();
-					sub_00DB6D();
-					sub_00DEF8();
+					if (second_task_waiting == 0u)
+						link_receive_records();
+					race_entries_update();
+					race_progress_update();
+					course_records_update();
 					screen = SCREEN_2;
-					r2 = sub_000C5A();
-					r0 = (uint8_t)SCREEN(screen)->unk_80;
+					r2 = take_screen_inputs();
+					r0 = SCREEN(screen)->game_mode;
 					player_car = screen + 0x1000u;
-					r0 = sub_000848(r0, r2);
+					r0 = check_game_start(r0, r2);
 					switch (r0)
 					{
 					case 0:
-						sub_001440();
+						game_mode_power_on();
 						break;
 					case 1:
-						sub_00144C();
+						game_mode_restart();
 						break;
 					case 2:
-						sub_001000();
+						game_mode_title();
 						break;
 					case 3:
-						sub_001458();
+						game_mode_car_presentation();
 						break;
 					case 4:
-						sub_001516();
+						game_mode_demo_race();
 						break;
 					case 5:
-						sub_001DCC();
+						game_mode_ranking();
 						break;
 					case 6:
-						sub_002E74();
+						game_mode_play();
 						break;
 					case 7:
-						sub_00DDA8();
+						entry_invitation_step();
 						break;
 					case 8:
-						sub_000D9F();
+						game_mode_isdn_connection();
 						break;
 					default:
 						invalid_jump(rom_0008CC[r0]);
 					}
 					run_objects();
-					sub_0189D9();
-				} while (unk_20E024 == 0u);
+					lcd_update();
+				} while (single_task == 0u);
 				if (L_00077F)
 					break;
 				break;
@@ -635,71 +706,71 @@ void second_task(uint32_t entry_point)
 				break;
 			do
 			{
-				unk_20E02B = 0xFFu;
-				sub_00E8DF();
-				r2 = sub_0008F0(r2);
-				unk_20E02B = 0u;
-				L_00077F = unk_20E700 != 0u;
+				second_task_waiting = 0xFFu;
+				link_send_records();
+				r2 = wait_for_frame(r2);
+				second_task_waiting = 0u;
+				L_00077F = test_mode_on != 0u;
 				if (L_00077F)
 					break;
-				sub_00E620();
-				sub_00D9F3();
-				sub_00DB6D();
-				sub_00DEF8();
-				unk_20E026++;
+				link_receive_records();
+				race_entries_update();
+				race_progress_update();
+				course_records_update();
+				game_frame_count++;
 				screen = SCREEN_1;
-				r2 = sub_000C5A();
-				r0 = (uint8_t)SCREEN(screen)->unk_80;
+				r2 = take_screen_inputs();
+				r0 = SCREEN(screen)->game_mode;
 				player_car = screen + 0x1000u;
-				r0 = sub_000848(r0, r2);
+				r0 = check_game_start(r0, r2);
 				switch (r0)
 				{
 				case 0:
-					sub_001440();
+					game_mode_power_on();
 					break;
 				case 1:
-					sub_00144C();
+					game_mode_restart();
 					break;
 				case 2:
-					sub_001000();
+					game_mode_title();
 					break;
 				case 3:
-					sub_001458();
+					game_mode_car_presentation();
 					break;
 				case 4:
-					sub_001516();
+					game_mode_demo_race();
 					break;
 				case 5:
-					sub_001DCC();
+					game_mode_ranking();
 					break;
 				case 6:
-					sub_002E74();
+					game_mode_play();
 					break;
 				case 7:
-					sub_00DDA8();
+					entry_invitation_step();
 					break;
 				case 8:
-					sub_000D9F();
+					game_mode_isdn_connection();
 					break;
 				default:
 					invalid_jump(rom_0008CC[r0]);
 				}
 				run_objects();
-				sub_0189D9();
-			} while (unk_20E024 == 0u);
+				lcd_update();
+			} while (single_task == 0u);
 			if (L_00077F)
 				break;
 			L_000719 = true;
 		}
 		L_00077F = false;
-		unk_20E028 = 0u;
-		sub_0008F0(r2);
-		sub_01C241();
+		task_swapping = 0u;
+		wait_for_frame(r2);
+		test_mode_start();
 		do
 		{
-			sub_0008F0(r2);
-			sub_01C388();
-		} while (unk_20E700 != 0u);
+			wait_for_frame(r2);
+			test_mode_frame();
+		} while (test_mode_on != 0u);
 		interrupts_off();
 		mem_write8(IO_C0001C, 4u);
 		mem_write8(0xC8001Cu, 0x80u);
@@ -726,9 +797,9 @@ void second_task(uint32_t entry_point)
 		move_halfwords(WORK_RAM + 0x1FF84u, 0xC98u, 0x3Eu);
 		player_car = 0x219000u;
 		unk_20E000 = 0x21FF84u;
-		unk_20E004 = 0x21F800u;
-		sub_000913();
-		sub_018827();
+		waiting_task_stack = 0x21F800u;
+		initialise_game();
+		lcd_reset();
 		unk_208080 = 1u;
 		unk_208153 = 1u;
 		unk_208094 |= 1u;
@@ -736,92 +807,105 @@ void second_task(uint32_t entry_point)
 		unk_218153 = 1u;
 		unk_218094 |= 1u;
 		interrupts_on();
-		sub_00D0C8();
+		network_check_again();
 		L_000637 = true;
 	}
 }
 
-uint32_t sub_000848(uint32_t r0, uint32_t r2)
+/* Each frame before the game mode's code: in the attract modes (not 0, not 6), with a credit on the seat
+   (seat1_credits, seat2_credits for screen 2) or free play (free_play), blinks the START lamp (bit 2 of
+   the seat's port_d_outputs, 8 frames on and 8 off by start_lamp_blink); START pressed (buttons_pressed
+   bit 6) takes the credit (not with free play; and clears unk_20E0A2, unk_20E0AA), turns the lamp off
+   and starts a game: game mode 6 at step 0, link_event 1, the race record's car part cleared
+   (race_record_clear) and race unk_19 = FF. Returns the game mode. */
+uint32_t check_game_start(uint32_t r0, uint32_t r2)
 {
 	uint8_t r3 = 0;
-	uint32_t r0_2 = 0, r1 = 0;
+	uint32_t r0_2 = 0, index = 0;
 	uint32_t t1 = 0;
 
 	if (r0 == 0u || (uint8_t)r0 == 6u)
 		return r0;
-	r1 = SCREEN(screen)->unk_00;
-	if (unk_20E615 != 0u)
+	index = SCREEN(screen)->index;
+	if (free_play != 0u)
 	{
-		r3 = (uint8_t)(SCREEN(screen)->unk_E1 + 1u);
-		SCREEN(screen)->unk_E1 = r3;
-		RAM8(unk_20E092_ADDRESS + r1) = (RAM8(unk_20E092_ADDRESS + r1) & ~4u) | ((r3 & 8u) >> 1);
-		if ((SCREEN(screen)->unk_118 & 0x40u) == 0u)
+		r3 = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
+		SCREEN(screen)->start_lamp_blink = r3;
+		port_d_outputs[index] = (port_d_outputs[index] & ~4u) | ((r3 & 8u) >> 1);
+		if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
 			return r0;
-		if (unk_20E615 == 0u)
+		if (free_play == 0u)
 		{
 			mem_write8(r2, mem_read8(r2) - 1u);
 			mem_write8(r2 + 2u, 0u);
 		}
-		SCREEN(screen)->unk_E1 = 0u;
-		t1 = unk_20E092_ADDRESS + r1;
+		SCREEN(screen)->start_lamp_blink = 0u;
+		t1 = port_d_outputs_ADDRESS + index;
 		mem_write8(t1, mem_read8(t1) & ~4u);
 		r0_2 = 6u;
-		SCREEN(screen)->unk_80 = 6u;
-		SCREEN(screen)->unk_40 = 1u;
-		sub_00DEC2();
-		RACE(SCREEN(screen)->race)->unk_19 = 0xFFu;
+		AS32(SCREEN(screen)->game_mode) = 6u;
+		SCREEN(screen)->link_event = 1u;
+		race_record_clear();
+		RACE(SCREEN(screen)->race)->entry_request = 0xFFu;
 		return r0_2;
 	}
-	r2 = rom_0008C4[r1];
+	r2 = rom_0008C4[index];
 	if (mem_read8(r2) == 0u)
 		return r0;
-	r3 = (uint8_t)(SCREEN(screen)->unk_E1 + 1u);
-	SCREEN(screen)->unk_E1 = r3;
-	RAM8(unk_20E092_ADDRESS + r1) = (RAM8(unk_20E092_ADDRESS + r1) & ~4u) | ((r3 & 8u) >> 1);
-	if ((SCREEN(screen)->unk_118 & 0x40u) == 0u)
+	r3 = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
+	SCREEN(screen)->start_lamp_blink = r3;
+	port_d_outputs[index] = (port_d_outputs[index] & ~4u) | ((r3 & 8u) >> 1);
+	if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
 		return r0;
-	if (unk_20E615 == 0u)
+	if (free_play == 0u)
 	{
 		mem_write8(r2, mem_read8(r2) - 1u);
 		mem_write8(r2 + 2u, 0u);
 	}
-	SCREEN(screen)->unk_E1 = 0u;
-	t1 = unk_20E092_ADDRESS + r1;
+	SCREEN(screen)->start_lamp_blink = 0u;
+	t1 = port_d_outputs_ADDRESS + index;
 	mem_write8(t1, mem_read8(t1) & ~4u);
 	r0_2 = 6u;
-	SCREEN(screen)->unk_80 = 6u;
-	SCREEN(screen)->unk_40 = 1u;
-	sub_00DEC2();
-	RACE(SCREEN(screen)->race)->unk_19 = 0xFFu;
+	AS32(SCREEN(screen)->game_mode) = 6u;
+	SCREEN(screen)->link_event = 1u;
+	race_record_clear();
+	RACE(SCREEN(screen)->race)->entry_request = 0xFFu;
 	return r0_2;
 }
 
-uint32_t sub_0008F0(uint32_t r2)
+/* Waits for the next frame: polls frame_ready (set by the VBLANK, which also swaps the tasks) and clears
+   it; while the screen has tile pages to unpack (screen unk_B00) it unpacks them a piece at a time
+   (unpack_queued_step) between the polls. */
+uint32_t wait_for_frame(uint32_t r2)
 {
 	for (;;)
 	{
-		if ((uint8_t)SCREEN(screen)->unk_B00 == 0u)
+		if ((uint8_t)SCREEN(screen)->unpack_state == 0u)
 		{
 			do
 			{
-				frame_wait(unk_20E023_ADDRESS);
+				frame_wait(frame_ready_ADDRESS);
 				take_interrupts();
-			} while (unk_20E023 == 0u);
+			} while (frame_ready == 0u);
 			frame_end();
-			unk_20E023 = 0u;
+			frame_ready = 0u;
 			break;
 		}
-		r2 = sub_010E42(r2);
-		if (unk_20E023 != 0u)
+		r2 = unpack_queued_step(r2);
+		if (frame_ready != 0u)
 		{
-			unk_20E023 = 0u;
+			frame_ready = 0u;
 			break;
 		}
 	}
 	return r2;
 }
 
-void sub_000913(void)
+/* Sets the game up, at start-up and after the test mode: 13, 0, 0, 1F to C00074 (which the board does
+   not map); for screen 2, then 1, its objects' page cleared (clear_screen_ram) and its constants
+   (init_screen: index, its video registers, the view's, the courses' stage lengths at 700);
+   initialise_board; then initialise_screen for screens 1 and 2. */
+void initialise_game(void)
 {
 	uint32_t r0 = 0;
 
@@ -830,52 +914,69 @@ void sub_000913(void)
 	mem_write8(IO_C00074, 0u);
 	mem_write8(IO_C00074, 0x1Fu);
 	screen = SCREEN_2;
-	sub_010688();
-	sub_010634();
+	clear_screen_ram();
+	init_screen();
 	screen = SCREEN_1;
-	sub_010688();
-	r0 = sub_010634();
-	sub_000995(r0);
+	clear_screen_ram();
+	r0 = init_screen();
+	initialise_board(r0);
 	screen = SCREEN_1;
-	sub_000976();
+	initialise_screen();
 	screen = SCREEN_2;
-	sub_000976();
+	initialise_screen();
 }
 
-void sub_000976(void)
+/* Sets a screen up: its sound off (reset_screen_sound), no objects (clear_objects), its tilemaps'
+   registers and their copies (init_mixer), three palettes uploaded (upload_boot_palettes) and the
+   courses' records (load_course_records). */
+void initialise_screen(void)
 {
-	sub_012004();
-	sub_011C60();
-	sub_010890();
-	sub_011594();
-	sub_001D84();
+	reset_screen_sound();
+	clear_objects();
+	init_mixer();
+	upload_boot_palettes();
+	load_course_records();
 }
 
-void sub_000995(uint32_t r0)
+/* Sets the board up: the I/O chips (init_io_chips), the settings (load_settings), the sprite chip and
+   its RAM (init_sprite_chip, load_sprite_ram_tables), the video RAM and its control (init_video), the
+   backup RAM checked (bookkeeping_check), the credits (init_coins), the sound requests
+   (start_sound_program), three lists of tile pages unpacked at once (unpack_tile_pages: 109420, 109428,
+   109578), then the inputs read and taken twice (read_switches_and_analog, take_screen_inputs) so that
+   their previous values hold. */
+void initialise_board(uint32_t r0)
 {
 	uint32_t r10 = 0;
 
-	sub_0108EA();
-	sub_00013C(r0);
-	sub_0107BC();
-	sub_010936();
-	sub_0106AF();
-	sub_0113C0();
-	sub_011018();
-	sub_011E88();
+	init_io_chips();
+	load_settings(r0);
+	init_sprite_chip();
+	load_sprite_ram_tables();
+	init_video();
+	bookkeeping_check();
+	init_coins();
+	start_sound_program();
 	r10 = 0x109420u;
-	sub_010FA1(r10);
+	unpack_tile_pages(r10);
 	r10 = 0x109428u;
-	sub_010FA1(r10);
+	unpack_tile_pages(r10);
 	r10 = 0x109578u;
-	sub_010FA1(r10);
-	sub_0009F9();
-	sub_0009F9();
-	sub_000C5A();
-	sub_000C5A();
+	unpack_tile_pages(r10);
+	read_switches_and_analog();
+	read_switches_and_analog();
+	take_screen_inputs();
+	take_screen_inputs();
 }
 
-uint32_t sub_0009F9(void)
+/* Reads the inputs in the VBLANK (int_vector_40; twice at start-up): the switches of both I/O chips
+   (ports E and F: bits 0-1 the seats' service switches, 2-5 the coin switches, 7 a test switch) into
+   switches, with previous_switches, switches_pressed and switches_released; then, on the turn of the
+   screen whose task runs, half the analog inputs through the A/D converter (C00050 + 4 * index): screen
+   1's turn seat 1's wheel, gas and brake and seat 2's wheel, screen 2's seat 2's gas and brake (the
+   converter's second bank), each raw into analog_raw on and scaled to 0-FF between its calibration (a
+   low and a high byte from 20E638, in the settings) into analog_inputs on; then the converter's bank for
+   the other turn (C00060). */
+uint32_t read_switches_and_analog(void)
 {
 	uint8_t r0 = 0, r1 = 0, r2 = 0, r3 = 0;
 	uint16_t r0_2 = 0, r7 = 0, r8 = 0;
@@ -893,16 +994,16 @@ uint32_t sub_0009F9(void)
 	r2 = (uint8_t)(~t3 | ((((uint32_t)r3 << 4) | (r3 >> 4)) & 3u));
 	r1 = (r0 | r2) & 2u;
 	r0 = (uint8_t)((r0 & 0xDu) | ((((r2 & 0xCu) * 2u) | (r2 & 1u)) * 2u) | ((uint32_t)r1 << 6) | (r1 >> 2));
-	r1 = unk_20E100;
-	unk_20E100 = r0;
-	unk_20E101 = r1;
-	unk_20E102 = ~r1 & r0;
-	unk_20E103 = r1 & ~r0;
-	r5 = SCREEN(screen)->unk_00;
+	r1 = switches;
+	switches = r0;
+	previous_switches = r1;
+	switches_pressed = ~r1 & r0;
+	switches_released = r1 & ~r0;
+	r5 = SCREEN(screen)->index;
 	r5 = r5 & 1u;
 	r1_2 = IO_PORTS + 0x50u + r5 * 4u;
-	r2_2 = 0x20E110u + r5 * 4u;
-	r3_2 = unk_20E116_ADDRESS + r5 * 4u;
+	r2_2 = analog_raw_ADDRESS + r5 * 4u;
+	r3_2 = analog_inputs_ADDRESS + r5 * 4u;
 	r4 = rom_000B14[r5];
 	r6 = rom_000B0C[r5];
 	do
@@ -930,7 +1031,12 @@ uint32_t sub_0009F9(void)
 	return r6;
 }
 
-void sub_000B16(void)
+/* Packs both seats' inputs for the coming frame (the VBLANK, on screen 1's turn) into their records: the
+   screen's player + 1, the buttons (port A's high bits into 0-3, its low two into 4-5, the shift; port E
+   bit 4 into bit 6, START), the wheel (analog_inputs inverted), the gas and the brake: seat_1_player to
+   seat_1_brake and seat_2_player to seat_2_brake. On ISDN (isdn_mode) they go to the link board instead
+   (link_send_seat_inputs). */
+void pack_seat_inputs(void)
 {
 	uint8_t r0 = 0, r1 = 0, r2 = 0;
 	uint32_t r2_2 = 0, r10 = 0, r11 = 0;
@@ -944,34 +1050,38 @@ void sub_000B16(void)
 	t4 = mem_read8(0xC80000u);
 	r2 = (uint8_t)~t4;
 	r1 = ((~t3 * 2u * 2u) & 0x40u) | ((((uint32_t)r2 << 4) | (r2 >> 4)) & 0x3Fu);
-	r10 = unk_20E116_ADDRESS;
-	if (unk_20E623 != 0u)
+	r10 = analog_inputs_ADDRESS;
+	if (isdn_mode != 0u)
 	{
 		r11 = 0x800020u;
 		r2_2 = 0x208040u;
-		sub_000BBC(r0, r2_2, &r10, &r11);
+		link_send_seat_inputs(r0, r2_2, &r10, &r11);
 		r2_2 = 0x218040u;
 		r0 = (uint8_t)r1;
-		sub_000BBC(r0, r2_2, &r10, &r11);
+		link_send_seat_inputs(r0, r2_2, &r10, &r11);
 		return;
 	}
-	unk_20E120 = unk_208001 + 1u;
-	unk_20E121 = r0;
-	unk_20E122 = ~unk_20E116;
+	seat_1_player = unk_208001 + 1u;
+	seat_1_buttons = r0;
+	seat_1_wheel = ~analog_inputs;
 	r10++;
-	unk_20E123 = unk_20E117;
+	seat_1_gas = analog_gas_1;
 	r10++;
-	unk_20E124 = unk_20E118;
-	unk_20E125 = unk_218001 + 1u;
-	unk_20E126 = r1;
+	seat_1_brake = analog_brake_1;
+	seat_2_player = unk_218001 + 1u;
+	seat_2_buttons = r1;
 	r10++;
-	unk_20E127 = ~unk_20E119;
+	seat_2_wheel = ~analog_wheel_2;
 	r10++;
-	unk_20E128 = unk_20E11A;
-	unk_20E129 = unk_20E11B;
+	seat_2_gas = analog_gas_2;
+	seat_2_brake = analog_brake_2;
 }
 
-void sub_000BBC(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p_r11)
+/* Never runs in the scenarios (ISDN only): writes a seat's five bytes as halfwords on the link board at
+   R11 (800020 on): 0, the buttons (R0), the wheel (inverted), gas and brake from analog_inputs at R10;
+   or, when its screen has a link_event (R2: screen + 40), the event and the four bytes after it, which
+   it then clears (without moving R10 on, so the next seat would read this one's analog inputs). */
+void link_send_seat_inputs(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p_r11)
 {
 	uint32_t r10 = *p_r10;
 	uint32_t r11 = *p_r11;
@@ -1019,114 +1129,136 @@ void sub_000BBC(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p_r11)
 	*p_r11 = r11;
 }
 
-uint32_t sub_000BF3(void)
+/* queue_screen_inputs for screen 1 (seat_1_buttons, the first I/O chip) and screen 2 (seat_2_buttons,
+   the second): the VBLANK on screen 2's turn. */
+uint32_t queue_seat_inputs(void)
 {
 	uint32_t r10 = 0, r11 = 0;
 
 	r10 = SCREEN_1;
-	r11 = unk_20E121_ADDRESS;
+	r11 = seat_1_buttons_ADDRESS;
 	r12 = 0xC00000u;
-	sub_000C1C(r10, r11);
+	queue_screen_inputs(r10, r11);
 	r10 = SCREEN_2;
-	r11 = unk_20E126_ADDRESS;
+	r11 = seat_2_buttons_ADDRESS;
 	r12 = 0xC80000u;
-	return sub_000C1C(r10, r11);
+	return queue_screen_inputs(r10, r11);
 }
 
-uint32_t sub_000C1C(uint32_t r10, uint32_t r11)
+/* Puts a screen's inputs into its ring of eight (screen + 130, at input_write_place): the seat's buttons
+   (R11) with ~port B of its I/O chip (R12 + 2) in bits 8-15; and the record's wheel, gas and brake into
+   the screen's wheel, gas and brake. On ISDN the record is the screen's race_copy's +2C (the inputs the
+   link brought). */
+uint32_t queue_screen_inputs(uint32_t r10, uint32_t r11)
 {
-	uint32_t r0 = 0, r1 = 0, r2 = 0;
+	uint32_t r0 = 0, r2 = 0, input_write_place = 0;
 
-	if (unk_20E623 != 0u)
+	if (isdn_mode != 0u)
 		r11 = SCREEN(r10)->race_copy + 0x2Cu;
 	r0 = (uint8_t)~mem_read8(r12 + 2u);
 	r2 = mem_read32(r11);
 	r0 = (uint16_t)(r0 << 8) | (uint8_t)r2;
-	r1 = SCREEN(r10)->unk_108;
-	mem_write32(r10 + 0x130u + r1 * 4u, r0);
-	SCREEN(r10)->unk_108 = (r1 + 1u) & 7u;
-	AS32(SCREEN(r10)->unk_100) = r2 >> 8;
+	input_write_place = SCREEN(r10)->input_write_place;
+	mem_write32(r10 + 0x130u + input_write_place * 4u, r0);
+	SCREEN(r10)->input_write_place = (input_write_place + 1u) & 7u;
+	AS32(SCREEN(r10)->wheel) = r2 >> 8;
 	return r0;
 }
 
-uint32_t sub_000C5A(void)
+/* Takes the screen's inputs for the frame from its ring (input_read_place; both frame loops, before
+   check_game_start): buttons, with previous_buttons, buttons_pressed and buttons_released (bit 6 START,
+   4-5 the shift up and down, 0-3 the others, 8-15 port B). On ISDN also the link's status (race_copy
+   unk_2B) into link_status, with link_status_set, link_status_cleared and link_status_changed, and,
+   unless in it already, game mode 8 (game_mode_isdn_connection) while it says the line connects (bits
+   2-3). */
+uint32_t take_screen_inputs(void)
 {
-	uint8_t r0_2 = 0, r1_2 = 0, r3_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0;
+	uint8_t r0_2 = 0, r3_2 = 0, link_status = 0;
+	uint32_t r0 = 0, r2 = 0, r3 = 0, buttons = 0, input_read_place = 0;
 	uint8_t t1 = 0;
 
-	r1 = SCREEN(screen)->unk_109;
-	r0 = mem_read32(screen + 0x130u + r1 * 4u);
-	SCREEN(screen)->unk_109 = (r1 + 1u) & 7u;
+	input_read_place = SCREEN(screen)->input_read_place;
+	r0 = mem_read32(screen + 0x130u + input_read_place * 4u);
+	SCREEN(screen)->input_read_place = (input_read_place + 1u) & 7u;
 	r3 = screen + 0x110u;
-	r1 = SCREEN(r3 - 0x110u)->unk_110;
-	SCREEN(r3 - 0x110u)->unk_110 = r0;
+	buttons = SCREEN(r3 - 0x110u)->buttons;
+	SCREEN(r3 - 0x110u)->buttons = r0;
 	r3 += 4u;
-	SCREEN(r3 - 0x114u)->unk_114 = r1;
-	r2 = ~r1 & r0;
+	SCREEN(r3 - 0x114u)->previous_buttons = buttons;
+	r2 = ~buttons & r0;
 	r3 += 4u;
-	SCREEN(r3 - 0x118u)->unk_118 = r2;
-	SCREEN(r3 - 0x118u)->unk_11C = r1 & ~r0;
-	if (unk_20E623 != 0u)
+	SCREEN(r3 - 0x118u)->buttons_pressed = r2;
+	SCREEN(r3 - 0x118u)->buttons_released = buttons & ~r0;
+	if (isdn_mode != 0u)
 	{
 		r0_2 = RACE(SCREEN(screen)->race_copy)->unk_2B;
 		t1 = r0_2;
-		r1_2 = SCREEN(screen)->unk_45;
-		SCREEN(screen)->unk_45 = t1;
-		r2 = (r2 & ~0xFFu) | (uint8_t)~r1_2;
+		link_status = SCREEN(screen)->link_status;
+		SCREEN(screen)->link_status = t1;
+		r2 = (r2 & ~0xFFu) | (uint8_t)~link_status;
 		r2 = (r2 & ~0xFFu) | (r2 & r0_2);
-		SCREEN(screen)->unk_46 = r2;
-		r3_2 = ~r0_2 & r1_2;
-		SCREEN(screen)->unk_47 = r3_2;
+		SCREEN(screen)->link_status_set = r2;
+		r3_2 = ~r0_2 & link_status;
+		SCREEN(screen)->link_status_cleared = r3_2;
 		r2 = (r2 & ~0xFFu) | (uint8_t)(r2 | r3_2);
-		SCREEN(screen)->unk_48 = r2;
-		if ((uint8_t)SCREEN(screen)->unk_80 != 8u && (r0_2 & 0xCu) != 0u)
-			SCREEN(screen)->unk_80 = 8u;
+		SCREEN(screen)->link_status_changed = r2;
+		if (SCREEN(screen)->game_mode != 8u && (r0_2 & 0xCu) != 0u)
+			AS32(SCREEN(screen)->game_mode) = 8u;
 	}
 	return r2;
 }
 
-void sub_000D7D(void)
+/* Never runs in the scenarios (ISDN only): the players on this side and on the other (race_copy unk_29,
+   unk_2A) into isdn_players_this_side and isdn_players_other_side, their sum into player_count (the
+   race's players) and half of it into machine_count (its cabinets). */
+void isdn_count_players(void)
 {
 	uint8_t r0 = 0, r1 = 0;
 
 	r0 = RACE(SCREEN(screen)->race_copy)->unk_29;
 	r1 = RACE(SCREEN(screen)->race_copy)->unk_2A;
-	unk_20E04A = r0;
-	unk_20E04B = r1;
+	isdn_players_this_side = r0;
+	isdn_players_other_side = r1;
 	r1 += r0;
-	unk_20E041 = r1;
-	unk_20E040 = r1 >> 1;
+	player_count = r1;
+	machine_count = r1 >> 1;
 }
 
-void sub_000D9F(void)
+/* Game mode 8, on ISDN only (never in the scenarios; take_screen_inputs goes to it while link_status
+   says the line connects, bits 2-3), by mode_step: 0 a fade out (attract_lamps_update in 0 and 1); 1
+   when it is over, no objects, the sound off, the screen's tilemaps, sprites and text off, palette
+   031740, the lamps off (checkpoint_lamp, leader_lamp by index), clear_lcd, isdn_status_update started
+   (the list at 000F70); 2 a fade in; 3 when it is over, 4; 4 when link_status says connected (bit 0:
+   isdn_count_players) or no longer connecting (bits 2-3 clear), mode_timer 150 frames; 5 counts them
+   down, then a fade out; 6 when it is over, game mode 2 (the title). */
+void game_mode_isdn_connection(void)
 {
-	uint32_t r0 = 0, r10 = 0, r19 = 0;
-	uint8_t t1 = 0;
+	uint32_t r10 = 0, r19 = 0, link_status = 0;
+	uint8_t mode_timer = 0;
 
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 8u))
+	switch (SCREEN(screen)->mode_step)
 	{
 	case 0:
-		SCREEN(screen)->unk_153 = 0u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 1)++;
-		sub_0015D8();
+		SCREEN(screen)->fade_kind = 0u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->mode_step++;
+		attract_lamps_update();
 		return;
 	case 1:
-		if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+		if ((SCREEN(screen)->flags & 1u) != 0u)
 		{
-			sub_0015D8();
+			attract_lamps_update();
 			return;
 		}
-		AT8(SCREEN(screen)->unk_80, 1)++;
-		sub_011C60();
-		sub_012004();
-		sub_01070C();
-		sub_010889();
-		sub_01076A();
+		SCREEN(screen)->mode_step++;
+		clear_objects();
+		reset_screen_sound();
+		reset_tile_layers();
+		clear_sprite_group_count();
+		clear_text_layer();
 		r19 = 0x31740u;
 		queue_palette(r19);
-		r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
+		r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
 		mem_write32(r10 + 0xC0u, 0u);
 		mem_write32(r10 + 0xC8u, 0u);
 		clear_lcd();
@@ -1134,57 +1266,62 @@ void sub_000D9F(void)
 		start_object_list(r10);
 		return;
 	case 2:
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 1)++;
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->mode_step++;
 		return;
 	case 3:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->mode_step++;
 			return;
 		}
 		return;
 	case 4:
 		break;
 	case 5:
-		t1 = (uint8_t)SCREEN(screen)->unk_88;
-		AS8(SCREEN(screen)->unk_88) = t1 - 1u;
-		if (t1 == 1u)
+		mode_timer = (uint8_t)SCREEN(screen)->mode_timer;
+		AS8(SCREEN(screen)->mode_timer) = mode_timer - 1u;
+		if (mode_timer == 1u)
 		{
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			SCREEN(screen)->mode_step++;
 		}
 		return;
 	case 6:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			SCREEN(screen)->unk_80 = 2u;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			AS32(SCREEN(screen)->game_mode) = 2u;
 		return;
 	default:
-		invalid_jump(rom_000DAC[(uint8_t)(SCREEN(screen)->unk_80 >> 8u)]);
+		invalid_jump(rom_000DAC[SCREEN(screen)->mode_step]);
 	}
-	r0 = SCREEN(screen)->unk_45;
-	if ((r0 & 1u) != 0u)
+	link_status = SCREEN(screen)->link_status;
+	if ((link_status & 1u) != 0u)
 	{
-		sub_000D7D();
-		AT8(SCREEN(screen)->unk_80, 1)++;
-		AS8(SCREEN(screen)->unk_88) = 0x96u;
+		isdn_count_players();
+		SCREEN(screen)->mode_step++;
+		AS8(SCREEN(screen)->mode_timer) = 0x96u;
 		return;
 	}
-	if ((r0 & 0xCu) == 0u)
+	if ((link_status & 0xCu) == 0u)
 	{
-		AT8(SCREEN(screen)->unk_80, 1)++;
-		AS8(SCREEN(screen)->unk_88) = 0x96u;
+		SCREEN(screen)->mode_step++;
+		AS8(SCREEN(screen)->mode_timer) = 0x96u;
 		return;
 	}
 }
 
-void sub_000EA4(void)
+/* Never runs in the scenarios: the ISDN connection screen's texts (game_mode_isdn_connection starts it
+   from the list at 000F70), on the text layer (print_text_layer), by state: 0 by link_status: bit 0 ISDN
+   SUCCESS, THIS SIDE, OTHER SIDE and TOTAL with the players (race_copy unk_29, unk_2A and their sum,
+   print_hex_byte), then 1; bits 2-3 clear ISDN FAILED, then 1; else ISDN CONECTING (sic) blinking every
+   8 frames (its unk_10 counting); 1 nothing more. */
+void isdn_status_update(void)
 {
-	uint8_t r0 = 0, r8 = 0, r9 = 0;
+	uint8_t r0_2 = 0, r8 = 0, r9 = 0, link_status = 0;
 	uint16_t r1 = 0;
-	uint32_t r0_2 = 0, r11 = 0, r19 = 0;
+	uint32_t r0 = 0, r11 = 0, r19 = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1195,97 +1332,102 @@ void sub_000EA4(void)
 	default:
 		invalid_jump(rom_000EB0[OBJECT(current_object)->state]);
 	}
-	r0 = SCREEN(screen)->unk_45;
-	if ((r0 & 1u) == 0u)
+	link_status = SCREEN(screen)->link_status;
+	if ((link_status & 1u) == 0u)
 	{
-		if ((r0 & 0xCu) == 0u)
+		if ((link_status & 0xCu) == 0u)
 		{
 			OBJECT(current_object)->state++;
 			r19 = rom_000F80;
-			r19 = sub_011874(r19);
+			r19 = print_text_layer(r19);
 			return;
 		}
-		r0_2 = (uint8_t)OBJECT(current_object)->unk_10;
-		r0_2 = (uint8_t)(r0_2 + 1u);
-		AS8(OBJECT(current_object)->unk_10) = r0_2;
-		r0_2 = r0_2 >> 3;
-		r19 = rom_000F78[r0_2 & 1u];
-		r19 = sub_011874(r19);
+		r0 = (uint8_t)OBJECT(current_object)->unk_10;
+		r0 = (uint8_t)(r0 + 1u);
+		AS8(OBJECT(current_object)->unk_10) = r0;
+		r0 = r0 >> 3;
+		r19 = rom_000F78[r0 & 1u];
+		r19 = print_text_layer(r19);
 		return;
 	}
 	OBJECT(current_object)->state++;
 	r19 = rom_000F84;
-	sub_011874(r19);
+	print_text_layer(r19);
 	r19 = rom_000F88;
-	sub_011874(r19);
+	print_text_layer(r19);
 	r19 = rom_000F8C;
-	sub_011874(r19);
+	print_text_layer(r19);
 	r19 = rom_000F90;
-	sub_011874(r19);
+	print_text_layer(r19);
 	r1 = 0x6000u;
-	r0 = RACE(SCREEN(screen)->race_copy)->unk_29;
-	r9 = (uint8_t)r0;
+	r0_2 = RACE(SCREEN(screen)->race_copy)->unk_29;
+	r9 = (uint8_t)r0_2;
 	r11 = TEXT_CELL(24, 12);
-	sub_01190C(r0, r1, r11);
-	r0 = RACE(SCREEN(screen)->race_copy)->unk_2A;
-	r8 = (uint8_t)r0;
+	print_hex_byte(r0_2, r1, r11);
+	r0_2 = RACE(SCREEN(screen)->race_copy)->unk_2A;
+	r8 = (uint8_t)r0_2;
 	r11 = TEXT_CELL(24, 13);
-	sub_01190C(r0, r1, r11);
-	r0 = (uint8_t)((uint32_t)r9 + r8);
+	print_hex_byte(r0_2, r1, r11);
+	r0_2 = (uint8_t)((uint32_t)r9 + r8);
 	r11 = TEXT_CELL(24, 14);
-	sub_01190C(r0, r1, r11);
+	print_hex_byte(r0_2, r1, r11);
 }
 
-void sub_001000(void)
+/* Game mode 2, the title (title_screen_update), by mode_step: 0 the screen cleared (as clear_screen),
+   the title's palette (031E88), title_screen_update started, a fade in (fade 1), the input ring's places
+   to 0 (input_write_place, input_read_place), the screen on (C0001C = 6, C8001C = 86 for screen 2); 1
+   when the fade is over, mode_timer 450 frames (15 seconds); 2 counts them down, then a fade out (fade
+   0); 3 when it is over, game mode 3 (the car presentation). attract_lamps_update every frame first. */
+void game_mode_title(void)
 {
 	uint32_t r19 = 0, r21 = 0;
-	uint16_t t1 = 0;
+	uint16_t mode_timer = 0;
 
-	sub_0015D8();
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 8u))
+	attract_lamps_update();
+	switch (SCREEN(screen)->mode_step)
 	{
 	case 0:
-		sub_011C60();
-		sub_01070C();
-		sub_010889();
-		sub_01076A();
+		clear_objects();
+		reset_tile_layers();
+		clear_sprite_group_count();
+		clear_text_layer();
 		r19 = rom_031E88;
 		queue_palette(r19);
 		r21 = start_object();
 		mem_write32(r21 + 4u, title_screen_update_ADDRESS);
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		SCREEN(screen)->unk_108 = 0u;
-		SCREEN(screen)->unk_109 = 0u;
-		if (SCREEN(screen)->unk_00 != 0u)
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->input_write_place = 0u;
+		SCREEN(screen)->input_read_place = 0u;
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x86u);
 		else
 			mem_write8(IO_C0001C, 6u);
-		AT8(SCREEN(screen)->unk_80, 1)++;
+		SCREEN(screen)->mode_step++;
 		return;
 	case 1:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->unk_88 = 0x1C2u;
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->mode_timer = 0x1C2u;
+			SCREEN(screen)->mode_step++;
 		}
 		return;
 	case 2:
-		t1 = SCREEN(screen)->unk_88;
-		SCREEN(screen)->unk_88 = t1 - 1u;
-		if (t1 == 1u)
+		mode_timer = SCREEN(screen)->mode_timer;
+		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		if (mode_timer == 1u)
 		{
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			SCREEN(screen)->mode_step++;
 		}
 		return;
 	case 3:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			SCREEN(screen)->unk_80 = 3u;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			AS32(SCREEN(screen)->game_mode) = 3u;
 		return;
 	default:
-		invalid_jump(rom_001014[(uint8_t)(SCREEN(screen)->unk_80 >> 8u)]);
+		invalid_jump(rom_001014[SCREEN(screen)->mode_step]);
 	}
 }
 
@@ -1399,180 +1541,206 @@ void sub_0011AB(void)
 	ignored = draw_object(0u);
 }
 
-void sub_001440(void)
+/* Game mode 0 (the first frame after start-up): game mode 2 and its first step (game_mode_title). */
+void game_mode_power_on(void)
 {
-	SCREEN(screen)->unk_80 = 2u;
-	sub_001000();
+	AS32(SCREEN(screen)->game_mode) = 2u;
+	game_mode_title();
 }
 
-void sub_00144C(void)
+/* Game mode 1 (after the ranking, game_mode_ranking, and after the test mode): game mode 2 and its first
+   step (game_mode_title). */
+void game_mode_restart(void)
 {
-	SCREEN(screen)->unk_80 = 2u;
-	sub_001000();
+	AS32(SCREEN(screen)->game_mode) = 2u;
+	game_mode_title();
 }
 
-void sub_001458(void)
+/* Game mode 3, the presentation of a car (car_presentation_update), by mode_step: 0 the screen cleared
+   (as clear_screen), the palettes of the car's scene (rom_031DDC by rom_001A98 by attract_car) and
+   031740, object_handlers_1A78 (credit_display, coin_prompt, car_presentation) started, a fade in; 1
+   when it is over, mode_timer 180 frames (6 seconds; the staff credits code adds 1200); 2 counts them
+   down, then a fade out; 3 when it is over, link_event 3 and game mode 4 (the demo race).
+   attract_lamps_update every frame first. */
+void game_mode_car_presentation(void)
 {
 	uint32_t r10 = 0, r19 = 0;
-	uint16_t t1 = 0;
+	uint16_t mode_timer = 0;
 
-	sub_0015D8();
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 8u))
+	attract_lamps_update();
+	switch (SCREEN(screen)->mode_step)
 	{
 	case 0:
 		break;
 	case 1:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->unk_88 = 0xB4u;
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->mode_timer = 0xB4u;
+			SCREEN(screen)->mode_step++;
 		}
 		return;
 	case 2:
-		t1 = SCREEN(screen)->unk_88;
-		SCREEN(screen)->unk_88 = t1 - 1u;
-		if (t1 == 1u)
+		mode_timer = SCREEN(screen)->mode_timer;
+		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		if (mode_timer == 1u)
 		{
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			AT8(SCREEN(screen)->unk_80, 1)++;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			SCREEN(screen)->mode_step++;
 		}
 		return;
 	case 3:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->unk_40 = 3u;
-			SCREEN(screen)->unk_80 = 4u;
+			SCREEN(screen)->link_event = 3u;
+			AS32(SCREEN(screen)->game_mode) = 4u;
 		}
 		return;
 	default:
-		invalid_jump(rom_00146C[(uint8_t)(SCREEN(screen)->unk_80 >> 8u)]);
+		invalid_jump(rom_00146C[SCREEN(screen)->mode_step]);
 	}
-	sub_011C60();
-	sub_01070C();
-	sub_010889();
-	sub_01076A();
-	r19 = rom_031DDC[rom_001A98[SCREEN(screen)->unk_9C]];
+	clear_objects();
+	reset_tile_layers();
+	clear_sprite_group_count();
+	clear_text_layer();
+	r19 = rom_031DDC[rom_001A98[SCREEN(screen)->attract_car]];
 	queue_palette(r19);
 	r19 = 0x31740u;
 	queue_palette(r19);
 	r10 = 0x1A78u;
 	start_object_list(r10);
-	SCREEN(screen)->unk_153 = 1u;
-	SCREEN(screen)->unk_94 |= 1u;
-	AT8(SCREEN(screen)->unk_80, 1)++;
+	SCREEN(screen)->fade_kind = 1u;
+	SCREEN(screen)->flags |= 1u;
+	SCREEN(screen)->mode_step++;
 }
 
-void sub_001516(void)
+/* Game mode 4, the demo race of the attract mode (the car just presented, attract_car, on its stage):
+   attract_lamps_update, then by mode_step demo_race_set_up, demo_race_fade_in, demo_race_start_timer,
+   demo_race_count_down, demo_race_end, and but on the set-up's and the end's frames the race's own steps
+   (game_mode_play by game_step, from step 10). */
+void game_mode_demo_race(void)
 {
 	uint32_t left_caller = 0;
 
-	sub_0015D8();
+	attract_lamps_update();
 	left_caller = 0u;
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 8u))
+	switch (SCREEN(screen)->mode_step)
 	{
 	case 0:
-		left_caller = sub_001544();
+		left_caller = demo_race_set_up();
 		break;
 	case 1:
-		sub_001577();
+		demo_race_fade_in();
 		break;
 	case 2:
-		sub_001594();
+		demo_race_start_timer();
 		break;
 	case 3:
-		sub_0015A9();
+		demo_race_count_down();
 		break;
 	case 4:
-		left_caller = sub_0015C0(left_caller);
+		left_caller = demo_race_end(left_caller);
 		break;
 	default:
-		invalid_jump(rom_001530[(uint8_t)(SCREEN(screen)->unk_80 >> 8u)]);
+		invalid_jump(rom_001530[SCREEN(screen)->mode_step]);
 	}
 	if (left_caller != 0u)
 		return;
-	sub_002E74();
+	game_mode_play();
 }
 
-uint32_t sub_001544(void)
+/* Step 0 of the demo race: demo_flags bit 8 (the race's code tells the demo by it: the car drives
+   itself), the screen cleared (as clear_screen), step 1 with mode_timer 0, and game_step 10 (the demo
+   race's set-up in game_mode_play, which does not run this frame). */
+uint32_t demo_race_set_up(void)
 {
 	uint32_t left_caller = 0;
 
-	SCREEN(screen)->unk_90 |= 0x100u;
-	sub_011C60();
-	sub_01070C();
-	sub_010889();
-	sub_01076A();
-	AT8(SCREEN(screen)->unk_80, 1)++;
-	AS8(SCREEN(screen)->unk_88) = 0u;
-	AT8(SCREEN(screen)->unk_80, 2) = 0xAu;
+	SCREEN(screen)->demo_flags |= 0x100u;
+	clear_objects();
+	reset_tile_layers();
+	clear_sprite_group_count();
+	clear_text_layer();
+	SCREEN(screen)->mode_step++;
+	AS8(SCREEN(screen)->mode_timer) = 0u;
+	SCREEN(screen)->game_step = 0xAu;
 	left_caller = 1u;
 	return left_caller;
 }
 
-void sub_001577(void)
+/* Step 1 of the demo race: after two frames (mode_timer), a fade in and step 2. */
+void demo_race_fade_in(void)
 {
 	uint8_t t1 = 0;
 
-	AS8(SCREEN(screen)->unk_88)++;
-	t1 = (uint8_t)SCREEN(screen)->unk_88 & 1u;
-	AS8(SCREEN(screen)->unk_88) = t1;
+	AS8(SCREEN(screen)->mode_timer)++;
+	t1 = (uint8_t)SCREEN(screen)->mode_timer & 1u;
+	AS8(SCREEN(screen)->mode_timer) = t1;
 	if (t1 == 0u)
 	{
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 1)++;
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->mode_step++;
 	}
 }
 
-void sub_001594(void)
+/* Step 2 of the demo race: when the fade is over, mode_timer 600 frames (20 seconds) and step 3. */
+void demo_race_start_timer(void)
 {
-	if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+	if ((SCREEN(screen)->flags & 1u) == 0u)
 	{
-		SCREEN(screen)->unk_88 = 0x258u;
-		AT8(SCREEN(screen)->unk_80, 1)++;
+		SCREEN(screen)->mode_timer = 0x258u;
+		SCREEN(screen)->mode_step++;
 	}
 }
 
-void sub_0015A9(void)
+/* Step 3 of the demo race: counts mode_timer down, then a fade out and step 4. */
+void demo_race_count_down(void)
 {
-	uint16_t t1 = 0;
+	uint16_t mode_timer = 0;
 
-	t1 = SCREEN(screen)->unk_88;
-	SCREEN(screen)->unk_88 = t1 - 1u;
-	if (t1 == 1u)
+	mode_timer = SCREEN(screen)->mode_timer;
+	SCREEN(screen)->mode_timer = mode_timer - 1u;
+	if (mode_timer == 1u)
 	{
-		SCREEN(screen)->unk_153 = 0u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 1)++;
+		SCREEN(screen)->fade_kind = 0u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->mode_step++;
 	}
 }
 
-uint32_t sub_0015C0(uint32_t left_caller)
+/* Step 4 of the demo race: when the fade is over, game mode 5 (the ranking) and the race record's car
+   part cleared (race_record_clear), without the race's step that frame. */
+uint32_t demo_race_end(uint32_t left_caller)
 {
 	uint32_t left_caller_2 = 0;
 
-	if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+	if ((SCREEN(screen)->flags & 1u) != 0u)
 		return left_caller;
-	SCREEN(screen)->unk_80 = 5u;
-	sub_00DEC2();
+	AS32(SCREEN(screen)->game_mode) = 5u;
+	race_record_clear();
 	left_caller_2 = 1u;
 	return left_caller_2;
 }
 
-void sub_0015D8(void)
+/* The lamp show of the attract modes (game_mode_title, game_mode_car_presentation, game_mode_demo_race,
+   game_mode_ranking, game_mode_isdn_connection): every 8 video frames (vblank_counter >> 3) the next of
+   32 steps of the pattern at 001607, two bytes a step and screen, into the screen's two lamp entries
+   (byte 0 of checkpoint_lamp and leader_lamp by 4 * index: bits 1 and 3 of the seat's output port D,
+   which the VBLANK writes). */
+void attract_lamps_update(void)
 {
 	uint32_t r0 = 0, r1 = 0;
 
-	r0 = unk_20E02D;
+	r0 = vblank_counter;
 	r0 = r0 >> 3;
 	r0 = (uint8_t)(r0 * 2u);
-	r1 = SCREEN(screen)->unk_00;
+	r1 = SCREEN(screen)->index;
 	r0 = 0x1607u + (uint8_t)(r0 + r1) * 2u;
 	r1 = (uint8_t)(r1 * 2u);
 	r1 = (uint8_t)(r1 * 2u);
-	unk_20E0C0[r1] = ROM8(r0);
-	unk_20E0C8[r1] = rom_000001[r0];
+	checkpoint_lamp[r1] = ROM8(r0);
+	leader_lamp[r1] = rom_000001[r0];
 }
 
 /* The presentation of a car in the attract mode (game mode 3, object_handlers_1A78): the picture of the
@@ -1600,13 +1768,13 @@ void car_presentation_update(void)
 		mem_write32(r21 + 0x14u, current_object);
 		OBJECT(current_object)->car_presentation.staff_credits_code = r21;
 		OBJECT(current_object)->state++;
-		r19 = 0x1AA0u + SCREEN(screen)->unk_00 * 5u * 4u;
+		r19 = 0x1AA0u + SCREEN(screen)->index * 5u * 4u;
 		set_up_background(r19);
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0x60u;
 		OBJECT(current_object)->depth_layer = 0u;
-		r0 = SCREEN(screen)->unk_9C;
+		r0 = SCREEN(screen)->attract_car;
 		r9 = rom_001A88[r0];
 		OBJECT(current_object)->palette = 0x275u;
 		animation_start(r9);
@@ -1686,7 +1854,7 @@ void staff_credits_code_watch(uint32_t r0, uint32_t r2)
 	}
 	r0_2 = 9u;
 	queue_sound(r0_2);
-	SCREEN(screen)->unk_88 += 0x4B0u;
+	SCREEN(screen)->mode_timer += 0x4B0u;
 	t2 = OBJECT(current_object)->staff_credits_code.presentation + 0x10u;
 	mem_write16(t2, mem_read16(t2) + 0x4B0u);
 	OBJECT(current_object)->staff_credits_code.frames_left = 0x4B0u;
@@ -1694,7 +1862,7 @@ void staff_credits_code_watch(uint32_t r0, uint32_t r2)
 	staff_credits_code_show();
 }
 
-/* Shows the staff credits (the texts at 001AE8, draw_text) for 1200 frames, then sub_011FE6 and
+/* Shows the staff credits (the texts at 001AE8, draw_text) for 1200 frames, then fade_out_music and
    staff_credits_code_done. */
 void staff_credits_code_show(void)
 {
@@ -1706,7 +1874,7 @@ void staff_credits_code_show(void)
 	if (frames_left == 1u)
 	{
 		OBJECT(current_object)->handler = staff_credits_code_done_ADDRESS;
-		sub_011FE6();
+		fade_out_music();
 		return;
 	}
 	r18 = 0x1AE8u;
@@ -1736,7 +1904,7 @@ void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_z
 
 	r0_2 = (r0 & ~0xFFu) | OBJECT(current_object)->staff_credits_code.controls_held;
 	r1 = 0u;
-	r2_2 = (r2 & ~0xFFu) | (uint8_t)~SCREEN(screen)->unk_100;
+	r2_2 = (r2 & ~0xFFu) | (uint8_t)~SCREEN(screen)->wheel;
 	if ((r0_2 & 8u) != 0u)
 	{
 		if ((uint8_t)r2_2 < 0x40u)
@@ -1745,14 +1913,14 @@ void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_z
 	else if ((uint8_t)r2_2 < 0x20u)
 		r1 |= 8u;
 	r3 = 2u;
-	r1 = sub_001969(r0_2, r1, (uint8_t)r2_2, r3);
-	r2_2 = (r2_2 & ~0xFFu) | SCREEN(screen)->unk_101;
+	r1 = staff_credits_code_control_bit(r0_2, r1, (uint8_t)r2_2, r3);
+	r2_2 = (r2_2 & ~0xFFu) | SCREEN(screen)->gas;
 	r3 = 5u;
-	r1 = sub_001969(r0_2, r1, (uint8_t)r2_2, r3);
-	r2_2 = (r2_2 & ~0xFFu) | SCREEN(screen)->unk_102;
+	r1 = staff_credits_code_control_bit(r0_2, r1, (uint8_t)r2_2, r3);
+	r2_2 = (r2_2 & ~0xFFu) | SCREEN(screen)->brake;
 	r3 = 4u;
-	r1 = sub_001969(r0_2, r1, (uint8_t)r2_2, r3);
-	r2_2 = (r2_2 & ~0xFFu) | (uint8_t)SCREEN(screen)->unk_110;
+	r1 = staff_credits_code_control_bit(r0_2, r1, (uint8_t)r2_2, r3);
+	r2_2 = (r2_2 & ~0xFFu) | (uint8_t)SCREEN(screen)->buttons;
 	if ((r2_2 & 0x10u) != 0u)
 		r1 |= 1u;
 	if ((r2_2 & 0x20u) == 0u)
@@ -1774,7 +1942,10 @@ void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_z
 	*p_zero = zero;
 }
 
-uint32_t sub_001969(uint32_t r0, uint32_t r1, uint8_t r2, uint32_t r3)
+/* Sets bit R3 of the controls being read (R1) when the value R2 is E0 or more, or C0 or more when the
+   bit was on in the controls held before (R0): staff_credits_code_read_controls' test for the wheel
+   turned right, the gas and the brake. */
+uint32_t staff_credits_code_control_bit(uint32_t r0, uint32_t r1, uint8_t r2, uint32_t r3)
 {
 	if ((r0 & shl32(1u, (int)(r3))) != 0u)
 	{
@@ -1799,7 +1970,7 @@ void car_name_start(void)
 	uint16_t r0 = 0;
 	uint32_t r10 = 0, r21 = 0;
 
-	r10 = rom_001CEC[SCREEN(screen)->unk_9C];
+	r10 = rom_001CEC[SCREEN(screen)->attract_car];
 	r0 = 0x168u;
 	r1 = 0xFu;
 	while (mem_read8(r10) != 0u)
@@ -1910,7 +2081,10 @@ void car_name_letter_update(void)
 	ignored = draw_object(0u);
 }
 
-void sub_001D84(void)
+/* Loads the ten courses' records into course_records (6 bytes each: the car's model, the name's three
+   letters, the time in hundredths) from the backup RAM (701F32); a course without one there (its first
+   byte negative) gets its default from 002CC4 (SGA, 5'00"00); the model is kept to its low three bits. */
+void load_course_records(void)
 {
 	uint32_t r0 = 0, r10 = 0, r11 = 0;
 	uint32_t t1 = 0;
@@ -1918,7 +2092,7 @@ void sub_001D84(void)
 	r0 = 0xAu;
 	r10 = SOUND_RAM + 0x1F32u;
 	r11 = 0x2CC4u;
-	r12 = unk_20E300_ADDRESS;
+	r12 = course_records_ADDRESS;
 	for (;;)
 	{
 		if ((int8_t)mem_read8(r10) >= 0)
@@ -1960,64 +2134,75 @@ void sub_001D84(void)
 	}
 }
 
-void sub_001DCC(void)
+/* Game mode 5, the ranking (ranking_update), after the demo race and after a game, by mode_step: 0
+   demo_flags bit 8 clear, the wheel motor off (unk_20E0D0 by index), the sound off (reset_screen_sound),
+   the screen cleared (as clear_screen), clear_published_car, the ranking's palette (031E80),
+   object_handlers_2CB8 (credit_display, coin_prompt) and ranking_update started, mode_timer 270 frames
+   (9 seconds), race game_over cleared; 1 waits until no fade runs (ranking_background fades the screen
+   in); 2 counts the 270 frames down; 3 when no fade runs, game mode 1 (back to the title).
+   attract_lamps_update every frame first. */
+void game_mode_ranking(void)
 {
 	uint32_t r10 = 0, r19 = 0, r21 = 0;
-	uint16_t t1 = 0;
+	uint16_t mode_timer = 0;
 
-	sub_0015D8();
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 8u))
+	attract_lamps_update();
+	switch (SCREEN(screen)->mode_step)
 	{
 	case 0:
 		break;
 	case 1:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			AT8(SCREEN(screen)->unk_80, 1)++;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			SCREEN(screen)->mode_step++;
 		return;
 	case 2:
-		t1 = SCREEN(screen)->unk_88;
-		SCREEN(screen)->unk_88 = t1 - 1u;
-		if (t1 == 1u)
-			AT8(SCREEN(screen)->unk_80, 1)++;
+		mode_timer = SCREEN(screen)->mode_timer;
+		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		if (mode_timer == 1u)
+			SCREEN(screen)->mode_step++;
 		return;
 	case 3:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			SCREEN(screen)->unk_80 = 1u;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			AS32(SCREEN(screen)->game_mode) = 1u;
 		return;
 	default:
-		invalid_jump(rom_001DE0[(uint8_t)(SCREEN(screen)->unk_80 >> 8u)]);
+		invalid_jump(rom_001DE0[SCREEN(screen)->mode_step]);
 	}
-	SCREEN(screen)->unk_90 &= ~0x100u;
-	unk_20E0D0[SCREEN(screen)->unk_00] = 0u;
-	sub_012004();
-	sub_011C60();
-	sub_01070C();
-	sub_010889();
-	sub_01076A();
-	sub_007677();
+	SCREEN(screen)->demo_flags &= ~0x100u;
+	unk_20E0D0[SCREEN(screen)->index] = 0u;
+	reset_screen_sound();
+	clear_objects();
+	reset_tile_layers();
+	clear_sprite_group_count();
+	clear_text_layer();
+	clear_published_car();
 	r19 = rom_031E80;
 	queue_palette(r19);
-	AT8(SCREEN(screen)->unk_80, 1)++;
+	SCREEN(screen)->mode_step++;
 	r10 = 0x2CB8u;
 	start_object_list(r10);
 	r21 = start_object();
 	mem_write32(r21 + 4u, ranking_update_ADDRESS);
-	SCREEN(screen)->unk_88 = 0x10Eu;
-	RACE(SCREEN(screen)->race)->unk_28 = 0u;
+	SCREEN(screen)->mode_timer = 0x10Eu;
+	RACE(SCREEN(screen)->race)->game_over = 0u;
 }
 
-uint32_t sub_001E89(void)
+/* Whether the screen's player has beaten the course's record (zero clear): when the race was finished
+   (race_copy unk_5E), the course (the goal's stage, screen unk_A3, less 15) into record_course, and a
+   record when the player came first (screen 320 + player is 0) in a time (screen 410 + 2 * player) under
+   the course's (course_record_times by course). */
+uint32_t course_record_beaten(void)
 {
 	uint32_t zero = 0;
-	uint32_t r0 = 0, r1 = 0;
+	uint32_t r0 = 0, player = 0;
 
 	if (RACE(SCREEN(screen)->race_copy)->unk_5E != 0u)
 	{
 		r0 = SCREEN(screen)->unk_A3;
 		r0 = (uint8_t)(r0 - 0x15u);
-		SCREEN(screen)->unk_9D = r0;
-		r1 = SCREEN(screen)->unk_01;
-		if (mem_read8(screen + 0x320u + r1) == 0u && mem_read16(screen + 0x410u + r1 * 2u) < unk_20E304[r0 * 3u])
+		SCREEN(screen)->record_course = r0;
+		player = SCREEN(screen)->player;
+		if (mem_read8(screen + 0x320u + player) == 0u && mem_read16(screen + 0x410u + player * 2u) < course_record_times[r0 * 3u])
 		{
 			zero = 1u == 0u;
 			return zero;
@@ -2028,31 +2213,32 @@ uint32_t sub_001E89(void)
 }
 
 /* The name entry after a race won at the goal under the course's record time (game step 18, when
-   sub_001E89 says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the
-   time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (unk_F20)
-   and clears unk_20E3F0, starts name_entry_lcd, the background (set_up_background with 002E4C by screen;
-   start_palette_fades with 13F6C0), the countdown number (time_digits_start), object_handlers_2D58
-   (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32
-   name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y
-   54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the
-   drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's
-   1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way
-   turns back if the wheel goes the other way), sooner the further it leans (turn_delay counts down by
-   rom_002D6C by the wheel), and << and >> a letter each time; the letter in front is letter, and shows
-   blinking at the name's next place; the gas pedal let up (under 40) then pressed (C0 or more), START or
-   the music button enters it with a sound (rom_002D98 by place): the left arrow takes the last letter
-   back, the right arrow enters a space, ED or the third letter ends the entry, as does the timer running
-   out (the seconds left show as the countdown number, time_digits_draw); then open 0, an empty name or
-   one of the names at 002D7C (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the
-   record into the race record (unk_11 + 1, unk_16 the time, unk_12 the car's model, unk_13-15 the name,
-   unk_18 the course, screen unk_A3 - 15), turns the lamps off and sets the game's next step (screen
-   unk_80 byte 2 = 15); 4 nothing. Every frame it draws the time and the name (draw_text). */
+   course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE
+   RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two
+   lamps (unk_F20) and clears lcd_restart_frames, starts name_entry_lcd, the background
+   (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number
+   (time_digits_start), object_handlers_2D58 (name_entry_car, name_entry_drivers, name_entry_course_name,
+   passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the
+   name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time,
+   screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a
+   letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter
+   (turn_steps; a turn under way turns back if the wheel goes the other way), sooner the further it leans
+   (turn_delay counts down by rom_002D6C by the wheel), and << and >> a letter each time; the letter in
+   front is letter, and shows blinking at the name's next place; the gas pedal let up (under 40) then
+   pressed (C0 or more), START or the music button enters it with a sound (rom_002D98 by place): the left
+   arrow takes the last letter back, the right arrow enters a space, ED or the third letter ends the
+   entry, as does the timer running out (the seconds left show as the countdown number,
+   time_digits_draw); then open 0, an empty name or one of the names at 002D7C (SEX, XXX, XX and X's with
+   spaces) becomes ---, 60 frames; 3 writes the record into the race record (unk_11 + 1, unk_16 the time,
+   unk_12 the car's model, unk_13-15 the name, unk_18 the course, screen unk_A3 - 15), turns the lamps
+   off and sets the game's next step (screen unk_80 byte 2 = 0x15 (step 21)); 4 nothing. Every frame it
+   draws the time and the name (draw_text). */
 void name_entry_update(void)
 {
 	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
 	uint8_t r0 = 0, r1 = 0;
-	uint16_t r0_3 = 0, r1_2 = 0;
-	uint32_t r0_2 = 0, r1_3 = 0, r10 = 0, r19 = 0, r21 = 0, ignored = 0, letter = 0, object = 0, race = 0;
+	uint16_t r0_3 = 0, buttons_pressed = 0, buttons_pressed_2 = 0;
+	uint32_t r0_2 = 0, r1_2 = 0, r10 = 0, r19 = 0, r21 = 0, ignored = 0, letter = 0, object = 0, race = 0;
 	uint32_t stack_4 = 0, stack_8 = 0;
 	uint8_t t1 = 0, turn_delay = 0, t2 = 0;
 	uint16_t spin_frames = 0, timer = 0, timer_2 = 0;
@@ -2061,12 +2247,12 @@ void name_entry_update(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		SCREEN(screen)->unk_F20 = 0xFFFFu;
-		unk_20E3F0 = 0u;
+		SCREEN(screen)->button_lamps = 0xFFFFu;
+		lcd_restart_frames = 0u;
 		r21 = start_object();
 		mem_write32(r21 + 4u, name_entry_lcd_update_ADDRESS);
 		mem_write32(r21 + 0x14u, current_object);
-		r19 = 0x2E4Cu + SCREEN(screen)->unk_00 * 5u * 4u;
+		r19 = 0x2E4Cu + SCREEN(screen)->index * 5u * 4u;
 		set_up_background(r19);
 		r19 = 0x13F6C0u;
 		start_palette_fades(r19);
@@ -2088,7 +2274,7 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.spin_frames = 0x28u;
 		OBJECT(current_object)->name_entry.wheel_angle = 0xA80u;
 		OBJECT(current_object)->name_entry.letter = 0xFFu;
-		r0_2 = mem_read16(screen + 0x410u + SCREEN(screen)->unk_01 * 2u);
+		r0_2 = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
 		object = current_object + 0x9Au;
 		OBJECT(object - 0x9Au)->name_entry.name_x = 0xF8u;
 		object += 2u;
@@ -2127,7 +2313,7 @@ void name_entry_update(void)
 		{
 			if ((int8_t)r0 < 0)
 			{
-				if (SCREEN(screen)->unk_100 >= 0x60u)
+				if (SCREEN(screen)->wheel >= 0x60u)
 				{
 					OBJECT(current_object)->name_entry.turn_steps = r0 + 1u;
 					r0_3 = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle - 0x20u);
@@ -2139,7 +2325,7 @@ void name_entry_update(void)
 					r0_3 = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
 				}
 			}
-			else if (SCREEN(screen)->unk_100 < 0xA0u)
+			else if (SCREEN(screen)->wheel < 0xA0u)
 			{
 				OBJECT(current_object)->name_entry.turn_steps = r0 - 1u;
 				r0_3 = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
@@ -2155,7 +2341,7 @@ void name_entry_update(void)
 		}
 		if (L_00200F)
 		{
-			r0_2 = SCREEN(screen)->unk_100;
+			r0_2 = SCREEN(screen)->wheel;
 			r0_2 = r0_2 >> 4;
 			r1 = rom_002D6C[r0_2];
 			if (r1 != 0u)
@@ -2173,10 +2359,10 @@ void name_entry_update(void)
 			}
 			else
 			{
-				r1_2 = (uint16_t)SCREEN(screen)->unk_118;
-				if ((r1_2 & 0x200u) != 0u)
+				buttons_pressed_2 = (uint16_t)SCREEN(screen)->buttons_pressed;
+				if ((buttons_pressed_2 & 0x200u) != 0u)
 				{
-					if ((r1_2 & 0x400u) == 0u)
+					if ((buttons_pressed_2 & 0x400u) == 0u)
 					{
 						r0_2 = 0xFFu;
 						r1 = 0xFu;
@@ -2192,7 +2378,7 @@ void name_entry_update(void)
 						}
 					}
 				}
-				else if ((r1_2 & 0x400u) != 0u)
+				else if ((buttons_pressed_2 & 0x400u) != 0u)
 				{
 					r0_2 = 0u;
 					r1 = 0xFu;
@@ -2218,17 +2404,17 @@ void name_entry_update(void)
 			switch (target1)
 			{
 			case 0x002090u:
-				if (!L_00209D && SCREEN(screen)->unk_101 >= 0x40u)
+				if (!L_00209D && SCREEN(screen)->gas >= 0x40u)
 					L_002133 = true;
 				else
 				{
 					if (!L_00209D)
 						OBJECT(current_object)->name_entry.gas_step++;
 					L_00209D = false;
-					if (SCREEN(screen)->unk_101 < 0xC0u)
+					if (SCREEN(screen)->gas < 0xC0u)
 					{
-						r0_3 = (uint16_t)SCREEN(screen)->unk_118;
-						L_0020B6 = (r0_3 & 0x100u) != 0u || (r0_3 & 0x40u) != 0u;
+						buttons_pressed = (uint16_t)SCREEN(screen)->buttons_pressed;
+						L_0020B6 = (buttons_pressed & 0x100u) != 0u || (buttons_pressed & 0x40u) != 0u;
 						if (!L_0020B6)
 							L_002133 = true;
 					}
@@ -2236,12 +2422,12 @@ void name_entry_update(void)
 					{
 						L_0020B6 = false;
 						letter = OBJECT(current_object)->name_entry.letter;
-						r1_3 = OBJECT(current_object)->name_entry.place;
+						r1_2 = OBJECT(current_object)->name_entry.place;
 						do
 						{
 							do
 							{
-								target2 = L_00212C ? 0x20D4u : L_0020FB ? 0x20D4u : rom_0020C8[r1_3];
+								target2 = L_00212C ? 0x20D4u : L_0020FB ? 0x20D4u : rom_0020C8[r1_2];
 								switch (target2)
 								{
 								case 0x0020D4u:
@@ -2267,22 +2453,22 @@ void name_entry_update(void)
 											{
 												L_0020FB = false;
 												stack_4 = letter;
-												stack_8 = r1_3;
-												r0 = rom_002D98[r1_3];
+												stack_8 = r1_2;
+												r0 = rom_002D98[r1_2];
 												request_sound(r0);
-												r1_3 = stack_8;
+												r1_2 = stack_8;
 												r0_2 = stack_4;
 												t2 = r0_2;
 												r0 = mem_read8(rom_002D00_ADDRESS + r0_2);
 												if (t2 == 0x1Du)
 													r0 = 0x20u;
-												mem_write8(current_object + 0xA0u + r1_3, r0);
-												r1_3 = (r1_3 & ~0xFFu) | (uint8_t)(r1_3 + 1u);
+												mem_write8(current_object + 0xA0u + r1_2, r0);
+												r1_2 = (r1_2 & ~0xFFu) | (uint8_t)(r1_2 + 1u);
 											}
-											if (L_00212C || (uint8_t)r1_3 != 3u)
+											if (L_00212C || (uint8_t)r1_2 != 3u)
 											{
 												L_00212C = false;
-												OBJECT(current_object)->name_entry.place = r1_3;
+												OBJECT(current_object)->name_entry.place = r1_2;
 												L_002130 = true;
 											}
 										}
@@ -2293,8 +2479,8 @@ void name_entry_update(void)
 								case 0x0020E2u:
 									if (letter == 0x1Eu)
 									{
-										mem_write8(current_object + 0xA0u + r1_3, 0u);
-										r1_3 = (uint8_t)(r1_3 - 1u);
+										mem_write8(current_object + 0xA0u + r1_2, 0u);
+										r1_2 = (uint8_t)(r1_2 - 1u);
 										L_00212C = true;
 									}
 									if (L_00212C)
@@ -2317,11 +2503,11 @@ void name_entry_update(void)
 				if (L_002133)
 				{
 					L_002133 = false;
-					r1_3 = OBJECT(current_object)->name_entry.place;
+					r1_2 = OBJECT(current_object)->name_entry.place;
 					r0 = rom_002D00[OBJECT(current_object)->name_entry.letter];
-					if ((unk_20E026 & 4u) == 0u)
+					if ((game_frame_count & 4u) == 0u)
 						r0 = 0u;
-					mem_write8(current_object + 0xA0u + r1_3, r0);
+					mem_write8(current_object + 0xA0u + r1_2, r0);
 					timer = OBJECT(current_object)->name_entry.timer;
 					OBJECT(current_object)->name_entry.timer = timer - 1u;
 					if (timer != 1u)
@@ -2346,7 +2532,7 @@ void name_entry_update(void)
 			}
 		} while (L_00209D);
 		OBJECT(current_object)->name_entry.open = 0u;
-		mem_write8(current_object + 0xA0u + r1_3, 0u);
+		mem_write8(current_object + 0xA0u + r1_2, 0u);
 		r0_2 = OBJECT(current_object)->unk_A0;
 		if (r0_2 == 0u)
 			OBJECT(current_object)->unk_A0 = 0x2D2D2Du;
@@ -2371,15 +2557,15 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			SCREEN(screen)->unk_F20 = 0u;
-			AT8(SCREEN(screen)->unk_80, 2) = 0x15u;
+			SCREEN(screen)->button_lamps = 0u;
+			SCREEN(screen)->game_step = 0x15u;
 			race = SCREEN(screen)->race;
-			RACE(race)->unk_11++;
-			RACE(race)->unk_16 = mem_read16(screen + 0x410u + SCREEN(screen)->unk_01 * 2u);
-			RACE(race)->unk_12 = CAR(player_car)->model;
-			RACE(race)->unk_13 = OBJECT(current_object)->name_entry.name;
+			RACE(race)->record_serial++;
+			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+			RACE(race)->record_model = CAR(player_car)->model;
+			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
 			RACE(race)->unk_14 = (uint16_t)(OBJECT(current_object)->unk_A0 >> 8u);
-			RACE(race)->unk_18 = SCREEN(screen)->unk_A3 - 0x15u;
+			RACE(race)->record_course = SCREEN(screen)->unk_A3 - 0x15u;
 			OBJECT(current_object)->state++;
 		}
 		break;
@@ -2388,15 +2574,15 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			SCREEN(screen)->unk_F20 = 0u;
-			AT8(SCREEN(screen)->unk_80, 2) = 0x15u;
+			SCREEN(screen)->button_lamps = 0u;
+			SCREEN(screen)->game_step = 0x15u;
 			race = SCREEN(screen)->race;
-			RACE(race)->unk_11++;
-			RACE(race)->unk_16 = mem_read16(screen + 0x410u + SCREEN(screen)->unk_01 * 2u);
-			RACE(race)->unk_12 = CAR(player_car)->model;
-			RACE(race)->unk_13 = OBJECT(current_object)->name_entry.name;
+			RACE(race)->record_serial++;
+			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+			RACE(race)->record_model = CAR(player_car)->model;
+			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
 			RACE(race)->unk_14 = (uint16_t)(OBJECT(current_object)->unk_A0 >> 8u);
-			RACE(race)->unk_18 = SCREEN(screen)->unk_A3 - 0x15u;
+			RACE(race)->record_course = SCREEN(screen)->unk_A3 - 0x15u;
 			OBJECT(current_object)->state++;
 		}
 		r19 = current_object + 0xA4u;
@@ -2422,8 +2608,8 @@ void name_entry_update(void)
    cosine at 101400): x_offset, depth, a width that narrows toward the drum's edges (width_factor),
    mirrored (flags bit 6) with palette 27 where it faces away (the cosine under 2000, more than 60
    degrees from the front), 34 in front, 30 for the letter in front (shown 4 frames of 8: hidden, flags
-   bit 5 cleared, when bit 2 of unk_20E026 is clear); drawn in perspective (100000 / (depth + 100)) about
-   x E0, y 40. */
+   bit 5 cleared, when bit 2 of game_frame_count is clear); drawn in perspective (100000 / (depth + 100))
+   about x E0, y 40. */
 void name_entry_letter_update(void)
 {
 	uint32_t carry = 0;
@@ -2481,7 +2667,7 @@ void name_entry_letter_update(void)
 	r2 = 0x34u;
 	if ((uint8_t)(OBJECT(object)->unk_08 >> 16u) == OBJECT(current_object)->name_entry_letter.index)
 	{
-		if ((unk_20E026 & 4u) == 0u)
+		if ((game_frame_count & 4u) == 0u)
 		{
 			OBJECT(current_object)->flags &= 0xDFu;
 			return;
@@ -2536,7 +2722,7 @@ void name_entry_lcd_update(void)
 	{
 	case 0:
 		clear_lcd();
-		SCREEN(screen)->unk_F35 = 0xFFu;
+		SCREEN(screen)->dj_face = 0xFFu;
 		move_string(OBJECT(current_object)->name_entry_lcd.name_entry + 0xAAu, 7u, screen + 0xF13u, 7u, 1u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->state++;
 		break;
@@ -2677,17 +2863,17 @@ void name_entry_course_name_update(void)
 	r0 = draw_object(r0);
 }
 
-/* The ranking in the attract mode (game mode 5, sub_001DCC): OutRunner of OutRunners, the record of
-   three courses in turn. By state: 0 starts object_handlers_2CB8 (01AA01, 01A6CF, which sub_001DCC has
-   started too), ranking_background and the two halves of the title (ranking_title_left,
-   ranking_title_right); 1 clears course_over; once the screen's fade is over (screen unk_94 bit 0):
-   after three courses ends, else courses_shown + 1, 60 frames (frames_left), and starts
-   ranking_course_banner and ranking_record for the course screen unk_9D; 2 when the 60 frames are over
-   sets course_over for a frame (the background fades out) and moves screen unk_9D to the next of the ten
-   courses, back to 1. */
+/* The ranking in the attract mode (game mode 5, game_mode_ranking): OutRunner of OutRunners, the record
+   of three courses in turn. By state: 0 starts object_handlers_2CB8 (01AA01, 01A6CF, which
+   game_mode_ranking has started too), ranking_background and the two halves of the title
+   (ranking_title_left, ranking_title_right); 1 clears course_over; once the screen's fade is over
+   (screen unk_94 bit 0): after three courses ends, else courses_shown + 1, 60 frames (frames_left), and
+   starts ranking_course_banner and ranking_record for the course screen unk_9D; 2 when the 60 frames are
+   over sets course_over for a frame (the background fades out) and moves screen unk_9D to the next of
+   the ten courses, back to 1. */
 void ranking_update(void)
 {
-	uint8_t r0 = 0;
+	uint8_t r0 = 0, record_course = 0;
 	uint32_t r10 = 0, r21 = 0;
 	uint16_t frames_left = 0;
 
@@ -2708,7 +2894,7 @@ void ranking_update(void)
 		return;
 	case 1:
 		OBJECT(current_object)->ranking.course_over &= 0xDFFFu;
-		if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+		if ((SCREEN(screen)->flags & 1u) != 0u)
 			return;
 		if (OBJECT(current_object)->ranking.courses_shown >= 3u)
 		{
@@ -2717,14 +2903,14 @@ void ranking_update(void)
 		}
 		OBJECT(current_object)->ranking.courses_shown++;
 		OBJECT(current_object)->ranking.frames_left = 0x3Cu;
-		r0 = SCREEN(screen)->unk_9D;
+		record_course = SCREEN(screen)->record_course;
 		r21 = start_object();
 		mem_write32(r21 + 4u, ranking_course_banner_update_ADDRESS);
 		mem_write32(r21 + 0x14u, current_object);
-		mem_write8(r21 + 9u, r0);
+		mem_write8(r21 + 9u, record_course);
 		r21 = start_object();
 		mem_write32(r21 + 4u, ranking_record_start_ADDRESS);
-		mem_write8(r21 + 9u, r0);
+		mem_write8(r21 + 9u, record_course);
 		OBJECT(current_object)->state++;
 		return;
 	case 2:
@@ -2733,10 +2919,10 @@ void ranking_update(void)
 		if (frames_left != 1u)
 			return;
 		OBJECT(current_object)->ranking.course_over |= 0x2000u;
-		r0 = (uint8_t)(SCREEN(screen)->unk_9D + 1u);
+		r0 = (uint8_t)(SCREEN(screen)->record_course + 1u);
 		if (r0 >= 0xAu)
 			r0 = 0u;
-		SCREEN(screen)->unk_9D = r0;
+		SCREEN(screen)->record_course = r0;
 		OBJECT(current_object)->state--;
 		return;
 	default:
@@ -2755,7 +2941,7 @@ void ranking_background_update(void)
 {
 	uint32_t scroll_x_address = 0;
 
-	if ((uint8_t)SCREEN(screen)->unk_80 == 5u)
+	if (SCREEN(screen)->game_mode == 5u)
 	{
 		switch (OBJECT(current_object)->state)
 		{
@@ -2763,17 +2949,17 @@ void ranking_background_update(void)
 			OBJECT(current_object)->ranking_background.courses_shown = (uint8_t)OBJECT(OBJECT(current_object)->ranking_background.ranking)->unk_10;
 			if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
 			{
-				if (SCREEN(screen)->unk_00 != 0u)
+				if (SCREEN(screen)->index != 0u)
 					mem_write8(0xC8001Cu, 0x86u);
 				else
 					mem_write8(IO_C0001C, 6u);
-				SCREEN(screen)->unk_153 = 1u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 1u;
+				SCREEN(screen)->flags |= 1u;
 			}
 			ranking_background_load();
 			OBJECT(current_object)->state++;
 		case 1:
-			if (SCREEN(screen)->unk_B00 != 0u)
+			if (SCREEN(screen)->unpack_state != 0u)
 			{
 				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
 				mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
@@ -2781,8 +2967,8 @@ void ranking_background_update(void)
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 0u)
 			{
-				SCREEN(screen)->unk_153 = 3u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 3u;
+				SCREEN(screen)->flags |= 1u;
 			}
 			OBJECT(current_object)->state++;
 			if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->unk_02 & 0x2000u) == 0u)
@@ -2793,16 +2979,16 @@ void ranking_background_update(void)
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
 			{
-				SCREEN(screen)->unk_153 = 2u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 2u;
+				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state++;
-				if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+				if ((SCREEN(screen)->flags & 1u) == 0u)
 					OBJECT(current_object)->state = 0u;
 			}
 			else
 			{
-				SCREEN(screen)->unk_153 = 0u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 0u;
+				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state = 4u;
 			}
 			break;
@@ -2815,23 +3001,23 @@ void ranking_background_update(void)
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
 			{
-				SCREEN(screen)->unk_153 = 2u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 2u;
+				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state++;
-				if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+				if ((SCREEN(screen)->flags & 1u) == 0u)
 					OBJECT(current_object)->state = 0u;
 			}
 			else
 			{
-				SCREEN(screen)->unk_153 = 0u;
-				SCREEN(screen)->unk_94 |= 1u;
+				SCREEN(screen)->fade_kind = 0u;
+				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state = 4u;
 			}
 			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
 			mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
 			return;
 		case 3:
-			if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+			if ((SCREEN(screen)->flags & 1u) == 0u)
 				OBJECT(current_object)->state = 0u;
 			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
 			mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
@@ -2981,7 +3167,7 @@ void ranking_record_start(void)
 	AT8(OBJECT(object - 0x82u)->unk_80, 2) = r4;
 	object++;
 	AT8(OBJECT(object - 0x83u)->unk_80, 3) = 0u;
-	r0 = unk_20E304[r3 >> 1];
+	r0 = course_record_times[r3 >> 1];
 	object++;
 	time_to_text(r0, object);
 	r0 = 0xBu;
@@ -3048,7 +3234,7 @@ void ranking_record_character_update(void)
 		if (colour_delay == 1u)
 		{
 			course = OBJECT(current_object)->ranking_record_character.course;
-			r0 = unk_20E300[(uint8_t)(course * 6u)];
+			r0 = course_records[(uint8_t)(course * 6u)];
 			OBJECT(current_object)->palette = rom_002DEC[r0];
 			OBJECT(current_object)->state++;
 		}
@@ -3059,7 +3245,7 @@ void ranking_record_character_update(void)
 		if (colour_delay == 1u)
 		{
 			course = OBJECT(current_object)->ranking_record_character.course;
-			r0 = unk_20E300[(uint8_t)(course * 6u)];
+			r0 = course_records[(uint8_t)(course * 6u)];
 			OBJECT(current_object)->palette = rom_002DEC[r0];
 			OBJECT(current_object)->state++;
 		}
@@ -3129,7 +3315,7 @@ void ranking_record_car_update(void)
 		OBJECT(current_object)->ranking_record_car.wait_frames = 0xFu;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		course = OBJECT(current_object)->ranking_record_car.course;
-		r0 = unk_20E300[(uint8_t)(course * 6u)];
+		r0 = course_records[(uint8_t)(course * 6u)];
 		r9 = rom_002DDC[r0];
 		OBJECT(current_object)->palette = rom_002DAC[r0];
 		animation_start(r9);
@@ -3389,10 +3575,10 @@ void passing_car_update(void)
    182 and 186; unk_94 bit 2); unk_20E027 = FF to send the registers. */
 void ranking_background_load(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0;
+	uint32_t r0 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0, index = 0;
 	uint32_t stack_4 = 0;
 
-	r19 = 0x2C44u + SCREEN(screen)->unk_00 * 0xCu * 4u;
+	r19 = 0x2C44u + SCREEN(screen)->index * 0xCu * 4u;
 	OBJECT(current_object)->ranking_background.tile_bank_address = mem_read32(r19);
 	r19 += 4u;
 	OBJECT(current_object)->ranking_background.pages_address = mem_read32(r19);
@@ -3416,13 +3602,13 @@ void ranking_background_load(void)
 	OBJECT(current_object)->ranking_background.second_scroll_x_address = mem_read32(r19);
 	OBJECT(current_object)->ranking_background.second_scroll_y_address = mem_read32(r19 + 4u);
 	unk_20E027 = 0xFFu;
-	r0 = rom_002D20[SCREEN(screen)->unk_9D];
+	r0 = rom_002D20[SCREEN(screen)->record_course];
 	mem_write8(OBJECT(current_object)->ranking_background.tile_bank_address, rom_002C18[r0]);
 	stack_4 = rom_031B14[r0];
 	r19 = rom_0318CC[r0];
 	r10 = rom_109694[r0] + 0x10u;
 	r11 = current_object + 0xB0u;
-	r0 = rom_002CAC[SCREEN(screen)->unk_00];
+	r0 = rom_002CAC[SCREEN(screen)->index];
 	r9 = 4u;
 	do
 	{
@@ -3446,79 +3632,117 @@ void ranking_background_load(void)
 	mem_write16(OBJECT(current_object)->unk_A4, 0u);
 	mem_write16(OBJECT(current_object)->ranking_background.second_scroll_x_address, 0u);
 	mem_write16(OBJECT(current_object)->ranking_background.second_scroll_y_address, 0u);
-	r0 = SCREEN(screen)->unk_00;
-	mem_write32(OBJECT(current_object)->ranking_background.pages_address, byte_swap32(rom_002CAC[r0]));
-	mem_write16(OBJECT(current_object)->ranking_background.scroll_x_address, rom_002CB4[r0]);
+	index = SCREEN(screen)->index;
+	mem_write32(OBJECT(current_object)->ranking_background.pages_address, byte_swap32(rom_002CAC[index]));
+	mem_write16(OBJECT(current_object)->ranking_background.scroll_x_address, rom_002CB4[index]);
 	mem_write16(OBJECT(current_object)->ranking_background.scroll_y_address, 0x60u);
-	r10 = rom_002CA4[r0];
+	r10 = rom_002CA4[index];
 	r0 = mem_read32(r10);
 	r0 = (r0 & ~0xFFFFu) | (r0 & 0xFFF0u);
 	mem_write32(r10, (r0 & ~0xFFu) | (uint8_t)(r0 | 1u));
 	r10 += 4u;
 	r0 = mem_read32(r10);
 	mem_write32(r10, (r0 & ~0xFFFFu) | (r0 & 0xFFF0u));
-	SCREEN(screen)->unk_94 |= 4u;
+	SCREEN(screen)->flags |= 4u;
 }
 
-void sub_002E74(void)
+/* Game mode 6, a game (check_game_start starts it at step 0) and the demo's race (game_mode_demo_race,
+   from step 10), by game_step: 0 sound 21 (queue_sound), the screen's two lamps on (unk_F20),
+   lcd_restart_frames cleared (the LCD's timer), a fade out, race game_over cleared; 1 when the fade is
+   over, waits until the screen's player is in the list of the race's players (from byte 1F of the
+   race_copy record of host_player), then the host itself (not on ISDN) writes 1 to the link board's
+   80000A; 2 the car select: demo_flags bit 8 clear, the wheel motor off (unk_20E0D0), game_start_time
+   from the backup RAM's seconds (701F10), a game counted on the seat (701F14 + 2 * index,
+   bookkeeping_increment16), C00074 = rom_003463 by index, the sound off (reset_screen_sound) unless the
+   entry countdown's music plays (entry_countdown_shown), clear_screen, clear_race_state, palette 031E7C,
+   in_game, host_record (the host's race_copy record), the stages (screen unk_A0-A6) 0, the seat's lamps
+   on (checkpoint_lamp 2, leader_lamp 8), car_select_start started, a fade in, the screen on; 3 the car
+   select (car_select_run goes on to 4); 4 a fade out, entry_countdown_shown cleared, the lamps on; 5
+   when the fade is over, race ready cleared, silence_and_clear_screen, the screen off (C0001C = 4), the
+   stage's palette (queue_stage_load), the screen's car (object_handlers_346C: player_car_update, its
+   place from screen 320 + player), step 23; 23 once the car has published its state (race_copy
+   published): race_running, the race's objects (object_handlers_3474; the demo's object_handlers_34C4),
+   24; 24 and 25 a frame each; 26 step 11, the input ring's places to 0, the screen on; 11 a fade in,
+   step 6; 6 when it is over, 7; 7 the race, until its ending is over (flags bit 1,
+   race_car_start_ending): race_running cleared, a fade out, 8; 8 when it is over, the lamps on, 9; 9 the
+   text and the tilemaps off (clear_text_layer, reset_tile_layers), no objects, step 12; 12 the route
+   map: short of the goal (race_copy unk_5E clear) the sound off, the song title Meaning of the Light
+   (start_song_title with 003504) and sound 0B; palette 031E84, route_map_update (object_handlers_34EC),
+   a fade in; 13 when it is over, 14; 14 the map until START (buttons_pressed bit 6) or route_map_update
+   sets 16; 15 (nothing sets it) 16; 16 with a new course record (course_record_beaten) a fade out and
+   18, else 21; 18 when the fade is over, no objects, name_entry_update started, 19; 19 a fade in, 20; 20
+   the name entry (name_entry_update sets 21); 21 set_player_ready and 22; 21 and 22 once every player of
+   the race is ready (players_not_ready): a fade out, fade_out_music, 17; 17 when the fade is over, the
+   game's end: the time played (the backup's seconds less game_start_time) added to the seat's total
+   (701F18 + 4 * index) and kept if the longest (701F20) or the shortest (701F22), a game counted at the
+   stage level reached (screen unk_A4, 6 at the goal: 701F24 + 2 * it), C00074 = rom_003465 then
+   rom_003467 by index, sound 1E, the sound and the tilemaps off, in_game, screen unk_31C and unk_318
+   cleared, the race record's car part cleared (race_record_clear), no objects, race game_over (the
+   screens in the attract modes go to the ranking, race_entries_update), the lamps off, clear_lcd, 28; 28
+   game mode 5 (the ranking). The demo: 10 silence_and_clear_screen, clear_race_state, the stage and the
+   car model from 0034F4 by attract_car (the stage into screen unk_A0, A1, A3, A5), host_record its own
+   record at screen + 490 (demo_player_count 1, demo_players this screen's player, demo_stage), the model
+   into car model and race unk_49, palette 031E88, then as 27; 27 waits until race_copy published is
+   clear, then as 5. */
+void game_mode_play(void)
 {
 	uint32_t zero = 0;
-	uint8_t r0 = 0, r1 = 0;
-	uint32_t r0_2 = 0, r1_2 = 0, r6 = 0, r7 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0, r21 = 0;
+	uint8_t r0 = 0, player = 0;
+	uint32_t r0_2 = 0, r6 = 0, r7 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0, r21 = 0, index = 0;
 	uint8_t t1 = 0;
-	uint32_t t2 = 0;
+	uint32_t flags = 0;
 
-	switch ((uint8_t)(SCREEN(screen)->unk_80 >> 16u))
+	switch (SCREEN(screen)->game_step)
 	{
 	case 0:
 		r0 = 0x21u;
 		queue_sound(r0);
-		SCREEN(screen)->unk_F20 = 0xFFFFu;
-		unk_20E3F0 = 0u;
-		SCREEN(screen)->unk_153 = 0u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 2)++;
-		RACE(SCREEN(screen)->race)->unk_28 = 0u;
+		SCREEN(screen)->button_lamps = 0xFFFFu;
+		lcd_restart_frames = 0u;
+		SCREEN(screen)->fade_kind = 0u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->game_step++;
+		RACE(SCREEN(screen)->race)->game_over = 0u;
 		return;
 	case 1:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			r10 = rom_00E0A0[SCREEN(screen)->unk_30C] + 0x20E01Fu;
+			r10 = rom_00E0A0[SCREEN(screen)->host_player] + 0x20E01Fu;
 			r0_2 = mem_read8(r10);
 			r10++;
 			if (r0_2 == 0u)
 				return;
-			r1 = SCREEN(screen)->unk_01;
+			player = SCREEN(screen)->player;
 			do
 			{
 				t1 = mem_read8(r10);
-				zero = (uint8_t)(t1 - r1) == 0u;
+				zero = (uint8_t)(t1 - player) == 0u;
 				r10++;
 				r0_2--;
-			} while ((r0_2 != 0u) & (t1 != r1));
+			} while ((r0_2 != 0u) & (t1 != player));
 			if (zero)
 			{
-				if (SCREEN(screen)->unk_01 == SCREEN(screen)->unk_30C && unk_20E623 == 0u)
+				if (SCREEN(screen)->player == SCREEN(screen)->host_player && isdn_mode == 0u)
 					mem_write8(0x80000Au, 1u);
-				AT8(SCREEN(screen)->unk_80, 2)++;
+				SCREEN(screen)->game_step++;
 			}
 		}
 		return;
 	case 2:
-		SCREEN(screen)->unk_90 &= ~0x100u;
-		unk_20E0D0[SCREEN(screen)->unk_00] = 0u;
-		SCREEN(screen)->unk_98 = mem_read32(SOUND_701F10);
-		r7 = SOUND_RAM + 0x1F14u + SCREEN(screen)->unk_00 * 2u;
-		sub_0112F0(r7);
-		mem_write8(IO_C00074, rom_003463[SCREEN(screen)->unk_00]);
-		if (SCREEN(screen)->unk_E2 == 0u)
-			sub_012004();
-		sub_00340D();
-		sub_003425();
+		SCREEN(screen)->demo_flags &= ~0x100u;
+		unk_20E0D0[SCREEN(screen)->index] = 0u;
+		SCREEN(screen)->game_start_time = mem_read32(SOUND_701F10);
+		r7 = SOUND_RAM + 0x1F14u + SCREEN(screen)->index * 2u;
+		bookkeeping_increment16(r7);
+		mem_write8(IO_C00074, rom_003463[SCREEN(screen)->index]);
+		if (SCREEN(screen)->entry_countdown_shown == 0u)
+			reset_screen_sound();
+		clear_screen();
+		clear_race_state();
 		r19 = rom_031E7C;
 		queue_palette(r19);
-		SCREEN(screen)->unk_31A = 0xFFu;
-		SCREEN(screen)->unk_308 = rom_00E0A0[SCREEN(screen)->unk_30C] + unk_20E000_ADDRESS;
+		SCREEN(screen)->in_game = 0xFFu;
+		SCREEN(screen)->host_record = rom_00E0A0[SCREEN(screen)->host_player] + unk_20E000_ADDRESS;
 		SCREEN(screen)->unk_A4 = 0u;
 		SCREEN(screen)->unk_A0 = 0u;
 		SCREEN(screen)->unk_A5 = 0u;
@@ -3526,34 +3750,34 @@ void sub_002E74(void)
 		SCREEN(screen)->unk_A6 = 0u;
 		SCREEN(screen)->unk_A1 = 0u;
 		SCREEN(screen)->unk_A2 = 0u;
-		r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
+		r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
 		mem_write32(r10 + 0xC0u, 2u);
 		mem_write32(r10 + 0xC8u, 8u);
 		r21 = start_object();
 		mem_write32(r21 + 4u, car_select_start_ADDRESS);
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		if (SCREEN(screen)->unk_00 != 0u)
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x86u);
 		else
 			mem_write8(IO_C0001C, 6u);
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->game_step++;
 		return;
 	case 3:
 		return;
 	case 4:
-		SCREEN(screen)->unk_153 = 0u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 2)++;
-		SCREEN(screen)->unk_E2 = 0u;
-		r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
+		SCREEN(screen)->fade_kind = 0u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->game_step++;
+		SCREEN(screen)->entry_countdown_shown = 0u;
+		r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
 		mem_write32(r10 + 0xC0u, 2u);
 		mem_write32(r10 + 0xC8u, 8u);
 		return;
 	case 10:
-		sub_003407();
-		sub_003425();
-		r10 = 0x34F4u + SCREEN(screen)->unk_9C * 2u;
+		silence_and_clear_screen();
+		clear_race_state();
+		r10 = 0x34F4u + SCREEN(screen)->attract_car * 2u;
 		r0 = ROM8(r10);
 		SCREEN(screen)->unk_A0 = r0;
 		SCREEN(screen)->unk_A3 = r0;
@@ -3562,118 +3786,118 @@ void sub_002E74(void)
 		SCREEN(screen)->unk_A5 = r0;
 		SCREEN(screen)->unk_A2 = 0u;
 		r11 = screen + 0x490u;
-		SCREEN(screen)->unk_308 = r11;
-		SCREEN(r11 - 0x490u)->unk_4AF = 1u;
-		SCREEN(r11 - 0x490u)->unk_4B0 = SCREEN(screen)->unk_01;
-		SCREEN(r11 - 0x490u)->unk_4F2 = r0;
+		SCREEN(screen)->host_record = r11;
+		SCREEN(r11 - 0x490u)->demo_player_count = 1u;
+		SCREEN(r11 - 0x490u)->demo_players = SCREEN(screen)->player;
+		SCREEN(r11 - 0x490u)->demo_stage = r0;
 		r0 = rom_000001[r10];
 		CAR(player_car)->model = r0;
 		RACE(SCREEN(screen)->race)->unk_49 = r0;
-		AT8(SCREEN(screen)->unk_80, 2) = 0x1Bu;
+		SCREEN(screen)->game_step = 0x1Bu;
 		r19 = rom_031E88;
 		queue_palette(r19);
-		if (RACE(SCREEN(screen)->race_copy)->unk_5F != 0u)
+		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
-		if (SCREEN(screen)->unk_00 != 0u)
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x84u);
 		else
 			mem_write8(IO_C0001C, 4u);
 		queue_stage_load();
 		r10 = 0x346Cu;
 		r21 = start_object_list(r10);
-		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->unk_01));
-		AT8(SCREEN(screen)->unk_80, 2) = 0x17u;
+		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->player));
+		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 27:
-		if (RACE(SCREEN(screen)->race_copy)->unk_5F != 0u)
+		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
-		if (SCREEN(screen)->unk_00 != 0u)
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x84u);
 		else
 			mem_write8(IO_C0001C, 4u);
 		queue_stage_load();
 		r10 = 0x346Cu;
 		r21 = start_object_list(r10);
-		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->unk_01));
-		AT8(SCREEN(screen)->unk_80, 2) = 0x17u;
+		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->player));
+		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 5:
-		if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+		if ((SCREEN(screen)->flags & 1u) != 0u)
 			return;
-		RACE(SCREEN(screen)->race)->unk_5C = 0u;
-		sub_003407();
-		if (SCREEN(screen)->unk_00 != 0u)
+		RACE(SCREEN(screen)->race)->ready = 0u;
+		silence_and_clear_screen();
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x84u);
 		else
 			mem_write8(IO_C0001C, 4u);
 		queue_stage_load();
 		r10 = 0x346Cu;
 		r21 = start_object_list(r10);
-		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->unk_01));
-		AT8(SCREEN(screen)->unk_80, 2) = 0x17u;
+		mem_write8(r21 + 0xDAu, mem_read8(screen + 0x320u + SCREEN(screen)->player));
+		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 23:
-		if (RACE(SCREEN(screen)->race_copy)->unk_5F == 0u)
+		if (RACE(SCREEN(screen)->race_copy)->published == 0u)
 			return;
-		SCREEN(screen)->unk_31B = 0xFFu;
+		SCREEN(screen)->race_running = 0xFFu;
 		r10 = 0x3474u;
-		if ((SCREEN(screen)->unk_90 & 0x100u) != 0u)
+		if ((SCREEN(screen)->demo_flags & 0x100u) != 0u)
 			r10 = 0x34C4u;
 		start_object_list(r10);
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->game_step++;
 		return;
 	case 24:
 	case 25:
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->game_step++;
 		return;
 	case 26:
-		AT8(SCREEN(screen)->unk_80, 2) = 0xBu;
-		SCREEN(screen)->unk_108 = 0u;
-		SCREEN(screen)->unk_109 = 0u;
-		if (SCREEN(screen)->unk_00 != 0u)
+		SCREEN(screen)->game_step = 0xBu;
+		SCREEN(screen)->input_write_place = 0u;
+		SCREEN(screen)->input_read_place = 0u;
+		if (SCREEN(screen)->index != 0u)
 			mem_write8(0xC8001Cu, 0x86u);
 		else
 			mem_write8(IO_C0001C, 6u);
 		return;
 	case 11:
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 2) = 6u;
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->game_step = 6u;
 		return;
 	case 6:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			AT8(SCREEN(screen)->unk_80, 2)++;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			SCREEN(screen)->game_step++;
 		return;
 	case 7:
-		t2 = SCREEN(screen)->unk_94;
-		SCREEN(screen)->unk_94 = t2 & ~2u;
-		if ((t2 & 2u) != 0u)
+		flags = SCREEN(screen)->flags;
+		SCREEN(screen)->flags = flags & ~2u;
+		if ((flags & 2u) != 0u)
 		{
-			SCREEN(screen)->unk_31B = 0u;
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			SCREEN(screen)->race_running = 0u;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			SCREEN(screen)->game_step++;
 		}
 		return;
 	case 8:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
+			r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
 			mem_write32(r10 + 0xC0u, 2u);
 			mem_write32(r10 + 0xC8u, 8u);
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			SCREEN(screen)->game_step++;
 		}
 		return;
 	case 9:
-		sub_01076A();
-		sub_01070C();
-		AT8(SCREEN(screen)->unk_80, 2) = 0xCu;
-		sub_011C60();
+		clear_text_layer();
+		reset_tile_layers();
+		SCREEN(screen)->game_step = 0xCu;
+		clear_objects();
 		return;
 	case 12:
 		if (RACE(SCREEN(screen)->race_copy)->unk_5E == 0u)
 		{
-			sub_012004();
+			reset_screen_sound();
 			r10 = 0x3504u;
 			start_song_title(r10);
 			r0 = 0xBu;
@@ -3683,138 +3907,145 @@ void sub_002E74(void)
 		queue_palette(r19);
 		r10 = 0x34ECu;
 		start_object_list(r10);
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->game_step++;
 		return;
 	case 13:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
-			AT8(SCREEN(screen)->unk_80, 2)++;
+		if ((SCREEN(screen)->flags & 1u) == 0u)
+			SCREEN(screen)->game_step++;
 		return;
 	case 14:
-		if ((SCREEN(screen)->unk_118 & 0x40u) != 0u)
+		if ((SCREEN(screen)->buttons_pressed & 0x40u) != 0u)
 		{
-			AT8(SCREEN(screen)->unk_80, 2) = 0x10u;
+			SCREEN(screen)->game_step = 0x10u;
 			return;
 		}
 		return;
 	case 15:
-		AT8(SCREEN(screen)->unk_80, 2) = 0x10u;
+		SCREEN(screen)->game_step = 0x10u;
 		return;
 	case 16:
-		zero = sub_001E89();
+		zero = course_record_beaten();
 		if (zero == 0u)
 		{
-			AT8(SCREEN(screen)->unk_80, 2) = 0x12u;
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
+			SCREEN(screen)->game_step = 0x12u;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
 			return;
 		}
-		AT8(SCREEN(screen)->unk_80, 2) = 0x15u;
+		SCREEN(screen)->game_step = 0x15u;
 		return;
 	case 18:
-		if ((SCREEN(screen)->unk_94 & 1u) == 0u)
+		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
-			sub_011C60();
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			clear_objects();
+			SCREEN(screen)->game_step++;
 			r21 = start_object();
 			mem_write32(r21 + 4u, name_entry_update_ADDRESS);
 		}
 		return;
 	case 19:
-		SCREEN(screen)->unk_153 = 1u;
-		SCREEN(screen)->unk_94 |= 1u;
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->fade_kind = 1u;
+		SCREEN(screen)->flags |= 1u;
+		SCREEN(screen)->game_step++;
 		return;
 	case 20:
 		return;
 	case 21:
 		set_player_ready();
-		AT8(SCREEN(screen)->unk_80, 2)++;
+		SCREEN(screen)->game_step++;
 		zero = players_not_ready();
 		if (zero == 0u)
 		{
-			AT8(SCREEN(screen)->unk_80, 2) = 0x11u;
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			sub_011FE6();
+			SCREEN(screen)->game_step = 0x11u;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			fade_out_music();
 		}
 		return;
 	case 22:
 		zero = players_not_ready();
 		if (zero == 0u)
 		{
-			AT8(SCREEN(screen)->unk_80, 2) = 0x11u;
-			SCREEN(screen)->unk_153 = 0u;
-			SCREEN(screen)->unk_94 |= 1u;
-			sub_011FE6();
+			SCREEN(screen)->game_step = 0x11u;
+			SCREEN(screen)->fade_kind = 0u;
+			SCREEN(screen)->flags |= 1u;
+			fade_out_music();
 		}
 		return;
 	case 17:
-		if ((SCREEN(screen)->unk_94 & 1u) != 0u)
+		if ((SCREEN(screen)->flags & 1u) != 0u)
 			return;
-		r9 = mem_read32(SOUND_701F10) - SCREEN(screen)->unk_98;
-		r7 = SOUND_RAM + 0x1F18u + SCREEN(screen)->unk_00 * 4u;
-		sub_011341(r7, r9);
+		r9 = mem_read32(SOUND_701F10) - SCREEN(screen)->game_start_time;
+		r7 = SOUND_RAM + 0x1F18u + SCREEN(screen)->index * 4u;
+		bookkeeping_add32(r7, r9);
 		if (mem_read16(SOUND_701F20) < (uint16_t)r9)
 		{
 			r7 = SOUND_701F20;
-			sub_01137D(r7, (uint16_t)r9);
+			bookkeeping_set16(r7, (uint16_t)r9);
 		}
 		if ((uint16_t)r9 < mem_read16(SOUND_701F22))
 		{
 			r7 = SOUND_701F22;
-			sub_01137D(r7, (uint16_t)r9);
+			bookkeeping_set16(r7, (uint16_t)r9);
 		}
 		r6 = SCREEN(screen)->unk_A4;
 		if (RACE(SCREEN(screen)->race_copy)->unk_5E != 0u)
 			r6 = 6u;
 		r7 = SOUND_RAM + 0x1F24u + r6 * 2u;
-		sub_0112F0(r7);
-		r1_2 = SCREEN(screen)->unk_00;
-		mem_write8(IO_C00074, rom_003465[r1_2]);
-		mem_write8(IO_C00074, rom_003467[r1_2]);
+		bookkeeping_increment16(r7);
+		index = SCREEN(screen)->index;
+		mem_write8(IO_C00074, rom_003465[index]);
+		mem_write8(IO_C00074, rom_003467[index]);
 		r0 = 0x1Eu;
 		request_sound(r0);
-		sub_012004();
-		sub_01070C();
-		SCREEN(screen)->unk_31C = 0u;
-		SCREEN(screen)->unk_31A = 0u;
-		SCREEN(screen)->unk_318 = 0u;
-		sub_00DEC2();
-		sub_011C60();
-		AT8(SCREEN(screen)->unk_80, 2) = 0x1Cu;
-		RACE(SCREEN(screen)->race)->unk_28 = 0xFFu;
-		r10 = unk_20E000_ADDRESS + SCREEN(screen)->unk_00 * 4u;
+		reset_screen_sound();
+		reset_tile_layers();
+		SCREEN(screen)->race_started = 0u;
+		SCREEN(screen)->in_game = 0u;
+		SCREEN(screen)->is_host = 0u;
+		race_record_clear();
+		clear_objects();
+		SCREEN(screen)->game_step = 0x1Cu;
+		RACE(SCREEN(screen)->race)->game_over = 0xFFu;
+		r10 = unk_20E000_ADDRESS + SCREEN(screen)->index * 4u;
 		mem_write32(r10 + 0xC0u, 0u);
 		mem_write32(r10 + 0xC8u, 0u);
 		clear_lcd();
 		return;
 	case 28:
-		SCREEN(screen)->unk_80 = 5u;
+		AS32(SCREEN(screen)->game_mode) = 5u;
 		return;
 	default:
-		invalid_jump(rom_002E80[(uint8_t)(SCREEN(screen)->unk_80 >> 16u)]);
+		invalid_jump(rom_002E80[SCREEN(screen)->game_step]);
 	}
 }
 
-void sub_003407(void)
+/* The screen's sound off (reset_screen_sound), then clear_screen. */
+void silence_and_clear_screen(void)
 {
-	sub_012004();
-	sub_00340D();
+	reset_screen_sound();
+	clear_screen();
 }
 
-void sub_00340D(void)
+/* Clears what the screen shows: no objects (clear_objects), its tilemaps off in the mixer
+   (reset_tile_layers), no sprites (clear_sprite_group_count, screen unk_B0) and the text layer cleared
+   (clear_text_layer). */
+void clear_screen(void)
 {
-	sub_011C60();
-	sub_01070C();
-	sub_010889();
-	sub_01076A();
+	clear_objects();
+	reset_tile_layers();
+	clear_sprite_group_count();
+	clear_text_layer();
 }
 
-void sub_003425(void)
+/* Clears the race's state: the race record's car part (race_record_clear), the screen's car block and
+   the 100 bytes after it (300 bytes from player_car), the race's order, places and times (screen + 330,
+   160 bytes) and the ring of views (screen + 600, 100 bytes). */
+void clear_race_state(void)
 {
-	sub_00DEC2();
+	race_record_clear();
 	move_halfwords(player_car, 0x100800u, 0x180u);
 	move_halfwords(screen + 0x330u, 0x100800u, 0xB0u);
 	move_string(0x100800u, 0x80u, screen + 0x600u, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
@@ -3846,17 +4077,17 @@ void sub_003425(void)
    70), then the world's tilemap again (pages rom_0048C8); 17 sea_colour black, starts 00463C and an
    004240 for each leg (stage + 1, at most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is
    quiet (screen unk_F30); 19 when the 90 frames are over sets the game's next step (screen unk_80 byte 2
-   = 10) and starts 0046BB; 20 nothing. */
+   = 0x10 (step 16)) and starts 0046BB; 20 nothing. */
 void route_map_update(void)
 {
 	bool L_003BFC = false, L_003C2D = false;
 	uint8_t r0_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r19 = 0, r21 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r19 = 0, r21 = 0, route_branches = 0, stage_lengths = 0;
 	uint8_t timer = 0, timer_2 = 0, t1 = 0, timer_3 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, timer_4 = 0, timer_5 = 0;
 	uint32_t target1 = 0, zoom_x_address = 0, zoom_y_address = 0, scroll_x_address = 0, scroll_x_address_2 = 0, scroll_y_address = 0, scroll_x_address_3 = 0, scroll_y_address_2 = 0, scroll_x_address_4 = 0, scroll_y_address_3 = 0, scroll_x_address_5 = 0, scroll_x_address_6 = 0, scroll_x_address_7 = 0, scroll_x_address_8 = 0, scroll_y_address_4 = 0, scroll_x_address_9 = 0, scroll_y_address_5 = 0, scroll_x_address_10 = 0, scroll_x_address_11 = 0, scroll_x_address_12 = 0, zoom_x_address_2 = 0, zoom_y_address_2 = 0, scroll_x_address_13 = 0, scroll_y_address_6 = 0, second_scroll_x_address = 0, second_scroll_y_address = 0;
 
-	if ((SCREEN(screen)->unk_F44 | SCREEN(screen)->unk_F40) == 0u)
-		SCREEN(screen)->unk_F40 = 0x5014u;
+	if ((SCREEN(screen)->lcd_scroll | SCREEN(screen)->lcd_scroll_request) == 0u)
+		SCREEN(screen)->lcd_scroll_request = 0x5014u;
 	do
 	{
 		do
@@ -3878,7 +4109,7 @@ void route_map_update(void)
 									{
 									case 0x003594u:
 										SCREEN(screen)->unk_5800 = 0u;
-										r19 = 0x47E8u + ((uint32_t)SCREEN(screen)->unk_00 << 4) * 4u;
+										r19 = 0x47E8u + ((uint32_t)SCREEN(screen)->index << 4) * 4u;
 										OBJECT(current_object)->route_map.pages_address = mem_read32(r19);
 										r19 += 4u;
 										OBJECT(current_object)->route_map.scroll_x_address = mem_read32(r19);
@@ -3909,17 +4140,17 @@ void route_map_update(void)
 										r19 += 4u;
 										OBJECT(current_object)->route_map.second_register_scroll_y_address = mem_read32(r19);
 										AS32(OBJECT(current_object)->unk_BC) = mem_read32(r19 + 4u);
-										r0 = SCREEN(screen)->unk_00 * 5u * 2u;
-										r1 = SCREEN(screen)->unk_34A;
-										OBJECT(current_object)->route_map.first_branch = r1;
-										r19 = 0x4868u + (r0 + r1 * 5u) * 4u;
+										r0 = SCREEN(screen)->index * 5u * 2u;
+										route_branches = SCREEN(screen)->route_branches;
+										OBJECT(current_object)->route_map.first_branch = route_branches;
+										r19 = 0x4868u + (r0 + route_branches * 5u) * 4u;
 										set_up_background(r19);
 										r19 = rom_031E8C;
 										queue_palette(r19);
 										OBJECT(current_object)->state++;
 										return;
 									case 0x003644u:
-										OBJECT(current_object)->route_map.sea_colour_address = rom_0048D8[SCREEN(screen)->unk_00];
+										OBJECT(current_object)->route_map.sea_colour_address = rom_0048D8[SCREEN(screen)->index];
 										mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
 										mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x200u);
 										mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x200u);
@@ -3958,7 +4189,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer_2 - 1u;
 										if (timer_2 != 1u)
 											return;
-										mem_write32(OBJECT(current_object)->route_map.pages_address, rom_0048B8[SCREEN(screen)->unk_00]);
+										mem_write32(OBJECT(current_object)->route_map.pages_address, rom_0048B8[SCREEN(screen)->index]);
 										mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x200u);
 										mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x200u);
 										mem_write16(OBJECT(current_object)->route_map.zoom_center_x_address, 0u);
@@ -3968,7 +4199,7 @@ void route_map_update(void)
 										mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
 										mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
 										unk_20E027 = 0xFFu;
-										SCREEN(screen)->unk_A7 = 0xFFu;
+										SCREEN(screen)->skip_scroll_update = 0xFFu;
 										r21 = start_object();
 										mem_write32(r21 + 4u, route_map_car_update_ADDRESS);
 										mem_write8(r21 + 9u, CAR(player_car)->model);
@@ -4008,10 +4239,10 @@ void route_map_update(void)
 										else
 										{
 											mem_write8(r21 + 0xAu, 1u);
-											r0 = mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->unk_01 << 7));
-											r1 = SCREEN(screen)->unk_700;
-											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 3, r1);
-											OBJECT(current_object)->route_map.leg_frames = divide_s32(((r0 * 5u) << 2) + r0 * 2u, r1);
+											r0 = mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7));
+											stage_lengths = SCREEN(screen)->stage_lengths;
+											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 3, stage_lengths);
+											OBJECT(current_object)->route_map.leg_frames = divide_s32(((r0 * 5u) << 2) + r0 * 2u, stage_lengths);
 											SCREEN(screen)->unk_5800 |= 0x40u;
 											OBJECT(current_object)->state++;
 										}
@@ -4066,7 +4297,7 @@ void route_map_update(void)
 											OBJECT(current_object)->route_map.timer = timer_3 - 1u;
 											if (timer_3 == 1u)
 											{
-												mem_write32(OBJECT(current_object)->route_map.pages_address, rom_0048C0[SCREEN(screen)->unk_00]);
+												mem_write32(OBJECT(current_object)->route_map.pages_address, rom_0048C0[SCREEN(screen)->index]);
 												mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x400u);
 												mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x400u);
 												scroll_x_address = OBJECT(current_object)->route_map.scroll_x_address;
@@ -4094,7 +4325,7 @@ void route_map_update(void)
 												OBJECT(current_object)->x = (int16_t)OBJECT(current_object)->x >> 3;
 												OBJECT(current_object)->y = (int16_t)OBJECT(current_object)->y >> 3;
 												unk_20E027 = 0xFFu;
-												SCREEN(screen)->unk_A7 = 0xFFu;
+												SCREEN(screen)->skip_scroll_update = 0xFFu;
 												SCREEN(screen)->unk_5800 |= 0x10u;
 												OBJECT(current_object)->route_map.timer = 9u;
 												OBJECT(current_object)->state++;
@@ -4127,7 +4358,7 @@ void route_map_update(void)
 										else
 										{
 											r2 = screen + 0x700u;
-											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->unk_01 << 7)) - CAR(player_car)->reached_stage_start - mem_read16(r2 + SCREEN(screen)->unk_A6 * 2u);
+											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - mem_read16(r2 + SCREEN(screen)->unk_A6 * 2u);
 											r3 = SCREEN(r2 - 0x700u)->unk_73E;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 2, r3);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(r0 * 3u * 2u, r3);
@@ -4167,7 +4398,7 @@ void route_map_update(void)
 										}
 										else
 										{
-											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->unk_01 << 7)) - CAR(player_car)->reached_stage_start;
+											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
 											r1 = mem_read16(screen + 0x700u + SCREEN(screen)->unk_A6 * 2u);
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 2, r1);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
@@ -4223,7 +4454,7 @@ void route_map_update(void)
 										else
 										{
 											r2 = screen + 0x700u;
-											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->unk_01 << 7)) - CAR(player_car)->reached_stage_start - mem_read16(r2 + SCREEN(screen)->unk_A6 * 2u);
+											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - mem_read16(r2 + SCREEN(screen)->unk_A6 * 2u);
 											r3 = SCREEN(r2 - 0x700u)->unk_73E;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 2, r3);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(r0 * 5u * 2u, r3);
@@ -4291,7 +4522,7 @@ void route_map_update(void)
 										}
 										else
 										{
-											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->unk_01 << 7)) - CAR(player_car)->reached_stage_start;
+											r0 = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
 											r1 = mem_read16(screen + 0x700u + SCREEN(screen)->unk_A6 * 2u);
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(r0 << 3, r1);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
@@ -4368,7 +4599,7 @@ void route_map_update(void)
 											mem_write16(OBJECT(current_object)->route_map.scroll_y_address, 0x70u);
 											mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
 											mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
-											mem_write32(OBJECT(current_object)->route_map.second_pages_address, rom_0048C8[SCREEN(screen)->unk_00]);
+											mem_write32(OBJECT(current_object)->route_map.second_pages_address, rom_0048C8[SCREEN(screen)->index]);
 											mem_write16(OBJECT(current_object)->route_map.second_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
 											mem_write16(OBJECT(current_object)->route_map.second_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
 											second_scroll_x_address = OBJECT(current_object)->route_map.second_scroll_x_address;
@@ -4405,7 +4636,7 @@ void route_map_update(void)
 										OBJECT(current_object)->state++;
 										return;
 									case 0x003DE9u:
-										if (SCREEN(screen)->unk_F30 == 0u)
+										if (SCREEN(screen)->dj_mouth_shapes == 0u)
 										{
 											r0_2 = 0x39u;
 											start_dj_message(r0_2);
@@ -4415,7 +4646,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer_5 - 1u;
 										if (timer_5 != 1u)
 											return;
-										AT8(SCREEN(screen)->unk_80, 2) = 0x10u;
+										SCREEN(screen)->game_step = 0x10u;
 										r21 = start_object();
 										mem_write32(r21 + 4u, route_map_wait_banner_show_ADDRESS);
 										OBJECT(current_object)->state++;
@@ -4425,7 +4656,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer_5 - 1u;
 										if (timer_5 != 1u)
 											return;
-										AT8(SCREEN(screen)->unk_80, 2) = 0x10u;
+										SCREEN(screen)->game_step = 0x10u;
 										r21 = start_object();
 										mem_write32(r21 + 4u, route_map_wait_banner_show_ADDRESS);
 										OBJECT(current_object)->state++;
@@ -4657,7 +4888,7 @@ void route_map_landmark_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		r0 = ((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 4) + ((uint32_t)SCREEN(screen)->unk_34A << 9);
+		r0 = ((uint32_t)(uint8_t)(OBJECT(current_object)->unk_08 >> 8u) << 4) + ((uint32_t)SCREEN(screen)->route_branches << 9);
 		r10 = 0x4C14u + r0;
 		r9 = mem_read16(r10);
 		r10 += 2u;
@@ -4735,18 +4966,18 @@ void map_depth_from_y(void)
 void stage_result_line_draw(void)
 {
 	uint16_t r5 = 0;
-	uint32_t r0 = 0, r3 = 0, r9 = 0, r18 = 0;
+	uint32_t r0 = 0, r3 = 0, r9 = 0, r18 = 0, player = 0;
 	uint32_t stack_4 = 0;
 	uint8_t t1 = 0;
 
-	r0 = SCREEN(screen)->unk_01;
-	if (mem_read8(SCREEN(screen)->unk_308 + 0x1Fu) <= 1u)
+	player = SCREEN(screen)->player;
+	if (RACE(SCREEN(screen)->host_record)->racer_count <= 1u)
 	{
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->unk_01 = 0u;
 		return;
 	}
-	OBJECT(current_object)->stage_result_line.place_address = screen + 0x320u + r0;
+	OBJECT(current_object)->stage_result_line.place_address = screen + 0x320u + player;
 	r18 = 0x4BA4u + OBJECT(current_object)->stage_result_line.stage * 3u * 3u;
 	r5 = mem_read16(r18);
 	r3 = (0x40u + (OBJECT(current_object)->stage_result_line.stage << 4)) << 16;
@@ -4755,8 +4986,8 @@ void stage_result_line_draw(void)
 	stack_4 = r3;
 	draw_text_at(r3, r5, r18);
 	r3 = (stack_4 & ~0xFFFFu) | (uint16_t)(stack_4 + 0x40u);
-	r0 = SCREEN(screen)->unk_01;
-	r0 = mem_read8(screen + 0x360u + r0 + (OBJECT(current_object)->stage_result_line.stage << 3)) * 3u;
+	player = SCREEN(screen)->player;
+	r0 = mem_read8(screen + 0x360u + player + (OBJECT(current_object)->stage_result_line.stage << 3)) * 3u;
 	if (OBJECT(current_object)->stage_result_line.last == 0u)
 	{
 		r18 = 0x4BDAu + r0 * 2u;
@@ -4981,17 +5212,17 @@ void route_map_leg_car_show(void)
 		OBJECT(current_object)->x = ROM16(r10);
 		r10 += 2u;
 		OBJECT(current_object)->y = ROM16(r10);
-		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->unk_34A];
+		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->route_branches];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)ROM16(r10 + 2u);
 		OBJECT(current_object)->state++;
 		return;
 	case 1:
-		r10 = 0x49A4u + (((uint32_t)SCREEN(screen)->unk_34A << 6) + ((uint32_t)(uint8_t)(OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->unk_08 >> 16u) << 3));
+		r10 = 0x49A4u + (((uint32_t)SCREEN(screen)->route_branches << 6) + ((uint32_t)(uint8_t)(OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->unk_08 >> 16u) << 3));
 		OBJECT(current_object)->x = mem_read16(r10);
 		r10 += 2u;
 		OBJECT(current_object)->y = mem_read16(r10);
-		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->unk_34A];
+		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->route_branches];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)mem_read16(r10 + 2u);
 		OBJECT(current_object)->state++;
@@ -5001,14 +5232,14 @@ void route_map_leg_car_show(void)
 	case 4:
 	case 5:
 		r1 = (uint8_t)(OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->unk_08 >> 8u) - 1u;
-		r10 = 0x4A24u + (((SCREEN(screen)->unk_34A * 3u) << 6) + ((mem_read8(screen + 0x34Au + r1) * 3u) << 5) + ((uint32_t)(uint8_t)(OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->unk_08 >> 16u) << 3));
+		r10 = 0x4A24u + (((SCREEN(screen)->route_branches * 3u) << 6) + ((mem_read8(screen + 0x34Au + r1) * 3u) << 5) + ((uint32_t)(uint8_t)(OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->unk_08 >> 16u) << 3));
 		r0 = mem_read8(screen + 0x343u + r1);
 		OBJECT(current_object)->x = rom_004900[r0];
 		OBJECT(current_object)->y = rom_00492A[r0];
 		OBJECT(current_object)->x += mem_read16(r10);
 		r10 += 2u;
 		OBJECT(current_object)->y += mem_read16(r10);
-		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->unk_34A];
+		OBJECT(current_object)->x += rom_004954[SCREEN(screen)->route_branches];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)mem_read16(r10 + 2u);
 		OBJECT(current_object)->state++;
@@ -5050,7 +5281,7 @@ void route_map_checkpoint_show(void)
 		OBJECT(current_object)->depth_layer = 0x194u;
 		if (OBJECT(current_object)->route_map_checkpoint.kind == 1u)
 		{
-			r0 = SCREEN(screen)->unk_34A * 2u + mem_read8(screen + 0x34Au + ((uint8_t)(OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->unk_08 >> 8u) - 1u));
+			r0 = SCREEN(screen)->route_branches * 2u + mem_read8(screen + 0x34Au + ((uint8_t)(OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->unk_08 >> 8u) - 1u));
 			OBJECT(current_object)->x += rom_00462C[r0];
 			OBJECT(current_object)->y += rom_004634[r0];
 			OBJECT(current_object)->state++;
@@ -5086,7 +5317,7 @@ void route_map_direction_sign_show(void)
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->depth_layer = 0x19Du;
-		OBJECT(current_object)->x = rom_004954[SCREEN(screen)->unk_34A];
+		OBJECT(current_object)->x = rom_004954[SCREEN(screen)->route_branches];
 		OBJECT(current_object)->y = 0x118u;
 		r9 = 0x39u;
 		OBJECT(current_object)->route_map_direction_sign.palette_base = 0x67u;
@@ -5254,7 +5485,7 @@ void car_select_start(void)
    frames left, the transmission choice (transmission_choice_run); 5 the wheel picks the transmission
    (car unk_61 = rom_006DA4 by the wheel: 0 automatic, 1 manual) until confirmed or out of time; 6-8 when
    the entry time is over (entry_over) marks the player ready (set_player_ready) and waits for the race's
-   other players (players_not_ready), DJ message 3C; 9 60 frames, then sub_011FE6 and the game's next
+   other players (players_not_ready), DJ message 3C; 9 60 frames, then fade_out_music and the game's next
    step (screen unk_80 byte 2); 10 stays. Every frame from 4 on: car_select_turn_to_choice and
    car_select_update_rowscroll; time_left down by one and shown in seconds. */
 void car_select_run(void)
@@ -5262,7 +5493,7 @@ void car_select_run(void)
 	uint32_t zero = 0;
 	uint8_t r0 = 0, r1 = 0;
 	uint16_t r0_2 = 0;
-	uint32_t r0_3 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r19 = 0, r21 = 0, model = 0, race = 0, rowscroll_address = 0;
+	uint32_t r0_3 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r19 = 0, r21 = 0, model = 0, race = 0, rowscroll_address = 0, wheel = 0;
 	uint32_t stack_4 = 0;
 	uint8_t t1 = 0, t2 = 0, t4 = 0, turn_delay = 0;
 	uint16_t timer = 0, timer_2 = 0;
@@ -5274,10 +5505,10 @@ void car_select_run(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		if (SCREEN(screen)->unk_E2 == 0u)
+		if (SCREEN(screen)->entry_countdown_shown == 0u)
 		{
 			clear_lcd();
-			SCREEN(screen)->unk_F35 = 0xFFu;
+			SCREEN(screen)->dj_face = 0xFFu;
 			r10 = 0x6EB6u;
 			start_song_title(r10);
 			r0 = 0xFu;
@@ -5285,7 +5516,7 @@ void car_select_run(void)
 			r0 = 0x3Bu;
 			start_dj_message(r0);
 		}
-		r10 = 0x6920u + ((uint32_t)SCREEN(screen)->unk_00 << 3) * 4u;
+		r10 = 0x6920u + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
 		OBJECT(current_object)->car_select.scroll_x_address = ROM32(r10);
 		r10 += 4u;
 		OBJECT(current_object)->car_select.scroll_y_address = ROM32(r10);
@@ -5333,7 +5564,7 @@ void car_select_run(void)
 		move_string(0x100800u, 0xE0u, screen + 0x3800u, 0xE0u, 2u, 0u, 0u, 0u, &r27, &r28);
 		return;
 	case 1:
-		if (SCREEN(screen)->unk_B00 != 0u)
+		if (SCREEN(screen)->unpack_state != 0u)
 			return;
 		r21 = start_object();
 		mem_write32(r21 + 4u, car_attendant_run_ADDRESS);
@@ -5361,7 +5592,7 @@ void car_select_run(void)
 			r0 = (uint8_t)(t2 - 1u);
 			mem_write8(r21 + 9u, r0);
 		} while (t2 != 1u);
-		r0_2 = rom_0069B0[mem_read8(screen + 0x320u + SCREEN(screen)->unk_01)];
+		r0_2 = rom_0069B0[mem_read8(screen + 0x320u + SCREEN(screen)->player)];
 		CAR(player_car)->model = (uint8_t)r0_2;
 		CAR(player_car)->transmission = 0u;
 		OBJECT(current_object)->car_select.car_chosen = 0u;
@@ -5434,7 +5665,7 @@ void car_select_run(void)
 			r0 = (uint8_t)OBJECT(current_object)->car_select.turn;
 			if (r0 == 0u)
 			{
-				r0_3 = SCREEN(screen)->unk_100;
+				r0_3 = SCREEN(screen)->wheel;
 				r0_3 = r0_3 >> 5;
 				t4 = rom_006D9C[r0_3];
 				turn_delay = OBJECT(current_object)->car_select.turn_delay;
@@ -5452,7 +5683,7 @@ void car_select_run(void)
 			{
 				if ((int8_t)r0 < 0)
 				{
-					if (SCREEN(screen)->unk_100 >= 0x60u)
+					if (SCREEN(screen)->wheel >= 0x60u)
 					{
 						OBJECT(current_object)->car_select.turn = r0 + 1u;
 						car_select_skew_floor_previous();
@@ -5466,7 +5697,7 @@ void car_select_run(void)
 						r0_2 = (uint16_t)(OBJECT(current_object)->car_select.angle + 0x20u);
 					}
 				}
-				else if (SCREEN(screen)->unk_100 < 0xA0u)
+				else if (SCREEN(screen)->wheel < 0xA0u)
 				{
 					OBJECT(current_object)->car_select.turn = r0 - 1u;
 					car_select_skew_floor_next();
@@ -5483,7 +5714,7 @@ void car_select_run(void)
 				mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (r0_2 >> 2));
 				if ((uint8_t)OBJECT(current_object)->car_select.turn == 0u)
 				{
-					r0_3 = SCREEN(screen)->unk_100;
+					r0_3 = SCREEN(screen)->wheel;
 					r0_3 = r0_3 >> 5;
 					t4 = rom_006D9C[r0_3];
 					turn_delay = OBJECT(current_object)->car_select.turn_delay;
@@ -5535,8 +5766,8 @@ void car_select_run(void)
 	case 5:
 		if (OBJECT(current_object)->car_select.time_left != 0u)
 		{
-			r0_3 = SCREEN(screen)->unk_100;
-			CAR(player_car)->transmission = rom_006DA4[r0_3 >> 5];
+			wheel = SCREEN(screen)->wheel;
+			CAR(player_car)->transmission = rom_006DA4[wheel >> 5];
 			zero = car_select_wait_confirm();
 			if (zero)
 			{
@@ -5579,8 +5810,8 @@ void car_select_run(void)
 		OBJECT(current_object)->car_select.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			sub_011FE6();
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			fade_out_music();
+			SCREEN(screen)->game_step++;
 			OBJECT(current_object)->state++;
 		}
 		car_select_turn_to_choice();
@@ -5609,8 +5840,8 @@ void car_select_run(void)
 		OBJECT(current_object)->car_select.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			sub_011FE6();
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			fade_out_music();
+			SCREEN(screen)->game_step++;
 			OBJECT(current_object)->state++;
 		}
 		car_select_turn_to_choice();
@@ -5631,8 +5862,8 @@ void car_select_run(void)
 		OBJECT(current_object)->car_select.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			sub_011FE6();
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			fade_out_music();
+			SCREEN(screen)->game_step++;
 			OBJECT(current_object)->state++;
 		}
 		car_select_turn_to_choice();
@@ -5643,8 +5874,8 @@ void car_select_run(void)
 		OBJECT(current_object)->car_select.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			sub_011FE6();
-			AT8(SCREEN(screen)->unk_80, 2)++;
+			fade_out_music();
+			SCREEN(screen)->game_step++;
 			OBJECT(current_object)->state++;
 		}
 		car_select_turn_to_choice();
@@ -7015,7 +7246,7 @@ void waiting_banner_show(void)
 
 /* The other players on the car select, by state: 0 its list of the race's players (race_order: the
    count, then the players); 1 when the LCD is not scrolling a text (screen unk_F44) writes Entry: on it
-   with _ at each player's car number (unk_20E030); then every frame: this screen's number blinks with _
+   with _ at each player's car number (car_numbers); then every frame: this screen's number blinks with _
    every 8 frames (own_number, digit_toggle, blink_timer); each other player not yet marked (a bit each
    from 40, the frame field) gets its number on the LCD and, once it has chosen a car (byte 48 of its
    race_copy record, which car_select writes), a flag over that car on the turntable (choice_flag, kept
@@ -7031,36 +7262,36 @@ void car_select_entries_run(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		OBJECT(current_object)->car_select_entries.race_order = SCREEN(screen)->unk_308 + 0x1Fu;
+		OBJECT(current_object)->car_select_entries.race_order = SCREEN(screen)->host_record + 0x1Fu;
 		AS8(OBJECT(current_object)->car_select_entries.shown_players) = 0u;
 		OBJECT(current_object)->car_select_entries.frames = 0u;
 		OBJECT(current_object)->state++;
-		if (SCREEN(screen)->unk_F44 != 0u)
+		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
 		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-		r9 = unk_20E041;
+		r9 = player_count;
 		do
 		{
 			mem_write8(r27 + mem_read8(0x20E02Fu + r9), 0x5Fu);
 			r9--;
 		} while (r9 != 0u);
-		r0 = unk_20E030[SCREEN(screen)->unk_01];
+		r0 = car_numbers[SCREEN(screen)->player];
 		OBJECT(current_object)->car_select_entries.own_number = r0;
 		OBJECT(current_object)->car_select_entries.digit_toggle = (r0 + 0x31u) ^ 0x5Fu;
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
 		OBJECT(current_object)->state++;
 		break;
 	case 1:
-		if (SCREEN(screen)->unk_F44 != 0u)
+		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
 		move_string(0x6EB0u, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-		r9 = unk_20E041;
+		r9 = player_count;
 		do
 		{
 			mem_write8(r27 + mem_read8(0x20E02Fu + r9), 0x5Fu);
 			r9--;
 		} while (r9 != 0u);
-		r0 = unk_20E030[SCREEN(screen)->unk_01];
+		r0 = car_numbers[SCREEN(screen)->player];
 		OBJECT(current_object)->car_select_entries.own_number = r0;
 		OBJECT(current_object)->car_select_entries.digit_toggle = (r0 + 0x31u) ^ 0x5Fu;
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
@@ -7086,9 +7317,9 @@ void car_select_entries_run(void)
 	{
 		r0_2 = mem_read8(r10);
 		r10++;
-		if (SCREEN(screen)->unk_01 != r0_2 && (OBJECT(current_object)->car_select_entries.shown_players & shl32(1u, (int)(r0_2))) == 0u)
+		if (SCREEN(screen)->player != r0_2 && (OBJECT(current_object)->car_select_entries.shown_players & shl32(1u, (int)(r0_2))) == 0u)
 		{
-			r1 = unk_20E030[r0_2];
+			r1 = car_numbers[r0_2];
 			mem_write8(screen + 0xF18u + r1, r1 + 0x31u);
 			t2 = mem_read8(0x20FC48u + (r0_2 << 7)) - 1u;
 			r1 = t2;

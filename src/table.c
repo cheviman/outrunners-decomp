@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -60,66 +60,67 @@ static void call_01864A(void)
 	palette_fade_step(0);
 }
 
-/* How call_code() runs sub_01C928 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_memory_test_run from a slot that holds its address: with 0 for what it
+   takes, and what it hands back dropped. */
 static void call_01C928(void)
 {
-	sub_01C928(0);
+	test_mode_memory_test_run(0);
 }
 
-/* How call_code() runs sub_01CE15 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_volume_adjustment_select from a slot that holds its address: with 0 for
+   what it takes, and what it hands back dropped. */
 static void call_01CE15(void)
 {
-	sub_01CE15(0);
+	test_mode_volume_adjustment_select(0);
 }
 
-/* How call_code() runs sub_01D126 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_input_test_run from a slot that holds its address: with 0 for what it
+   takes, and what it hands back dropped. */
 static void call_01D126(void)
 {
-	sub_01D126(0);
+	test_mode_input_test_run(0);
 }
 
-/* How call_code() runs sub_01D868 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_crt_test_bars_run from a slot that holds its address: with 0 for what
+   it takes, and what it hands back dropped. */
 static void call_01D868(void)
 {
-	sub_01D868(0);
+	test_mode_crt_test_bars_run(0);
 }
 
-/* How call_code() runs sub_01D88F from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_crt_test_grid_run from a slot that holds its address: with 0 for what
+   it takes, and what it hands back dropped. */
 static void call_01D88F(void)
 {
-	sub_01D88F(0);
+	test_mode_crt_test_grid_run(0);
 }
 
-/* How call_code() runs sub_01DD58 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_coin_assignments_run from a slot that holds its address: with 0 for
+   what it takes, and what it hands back dropped. */
 static void call_01DD58(void)
 {
-	sub_01DD58(0);
+	test_mode_coin_assignments_run(0);
 }
 
-/* How call_code() runs sub_01E703 from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_bookkeeping_wait from a slot that holds its address: with 0 for what it
+   takes, and what it hands back dropped. */
 static void call_01E703(void)
 {
-	sub_01E703(0);
+	test_mode_bookkeeping_wait(0);
 }
 
-/* How call_code() runs sub_01E72D from a slot that holds its address: with 0 for what it takes, and what
-   it hands back dropped. */
+/* How call_code() runs test_mode_bookkeeping_second_page_wait from a slot that holds its address: with 0
+   for what it takes, and what it hands back dropped. */
 static void call_01E72D(void)
 {
-	sub_01E72D(0);
+	test_mode_bookkeeping_second_page_wait(0);
 }
 
 /* the code calls through memory slots and interrupts can reach, by address */
 const game_code_entry game_code[] =
 {
 	{ 0x0006B0u, call_0006B0 },
+	{ 0x000EA4u, isdn_status_update },
 	{ 0x0010EBu, sub_0010EB },
 	{ 0x001141u, sub_001141 },
 	{ 0x0011ABu, sub_0011AB },
@@ -198,8 +199,8 @@ const game_code_entry game_code[] =
 	{ 0x007C9Eu, rival_alarm_update },
 	{ 0x009590u, race_cars_start },
 	{ 0x00974Cu, race_car_draw },
-	{ 0x00AB24u, sub_00AB24 },
-	{ 0x00AB36u, sub_00AB36 },
+	{ 0x00AB24u, distance_offset_from_x },
+	{ 0x00AB36u, distance_offset_from_z },
 	{ 0x00BFC1u, rev_meter_update },
 	{ 0x00C017u, speedometer_update },
 	{ 0x00C0C6u, speed_unit_update },
@@ -321,42 +322,42 @@ const game_code_entry game_code[] =
 	{ 0x01AA01u, credit_display_update },
 	{ 0x01ADE8u, demo_captions_run },
 	{ 0x01AE8Du, demo_caption_update },
-	{ 0x01C392u, sub_01C392 },
-	{ 0x01C3E6u, sub_01C3E6 },
-	{ 0x01C5BAu, sub_01C5BA },
-	{ 0x01C5DBu, sub_01C5DB },
+	{ 0x01C392u, test_mode_menu },
+	{ 0x01C3E6u, test_mode_menu_run },
+	{ 0x01C5BAu, test_mode_menu_toggle_continue },
+	{ 0x01C5DBu, test_mode_memory_test },
 	{ 0x01C928u, call_01C928 },
-	{ 0x01CDE0u, sub_01CDE0 },
+	{ 0x01CDE0u, test_mode_volume_adjustment },
 	{ 0x01CE15u, call_01CE15 },
-	{ 0x01CE97u, sub_01CE97 },
-	{ 0x01D111u, sub_01D111 },
+	{ 0x01CE97u, test_mode_volume_adjustment_adjust },
+	{ 0x01D111u, test_mode_input_test },
 	{ 0x01D126u, call_01D126 },
-	{ 0x01D13Bu, sub_01D13B },
-	{ 0x01D3E4u, sub_01D3E4 },
-	{ 0x01D419u, sub_01D419 },
-	{ 0x01D620u, sub_01D620 },
-	{ 0x01D661u, sub_01D661 },
-	{ 0x01D840u, sub_01D840 },
+	{ 0x01D13Bu, test_mode_input_test_release },
+	{ 0x01D3E4u, test_mode_output_test },
+	{ 0x01D419u, test_mode_output_test_run },
+	{ 0x01D620u, test_mode_sound_test },
+	{ 0x01D661u, test_mode_sound_test_run },
+	{ 0x01D840u, test_mode_crt_test },
 	{ 0x01D868u, call_01D868 },
-	{ 0x01D87Au, sub_01D87A },
+	{ 0x01D87Au, test_mode_crt_test_grid },
 	{ 0x01D88Fu, call_01D88F },
-	{ 0x01D9F3u, sub_01D9F3 },
-	{ 0x01DA28u, sub_01DA28 },
-	{ 0x01DD1Eu, sub_01DD1E },
-	{ 0x01DD2Bu, sub_01DD2B },
+	{ 0x01D9F3u, test_mode_game_assignments },
+	{ 0x01DA28u, test_mode_game_assignments_run },
+	{ 0x01DD1Eu, test_mode_coin_assignments },
+	{ 0x01DD2Bu, test_mode_coin_assignments_show },
 	{ 0x01DD58u, call_01DD58 },
-	{ 0x01DEFDu, sub_01DEFD },
-	{ 0x01E453u, sub_01E453 },
-	{ 0x01E4BAu, sub_01E4BA },
-	{ 0x01E6EBu, sub_01E6EB },
+	{ 0x01DEFDu, test_mode_coin_assignments_manual_run },
+	{ 0x01E453u, test_mode_network_assignments_start },
+	{ 0x01E4BAu, test_mode_network_assignments_run },
+	{ 0x01E6EBu, test_mode_bookkeeping_start },
 	{ 0x01E703u, call_01E703 },
-	{ 0x01E715u, sub_01E715 },
+	{ 0x01E715u, test_mode_bookkeeping_second_page_start },
 	{ 0x01E72Du, call_01E72D },
-	{ 0x01EDC4u, sub_01EDC4 },
-	{ 0x01EDF1u, sub_01EDF1 },
-	{ 0x01EE66u, sub_01EE66 },
-	{ 0x01EEC1u, sub_01EEC1 },
-	{ 0x01EEEFu, sub_01EEEF },
+	{ 0x01EDC4u, test_mode_backup_data_clear_start },
+	{ 0x01EDF1u, test_mode_backup_data_clear_run },
+	{ 0x01EE66u, test_mode_backup_data_clear_wait },
+	{ 0x01EEC1u, test_mode_exit },
+	{ 0x01EEEFu, test_mode_exit_caution_wait },
 	{ 0x03F500u, int_vector_40 },
 	{ 0x03F794u, int_vector_41 },
 	{ 0x03F7A0u, int_vector_42 },
@@ -364,7 +365,7 @@ const game_code_entry game_code[] =
 	{ 0x03F830u, int_vector_44 },
 };
 
-const size_t game_code_count = 243;
+const size_t game_code_count = 244;
 
 /* the code at the reset vector */
 void game_entry(void)

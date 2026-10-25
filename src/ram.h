@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -54,172 +54,178 @@
 #define unk_208F20 RAM16(unk_208F20_ADDRESS)
 #define unk_20E000_ADDRESS 0x20E000u
 #define unk_20E000 RAM32(unk_20E000_ADDRESS)
-#define unk_20E004_ADDRESS 0x20E004u
-#define unk_20E004 RAM32(unk_20E004_ADDRESS)
-#define unk_20E00A_ADDRESS 0x20E00Au
-#define unk_20E00A RAM16(unk_20E00A_ADDRESS)
+#define waiting_task_stack_ADDRESS 0x20E004u
+#define waiting_task_stack RAM32(waiting_task_stack_ADDRESS)
+#define vblanks_since_start_ADDRESS 0x20E00Au
+#define vblanks_since_start RAM16(vblanks_since_start_ADDRESS)
 #define unk_20E00E_ADDRESS 0x20E00Eu
 #define unk_20E00E RAM8(unk_20E00E_ADDRESS)
-#define unk_20E020_ADDRESS 0x20E020u
-#define unk_20E020 RAM16(unk_20E020_ADDRESS)
+#define sprite_list_buffers_ADDRESS 0x20E020u
+#define sprite_list_buffers RAM16(sprite_list_buffers_ADDRESS)
 #define unk_20E022_ADDRESS 0x20E022u
 #define unk_20E022 RAM8(unk_20E022_ADDRESS)
-#define unk_20E023_ADDRESS 0x20E023u
-#define unk_20E023 RAM8(unk_20E023_ADDRESS)
-#define unk_20E024_ADDRESS 0x20E024u
-#define unk_20E024 RAM8(unk_20E024_ADDRESS)
-#define unk_20E026_ADDRESS 0x20E026u
-#define unk_20E026 RAM8(unk_20E026_ADDRESS)
+#define frame_ready_ADDRESS 0x20E023u
+#define frame_ready RAM8(frame_ready_ADDRESS)
+#define single_task_ADDRESS 0x20E024u
+#define single_task RAM8(single_task_ADDRESS)
+#define game_frame_count_ADDRESS 0x20E026u
+#define game_frame_count RAM8(game_frame_count_ADDRESS)
 #define unk_20E027_ADDRESS 0x20E027u
 #define unk_20E027 RAM8(unk_20E027_ADDRESS)
-#define unk_20E028_ADDRESS 0x20E028u
-#define unk_20E028 RAM8(unk_20E028_ADDRESS)
-#define unk_20E02B_ADDRESS 0x20E02Bu
-#define unk_20E02B RAM8(unk_20E02B_ADDRESS)
-#define unk_20E02C_ADDRESS 0x20E02Cu
-#define unk_20E02C RAM8(unk_20E02C_ADDRESS)
-#define unk_20E02D_ADDRESS 0x20E02Du
-#define unk_20E02D RAM8(unk_20E02D_ADDRESS)
+#define task_swapping_ADDRESS 0x20E028u
+#define task_swapping RAM8(task_swapping_ADDRESS)
+#define second_task_waiting_ADDRESS 0x20E02Bu
+#define second_task_waiting RAM8(second_task_waiting_ADDRESS)
+#define timer_interrupts_left_ADDRESS 0x20E02Cu
+#define timer_interrupts_left RAM8(timer_interrupts_left_ADDRESS)
+#define vblank_counter_ADDRESS 0x20E02Du
+#define vblank_counter RAM8(vblank_counter_ADDRESS)
 #define unk_20E02E_ADDRESS 0x20E02Eu
 #define unk_20E02E RAM8(unk_20E02E_ADDRESS)
-#define unk_20E030_ADDRESS 0x20E030u
-#define unk_20E030 ((uint8_t *)ram(unk_20E030_ADDRESS))
+#define car_numbers_ADDRESS 0x20E030u
+#define car_numbers ((uint8_t *)ram(car_numbers_ADDRESS))
 #define unk_20E038_ADDRESS 0x20E038u
 #define unk_20E038 RAM16(unk_20E038_ADDRESS)
-#define unk_20E03A_ADDRESS 0x20E03Au
-#define unk_20E03A RAM16(unk_20E03A_ADDRESS)
-#define unk_20E040_ADDRESS 0x20E040u
-#define unk_20E040 RAM8(unk_20E040_ADDRESS)
-#define unk_20E041_ADDRESS 0x20E041u
-#define unk_20E041 RAM8(unk_20E041_ADDRESS)
-#define unk_20E042_ADDRESS 0x20E042u
-#define unk_20E042 RAM8(unk_20E042_ADDRESS)
-#define unk_20E043_ADDRESS 0x20E043u
-#define unk_20E043 RAM8(unk_20E043_ADDRESS)
-#define unk_20E046_ADDRESS 0x20E046u
-#define unk_20E046 RAM16(unk_20E046_ADDRESS)
-#define unk_20E048_ADDRESS 0x20E048u
-#define unk_20E048 RAM16(unk_20E048_ADDRESS)
-#define unk_20E04A_ADDRESS 0x20E04Au
-#define unk_20E04A RAM8(unk_20E04A_ADDRESS)
-#define unk_20E04B_ADDRESS 0x20E04Bu
-#define unk_20E04B RAM8(unk_20E04B_ADDRESS)
-#define unk_20E060_ADDRESS 0x20E060u
-#define unk_20E060 RAM32(unk_20E060_ADDRESS)
-#define unk_20E08C_ADDRESS 0x20E08Cu
-#define unk_20E08C RAM8(unk_20E08C_ADDRESS)
-#define unk_20E08D_ADDRESS 0x20E08Du
-#define unk_20E08D RAM8(unk_20E08D_ADDRESS)
-#define unk_20E08E_ADDRESS 0x20E08Eu
-#define unk_20E08E RAM8(unk_20E08E_ADDRESS)
-#define unk_20E08F_ADDRESS 0x20E08Fu
-#define unk_20E08F RAM8(unk_20E08F_ADDRESS)
-#define unk_20E091_ADDRESS 0x20E091u
-#define unk_20E091 RAM8(unk_20E091_ADDRESS)
-#define unk_20E092_ADDRESS 0x20E092u
-#define unk_20E092 ((uint16_t *)ram(unk_20E092_ADDRESS))
+#define total_time_count_ADDRESS 0x20E03Au
+#define total_time_count RAM16(total_time_count_ADDRESS)
+#define machine_count_ADDRESS 0x20E040u
+#define machine_count RAM8(machine_count_ADDRESS)
+#define player_count_ADDRESS 0x20E041u
+#define player_count RAM8(player_count_ADDRESS)
+#define link_off_ADDRESS 0x20E042u
+#define link_off RAM8(link_off_ADDRESS)
+#define link_failed_ADDRESS 0x20E043u
+#define link_failed RAM8(link_failed_ADDRESS)
+#define link_wait_frames_ADDRESS 0x20E046u
+#define link_wait_frames RAM16(link_wait_frames_ADDRESS)
+#define network_check_blink_counter_ADDRESS 0x20E048u
+#define network_check_blink_counter RAM16(network_check_blink_counter_ADDRESS)
+#define isdn_players_this_side_ADDRESS 0x20E04Au
+#define isdn_players_this_side RAM8(isdn_players_this_side_ADDRESS)
+#define isdn_players_other_side_ADDRESS 0x20E04Bu
+#define isdn_players_other_side RAM8(isdn_players_other_side_ADDRESS)
+#define link_wait_count_ADDRESS 0x20E060u
+#define link_wait_count RAM32(link_wait_count_ADDRESS)
+#define coin_meters_ADDRESS 0x20E080u
+#define coin_meters RAM8(coin_meters_ADDRESS)
+#define seat1_coin_sounds_ADDRESS 0x20E08Cu
+#define seat1_coin_sounds RAM8(seat1_coin_sounds_ADDRESS)
+#define seat2_coin_sounds_ADDRESS 0x20E08Du
+#define seat2_coin_sounds RAM8(seat2_coin_sounds_ADDRESS)
+#define seat1_service_sounds_ADDRESS 0x20E08Eu
+#define seat1_service_sounds RAM8(seat1_service_sounds_ADDRESS)
+#define seat2_service_sounds_ADDRESS 0x20E08Fu
+#define seat2_service_sounds RAM8(seat2_service_sounds_ADDRESS)
+#define chute_entry_offset_ADDRESS 0x20E091u
+#define chute_entry_offset RAM8(chute_entry_offset_ADDRESS)
+#define port_d_outputs_ADDRESS 0x20E092u
+#define port_d_outputs ((uint8_t *)ram(port_d_outputs_ADDRESS))
+#define unk_20E093_ADDRESS 0x20E093u
+#define unk_20E093 RAM8(unk_20E093_ADDRESS)
 #define unk_20E094_ADDRESS 0x20E094u
 #define unk_20E094 RAM16(unk_20E094_ADDRESS)
-#define unk_20E0A0_ADDRESS 0x20E0A0u
-#define unk_20E0A0 RAM8(unk_20E0A0_ADDRESS)
-#define unk_20E0A1_ADDRESS 0x20E0A1u
-#define unk_20E0A1 RAM8(unk_20E0A1_ADDRESS)
+#define seat1_credits_ADDRESS 0x20E0A0u
+#define seat1_credits RAM8(seat1_credits_ADDRESS)
+#define seat1_coin_units_ADDRESS 0x20E0A1u
+#define seat1_coin_units RAM8(seat1_coin_units_ADDRESS)
 #define unk_20E0A4_ADDRESS 0x20E0A4u
 #define unk_20E0A4 RAM8(unk_20E0A4_ADDRESS)
-#define unk_20E0A8_ADDRESS 0x20E0A8u
-#define unk_20E0A8 RAM8(unk_20E0A8_ADDRESS)
-#define unk_20E0A9_ADDRESS 0x20E0A9u
-#define unk_20E0A9 RAM8(unk_20E0A9_ADDRESS)
+#define seat2_credits_ADDRESS 0x20E0A8u
+#define seat2_credits RAM8(seat2_credits_ADDRESS)
+#define seat2_coin_units_ADDRESS 0x20E0A9u
+#define seat2_coin_units RAM8(seat2_coin_units_ADDRESS)
 #define unk_20E0AC_ADDRESS 0x20E0ACu
 #define unk_20E0AC RAM8(unk_20E0AC_ADDRESS)
-#define unk_20E0C0_ADDRESS 0x20E0C0u
-#define unk_20E0C0 ((uint8_t *)ram(unk_20E0C0_ADDRESS))
-#define unk_20E0C1_ADDRESS 0x20E0C1u
-#define unk_20E0C1 RAM8(unk_20E0C1_ADDRESS)
-#define unk_20E0C2_ADDRESS 0x20E0C2u
-#define unk_20E0C2 RAM8(unk_20E0C2_ADDRESS)
-#define unk_20E0C3_ADDRESS 0x20E0C3u
-#define unk_20E0C3 RAM8(unk_20E0C3_ADDRESS)
-#define unk_20E0C4_ADDRESS 0x20E0C4u
-#define unk_20E0C4 RAM8(unk_20E0C4_ADDRESS)
-#define unk_20E0C5_ADDRESS 0x20E0C5u
-#define unk_20E0C5 RAM8(unk_20E0C5_ADDRESS)
-#define unk_20E0C6_ADDRESS 0x20E0C6u
-#define unk_20E0C6 RAM8(unk_20E0C6_ADDRESS)
-#define unk_20E0C7_ADDRESS 0x20E0C7u
-#define unk_20E0C7 RAM8(unk_20E0C7_ADDRESS)
-#define unk_20E0C8_ADDRESS 0x20E0C8u
-#define unk_20E0C8 ((uint8_t *)ram(unk_20E0C8_ADDRESS))
-#define unk_20E0C9_ADDRESS 0x20E0C9u
-#define unk_20E0C9 RAM8(unk_20E0C9_ADDRESS)
-#define unk_20E0CA_ADDRESS 0x20E0CAu
-#define unk_20E0CA RAM8(unk_20E0CA_ADDRESS)
-#define unk_20E0CB_ADDRESS 0x20E0CBu
-#define unk_20E0CB RAM8(unk_20E0CB_ADDRESS)
-#define unk_20E0CC_ADDRESS 0x20E0CCu
-#define unk_20E0CC RAM8(unk_20E0CC_ADDRESS)
-#define unk_20E0CD_ADDRESS 0x20E0CDu
-#define unk_20E0CD RAM8(unk_20E0CD_ADDRESS)
-#define unk_20E0CE_ADDRESS 0x20E0CEu
-#define unk_20E0CE RAM8(unk_20E0CE_ADDRESS)
-#define unk_20E0CF_ADDRESS 0x20E0CFu
-#define unk_20E0CF RAM8(unk_20E0CF_ADDRESS)
+#define checkpoint_lamp_ADDRESS 0x20E0C0u
+#define checkpoint_lamp ((uint8_t *)ram(checkpoint_lamp_ADDRESS))
+#define checkpoint_lamp_blinks_ADDRESS 0x20E0C1u
+#define checkpoint_lamp_blinks RAM8(checkpoint_lamp_blinks_ADDRESS)
+#define checkpoint_lamp_period_ADDRESS 0x20E0C2u
+#define checkpoint_lamp_period RAM8(checkpoint_lamp_period_ADDRESS)
+#define checkpoint_lamp_timer_ADDRESS 0x20E0C3u
+#define checkpoint_lamp_timer RAM8(checkpoint_lamp_timer_ADDRESS)
+#define checkpoint_lamp_2_ADDRESS 0x20E0C4u
+#define checkpoint_lamp_2 RAM8(checkpoint_lamp_2_ADDRESS)
+#define checkpoint_lamp_2_blinks_ADDRESS 0x20E0C5u
+#define checkpoint_lamp_2_blinks RAM8(checkpoint_lamp_2_blinks_ADDRESS)
+#define checkpoint_lamp_2_period_ADDRESS 0x20E0C6u
+#define checkpoint_lamp_2_period RAM8(checkpoint_lamp_2_period_ADDRESS)
+#define checkpoint_lamp_2_timer_ADDRESS 0x20E0C7u
+#define checkpoint_lamp_2_timer RAM8(checkpoint_lamp_2_timer_ADDRESS)
+#define leader_lamp_ADDRESS 0x20E0C8u
+#define leader_lamp ((uint8_t *)ram(leader_lamp_ADDRESS))
+#define leader_lamp_blinks_ADDRESS 0x20E0C9u
+#define leader_lamp_blinks RAM8(leader_lamp_blinks_ADDRESS)
+#define leader_lamp_period_ADDRESS 0x20E0CAu
+#define leader_lamp_period RAM8(leader_lamp_period_ADDRESS)
+#define leader_lamp_timer_ADDRESS 0x20E0CBu
+#define leader_lamp_timer RAM8(leader_lamp_timer_ADDRESS)
+#define leader_lamp_2_ADDRESS 0x20E0CCu
+#define leader_lamp_2 RAM8(leader_lamp_2_ADDRESS)
+#define leader_lamp_2_blinks_ADDRESS 0x20E0CDu
+#define leader_lamp_2_blinks RAM8(leader_lamp_2_blinks_ADDRESS)
+#define leader_lamp_2_period_ADDRESS 0x20E0CEu
+#define leader_lamp_2_period RAM8(leader_lamp_2_period_ADDRESS)
+#define leader_lamp_2_timer_ADDRESS 0x20E0CFu
+#define leader_lamp_2_timer RAM8(leader_lamp_2_timer_ADDRESS)
 #define unk_20E0D0_ADDRESS 0x20E0D0u
 #define unk_20E0D0 ((uint8_t *)ram(unk_20E0D0_ADDRESS))
 #define unk_20E0D1_ADDRESS 0x20E0D1u
 #define unk_20E0D1 RAM8(unk_20E0D1_ADDRESS)
-#define unk_20E0FC_ADDRESS 0x20E0FCu
-#define unk_20E0FC RAM8(unk_20E0FC_ADDRESS)
+#define screen_2_vblanks_ADDRESS 0x20E0FCu
+#define screen_2_vblanks RAM8(screen_2_vblanks_ADDRESS)
 #define unk_20E0FD_ADDRESS 0x20E0FDu
 #define unk_20E0FD RAM8(unk_20E0FD_ADDRESS)
-#define unk_20E0FE_ADDRESS 0x20E0FEu
-#define unk_20E0FE RAM8(unk_20E0FE_ADDRESS)
+#define screen_1_vblanks_ADDRESS 0x20E0FEu
+#define screen_1_vblanks RAM8(screen_1_vblanks_ADDRESS)
 #define unk_20E0FF_ADDRESS 0x20E0FFu
 #define unk_20E0FF RAM8(unk_20E0FF_ADDRESS)
-#define unk_20E100_ADDRESS 0x20E100u
-#define unk_20E100 RAM8(unk_20E100_ADDRESS)
-#define unk_20E101_ADDRESS 0x20E101u
-#define unk_20E101 RAM8(unk_20E101_ADDRESS)
-#define unk_20E102_ADDRESS 0x20E102u
-#define unk_20E102 RAM8(unk_20E102_ADDRESS)
-#define unk_20E103_ADDRESS 0x20E103u
-#define unk_20E103 RAM8(unk_20E103_ADDRESS)
+#define switches_ADDRESS 0x20E100u
+#define switches RAM8(switches_ADDRESS)
+#define previous_switches_ADDRESS 0x20E101u
+#define previous_switches RAM8(previous_switches_ADDRESS)
+#define switches_pressed_ADDRESS 0x20E102u
+#define switches_pressed RAM8(switches_pressed_ADDRESS)
+#define switches_released_ADDRESS 0x20E103u
+#define switches_released RAM8(switches_released_ADDRESS)
 #define unk_20E104_ADDRESS 0x20E104u
 #define unk_20E104 RAM8(unk_20E104_ADDRESS)
-#define unk_20E116_ADDRESS 0x20E116u
-#define unk_20E116 RAM8(unk_20E116_ADDRESS)
-#define unk_20E117_ADDRESS 0x20E117u
-#define unk_20E117 RAM8(unk_20E117_ADDRESS)
-#define unk_20E118_ADDRESS 0x20E118u
-#define unk_20E118 RAM8(unk_20E118_ADDRESS)
-#define unk_20E119_ADDRESS 0x20E119u
-#define unk_20E119 RAM8(unk_20E119_ADDRESS)
-#define unk_20E11A_ADDRESS 0x20E11Au
-#define unk_20E11A RAM8(unk_20E11A_ADDRESS)
-#define unk_20E11B_ADDRESS 0x20E11Bu
-#define unk_20E11B RAM8(unk_20E11B_ADDRESS)
-#define unk_20E120_ADDRESS 0x20E120u
-#define unk_20E120 RAM8(unk_20E120_ADDRESS)
-#define unk_20E121_ADDRESS 0x20E121u
-#define unk_20E121 RAM8(unk_20E121_ADDRESS)
-#define unk_20E122_ADDRESS 0x20E122u
-#define unk_20E122 RAM8(unk_20E122_ADDRESS)
-#define unk_20E123_ADDRESS 0x20E123u
-#define unk_20E123 RAM8(unk_20E123_ADDRESS)
-#define unk_20E124_ADDRESS 0x20E124u
-#define unk_20E124 RAM8(unk_20E124_ADDRESS)
-#define unk_20E125_ADDRESS 0x20E125u
-#define unk_20E125 RAM8(unk_20E125_ADDRESS)
-#define unk_20E126_ADDRESS 0x20E126u
-#define unk_20E126 RAM8(unk_20E126_ADDRESS)
-#define unk_20E127_ADDRESS 0x20E127u
-#define unk_20E127 RAM8(unk_20E127_ADDRESS)
-#define unk_20E128_ADDRESS 0x20E128u
-#define unk_20E128 RAM8(unk_20E128_ADDRESS)
-#define unk_20E129_ADDRESS 0x20E129u
-#define unk_20E129 RAM8(unk_20E129_ADDRESS)
-#define unk_20E200_ADDRESS 0x20E200u
-#define unk_20E200 RAM16(unk_20E200_ADDRESS)
+#define analog_raw_ADDRESS 0x20E110u
+#define analog_raw RAM8(analog_raw_ADDRESS)
+#define analog_inputs_ADDRESS 0x20E116u
+#define analog_inputs RAM8(analog_inputs_ADDRESS)
+#define analog_gas_1_ADDRESS 0x20E117u
+#define analog_gas_1 RAM8(analog_gas_1_ADDRESS)
+#define analog_brake_1_ADDRESS 0x20E118u
+#define analog_brake_1 RAM8(analog_brake_1_ADDRESS)
+#define analog_wheel_2_ADDRESS 0x20E119u
+#define analog_wheel_2 RAM8(analog_wheel_2_ADDRESS)
+#define analog_gas_2_ADDRESS 0x20E11Au
+#define analog_gas_2 RAM8(analog_gas_2_ADDRESS)
+#define analog_brake_2_ADDRESS 0x20E11Bu
+#define analog_brake_2 RAM8(analog_brake_2_ADDRESS)
+#define seat_1_player_ADDRESS 0x20E120u
+#define seat_1_player RAM8(seat_1_player_ADDRESS)
+#define seat_1_buttons_ADDRESS 0x20E121u
+#define seat_1_buttons RAM8(seat_1_buttons_ADDRESS)
+#define seat_1_wheel_ADDRESS 0x20E122u
+#define seat_1_wheel RAM8(seat_1_wheel_ADDRESS)
+#define seat_1_gas_ADDRESS 0x20E123u
+#define seat_1_gas RAM8(seat_1_gas_ADDRESS)
+#define seat_1_brake_ADDRESS 0x20E124u
+#define seat_1_brake RAM8(seat_1_brake_ADDRESS)
+#define seat_2_player_ADDRESS 0x20E125u
+#define seat_2_player RAM8(seat_2_player_ADDRESS)
+#define seat_2_buttons_ADDRESS 0x20E126u
+#define seat_2_buttons RAM8(seat_2_buttons_ADDRESS)
+#define seat_2_wheel_ADDRESS 0x20E127u
+#define seat_2_wheel RAM8(seat_2_wheel_ADDRESS)
+#define seat_2_gas_ADDRESS 0x20E128u
+#define seat_2_gas RAM8(seat_2_gas_ADDRESS)
+#define seat_2_brake_ADDRESS 0x20E129u
+#define seat_2_brake RAM8(seat_2_brake_ADDRESS)
+#define video_registers_ADDRESS 0x20E200u
+#define video_registers RAM16(video_registers_ADDRESS)
 #define unk_20E202_ADDRESS 0x20E202u
 #define unk_20E202 RAM16(unk_20E202_ADDRESS)
 #define unk_20E204_ADDRESS 0x20E204u
@@ -258,104 +264,118 @@
 #define unk_20E2B2 RAM8(unk_20E2B2_ADDRESS)
 #define unk_20E2B3_ADDRESS 0x20E2B3u
 #define unk_20E2B3 RAM8(unk_20E2B3_ADDRESS)
-#define unk_20E300_ADDRESS 0x20E300u
-#define unk_20E300 ((uint8_t *)ram(unk_20E300_ADDRESS))
-#define unk_20E304_ADDRESS 0x20E304u
-#define unk_20E304 ((uint16_t *)ram(unk_20E304_ADDRESS))
-#define unk_20E3C0_ADDRESS 0x20E3C0u
-#define unk_20E3C0 ((uint8_t *)ram(unk_20E3C0_ADDRESS))
+#define course_records_ADDRESS 0x20E300u
+#define course_records ((uint8_t *)ram(course_records_ADDRESS))
+#define course_record_times_ADDRESS 0x20E304u
+#define course_record_times ((uint16_t *)ram(course_record_times_ADDRESS))
+#define lcd_send_buffer_1_ADDRESS 0x20E3C0u
+#define lcd_send_buffer_1 ((uint8_t *)ram(lcd_send_buffer_1_ADDRESS))
 #define unk_20E3C4_ADDRESS 0x20E3C4u
 #define unk_20E3C4 RAM32(unk_20E3C4_ADDRESS)
 #define unk_20E3C8_ADDRESS 0x20E3C8u
 #define unk_20E3C8 RAM32(unk_20E3C8_ADDRESS)
 #define unk_20E3CC_ADDRESS 0x20E3CCu
 #define unk_20E3CC RAM32(unk_20E3CC_ADDRESS)
-#define unk_20E3D0_ADDRESS 0x20E3D0u
-#define unk_20E3D0 ((uint8_t *)ram(unk_20E3D0_ADDRESS))
+#define lcd_send_buffer_2_ADDRESS 0x20E3D0u
+#define lcd_send_buffer_2 ((uint8_t *)ram(lcd_send_buffer_2_ADDRESS))
 #define unk_20E3D4_ADDRESS 0x20E3D4u
 #define unk_20E3D4 RAM32(unk_20E3D4_ADDRESS)
 #define unk_20E3D8_ADDRESS 0x20E3D8u
 #define unk_20E3D8 RAM32(unk_20E3D8_ADDRESS)
 #define unk_20E3DC_ADDRESS 0x20E3DCu
 #define unk_20E3DC RAM32(unk_20E3DC_ADDRESS)
-#define unk_20E3F0_ADDRESS 0x20E3F0u
-#define unk_20E3F0 RAM16(unk_20E3F0_ADDRESS)
-#define unk_20E3F2_ADDRESS 0x20E3F2u
-#define unk_20E3F2 RAM8(unk_20E3F2_ADDRESS)
-#define unk_20E3F3_ADDRESS 0x20E3F3u
-#define unk_20E3F3 RAM8(unk_20E3F3_ADDRESS)
-#define unk_20E3F4_ADDRESS 0x20E3F4u
-#define unk_20E3F4 RAM8(unk_20E3F4_ADDRESS)
-#define unk_20E600_ADDRESS 0x20E600u
-#define unk_20E600 RAM32(unk_20E600_ADDRESS)
-#define unk_20E604_ADDRESS 0x20E604u
-#define unk_20E604 RAM16(unk_20E604_ADDRESS)
-#define unk_20E608_ADDRESS 0x20E608u
-#define unk_20E608 RAM16(unk_20E608_ADDRESS)
-#define unk_20E60A_ADDRESS 0x20E60Au
-#define unk_20E60A RAM16(unk_20E60A_ADDRESS)
-#define unk_20E60C_ADDRESS 0x20E60Cu
-#define unk_20E60C RAM8(unk_20E60C_ADDRESS)
-#define unk_20E60D_ADDRESS 0x20E60Du
-#define unk_20E60D RAM8(unk_20E60D_ADDRESS)
-#define unk_20E610_ADDRESS 0x20E610u
-#define unk_20E610 RAM8(unk_20E610_ADDRESS)
-#define unk_20E611_ADDRESS 0x20E611u
-#define unk_20E611 RAM8(unk_20E611_ADDRESS)
-#define unk_20E612_ADDRESS 0x20E612u
-#define unk_20E612 RAM8(unk_20E612_ADDRESS)
-#define unk_20E613_ADDRESS 0x20E613u
-#define unk_20E613 RAM8(unk_20E613_ADDRESS)
-#define unk_20E614_ADDRESS 0x20E614u
-#define unk_20E614 RAM8(unk_20E614_ADDRESS)
-#define unk_20E615_ADDRESS 0x20E615u
-#define unk_20E615 RAM8(unk_20E615_ADDRESS)
-#define unk_20E620_ADDRESS 0x20E620u
-#define unk_20E620 RAM8(unk_20E620_ADDRESS)
-#define unk_20E621_ADDRESS 0x20E621u
-#define unk_20E621 RAM8(unk_20E621_ADDRESS)
-#define unk_20E622_ADDRESS 0x20E622u
-#define unk_20E622 RAM8(unk_20E622_ADDRESS)
-#define unk_20E623_ADDRESS 0x20E623u
-#define unk_20E623 RAM8(unk_20E623_ADDRESS)
-#define unk_20E624_ADDRESS 0x20E624u
-#define unk_20E624 RAM8(unk_20E624_ADDRESS)
-#define unk_20E630_ADDRESS 0x20E630u
-#define unk_20E630 RAM8(unk_20E630_ADDRESS)
-#define unk_20E632_ADDRESS 0x20E632u
-#define unk_20E632 RAM16(unk_20E632_ADDRESS)
+#define lcd_restart_frames_ADDRESS 0x20E3F0u
+#define lcd_restart_frames RAM16(lcd_restart_frames_ADDRESS)
+#define lcd_send_step_ADDRESS 0x20E3F2u
+#define lcd_send_step RAM8(lcd_send_step_ADDRESS)
+#define lcd_busy_ADDRESS 0x20E3F3u
+#define lcd_busy RAM8(lcd_busy_ADDRESS)
+#define lcd_init_step_ADDRESS 0x20E3F4u
+#define lcd_init_step RAM8(lcd_init_step_ADDRESS)
+#define settings_magic_ADDRESS 0x20E600u
+#define settings_magic RAM32(settings_magic_ADDRESS)
+#define settings_signature_ADDRESS 0x20E604u
+#define settings_signature RAM16(settings_signature_ADDRESS)
+#define settings_checksum_ADDRESS 0x20E608u
+#define settings_checksum RAM16(settings_checksum_ADDRESS)
+#define eeprom_write_count_ADDRESS 0x20E60Au
+#define eeprom_write_count RAM16(eeprom_write_count_ADDRESS)
+#define flip_screen_ADDRESS 0x20E60Cu
+#define flip_screen RAM8(flip_screen_ADDRESS)
+#define advertise_sound_ADDRESS 0x20E60Du
+#define advertise_sound RAM8(advertise_sound_ADDRESS)
+#define coins_per_credit_ADDRESS 0x20E610u
+#define coins_per_credit RAM8(coins_per_credit_ADDRESS)
+#define first_chute_multiplier_ADDRESS 0x20E611u
+#define first_chute_multiplier RAM8(first_chute_multiplier_ADDRESS)
+#define second_chute_multiplier_ADDRESS 0x20E612u
+#define second_chute_multiplier RAM8(second_chute_multiplier_ADDRESS)
+#define bonus_adder_ADDRESS 0x20E613u
+#define bonus_adder RAM8(bonus_adder_ADDRESS)
+#define coin_setting_ADDRESS 0x20E614u
+#define coin_setting RAM8(coin_setting_ADDRESS)
+#define free_play_ADDRESS 0x20E615u
+#define free_play RAM8(free_play_ADDRESS)
+#define stand_alone_ADDRESS 0x20E620u
+#define stand_alone RAM8(stand_alone_ADDRESS)
+#define link_master_ADDRESS 0x20E621u
+#define link_master RAM8(link_master_ADDRESS)
+#define cabinet_id_ADDRESS 0x20E622u
+#define cabinet_id RAM8(cabinet_id_ADDRESS)
+#define isdn_mode_ADDRESS 0x20E623u
+#define isdn_mode RAM8(isdn_mode_ADDRESS)
+#define steering_wheel_reaction_ADDRESS 0x20E624u
+#define steering_wheel_reaction RAM8(steering_wheel_reaction_ADDRESS)
+#define game_difficulty_ADDRESS 0x20E630u
+#define game_difficulty RAM8(game_difficulty_ADDRESS)
+#define time_difficulty_ADDRESS 0x20E632u
+#define time_difficulty RAM8S(time_difficulty_ADDRESS)
 #define unk_20E634_ADDRESS 0x20E634u
 #define unk_20E634 RAM32(unk_20E634_ADDRESS)
-#define unk_20E644_ADDRESS 0x20E644u
-#define unk_20E644 RAM16(unk_20E644_ADDRESS)
-#define unk_20E646_ADDRESS 0x20E646u
-#define unk_20E646 RAM16(unk_20E646_ADDRESS)
-#define unk_20E700_ADDRESS 0x20E700u
-#define unk_20E700 RAM8(unk_20E700_ADDRESS)
-#define unk_20E701_ADDRESS 0x20E701u
-#define unk_20E701 RAM32(unk_20E701_ADDRESS)
-#define unk_20E708_ADDRESS 0x20E708u
-#define unk_20E708 RAM32(unk_20E708_ADDRESS)
-#define unk_20E70C_ADDRESS 0x20E70Cu
-#define unk_20E70C RAM8(unk_20E70C_ADDRESS)
-#define unk_20E70D_ADDRESS 0x20E70Du
-#define unk_20E70D RAM8(unk_20E70D_ADDRESS)
-#define unk_20E70E_ADDRESS 0x20E70Eu
-#define unk_20E70E RAM32(unk_20E70E_ADDRESS)
-#define unk_20E72F_ADDRESS 0x20E72Fu
-#define unk_20E72F RAM8(unk_20E72F_ADDRESS)
-#define unk_20E730_ADDRESS 0x20E730u
-#define unk_20E730 RAM8(unk_20E730_ADDRESS)
-#define unk_20E731_ADDRESS 0x20E731u
-#define unk_20E731 RAM8(unk_20E731_ADDRESS)
-#define unk_20E732_ADDRESS 0x20E732u
-#define unk_20E732 RAM8(unk_20E732_ADDRESS)
-#define unk_20E733_ADDRESS 0x20E733u
-#define unk_20E733 RAM8(unk_20E733_ADDRESS)
-#define unk_20E734_ADDRESS 0x20E734u
-#define unk_20E734 ((uint16_t *)ram(unk_20E734_ADDRESS))
-#define unk_20E754_ADDRESS 0x20E754u
-#define unk_20E754 RAM8(unk_20E754_ADDRESS)
+#define volume_ranges_ADDRESS 0x20E638u
+#define volume_ranges RAM8(volume_ranges_ADDRESS)
+#define backup_settings_checksum_ADDRESS 0x20E644u
+#define backup_settings_checksum RAM16(backup_settings_checksum_ADDRESS)
+#define backup_eeprom_write_count_ADDRESS 0x20E646u
+#define backup_eeprom_write_count RAM16(backup_eeprom_write_count_ADDRESS)
+#define test_mode_on_ADDRESS 0x20E700u
+#define test_mode_on RAM8(test_mode_on_ADDRESS)
+#define test_mode_flags_ADDRESS 0x20E701u
+#define test_mode_flags RAM8(test_mode_flags_ADDRESS)
+#define test_mode_cursor_ADDRESS 0x20E702u
+#define test_mode_cursor RAM8(test_mode_cursor_ADDRESS)
+#define test_mode_page_cursor_ADDRESS 0x20E703u
+#define test_mode_page_cursor RAM8(test_mode_page_cursor_ADDRESS)
+#define test_mode_routine_ADDRESS 0x20E704u
+#define test_mode_routine RAM32(test_mode_routine_ADDRESS)
+#define test_mode_blink_address_ADDRESS 0x20E708u
+#define test_mode_blink_address RAM32(test_mode_blink_address_ADDRESS)
+#define test_mode_buttons_ADDRESS 0x20E70Cu
+#define test_mode_buttons RAM8(test_mode_buttons_ADDRESS)
+#define test_mode_buttons_previous_ADDRESS 0x20E70Du
+#define test_mode_buttons_previous RAM8(test_mode_buttons_previous_ADDRESS)
+#define test_mode_buttons_pressed_ADDRESS 0x20E70Eu
+#define test_mode_buttons_pressed RAM8(test_mode_buttons_pressed_ADDRESS)
+#define test_mode_buttons_released_ADDRESS 0x20E70Fu
+#define test_mode_buttons_released RAM8(test_mode_buttons_released_ADDRESS)
+#define test_mode_analog_inputs_ADDRESS 0x20E710u
+#define test_mode_analog_inputs RAM8(test_mode_analog_inputs_ADDRESS)
+#define memory_test_results_ADDRESS 0x20E716u
+#define memory_test_results RAM8(memory_test_results_ADDRESS)
+#define test_mode_blink_timer_ADDRESS 0x20E72Fu
+#define test_mode_blink_timer RAM8S(test_mode_blink_timer_ADDRESS)
+#define sound_test_number_a_ADDRESS 0x20E730u
+#define sound_test_number_a RAM8(sound_test_number_a_ADDRESS)
+#define sound_test_number_b_ADDRESS 0x20E731u
+#define sound_test_number_b RAM8(sound_test_number_b_ADDRESS)
+#define test_mode_sound_queue_write_ADDRESS 0x20E732u
+#define test_mode_sound_queue_write RAM8(test_mode_sound_queue_write_ADDRESS)
+#define test_mode_sound_queue_read_ADDRESS 0x20E733u
+#define test_mode_sound_queue_read RAM8(test_mode_sound_queue_read_ADDRESS)
+#define test_mode_sound_queue_ADDRESS 0x20E734u
+#define test_mode_sound_queue ((uint16_t *)ram(test_mode_sound_queue_ADDRESS))
+#define test_mode_privilege_mode_ADDRESS 0x20E754u
+#define test_mode_privilege_mode RAM8(test_mode_privilege_mode_ADDRESS)
 #define unk_20FB00_ADDRESS 0x20FB00u
 #define unk_20FB00 RAM8(unk_20FB00_ADDRESS)
 #define unk_20FB01_ADDRESS 0x20FB01u
@@ -1447,6 +1467,7 @@
 #define RANDOM_D80000 0xD80000u
 
 /* data in the program ROM symbols.txt labels */
+#define object_handlers_F70_ADDRESS 0x000F74u
 #define unk_00183B_ADDRESS 0x00183Bu
 #define object_handlers_1A78_ADDRESS 0x001A7Cu
 #define object_handlers_2D58_ADDRESS 0x002D5Cu
@@ -2073,7 +2094,7 @@ struct object
 		struct
 		{
 			uint8_t pad_02[0x7];
-			uint8_t player_count;
+			uint8_t racer_count;
 			uint8_t pad_0A[0x3];
 			uint8_t page;
 			uint8_t page_step;
@@ -3260,30 +3281,30 @@ struct car
 
 struct screen
 {
-	uint8_t unk_00;
-	uint8_t unk_01;
-	uint8_t unk_02;
+	uint8_t index;
+	uint8_t player;
+	uint8_t car_number;
 	uint8_t pad_03[0x1];
-	uint32_t unk_04;
-	uint32_t unk_08;
-	uint32_t unk_0C;
+	uint32_t palette_ram;
+	uint32_t mixer;
+	uint32_t io_chip;
 	uint16_t unk_10;
 	uint16_t unk_12;
-	uint16_t unk_14;
-	uint16_t unk_16;
+	uint16_t sprite_origin_x;
+	uint16_t sprite_origin_y;
 	uint16_t unk_18;
-	uint16_t unk_1A;
+	uint16_t sprite_screen_bit;
 	uint8_t pad_1C[0x4];
 	uint32_t race_copy;
 	uint32_t race;
 	uint8_t pad_28[0x18];
-	uint8_t unk_40;
+	uint8_t link_event;
 	uint8_t unk_41;
 	uint8_t pad_42[0x3];
-	uint8_t unk_45;
-	uint8_t unk_46;
-	uint8_t unk_47;
-	uint8_t unk_48;
+	uint8_t link_status;
+	uint8_t link_status_set;
+	uint8_t link_status_cleared;
+	uint8_t link_status_changed;
 	uint8_t pad_49[0x17];
 	uint32_t unk_60;
 	uint32_t unk_64;
@@ -3294,15 +3315,17 @@ struct screen
 	uint8_t unk_72;
 	uint8_t unk_73;
 	uint8_t pad_74[0xC];
-	uint32_t unk_80;
-	uint8_t pad_84[0x4];
-	uint16_t unk_88;
+	uint8_t game_mode;
+	uint8_t mode_step;
+	uint8_t game_step;
+	uint8_t pad_83[0x5];
+	uint16_t mode_timer;
 	uint8_t pad_8A[0x6];
-	uint32_t unk_90;
-	uint32_t unk_94;
-	uint32_t unk_98;
-	uint8_t unk_9C;
-	uint8_t unk_9D;
+	uint32_t demo_flags;
+	uint32_t flags;
+	uint32_t game_start_time;
+	uint8_t attract_car;
+	uint8_t record_course;
 	uint8_t unk_9E;
 	uint8_t pad_9F[0x1];
 	uint8_t unk_A0;
@@ -3312,42 +3335,46 @@ struct screen
 	uint8_t unk_A4;
 	uint8_t unk_A5;
 	uint8_t unk_A6;
-	uint8_t unk_A7;
+	uint8_t skip_scroll_update;
 	uint8_t pad_A8[0x8];
-	uint16_t unk_B0;
+	uint16_t sprite_groups;
 	uint8_t pad_B2[0x2];
-	uint32_t unk_B4;
+	uint32_t next_sprite_place;
 	uint16_t unk_B8;
 	uint8_t pad_BA[0x6];
-	uint32_t unk_C0;
-	uint32_t unk_C4;
+	uint32_t sprite_list_last;
+	uint32_t sprite_list_limit;
 	uint8_t pad_C8[0x8];
 	uint32_t unk_D0;
 	uint8_t unk_D4;
 	uint8_t pad_D5[0xC];
-	uint8_t unk_E1;
-	uint8_t unk_E2;
+	uint8_t start_lamp_blink;
+	uint8_t entry_countdown_shown;
 	uint8_t pad_E3[0x1D];
-	uint8_t unk_100;
-	uint8_t unk_101;
-	uint8_t unk_102;
+	uint8_t wheel;
+	uint8_t gas;
+	uint8_t brake;
 	uint8_t pad_103[0x5];
-	uint8_t unk_108;
-	uint8_t unk_109;
+	uint8_t input_write_place;
+	uint8_t input_read_place;
 	uint8_t pad_10A[0x6];
-	uint32_t unk_110;
-	uint32_t unk_114;
-	uint32_t unk_118;
-	uint32_t unk_11C;
+	uint32_t buttons;
+	uint32_t previous_buttons;
+	uint32_t buttons_pressed;
+	uint32_t buttons_released;
 	uint8_t pad_120[0x30];
-	uint8_t unk_150;
-	uint8_t unk_151;
-	uint8_t unk_152;
-	uint8_t unk_153;
-	uint8_t unk_154;
-	uint8_t pad_155[0x4A];
+	uint8_t fade_level;
+	int8_t fade_step;
+	uint8_t fade_end;
+	uint8_t fade_kind;
+	uint8_t fade_channels;
+	uint8_t pad_155[0xB];
+	uint16_t mixer_values;
+	uint8_t pad_162[0x3D];
 	uint8_t unk_19F;
-	uint8_t pad_1A0[0x60];
+	uint8_t pad_1A0[0x10];
+	uint16_t mixer_defaults;
+	uint8_t pad_1B2[0x4E];
 	uint16_t unk_200;
 	uint8_t unk_202;
 	uint8_t unk_203;
@@ -3358,88 +3385,113 @@ struct screen
 	uint32_t unk_208;
 	uint16_t unk_20C;
 	uint8_t pad_20E[0xF2];
-	uint32_t unk_300;
+	uint8_t accepted_players;
+	uint8_t pad_301[0x3];
 	uint32_t unk_304;
-	uint32_t unk_308;
-	uint8_t unk_30C;
+	uint32_t host_record;
+	uint8_t host_player;
 	uint8_t pad_30D[0x2];
-	uint8_t unk_30F;
-	uint32_t unk_310;
+	uint8_t entrant_count;
+	uint8_t entrants;
+	uint8_t pad_311[0x3];
 	uint32_t unk_314;
-	uint8_t unk_318;
-	uint8_t unk_319;
-	uint8_t unk_31A;
-	uint8_t unk_31B;
-	uint8_t unk_31C;
+	uint8_t is_host;
+	uint8_t entry_accepted;
+	uint8_t in_game;
+	uint8_t race_running;
+	uint8_t race_started;
 	uint8_t pad_31D[0x2];
-	uint8_t unk_31F;
-	uint8_t pad_320[0x22];
-	uint8_t unk_342;
-	uint8_t pad_343[0x6];
-	uint8_t unk_349;
-	uint8_t unk_34A;
+	uint8_t place;
+	uint8_t places;
+	uint8_t pad_321[0x7];
+	uint8_t name_entries_seen;
+	uint8_t pad_329[0x7];
+	uint8_t counted_stages;
+	uint8_t pad_331[0x7];
+	uint8_t counted_passes;
+	uint8_t pad_339[0x9];
+	uint8_t pass_seen;
+	uint8_t pad_343[0x1];
+	uint8_t route_stages;
+	uint8_t pad_345[0x4];
+	uint8_t forks_decided;
+	uint8_t route_branches;
 	uint8_t pad_34B[0x5];
-	uint16_t unk_350;
-	uint8_t unk_352;
-	uint8_t pad_353[0x15C];
-	uint8_t unk_4AF;
-	uint8_t unk_4B0;
+	uint16_t leader_window_segment;
+	uint8_t leader_stage;
+	uint8_t pad_353[0x7];
+	uint8_t checkpoint_passes;
+	uint8_t pad_35B[0x5];
+	uint8_t checkpoint_orders;
+	uint8_t pad_361[0x2F];
+	uint8_t checkpoint_order;
+	uint8_t pad_391[0x2F];
+	uint16_t checkpoint_times_by_player;
+	uint8_t pad_3C2[0x5E];
+	uint16_t checkpoint_times;
+	uint8_t pad_422[0x5E];
+	uint8_t checkpoints_passed;
+	uint8_t pad_481[0x2E];
+	uint8_t demo_player_count;
+	uint8_t demo_players;
 	uint8_t pad_4B1[0x41];
-	uint8_t unk_4F2;
+	uint8_t demo_stage;
 	uint8_t pad_4F3[0xD];
 	uint32_t unk_500;
 	uint8_t pad_504[0xC];
 	uint32_t unk_510;
 	uint8_t pad_514[0x1EC];
-	uint16_t unk_700;
+	uint16_t stage_lengths;
 	uint8_t pad_702[0x3C];
 	uint16_t unk_73E;
 	uint8_t pad_740[0xC0];
-	uint8_t unk_800;
-	uint8_t unk_801;
+	uint8_t sound_queue_read;
+	uint8_t sound_queue_write;
 	uint8_t pad_802[0x20];
 	uint8_t unk_822;
 	uint8_t pad_823[0x1D];
-	uint8_t unk_840;
-	uint8_t unk_841;
+	uint8_t second_sound_queue_read;
+	uint8_t second_sound_queue_write;
 	uint8_t pad_842[0xBE];
 	uint32_t unk_900;
 	uint8_t pad_904[0x1FC];
-	uint16_t unk_B00;
-	uint8_t unk_B02;
-	uint8_t unk_B03;
-	uint32_t unk_B04;
-	uint32_t unk_B08;
-	uint32_t unk_B0C;
-	uint8_t unk_B10;
-	uint8_t unk_B11;
-	uint8_t unk_B12;
-	uint8_t pad_B13[0x3ED];
+	uint16_t unpack_state;
+	uint8_t unpack_read_place;
+	uint8_t unpack_write_place;
+	uint32_t unpack_source;
+	uint32_t unpack_destination;
+	uint32_t unpack_copy_source;
+	uint8_t unpack_copy_count;
+	uint8_t unpack_flags;
+	uint8_t unpack_flags_left;
+	uint8_t pad_B13[0xED];
+	uint32_t unpack_queue;
+	uint8_t pad_C04[0x2FC];
 	uint32_t unk_F00;
 	uint32_t unk_F04;
 	uint32_t unk_F08;
 	uint8_t pad_F0C[0x2];
 	uint8_t unk_F0E;
 	uint8_t unk_F0F;
-	uint16_t unk_F10;
-	uint8_t pad_F12[0x2];
+	uint8_t lcd_text;
+	uint8_t pad_F11[0x3];
 	uint32_t unk_F14;
 	uint32_t unk_F18;
 	uint32_t unk_F1C;
-	uint16_t unk_F20;
-	uint8_t unk_F22;
-	uint8_t unk_F23;
-	uint8_t unk_F24;
-	uint8_t unk_F25;
+	uint16_t button_lamps;
+	uint8_t music_lamp_mode;
+	uint8_t arrows_lamp_mode;
+	uint8_t music_lamp_timer;
+	uint8_t arrows_lamp_timer;
 	uint8_t pad_F26[0xA];
-	uint32_t unk_F30;
-	uint8_t unk_F34;
-	uint8_t unk_F35;
+	uint32_t dj_mouth_shapes;
+	uint8_t dj_mouth_frames;
+	uint8_t dj_face;
 	uint8_t pad_F36[0xA];
-	uint32_t unk_F40;
-	uint32_t unk_F44;
-	uint8_t unk_F48;
-	uint8_t unk_F49;
+	uint32_t lcd_scroll_request;
+	uint32_t lcd_scroll;
+	uint8_t lcd_scroll_step;
+	uint8_t lcd_scroll_frames;
 	uint8_t pad_F4A[0x6];
 	uint16_t unk_F50;
 	uint16_t unk_F52;
@@ -3452,10 +3504,14 @@ struct screen
 	uint16_t unk_FA6;
 	uint8_t unk_FA8;
 	uint8_t pad_FA9[0xF57];
-	uint8_t unk_1F00;
-	uint8_t pad_1F01[0x2F];
-	uint16_t unk_1F30;
-	uint8_t pad_1F32[0x3746];
+	uint8_t crest_count;
+	uint8_t pad_1F01[0xF];
+	uint16_t crest_layers;
+	uint8_t pad_1F12[0x1E];
+	uint16_t crest_heights;
+	uint8_t pad_1F32[0x30CE];
+	uint16_t depth_lists;
+	uint8_t pad_5002[0x676];
 	uint16_t unk_5678;
 	uint16_t unk_567A;
 	uint8_t pad_567C[0x184];
@@ -3467,24 +3523,26 @@ struct screen
 
 struct race
 {
-	uint8_t pad_00[0x2];
-	uint8_t unk_02;
+	uint8_t machine;
+	uint8_t player;
+	uint8_t car_number;
 	uint8_t pad_03[0xE];
-	uint8_t unk_11;
-	uint8_t unk_12;
-	uint8_t unk_13;
+	uint8_t record_serial;
+	uint8_t record_model;
+	uint8_t record_name;
 	uint16_t unk_14;
-	uint16_t unk_16;
-	uint8_t unk_18;
-	uint8_t unk_19;
-	uint16_t unk_1A;
-	uint8_t unk_1C;
-	uint8_t unk_1D;
-	uint8_t unk_1E;
-	uint8_t unk_1F;
-	uint32_t unk_20;
+	uint16_t finish_time;
+	uint8_t record_course;
+	uint8_t entry_request;
+	uint16_t entry_frames;
+	uint8_t entry_serial_seen;
+	uint8_t entry_serial;
+	uint8_t entrant;
+	uint8_t racer_count;
+	uint8_t race_order;
+	uint8_t pad_21[0x3];
 	uint32_t unk_24;
-	uint8_t unk_28;
+	uint8_t game_over;
 	uint8_t unk_29;
 	uint8_t unk_2A;
 	uint8_t unk_2B;
@@ -3512,21 +3570,21 @@ struct race
 	uint16_t unk_56;
 	uint16_t unk_58;
 	uint8_t pad_5A[0x2];
-	uint8_t unk_5C;
+	uint8_t ready;
 	uint8_t unk_5D;
 	uint8_t unk_5E;
-	uint8_t unk_5F;
-	uint8_t unk_60;
-	uint8_t unk_61;
-	uint8_t unk_62;
-	uint8_t unk_63;
-	uint8_t unk_64;
-	uint8_t unk_65;
-	uint8_t unk_66;
-	uint8_t unk_67;
-	uint16_t unk_68;
-	uint16_t unk_6A;
-	uint32_t unk_6C;
+	uint8_t published;
+	uint8_t stage_count;
+	uint8_t pass_seen;
+	uint8_t stage;
+	uint8_t pass_count;
+	uint8_t pass_player;
+	uint8_t pass_checkpoint;
+	uint8_t pass_order;
+	uint8_t pass_branch;
+	uint16_t pass_time;
+	uint16_t time_left;
+	uint32_t race_time;
 	uint8_t pad_70[0x10];
 };
 

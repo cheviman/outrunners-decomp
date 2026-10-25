@@ -59,8 +59,9 @@ register R32  stack_pointer      # SP, in the functions whose stack stays in mem
 struct object 100
 struct car 200
 struct screen 8000
-# Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (stage at
-# 60, node at 62, the race time at 68), and 20FC00 and 20FC80, which the time is copied to
+# Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (the number
+# of stages at 60, the stage at 62, the time of the last checkpoint pass at 68, the time left at 6A in 30ths
+# of a second, the race time at 6C in thousandths), and the copy at 20FC00 and 20FC80 each screen keeps
 struct race 80
 field object 00 flags u8               # bit 0: the object is live (run_objects runs it; else it frees its slot)
 field object 04 handler u32            # the code run_objects runs for it each frame ("jsr [4[R20]]", 011CD2)
@@ -123,6 +124,7 @@ task  second_task
 0181B8  data  object_lists_181B8  pointers=62 record=8 count=bytes32 code=0 data=4  # 017BD2-017BF6: the records' length in bytes (the count is >> 3), then (handler, data) pairs
 02E1F0  data  object_lists_2E1F0  pointers=32 record=16 end=FFFF8000 code=4 data=12  # 0137F1, 013809-013821: (position, type, handler -> field 4, field 84, field 18) records, closed by 8000 FFFF
 00DF78  data  object_handlers_DF74  record=4 count=3 code=0    # the count at 00DF74; list taken at 00DE57
+000F74  data  object_handlers_F70  record=4 count=1 code=0     # the count at 000F70: game mode 8's (the ISDN connection)
 
 # The objects of each stage's road: a stream of (position, command) halfword pairs, taken from this table by
 # the stage's number (012720 and 0127BF, "mov.w 20800(R0), 80[R20]") and read at 01272C-012746 as the road
@@ -157,10 +159,10 @@ task  second_task
 0002E6  code  unused_0002E6      # unused: what the branch before it skips, then on into the code at 0002EA
 0002FD  code  unused_0002FD      # unused: runs into the code at 00041B
 000303  code  unused_000303      # unused: what the branch before it skips, then on into the code at 00041B
-000310  func  sub_000310         # unused: what the branch before it skips
-000327  func  sub_000327         # unused: what the branch before it skips
-000354  func  sub_000354         # unused
-000EA4  func  sub_000EA4         # unused object handler: goes by its state (C[R20]) through the table after it
+000310  func  eeprom_read_one_word         # unused: what the branch before it skips
+000327  func  reload_settings         # unused: what the branch before it skips
+000354  func  eeprom_write_one_word         # unused
+000EA4  func  isdn_status_update         # the handler of object_handlers_F70, which game mode 8 (the ISDN connection) starts
 0010CD  func  sub_0010CD         # unused: starts objects (011D43)
 001737  code  unused_001737      # unused object set-up; its handler (001820) calls into 011EB8 at 011EC0
 001783  code  unused_001783      # unused object set-up, like unused_001737
@@ -263,7 +265,7 @@ comment road_row_crash_check road_row_hit_check with kind 0 (R27): hitting an it
 comment road_row_pair_crash_check road_row_hit_check for the rows drawn in mirrored pairs, with kind 0 (a crash): each item's hit box is tested as it is and mirrored across the road's centre. Used by scenery_pair and animated_scenery_pair.
 comment road_row_draw Draws the row's items in view: ends the object once end_position is not past the view's start (race_copy unk_46); nothing while first_position is beyond the draw distance (SCREEN(screen)->unk_12 >> 7 segments); moves first_position up to the first item in view; for each item (spacing apart, to the draw distance) where the road has a scale: x = (the road's width * side + x_offset) * scale >> 12 plus the road's screen x unless screen_centered, y = y_offset * scale >> 12 plus the road's screen y; off the screen (x beyond -1E0..1E0, y beyond -160..80) it is skipped, else the scale shifted by scale_shift picks the size (size_table: a size step and a shift) and a sprite of the animation's frame with its palette (flags bits 6-7 flip it) goes into the screen's sprite list (unk_C0; the copy at +3000 is the halfway point from the item's sprite of the frame before, previous_sprites) and the depth list of its road segment (screen + 5000). Sets flags bit 5 and keeps where its sprites went in previous_sprites. Used by scenery, fork_sign, animated_scenery, flashing_scenery and overhead_scenery (and 01351E).
 comment road_row_pair_draw road_row_draw for the rows drawn in mirrored pairs: each item twice, at the same distance either side of the road's centre, the second with sprite attribute bits 43 toggled (bit 6 flips it, bits 0-1 swap its X alignment); there is no off-screen test and no screen_centered. Used by scenery_pair and animated_scenery_pair.
-comment animation_start Starts animation R9 (rom_034138[R9] is its record) at its first frame: frame_time and frame_countdown from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and height zoom of the screen-position drawing, sub_00EF32: 100 the sprite's own size).
+comment animation_start Starts animation R9 (rom_034138[R9] is its record) at its first frame: frame_time and frame_countdown from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and height zoom of the screen-position drawing, draw_object_on_screen: 100 the sprite's own size).
 comment animation_advance Steps the object's animation: nothing while frame_time is 0; when frame_countdown runs out (back to frame_time), the next frame. A frame's entry in the record (32 bits at +4 + frame * 4) is the address of its data when positive, else an order: 0 holds the frame before (frame_time 0), -1 goes back to frame 0, -2 starts the animation whose number is the next entry.
 comment draw_object Draws the object's sprite, unless flags bit 1 is set or the screen's sprite list is full: field 3E picks the routine (rom_00EB44): some project the object's road position (1C) with its offsets (20, 24) and set fields 30 and 32 to where it lands and 3C to the road's depth layer there, some draw it at the screen position in 30 and 32, some copy a ready sprite entry from the address in field 38; then links it into the depth list of layer 3C (screen + 5000).
 scoped object flashing_scenery 10 spacing u16
@@ -391,7 +393,7 @@ scoped object animation 42 frame_countdown s8
 0193FC  func  start_dj_message_if_quiet
 019402  func  start_dj_message
 comment lcd_race_info_start Starts the race information on the cabinet LCD: clears it (clear_lcd), shows the DJ's face in its first two characters (screen unk_F35) and goes on to lcd_race_info_update.
-comment lcd_race_info_update Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150 frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, unk_20E030 + 1, in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen unk_F50), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1 updates the number. When the car reaches the goal (car unk_181) goes to lcd_race_info_finish; when the race is over (car unk_182) shows the average and ends; while the LCD scrolls a text (screen unk_F44) waits in lcd_race_info_paused.
+comment lcd_race_info_update Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150 frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, car_numbers + 1, in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen unk_F50), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1 updates the number. When the car reaches the goal (car unk_181) goes to lcd_race_info_finish; when the race is over (car unk_182) shows the average and ends; while the LCD scrolls a text (screen unk_F44) waits in lcd_race_info_paused.
 comment lcd_race_info_time_page Writes the Time page's label on the LCD, then the time (lcd_race_info_time).
 comment lcd_race_info_time Writes the race time (the car's unk_04, in thousandths of a second) on the LCD as minutes'seconds"hundredths.
 comment lcd_race_info_average_page Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average).
@@ -402,7 +404,7 @@ comment lcd_race_info_paused Waits while the LCD scrolls a text (screen unk_F44)
 comment car_radio_start Sets up the radio as the race starts: the car each player chose (byte 49 of its race_copy record) by car number in car_models (FF where none) and how many in cars_to_introduce, this screen's car number, clears screen unk_F0F, gives the car the song of its model (car unk_14 = rom_019421 by car unk_60), notes the stage (screen unk_A1), then car_radio_wait_start.
 comment car_radio_wait_start Waits for the start (the car object's unk_10, the frames to it, down to 0), then goes on to car_radio_read_buttons.
 comment car_radio_read_buttons Each frame of the race: the buttons newly pressed (screen unk_118) into buttons, then car_radio_update. Once the race is over (car unk_181 at the goal, or unk_182) clears them, silences the DJ (talk_step 5), turns the screen's two lamps off (unk_F20) and leaves car_radio_update alone, without the buttons.
-comment car_radio_update The radio, by state: 0 plays the car's song (car unk_14) with its title; 1 << and >> step through the ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound (rom_019458 by screen unk_A1); 3 the station plays; 4-8 while screen unk_F0F is set (the road object 01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (sub_011FEA), sound E0 after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message (rom_019571 by screen unk_A4) and sound. On the station: any of the three buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step: 0 message 0, 1-2 each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing.
+comment car_radio_update The radio, by state: 0 plays the car's song (car unk_14) with its title; 1 << and >> step through the ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound (rom_019458 by screen unk_A1); 3 the station plays; 4-8 while screen unk_F0F is set (the road object 01458D sets it, a new stage unk_A1 clears it): 3F to the screen's sound byte (fade_out_music_at), sound E0 after 60 frames, sound EE, 7F when it clears and after 120 frames the stage's message (rom_019571 by screen unk_A4) and sound. On the station: any of the three buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no message plays (screen unk_F30), by talk_step: 0 message 0, 1-2 each car number (message 9 + number) and its car (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of remarks (routine_lists_1966C), 5 nothing.
 comment car_radio_dj_leader A DJ remark: message 11 plus the car number of the car in the lead.
 comment car_radio_dj_own_car A DJ remark: message 19 plus this screen's car number.
 comment car_radio_dj_remark_2a A DJ remark: message 2A (also the end of the cars' introduction).
@@ -414,14 +416,14 @@ comment car_radio_song Shows the title of song R0 (rom_01942C: 0 Magical Sound S
 comment car_radio_show_title Starts a song title (start_song_title) for the record it is given, sends the one shown (title) away and keeps the new one in title.
 comment staff_credits_code_start Starts watching for the secret code during the presentation of the cars: takes the controls held (staff_credits_code_read_controls), puts code_place at the start of the code (001ADC) and goes on to staff_credits_code_watch.
 comment staff_credits_code_watch Watches the controls for the code (001ADC: shift down twice, shift up twice, the wheel left, right, left, right, the brake, the gas; a wrong one starts over); when it is complete: sound 9, the presentation 1200 frames longer (screen unk_88), and staff_credits_code_show.
-comment staff_credits_code_show Shows the staff credits (the texts at 001AE8, draw_text) for 1200 frames, then sub_011FE6 and staff_credits_code_done.
+comment staff_credits_code_show Shows the staff credits (the texts at 001AE8, draw_text) for 1200 frames, then fade_out_music and staff_credits_code_done.
 comment staff_credits_code_done Does nothing: the code has been used; the object stays until the presentation's objects are cleared.
 comment staff_credits_code_read_controls Reads the controls as bits (0 shift up, 1 shift down, 2 the wheel right, 3 the wheel left, 4 the brake, 5 the gas, each with less needed to stay on), keeps them in controls_held and returns the ones newly on (zero set when there are none).
 comment transmission_label_start_automatic Sets up the label of the automatic transmission's panel (sprite set 2C1, 24 below the panel's place; the frames show NOVICE there), then transmission_label_follow.
 comment transmission_label_start_manual Sets up the label of the manual transmission's panel (sprite set 2C9, its unk_40 from rom_006E78 by the car's model; the frames show 5 SPEED there for the car coin_start takes), then transmission_label_follow.
 comment transmission_label_follow Keeps the label on its panel (the panel's place plus its offsets, the panel's palette) and draws it; ends when the panel ends.
 comment entry_countdown_start Sets up the invitation to join, on a seat with no player while the entry time of a game runs: the screen (set_up_background, start_palette_fades), clears the LCD (clear_lcd) with the DJ's face, the music (sound F, Mega Driver) and DJ message 3B, marks the screen (unk_E2) so the car select does not start them again, starts the WAITING YOUR ENTRY banner (entry_banner), the ring of cars (entry_car_ring, in car_ring) and the traffic behind it (entry_traffic_run), and goes on to entry_countdown_count.
-comment entry_countdown_count Shows the entry time left (unk_20FC1A, frames): the seconds as the big number (its unk_40), the frames into the second to the ring of cars, and on the LCD a shrinking bar (rom_006464) with the seconds; when it is over clears the screen's unk_E2, sub_011FE6, and goes on to entry_countdown_done.
+comment entry_countdown_count Shows the entry time left (unk_20FC1A, frames): the seconds as the big number (its unk_40), the frames into the second to the ring of cars, and on the LCD a shrinking bar (rom_006464) with the seconds; when it is over clears the screen's unk_E2, fade_out_music, and goes on to entry_countdown_done.
 comment entry_countdown_done Does nothing (the number is no longer drawn): the entry time is over.
 comment entry_banner_start Sets up the WAITING YOUR ENTRY banner (sprite set 287) at the centre of the screen, then entry_banner_blink.
 comment entry_banner_blink Draws the banner 16 frames out of every 32.
@@ -430,7 +432,7 @@ comment entry_car_ring_draw Draws a ring of as many copies of a car around the c
 comment stage_indicator_start Sets up the STAGE label at the top left of the race screen (sprite set 2E), then stage_indicator_draw.
 comment stage_indicator_draw Draws the stage's name after the label (rom_00D034 by the forks taken, screen unk_A5: PRE-STAGE, 1 to 4, FINAL STAGE) and the label itself.
 comment car_select_start Starts the car select with 630 frames (21 seconds) to choose, then car_select_run.
-comment car_select_run The car select, by state: 0 sets the screen up (unless screen unk_E2 says the entry countdown did: clears the LCD, the title Mega Driver, sound F, DJ message 3B), the tile layer's tables from 006920, the WELCOME! letters; 1 when the screen's data is unpacked (unk_B00) starts the eight cars on the turntable and the rest, the default car (rom_0069B0 by the player's place in the race), the time display (time_digits_start); 2 30 frames; 3 the screen's unk_F04 up to 0, then the instructions (select_car_heading_show) and the car's caption (car_caption_show); 4 the wheel turns the turntable (turn, turn_delay, angle; car unk_60 is the car in front) until the gas or START confirms or time_left runs out: race unk_49 = the car, unk_48 = the car + 1, the car's sound (rom_006DEE), at least 180 frames left, the transmission choice (transmission_choice_run); 5 the wheel picks the transmission (car unk_61 = rom_006DA4 by the wheel: 0 automatic, 1 manual) until confirmed or out of time; 6-8 when the entry time is over (entry_over) marks the player ready (set_player_ready) and waits for the race's other players (players_not_ready), DJ message 3C; 9 60 frames, then sub_011FE6 and the game's next step (screen unk_80 byte 2); 10 stays. Every frame from 4 on: car_select_turn_to_choice and car_select_update_rowscroll; time_left down by one and shown in seconds.
+comment car_select_run The car select, by state: 0 sets the screen up (unless screen unk_E2 says the entry countdown did: clears the LCD, the title Mega Driver, sound F, DJ message 3B), the tile layer's tables from 006920, the WELCOME! letters; 1 when the screen's data is unpacked (unk_B00) starts the eight cars on the turntable and the rest, the default car (rom_0069B0 by the player's place in the race), the time display (time_digits_start); 2 30 frames; 3 the screen's unk_F04 up to 0, then the instructions (select_car_heading_show) and the car's caption (car_caption_show); 4 the wheel turns the turntable (turn, turn_delay, angle; car unk_60 is the car in front) until the gas or START confirms or time_left runs out: race unk_49 = the car, unk_48 = the car + 1, the car's sound (rom_006DEE), at least 180 frames left, the transmission choice (transmission_choice_run); 5 the wheel picks the transmission (car unk_61 = rom_006DA4 by the wheel: 0 automatic, 1 manual) until confirmed or out of time; 6-8 when the entry time is over (entry_over) marks the player ready (set_player_ready) and waits for the race's other players (players_not_ready), DJ message 3C; 9 60 frames, then fade_out_music and the game's next step (screen unk_80 byte 2); 10 stays. Every frame from 4 on: car_select_turn_to_choice and car_select_update_rowscroll; time_left down by one and shown in seconds.
 comment car_select_turn_to_choice Once the car is chosen (car_chosen), turns the turntable the short way round until the chosen car (car unk_60) is in front, 20 a frame, skewing the floor as it goes.
 comment car_select_update_rowscroll Writes the line scroll of the tile layer for the next frames: the top 104 lines all at top_scroll, which moves one more each frame, and while rowscroll_copies says, the floor's 120 lines from their offsets at 3800 of the screen.
 comment car_select_skew_floor_next Skews the turntable's floor for a step toward the next car (car_select_skew_floor with 6).
@@ -444,14 +446,14 @@ comment start_dj_message Starts DJ message R0 (typed_messages): requests its voi
 comment start_dj_message_if_quiet Starts DJ message R0 (start_dj_message) unless one is being said (screen unk_F30).
 comment start_song_title Starts an object that shows the song title of record R10 (x, then the text) on the screen and scrolls it on the LCD; returns the object.
 comment random_number Returns the next pseudo-random number of the screen's sequence (kept in unk_F00).
-comment request_sound Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when only the sounds the table at 01202E allows play, and only with unk_20E60D set.
+comment request_sound Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when only the sounds the table at 01202E allows play, and only with advertise_sound set.
 comment queue_sound Puts sound R0 in the screen's ring of 32 sound requests (801 of the screen: the place, then the requests).
 comment draw_text Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character and returns the address of the record after it.
 comment step_palette Gives the object the next palette (unk_3A, an index into the sprites' palette words, rom_032BA4) of its palette list (unk_18); a negative entry goes back by that many bytes, to loop.
 comment binary_to_bcd Converts R0 into eight decimal digits, one per four bits, the units in the lowest.
 comment set_player_ready Marks the screen's player ready in its race record (unk_5C), after its selections.
 comment players_not_ready Whether a player of the race has not marked itself ready yet (zero set): byte 5C of each one's race_copy record.
-scoped object lcd_race_info 09 player_count u8
+scoped object lcd_race_info 09 racer_count u8
 scoped object lcd_race_info 0D page u8
 scoped object lcd_race_info 0E page_step u8
 scoped object lcd_race_info 10 frames u16
@@ -566,7 +568,7 @@ comment road_object_stream_stage_end Command 1: the stage's stream is over; note
 comment road_object_stream_fork Command 3, a fork: keeps the address of the table of the branches' streams in stream, the current stage (screen unk_A3) in stage, and waits for the branch (state 3).
 comment road_object_stream_end Command 2: the last stage's stream is over (the goals): ends the reader.
 comment crest_clip_update Cuts the sprites beyond the road's crests: each frame, for the crests the road's projection found (screen unk_1F00 of them; their depth layers at 1F10 of the screen and their screen heights at 1F30), each whose layer is lower than all those before it gets a sprite clip command in its layer (draw_mode 6: the 16-byte entry at clip_command, command 7000: the drawing area from the top of the screen down to clip_bottom = the crest's height + screen unk_16 - 1, across clip_left..clip_right), so the sprites the list draws after it (meant: what lies beyond the crest) are cut at the crest's height.
-comment traffic_spawner_update Starts the traffic of the stage the race's leader is in (object_lists_2E1F0). By state: 0 the list of the stage being built (screen unk_A3), traffic_level = 8 - the number of players (byte 1F of the record screen unk_308 points at) + the game setting unk_20E630, the draw distance into screen unk_FA6, no traffic yet (screen unk_FA8); 1 (outside the attract demo, screen unk_90 bit 8) when the leader's stage (screen unk_352) changes, takes its list with positions from where the leader was then (screen unk_350); starts each record (position, level, handler, stop_distance, record) whose position is within the draw distance of the leader's view (unk_46 of the race record screen unk_60), when its level is not above traffic_level and fewer than 32 are on the road (screen unk_FA8); then writes at F84 of the screen the stretches of road the players can see (each player's view, unk_46 of the race records listed after byte 1F, give or take the draw distance; a count, then each stretch's top and bottom from the highest), for traffic_out_of_view.
+comment traffic_spawner_update Starts the traffic of the stage the race's leader is in (object_lists_2E1F0). By state: 0 the list of the stage being built (screen unk_A3), traffic_level = 8 - the number of players (byte 1F of the record screen unk_308 points at) + the game setting game_difficulty, the draw distance into screen unk_FA6, no traffic yet (screen unk_FA8); 1 (outside the attract demo, screen unk_90 bit 8) when the leader's stage (screen unk_352) changes, takes its list with positions from where the leader was then (screen unk_350); starts each record (position, level, handler, stop_distance, record) whose position is within the draw distance of the leader's view (unk_46 of the race record screen unk_60), when its level is not above traffic_level and fewer than 32 are on the road (screen unk_FA8); then writes at F84 of the screen the stretches of road the players can see (each player's view, unk_46 of the race records listed after byte 1F, give or take the draw distance; a count, then each stretch's top and bottom from the highest), for traffic_out_of_view.
 comment traffic_car_start Sets up a traffic car from its record (the address of its sprite record, then side, x_offset and speed): from the sprite record its animation (animation_start), palette, passing_sound, hit_sound, weight and hit_box (the sprite record's last 8 bytes); draw_mode B (the frame chosen by the angle it is seen from, traffic_car_draw), scale_shift FF, passed 0; goes on to state 1.
 comment traffic_car_draw Moves and draws a traffic car: keeps the position_fraction; ends it (taking it off the count, screen unk_FA8) when traffic_out_of_view; plays passing_sound whenever the screen's car (race_copy unk_42) passes it or it passes the car (passed); while it is within the draw distance ahead of the view (race_copy unk_46) picks its frame by the angle the player sees it from: a column (4-1B) from the difference between the road's direction (+0 of the road's segment record) at the car and at it, plus a quarter of its screen_x, and a row (0-3, 20 frames apart) from the difference in height (+2) and the car's pitch (car unk_2C), shaken for 20 frames after a hit (shake, rom_013D45); traffic_hit_check, and on a hit traffic_start_hit_sound and shake = 1; draw_object.
 comment traffic_start_hit_sound When the traffic object has a hit_sound, starts an object (013D15) that plays it 15 frames later.
@@ -865,8 +867,8 @@ scoped object backdrop_translucent 80 data u32 rom
 comment player_car_update The screen's car, each frame: player_car_check_place, player_car_read_controls, player_car_build_hit_boxes, then by state: 0 sets up the race (the view's constants in screen unk_10-18, the course, the car on its grid place: segment 16 + rom_0091CC by players and place, road_x from rom_0090AC, its world position; the palette of its model, rom_009510; timer 8 frames in the demo, 149 in a race with the intro view car unk_10C/unk_10E; the gears, torque curves, crash physics, with screen unk_318 the race's time left (race unk_6A: 40 seconds plus unk_20FC0B), the engine sound); 1 the countdown to the start: brake full and the wheel centred until timer runs out (others read it as the frames to the start), then car unk_66 and race unk_5D; 2 driving (player_car_move): goes to 3 when the time is up (car unk_180), to 4 at the goal (car unk_181); counts hit_guard down; on a hit (flags bit 2, by hit_kind): 3 a fork sign slows it for 15 frames (car unk_147), 0 scenery, 1 a road object (hit_other), 2 the other player's car (hit_other): a speed change, a push and a bounce from the model's crash table (car unk_130, by impact_speed or the cars' speeds and places), the hit's sounds, a crash animation, the CRASH text (car unk_136), immune (flags bit 3), state 5; 5 the crash plays out: no controls, the push and the speed change die away, it bounces under gravity (sound 31 on landing), back to 2 when the animation ends with 15 frames of hit_guard; 3 time up: gas off and the model's brake (rom_009530), 180 frames, then the race is over (car unk_182), GAME OVER (004771) with one player or race_result_start with two, 60 frames, screen unk_94 bit 4 and DJ message 36 or 37; 4 the goal: finished, the race's stage count up, waits for the screen's finish time (screen 410) into race unk_16 and the race time, race unk_5E, then drives itself (player_car_steer_to_stop) to its stop_position by its place (rom_009540), plays the model's arrival animation (rom_009520), brakes to a stop, 90 frames, screen unk_94 bit 4.
 comment player_car_move One frame of the car on the road: player_car_drive, player_car_place_view, player_car_move_view, player_car_set_horizon, player_car_publish, player_car_extend_course, player_car_project_road, player_car_engine_sound and player_car_animate; no wheel effects while it crashes (state 5).
 comment player_car_steer_to_stop Drives the car by itself after the goal: gas 40, no brake, the speed (car unk_74) a 16th of the way to stop_speed each frame, and the wheel turned step by step toward stop_x across the road (centred within 8 of it; stop_wheel keeps it).
-comment player_car_check_place Keeps the race order around the screen's car: screen unk_60-6C the race records (unk_70-73 the players) of the leader, the last, the car just ahead and the car just behind (all itself in the demo), screen unk_350 and unk_352 the leader's race unk_46 and unk_62. When its place (screen 320 + player, kept in place) changes during the race: sound 37 when the car it passed or that passed it is within 160 across, else 3A. While first, blinks one of the screen's lamps (the count, period and timer bytes C9-CB of its entry at unk_20E0C0).
-comment player_car_publish Hands the car's state on: this frame's view into the screen's ring of eight (screen + 600, slot unk_D4, also race unk_4B) and the view of the slot race_copy unk_4B names back into the car and screen unk_D0, so that both screens draw the view of the same frame; and the car's world position, animation, palette, frame, wheel effects, speed, sideways speed, flags, segments, place across the road and bounce into its race record (race unk_5F set), from which race_car draws it on both screens. Not in a replay (unk_20E623), which reads them back instead.
+comment player_car_check_place Keeps the race order around the screen's car: screen unk_60-6C the race records (unk_70-73 the players) of the leader, the last, the car just ahead and the car just behind (all itself in the demo), screen unk_350 and unk_352 the leader's race unk_46 and unk_62. When its place (screen 320 + player, kept in place) changes during the race: sound 37 when the car it passed or that passed it is within 160 across, else 3A. While first, blinks one of the screen's lamps (the count, period and timer bytes C9-CB of its entry at checkpoint_lamp).
+comment player_car_publish Hands the car's state on: this frame's view into the screen's ring of eight (screen + 600, slot unk_D4, also race unk_4B) and the view of the slot race_copy unk_4B names back into the car and screen unk_D0, so that both screens draw the view of the same frame; and the car's world position, animation, palette, frame, wheel effects, speed, sideways speed, flags, segments, place across the road and bounce into its race record (race unk_5F set), from which race_car draws it on both screens. Not in ISDN mode (isdn_mode), which reads them back instead.
 comment player_car_set_horizon Works out the horizon's line on the screen (screen unk_B8) from the view's tilt: the nod (car unk_102), the rival and road-object pulls (unk_112, unk_10A), the screen's own tilt (screen unk_18), clamped to C0-200, and the intro's (unk_10E).
 comment player_car_place_on_road Puts the car on its starting segment at the start: no way into the segment, road_x from the grid's place, its world position (player_car_world_position) and the view behind it (player_car_place_view).
 comment player_car_clear_hit Ends what a hit was doing to the car: no sideways_push, speed_change, bounce, no hit pending (flags bit 2), and the car no longer skidding (car unk_67) or slipping (unk_65).
@@ -879,7 +881,7 @@ comment player_car_load_crash_physics Loads the crash physics of the car's model
 comment player_car_load_gears Loads the car's model and transmission: its handling record (car unk_58), its torque curves (unk_50), its gear ratios (unk_54) and top gear (unk_63), the first gear's ratio (unk_64), and the roadside surfaces of the first stage (player_car_next_surfaces).
 comment player_car_build_torque_curves Builds the drive force of each gear by speed at screen + 1300 (256 values a gear), interpolating the model's points (car unk_50).
 comment player_car_read_controls Takes the controls: gas, brake and wheel from the screen's pedals and wheel (screen unk_101, unk_102, unk_100). In the demo (screen unk_90 bit 8) the car drives itself: no brake, the gas up to F0 (eased off while skidding), the wheel back toward the middle when off the road or slowed, else against its sideways drift.
-comment player_car_drive Moves the car for the frame: the drag (player_car_road_drag), the slope of its segment (race unk_54), the brake (no gas while braking; brake lights car unk_7E) and the gas through the gear's torque curve go to player_car_engine (speed, revs); the wheel steers through the model's table (less at low speed) into steering; the road's turn under it (previous_heading less heading) pushes it out (less with catch-up, car unk_6A); beyond the model's grip it skids (car unk_67, slide, tyre noise 3, smoke on both sides); sideways_speed and sideways_push move it across (car unk_38, within the road's half width + 60); the speed along (less its sideways angle, vector_angle) plus a catch-up bonus by the distance to the car ahead (car unk_68, unk_6A; not once finished) moves it along, passing segments (car unk_42, unk_44, unk_40, unk_A4, unk_34, unk_32); then player_car_world_position. In a replay (unk_20E623) the race record gives all this.
+comment player_car_drive Moves the car for the frame: the drag (player_car_road_drag), the slope of its segment (race unk_54), the brake (no gas while braking; brake lights car unk_7E) and the gas through the gear's torque curve go to player_car_engine (speed, revs); the wheel steers through the model's table (less at low speed) into steering; the road's turn under it (previous_heading less heading) pushes it out (less with catch-up, car unk_6A); beyond the model's grip it skids (car unk_67, slide, tyre noise 3, smoke on both sides); sideways_speed and sideways_push move it across (car unk_38, within the road's half width + 60); the speed along (less its sideways angle, vector_angle) plus a catch-up bonus by the distance to the car ahead (car unk_68, unk_6A; not once finished) moves it along, passing segments (car unk_42, unk_44, unk_40, unk_A4, unk_34, unk_32); then player_car_world_position. In ISDN mode (isdn_mode) the race record the link brings in gives all this.
 comment player_car_world_position Places the car in the world from its segment: world_x and world_z from the segment's position and the car's place across and along it turned by the road's heading and pitch (rotate_offset), world_y the road's height there plus bounce_height (the old one to previous_world_y); the rest of the segment (car unk_3A) and the road's heading under the car (heading, the old one to previous_heading).
 comment player_car_place_view Places the view behind the car: a point on the road some way back of the car (the nod, the intro, the rival and road-object pulls: car unk_100, unk_10C, unk_110, unk_108) and across (unk_106) and above (unk_104) it (view_target_x/y/z), looking toward the road twelve segments on (vector_angles: car unk_2E the yaw, unk_30 the road's pitch; car unk_2C the pitch with the view's tilt), the eye screen unk_10 back from the target along those angles (angles_to_offset) in car unk_20-28.
 comment player_car_engine The engine and the speed: the force (brake, slope and drag, drive; acceleration) changes the speed (car unk_74, also impact_speed), with any speed_change from a hit, up to the top speed of the gear (its ratio, car unk_64); a force past the model's grip spins the wheels, and hard braking locks them (car unk_65: tyre noise 1 or the model's skid noise, smoke); the revs (car unk_70) follow the speed through the gear's ratio, or the gas when the car stands; car unk_66 says it moves.
@@ -901,7 +903,7 @@ comment rotate_offset Turns an offset (R1 across, R2 along, R0 up) by a heading 
 comment angles_to_offset Returns the offset of length R2 along pitch R0 and yaw R1 (R3, R4, R5: x, y, z). Used by player_car_place_view for the eye behind the view's target.
 comment set_tyre_noise Sets the noise of the screen's car's tyres on the sound board (byte 718 of the screen's page): wheelspin, skids, off-road rumble. In the demo without sound it mutes the engine instead. Used by player_car (player_car_engine, player_car_off_road_shake, the goal) and 00664E.
 comment set_tyre_noise_on_road set_tyre_noise, unless the car is off the road (car unk_7C), where the off-road noise plays. Used by player_car_drive, player_car_engine and gear_indicator_update.
-comment queue_stage_load Queues the data of the stage the screen goes to (rom_031DDC by screen unk_A1) in the screen's load queue (screen + 900). Used by player_car_extend_course and the game's code (002E74).
+comment queue_stage_load Queues the palette of the stage the screen goes to (rom_031DDC by screen unk_A1) through queue_palette (the palette queue at screen + 900). Used by player_car_extend_course and the game's code (002E74).
 comment rev_meter_update The rev meter, the bar left of the speed at the bottom right: state 0 sets it up (animation 6, at F2, D6), 1 draws the frame of the revs (car unk_70 >> 11, 32 steps).
 comment speedometer_update The speed in km/h at the bottom right: state 0 sets it up (digits of animation 12, units_x, digits_y) and clears the screen's maximum (unk_F52), sum (unk_F54) and count (unk_F58); 1 each frame the car's speed / 88 into screen unk_F50, and while moving adds it to the sum, counts it and keeps the maximum (for the LCD's pages), then draws its digits from the units leftwards.
 comment speed_unit_update The km/h after the speed: state 0 sets it up (animation 10 at 127, CE), 1 draws it.
@@ -915,7 +917,7 @@ comment time_left_display_update The time left in seconds at the top centre, and
 comment time_left_display_check_extension Starts the EXTEND TIME message once for each checkpoint passed (screen unk_349, counted in car unk_CD).
 comment time_digits_start Sets up the three digits of the time at the top centre (animation 3 at A9, 11), each to open from nothing at its first value. Used by time_left_display, car_select_run and 001EC2.
 comment time_digits_draw Draws the three digits of R0 (binary-coded decimal), the units at the right: a digit that changes squeezes shut and opens again as the new one; leading zeros are left out.
-comment extend_time_message_start Sets up the EXTEND TIME message under the time (animation 33) for 90 frames, blinks one of the screen's cabinet lamps 16 times (bytes C1-C3 of its entry at unk_20E0C0), then extend_time_message_blink.
+comment extend_time_message_start Sets up the EXTEND TIME message under the time (animation 33) for 90 frames, blinks one of the screen's cabinet lamps 16 times (bytes C1-C3 of its entry at checkpoint_lamp), then extend_time_message_blink.
 comment extend_time_message_blink Blinks EXTEND TIME (4 frames on, 4 off) until its frames run out.
 comment goal_update The goal line and what follows it: state 0 waits until the screen's car reaches its segment (position), then marks the car at the goal (car unk_181); 1 when the car's finish is recorded (race unk_5E) sets up Congratulations! (animation 2F5) and the TOTAL TIME (the text at D08E and the screen's finish time, screen 410, through time_to_text), DJ message 34 when first, else 35, the screen's sound byte to 7F; 2 waits; 3 after 120 frames draws them for 60, then the title Dream Flying (start_song_title) and sound 10; 4 240 more frames of both, or with two players 5 only the TOTAL TIME beside the race_result; then it ends.
 comment race_result_start With two players, the result at the end of the race: the screen's place in big letters (animation 2F8: 1st, 2nd) at the bottom for 240 frames (race_result_hold), and the verdict above it (race_result_verdict_start).
@@ -936,7 +938,7 @@ comment race_car_draw_part Draws a part of the car (a wheel, a spray) at its off
 comment race_car_put_frame Puts the first piece of frame R14 of animation R12 with palette R13 into the sprite list, scaled by R8 at R17, R18 (race_car_put_sprite).
 comment race_car_put_sprite Writes one sprite of a frame's piece into the screen's sprite list (and its copy at + 3000), its size and offsets scaled by R8, at R17, R18.
 comment race_car_put_flat_sprite Writes the first piece of animation R12 into the sprite list at R17, R18 at its own size (the number tags).
-comment race_car_start_ending The end of the race for the screen's car: starts the objects of its ending (object_lists_14A20 by its model and whether it won, or object_list_14A60 when it did not finish); when they are done (state 2) sound 4F and the game's next step (screen unk_94 bit 1; the music stopped without a finish).
+comment race_car_start_ending The end of the race for the screen's car: starts the objects of its ending (object_lists_14A20 by its model and whether it won, or object_list_14A60 when it did not finish); when they are done (state 2) sound 4F and raises screen unk_94 bit 1, which game step 7 waits for ( the music stopped without a finish).
 comment rival_warning_update RIVAL SEKKIN !! (a rival approaching) at the centre of the screen: 12 frames on, 6 off, 12 on, with the rival_alarm, then it ends.
 comment rival_alarm_update The sound of the rival warning: sound 2B twice, 15 frames apart.
 scoped object player_car 0D step u8
@@ -1188,8 +1190,8 @@ field car 182 race_over u8
 comment car_presentation_update The presentation of a car in the attract mode (game mode 3, object_handlers_1A78): the picture of the car screen unk_9C names. By state: 0 starts car_name and staff_credits_code (with this object as its presentation, kept in staff_credits_code), the screen's background (set_up_background with 001AA0 by screen), the picture (animation rom_001A88 by the car, palette 275, draw mode 0) at x A0, y 60 on depth layer 0; 1 steps its animation (animation_advance) and draws it. Every frame, in all states, it queues the next of the four palette records of rom_001AC8 (palette_step, round and round) with queue_palette_list, so the picture's colours cycle. State 2 (the palette only, no picture) is not set by its own code.
 comment car_name_start Starts the letters of the presented car's name (rom_001CEC by screen unk_9C: MAD POWER, SPEED BUSTER, EASY HANDLING, SMOOTH OPERATOR, BAD BOY, ROAD MONSTER, QUICK REACTOR, WILD CHASER): a car_name_letter for each character, spaces too, 18 pixels apart from x 168, each 2 frames later than the one before (delay 15, 17...); then ends.
 comment car_name_letter_update A letter of the presented car's name (font 346 at size A0, its colours cycling through 001D70 with step_palette, at y 14). By state: 0 sets itself up (its character from character, x + 8); 1 hidden until delay runs out; 2 slides in from the right, 24 pixels a frame for 14 frames (slide_frames); 3 stays until 120 frames after its start (frames_left); 4 slides out to the left, 24 pixels a frame, and ends once x is negative.
-comment name_entry_update The name entry after a race won at the goal under the course's record time (game step 18, when sub_001E89 says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (unk_F20) and clears unk_20E3F0, starts name_entry_lcd, the background (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number (time_digits_start), object_handlers_2D58 (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way), sooner the further it leans (turn_delay counts down by rom_002D6C by the wheel), and << and >> a letter each time; the letter in front is letter, and shows blinking at the name's next place; the gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a sound (rom_002D98 by place): the left arrow takes the last letter back, the right arrow enters a space, ED or the third letter ends the entry, as does the timer running out (the seconds left show as the countdown number, time_digits_draw); then open 0, an empty name or one of the names at 002D7C (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the record into the race record (unk_11 + 1, unk_16 the time, unk_12 the car's model, unk_13-15 the name, unk_18 the course, screen unk_A3 - 15), turns the lamps off and sets the game's next step (screen unk_80 byte 2 = 15); 4 nothing. Every frame it draws the time and the name (draw_text).
-comment name_entry_letter_update A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow and ED, rom_002D00); ends when the entry closes (the name entry's open is 0). By state: 0 its angle index * 80 round the drum, y_offset -5; 1 for 40 frames (spin_frames) y_offset + 1, the drum dropping into place. Every frame its place from its angle less the wheel_angle (the sine table at 100C00, the cosine at 101400): x_offset, depth, a width that narrows toward the drum's edges (width_factor), mirrored (flags bit 6) with palette 27 where it faces away (the cosine under 2000, more than 60 degrees from the front), 34 in front, 30 for the letter in front (shown 4 frames of 8: hidden, flags bit 5 cleared, when bit 2 of unk_20E026 is clear); drawn in perspective (100000 / (depth + 100)) about x E0, y 40.
+comment name_entry_update The name entry after a race won at the goal under the course's record time (game step 18, when course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (unk_F20) and clears lcd_restart_frames, starts name_entry_lcd, the background (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number (time_digits_start), object_handlers_2D58 (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way), sooner the further it leans (turn_delay counts down by rom_002D6C by the wheel), and << and >> a letter each time; the letter in front is letter, and shows blinking at the name's next place; the gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a sound (rom_002D98 by place): the left arrow takes the last letter back, the right arrow enters a space, ED or the third letter ends the entry, as does the timer running out (the seconds left show as the countdown number, time_digits_draw); then open 0, an empty name or one of the names at 002D7C (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the record into the race record (unk_11 + 1, unk_16 the time, unk_12 the car's model, unk_13-15 the name, unk_18 the course, screen unk_A3 - 15), turns the lamps off and sets the game's next step (screen unk_80 byte 2 = 0x15 (step 21)); 4 nothing. Every frame it draws the time and the name (draw_text).
+comment name_entry_letter_update A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow and ED, rom_002D00); ends when the entry closes (the name entry's open is 0). By state: 0 its angle index * 80 round the drum, y_offset -5; 1 for 40 frames (spin_frames) y_offset + 1, the drum dropping into place. Every frame its place from its angle less the wheel_angle (the sine table at 100C00, the cosine at 101400): x_offset, depth, a width that narrows toward the drum's edges (width_factor), mirrored (flags bit 6) with palette 27 where it faces away (the cosine under 2000, more than 60 degrees from the front), 34 in front, 30 for the letter in front (shown 4 frames of 8: hidden, flags bit 5 cleared, when bit 2 of game_frame_count is clear); drawn in perspective (100000 / (depth + 100)) about x E0, y 40.
 comment name_entry_lcd_update Shows the name entry on the cabinet LCD: 0 clears it (clear_lcd), shows the DJ's face (screen unk_F35 = FF) and writes the time (7 characters of the entry's time_text) at F13; then every frame the name's three characters at F1C, in the LCD's codes (7F -> 7E and | -> 7F, its arrows; \ -> 65); ends when the entry closes. It means to write spaces after the end of the name, but tests the address (tb R10) instead of the character, so it never does.
 comment name_entry_car_update The player's car on the certificate screen (animation rom_002D9C by the car's model, car unk_60; palette rom_002DAC) at x 40, y C0: state 0 sets it up and runs into name_entry_drivers_update, which with state 1 draws it; then it draws itself every frame.
 comment name_entry_drivers_update The car's two drivers standing by it on the certificate screen (animation rom_002DBC by the car's model, car unk_60; palette rom_002DCC) at x 60, y C8: state 0 sets them up and runs into name_entry_course_name_update, which with state 1 draws them; then drawn every frame.
@@ -1197,7 +1199,7 @@ comment name_entry_course_name_update The course's name on the certificate (Aust
 comment passing_traffic_start Counts the steps of the passing cars' path (0067B2: size, x, y; closed by 0) into path_steps, then runs passing_traffic_update.
 comment passing_traffic_update Now and then a car passes on the road behind the certificate: by state, 0 one frame in 16 at random (random_number) starts a passing_car on the path's last step (path_steps), 1 then waits 10 frames (wait).
 comment passing_car_update A car on the road behind the certificate (animation rom_002DDC by a random model, palette rom_002DAC; its sound, rom_0067A9 by the model, requested as it starts): state 0 picks frame C and state 1, or frame 1 and state 2 when the random number is negative; then a frame a step it goes from the path's last step (0067B2: size 370 near the bottom edge) to its first (size 5 on the horizon), at the path's x in state 1 or at 96 - x on the other side of the road in state 2; ends past the first step.
-comment ranking_update The ranking in the attract mode (game mode 5, sub_001DCC): OutRunner of OutRunners, the record of three courses in turn. By state: 0 starts object_handlers_2CB8 (01AA01, 01A6CF, which sub_001DCC has started too), ranking_background and the two halves of the title (ranking_title_left, ranking_title_right); 1 clears course_over; once the screen's fade is over (screen unk_94 bit 0): after three courses ends, else courses_shown + 1, 60 frames (frames_left), and starts ranking_course_banner and ranking_record for the course screen unk_9D; 2 when the 60 frames are over sets course_over for a frame (the background fades out) and moves screen unk_9D to the next of the ten courses, back to 1.
+comment ranking_update The ranking in the attract mode (game mode 5, game_mode_ranking): OutRunner of OutRunners, the record of three courses in turn. By state: 0 starts object_handlers_2CB8 (01AA01, 01A6CF, which game_mode_ranking has started too), ranking_background and the two halves of the title (ranking_title_left, ranking_title_right); 1 clears course_over; once the screen's fade is over (screen unk_94 bit 0): after three courses ends, else courses_shown + 1, 60 frames (frames_left), and starts ranking_course_banner and ranking_record for the course screen unk_9D; 2 when the 60 frames are over sets course_over for a frame (the background fades out) and moves screen unk_9D to the next of the ten courses, back to 1.
 comment ranking_background_update The picture of the course behind the ranking, while the game mode is the ranking (screen unk_80 5). By state: 0 courses_shown from the ranking; for the first course I/O C0001C = 6 (C8001C = 86 for screen 2) and a fade in (screen unk_153 1, unk_94 bit 0); ranking_background_load; 1 waits while the pages are unpacked (screen unk_B00), then for the later courses a fade in (unk_153 3); 2 when the ranking says course_over: after the third course a fade out (unk_153 0) and state 4, else a fade out (unk_153 2); 3 when the fade is over, back to 0 for the next course's picture; 4 nothing more. Every frame, in any game mode, the picture scrolls by 3 pixels (scroll_x - 3).
 comment ranking_background_load Loads the picture of the course screen unk_9D (rom_002D20 picks it) into the screen's first tilemap: its register addresses for the screen (002C44, into 80-AC), the tile bank (rom_002C18), the palette (rom_0318CC, queue_palette_list), the four tilemap pages (rom_109694, with the screen's page numbers from rom_002CAC, in page_list; queue_tile_pages), start_palette_fades with rom_031B14, zoom 1:1, zoom centre and the second tilemap's scroll 0, the pages, the scroll's start (rom_002CB4: x 360 for screen 1, 4A0 for screen 2; y 60), its priority 1 and the second tilemap off in the mixer (rom_002CA4: screen 182 and 186; unk_94 bit 2); unk_20E027 = FF to send the registers.
 comment ranking_title_left_update The left half of the ranking's title, OutRunner of OutRunners (animation 2D2, palette 2B2) at x 0, y 30: state 0 sets it up; drawn every frame.
@@ -1206,7 +1208,7 @@ comment ranking_course_banner_update The scroll with the course's name under the
 comment ranking_record_start Sets up the course's record line from the records at 20E300 (by course: the initials, '-' shown as '.', and a 0 into text, then the time as 5'00"00, time_to_text), starts a ranking_record_character for each of its 11 characters (index, course, itself) and ends at once.
 comment ranking_record_character_update A character of a course's record line (font 2DE, palette 27): 0 its character from the record's text by index, at y 80 and x -A0 plus 16 pixels for each place of index; 1 slides in, 32 pixels a frame for 7 frames (slide_steps), then starts a ranking_record_car (each of the 11 characters starts one, all at the same place); 2 index + 2 frames later (colour_delay) takes the colours of the record's car (rom_002DEC by its model); 3 58 frames after its start (frames_left) slides out to the left, 16 pixels a frame, and ends at x -20.
 comment ranking_record_car_update The record holder's car under the course's record line (animation rom_002DDC by the model of the course's record, palette rom_002DAC; size 50, y 88): drives in from the left 16 pixels a frame to x 108 or more, turns round (frame 9 down to 4), waits 15 frames (wait_frames), drives back left 16 pixels a frame and ends at x 0. State 5 (drawn only) is not set by its own code.
-comment route_map_update The map of the route after the race (game step 12, object_handlers_34EC); keeps "Thank you for your playing." scrolling on the LCD (F40 = 005014). By state: 0 copies its screen's tilemap register addresses (0047E8) into 80-BC, first_branch from screen unk_34A, the background (set_up_background with 004868 by screen and first_branch: the routes on tilemap 0 over the world on the second), the palette rom_031DDC[2C] (queue_palette); 1 zoom 1:1 about the middle of the screen, sea_colour black, 30 frames (timer); 2 the world's tilemap off, sea_colour 7EE0; 3 zooms in (zoom + 20 a frame for 9 frames, 200 being 1:1), then the close-up map (pages rom_0048B8) at its start (x scroll rom_0048D0 by first_branch, y 8C), starts route_map_car and the 32 route_map_landmark objects; 4 checkpoint_legs_left from the car's unk_D0, unk_12 from screen unk_A4, stage 0; 5-14 the car drives the route leg by leg (leg_frames frames each): 22 frames up from the start to the first checkpoint (the car moves, the map stands), then 6 frames of 8 pixels sideways (first_branch picks the side), 11 of 5, then for each stage 10 frames of 4 up or down by the branch taken (screen unk_34A + stage - 1) and 15 of 7 sideways; on these legs the map scrolls under the car (the object's x and y move the other way, for the objects on the map), screen unk_5800 telling the car its way (bits 0 down, 1 up, 2 right, 3 left, 5 the map at its edge, 7 standing); a stage_result_line starts where each stage begins (5, 7, 11), a route_map_sign (C.P) and stage + 1 where a checkpoint leg ends; when its count of legs (unk_12 for the first leg of a stage, checkpoint_legs_left for the others) is 0 at a leg's start, the race ended on it: last_leg_progress and leg_frames are worked out from the race_copy record's unk_42, the car's unk_4A and the stage lengths at 700 of the screen, and unk_5800 bit 6 ends the drive after it; at the end (stage 6 or a cut leg) the car stands (bit 7), FINISH (route_map_sign 1) if the goal was reached (race_copy unk_5E), 60 frames; 15 the routes (pages rom_0048C0) at zoom 2x where the close-up map was, the steps of the zoom out into x and y, unk_5800 bit 4 (the car, the landmarks and the signs end); 16 zooms out over 9 frames to 1:1 and the whole route (x scroll rom_0048D4 by first_branch, y 70), then the world's tilemap again (pages rom_0048C8); 17 sea_colour black, starts 00463C and an 004240 for each leg (stage + 1, at most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is quiet (screen unk_F30); 19 when the 90 frames are over sets the game's next step (screen unk_80 byte 2 = 10) and starts 0046BB; 20 nothing.
+comment route_map_update The map of the route after the race (game step 12, object_handlers_34EC); keeps "Thank you for your playing." scrolling on the LCD (F40 = 005014). By state: 0 copies its screen's tilemap register addresses (0047E8) into 80-BC, first_branch from screen unk_34A, the background (set_up_background with 004868 by screen and first_branch: the routes on tilemap 0 over the world on the second), the palette rom_031DDC[2C] (queue_palette); 1 zoom 1:1 about the middle of the screen, sea_colour black, 30 frames (timer); 2 the world's tilemap off, sea_colour 7EE0; 3 zooms in (zoom + 20 a frame for 9 frames, 200 being 1:1), then the close-up map (pages rom_0048B8) at its start (x scroll rom_0048D0 by first_branch, y 8C), starts route_map_car and the 32 route_map_landmark objects; 4 checkpoint_legs_left from the car's unk_D0, unk_12 from screen unk_A4, stage 0; 5-14 the car drives the route leg by leg (leg_frames frames each): 22 frames up from the start to the first checkpoint (the car moves, the map stands), then 6 frames of 8 pixels sideways (first_branch picks the side), 11 of 5, then for each stage 10 frames of 4 up or down by the branch taken (screen unk_34A + stage - 1) and 15 of 7 sideways; on these legs the map scrolls under the car (the object's x and y move the other way, for the objects on the map), screen unk_5800 telling the car its way (bits 0 down, 1 up, 2 right, 3 left, 5 the map at its edge, 7 standing); a stage_result_line starts where each stage begins (5, 7, 11), a route_map_sign (C.P) and stage + 1 where a checkpoint leg ends; when its count of legs (unk_12 for the first leg of a stage, checkpoint_legs_left for the others) is 0 at a leg's start, the race ended on it: last_leg_progress and leg_frames are worked out from the race_copy record's unk_42, the car's unk_4A and the stage lengths at 700 of the screen, and unk_5800 bit 6 ends the drive after it; at the end (stage 6 or a cut leg) the car stands (bit 7), FINISH (route_map_sign 1) if the goal was reached (race_copy unk_5E), 60 frames; 15 the routes (pages rom_0048C0) at zoom 2x where the close-up map was, the steps of the zoom out into x and y, unk_5800 bit 4 (the car, the landmarks and the signs end); 16 zooms out over 9 frames to 1:1 and the whole route (x scroll rom_0048D4 by first_branch, y 70), then the world's tilemap again (pages rom_0048C8); 17 sea_colour black, starts 00463C and an 004240 for each leg (stage + 1, at most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is quiet (screen unk_F30); 19 when the 90 frames are over sets the game's next step (screen unk_80 byte 2 = 0x10 (step 16)) and starts 0046BB; 20 nothing.
 comment route_map_car_update The player's car on the route map (animation rom_0048E0 by the car's model, palette rom_0048F0, size 50): 0 at x 8C, y C3 with frame C; 1 until the route map's stage is not 0, drives up 4 pixels and right 1 a frame unless the map says it stands (screen unk_5800 bit 7); 2 stays where it is while the map scrolls under it, its frame by the way the map says it goes (bit 2 frame 9, bit 3 frame 4, bit 0 frame 6, bit 1 frame C), moving itself 7 pixels a frame sideways when the map is at its edge (bit 5); ends when the map zooms out (bit 4). Its depth layer follows its y (map_depth_from_y).
 comment route_map_sign_update A sign on the route map, by kind: 0 C.P where the car passed a checkpoint (animation 2F9), 1 FINISH at the goal (2FA); palette 2CF, depth layer 195. State 0: x_offset and y_offset are the middle of the screen (A0, 70 less 8) less the map's place, where the car is; kind 1 goes to state 2; 1 follows the map (its x and y plus the offsets) and turns (animation_advance); 2 FINISH at the goal's place on the map (the map's x plus rom_004042 by the goal, screen unk_A6 - 15; y 5C), drawn 4 frames of 8 (blink); both end when the map zooms out (screen unk_5800 bit 4).
 comment route_map_landmark_update One of the 32 animated pictures on the close-up route map (people, animals and vehicles by the landmarks): 0 from its record (004C14 + 16 * the index in 9, the second set of 32 (+ 200) when screen unk_34A is 1): animation, palette, size, x_offset and y_offset from the map's place, then field 9 from the record (set for one record: it then shows only every other frame); 1 follows the map (its x and y plus the offsets), animation_advance and draw_object, with field 9 set only when toggle comes round; ends when the map zooms out (screen unk_5800 bit 4). Its depth layer follows its y (map_depth_from_y).
@@ -1215,7 +1217,7 @@ comment map_depth_from_y Sets the object's depth layer (3C) from its y: (y + D0)
 comment draw_text_at Draws the string at R18 as draw_text does (a sprite per character into the screen's sprite list), at the place R3 holds (x in its low half, y in its high half, as a text record's first 32 bits) with the attribute R5. Used by stage_result_line, stage_indicator_draw and song_title_show (the song title).
 comment queue_tile_pages Queues the tilemap pages of the list R10 to be unpacked into video RAM: each 32-bit entry a page number in its top byte (the page at 300000 + 400 * page) and the address of its packed data below, closed by a negative entry; the requests go into the screen's ring of 64 at C00 (unk_B03 the place) and unk_B00 says there is work. Used by set_up_background, ranking_background_load and race_background_update.
 comment set_up_background Sets up the screen's two tilemaps (0 and 2 for screen 1, 1 and 3 for screen 2; their register copies listed at rom_017A78 by screen) from the 20-byte record R19: their pages (two words), their tile banks (two bytes) and their priorities in the mixer (two bytes, the low four bits of mixer registers 22 and 26, 24 and 28 for screen 2; 0 is off), zoom 1:1, zoom centre and scrolls 0, the second tilemap's row scroll and row select off (unk_20E204), the registers and the mixer to be sent (unk_20E027, screen unk_94 bit 2); then queues the pages of the list at the record's +C (queue_tile_pages) and the palette record at +10 (queue_palette_list). Used by car_presentation, name_entry, route_map, car_select_run, entry_countdown_start and title_screen_update.
-comment start_object_list Starts an object for each handler of the list R10 (a 32-bit count, then the handlers: the object_handlers_* tables), each with its place in the list at 9, and returns the last one. Used by the game modes (sub_001458, sub_001DCC, sub_002E74, sub_000995...), name_entry and ranking.
+comment start_object_list Starts an object for each handler of the list R10 (a 32-bit count, then the handlers: the object_handlers_* tables), each with its place in the list at 9, and returns the last one. Used by the game modes (game_mode_car_presentation, game_mode_ranking, game_mode_play, initialise_board...), name_entry and ranking.
 scoped object car_presentation 12 palette_step u8
 scoped object car_presentation 14 staff_credits_code u32 object
 scoped object car_name_letter 09 character u8
@@ -1376,12 +1378,12 @@ comment driver_couple_start Sets up the couple who drive the chosen car (a man a
 comment car_caption_show The caption of the car in front on the car select (EASY HANDLING, SMOOTH OPERATOR...: animation 26E, frame car unk_60, palette rom_006DDE), by state: 0 starts the gearboxes under it (car_gears_caption) and sets it up; 1 drawn 10 frames (timer); 2 hidden 10 frames; a new car in front (shown_car) shows it at once, for 10 frames more; it ends when the car is chosen (car_select car_chosen).
 comment car_gears_caption_show The gearboxes of the car in front under its caption (Auto/5 Speed...: animation 2D1, frame rom_006E78 by car unk_60, the manual box's), blinking like car_caption: 1 drawn 10 frames (timer), 2 hidden 10, at once for a new car (shown_car); it ends when the car is chosen (car_select car_chosen).
 comment waiting_banner_show The car select's message once the choices are made, by state: 0 sets up WAITING FOR CHALLENGERS! JUST A MOMENT PLEASE (animation 28B); 1 drawn 20 frames (timer); 2 hidden 10; once the entry time is over (car_select entry_over) JUST A MOMENT PLEASE (animation 28D) instead: 3 drawn 20 frames, 4 hidden 10.
-comment car_select_entries_run The other players on the car select, by state: 0 its list of the race's players (race_order: the count, then the players); 1 when the LCD is not scrolling a text (screen unk_F44) writes Entry: on it with _ at each player's car number (unk_20E030); then every frame: this screen's number blinks with _ every 8 frames (own_number, digit_toggle, blink_timer); each other player not yet marked (a bit each from 40, the frame field) gets its number on the LCD and, once it has chosen a car (byte 48 of its race_copy record, which car_select writes), a flag over that car on the turntable (choice_flag, kept in car_flags by car; one more player on the same car gets a stacked_choice_flag on the last one) and its bit; flags_visible follows the blink pattern rom_006EA0 (frames >> 1).
+comment car_select_entries_run The other players on the car select, by state: 0 its list of the race's players (race_order: the count, then the players); 1 when the LCD is not scrolling a text (screen unk_F44) writes Entry: on it with _ at each player's car number (car_numbers); then every frame: this screen's number blinks with _ every 8 frames (own_number, digit_toggle, blink_timer); each other player not yet marked (a bit each from 40, the frame field) gets its number on the LCD and, once it has chosen a car (byte 48 of its race_copy record, which car_select writes), a flag over that car on the turntable (choice_flag, kept in car_flags by car; one more player on the same car gets a stacked_choice_flag on the last one) and its bit; flags_visible follows the blink pattern rom_006EA0 (frames >> 1).
 comment choice_flag_start Sets up a flag over the car another player has chosen (animation 1B, a palette by the car, rom_006E80; angle: the car's place on the turntable), starts its number (choice_flag_number) and goes on to choice_flag_follow.
 comment choice_flag_follow Keeps the flag over its car as the turntable turns (its angle less car_select angle, projected as turntable_draw does, above the cars) and draws it while car_select_entries' flags_visible says so (visible); not drawn behind the view.
 comment stacked_choice_flag_start Sets up the flag of one more player on a car that has one (on the last flag there, below), starts its number (choice_flag_number) and goes on to stacked_choice_flag_follow.
 comment stacked_choice_flag_follow Draws the flag 14 higher (and 3 right) than the one below it while that one is drawn (its flags bit 5 and visible); else it is not drawn.
-comment choice_flag_number_start Sets up the car number of a flag's player (rom_006E90 by its car number, unk_20E030), then choice_flag_number_follow.
+comment choice_flag_number_start Sets up the car number of a flag's player (rom_006E90 by its car number, car_numbers), then choice_flag_number_follow.
 comment choice_flag_number_follow Draws the number on its flag (13 right, 10 up from its place) while the flag is drawn (its flags bit 5 and visible); else it is not drawn.
 comment entry_traffic_run Sends cars up the road behind the entry countdown (entry_traffic_car), by state: 0 one chance in 16 each frame to start one; 1 then waits 10 frames (delay).
 comment entry_traffic_car_drive A car coming up the road toward the view behind the entry countdown (car: a random one of the eight, rom_0069B8), by state: 0 sets it up and picks its way: 1 along the path at 0067B2 (scale, x and y a frame, path_step) seen from the front and one side (frame 6), 2 the same path mirrored (x = 96 - x) from the other side (frame 7); one car in 128 goes to 3 or 4 instead, the same paths, but after 45 frames (spin_delay) its frames, its views all round, run five a frame (it spins) with set_tyre_noise(4) each frame; at the end of the path it requests its car's sound (rom_0067A9) and ends.
@@ -1541,15 +1543,15 @@ comment title_logo_stripe_update One of the three thin coloured lines across the
 comment title_board_palms_update The palm trees at the right end of the logo's board: grow in from 3/4 of their size (8 frames), then sway each time the logo shines (screen unk_5801).
 comment title_seagull_fly One of the two seagulls over the title (index 0, 1): flies up out of the logo for 8 frames growing to full size, then circles about that place in a figure of eight (the sine of x_angle, a turn in 128 frames, and of y_angle, twice as fast), flapping (its animation).
 comment title_picture_draw One of the title's still pictures (title_logo starts them): by index, from its record at 01AC70 (animation, palette, width_scale, height_scale, x, y, depth_layer): 0 (C) SEGA 1992, 1 the oval board behind the logo, 2 the SEGA logo.
-comment coin_prompt_update The prompt at the bottom of the title, the car presentations and the demo races, and its text on the cabinet's LCD; ends at once in game mode 6 (screen unk_80). Every 30 frames (round_frames): a little car crosses the message (coin_prompt_car with this round's car; next_car then steps through the eight, from screen unk_02) and the message by the seat (unk_20E0A0 and unk_20E0A1 for screen 1, unk_20E0A8 and unk_20E0A9 for screen 2): with free play (unk_20E615) or a credit message 2, TURN THE IGNITION KEY (coin_prompt_start_key_prompt); else message 1 with coins in toward a credit or 0, a coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to scroll (screen unk_F40) is the message's (rom_01A9BC: Insert Coin(s), Insert More Coin(s), Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls (unk_F44).
+comment coin_prompt_update The prompt at the bottom of the title, the car presentations and the demo races, and its text on the cabinet's LCD; ends at once in game mode 6 (screen unk_80). Every 30 frames (round_frames): a little car crosses the message (coin_prompt_car with this round's car; next_car then steps through the eight, from screen unk_02) and the message by the seat (seat1_credits and seat1_coin_units for screen 1, seat2_credits and seat2_coin_units for screen 2): with free play (free_play) or a credit message 2, TURN THE IGNITION KEY (coin_prompt_start_key_prompt); else message 1 with coins in toward a credit or 0, a coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to scroll (screen unk_F40) is the message's (rom_01A9BC: Insert Coin(s), Insert More Coin(s), Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls (unk_F44).
 comment coin_prompt_start_key_prompt Starts R1 pieces of the ignition key prompt (ignition_key_prompt), pieces R2 on, and returns the last one.
 comment coin_prompt_car_drive The little car that drives across the prompt from right to left each round (coin_prompt starts it): one of the eight cars (car) at a quarter of its size, 14 a frame, ending at the left edge.
 comment coin_prompt_message_update The prompt's message for a round (coin_prompt starts one every 30 frames): after 6 frames, INSERT COIN(S) (message 0; 1 when coins are in, animation rom_01A9A6) in the colour of the round's car (rom_01A9AC by car_colour), animating in for 22 frames over the one before, then a layer back for 30 frames, and ends; ends at once when the prompt's message changes.
 comment ignition_key_prompt_update A piece of the prompt when a game can start (coin_prompt starts both every round): by piece, from its record at 01A95B (animation, palette, width_scale, height_scale, x, y, depth_layer, frames_left): 0 the words TURN THE IGNITION KEY, 1 the START / IGNITION key with its arrow; animates until frames_left runs out (24 or 30 frames) and ends.
-comment credit_display_update The credits line under the prompt (title, car presentations, demo races); ends in game mode 6. With free play (unk_20E615) FREE PLAY; otherwise, for the screen's seat (unk_20E0A0 and unk_20E0A1 for screen 1, unk_20E0A8 and unk_20E0A9 for screen 2): Credit (0 or 1) or Credits and the number of credits in the font's digits (tens at x AC when there are, units at B4), and while coins are in toward the next credit the coins and the coins a credit costs (unk_20E610) as a fraction (C0 and C8), each drawn with credit_display_digit.
+comment credit_display_update The credits line under the prompt (title, car presentations, demo races); ends in game mode 6. With free play (free_play) FREE PLAY; otherwise, for the screen's seat (seat1_credits and seat1_coin_units for screen 1, seat2_credits and seat2_coin_units for screen 2): Credit (0 or 1) or Credits and the number of credits in the font's digits (tens at x AC when there are, units at B4), and while coins are in toward the next credit the coins and the coins a credit costs (coins_per_credit) as a fraction (C0 and C8), each drawn with credit_display_digit.
 comment credit_display_digit Draws one digit of the credits line at x and y: digit_kind picks the animation and palette (rom_01AB98, rom_01AB9E: 0 the font, whose frames are its characters, 1 the coins, 2 the coins a credit costs) and digit the frame.
 comment demo_captions_run The captions over the demo race of the attract mode: counts its frames and runs the routines of timeline_1AFC0 as it reaches their frames (30 demo_captions_head_to_head, 225 demo_captions_checkpoint, 420 demo_captions_music_select); ends once the count passes a record's frame (the closing FFFF).
-comment demo_captions_head_to_head Frame 30 of the demo captions: HEAD TO HEAD! 2 PLAYER RACING (demo_caption records 0, 1 and 3 + unk_20E040, or 4 when unk_20E620 is set; 4 in attract.txt).
+comment demo_captions_head_to_head Frame 30 of the demo captions: HEAD TO HEAD! 2 PLAYER RACING (demo_caption records 0, 1 and 3 + machine_count, or 4 when stand_alone is set; 4 in attract.txt).
 comment demo_captions_checkpoint Frame 225 of the demo captions: AT THE CHECKPOINT ONLY THE RACE LEADER CAN SELECT THE NEXT STAGE ! (demo_caption records 2 and 3).
 comment demo_captions_music_select Frame 420 of the demo captions: the radio's panel, the hand pressing its button and MUSIC SELECT (demo_caption records 8-11).
 comment demo_captions_start Starts R1 demo_caption objects with the records from R0 on.
@@ -1574,7 +1576,7 @@ comment road_surface_fill_skipped_lines Fills the stretch of lines road_surface_
 comment road_surface_start_tiles_change Starts the road_tiles_change of event 1 (its data at 017444, the even bytes of the page table) with the road's first flag (0A).
 comment road_surface_fade_back Starts the palette fades of list R19 backwards (start_palette_fade from each record's second palette to its first): the road's colours back after a change of page set.
 comment road_tiles_change_update Changes the road's tiles for a stretch of road (road_surface starts it when an event turns one of its flags on; the Golden Gate Bridge in race_to_goal.txt): copies the four tile pages the road shows (source_pages to target_pages, a page a frame), turns its half of the road's page table (table_half: the even or odd bytes) to the copies, copies the new look into the pages by the road's page set (16 halfwords of each a frame for 16 frames) and turns the table back; when the road turns its flag off (flag) it changes them back the same way and ends; its data list (data: 017444 for the first flag, 0174B4 for the second) holds the pages and the bytes for the table.
-comment race_background_update The scenery behind the road (the race's first tilemap). By state: 0 sets it up: its register copies (017A50 by screen: scroll_x_address, scroll_y_address, page_word_address, tile_bank_address), the stage's background (background: rom_017B60 by screen unk_A0, none for stage 0), its tile pages (rom_109694, loaded at once with sub_010FA1), tile bank and palettes (race_background_fade_palettes, queue_palette_list), its objects (race_background_start_objects) and, for stages 6, 8 and 1C, its animation (race_background_start_lower_animation, race_background_start_upper_animation); 1 waits for a change: a fork's new stage (the car's unk_CA; background 2 * screen unk_A3 + the branch, car unk_C9) or the road's events 4 and 5 (screen unk_203; background 2A + unk_A3): screen unk_202 set, the new background's pages queued into the other half of the pages (page_half; queue_tile_pages); 2 changes over as the view turns away and back (the car's unk_2E; change_step): when it starts its palettes, tile bank and the first page word (next_page_words), at 2A0 (off the screen) the fades of rom_0319F0 and of the road (rom_031CB8, into screen unk_208) and the next, the new stage's objects (screen unk_A1), at 160 its palette fades (race_background_fade_palettes) and the next, at 60 the last, at 0 back to state 1 with the animation of backgrounds 5, 7, 8, 25 and 26. Each frame scrolls it: x by the car's unk_2E (a quarter of it, all of it during a change) less A0, y by the slope (the car's unk_30) and screen unk_B8, kept between 0 and 180 less the road's top line (screen unk_200; also into screen unk_20C).
+comment race_background_update The scenery behind the road (the race's first tilemap). By state: 0 sets it up: its register copies (017A50 by screen: scroll_x_address, scroll_y_address, page_word_address, tile_bank_address), the stage's background (background: rom_017B60 by screen unk_A0, none for stage 0), its tile pages (rom_109694, loaded at once with unpack_tile_pages), tile bank and palettes (race_background_fade_palettes, queue_palette_list), its objects (race_background_start_objects) and, for stages 6, 8 and 1C, its animation (race_background_start_lower_animation, race_background_start_upper_animation); 1 waits for a change: a fork's new stage (the car's unk_CA; background 2 * screen unk_A3 + the branch, car unk_C9) or the road's events 4 and 5 (screen unk_203; background 2A + unk_A3): screen unk_202 set, the new background's pages queued into the other half of the pages (page_half; queue_tile_pages); 2 changes over as the view turns away and back (the car's unk_2E; change_step): when it starts its palettes, tile bank and the first page word (next_page_words), at 2A0 (off the screen) the fades of rom_0319F0 and of the road (rom_031CB8, into screen unk_208) and the next, the new stage's objects (screen unk_A1), at 160 its palette fades (race_background_fade_palettes) and the next, at 60 the last, at 0 back to state 1 with the animation of backgrounds 5, 7, 8, 25 and 26. Each frame scrolls it: x by the car's unk_2E (a quarter of it, all of it during a change) less A0, y by the slope (the car's unk_30) and screen unk_B8, kept between 0 and 180 less the road's top line (screen unk_200; also into screen unk_20C).
 comment race_background_start_lower_animation Loads the tiles of the background's lower animation (queue_tile_pages with rom_017904 by screen) and starts it (race_background_lower_animation).
 comment race_background_start_upper_animation Loads the tiles of upper animation R0 (queue_tile_pages with rom_017988 by R0 and screen) and starts it (race_background_upper_animation).
 comment race_background_start_objects Starts the background objects of stage R0 (object_lists_181B8; R0 + 1F during a change within the stage, screen unk_203), each with its data (field 80) and this object (14).
@@ -1726,3 +1728,824 @@ scoped object song_title 20 slide s16
 scoped object song_title 22 y u16
 field object 3C depth_layer u16
 scoped object car_select_entries 40 shown_players u32  # bit n: player n's choice is shown already (test1/set1 R0, 40[R20])
+
+# ======== the frame loops, the inputs, the game modes and the EEPROM (naming batch G) ========
+0000C4  func  crc16
+0000FC  func  signature_checksum
+00013C  func  load_settings
+0002CA  func  count_eeprom_write
+0002E1  func  eeprom_lock
+000337  func  eeprom_read_settings
+00036B  func  save_settings
+000372  func  eeprom_write_settings_counted
+000375  func  eeprom_write_settings
+0003BA  func  eeprom_read_word
+0003ED  func  eeprom_write_word
+000451  func  eeprom_send_command
+0004A1  func  eeprom_begin
+0004B8  func  eeprom_set_lines
+000848  func  check_game_start
+0008F0  func  wait_for_frame
+000913  func  initialise_game
+000976  func  initialise_screen
+000995  func  initialise_board
+0009F9  func  read_switches_and_analog
+000B16  func  pack_seat_inputs
+000BBC  func  link_send_seat_inputs
+000BF3  func  queue_seat_inputs
+000C1C  func  queue_screen_inputs
+000C5A  func  take_screen_inputs
+000D7D  func  isdn_count_players
+000D9F  func  game_mode_isdn_connection
+001000  func  game_mode_title
+001440  func  game_mode_power_on
+00144C  func  game_mode_restart
+001458  func  game_mode_car_presentation
+001516  func  game_mode_demo_race
+001544  func  demo_race_set_up
+001577  func  demo_race_fade_in
+001594  func  demo_race_start_timer
+0015A9  func  demo_race_count_down
+0015C0  func  demo_race_end
+0015D8  func  attract_lamps_update
+001969  func  staff_credits_code_control_bit
+001D84  func  load_course_records
+001DCC  func  game_mode_ranking
+001E89  func  course_record_beaten
+002E74  func  game_mode_play
+003407  func  silence_and_clear_screen
+00340D  func  clear_screen
+003425  func  clear_race_state
+007677  func  clear_published_car
+comment boot The reset's code (000006): SBR to the vector table, the stack 21FC00, 16 bytes from 0000A4 to E00000 and 4 from 0000B4 to E80000 (which the board does not map), the interrupt controller's registers from 0000B8, privilege level 0 with the stack 21F400 and a delay; then clears 21E000-21E3FF, turns the link board off (801000), clears 21F000-21FFFF, sets the I/O chips up (init_io_chips), clears the game's variables (20E000-20FFFF), writes the second task's first interrupt frame (000C98 to 21FF84: its PC 0006B0) and its stack pointers (unk_20E000, waiting_task_stack), initialise_game, lcd_start (the LCD), the interrupts on, the link's check (network_check), and goes on as the boot task's frame loop (second_task(1), screen 2's).
+comment second_task The two tasks' frame loops, one function in the C: second_task(0) is the second task (from 0006B0), which runs screen 1; second_task(1) the boot task after boot (from 000637), which first sets up the link's race (link_take_master_settings), the interrupt controller's timer (D00008, D0000A), task_swapping, each screen's first attract car (screen unk_9E from rom_000D14 by machine_count and the screen's car number) and the screens on (C0001C, C8001C), then runs screen 2. A frame of either: wait_for_frame (the VBLANK swaps the tasks meanwhile; the second task calls link_send_records before it with second_task_waiting set, and the boot task calls link_send_records and link_receive_records only while that is clear), the test mode when test_mode_on is set, link_receive_records, race_entries_update, race_progress_update and course_records_update (the link and the race records), game_frame_count + 1 (screen 1's loop), take_screen_inputs, check_game_start, the game mode's code (the table at 0008CC by game_mode: game_mode_power_on, game_mode_restart, game_mode_title, game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_play, entry_invitation_step (the entry countdown on a seat without a player), game_mode_isdn_connection), run_objects and lcd_update; with single_task set it goes on with the other screen's frame instead of waiting. The test mode: task_swapping off, test_mode_start, then test_mode_frame each frame while test_mode_on lasts; then the screens off, the variables cleared, the second task's frame written again, initialise_game, lcd_reset, both screens in game mode 1 with a fade in (fade 1), network_check_again, and the boot task's part again.
+comment wait_for_frame Waits for the next frame: polls frame_ready (set by the VBLANK, which also swaps the tasks) and clears it; while the screen has tile pages to unpack (screen unk_B00) it unpacks them a piece at a time (unpack_queued_step) between the polls.
+comment initialise_game Sets the game up, at start-up and after the test mode: 13, 0, 0, 1F to C00074 (which the board does not map); for screen 2, then 1, its objects' page cleared (clear_screen_ram) and its constants (init_screen: index, its video registers, the view's, the courses' stage lengths at 700); initialise_board; then initialise_screen for screens 1 and 2.
+comment initialise_screen Sets a screen up: its sound off (reset_screen_sound), no objects (clear_objects), its tilemaps' registers and their copies (init_mixer), three palettes uploaded (upload_boot_palettes) and the courses' records (load_course_records).
+comment initialise_board Sets the board up: the I/O chips (init_io_chips), the settings (load_settings), the sprite chip and its RAM (init_sprite_chip, load_sprite_ram_tables), the video RAM and its control (init_video), the backup RAM checked (bookkeeping_check), the credits (init_coins), the sound requests (start_sound_program), three lists of tile pages unpacked at once (unpack_tile_pages: 109420, 109428, 109578), then the inputs read and taken twice (read_switches_and_analog, take_screen_inputs) so that their previous values hold.
+comment read_switches_and_analog Reads the inputs in the VBLANK (int_vector_40; twice at start-up): the switches of both I/O chips (ports E and F: bits 0-1 the seats' service switches, 2-5 the coin switches, 7 a test switch) into switches, with previous_switches, switches_pressed and switches_released; then, on the turn of the screen whose task runs, half the analog inputs through the A/D converter (C00050 + 4 * index): screen 1's turn seat 1's wheel, gas and brake and seat 2's wheel, screen 2's seat 2's gas and brake (the converter's second bank), each raw into analog_raw on and scaled to 0-FF between its calibration (a low and a high byte from 20E638, in the settings) into analog_inputs on; then the converter's bank for the other turn (C00060).
+comment pack_seat_inputs Packs both seats' inputs for the coming frame (the VBLANK, on screen 1's turn) into their records: the screen's player + 1, the buttons (port A's high bits into 0-3, its low two into 4-5, the shift; port E bit 4 into bit 6, START), the wheel (analog_inputs inverted), the gas and the brake: seat_1_player to seat_1_brake and seat_2_player to seat_2_brake. On ISDN (isdn_mode) they go to the link board instead (link_send_seat_inputs).
+comment link_send_seat_inputs Never runs in the scenarios (ISDN only): writes a seat's five bytes as halfwords on the link board at R11 (800020 on): 0, the buttons (R0), the wheel (inverted), gas and brake from analog_inputs at R10; or, when its screen has a link_event (R2: screen + 40), the event and the four bytes after it, which it then clears (without moving R10 on, so the next seat would read this one's analog inputs).
+comment queue_seat_inputs queue_screen_inputs for screen 1 (seat_1_buttons, the first I/O chip) and screen 2 (seat_2_buttons, the second): the VBLANK on screen 2's turn.
+comment queue_screen_inputs Puts a screen's inputs into its ring of eight (screen + 130, at input_write_place): the seat's buttons (R11) with ~port B of its I/O chip (R12 + 2) in bits 8-15; and the record's wheel, gas and brake into the screen's wheel, gas and brake. On ISDN the record is the screen's race_copy's +2C (the inputs the link brought).
+comment take_screen_inputs Takes the screen's inputs for the frame from its ring (input_read_place; both frame loops, before check_game_start): buttons, with previous_buttons, buttons_pressed and buttons_released (bit 6 START, 4-5 the shift up and down, 0-3 the others, 8-15 port B). On ISDN also the link's status (race_copy unk_2B) into link_status, with link_status_set, link_status_cleared and link_status_changed, and, unless in it already, game mode 8 (game_mode_isdn_connection) while it says the line connects (bits 2-3).
+comment check_game_start Each frame before the game mode's code: in the attract modes (not 0, not 6), with a credit on the seat (seat1_credits, seat2_credits for screen 2) or free play (free_play), blinks the START lamp (bit 2 of the seat's port_d_outputs, 8 frames on and 8 off by start_lamp_blink); START pressed (buttons_pressed bit 6) takes the credit (not with free play; and clears unk_20E0A2, unk_20E0AA), turns the lamp off and starts a game: game mode 6 at step 0, link_event 1, the race record's car part cleared (race_record_clear) and race unk_19 = FF. Returns the game mode.
+comment game_mode_power_on Game mode 0 (the first frame after start-up): game mode 2 and its first step (game_mode_title).
+comment game_mode_restart Game mode 1 (after the ranking, game_mode_ranking, and after the test mode): game mode 2 and its first step (game_mode_title).
+comment game_mode_title Game mode 2, the title (title_screen_update), by mode_step: 0 the screen cleared (as clear_screen), the title's palette (031E88), title_screen_update started, a fade in (fade 1), the input ring's places to 0 (input_write_place, input_read_place), the screen on (C0001C = 6, C8001C = 86 for screen 2); 1 when the fade is over, mode_timer 450 frames (15 seconds); 2 counts them down, then a fade out (fade 0); 3 when it is over, game mode 3 (the car presentation). attract_lamps_update every frame first.
+comment game_mode_car_presentation Game mode 3, the presentation of a car (car_presentation_update), by mode_step: 0 the screen cleared (as clear_screen), the palettes of the car's scene (rom_031DDC by rom_001A98 by attract_car) and 031740, object_handlers_1A78 (credit_display, coin_prompt, car_presentation) started, a fade in; 1 when it is over, mode_timer 180 frames (6 seconds; the staff credits code adds 1200); 2 counts them down, then a fade out; 3 when it is over, link_event 3 and game mode 4 (the demo race). attract_lamps_update every frame first.
+comment game_mode_demo_race Game mode 4, the demo race of the attract mode (the car just presented, attract_car, on its stage): attract_lamps_update, then by mode_step demo_race_set_up, demo_race_fade_in, demo_race_start_timer, demo_race_count_down, demo_race_end, and but on the set-up's and the end's frames the race's own steps (game_mode_play by game_step, from step 10).
+comment demo_race_set_up Step 0 of the demo race: demo_flags bit 8 (the race's code tells the demo by it: the car drives itself), the screen cleared (as clear_screen), step 1 with mode_timer 0, and game_step 10 (the demo race's set-up in game_mode_play, which does not run this frame).
+comment demo_race_fade_in Step 1 of the demo race: after two frames (mode_timer), a fade in and step 2.
+comment demo_race_start_timer Step 2 of the demo race: when the fade is over, mode_timer 600 frames (20 seconds) and step 3.
+comment demo_race_count_down Step 3 of the demo race: counts mode_timer down, then a fade out and step 4.
+comment demo_race_end Step 4 of the demo race: when the fade is over, game mode 5 (the ranking) and the race record's car part cleared (race_record_clear), without the race's step that frame.
+comment attract_lamps_update The lamp show of the attract modes (game_mode_title, game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_isdn_connection): every 8 video frames (vblank_counter >> 3) the next of 32 steps of the pattern at 001607, two bytes a step and screen, into the screen's two lamp entries (byte 0 of checkpoint_lamp and leader_lamp by 4 * index: bits 1 and 3 of the seat's output port D, which the VBLANK writes).
+comment game_mode_ranking Game mode 5, the ranking (ranking_update), after the demo race and after a game, by mode_step: 0 demo_flags bit 8 clear, the wheel motor off (unk_20E0D0 by index), the sound off (reset_screen_sound), the screen cleared (as clear_screen), clear_published_car, the ranking's palette (031E80), object_handlers_2CB8 (credit_display, coin_prompt) and ranking_update started, mode_timer 270 frames (9 seconds), race game_over cleared; 1 waits until no fade runs (ranking_background fades the screen in); 2 counts the 270 frames down; 3 when no fade runs, game mode 1 (back to the title). attract_lamps_update every frame first.
+comment game_mode_isdn_connection Game mode 8, on ISDN only (never in the scenarios; take_screen_inputs goes to it while link_status says the line connects, bits 2-3), by mode_step: 0 a fade out (attract_lamps_update in 0 and 1); 1 when it is over, no objects, the sound off, the screen's tilemaps, sprites and text off, palette 031740, the lamps off (checkpoint_lamp, leader_lamp by index), clear_lcd, isdn_status_update started (the list at 000F70); 2 a fade in; 3 when it is over, 4; 4 when link_status says connected (bit 0: isdn_count_players) or no longer connecting (bits 2-3 clear), mode_timer 150 frames; 5 counts them down, then a fade out; 6 when it is over, game mode 2 (the title).
+comment isdn_status_update Never runs in the scenarios: the ISDN connection screen's texts (game_mode_isdn_connection starts it from the list at 000F70), on the text layer (print_text_layer), by state: 0 by link_status: bit 0 ISDN SUCCESS, THIS SIDE, OTHER SIDE and TOTAL with the players (race_copy unk_29, unk_2A and their sum, print_hex_byte), then 1; bits 2-3 clear ISDN FAILED, then 1; else ISDN CONECTING (sic) blinking every 8 frames (its unk_10 counting); 1 nothing more.
+comment isdn_count_players Never runs in the scenarios (ISDN only): the players on this side and on the other (race_copy unk_29, unk_2A) into isdn_players_this_side and isdn_players_other_side, their sum into player_count (the race's players) and half of it into machine_count (its cabinets).
+comment game_mode_play Game mode 6, a game (check_game_start starts it at step 0) and the demo's race (game_mode_demo_race, from step 10), by game_step: 0 sound 21 (queue_sound), the screen's two lamps on (unk_F20), lcd_restart_frames cleared (the LCD's timer), a fade out, race game_over cleared; 1 when the fade is over, waits until the screen's player is in the list of the race's players (from byte 1F of the race_copy record of host_player), then the host itself (not on ISDN) writes 1 to the link board's 80000A; 2 the car select: demo_flags bit 8 clear, the wheel motor off (unk_20E0D0), game_start_time from the backup RAM's seconds (701F10), a game counted on the seat (701F14 + 2 * index, bookkeeping_increment16), C00074 = rom_003463 by index, the sound off (reset_screen_sound) unless the entry countdown's music plays (entry_countdown_shown), clear_screen, clear_race_state, palette 031E7C, in_game, host_record (the host's race_copy record), the stages (screen unk_A0-A6) 0, the seat's lamps on (checkpoint_lamp 2, leader_lamp 8), car_select_start started, a fade in, the screen on; 3 the car select (car_select_run goes on to 4); 4 a fade out, entry_countdown_shown cleared, the lamps on; 5 when the fade is over, race ready cleared, silence_and_clear_screen, the screen off (C0001C = 4), the stage's palette (queue_stage_load), the screen's car (object_handlers_346C: player_car_update, its place from screen 320 + player), step 23; 23 once the car has published its state (race_copy published): race_running, the race's objects (object_handlers_3474; the demo's object_handlers_34C4), 24; 24 and 25 a frame each; 26 step 11, the input ring's places to 0, the screen on; 11 a fade in, step 6; 6 when it is over, 7; 7 the race, until its ending is over (flags bit 1, race_car_start_ending): race_running cleared, a fade out, 8; 8 when it is over, the lamps on, 9; 9 the text and the tilemaps off (clear_text_layer, reset_tile_layers), no objects, step 12; 12 the route map: short of the goal (race_copy unk_5E clear) the sound off, the song title Meaning of the Light (start_song_title with 003504) and sound 0B; palette 031E84, route_map_update (object_handlers_34EC), a fade in; 13 when it is over, 14; 14 the map until START (buttons_pressed bit 6) or route_map_update sets 16; 15 (nothing sets it) 16; 16 with a new course record (course_record_beaten) a fade out and 18, else 21; 18 when the fade is over, no objects, name_entry_update started, 19; 19 a fade in, 20; 20 the name entry (name_entry_update sets 21); 21 set_player_ready and 22; 21 and 22 once every player of the race is ready (players_not_ready): a fade out, fade_out_music, 17; 17 when the fade is over, the game's end: the time played (the backup's seconds less game_start_time) added to the seat's total (701F18 + 4 * index) and kept if the longest (701F20) or the shortest (701F22), a game counted at the stage level reached (screen unk_A4, 6 at the goal: 701F24 + 2 * it), C00074 = rom_003465 then rom_003467 by index, sound 1E, the sound and the tilemaps off, in_game, screen unk_31C and unk_318 cleared, the race record's car part cleared (race_record_clear), no objects, race game_over (the screens in the attract modes go to the ranking, race_entries_update), the lamps off, clear_lcd, 28; 28 game mode 5 (the ranking). The demo: 10 silence_and_clear_screen, clear_race_state, the stage and the car model from 0034F4 by attract_car (the stage into screen unk_A0, A1, A3, A5), host_record its own record at screen + 490 (demo_player_count 1, demo_players this screen's player, demo_stage), the model into car model and race unk_49, palette 031E88, then as 27; 27 waits until race_copy published is clear, then as 5.
+comment course_record_beaten Whether the screen's player has beaten the course's record (zero clear): when the race was finished (race_copy unk_5E), the course (the goal's stage, screen unk_A3, less 15) into record_course, and a record when the player came first (screen 320 + player is 0) in a time (screen 410 + 2 * player) under the course's (course_record_times by course).
+comment load_course_records Loads the ten courses' records into course_records (6 bytes each: the car's model, the name's three letters, the time in hundredths) from the backup RAM (701F32); a course without one there (its first byte negative) gets its default from 002CC4 (SGA, 5'00"00); the model is kept to its low three bits.
+comment silence_and_clear_screen The screen's sound off (reset_screen_sound), then clear_screen.
+comment clear_screen Clears what the screen shows: no objects (clear_objects), its tilemaps off in the mixer (reset_tile_layers), no sprites (clear_sprite_group_count, screen unk_B0) and the text layer cleared (clear_text_layer).
+comment clear_race_state Clears the race's state: the race record's car part (race_record_clear), the screen's car block and the 100 bytes after it (300 bytes from player_car), the race's order, places and times (screen + 330, 160 bytes) and the ring of views (screen + 600, 100 bytes).
+comment clear_published_car Clears what the screen's car hands on to the race record (player_car_publish's), for the ranking (game_mode_ranking): race published, the next of the ring of eight views (screen unk_D4, race unk_4B, its address in screen unk_D0) with the view's place and angles cleared in it and the car (view_x-z, view_pitch, view_yaw), the wheel effects and hard acceleration (race unk_50-53), segment_fraction, segment, road_x, window_segment (race unk_40-46), window_offset, segment_remaining, the horizon (screen unk_B8), and the halfword at C8 of current_object (player_car_publish's bounce_height) with race unk_56; from the ranking current_object is what run_objects left in it, not the car.
+comment staff_credits_code_control_bit Sets bit R3 of the controls being read (R1) when the value R2 is E0 or more, or C0 or more when the bit was on in the controls held before (R0): staff_credits_code_read_controls' test for the wheel turned right, the gas and the brake.
+comment crc16 Returns the CRC-16 (polynomial 1021) of the R11 bytes at R10, worked out in the top half of a 32-bit register that starts at DEBDEB00, each byte entering its low byte, with eight more shifts after the last. Used for the EEPROM's settings (load_settings, eeprom_write_settings) and the program's signature (signature_checksum).
+comment signature_checksum Returns the crc16 of the program's 48-byte signature text at 00010C (OUTRUNNERS EUROPA and its build date, 93.4.21), which the EEPROM keeps in settings_signature so that a new program is noticed (load_settings).
+comment load_settings Loads the settings from the EEPROM at start-up (eeprom_read_settings into 20E600-20E67F) and repairs them: a block marked SEGA gets the defaults (0004C0, marked S32A) with eeprom_write_count 100; one without the S32A mark the defaults; with it, a new program (signature_checksum unlike settings_signature) gets the defaults keeping the eeprom_write_count of a sound copy (the settings or their backup, each checked with its crc16); with the same program a bad copy (or a backup unlike the settings) is rewritten from the other, both bad the defaults. Every repair but rewriting a copy also resets the backup RAM's data (bookkeeping_reset); each one saves the result (eeprom_write_settings).
+comment count_eeprom_write Counts a save of the settings in eeprom_write_count, up to 10000 (the test mode warns when the EEPROM's limit of 10,000 writes is reached).
+comment eeprom_lock Locks the EEPROM against writes (command 00, the 93C46's write disable) and turns the interrupts back on.
+comment eeprom_read_settings Reads the EEPROM's 64 words into 20E600-20E67F (settings_magic, settings_signature, the settings from settings_checksum on, their backup from backup_settings_checksum on), with the interrupts off.
+comment save_settings Saves the settings into the EEPROM after they changed (the link's, link_take_master_settings; the test mode's, test_mode_exit): eeprom_write_settings_counted, then eeprom_lock.
+comment eeprom_write_settings_counted Counts the save (count_eeprom_write) and writes the settings (eeprom_write_settings).
+comment eeprom_write_settings Writes the settings into the EEPROM: their checksum (crc16 of the 3A bytes from eeprom_write_count) into settings_checksum, checksum and settings copied over the backup (backup_settings_checksum on), the EEPROM unlocked (command 30, write enable) and its 64 words written from 20E600 (eeprom_write_word). Leaves the interrupts off and the EEPROM unlocked (save_settings locks it).
+comment eeprom_read_word Reads the EEPROM word of read command R4 (eeprom_send_command): 18 clock pulses collecting the data out (bit 7 of R12, port F of the second I/O chip), the 16-bit word into R0; then chip select off.
+comment eeprom_write_word Writes R0 into the EEPROM word of write command R4 (eeprom_send_command): its 16 bits high first, chip select dropped to start the write, then waits, clocking, until the data out (bit 7 of R12) says it is done.
+comment eeprom_send_command Sends command R4 to the EEPROM (a 93C46 on port H of the second I/O chip, R13: bit 7 data in, 6 clock, 5 chip select): chip select, a start bit, then the 8 bits of R4 high first (two of opcode: 2 read, 1 write, 0 with the address's top bits 3 write enable or 0 write disable; six of address), each with a clock pulse.
+comment eeprom_begin Starts an EEPROM access: the interrupts off, R13 the EEPROM's lines (C8000E, port H of the second I/O chip), R12 its data out (C8000A, port F, bit 7), R2 the lines' present value.
+comment eeprom_set_lines Writes R2 to the EEPROM's lines (R13), with bit 4 set too.
+comment eeprom_read_one_word Unused: reads the EEPROM's word R4 (its read command, R4 | 80) into R0 and turns the interrupts back on.
+comment reload_settings Unused: reads the settings from the EEPROM again (eeprom_read_settings) and turns the interrupts back on.
+comment eeprom_write_one_word Unused: writes R0 into the EEPROM's word R4 (its write command, R4 | 40) without unlocking it first, and turns the interrupts back on.
+field screen 40 link_event u8
+field screen 45 link_status u8
+field screen 46 link_status_set u8
+field screen 47 link_status_cleared u8
+field screen 48 link_status_changed u8
+field screen 80 game_mode u8
+field screen 81 mode_step u8
+field screen 82 game_step u8
+field screen 88 mode_timer u16
+field screen 90 demo_flags u32
+field screen 94 flags u32
+field screen 98 game_start_time u32
+field screen 9C attract_car u8
+field screen 9D record_course u8
+field screen E1 start_lamp_blink u8
+field screen E2 entry_countdown_shown u8
+field screen 100 wheel u8
+field screen 101 gas u8
+field screen 102 brake u8
+field screen 108 input_write_place u8
+field screen 109 input_read_place u8
+field screen 110 buttons u32
+field screen 114 previous_buttons u32
+field screen 118 buttons_pressed u32
+field screen 11C buttons_released u32
+field screen 31A in_game u8
+field screen 31B race_running u8
+field screen 4AF demo_player_count u8
+field screen 4B0 demo_players u8
+field screen 4F2 demo_stage u8
+field race 28 game_over u8
+field race 5C ready u8
+field race 5F published u8
+20E004  var  waiting_task_stack u32
+20E023  var  frame_ready u8
+20E024  var  single_task u8
+20E026  var  game_frame_count u8
+20E02B  var  second_task_waiting u8
+20E04A  var  isdn_players_this_side u8
+20E04B  var  isdn_players_other_side u8
+20E100  var  switches u8
+20E101  var  previous_switches u8
+20E102  var  switches_pressed u8
+20E103  var  switches_released u8
+20E110  var  analog_raw u8
+20E116  var  analog_inputs u8
+20E117  var  analog_gas_1 u8
+20E118  var  analog_brake_1 u8
+20E119  var  analog_wheel_2 u8
+20E11A  var  analog_gas_2 u8
+20E11B  var  analog_brake_2 u8
+20E120  var  seat_1_player u8
+20E121  var  seat_1_buttons u8
+20E122  var  seat_1_wheel u8
+20E123  var  seat_1_gas u8
+20E124  var  seat_1_brake u8
+20E125  var  seat_2_player u8
+20E126  var  seat_2_buttons u8
+20E127  var  seat_2_wheel u8
+20E128  var  seat_2_gas u8
+20E129  var  seat_2_brake u8
+20E304  var  course_record_times u16
+20E600  var  settings_magic u32
+20E604  var  settings_signature u16
+20E608  var  settings_checksum u16
+20E644  var  backup_settings_checksum u16
+20E646  var  backup_eeprom_write_count u16
+
+# ======== the race's logic, the link between cabinets, the draw modes and the LCD (naming batch H) ========
+00AB24  func  distance_offset_from_x
+00AB36  func  distance_offset_from_z
+00AB46  func  distance_offset_at_angle
+00B65F  func  wheel_effect_1_none
+00B660  func  wheel_effect_1_surface_1_inner
+00B66E  func  wheel_effect_1_surface_1_outer
+00B67C  func  wheel_effect_1_surface_2_inner
+00B68A  func  wheel_effect_1_surface_2_outer
+00B698  func  wheel_effect_2_none
+00B699  func  wheel_effect_2_surface_1_inner
+00B6A7  func  wheel_effect_2_surface_1_outer
+00B6B5  func  wheel_effect_2_surface_2_inner
+00B6C3  func  wheel_effect_2_surface_2_outer
+00D0C8  func  network_check_again
+00D13A  func  network_check
+00D298  func  network_check_join
+00D2BE  func  network_check_isdn
+00D2EB  func  link_lost
+00D2F0  func  network_check_stand_alone
+00D341  func  network_check_result
+00D524  func  network_check_board_memory
+00D544  func  network_check_memory_test
+00D5E0  func  network_check_wait_board
+00D612  func  network_check_wait_isdn
+00D664  func  network_check_greeting
+00D6AD  func  network_check_five_ics
+00D6BB  func  network_check_four_ics
+00D6C7  func  network_check_show_ics
+00D6EC  func  network_check_blink_text
+00D716  func  network_check_clear_status_line
+00D72D  func  network_check_toggle_memory_text
+00D7CB  func  network_check_error
+00D884  func  network_check_halt
+00D8A5  func  link_take_master_settings
+00D9F3  func  race_entries_update
+00DB6D  func  race_progress_update
+00DDA8  func  entry_invitation_step
+00DEC2  func  race_record_clear
+00DEF8  func  course_records_update
+00E620  func  link_receive_records
+00E638  func  link_isdn_receive_records
+00E67C  func  link_copy_records_in
+00E8DF  func  link_send_records
+00EB74  func  draw_object_between_segments
+00EC1B  func  draw_object_from_road_edge
+00ECCD  func  draw_object_from_road_edge_unshifted
+00ED82  func  draw_object_from_road_edge_doubled
+00EE37  func  draw_object_at_car_window_segment
+00EE75  func  draw_object_at_segment
+00EEBF  func  draw_object_at_car_window_segment_on_road
+00EEF0  func  draw_object_at_segment_scale
+00EEF4  func  draw_object_at_shifted_scale
+00EEFF  func  draw_object_at_scale
+00EF32  func  draw_object_on_screen
+00EF4A  func  put_object_sprites
+0186FC  func  lcd_start
+0187A3  func  lcd_write_character
+0187C1  func  lcd_write_data_nibble
+0187F0  func  lcd_command_nibble_after_pause
+0187F8  func  lcd_write_command_nibble
+018827  func  lcd_reset
+018863  func  lcd_refresh
+0188BE  func  lcd_send_next_nibble
+0189D9  func  lcd_update
+comment distance_offset_from_x Unused (only unk_00AB04 lists it, for octants 1, 2, 5 and 6 of an angle): the distance along angle R0 that has the x distance from R11's x (+4) to the object's field 20 (that distance / the sine of R0), turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the results (R2, R3).
+comment distance_offset_from_z Unused (only unk_00AB04 lists it, for octants 0, 3, 4 and 7 of an angle): the distance along angle R0 that has the z distance from R11's z (+8) to the object's field 28 (that distance / the cosine of R0), turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the results (R2, R3).
+comment distance_offset_at_angle Unused (the end of distance_offset_from_x and distance_offset_from_z): R2 / R6 as a length along angle R1, its sine part into R2 and its cosine part into R3. Its C has no body: nothing reads the results.
+comment wheel_effect_1_none The wheel at road_x plus the model's half track (handling +1A) is within the bounds of both surface entries: no effect (player_car_road_drag's pick, rom_00B70C).
+comment wheel_effect_1_surface_1_inner wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+6) of surface_entry_1 past its inner bound (+2): the wheel at road_x plus the half track is past it and no other bound (player_car_road_drag's pick, rom_00B70C).
+comment wheel_effect_1_surface_1_outer wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+7) of surface_entry_1 past its outer bound (+4), when the wheel at road_x plus the half track is past it and not past the bounds of surface_entry_2.
+comment wheel_effect_1_surface_2_inner wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+6) of surface_entry_2 past its inner bound (+2), when the wheel at road_x plus the half track is past it but not past its outer bound.
+comment wheel_effect_1_surface_2_outer wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+7) of surface_entry_2 past its outer bound (+4): for the wheel at road_x plus the half track it comes before every other.
+comment wheel_effect_2_none The wheel at road_x less the model's half track is within the bounds of both surface entries: no effect (player_car_road_drag's pick, rom_00B74C).
+comment wheel_effect_2_surface_1_inner wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+6) of surface_entry_1 past its inner bound (+2), when the wheel at road_x less the half track is past it but not past its outer bound.
+comment wheel_effect_2_surface_1_outer wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+7) of surface_entry_1 past its outer bound (+4): for the wheel at road_x less the half track it comes before every other.
+comment wheel_effect_2_surface_2_inner wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+6) of surface_entry_2 past its inner bound (+2), when the wheel at road_x less the half track passes no bound of surface_entry_1 nor the outer one of surface_entry_2.
+comment wheel_effect_2_surface_2_outer wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+7) of surface_entry_2 past its outer bound (+4), when the wheel at road_x less the half track passes no bound of surface_entry_1.
+comment network_check_again The network check after the test mode: network_check, or in ISDN mode (isdn_mode) the link board off for a moment, the link's variables (from machine_count), the board's memory at 800004 and 800600, this machine's two race records and all the players' records cleared, then network_check_isdn.
+comment network_check The network check at boot: the link board off (801000), the link's variables, the board's first bytes and all the race records cleared; with the STAND-ALONE setting (stand_alone into link_off) only network_check_stand_alone. Else it shows NETWORK CHECK (MASTER, SLAVE or ISDN) and BOARD CHECK, tests the board's memory (network_check_board_memory), writes its greeting V70 and turns the board on, waits for it (network_check_wait_board), checks the board's answer Z80 (network_check_greeting), waits again, shows the board's self-test (network_check_four_ics); in ISDN mode goes on to network_check_isdn; else gives the board this machine's role (link_master at 800004), waits, shows the self-test again (network_check_five_ics), waits for the board's flag (801002 bit 7) with CHECK NETWORK STATUS blinking, gives it this machine's number (800002 to 800E20) and FF at 800006, shows CHECK TRANS END until the board's 800008 is set (link_lost if 80000C is), and goes on to network_check_join. The test button (test_mode_on) gives it up at any wait (link_failed FF).
+comment network_check_join Takes the link from the board: machine_count from its byte at 800000, player_count twice it, this machine's number from 800002, the board's flag 801002 set; with no machine on the link (and not in ISDN mode) network_check_stand_alone; else the two screens' car numbers from the cabinet ID (cabinet_id * 2 and + 1, into screen car_number and race car_number), then network_check_result with this machine's number.
+comment network_check_isdn The network check's ISDN mode: the link board off for a moment, 1 into its byte at 800014 (0 in network mode), its flag clear, the board on, network_check_wait_isdn, then network_check_join.
+comment link_lost The link has failed (the board's error byte 80000C, seen by network_check, link_receive_records or link_send_records): link_failed 1, then network_check_stand_alone (which shows COMMUNICATION FAILED. for 128 frames).
+comment network_check_stand_alone Sets the machine up alone: link_off, one machine and two players (machine_count, player_count), car numbers 0 and 1 for the two screens (screen and race car_number), then network_check_result as machine 1.
+comment network_check_result Sets up the machine's two players from its number R0 (1-4): both race records' machine, their players ((R0 - 1) * 2 and + 1, also screen player), the screens' race_copy (rom_00E0A0 by player: 20FC00 + 80 each) and race (20FB00, 20FB80); machine 1 also puts its settings (advertise_sound, steering_wheel_reaction, coins_per_credit, first_chute_multiplier, bonus_adder-15, game_difficulty, time_difficulty, unk_20E634) at 03-0D of its first record and its course records (the backup's, 701F32) at 30. Then NETWORK CHECK and the result for 128 frames: COMMUNICATION FAILED. (link_failed), THIS MACHINE IS ISDN MODE., THIS MACHINE IS STAND-ALONE., or SLAVE / MASTER CONTROLLER (the board's 800004) with COMMUNICATION SUCCESS. and THIS MACHINE ID IS n (the board's 800002); the text cleared.
+comment network_check_board_memory Tests the link board's memory (network_check_memory_test over 7FF of its bytes); on a fault the screens off, CONNECTION ERROR and network_check_error.
+comment network_check_memory_test A memory test: eight passes (seed 01, 02, ... 80), each writing a pattern from the seed into R1 bytes (one a halfword) from R10, reading them back and gathering the bits that differ into R0's low byte (0: no fault); CHECK DUALPORT RAM flips on the status line after each pass (network_check_toggle_memory_text).
+comment network_check_wait_board Waits for the link board's flag (801002 bit 7), WAIT blinking, for up to E10 frames (two minutes, link_wait_frames): then the screens off, COMMUNICATION TIME OUT and network_check_error; the test button gives the check up (link_failed FF); the status line cleared after.
+comment network_check_wait_isdn ISDN mode: waits, WAIT blinking, until the link board's byte 800000 (its machine count) is set, then 60 frames more (link_wait_frames); the test button gives the check up (link_failed FF); the status line cleared after.
+comment network_check_greeting Checks the greetings on the link board: V70 (this program's, at 800000) and Z80 (the board's answer, at 800010); otherwise the screens off, CONNECTION ERROR and network_check_error.
+comment network_check_five_ics The link board's self-test (its byte 80000C), the second time: clear, IC17, IC23, IC11, IC10 and IC9 GOOD (network_check_show_ics); else the screens off, COMMUNICATION BOARD ERROR and network_check_four_ics, which, the byte still set, shows four of the ICs and halts there (the five after it only show if the byte clears meanwhile), then network_check_halt.
+comment network_check_four_ics The link board's self-test (its byte 80000C), the first time: clear, IC17, IC23, IC11 and IC10 GOOD (network_check_show_ics); else the screens off, COMMUNICATION BOARD ERROR with each of the four GOOD or BAD, the screens on, and network_check_halt.
+comment network_check_show_ics Shows R0 of the link board's ICs (IC17, IC23, IC11, IC10, IC9), each GOOD or BAD by its bit in R2 (rom_00E4D0).
+comment network_check_blink_text Blinks a text record (at current_object: its cell, attribute and characters) by flipping it into the text layer every 16th call (network_check_blink_counter): WAIT, CHECK NETWORK STATUS, NETWORK ERROR.
+comment network_check_clear_status_line Clears row 24 of the text layer, where the network check's waits blink their texts.
+comment network_check_toggle_memory_text Flips CHECK DUALPORT RAM on or off on the status line (row 24), once each pass of network_check_memory_test.
+comment network_check_error Shows the error R19 (a text list: CONNECTION ERROR, COMMUNICATION TIME OUT...) on a cleared text layer with the screens on, then halts like network_check_halt.
+comment network_check_halt Blinks NETWORK ERROR until the test button (test_mode_on) is pressed; then link_failed FF and the network check is given up (it returns past its caller).
+comment link_take_master_settings After the network check (unless the test button is down): sends and receives the race records (link_send_records, 5 frames, link_receive_records; in ISDN mode once the board's 8006E1 is set, link_isdn_receive_records), keeps each player's car number (race car_number into car_numbers), takes the first player's (the master's) course records into the backup (701F32 with its checksum, 011418, and the copy at 701FAE) and into course_records (001D84), and adopts its settings (record +03-0D into advertise_sound, steering_wheel_reaction, coins_per_credit-15, game_difficulty, time_difficulty, unk_20E634; 011018 and 01139E when any of coins_per_credit-15 changes, all saved by 00036B when any changes).
+comment race_entries_update The entries to a race, each frame. Player 0's screen keeps them in its record: once every entry is taken (it means to wait for each record's entry_serial_seen, but compares player 0's own each time), a player's entry_request not yet accepted (accepted_players) is accepted: entrant = that player, entry_serial + 1, and the first one starts entry_frames at 600 (rom_00E614), cut to 40 once every player is in; entry_frames counting down to 0 closes the entries (entrant FF, entry_serial + 1, accepted_players cleared, 1 to the link board's 80000A). Every screen: when some player's race is over (race unk_28) an idle screen (game steps 1-5) goes to step 5 (unk_20E02E cleared), and while player 0's entry_frames runs to step 7 (entry_invitation_step); each new entry_serial of player 0's record (entry_serial_seen) adds its entrant to the screen's entrants (entrant_count), or the close clears them (and entry_accepted); the screen's own player accepted: its entry_request cleared, entry_accepted, the first entrant into host_player and is_host when that is itself; the host keeps racer_count and race_order in its record from the entrants.
+comment race_progress_update The race's progress, each frame of a race (screen unk_31A). The host (is_host) runs it in its record: once every racer has taken the last pass (pass_seen = pass_count), a racer whose stage_count changed (against counted_stages) has passed a checkpoint (stage_count - 1): pass_player, pass_checkpoint, pass_order (counted_passes), pass_branch (the side of the road it was on: race unk_44 bit 15), pass_time (race_time in hundredths plus the order), pass_count + 1; the first to pass a checkpoint before the goal adds the time of the stage its branch leads to (rom_00E5B3 by rom_00E5D3[stage * 2 + branch]) plus the setting for that checkpoint (unk_20FC0B) to time_left. Once the race has started (race_started) race_time + 34 and time_left - 1 a frame, and one pass of sorting race_order: the finished (race unk_5E) first by finish_time, then by distance (race unk_40-43). Every screen from the host's record (host_record): the leader's segment and stage (leader_window_segment, leader_stage), each player's place (places, its own in place); each new pass: pass_seen (screen and race), checkpoints_passed, checkpoint_passes, the order and the time by player and by order (checkpoint_orders, checkpoint_order, checkpoint_times_by_player, checkpoint_times); the first car past a fork decides the route: forks_decided + 1, its branch in route_branches and the stage it leads to in route_stages.
+comment entry_invitation_step Game step 7, an idle seat while another one's game takes entries (race_entries_update sends it here), by screen unk_80's byte 2: 0 screen unk_153 = 0 and unk_94 bit 0; 1 once that bit has cleared: the seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count (010889) and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear), not the demo (unk_90 bit 8), the wheel motor off (unk_20E0D0), both of the seat's lamps blinking (bytes C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts object_handlers_DF74 (entry_countdown_start, credit_display_update, coin_prompt_update): the invitation to join with the entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), unk_153 = 1, unk_94 bit 0; 4 once player 0's entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD cleared (clear_lcd).
+comment race_record_clear Clears bytes 30-7F of the screen's race record (the race's part: the car's published state, the checkpoint passes, the times), from the zeros at 100800.
+comment course_records_update Takes the players' new course records, each frame: when a player's record_serial changes (against name_entries_seen), its time (finish_time) on its course (record_course) at or under the course's record (course_records, 6 bytes a course: model, the three letters of the name, the time) replaces it with its record_model and record_name, also in the two copies in the backup (701F32 with its checksum, 011418, and 701FAE).
+comment link_receive_records Takes the race records of all the players into 20FC00 (80 bytes each, by player), each frame: alone (link_off, link_failed) this machine's own two (20FB00, 20FB80); in ISDN mode the eight from 21E000; on the link the eight from the link board (link_copy_records_in from 800020, or 800720 when its byte 80000E is set), or link_lost when its error byte 80000C is set.
+comment link_isdn_receive_records ISDN mode: copies the eight race records from the link board (800600) to 21E000, where link_receive_records takes them; the link interrupt (int_vector_44) does it on the board's command 3.
+comment link_copy_records_in Copies R1 race records from the link board's memory at R10 (a byte in each halfword) to R11: their first 70 bytes, 80 apart.
+comment link_send_records Sends this machine's two race records to the link board, each frame (not in ISDN mode, nor alone): their first 70 bytes to 800E20 and 800F00 (a byte in each halfword), then FF to its byte 800006; link_lost when its error byte 80000C is set. link_wait_frames from unk_20E038 (which nothing sets).
+comment draw_object_between_segments Draw mode 2: the object between the road's segment at its position (field 1C, counted from the view drawn: race_copy unk_46) and the next, by the fraction in field 28 (80ths), offset across and up by fields 20 and 24 scaled by each segment's scale (draw_object_at_scale). Its size, meant as the two segments' scales by the fraction, multiplies them by the second point's offsets instead (R4 and R5 used twice): a slip in the game's code; nothing in the scenarios draws with it.
+comment draw_object_from_road_edge Draw mode 5: the object on the road's surface between its segment (field 1C) and the next by the fraction in field 28, across at field 20 from the road's edge on side field 3F (the segment's half width times the side), its size the two segments' scales by the fraction shifted by scale_shift (draw_object_at_shifted_scale).
+comment draw_object_from_road_edge_unshifted Draw mode 7: as draw_object_from_road_edge, at the size of scale_shift 0 whatever the object's.
+comment draw_object_from_road_edge_doubled Draw mode B (the traffic cars'): as draw_object_from_road_edge, at twice the size of draw_object_from_road_edge_unshifted (scale_shift 1) whatever the object's.
+comment draw_object_at_car_window_segment Draw mode 4: as draw_object_at_segment, but the segment counted from the screen car's own window_segment instead of the view drawn (race_copy unk_46).
+comment draw_object_at_segment Draw mode 9: the object at the road's segment of its position (field 1C, counted from the view drawn: race_copy unk_46), offset across and up by fields 20 and 24 scaled by the segment's scale, its size that scale shifted by scale_shift; not drawn when the segment is behind or not projected.
+comment draw_object_at_car_window_segment_on_road Draw mode 3: as draw_object_at_car_window_segment, on the road's surface (no up offset).
+comment draw_object_at_segment_scale Draws the object at R0, R1 at the projected segment R11's own scale (draw_object_at_shifted_scale).
+comment draw_object_at_shifted_scale Draws the object at R0, R1 at the scale R2 shifted by its scale_shift (and >> 4) (draw_object_at_scale).
+comment draw_object_at_scale Places a road object projected at R0, R1 with size R2 (both scales): x and y; off the screen (x beyond 1A0 or -1A0, y beyond 80 or -160) back to draw_object's caller undrawn; the depth_layer of the projected segment R11 (+8), then put_object_sprites.
+comment draw_object_on_screen Draw mode 0: the object at x, y on the screen, less the screen's scroll (screen unk_14, unk_16), at its width_scale and height_scale (put_object_sprites).
+comment put_object_sprites Writes the object's frame (animation, frame) into the screen's sprite list at R10 and its copy at + 3000, a sprite of 8 halfwords for each piece: its word flipped by flags bits 6-7, its size from 0x122B74 by size_step scaled by R2 (height) and R3 (width), placed at R0, R1 plus its offsets scaled the same way (signs flipped by the flags: rom_00F13C, rom_00F140), its palette word from rom_032BA4 by palette; R10 past them.
+comment lcd_start Starts the cabinets' LCDs at boot (both, through port G of the two I/O chips): the 4-bit start (command nibbles 3, 3, 3, 2), display on (0C), SEGA Enterprises as both screens' text (lcd_text), command 40 then the eight custom characters (rom_018B4E: the DJ's face among them); the screens' lamps off (screen unk_F20), lcd_restart_frames E10.
+comment lcd_write_character Writes the data byte R0 to both LCDs, its high nibble then its low one (lcd_write_data_nibble), with pauses.
+comment lcd_write_data_nibble Writes the high nibble of R0 to both LCDs as data (port G of the two I/O chips, inverted: the data lines, register select set, then the enable strobe bit 3 dropped).
+comment lcd_command_nibble_after_pause A pause, then lcd_write_command_nibble.
+comment lcd_write_command_nibble Writes the high nibble of R0 to both LCDs as a command (register select clear), then drops the enable strobe (bit 3).
+comment lcd_reset After the test mode: both screens' LCD text back to SEGA Enterprises (lcd_text), their lamps off (screen unk_F20), and lcd_restart_frames 0 so that the next VBLANK starts the LCDs again.
+comment lcd_refresh Each VBLANK: counts lcd_restart_frames down and, when it runs out, has the LCDs started again (lcd_init_step 2C, E10 VBLANKs to the next, a minute); else, unless a nibble is being written (lcd_busy), after a byte cut in half (an odd lcd_send_step) writes one more command nibble (0 or 4) to keep the LCDs in step, takes both screens' lcd_text into lcd_send_buffer_1 and lcd_send_buffer_2 and starts sending them (lcd_send_step 0).
+comment lcd_send_next_nibble One nibble to the LCDs each timer interrupt (int_vector_43), with the other bits of port G (unk_20E094, the lamps): while lcd_init_step counts, the start sequence (rom_018B21, from the end), then idle (lcd_send_step 22); else by lcd_send_step: the cursor home command (80), then the 16 characters of lcd_send_buffer_1 to screen 1's LCD and of lcd_send_buffer_2 to screen 2's, a nibble at a time; lcd_busy while it writes the port.
+comment lcd_update The screen's LCD, each frame. With the DJ's face on (dj_face) its first two characters are the face, its mouth the next shape of dj_mouth_shapes every third frame (dj_mouth_frames; rom_018AE8, pairs of custom characters), closed when the string ends (a negative byte); the rest of the line (all 16 without the face) scrolls a text: a new lcd_scroll_request clears the line and starts lcd_scroll, which shifts the text in from the right a character every 5 frames (lcd_scroll_frames; ` shows custom character 7), then shifts spaces in until the text has gone (lcd_scroll_step 0-3).
+field screen 01 player u8
+field screen 02 car_number u8
+field screen 300 accepted_players u8
+field screen 308 host_record u32 race
+field screen 30C host_player u8
+field screen 30F entrant_count u8
+field screen 310 entrants u8
+field screen 318 is_host u8
+field screen 319 entry_accepted u8
+field screen 31C race_started u8
+field screen 31F place u8
+field screen 320 places u8
+field screen 328 name_entries_seen u8
+field screen 330 counted_stages u8
+field screen 338 counted_passes u8
+field screen 342 pass_seen u8
+field screen 344 route_stages u8
+field screen 349 forks_decided u8
+field screen 34A route_branches u8
+field screen 350 leader_window_segment u16
+field screen 352 leader_stage u8
+field screen 35A checkpoint_passes u8
+field screen 360 checkpoint_orders u8
+field screen 390 checkpoint_order u8
+field screen 3C0 checkpoint_times_by_player u16
+field screen 420 checkpoint_times u16
+field screen 480 checkpoints_passed u8
+field screen F10 lcd_text u8
+field screen F30 dj_mouth_shapes u32 rom
+field screen F34 dj_mouth_frames u8
+field screen F35 dj_face u8
+field screen F40 lcd_scroll_request u32
+field screen F44 lcd_scroll u32
+field screen F48 lcd_scroll_step u8
+field screen F49 lcd_scroll_frames u8
+field race 00 machine u8
+field race 01 player u8
+field race 02 car_number u8
+field race 11 record_serial u8
+field race 12 record_model u8
+field race 13 record_name u8
+field race 16 finish_time u16
+field race 18 record_course u8
+field race 19 entry_request u8
+field race 1A entry_frames u16
+field race 1C entry_serial_seen u8
+field race 1D entry_serial u8
+field race 1E entrant u8
+field race 1F racer_count u8
+field race 20 race_order u8
+field race 60 stage_count u8
+field race 61 pass_seen u8
+field race 62 stage u8
+field race 63 pass_count u8
+field race 64 pass_player u8
+field race 65 pass_checkpoint u8
+field race 66 pass_order u8
+field race 67 pass_branch u8
+field race 68 pass_time u16
+field race 6A time_left u16
+field race 6C race_time u32
+20E030  var  car_numbers u8
+20E040  var  machine_count u8
+20E041  var  player_count u8
+20E042  var  link_off u8
+20E043  var  link_failed u8
+20E046  var  link_wait_frames u16
+20E048  var  network_check_blink_counter u16
+20E300  var  course_records u8
+20E3C0  var  lcd_send_buffer_1 u8
+20E3D0  var  lcd_send_buffer_2 u8
+20E3F0  var  lcd_restart_frames u16
+20E3F2  var  lcd_send_step u8
+20E3F3  var  lcd_busy u8
+20E3F4  var  lcd_init_step u8
+
+# ======== the sprite lists, the boot of the video, unpacking, fades, coins, bookkeeping and sound (naming batch I) ========
+00F04E  func  draw_object_one_piece
+00F104  func  draw_object_entry
+00F126  func  draw_object_command
+00F15C  func  draw_object_smoothed
+00F396  func  finish_sprite_list
+010243  func  note_road_crest
+010634  func  init_screen
+010688  func  clear_screen_ram
+0106AF  func  init_video
+01070C  func  reset_tile_layers
+010741  func  clear_video_ram
+01076A  func  clear_text_layer
+0107BC  func  init_sprite_chip
+0107F0  func  init_sprite_lists
+010889  func  clear_sprite_group_count
+010890  func  init_mixer
+0108EA  func  init_io_chips
+010936  func  load_sprite_ram_tables
+010DC4  func  unpack
+010E42  func  unpack_queued_step
+010FA1  func  unpack_tile_pages
+011018  func  init_coins
+01106C  func  update_coins
+0111CB  func  pulse_coin_meter
+011213  func  write_bookkeeping_credits
+01122C  func  add_service_credit
+011252  func  insert_coin
+0112D9  func  show_title_on_credit
+0112F0  func  bookkeeping_increment16
+011324  func  bookkeeping_add16
+011341  func  bookkeeping_add32
+01137D  func  bookkeeping_set16
+01139E  func  bookkeeping_clear_credits
+0113C0  func  bookkeeping_check
+0113E5  func  bookkeeping_reset
+01140E  func  bookkeeping_copy
+011418  func  bookkeeping_update_checksum
+01143E  func  bookkeeping_checksum
+011594  func  upload_boot_palettes
+01167E  func  step_screen_fade
+0117E4  func  load_text_font
+011868  func  print_text_layer_list
+011874  func  print_text_layer
+01190C  func  print_hex_byte
+01192B  func  print_hex_digits
+011A72  func  draw_text_sprites
+011C60  func  clear_objects
+011E88  func  start_sound_program
+011FE6  func  fade_out_music
+011FEA  func  fade_out_music_at
+012004  func  reset_screen_sound
+comment draw_object_one_piece Draw mode 8: the first piece of the animation's frame at its own size (no zoom, no flip), at x, y on the screen (less sprite_origin_x, sprite_origin_y), with the first word of its palette (rom_032BA4), into the sprite list and its halfway copy alike.
+comment draw_object_entry Draw mode 1: copies a ready 16-byte sprite entry, from the address in fields 38-3B (animation and palette read as one 32-bit address), into the sprite list and its halfway copy, with the screen's bit in its fourth word (sprite_screen_bit). Not run in the scenarios.
+comment draw_object_command Draw mode 6: copies a ready 16-byte entry from the address in fields 38-3B into the sprite list and its halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's clip.
+comment draw_object_smoothed Draw mode A: every piece of the animation's frame at x, y on the screen (less sprite_origin_x, sprite_origin_y), zoomed by width_scale and height_scale, flipped by flags bits 6-7 (with bit 7 the pieces' offsets are negated, rom_00F4EC), each with its palette word; the halfway copy (+3000) is drawn from the averages of this frame's x, y, width_scale and height_scale and the last frame's, kept in the ring of sprite places (next_sprite_place, 16 bytes a record; the object's field 50 points at its record) when flags bit 5 says it was drawn the frame before. Keeps this frame's values in a new record and sets flags bit 5.
+comment finish_sprite_list Finishes the screen's sprite list in the vertical blank (int_vector_40): picks a record of rom_00F508 by the screen (index) and sprite_list_buffers; when groups were drawn (sprite_groups), chains the depth lists from layer 0 to 415 (depth_lists: the list's start entry jumps to the first layer's newest group, each layer's tail to the next layer's head; the heads cleared), in the list and its halfway copy, and ends the chain with the record's word (a jump on to sprite entry 3, screen 2's list, after screen 1's; entry 4, the end, after screen 2's); points sprite RAM entries 2 and 3 (the jumps to each screen's list) at the halfway copy of the list just finished and at the other screen's finished list; then the next buffer (sprite_list_buffers, sprite_list_last, sprite_list_limit) and sprite_groups 0.
+comment init_sprite_chip Sets up the sprite chip at boot: its control registers 500000-50000C from 010B0A-010B0F (rendering every frame), the buffer's flip bits inverted when the screen is flipped (flip_screen), then init_sprite_lists.
+comment init_sprite_lists Sets up the sprite lists: sprite RAM entries 0-4 (0 clips to the whole screen, 1 sets the offset sprites can add, x A0 y DE (sprite_origin_x, sprite_origin_y), and jumps to 2; 2 and 3, the jumps to screen 1's and screen 2's lists, and 4 an end), an end at the start of the eight list buffers (404000, 40A000, 414000, 41A000 and their halfway copies 3000 on), each screen's list at its first buffer (sprite_list_last 404000 and 414000, sprite_list_buffers 0), its ring of sprite places at 20C000 and 21C000 (next_sprite_place), sprite_groups 0, and unk_20E022 = 1 (nothing reads it).
+comment clear_sprite_group_count Sets the count of sprite groups drawn this frame (sprite_groups) to 0: unless something is drawn after it, the vertical blank (finish_sprite_list) ends the screen's list at its start, without sprites. Used as the game modes start.
+comment draw_text_sprites Writes a sprite per character of the string at R18 (closed by 0) into the sprite list and its halfway copy alike: words 0-3 from R1 and R2 (an 8x8 piece, with the screen's bit), the place R3 (y, x; x 8 more each character), the graphics R4 + 8 * the character, the attribute R5; then links them into depth layer 19E (screen 5678, drawn after nearly all the others) and counts them (sprite_groups). Returns the address after the string. The end of draw_text and draw_text_at.
+comment load_sprite_ram_tables Copies data into sprite RAM outside the lists at boot: 1E0 bytes from 12297C to 410000, 2400 bytes from 107020 to 401000, and twelve tables of sixteen halfwords from 010C44 to 403400 (laid out as the indirect colour tables sprites can take from sprite RAM).
+comment note_road_crest Notes a crest of the road while player_car_project_road projects it, for crest_clip_update: when it is the first, or higher on the screen (R27) than the last one noted, crest_count goes up, its depth layer R28 goes into crest_layers (at the old count, with 3 in the next place) and its height into crest_heights (at the new count; entry 0 is the bottom of the screen).
+comment init_screen Sets up the constants of the screen's block at boot: index (0 for the block at 208000, 1 at 218000) and by it (rom_010BA0) sprite_screen_bit, palette_ram, mixer and io_chip; unk_10, unk_12 (the second of the draw distances at 010BE2), sprite_origin_x, sprite_origin_y and unk_18 from 010BC8; and stage_lengths: for each of the 31 roads of rom_03CC00 (the courses player_car_start_course starts by screen unk_A0) the sum of its sections' lengths (the first halfword of each 6-byte record; the negative ones are commands: -1 goes on at the address it holds, -4 is 4 bytes long, -2 and -6 end it), and 14A after them.
+comment clear_screen_ram Clears the screen's work RAM at boot: E000 bytes from 8000 below its block (the objects and their lists) to 6000 into it.
+comment init_mixer Sets the screen's mixer (registers 00-4E at mixer) and its two copies in the screen's block (mixer_values, mixer_defaults) to the defaults at 010AB6, with the other screen's two tile layers turned off (010B06: NBG1 and NBG3 on screen 1, NBG0 and NBG2 on screen 2; the two screens share video RAM, each showing two of the four layers).
+comment init_io_chips Sets up the two I/O chips at boot: ports D, G and H outputs and cleared (the coin meters, lamps, LCD, the tile bank and the EEPROM's lines), each chip's screen on and the sound CPU out of reset (CNT 6 and 86), and the first bank of the wheels' and pedals' A/D inputs (C00060).
+comment upload_boot_palettes Uploads three blocks of colours straight into the screen's palette RAM at boot (upload_palette): 256 colours at 9E00 (03153C), 16 at 9C00 (031740) and 2560 at 8000 (153904).
+comment init_video Sets up video RAM: cleared (clear_video_ram), the text font (load_text_font), the video control register 31FF00 (0800; 0A00 flipped, flip_screen) and the registers 31FF02-31FF8F from 010B12, with their copy at video_registers, the four tile layers' scroll targets (unk_20E290-20E2AF) cleared, then reset_tile_layers.
+comment reset_tile_layers Puts the screen's two tile layers (NBG0 and NBG2 for screen 1, NBG1 and NBG3 for screen 2) back at page 0 and scroll 0: their page selects (unk_20E240, unk_20E248) and scroll targets (unk_20E290, unk_20E2A0) cleared, and bits 12-15 of the video control register (31FF00, video_registers) cleared. Used as the game modes start.
+comment clear_video_ram Clears video RAM below its registers (300000-31FEFF): the tilemap pages, the text layer and its font, the bitmap and the line tables.
+comment clear_text_layer Clears the text layer's first 30 rows (64 cells each, 31F000-31FEFF).
+comment load_text_font Copies the text layer's characters (3000 bytes, 384 characters of 8x8 pixels) from 104020 into video RAM at 318000.
+comment print_text_layer Writes a string on the text layer: from the record R19, the cell's address (310000 + its first halfword), an attribute byte (the cells' high byte: palette) and the characters, closed by 0; returns the address after it.
+comment print_hex_byte Never runs in the scenarios (ISDN only): writes a number's low byte as two hex digits on the text layer, ending before the cell it is given, with the attribute byte it is given (print_hex_digits).
+comment print_hex_digits Writes a number in hex on the text layer, in as many cells as it is told, ending before the cell it is given, the lowest digit last: each digit a character ('0'-'9', 'A'-'F') with the attribute byte it is given; when the number runs out, the cells left before it are cleared (0). Only print_hex_byte runs it; the entries for four, six and eight digits before it are unused.
+comment print_text_layer_list Writes the strings of the list R19 on the text layer (print_text_layer each) until an FFFF halfword. Not run in the scenarios.
+comment unpack Unpacks the packed data at R10 into R11: flag bits read the highest first, 8 to a byte as needed; 1 copies a byte; 01 takes a halfword (an offset back of its value >> 3, -1 to -8192, and a length of its low three bits + 2, or when they are 0 the next byte + 1; a 0 byte ends the data); 00 takes two bits more (a length of 2-5) and a byte (an offset back of -1 to -256); a length copies that many bytes from that far back in what has been unpacked.
+comment unpack_queued_step Unpacks a little of the screen's queued tile pages (queue_tile_pages), from the frame loop's wait while unpack_state says there is work: with none under way, takes the next request of the ring unpack_queue (unpack_read_place; unpack_state 0 when it is empty); else goes on where it stopped, by unpack_state's second byte: FF one byte of a match (unpack_copy_source, unpack_copy_count), 1 one step of unpack's format (unpack_flags, unpack_flags_left, unpack_source, unpack_destination): a byte, or a match's first byte.
+comment unpack_tile_pages Unpacks a list of tilemap pages into video RAM at once (unpack): each 32-bit entry a page number in its top byte (the page at 300000 + 400 * page) and the address of its packed data below, closed by a negative entry; the list format of queue_tile_pages.
+comment step_screen_fade Steps the screen's fade while unk_94 bit 0 is set (vblank_update_mixer, every other vertical blank): a fade asked for by fade_kind (0 to black, 1 from black, 2 to white, 3 from white, 4 to a red tint, 5 back from it; records at 01173A) sets fade_level, fade_step, fade_end and fade_channels and fade_kind 6 (under way); then each time the level moves a step (6 bits: 20 is -32, black; 1F is +31, white) and goes into the mixer's colour offset 0 in mixer_values (registers 40-44: red, green, blue, those fade_channels has; register 3E's high byte C0), which vblank_update_mixer copies to the mixer; unk_94 bit 0 is cleared when the level reaches fade_end.
+comment clear_objects Ends all of the screen's objects at once: every slot free (screen - 7FF0), both object lists empty (this frame's at - 7E00, the next one's at - 7D00, with run_objects' pointers to them at - 8000, - 7FFC, - 7FF4 and - 7FF8), and the queue of palette uploads (unk_900) emptied. At boot and as each game mode starts.
+comment start_sound_program Starts the sound at boot: the screen's ring of sound requests with one request of sound 0 waiting (800 the place read, 801 the place written, the requests from 802), I/O chip 0's CNT 6 (its screen on, the sound CPU out of reset), screen byte 822 cleared, and 701FFF cleared, which lets the sound program's main loop run.
+comment fade_out_music Fades out the screen's music, a step every 20 of the sound program's ticks (fade_out_music_at).
+comment fade_out_music_at Fades out the screen's music: R0 into byte 18 of the screen's first track in the shared sound RAM (700918 for screen 1, 701118 for screen 2; rom_011FFC), which has the sound program lower the track's volume by one every R0 of its ticks and stop it at 0. 20 from fade_out_music, 3F and 7F from car_radio_update, 7F from goal_update.
+comment reset_screen_sound Sends sound command 1F straight to the screen's request byte in the shared sound RAM (700700 + 100 * screen, without going through the ring of requests) and mutes the car's engine (710 = 0, 712 bit 5, as set_tyre_noise does in the silent demo). As the game modes start. What 1F does in the sound program was not followed.
+comment update_coins The coins and service credits, in the vertical blank unless on free play (free_play): queues each seat's pending coin sound (4E, seat1_coin_sounds, seat2_coin_sounds) and service sound (50, seat1_service_sounds, seat2_service_sounds), one each vertical blank; SERVICE newly pressed (switches_pressed bits 0-1) gives that seat a credit (add_service_credit), counted in the bookkeeping's service credits (701F04); a coin chute let go (switches_released bits 2-3 seat 1's two chutes, 4-5 seat 2's) counts its coin (insert_coin, entries at 0114D4) and the credits it gives in the bookkeeping (701F02); then drives the coin meters (pulse_coin_meter: each seat's first, and its second unless the chutes are shared, chute_entry_offset).
+comment pulse_coin_meter Drives coin meter R1 (its bit in the port D outputs at R12, port_d_outputs: bit 0 a seat's first chute's meter, bit 1 its second's) from its record R7 in coin_meters (frames on, frames off, pulses owed): when idle with a pulse owed, the bit goes on for 6 vertical blanks and off for 6. Then writes the credits into the bookkeeping and its backup (write_bookkeeping_credits) with the checksum.
+comment write_bookkeeping_credits Writes the seats' credits (the halfwords at seat1_credits, unk_20E0A4, seat2_credits, unk_20E0AC) at R12: 701F74 in the bookkeeping or 701FF0 in its backup.
+comment add_service_credit A service credit for the seat whose credits are at R10 (seat1_credits or seat2_credits): one credit more, up to 9 (at 9 its coin units are cleared; beyond, nothing); a credit given brings the screen R12 to the title from the attract mode (show_title_on_credit), asks for the seat's service sound (R11) and counts one in R9, which it returns. Not run in the scenarios.
+comment insert_coin A coin from the chute of entry R19 (when its bit is in R6): takes the entry's variant (chute_entry_offset: with the chutes shared, the second counts as the first), writes its byte to I/O C00074, owes the chute's coin meter a pulse (coin_meters) and counts the coin in the bookkeeping (701F06-701F0C, bookkeeping_increment16); with fewer than 9 credits: the screen's coin sound, and the chute's coin units (first_chute_multiplier or second_chute_multiplier) go toward a bonus unit (the credit record's third byte; one more unit each bonus_adder, when set) and toward a credit (its second byte, seat1_coin_units: a credit each coins_per_credit, up to 9, show_title_on_credit). Returns R9 plus the credits given.
+comment show_title_on_credit A credit on the screen R12 during the attract mode (game modes 1-5, the low byte of its unk_80) brings it to the title: unk_80 = 2 (game mode 2, game_mode_title, from its first step).
+comment init_coins Sets up the coins: chute_entry_offset 14 (the two chutes shared: the second's coins counted as the first's, on its meter) when not on free play and both chutes give the same units (first_chute_multiplier = second_chute_multiplier), else 0; the seats' credits back from the bookkeeping (701F74-701F7A, bytes); and the low four bits of I/O chip 1's port F, inverted, into unk_20E104 (nothing reads it).
+comment bookkeeping_checksum Returns the checksum of the 3E halfwords at R2 (the bookkeeping or its backup): from 1, each halfword XORed in, then a shift right by one, with 8810 XORed in when the bit shifted out was 1.
+comment bookkeeping_update_checksum Writes the checksum of the bookkeeping (701F02-701F7D in the shared sound RAM) into 701F00, after a change to it; returns it.
+comment bookkeeping_copy Copies 3E halfwords from R2 over R3 (the bookkeeping and its backup at 701F7E, either way, or the defaults), then bookkeeping_update_checksum.
+comment bookkeeping_check Checks the bookkeeping at boot: when the block (701F02) matches the checksum (701F00), copies it over the backup (701F7E); else when the backup matches, the backup over the block; else resets both (bookkeeping_reset).
+comment bookkeeping_reset Resets the bookkeeping: the defaults at 011458 into the block (701F02), then the block into its backup (701F7E), with the checksum.
+comment bookkeeping_increment16 Adds one to the 16-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FFFF, with the checksum: the coins by chute (insert_coin), the games by seat and the races' results (game_mode_play).
+comment bookkeeping_add16 Adds R9 to the 16-bit bookkeeping counter at R7 (the credits from coins, 701F02, and the service credits, 701F04: update_coins) and to its backup's (7C on), with the checksum; past FFFF it stays at FFFF (and the backup's is left as it was: the code writes R7 twice).
+comment bookkeeping_add32 Adds R9 to the 32-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum; past FFFFFFFF it stays there (the backup's left as it was): the play time by seat (game_mode_play).
+comment bookkeeping_set16 Sets the 16-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum: the longest and shortest play (701F20, 701F22; game_mode_play).
+comment bookkeeping_clear_credits Clears the credits kept in the bookkeeping (701F74-701F7B) and in its backup (701FF0-701FF7), with the checksum. Not run in the scenarios.
+field screen 00 index u8
+field screen 04 palette_ram u32
+field screen 08 mixer u32
+field screen 0C io_chip u32
+field screen 14 sprite_origin_x u16
+field screen 16 sprite_origin_y u16
+field screen 1A sprite_screen_bit u16
+field screen B0 sprite_groups u16
+field screen B4 next_sprite_place u32
+field screen C0 sprite_list_last u32
+field screen C4 sprite_list_limit u32
+field screen 150 fade_level u8
+field screen 151 fade_step s8
+field screen 152 fade_end u8
+field screen 153 fade_kind u8
+field screen 154 fade_channels u8
+field screen 160 mixer_values u16
+field screen 1B0 mixer_defaults u16
+field screen 700 stage_lengths u16
+field screen B00 unpack_state u16
+field screen B02 unpack_read_place u8
+field screen B03 unpack_write_place u8
+field screen B04 unpack_source u32
+field screen B08 unpack_destination u32
+field screen B0C unpack_copy_source u32
+field screen B10 unpack_copy_count u8
+field screen B11 unpack_flags u8
+field screen B12 unpack_flags_left u8
+field screen C00 unpack_queue u32
+field screen 1F00 crest_count u8
+field screen 1F10 crest_layers u16
+field screen 1F30 crest_heights u16
+field screen 5000 depth_lists u16
+20E020  var  sprite_list_buffers u16
+20E080  var  coin_meters u8
+20E08C  var  seat1_coin_sounds u8
+20E08D  var  seat2_coin_sounds u8
+20E08E  var  seat1_service_sounds u8
+20E08F  var  seat2_service_sounds u8
+20E091  var  chute_entry_offset u8
+20E092  var  port_d_outputs u8
+20E0A0  var  seat1_credits u8
+20E0A1  var  seat1_coin_units u8
+20E0A8  var  seat2_credits u8
+20E0A9  var  seat2_coin_units u8
+20E200  var  video_registers u16
+20E60C  var  flip_screen u8
+
+# ======== the test mode, first part (naming batch J1) ========
+01C241  func  test_mode_start
+01C388  func  test_mode_frame
+01C392  func  test_mode_menu
+01C3E6  func  test_mode_menu_run
+01C435  func  test_mode_menu_show_write_count
+01C5BA  func  test_mode_menu_toggle_continue
+01C5DB  func  test_mode_memory_test
+01C928  func  test_mode_memory_test_run
+01C93B  func  test_mode_memory_test_draw
+01C98E  func  test_mode_memory_test_checksum
+01C9BE  func  test_mode_memory_test_words
+01CA5D  func  test_mode_memory_test_halfwords
+01CAF8  func  test_mode_memory_test_bytes
+01CB8F  func  test_mode_memory_test_nibbles
+01CC80  func  test_mode_memory_test_blink
+01CDE0  func  test_mode_volume_adjustment
+01CE15  func  test_mode_volume_adjustment_select
+01CE97  func  test_mode_volume_adjustment_adjust
+01CEDB  func  test_mode_volume_adjustment_draw
+01D111  func  test_mode_input_test
+01D126  func  test_mode_input_test_run
+01D13B  func  test_mode_input_test_release
+01D151  func  test_mode_input_test_draw
+01D3E4  func  test_mode_output_test
+01D419  func  test_mode_output_test_run
+01D49A  func  test_mode_output_test_draw
+01D4C7  func  test_mode_output_test_toggle
+01D4DF  func  test_mode_output_test_exit
+01D620  func  test_mode_sound_test
+01D661  func  test_mode_sound_test_run
+01D6BD  func  test_mode_sound_test_draw
+01D6E7  func  test_mode_sound_test_play_a
+01D72C  func  test_mode_sound_test_play_b
+01D771  func  test_mode_sound_test_exit
+01D840  func  test_mode_crt_test
+01D868  func  test_mode_crt_test_bars_run
+01D87A  func  test_mode_crt_test_grid
+01D88F  func  test_mode_crt_test_grid_run
+01D8B9  func  test_mode_crt_test_draw_bars
+01D927  func  test_mode_crt_test_draw_bar
+01D957  func  test_mode_crt_test_draw_grid
+01D9F3  func  test_mode_game_assignments
+01DA28  func  test_mode_game_assignments_run
+01DA7C  func  test_mode_game_assignments_draw
+01DB58  func  test_mode_game_assignments_difficulty
+01DB68  func  test_mode_game_assignments_time
+01DB85  func  test_mode_game_assignments_steering
+01DB97  func  test_mode_game_assignments_advertise
+01DBA9  func  test_mode_game_assignments_exit
+01DD1E  func  test_mode_coin_assignments
+01DD2B  func  test_mode_coin_assignments_show
+01DD58  func  test_mode_coin_assignments_run
+01DDAC  func  test_mode_coin_assignments_draw
+01DE56  func  test_mode_coin_assignments_next_setting
+comment test_mode_start Enters the test mode (reset calls it once when test_mode_on says the test mode is on): turns the link board off, clears the tilemaps and the sprite lists (init_video, init_sprite_lists), clears both screens' pending tile unpacking (screen unk_B00), demo flag (unk_90 bit 8) and unk_94 bit 0, the mixers' registers 40-4A, turns both screens on (the I/O chips' CNT), sets up the test mode's palettes and font (test_mode_set_up_colours), test_mode_flags 0 (INDIVIDUAL) and the cursor on EXIT, stops both monitors' sounds (command 1F through the sound command queue, test_mode_queue_sound and test_mode_queue_sound_screen_2), turns the lamps and the wheel motor off (checkpoint_lamp-unk_20E0D1, screen unk_F20, port_d_outputs, unk_20E094), writes " LCD status OK! " on both cabinets' LCDs (the 16 bytes at F10 of each screen's block), sets test_mode_routine to test_mode_menu and reads the controls (test_mode_read_controls).
+comment test_mode_frame The test mode's frame, which reset runs every video frame while the test mode is on: reads the buttons and the analog inputs (test_mode_read_controls), sends the sound board the next queued sound command (test_mode_send_sound) and runs test_mode_routine, the step of the menu or page being shown.
+comment test_mode_menu Shows the test mode's menu, where every page returns: in CONTINUE mode (test_mode_flags bit 0) the cursor first moves on to the next item; clears the text layer, shows the E2PROM write count while SERVICE is held (test_mode_menu_show_write_count), draws TEST MODE, the heading (INDIVIDUAL or CONTINUE), the twelve items and SELECT BY SERVICE BUTTON AND PUSH TEST BUTTON, puts the cursor on test_mode_cursor (test_mode_set_cursor) and goes on to test_mode_menu_run. With the cursor on the heading (after test_mode_menu_toggle_continue has redrawn it) it goes straight on.
+comment test_mode_menu_run The menu, each frame: SERVICE moves the cursor (test_mode_cursor) down, from EXIT back to the heading; TEST starts the item's page (rom_01C45C: test_mode_menu_toggle_continue, test_mode_memory_test, test_mode_volume_adjustment, test_mode_input_test, test_mode_output_test, test_mode_sound_test, test_mode_crt_test, test_mode_game_assignments, test_mode_coin_assignments, then the network assignments, bookkeeping, backup data clear and exit pages, test_mode_network_assignments_start, test_mode_bookkeeping_start, test_mode_backup_data_clear_start, test_mode_exit); the cursor's arrow blinks (test_mode_blink_address, test_mode_blink_timer: 11 frames shown, 6 hidden).
+comment test_mode_menu_show_write_count While SERVICE is held as the menu is drawn: E2PROM WRITE COUNT and the count (eeprom_write_count, 5 digits) at the bottom of the menu.
+comment test_mode_menu_toggle_continue The menu's heading: TEST switches between INDIVIDUAL and CONTINUE (test_mode_flags bit 0) and redraws it, then back to test_mode_menu. In CONTINUE mode each return to the menu moves the cursor to the next item, so the pages run one after another with TEST alone.
+comment test_mode_memory_test The MEMORY TEST, all at once with the interrupts off and the sound program held in its wait loop (sound RAM 1FFF = 1): each chip's result shows TEST while it is tested, then GOOD or BAD (memory_test_results, test_mode_memory_test_draw). The program ROM's two halves by test_mode_memory_test_checksum against the sums at 03FFF8-03FFFF (IC37, IC40: 000000-03FFF7; IC36, IC39: 100000-1FEFFF); the video RAM (IC60, IC58, IC57, IC54) and the sprite RAM (IC61, IC67, IC68, IC70) by 4-bit lanes (test_mode_memory_test_nibbles); the palette RAMs' four 16 KB blocks by byte (IC1, IC3, IC2, IC4, IC120, IC121, IC122, IC123; test_mode_memory_test_halfwords); the work RAM (IC115-IC118, test_mode_memory_test_words) and the sound RAM (IC21, test_mode_memory_test_bytes) each saved in the sprite RAM and put back. The tilemaps, sprite lists and palettes it overwrites are set up again (init_video, init_sprite_lists, test_mode_set_up_colours). IC70 always shows GOOD: the test of its lane has no branch to BAD. Ends with the blinking PUSH TEST BUTTON TO EXIT (test_mode_show_exit_prompt) and test_mode_memory_test_run.
+comment test_mode_memory_test_run The memory test's results, each frame: TEST goes back to the menu; PUSH TEST BUTTON TO EXIT blinks (test_mode_blink_prompt).
+comment test_mode_memory_test_draw Draws the memory test's page (MEMORY TEST, 837-8890 <ROM> and its four chips, 837-8676 <RAM> and its 21, NOW TESTING) and each chip's result from memory_test_results beside its name: ---- (not yet), TEST, GOOD or BAD.
+comment test_mode_memory_test_checksum Sums a stretch of the program ROM as two 16-bit checks, one of the even halfwords (the chip of the low half of each 32-bit word: IC37 or IC36) and one of the odd (IC40 or IC39): each halfword is xored in, the sum shifted right by one and xored with 8810 when a 1 falls out (a CRC); both start at 1.
+comment test_mode_memory_test_words Tests RAM 32 bits at a time (the work RAM, in place: it takes its return address off the stack into a register and jumps back through it, so that it needs no stack in the RAM it overwrites): 8 passes, each writing a walking pattern (01010101 the first pass, one bit further each pass, turned by a few bits from word to word by the word's address) and reading it back; returns the bits found wrong (each mismatch's expected ^ read, xored together), a byte per chip; NOW TESTING blinks once a pass (test_mode_memory_test_blink).
+comment test_mode_memory_test_halfwords test_mode_memory_test_words 16 bits at a time (the palette RAMs: a chip for each byte), with the pattern 0101; returns the bits found wrong.
+comment test_mode_memory_test_bytes test_mode_memory_test_words a byte at a time (the sound RAM, all but its last byte, which holds the sound program), with the pattern 01; returns the bits found wrong.
+comment test_mode_memory_test_nibbles test_mode_memory_test_words for RAM of 4-bit chips, 16 bits at a time (the video RAM and the sprite RAM): 4 passes with the pattern 1111 (a bit per chip); returns the bits found wrong, a nibble per chip.
+comment test_mode_memory_test_blink Shows or hides NOW TESTING (each of its cells xored with its character in palette 66): the RAM tests call it after each pass.
+comment test_mode_volume_adjustment Starts the VOLUME ADJUSTMENT, the calibration of the wheels' and pedals' potentiometers: draws ADJUST and CANCEL with the cursor on CANCEL (test_mode_page_cursor 1), the six controls' names (MONITOR A and B: STEERING WHEEL, ACCELERATOR, BRAKE) and the prompt; then test_mode_volume_adjustment_select.
+comment test_mode_volume_adjustment_select Each frame: the bars (test_mode_volume_adjustment_draw); SERVICE moves the cursor between ADJUST and CANCEL; TEST on CANCEL goes back to the menu; TEST on ADJUST starts the adjustment: ADJUSTING, PUSH TEST BUTTON TO EXIT, each control's range (volume_ranges) narrowed to where it is now, then test_mode_volume_adjustment_adjust.
+comment test_mode_volume_adjustment_adjust The adjustment, each frame: each control's range (volume_ranges) widens to take its position (test_mode_analog_inputs), as the operator turns the wheels and presses the pedals all the way; the bars; TEST marks the settings changed (test_mode_flags bit 1) and goes back to the menu; PUSH TEST BUTTON TO EXIT blinks.
+comment test_mode_volume_adjustment_draw Draws the six controls' bars (32 cells, a cell for 8 steps): the range of volume_ranges in green and the control's position (test_mode_analog_inputs) in red.
+comment test_mode_input_test Starts the INPUT TEST: clears the text layer, draws the inputs' names and the blinking PUSH TEST BUTTON TO EXIT, then test_mode_input_test_run.
+comment test_mode_input_test_run The input test, each frame: the inputs (test_mode_input_test_draw); TEST goes on to test_mode_input_test_release, so that the press shows as TEST On before the page ends; PUSH TEST BUTTON TO EXIT blinks (test_mode_blink_prompt).
+comment test_mode_input_test_release The input test once TEST is pressed: the inputs each frame until TEST is let go, then back to the menu.
+comment test_mode_input_test_draw Draws the inputs of both monitors (cabinets): the wheel, accelerator and brake as the game sees them through the calibration (test_mode_analog_inputs clamped to volume_ranges and scaled to 0-FF), as a mark on a bar of 16 cells and a hexadecimal number; SHIFT UP, SHIFT DOWN, START, DJ/MUSIC, <<, >>, COIN and SERVICE On or Off, read from each I/O chip's ports (active low); TEST On when either monitor's is pressed.
+comment test_mode_output_test Starts the OUTPUT TEST: the ten outputs of the two monitors (cabinets) with their state (test_mode_output_test_draw), EXIT and the prompt, the cursor on EXIT (test_mode_page_cursor 10); then test_mode_output_test_run.
+comment test_mode_output_test_run The output test, each frame: TEST turns the output under the cursor on and letting go of it turns it off again (test_mode_output_test_toggle both times), so it is on while TEST is held; TEST on EXIT runs test_mode_output_test_exit; SERVICE, while TEST is not held, moves the cursor through the eleven items; the arrow blinks.
+comment test_mode_output_test_draw Draws On or Off for the ten outputs, from their bits in the game's output bytes: monitor A's CHECK POINT and RACE LEADER lamps (port_d_outputs bits 1 and 3), the steering wheel's motor (port_d_outputs bit 4), the DJ/MUSIC and << >> lamps (unk_20E094 bits 0 and 1); monitor B's the same bits of 20E093 and 20E095.
+comment test_mode_output_test_toggle Turns the output under the cursor (test_mode_page_cursor) on or off: flips its bit in the game's output bytes (the list at 01D5C0).
+comment test_mode_output_test_exit The output test's EXIT: turns the lamps and the wheel motor off (port_d_outputs &= E0E1, unk_20E094 &= FBFC: monitor B's DJ/MUSIC and << >> bits, 20E095 bits 0-1, are not among them) and goes back to the menu.
+comment test_mode_sound_test Starts the SOUND TEST: MONITOR A No., MONITOR B No. (the numbers of the next sounds, both 0: sound_test_number_a, sound_test_number_b), EXIT with the cursor on it (test_mode_page_cursor 2) and the prompt; then test_mode_sound_test_run.
+comment test_mode_sound_test_run The sound test, each frame: SERVICE moves the cursor through the three items; TEST stops both monitors' sounds (command 1F to each), then plays monitor A's next sound (test_mode_sound_test_play_a), monitor B's (test_mode_sound_test_play_b) or goes back to the menu (test_mode_sound_test_exit), and redraws the numbers; the arrow blinks.
+comment test_mode_sound_test_draw Draws the two monitors' sound numbers (sound_test_number_a, sound_test_number_b), 3 digits each.
+comment test_mode_sound_test_play_a Plays monitor A's sound number sound_test_number_a from the list of 121 sound codes at 01D7C6 (test_mode_queue_sound) and steps to the next; from number 40 on it first sends command D6 (DA from 66, D8 from 6B); past the list's end (its closing 0) the number goes back to 0 without a sound.
+comment test_mode_sound_test_play_b test_mode_sound_test_play_a for monitor B: sound_test_number_b, sent through test_mode_queue_sound_screen_2.
+comment test_mode_sound_test_exit The sound test's EXIT: back to the menu.
+comment test_mode_crt_test Starts the C.R.T. TEST's first page: a black background (the background colour of both palettes, 609C00 and 689C00), C.R.T. TEST 1/2, the colour bars (test_mode_crt_test_draw_bars) and the blinking PUSH TEST BUTTON TO CONTINUE; then test_mode_crt_test_bars_run.
+comment test_mode_crt_test_bars_run The colour bars, each frame: TEST goes on to the second page (test_mode_crt_test_grid); the message blinks.
+comment test_mode_crt_test_grid The C.R.T. test's second page: the crosshatch (test_mode_crt_test_draw_grid), C.R.T. TEST 2/2 and the blinking PUSH TEST BUTTON TO EXIT; then test_mode_crt_test_grid_run.
+comment test_mode_crt_test_grid_run The crosshatch, each frame: TEST clears the text layer, gives the background back its blue (733) and goes back to the menu; the message blinks.
+comment test_mode_crt_test_draw_bars Draws the first page on the text layer: a frame around the screen and four bars of 32 steps (test_mode_crt_test_draw_bar, characters 8001-8004: red, green, blue and white).
+comment test_mode_crt_test_draw_bar Draws one colour bar: 5 rows of 32 cells of character R0, each column with the next palette (the cell + 200), so that the colour steps up across it; returns the place 5 rows down for the next bar.
+comment test_mode_crt_test_draw_grid Draws the crosshatch of the second page over the whole text layer (characters 6C1B-6C1F: the edges and the inside), and blanks the cell after the exit message.
+comment test_mode_game_assignments Starts the GAME ASSIGNMENTS: the settings' names and values (test_mode_game_assignments_draw), EXIT, the prompt, the cursor on EXIT (test_mode_page_cursor 9); then test_mode_game_assignments_run.
+comment test_mode_game_assignments_run The game assignments, each frame: SERVICE moves the cursor through the ten items; TEST changes the setting under it: the game difficulty (test_mode_game_assignments_difficulty), a stage's time (test_mode_game_assignments_time), the steering wheel reaction (test_mode_game_assignments_steering), the advertise sound (test_mode_game_assignments_advertise), or EXIT (test_mode_game_assignments_exit); the arrow blinks.
+comment test_mode_game_assignments_draw Draws the game settings: game_difficulty + 1 (1-8) and its bar from EASY to HARD (two cells a level), the six stages' time_difficulty (NORMAL, or +n SEC / -n SEC), and steering_wheel_reaction and advertise_sound (bit 0) as On or Off.
+comment test_mode_game_assignments_difficulty GAME DIFFICULTY: game_difficulty one level harder, after the eighth back to the first; redraws.
+comment test_mode_game_assignments_time TIME DIFFICULTY: the time_difficulty of the stage under the cursor (items 1-6: PRE-STAGE, STAGE 1-4, FINAL STAGE) one second more, from +5 back to -5; redraws.
+comment test_mode_game_assignments_steering STEERING WHEEL REACTION: steering_wheel_reaction on or off (1 or 0); redraws.
+comment test_mode_game_assignments_advertise ADVERTISE SOUND: advertise_sound on or off (1 or 0); redraws.
+comment test_mode_game_assignments_exit The game assignments' EXIT: compares game_difficulty, time_difficulty, steering_wheel_reaction and advertise_sound with their backup copy 3C bytes on (backup_settings_checksum on, the copy of the settings the boot code keeps); if any changed, marks the settings changed (test_mode_flags bit 1); back to the menu.
+comment test_mode_coin_assignments Starts the COIN ASSIGNMENTS with the cursor on EXIT (test_mode_page_cursor 2): test_mode_coin_assignments_show.
+comment test_mode_coin_assignments_show Draws the coin assignments page (COIN/CREDIT SETTING with the setting, test_mode_coin_assignments_draw; MANUAL SETTING; EXIT; the prompt) with the cursor where test_mode_page_cursor says: on EXIT when the page starts, on MANUAL SETTING when that page (test_mode_coin_assignments_manual_start) returns here; then test_mode_coin_assignments_run.
+comment test_mode_coin_assignments_run The coin assignments, each frame: SERVICE moves the cursor through the three items; TEST on COIN/CREDIT SETTING takes the next setting (test_mode_coin_assignments_next_setting), on MANUAL SETTING opens that page (test_mode_coin_assignments_manual_start), on EXIT leaves (test_mode_coin_assignments_exit); the arrow blinks. Its table's last four entries belong to the manual setting page, whose table starts inside this one: they are never taken from here.
+comment test_mode_coin_assignments_draw Draws the coin/credit setting: its number (coin_setting + 1) and what it gives, from its description (rom_01E220): up to five lines of "n COIN(S) m CREDIT(S)", or a text (FREE PLAY, MANUAL SETTING).
+comment test_mode_coin_assignments_next_setting COIN/CREDIT SETTING: the next of the 26 settings (coin_setting, after FREE PLAY back to #1): its record at 01E3E8 gives coins_per_credit, bonus_adder, first_chute_multiplier and second_chute_multiplier, and free_play 0; FREE PLAY (#26) sets coins_per_credit, first_chute_multiplier and second_chute_multiplier to 1 and bonus_adder and free_play to FF. Settings whose first three bytes are the ones in place are skipped (they differ only in second_chute_multiplier), so only 15 of them come up: #1, 6, 8-12, 15, 17-19, 21, 22, 24, 26. Redraws.
+20E701  var  test_mode_flags u8
+20E702  var  test_mode_cursor u8
+20E703  var  test_mode_page_cursor u8
+20E704  var  test_mode_routine u32
+20E708  var  test_mode_blink_address u32
+20E70C  var  test_mode_buttons u8
+20E70D  var  test_mode_buttons_previous u8
+20E70E  var  test_mode_buttons_pressed u8
+20E70F  var  test_mode_buttons_released u8
+20E710  var  test_mode_analog_inputs u8
+20E716  var  memory_test_results u8
+20E72F  var  test_mode_blink_timer s8
+20E730  var  sound_test_number_a u8
+20E731  var  sound_test_number_b u8
+20E60A  var  eeprom_write_count u16
+20E60D  var  advertise_sound u8
+20E614  var  coin_setting u8
+20E615  var  free_play u8
+20E624  var  steering_wheel_reaction u8
+20E630  var  game_difficulty u8
+20E632  var  time_difficulty s8
+20E638  var  volume_ranges u8
+
+# ======== the test mode, second part, and the interrupt hooks (naming batch J2) ========
+01DEC7  func  test_mode_coin_assignments_manual_start
+01DEFD  func  test_mode_coin_assignments_manual_run
+01DF51  func  test_mode_coin_assignments_manual_draw
+01E02E  func  test_mode_draw_two_digits
+01E04F  func  test_mode_coin_assignments_step_coin_to_credit
+01E053  func  test_mode_coin_assignments_step_value
+01E073  func  test_mode_coin_assignments_step_bonus_adder
+01E09B  func  test_mode_coin_assignments_step_multiplier
+01E0A1  func  test_mode_coin_assignments_manual_exit
+01E0B0  func  test_mode_coin_assignments_exit
+01E453  func  test_mode_network_assignments_start
+01E4BA  func  test_mode_network_assignments_run
+01E523  func  test_mode_network_assignments_draw
+01E57F  func  test_mode_network_assignments_toggle_communication
+01E5C3  func  test_mode_network_assignments_toggle_privilege_mode
+01E5E7  func  test_mode_network_assignments_step_cabinet_id
+01E5F7  func  test_mode_network_assignments_exit
+01E6EB  func  test_mode_bookkeeping_start
+01E703  func  test_mode_bookkeeping_wait
+01E715  func  test_mode_bookkeeping_second_page_start
+01E72D  func  test_mode_bookkeeping_second_page_wait
+01E740  func  test_mode_bookkeeping_draw_totals
+01E862  func  test_mode_bookkeeping_draw_histogram
+01E9A4  func  test_mode_draw_duration
+01E9E6  func  test_mode_draw_minutes_seconds
+01EDC4  func  test_mode_backup_data_clear_start
+01EDF1  func  test_mode_backup_data_clear_run
+01EE66  func  test_mode_backup_data_clear_wait
+01EEC1  func  test_mode_exit
+01EEEF  func  test_mode_exit_caution_wait
+01EF6E  func  test_mode_set_up_colours
+01F02C  func  test_mode_draw_instructions
+01F034  func  test_mode_show_exit_prompt
+01F043  func  test_mode_show_continue_prompt
+01F052  func  test_mode_blink_prompt
+01F085  func  test_mode_set_cursor
+01F09A  func  test_mode_clear_cursor
+01F0CA  func  test_mode_draw_texts
+01F0ED  func  test_mode_draw_count
+01F103  func  test_mode_draw_number
+01F131  func  test_mode_draw_hex_number
+01F16C  func  test_mode_colour_line
+01F17D  func  test_mode_clear_text
+01F190  func  test_mode_read_controls
+01F237  func  test_mode_send_sound
+01F266  func  test_mode_queue_sound_screen_2
+01F26B  func  test_mode_queue_sound
+03F62A  func  vblank_update_mixer
+03F6A0  func  vblank_update_scrolls
+03F8C9  func  check_test_button
+03F8DA  func  send_sound_requests
+03F922  func  count_total_time
+03F96B  func  update_lamps
+03FA54  func  update_button_lamps
+comment test_mode_coin_assignments_manual_start Opens the coin assignments' MANUAL SETTING page: clears the text, draws its texts (COIN TO CREDIT, BONUS ADDER, MULTIPLIER, the table of credits for 1 to 9 coins, EXIT) and the setting (test_mode_coin_assignments_manual_draw), the instructions, puts the cursor on EXIT (test_mode_page_cursor 3) and goes on in test_mode_coin_assignments_manual_run.
+comment test_mode_coin_assignments_manual_run Each frame of the MANUAL SETTING page: SERVICE moves the cursor down its four lines (test_mode_page_cursor, wrapping), TEST changes the line's value: COIN TO CREDIT (test_mode_coin_assignments_step_coin_to_credit), BONUS ADDER (test_mode_coin_assignments_step_bonus_adder), MULTIPLIER (test_mode_coin_assignments_step_multiplier) or EXIT (test_mode_coin_assignments_manual_exit); then blinks the cursor.
+comment test_mode_coin_assignments_manual_draw Draws the manual coin setting: coins_per_credit (N COIN(S) 1 CREDIT), the bonus_adder (N COINS GIVE 1 EXTRA COIN, NO BONUS ADDER, or FREE PLAY when negative), the first_chute_multiplier (1 COIN COUNTS AS N COIN(S)), and the table of what 1 to 9 coins give: each coin counts as the multiplier, the bonus adds a coin for every bonus_adder counted (the rest carried on), and the credits (at most 9) show as two digits (test_mode_draw_two_digits) with what is left over as a fraction of a credit in the font's fraction characters.
+comment test_mode_draw_two_digits Draws R5 (below 100) at text cell R10 as two digits in white (6A), a blank for a 0 tens digit, and returns the cell after them. Used by test_mode_coin_assignments_manual_draw.
+comment test_mode_coin_assignments_step_coin_to_credit COIN TO CREDIT: test_mode_coin_assignments_step_value with coins_per_credit.
+comment test_mode_coin_assignments_step_value Steps the coin setting R0 bytes into the settings (coins_per_credit or first_chute_multiplier) from 1 to 9 and round; unless free play is on, the coin setting becomes the manual one (coin_setting 1A); redraws (test_mode_coin_assignments_manual_draw).
+comment test_mode_coin_assignments_step_bonus_adder BONUS ADDER: steps bonus_adder through none (0), 2 to 9 and back to none; from free play (FF) it goes to none and turns free_play off; the coin setting becomes the manual one (coin_setting 1A); redraws.
+comment test_mode_coin_assignments_step_multiplier MULTIPLIER: test_mode_coin_assignments_step_value with first_chute_multiplier (1 COIN COUNTS AS N COIN).
+comment test_mode_coin_assignments_manual_exit EXIT of the MANUAL SETTING page: back to the coin assignments page, its cursor on MANUAL SETTING (test_mode_page_cursor 1).
+comment test_mode_coin_assignments_exit EXIT of the coin assignments page: when coins_per_credit, first_chute_multiplier, bonus_adder, free_play or coin_setting differ from the copy last written to the EEPROM (3C bytes on), marks the settings changed (test_mode_flags bit 1, written at the test mode's EXIT) and clears the credits kept in the shared RAM (bookkeeping_clear_credits); back to the menu.
+comment test_mode_network_assignments_start Opens the NETWORK ASSIGNMENTS page: its texts, with PRIVILEGE MODE and CABINET ID hidden (colour 6E) when the cabinet is stand_alone; test_mode_privilege_mode from link_master; the values (test_mode_network_assignments_draw), the instructions, the cursor on EXIT; goes on in test_mode_network_assignments_run.
+comment test_mode_network_assignments_run Each frame of the NETWORK ASSIGNMENTS page: SERVICE moves the cursor (between COMMUNICATION and EXIT only when stand_alone, else down all four lines), TEST runs its line: COMMUNICATION (test_mode_network_assignments_toggle_communication), PRIVILEGE MODE (test_mode_network_assignments_toggle_privilege_mode), CABINET ID (test_mode_network_assignments_step_cabinet_id) or EXIT (test_mode_network_assignments_exit); then blinks the cursor.
+comment test_mode_network_assignments_draw Draws the network settings: COMMUNICATION NETWORK or STAND-ALONE (stand_alone), PRIVILEGE MODE SLAVE or MASTER (test_mode_privilege_mode), CABINET ID 1-4 (cabinet_id + 1); the last two hidden (colour 6E) when stand-alone.
+comment test_mode_network_assignments_toggle_communication COMMUNICATION: switches stand_alone (NETWORK, STAND-ALONE), puts the privilege mode back to MASTER (link_master 1, isdn_mode 0, test_mode_privilege_mode 1), shows or hides the PRIVILEGE MODE and CABINET ID labels and redraws the values.
+comment test_mode_network_assignments_toggle_privilege_mode PRIVILEGE MODE: switches test_mode_privilege_mode between SLAVE and MASTER and sets link_master and isdn_mode from it (01E6E5: SLAVE 0 and 0, MASTER 1 and 0; the table's third pair, ISDN, 0 and 1, cannot be reached); redraws.
+comment test_mode_network_assignments_step_cabinet_id CABINET ID: steps cabinet_id through 0-3 (shown 1-4); redraws.
+comment test_mode_network_assignments_exit EXIT of the NETWORK ASSIGNMENTS page: when stand_alone, link_master, isdn_mode or cabinet_id differ from the copy last written to the EEPROM, marks the settings changed (test_mode_flags bit 1); back to the menu.
+comment test_mode_bookkeeping_start Opens the first BOOKKEEPING page (1/2): its texts, its numbers (test_mode_bookkeeping_draw_totals) and the blinking PUSH TEST BUTTON TO CONTINUE (test_mode_show_continue_prompt); goes on in test_mode_bookkeeping_wait.
+comment test_mode_bookkeeping_wait Blinks the prompt (test_mode_blink_prompt) until TEST, then the second page (test_mode_bookkeeping_second_page_start).
+comment test_mode_bookkeeping_second_page_start Opens the second BOOKKEEPING page (2/2): its texts, the time histogram and the course records (test_mode_bookkeeping_draw_histogram) and the blinking PUSH TEST BUTTON TO EXIT (test_mode_show_exit_prompt); goes on in test_mode_bookkeeping_second_page_wait.
+comment test_mode_bookkeeping_second_page_wait Blinks the prompt until TEST, then back to the menu.
+comment test_mode_bookkeeping_draw_totals Draws the first bookkeeping page's numbers from the bookkeeping in the sound board's shared RAM (701F00 on): COIN CHUTE A and B (the coins of each seat's first chute, 701F06 and 701F0A) and TOTAL COIN(S); COIN CREDIT(S) (701F02) and SERVICE CREDIT(S) (701F04) and their TOTAL; NUMBER OF GAME(S) A and B (701F14, 701F16); TOTAL TIME (701F10, counted by count_total_time) and GAME PLAY TIME A and B (701F18, 701F1C) in days, hours, minutes and seconds (test_mode_draw_duration); once a game was played, AVERAGE GAME TIME (the play times over the games), LONGEST (701F20) and SHORTEST (701F22) in minutes and seconds (test_mode_draw_minutes_seconds).
+comment test_mode_bookkeeping_draw_histogram Draws the second bookkeeping page's numbers: the TIME HISTOGRAM, how far the games got (seven counts from 701F24: PRE-STAGE, STAGE 1-5, COMPLETE), each with a bar of up to 20 blocks scaled to the largest; and OutRunner of OutRunners, the record of each of the ten goals (AUSTRALIA to KENYA; six bytes each from 701F32: the car, none when negative, shown by its colour, the three letters of the name and the time in hundredths, shown as minutes, seconds and hundredths).
+comment test_mode_draw_duration Draws a time of R0 seconds at text cell R11 as days (5 digits), hours, minutes and seconds (2 digits each, a cell apart, for the D H M S of the text) and returns the cell after it.
+comment test_mode_draw_minutes_seconds Draws a time of R0 seconds at text cell R11 as minutes and seconds, 2 digits each a cell apart; R11 moves to the seconds.
+comment test_mode_backup_data_clear_start Opens the BACKUP DATA CLEAR page: YES (CLEAR) and NO (CANCEL), the instructions, the cursor on NO; goes on in test_mode_backup_data_clear_run.
+comment test_mode_backup_data_clear_run Each frame of the BACKUP DATA CLEAR page: SERVICE moves the cursor between YES and NO; TEST on NO goes back to the menu; TEST on YES leaves the cursor on, clears the bookkeeping (bookkeeping_reset: all of it back to its defaults at 011458, zeros but SHORTEST GAME TIME FFFF and no course records, the credits too), shows COMPLETED, hides SELECT BY SERVICE BUTTON and blinks PUSH TEST BUTTON TO EXIT (test_mode_show_exit_prompt) until TEST (test_mode_backup_data_clear_wait).
+comment test_mode_backup_data_clear_wait After the clear: blinks the prompt until TEST, then back to the menu.
+comment test_mode_exit EXIT: when a page changed a setting (test_mode_flags bit 1, cleared here) writes the settings to the EEPROM (save_settings, which counts eeprom_write_count up to 10000); while eeprom_write_count is below 10000, or with nothing to write, leaves the test mode: test_mode_on 0 and the I/O chips' CNT registers 4 and 80 (the test mode's start wrote 6 and 86: bit 1, cleared now, turns a chip's screen output on, runtime/src/io.c); at 10000 shows the CAUTION that the EEPROM has been written 10,000 times and waits for TEST first (test_mode_exit_caution_wait).
+comment test_mode_exit_caution_wait Blinks PUSH TEST BUTTON TO EXIT under the CAUTION until TEST, then leaves the test mode as test_mode_exit does.
+comment test_mode_set_up_colours Sets up the test mode's colours and tiles on both screens: the whole palette in the background's colour (733), the text palettes (01F304 for screen 1, 01F506 for screen 2: the text colours 60 grey, 62 red, 64 green, 66 yellow, 68 cyan, 6A white, 6E the background's), 32 palettes after them whose colours 1-4 are red, green, blue and white at levels 0-31, and four solid tiles of colours 1-4 (318020): what the C.R.T. test's colour bars are drawn with.
+comment test_mode_draw_instructions Draws SELECT BY SERVICE BUTTON AND PUSH TEST BUTTON at the bottom of the screen.
+comment test_mode_show_exit_prompt Makes PUSH TEST BUTTON TO EXIT (the text record at 01F2BC, row 25) the prompt test_mode_blink_prompt blinks (test_mode_blink_address), from the next frame.
+comment test_mode_show_continue_prompt Makes PUSH TEST BUTTON TO CONTINUE (the text record at 01F2DE) the prompt test_mode_blink_prompt blinks, from the next frame.
+comment test_mode_blink_prompt Blinks the prompt whose text record test_mode_blink_address holds: when test_mode_blink_timer runs out, draws it (shown 21 frames) if its first cell is empty, else erases it (hidden 11 frames).
+comment test_mode_set_cursor Puts the cursor at text cell R10, the cell two before a menu line: test_mode_blink_address = R10 (the cursor, character 7F, blinks there: the menu loops' tail at 01F0AD), test_mode_blink_timer 0, and the line in white (6A, test_mode_colour_line).
+comment test_mode_clear_cursor Takes the cursor off its line: clears its cell (test_mode_blink_address) and puts the line back in grey (60).
+comment test_mode_draw_texts Draws the text record at R10 on the text layer: lines of a cell (halfword), characters and colour changes (a negative byte: its complement is the colour, the cells' high byte), each closed by 0; a 0 cell ends it.
+comment test_mode_draw_count Draws the number R0 as test_mode_draw_number does, and R3 cells from R10 an S (or a blank for 1 or less) for the plural of the word beside it (COIN(S), CREDIT(S), GAME(S)); R1 holds the S's colour (the word's) in its low byte and the digits' in its second.
+comment test_mode_draw_number Draws the number R0 in decimal in R2 cells ending at text cell R10 + 2 * R2, right-aligned in the colour in R1's low byte (the cells' high byte), the unused cells before it cleared.
+comment test_mode_draw_hex_number test_mode_draw_number in hexadecimal (digits 0-9, A-F).
+comment test_mode_colour_line Gives the text from cell R10 up to the next empty cell the colour R0 (60 grey, 6A white, 6E hidden...).
+comment test_mode_clear_text Clears the text layer (30 rows of 64 cells).
+comment test_mode_read_controls The test mode's controls, each frame: test_mode_buttons (SERVICE bit 0, TEST bit 1, START bit 4 and bit 5 of input port E, of either seat; bits 4-5 of port F count as SERVICE and TEST too), test_mode_buttons_previous, test_mode_buttons_pressed and test_mode_buttons_released; and the analog inputs into test_mode_analog_inputs, alternately (test_mode_flags bit 2, which also sets the converter's input bank): the first four (seat A's wheel, gas and brake, seat B's wheel) one frame, seat B's gas and brake the next.
+comment test_mode_send_sound Sends the test mode's next queued sound request (test_mode_sound_queue, test_mode_sound_queue_read) to the sound CPU, one a frame: to screen 2's command byte (SOUND_700800) when the request has its high byte set, else to screen 1's (SOUND_700700).
+comment test_mode_queue_sound_screen_2 test_mode_queue_sound for screen 2's sound CPU commands (the high byte set).
+comment test_mode_queue_sound Puts sound request R0 in the test mode's ring of 16 (test_mode_sound_queue at test_mode_sound_queue_write) for test_mode_send_sound: screen 1's, or screen 2's with the high byte set (test_mode_queue_sound_screen_2).
+comment vblank_update_mixer In the vertical blank, a screen's mixer and colours: while the screen's unk_94 bit 0 is set, a step of its colour offsets (step_screen_fade) into the mixer's colour offset registers (3E-4B); unk_94 bit 2 (cleared) sends the mixer settings at 160 of the screen (registers 00-3D and 4C-4F); unk_94 bit 3 (cleared) makes the set at 1B0 the current one and sends it; then the queued palettes (upload_queued_palettes).
+comment vblank_update_scrolls In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was running from unk_20E210 and unk_20E220 as they are; those of the other screen half-way between the values they have (unk_20E210, unk_20E220 by screen) and the new ones (unk_20E290, unk_20E2A0), which become their values: the in-between frame of the screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05 from unk_20E204's second byte, which steps by 4 (bits 2-3).
+comment check_test_button Turns the test mode on (test_mode_on FF) when TEST has just been pressed (bit 7 of switches_pressed, the inputs newly pressed); the boot task's loop then runs the test mode.
+comment send_sound_requests In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32 (queue_sound's: sound_queue_read, sound_queue_write, the requests after them) to its command byte (SOUND_700700 for screen 1, 700800 for screen 2), and one from its second ring at 840 (second_sound_queue_read, second_sound_queue_write; only the unused sub_011EF4 fills it) to the byte 8 after it.
+comment count_total_time Counts the bookkeeping's TOTAL TIME (701F10, seconds, kept with its copy and checksum), outside the test mode only: total_time_count gains 17 every vertical blank and a second passes at each 1000 (2000 for every 73rd second).
+comment update_lamps In the vertical blank, the cabinet's lamps: blinks each seat's CHECK POINT lamp (output port D bit 1: checkpoint_lamp, checkpoint_lamp_2) and RACE LEADER lamp (bit 3: leader_lamp, leader_lamp_2), each with a blinks, a period and a timer byte after it: while blinks is not 0 the timer counts the vertical blanks and at 0 toggles the lamp, starts again from period and takes one off blinks; writes output port D of each I/O chip from port_d_outputs or unk_20E093 with those lamps and, when the seat is not in the attract mode (screen unk_90 bit 8) and the STEERING WHEEL REACTION setting (steering_wheel_reaction) is on, the wheel motor's bits (unk_20E0D0 by seat); then the music and arrows lamps (update_button_lamps).
+comment update_button_lamps A screen's two button lamps, in its port G image (R11: unk_20E094 or unk_20E095, which the LCD's output sends): the DJ/MUSIC lamp (bit 0) by the low byte of button_lamps and the << >> lamp (bit 1) by its high byte: 0 off, negative on, n blinking every n vertical blanks (music_lamp_timer, arrows_lamp_timer), each mode taken when it changes (music_lamp_mode, arrows_lamp_mode).
+comment int_vector_40 The vertical blank interrupt (IRQ 0), every video frame: counts vblank_counter and vblanks_since_start, starts timer 0 for the LCD (int_vector_43, 34 times: timer_interrupts_left); when it interrupted screen 2's task: both screens' mixers and palettes (vblank_update_mixer), the video registers (all 72 halfwords from video_registers when unk_20E027 asks for them, which it clears, else the 8 at unk_20E220 and the 8 at unk_20E240) and the external tile banks of chip 0's port H (2 bits each of unk_20E2B0-unk_20E2B3); then for the interrupted task's screen the sprite list (finish_sprite_list), send_sound_requests, and vblank_update_scrolls unless the screen's skip_scroll_update is set (cleared here); outside the test mode the inputs (read_switches_and_analog), pack_seat_inputs (screen 1) or queue_seat_inputs (screen 2), check_test_button and, without free play, the coins (update_coins); then update_lamps, the LCD (lcd_refresh), count_total_time; sets frame_ready; swaps the tasks (task_swap) unless single_task is set, when task_swapping is set or when the test mode is on and screen 1's task is running; counts the frame for the running task's screen (screen_1_vblanks, screen_2_vblanks).
+comment int_vector_41 The end of the vertical blank (IRQ 1): only acknowledged.
+comment int_vector_42 The sound CPU's interrupt (IRQ 2): only acknowledged.
+comment int_vector_43 Timer 0 (IRQ 3), which int_vector_40 starts each frame at its shortest period: sends the LCD its next piece (lcd_send_next_nibble) and starts the timer again until timer_interrupts_left runs out, 34 times a frame. When it runs out it tests the screen's byte 1 and test_mode_on but goes the same way; the code after them (unused_03F7D8: counts unk_20E00E and shows it on the text layer) is never reached.
+comment int_vector_44 Timer 1 (IRQ 4), the link board's: outside the ISDN mode (isdn_mode) only acknowledged, which leaves the timer stopped; in it counts link_wait_count and takes the kind of the link board's message (its byte at 800010, cleared as it is read): 3, a message, is copied out of the board (link_isdn_receive_records: 800600 on to 21E000), link_wait_count cleared and the timer started at 168; any other kind polls again at the shortest period. link_unused_case is a fourth case (the controls, pack_seat_inputs, then 96) its table does not list.
+comment int_default The vectors no interrupt uses (250 of the 256): halt instructions, on into int_vector_02's.
+comment int_vector_02 The NMI: halt instructions, then on into check_test_button (whose return is not an interrupt's).
+field screen A7 skip_scroll_update u8
+field screen 800 sound_queue_read u8
+field screen 801 sound_queue_write u8
+field screen 840 second_sound_queue_read u8
+field screen 841 second_sound_queue_write u8
+field screen F20 button_lamps u16
+field screen F22 music_lamp_mode u8
+field screen F23 arrows_lamp_mode u8
+field screen F24 music_lamp_timer u8
+field screen F25 arrows_lamp_timer u8
+20E700  var  test_mode_on u8
+20E732  var  test_mode_sound_queue_write u8
+20E733  var  test_mode_sound_queue_read u8
+20E734  var  test_mode_sound_queue u16
+20E754  var  test_mode_privilege_mode u8
+20E610  var  coins_per_credit u8
+20E611  var  first_chute_multiplier u8
+20E612  var  second_chute_multiplier u8
+20E613  var  bonus_adder u8
+20E620  var  stand_alone u8
+20E621  var  link_master u8
+20E622  var  cabinet_id u8
+20E623  var  isdn_mode u8
+20E00A  var  vblanks_since_start u16
+20E028  var  task_swapping u8
+20E02C  var  timer_interrupts_left u8
+20E02D  var  vblank_counter u8
+20E03A  var  total_time_count u16
+20E060  var  link_wait_count u32
+20E0FC  var  screen_2_vblanks u8
+20E0FE  var  screen_1_vblanks u8
+20E0C0  var  checkpoint_lamp u8
+20E0C1  var  checkpoint_lamp_blinks u8
+20E0C2  var  checkpoint_lamp_period u8
+20E0C3  var  checkpoint_lamp_timer u8
+20E0C4  var  checkpoint_lamp_2 u8
+20E0C5  var  checkpoint_lamp_2_blinks u8
+20E0C6  var  checkpoint_lamp_2_period u8
+20E0C7  var  checkpoint_lamp_2_timer u8
+20E0C8  var  leader_lamp u8
+20E0C9  var  leader_lamp_blinks u8
+20E0CA  var  leader_lamp_period u8
+20E0CB  var  leader_lamp_timer u8
+20E0CC  var  leader_lamp_2 u8
+20E0CD  var  leader_lamp_2_blinks u8
+20E0CE  var  leader_lamp_2_period u8
+20E0CF  var  leader_lamp_2_timer u8
