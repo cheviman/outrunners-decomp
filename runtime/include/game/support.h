@@ -41,6 +41,10 @@ extern "C" {
 #define GAME_NORETURN _Noreturn
 #endif
 
+/* A game function the board puts its own in place of (runtime/replaced.txt): tools/decompile.py writes
+   its definition as BOARD_ORIGINAL(name), which keeps the original as original_name */
+#define BOARD_ORIGINAL(name) original_##name
+
 /* a structure pointer that is not in work RAM: in the program ROM (a link left at 0 in an object a
    scenario crafted), the bus reads the ROM there and drops writes, so it gets a copy of the ROM to read
    and write; anywhere else the program stops */

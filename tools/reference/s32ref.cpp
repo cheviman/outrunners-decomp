@@ -14,10 +14,12 @@
  *                           [--dump-frame N ... --dump-dir DIR] [--video-hashes hashes.txt]
  *                           [--video-dump N ... --video-dir DIR] [--sound-hashes hashes.txt]
  *                           [--sound-log writes.txt] [--sound-wav sound.wav] [--sound-trace executed.txt]
- *                           [--sound-timing timing.txt] [--rom-reads reads.txt]
+ *                           [--sound-timing timing.txt] [--rom-reads reads.txt] [--rom FOLDER]
  *                           [--verbose]
  *
- *    The program and the other ROMs are the game's data the executable carries (game/data.h).
+ *    It runs the original program, so it reads the player's ROM set when it starts, as MAME does: the
+ *    set in --rom's folder or .zip (rom/ by default), into the board's memory (game/data.h,
+ *    runtime/src/rom_set.c).
  *
  *    --timing frames, the default, runs the program the way the decompiled game runs: instructions take
  *    no time, and the board moves on to its next event only while the game waits for the next frame in
@@ -46,6 +48,7 @@
 #include "v60.h"
 
 #include "game/data.h"
+#include "game/extract.h"
 #include "s32/machine.h"
 #include "s32/script.h"
 #include "s32sound.h"
@@ -553,7 +556,8 @@ int main(int argc, char **argv)
 		" [--hashes FILE] [--trace FILE] [--calls FILE] [--transfers FILE] [--watch ADDRESS ...] [--profile FILE]"
 		" [--dump-frame N ... --dump-dir DIR] [--video-hashes FILE] [--video-dump N ... --video-dir DIR]"
 		" [--sound-hashes FILE] [--sound-log FILE] [--sound-wav FILE] [--sound-trace FILE] [--sound-timing FILE]"
-		" [--rom-reads FILE] [--verbose]\n";
+		" [--rom-reads FILE] [--rom FOLDER] [--verbose]\n";
+	std::string rom_folder = "rom";
 
 	for (int index = 1; index < argc; index++)
 	{
@@ -564,6 +568,8 @@ int main(int argc, char **argv)
 			g_frames_wanted = std::stoull(argv[++index]);
 			frames_given = true;
 		}
+		else if (argument == "--rom" && has_value)
+			rom_folder = argv[++index];
 		else if (argument == "--timing" && has_value)
 		{
 			const std::string timing = argv[++index];
@@ -642,10 +648,16 @@ int main(int argc, char **argv)
 	if (!hashes_path.empty())
 		g_hashes.open(hashes_path);
 
+	if (const char *problem = game_rom_set_load(rom_folder.c_str()))
+	{
+		std::cerr << rom_folder << ": " << problem << "\n";
+		return 1;
+	}
+
 	// the reference video, from the tile and sprite ROMs
 	if (!video_hashes_path.empty() || !g_video_dump_frames.empty())
 	{
-		s32v_attach(game_tile_rom, GAME_TILE_ROM_SIZE, game_sprite_rom, GAME_SPRITE_ROM_SIZE);
+		s32v_attach(game_tiles, GAME_TILES_SIZE, game_sprites, GAME_SPRITES_SIZE);
 		g_video = true;
 		if (!video_hashes_path.empty())
 			g_video_hashes.open(video_hashes_path);
@@ -657,8 +669,8 @@ int main(int argc, char **argv)
 		|| !sound_trace_path.empty();
 	if (g_sound)
 	{
-		s32_board.sound_rom = game_sound_rom;
-		s32_board.pcm_rom = game_pcm_rom;
+		s32_board.sound_rom = game_sound;
+		s32_board.pcm_rom = game_pcm;
 		s32s_attach();
 		if (!sound_timing_path.empty() && !s32s_use_timing(sound_timing_path.c_str()))
 		{
@@ -678,7 +690,7 @@ int main(int argc, char **argv)
 	s32_board.controls_update = [] { s32_script_apply(g_script, s32_board.frame); };
 	s32_board.log = on_log;
 	s32_board.frame_timing = frame_timing;
-	s32_init(game_program_rom);
+	s32_init(game_program);
 	choose_drawing(0);
 
 	machine_config config;

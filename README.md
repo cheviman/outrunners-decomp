@@ -86,8 +86,22 @@ the tools verify it, extract the assets and build your own executable.
 - [x] A window port (`orunners`, `ports/sdl2/`): both screens, the sound, the keyboard and game controllers;
       a control script played in the window gives the reference's frames (`coin_start`: state, picture
       and sound)
-- [ ] Names, types and structures for the C (`symbols.txt` and `sound_symbols.txt`); the assets, and the
-      ROM out of every executable (today the build still writes the ROM's regions into them); other ports
+- [x] The assets (`extract_assets.py`, driven by `assets.json`, which holds positions only): the tiles as
+      32 indexed PNG sheets in the palettes the game shows them with (`tile_palettes.json`, from a census
+      of the scenarios), the sprites as 144 sheets of the piece records at 0x122B74 (`sprite_sheets.txt`,
+      `sprite_palettes.json`), the MultiPCM's sample headers as text and its samples as WAV files (the
+      fixed megabyte and the six pages the sound sets bank in), and the program's and the sound program's
+      data as text, the code left out. `python extract_assets.py --check` builds the 17 chips back from
+      them, byte for byte (the code from the set)
+- [x] No executable carries the ROM: the game loads its assets pack (`orunners.assets`, which
+      `tools/make_pack.py` writes from the assets; on a first run the game writes it from the player's ROM
+      set itself, `--extract`), the reference and the translation scaffold read the ROM set when they
+      start, and the memory test's ROM part is the board's (`runtime/replaced.txt`: the decompiled game has
+      no ROM chips to sum). `tools/rom_in_executables.py` finds no stretch of the ROM in any executable,
+      and the 16 scenarios are identical in state, picture and sound with the game on its pack
+- [ ] The C reads the program's data by name: 599 reads still go through a ROM address
+      (`tools/noise_report.py`, rom_reads) and 839 through tables named after their address; the data's
+      text files are grouped by 64 KB of the ROM until the tables have names. Other ports
 
 ## Getting started
 
@@ -101,7 +115,8 @@ Tools on Windows). The window port needs SDL2 2.32: on Windows its development p
    python tools/verify_rom.py
    ```
 
-2. Build the tools into `build/bin/` (the build writes the ROM regions into the executables):
+2. Build the tools into `build/bin/` (the build takes the assets out of the ROM set into `assets/` and
+   packs them into `build/bin/orunners.assets`, which the game loads; no executable holds the ROM):
 
    ```bash
    cmake -S . -B build/cmake
@@ -177,6 +192,31 @@ Tools on Windows). The window port needs SDL2 2.32: on Windows its development p
    the triggers the pedals, the shoulders the gears. `--script FILE` plays a control script instead
    (`--fast` without waiting for the frames' time), and `--hashes`, `--video-hashes` and
    `--sound-hashes` write the same hashes as the reference.
+
+## The assets
+
+`python extract_assets.py` takes the assets out of the ROM set into `assets/` (`--force` again, `--clean`
+removes them, `--check` builds the chips back from them and compares); `assets.json` says what goes where,
+in positions only, and `tile_palettes.json`, `sprite_palettes.json` and `sprite_sheets.txt` (positions and
+record numbers too) say which palette each tile and sprite piece is shown with and how the pieces are
+grouped into sheets. `tools/palette_census.py run DIR` and `resolve DIR` write those files again from the
+scenarios. The formats:
+
+- `assets/tiles/`: indexed PNG sheets of 1024 16x16 tiles, 16 palettes each (a pixel's index & 15 is its
+  pen); a JSON beside each says every tile's palette.
+- `assets/sprites/`: indexed PNG sheets, a family of objects (or a stretch of animations) each, a row an
+  animation; 4-bit sheets hold up to 8 palettes, 32 entries each (the pens the board draws, then the same
+  pens where it does not); a JSON beside each says where each piece goes back in the sprite ROM.
+- `assets/sound/pcm_headers.txt` and `assets/sound/samples/`: the MultiPCM's 512 sample headers as text,
+  and its samples as 8-bit WAV files, one byte a sample: `common.wav` and `bank_2.wav`-`bank_7.wav`, each
+  with a JSON of the samples the headers start in it.
+- `assets/data/` and `assets/sound/data/`: the program's and the sound program's data as text files, a
+  section a piece (cut where `symbols.txt` names a place and where the C reads a table), and
+  `layout.json`, the pieces in order; the code is left out (the C replaces it).
+
+`python tools/make_pack.py` packs them for the game (`--check` compares what the pack puts in the board's
+memory with the set, the code left out; `--layout` writes `runtime/src/pack_layout.c`, the pieces without
+their bytes, which the first run fills from the player's set).
 
 ## Tools
 

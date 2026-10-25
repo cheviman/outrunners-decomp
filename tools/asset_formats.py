@@ -183,6 +183,28 @@ def sprite_frames(program, offset, count):
     return frames
 
 
+PIECE_RECORD = 12   # bytes of an OutRunners sprite piece record (0x122B74)
+
+
+def sprite_records(program, offset, count, bits_of):
+    """OutRunners' piece records at 'offset' of the program ROM image (little endian), in record order, as
+    frames: [{"number": the record's number, "width" (pixels), "height", "word": where its graphics start in
+    the sprite ROM (32-bit words, bank << 20 | address), "bits", "words": its length}]. A record holds the
+    sprite words a piece puts in the list: the size (rows in the high byte, 32-bit words a row in the low),
+    the address's low 16 bits, then the height and width words (scale and the address's bits 16-19, the
+    bank in bits 13 and 15). 'bits_of' gives the bits a pen of each record (the pieces that draw it say)."""
+    frames = []
+    for index in range(count):
+        size, address, _, height_word, _, width_word = struct.unpack_from("<6H", program, offset + index * PIECE_RECORD)
+        bank = (width_word & 0x2000) >> 13 | (width_word & 0x8000) >> 14
+        bits = bits_of(index)
+        words = size & 0xFF
+        frames.append({"number": index, "width": words * (32 // bits), "height": size >> 8,
+                       "word": bank << 20 | (height_word & 0xF000) << 4 | address, "bits": bits,
+                       "words": words * (size >> 8)})
+    return frames
+
+
 def sprite_pens(sprites, frame):
     """The frame's pens: one list a row, (width >> 3) words of 8 pens (4 bits) or (width >> 2) of 4 (8 bits)."""
     bits = frame["bits"]

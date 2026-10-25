@@ -4,7 +4,7 @@ Description: the program ROM's and the sound program's data as readable files by
              for byte
 Version:     0.1.0
 Created:     14-10-2026
-Modified:    15-10-2026
+Modified:    25-10-2026
 Author:      Sebastian Toyos
 
 The data of the program ROM (the data area, 0x100000-0x17FFFF, and what the code chips hold besides the
@@ -201,11 +201,11 @@ SOUND_WINDOW = 0xA000    # the Z80 sees the start of the sound program's chip be
 
 def sound_pieces(symbols_path, size):
     """[(offset in the chip, name)] of the places sound_symbols.txt names in the sound program's chip: its
-    table and data lines below A000 (Z80 addresses, the chip's own offsets there) and its banked lines
+    table, data and jumps lines below A000 (Z80 addresses, the chip's own offsets there) and its banked lines
     (offsets in the chip: bank * 2000h + the address in the A000-BFFF window - A000h)."""
     found = {}
     for line in symbols_path.read_text(encoding="utf-8").splitlines():
-        match = re.match(r"([0-9A-F]{4,6})\s+(data|table|banked)\s+(\w+)", line)
+        match = re.match(r"([0-9A-F]{4,6})\s+(data|table|jumps|banked)\s+(\w+)", line)
         if not match:
             continue
         offset = int(match.group(1), 16)
@@ -217,12 +217,12 @@ def sound_pieces(symbols_path, size):
 
 def z80_code(chip, symbols_path):
     """[(start, end)] of the sound program's code (what the Z80 analysis reaches from sound_symbols.txt's
-    entries, and its jump tables): the C replaces it, so the asset does not hold it."""
+    entries): the C replaces it, so the asset does not hold it. Its jump tables are data: the driver reads
+    them (read_table_word) before it jumps."""
     from z80 import analysis
     program = analysis.load_program(chip, symbols_path)
     instructions = program.analysis.instructions
     lengths = {address: instruction.length for address, instruction in instructions.items()}
-    lengths.update({address: symbol.count * 2 for address, symbol in program.symbols.items() if symbol.kind == "jumps"})
     spans = []
     for address in sorted(lengths):
         end = address + lengths[address]
@@ -268,14 +268,15 @@ def _wrap(text, prefix="# ", width=110):
     return lines + [line.rstrip()]
 
 
-def export(region, base, places, formats_path, folder, kept=(), movable=None):
+def export(region, base, places, formats_path, folder, kept=(), movable=None, default_group=None):
     """Every piece of 'region' (which starts at address 'base') into 'folder', and layout.json, the pieces in
     order. 'places' are [(address, name)] where pieces start (pieces() for the program ROM); 'kept' are (start,
     end) ranges the asset does not hold (code): pieces of their own that build() takes from the ROM; 'movable',
     (start, end), a range whose pieces build() may lay out anew (see build()). The formats file (load_formats)
     gives each piece its format and its file: a text file by subject holds its pieces as sections; a piece
     in a binary format is a file of its own in the folder of its subject; a run of one byte (padding) is
-    written in layout.json. Returns how many files."""
+    written in layout.json. 'default_group' (an address -> a file's name) groups the pieces no file of the
+    formats file takes. Returns how many files."""
     chosen, groups, descriptions = load_formats(formats_path)
     cuts = dict(places)
     if base not in cuts:
@@ -289,6 +290,10 @@ def export(region, base, places, formats_path, folder, kept=(), movable=None):
                      if base <= address < base + len(region) and address not in inside_kept)
     # the file of each piece: its own, else the one of the piece before it (the first ones: the one after)
     group_of = [None if address in kept_starts else groups.get(name) for address, name in ordered]
+    if default_group is not None:
+        group_of = [None if address in kept_starts else group or default_group(address)
+                    for (address, _), group in zip(ordered, group_of)]
+        groups = groups or {"": None}
     if groups:
         held = [index for index, (address, _) in enumerate(ordered) if address not in kept_starts]
         for previous, index in zip([None] + held, held):
@@ -376,9 +381,9 @@ def read_sections(path):
 PLACES = {}    # while build() reads the pieces: where this build lays out each one, by its name
 
 
-def build(folder, size, original=None):
-    """The region back from 'folder': every piece's file, in the order layout.json gives; the kept pieces
-    (code) from 'original', the region as the ROM has it. A piece keeps its size (the code reaches it at a
+def build_pieces(folder, size, original=None):
+    """The region back from 'folder', as [(piece, its offset in the region, its bytes)]: every piece's file,
+    in the order layout.json gives; the kept pieces (code) from 'original', the region as the ROM has it. A piece keeps its size (the code reaches it at a
     fixed address), except in the layout's 'movable' range: there the pieces are laid out one after another
     whatever their sizes, and the last one, a fill, takes what room is left up to the range's end; the
     formats that point at a piece by its name (PLACES) find it where it went."""
@@ -441,12 +446,17 @@ def build(folder, size, original=None):
                 raise ValueError(f"{folder}: a piece changed its size when the places moved")
     finally:
         PLACES.clear()
-    out = bytearray()
+    total = 0
     for piece, data in zip(pieces, datas):
         if len(data) != piece["size"]:
             # the code reaches every piece at a fixed address: one that grows or shrinks moves the rest
             raise ValueError(f"{piece.get('file', piece['name'])}: {piece['name']} is {len(data)} bytes, not {piece['size']}")
-        out += data
-    if len(out) != size:
-        raise ValueError(f"{folder}: the pieces make {len(out)} bytes, not {size}")
-    return bytes(out)
+        total += len(data)
+    if total != size:
+        raise ValueError(f"{folder}: the pieces make {total} bytes, not {size}")
+    return [(piece, address - base, data) for piece, address, data in zip(pieces, addresses, datas)]
+
+
+def build(folder, size, original=None):
+    """The region back from 'folder' (build_pieces' pieces, one after another)."""
+    return b"".join(data for _, _, data in build_pieces(folder, size, original))

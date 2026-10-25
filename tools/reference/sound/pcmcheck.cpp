@@ -23,6 +23,7 @@
 #include "s32/multipcm.h"
 
 #include "game/data.h"
+#include "game/extract.h"
 
 // (every standard header MAME's files use comes before their namespace, as in s32sound.cpp)
 #include <algorithm>
@@ -266,7 +267,12 @@ int main(int argc, char **argv)
 		else
 			logs.push_back(argv[index]);
 	}
-	s32_board.pcm_rom = game_pcm_rom;
+	if (const char *problem = game_rom_set_load("rom"))
+	{
+		std::fprintf(stderr, "rom: %s\n", problem);
+		return 1;
+	}
+	s32_board.pcm_rom = game_pcm;
 	for (const char *path : logs)
 		if (!replay(path))
 			break;

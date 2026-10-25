@@ -4,11 +4,12 @@
  *                 keeps the pace, around the same game and board the headless runs check
  *    Version:     0.1.0
  *    Created:     21-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    Usage: orunners [--script FILE [--fast]] [--hashes FILE] [--video-hashes FILE] [--sound-hashes FILE]
+ *                    [--assets FILE]
  *
  *    The game (src/) and the board (runtime/) run as they are: this file only wraps them. Where the board
  *    has its hooks, the port does its part: when VBLANK starts the video draws both screens and the port
@@ -16,6 +17,10 @@
  *    hands it the keyboard and the game controllers; when the game finishes a frame the port queues the
  *    frame's sound and waits for the frame's time (60 a second) to pass. The EEPROM (the game's settings,
  *    bookkeeping) is kept in orunners.eeprom beside the executable.
+ *
+ *    The game's data is its assets pack (game/data.h): orunners.assets beside the executable, or --assets.
+ *    The first run, with no pack there, makes it from the player's ROM set beside the executable (the
+ *    folder rom/ or orunners.zip; game/extract.h).
  *
  *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end;
  *    --fast runs it without waiting for the frames' time. --hashes, --video-hashes and --sound-hashes
@@ -41,6 +46,7 @@
 #include "s32/video.h"
 #include "sound/chips.h"
 #include "game/data.h"
+#include "game/extract.h"
 
 #include <SDL.h>
 
@@ -51,6 +57,7 @@
 #include <string.h>
 
 #define TITLE               "OutRunners"
+#define ASSETS_FILE         "orunners.assets"    /* the game's assets pack (tools/make_pack.py) */
 #define PLAYERS             2
 #define WINDOW_SCALE        2
 #define QUEUE_FRAMES_MAX    6          /* sound queued beyond this many frames is dropped */
@@ -63,7 +70,8 @@
 #define PEDAL_LIFT          0x30
 #define STICK_DEAD_ZONE     4000
 
-#define USAGE "Usage: orunners [--script FILE [--fast]] [--hashes FILE] [--video-hashes FILE] [--sound-hashes FILE]"
+#define USAGE "Usage: orunners [--script FILE [--fast]] [--hashes FILE] [--video-hashes FILE] [--sound-hashes FILE]" \
+	" [--assets FILE]"
 
 static jmp_buf finished;
 static SDL_Window *window;
@@ -394,6 +402,8 @@ int main(int argc, char **argv)
 	SDL_AudioSpec wanted;
 	const char *script_path = NULL;
 	const char *hashes_path = NULL, *video_hashes_path = NULL, *sound_hashes_path = NULL;
+	const char *assets_path = NULL;
+	char beside[1024];
 	char *base;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
@@ -410,6 +420,8 @@ int main(int argc, char **argv)
 			sound_hashes_path = argv[++index];
 		else if (strcmp(argv[index], "--fast") == 0)
 			fast = true;
+		else if (strcmp(argv[index], "--assets") == 0 && index + 1 < argc)
+			assets_path = argv[++index];
 		else
 			return fail("Unknown option.", USAGE);
 	}
@@ -431,7 +443,38 @@ int main(int argc, char **argv)
 
 	base = SDL_GetBasePath();
 	snprintf(eeprom_path, sizeof(eeprom_path), "%sorunners.eeprom", base ? base : "");
+	if (!assets_path)
+	{
+		snprintf(beside, sizeof(beside), "%s" ASSETS_FILE, base ? base : "");
+		assets_path = beside;
+	}
+	if (game_data_load(assets_path) == GAME_DATA_MISSING)
+	{
+		/* (the first run: the pack from the player's ROM set beside the executable) */
+		static const char *const sources[] = { "rom", "orunners.zip" };
+		const char *problem = NULL;
+		char source[1024];
+
+		for (size_t index = 0; index < sizeof(sources) / sizeof(sources[0]); index++)
+		{
+			snprintf(source, sizeof(source), "%s%s", base ? base : "", sources[index]);
+			problem = game_data_extract(source, assets_path);
+			if (!problem)
+				break;
+		}
+		if (problem)
+			return fail("The game's assets are missing, and no ROM set to make them from was found.", problem);
+	}
 	SDL_free(base);
+	switch (game_data_load(assets_path))
+	{
+	case GAME_DATA_LOADED:
+		break;
+	case GAME_DATA_MISSING:
+		return fail("The game's assets are missing.", assets_path);
+	default:
+		return fail("The game's assets cannot be read.", assets_path);
+	}
 
 	window = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		2 * 320 * WINDOW_SCALE, S32_VIDEO_HEIGHT * WINDOW_SCALE, SDL_WINDOW_RESIZABLE);
@@ -460,11 +503,11 @@ int main(int argc, char **argv)
 	s32_board.controls_update = on_controls_update;
 	s32_board.log = on_log;
 	s32_board.frame_timing = true;
-	s32_init(game_program_rom);
-	s32_video_init(game_tile_rom, sizeof(game_tile_rom), game_sprite_rom, sizeof(game_sprite_rom));
+	s32_init(game_program);
+	s32_video_init(game_tiles, sizeof(game_tiles), game_sprites, sizeof(game_sprites));
 	s32_board.frame_shown = on_frame_shown;
-	s32_board.sound_rom = game_sound_rom;
-	s32_board.pcm_rom = game_pcm_rom;
+	s32_board.sound_rom = game_sound;
+	s32_board.pcm_rom = game_pcm;
 	sound_chips_attach();
 	sound_cpu_attach();
 	if (!script)

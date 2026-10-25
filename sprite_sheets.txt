@@ -1,0 +1,2602 @@
+# The sprite ROM's pieces in sheets (tools/sprite_sheets.py writes it; it can be edited by hand):
+# 'NNNN sheet PATH # description' starts a sheet at piece record NNNN, up to the next sheet line
+# (a sheet may take several stretches); 'NNNN row NAME' starts a row. Records by number (the
+# records at 0x122B74, 12 bytes each).
+0000 sheet bar_picture/bar_picture  # the pieces of bar_picture's animations
+000F sheet animations/animations_5C0  # the pieces of animations no constant in the code names
+0017 row animation_5EB
+001F row animation_5EC
+0027 row animation_5ED
+002F row animation_5EE
+0037 row animation_5EF
+003F row animation_5EA
+004F sheet animations/animations_6C0  # the pieces of animations no constant in the code names
+0057 row animation_6D3
+005F row animation_6D4
+0067 sheet animations/animations_240  # the pieces of animations no constant in the code names
+006A sheet animations/animations_6C0  # the pieces of animations no constant in the code names
+006F row animation_6D6
+0077 row animation_6D7
+007F sheet animations/animations_240  # the pieces of animations no constant in the code names
+0083 sheet animations/animations_6C0  # the pieces of animations no constant in the code names
+008F sheet animations/animations_400  # the pieces of animations no constant in the code names
+0097 row animation_41B
+009F row animation_41C
+00A7 row animation_41D
+00AF row animation_41E
+00B7 row animation_41F
+00BF row animation_41A
+00CF sheet animations/animations_640  # the pieces of animations no constant in the code names
+00D7 row animation_65F
+00DF row animation_660
+00E7 row animation_661
+00EF row animation_662
+00F7 row animation_663
+00FF row animation_65E
+010F sheet animations/animations_380  # the pieces of animations no constant in the code names
+0117 row animation_3A7
+011F row animation_3A8
+0127 row animation_3A9
+012F row animation_3AA
+0137 row animation_3AB
+013F row animation_3A6
+014F sheet animations/animations_480  # the pieces of animations no constant in the code names
+0157 row animation_48F
+015F row animation_490
+0167 row animation_491
+016F row animation_492
+0177 row animation_493
+017F row animation_48E
+018F sheet animations/animations_500  # the pieces of animations no constant in the code names
+0197 row animation_503
+019F row animation_504
+01A7 row animation_505
+01AF row animation_506
+01B7 row animation_507
+01BF row animation_502
+01CF sheet animations/animations_540  # the pieces of animations no constant in the code names
+01D7 sheet animations/animations_340  # the pieces of animations no constant in the code names
+01D8 row animation_379
+01D9 sheet animations/animations_540  # the pieces of animations no constant in the code names
+01DA sheet animations/animations_340  # the pieces of animations no constant in the code names
+01DB sheet animations/animations_540  # the pieces of animations no constant in the code names
+01DC sheet animations/animations_340  # the pieces of animations no constant in the code names
+01DD sheet animations/animations_540  # the pieces of animations no constant in the code names
+01DE sheet animations/animations_340  # the pieces of animations no constant in the code names
+01DF row animation_378
+01E0 sheet animations/animations_540  # the pieces of animations no constant in the code names
+01E7 row animation_579
+01EF row animation_57A
+01F7 row animation_57B
+01FF row animation_576
+020F sheet animations/animations_000  # the pieces of animations no constant in the code names
+028F sheet animations/animations_A80  # the pieces of animations no constant in the code names
+0294 row animation_A87
+0299 row animation_A88
+029E row animation_A89
+02A3 row animation_A8A
+02A8 row animation_A8B
+02AD row animation_A8C
+02B2 row animation_A8D
+02B7 row animation_ABB
+02BC row animation_ABC
+02C1 row animation_ABD
+02C6 row animation_ABE
+02CB row animation_ABF
+02D0 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+02D5 row animation_AC1
+02DA sheet animations/animations_A80  # the pieces of animations no constant in the code names
+02DF row animation_A8F
+02E4 row animation_A90
+02E9 row animation_A91
+02EE row animation_A92
+02F3 row animation_A93
+02F8 row animation_A94
+02FD row animation_A95
+0302 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+0307 row animation_AC4
+030C row animation_AC5
+0311 row animation_AC6
+0316 row animation_AC7
+031B row animation_AC8
+0320 row animation_AC9
+0325 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+032A row animation_A97
+032F row animation_A98
+0334 row animation_A99
+0339 row animation_A9A
+033E row animation_A9B
+0343 row animation_A9C
+0348 row animation_A9D
+034D sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+0352 row animation_ACC
+0357 row animation_ACD
+035C row animation_ACE
+0361 row animation_ACF
+0366 row animation_AD0
+036B row animation_AD1
+0370 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+0375 row animation_A9F
+037A row animation_AA0
+037F row animation_AA1
+0384 row animation_AA2
+0389 row animation_AA3
+038E row animation_AA4
+0393 row animation_AA5
+0398 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+039D row animation_AD4
+03A2 row animation_AD5
+03A7 row animation_AD6
+03AC row animation_AD7
+03B1 row animation_AD8
+03B6 row animation_AD9
+03BB sheet animations/animations_A80  # the pieces of animations no constant in the code names
+03C0 row animation_AA7
+03C5 row animation_AA8
+03CA row animation_AA9
+03CF row animation_AAA
+03D4 row animation_AAB
+03D9 row animation_AAC
+03DE row animation_AAD
+03E3 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+03E8 row animation_ADC
+03ED row animation_ADD
+03F2 row animation_ADE
+03F7 row animation_ADF
+03FC row animation_AE0
+0401 row animation_AE1
+0406 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+040B row animation_AAF
+0410 row animation_AB0
+0415 row animation_AB1
+041A row animation_AB2
+041F row animation_AB3
+0424 row animation_AB4
+0429 row animation_AB5
+042E sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+0433 row animation_AE4
+0438 row animation_AE5
+043D row animation_AE6
+0442 row animation_AE7
+0447 row animation_AE8
+044C row animation_AE9
+0451 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+0452 row animation_AB7
+0453 row animation_AB8
+0454 row animation_AB9
+0455 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+0456 row animation_AEB
+0457 row animation_AEC
+0458 row animation_AED
+0459 sheet animations/animations_980  # the pieces of animations no constant in the code names
+045A sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+045D row animation_9EE
+0460 row animation_9F1
+0461 sheet animations/animations_980  # the pieces of animations no constant in the code names
+0464 row animation_9BA
+0465 row animation_9BB
+0466 row animation_9BC
+0467 row animation_9BD
+0468 row animation_9BE
+0469 sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+046A row animation_9F4
+046B row animation_9F5
+046C row animation_9F6
+046D row animation_9F7
+046E row animation_9F8
+046F row animation_9F9
+0470 sheet animations/animations_980  # the pieces of animations no constant in the code names
+0471 sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+0472 row animation_9C1
+0473 row animation_9C2
+0474 row animation_9C3
+0475 row animation_9C4
+0476 row animation_9C5
+0477 row animation_9C6
+0478 row animation_9FB
+0479 row animation_9FC
+047A row animation_9FD
+047B row animation_9FE
+047C row animation_9FF
+047D sheet animations/animations_A00  # the pieces of animations no constant in the code names
+047E row animation_A01
+047F sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+0480 row animation_9C8
+0481 row animation_9C9
+0482 row animation_9CA
+0483 row animation_9CB
+0484 row animation_9CC
+0485 row animation_9CD
+0486 row animation_9CE
+0487 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+0488 row animation_A04
+0489 row animation_A05
+048A row animation_A06
+048B row animation_A07
+048C row animation_A08
+048D row animation_A09
+048E sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+048F row animation_9D0
+0490 row animation_9D1
+0491 row animation_9D2
+0492 row animation_9D3
+0493 row animation_9D4
+0494 row animation_9D5
+0495 row animation_9D6
+0496 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+0497 row animation_A0C
+0498 row animation_A0D
+0499 row animation_A0E
+049A row animation_A0F
+049B row animation_A10
+049C row animation_A11
+049D sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+049E row animation_9D8
+049F row animation_9D9
+04A0 row animation_9DA
+04A1 row animation_9DB
+04A2 row animation_9DC
+04A3 row animation_9DD
+04A4 row animation_9DE
+04A5 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+04A6 row animation_A14
+04A7 row animation_A15
+04A8 row animation_A16
+04A9 row animation_A17
+04AA row animation_A18
+04AB row animation_A19
+04AC sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+04AD row animation_9E0
+04AE row animation_9E1
+04AF row animation_9E2
+04B0 row animation_9E3
+04B1 row animation_9E4
+04B2 row animation_9E5
+04B3 sheet animations/animations_980  # the pieces of animations no constant in the code names
+04B7 row animation_9BA
+04BB row animation_9BB
+04BF row animation_9BC
+04C3 row animation_9BD
+04C7 row animation_9BE
+04CB row animation_9BF
+04CF sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+04D3 row animation_9C1
+04D7 row animation_9C2
+04DB row animation_9C3
+04DF row animation_9C4
+04E3 row animation_9C5
+04E7 row animation_9C6
+04EB row animation_9C7
+04EF row animation_9C8
+04F3 row animation_9C9
+04F7 row animation_9CA
+04FB row animation_9CB
+04FF row animation_9CC
+0503 row animation_9CD
+0507 row animation_9CE
+050B row animation_9CF
+050F row animation_9D0
+0513 row animation_9D1
+0517 row animation_9D2
+051B row animation_9D3
+051F row animation_9D4
+0523 row animation_9D5
+0527 row animation_9D6
+052B row animation_9D7
+052F row animation_9D8
+0533 row animation_9D9
+0537 row animation_9DA
+053B row animation_9DB
+053F row animation_9DC
+0543 row animation_9DD
+0547 row animation_9DE
+054B row animation_9DF
+054F row animation_9E0
+0553 row animation_9E1
+0557 row animation_9E2
+055B row animation_9E3
+055F row animation_9E4
+0563 row animation_9E5
+0567 row animation_9EB
+056B row animation_9EE
+056F row animation_9F1
+0573 row animation_9F3
+0577 row animation_9F4
+057B row animation_9F5
+057F row animation_9F6
+0583 row animation_9F7
+0587 row animation_9F8
+058B row animation_9F9
+058F row animation_9FB
+0593 row animation_9FC
+0597 row animation_9FD
+059B row animation_9FE
+059F row animation_9FF
+05A3 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+05A7 row animation_A01
+05AB row animation_A03
+05AF row animation_A04
+05B3 row animation_A05
+05B7 row animation_A06
+05BB row animation_A07
+05BF row animation_A08
+05C3 row animation_A09
+05C7 row animation_A0B
+05CB row animation_A0C
+05CF row animation_A0D
+05D3 row animation_A0E
+05D7 row animation_A0F
+05DB row animation_A10
+05DF row animation_A11
+05E3 row animation_A13
+05E7 row animation_A14
+05EB row animation_A15
+05EF row animation_A16
+05F3 row animation_A17
+05F7 row animation_A18
+05FB row animation_A19
+05FF sheet animations/animations_9C0  # the pieces of animations no constant in the code names
+0600 row animation_9E7
+0601 row animation_9E8
+0602 row animation_9E9
+0603 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+0604 row animation_A1B
+0605 row animation_A1C
+0606 row animation_A1D
+0607 sheet animations/animations_800  # the pieces of animations no constant in the code names
+060A row animation_817
+060D row animation_818
+0610 row animation_819
+0613 row animation_81A
+0616 row animation_81B
+0619 row animation_81C
+061C row animation_81D
+061F sheet animations/animations_840  # the pieces of animations no constant in the code names
+0622 row animation_84C
+0625 row animation_84D
+0628 row animation_84E
+062B row animation_84F
+062E row animation_850
+0631 row animation_851
+0634 sheet animations/animations_800  # the pieces of animations no constant in the code names
+0637 row animation_81F
+063A row animation_820
+063D row animation_821
+0640 row animation_822
+0643 row animation_823
+0646 row animation_824
+0649 row animation_825
+064C sheet animations/animations_840  # the pieces of animations no constant in the code names
+064F row animation_854
+0652 row animation_855
+0655 row animation_856
+0658 row animation_857
+065B row animation_858
+065E row animation_859
+0661 sheet animations/animations_800  # the pieces of animations no constant in the code names
+0664 row animation_827
+0667 row animation_828
+066A row animation_829
+066D row animation_82A
+0670 row animation_82B
+0673 row animation_82C
+0676 row animation_82D
+0679 sheet animations/animations_840  # the pieces of animations no constant in the code names
+067C row animation_85C
+067F row animation_85D
+0682 row animation_85E
+0685 row animation_85F
+0688 row animation_860
+068B row animation_861
+068E sheet animations/animations_800  # the pieces of animations no constant in the code names
+0691 row animation_82F
+0694 row animation_830
+0697 row animation_831
+069A row animation_832
+069D row animation_833
+06A0 row animation_834
+06A3 row animation_835
+06A6 sheet animations/animations_840  # the pieces of animations no constant in the code names
+06A9 row animation_864
+06AC row animation_865
+06AF row animation_866
+06B2 row animation_867
+06B5 row animation_868
+06B8 row animation_869
+06BB sheet animations/animations_800  # the pieces of animations no constant in the code names
+06BE row animation_837
+06C1 row animation_838
+06C4 row animation_839
+06C7 row animation_83A
+06CA row animation_83B
+06CD row animation_83C
+06D0 row animation_83D
+06D3 sheet animations/animations_840  # the pieces of animations no constant in the code names
+06D6 row animation_86C
+06D9 row animation_86D
+06DC row animation_86E
+06DF row animation_86F
+06E2 row animation_870
+06E5 row animation_871
+06E8 sheet animations/animations_800  # the pieces of animations no constant in the code names
+06EB row animation_83F
+06EE sheet animations/animations_840  # the pieces of animations no constant in the code names
+06F1 row animation_841
+06F4 row animation_842
+06F7 row animation_843
+06FA row animation_844
+06FD row animation_845
+0700 row animation_873
+0703 row animation_874
+0706 row animation_875
+0709 row animation_876
+070C row animation_877
+070F row animation_878
+0712 row animation_879
+0715 row animation_846
+0716 row animation_847
+0717 row animation_848
+0718 row animation_849
+0719 row animation_87A
+071A row animation_87B
+071B row animation_87C
+071C row animation_87D
+071D sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+0727 sheet animations/animations_840  # the pieces of animations no constant in the code names
+072C row animation_87F
+0731 sheet animations/animations_880  # the pieces of animations no constant in the code names
+0736 row animation_881
+073B row animation_882
+0740 row animation_883
+0745 row animation_884
+074A row animation_885
+074F row animation_8B3
+0754 row animation_8B4
+0759 row animation_8B5
+075E row animation_8B6
+0763 row animation_8B7
+0768 row animation_8B8
+076D row animation_8B9
+0772 row animation_886
+0777 row animation_887
+077C row animation_888
+0781 row animation_889
+0786 row animation_88A
+078B row animation_88B
+0790 row animation_88C
+0795 row animation_88D
+079A row animation_8BB
+079F row animation_8BC
+07A4 row animation_8BD
+07A9 row animation_8BE
+07AE row animation_8BF
+07B3 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+07B8 row animation_8C1
+07BD sheet animations/animations_880  # the pieces of animations no constant in the code names
+07C2 row animation_88F
+07C7 row animation_890
+07CC row animation_891
+07D1 row animation_892
+07D6 row animation_893
+07DB row animation_894
+07E0 row animation_895
+07E5 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+07EA row animation_8C4
+07EF row animation_8C5
+07F4 row animation_8C6
+07F9 row animation_8C7
+07FE row animation_8C8
+0803 row animation_8C9
+0808 sheet animations/animations_880  # the pieces of animations no constant in the code names
+080D row animation_897
+0812 row animation_898
+0817 row animation_899
+081C row animation_89A
+0821 row animation_89B
+0826 row animation_89C
+082B row animation_89D
+0830 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+0835 row animation_8CC
+083A row animation_8CD
+083F row animation_8CE
+0844 row animation_8CF
+0849 row animation_8D0
+084E row animation_8D1
+0853 sheet animations/animations_880  # the pieces of animations no constant in the code names
+0858 row animation_89F
+085D row animation_8A0
+0862 row animation_8A1
+0867 row animation_8A2
+086C row animation_8A3
+0871 row animation_8A4
+0876 row animation_8A5
+087B sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+0880 row animation_8D4
+0885 row animation_8D5
+088A row animation_8D6
+088F row animation_8D7
+0894 row animation_8D8
+0899 row animation_8D9
+089E sheet animations/animations_880  # the pieces of animations no constant in the code names
+08A3 row animation_8A7
+08A8 row animation_8A8
+08AD row animation_8A9
+08B2 row animation_8AA
+08B7 row animation_8AB
+08BC row animation_8AC
+08C1 row animation_8AD
+08C6 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+08CB row animation_8DC
+08D0 row animation_8DD
+08D5 row animation_8DE
+08DA row animation_8DF
+08DF row animation_8E0
+08E4 row animation_8E1
+08E9 sheet animations/animations_880  # the pieces of animations no constant in the code names
+08EA row animation_8AF
+08EB row animation_8B0
+08EC row animation_8B1
+08ED sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+08EE row animation_8E3
+08EF row animation_8E4
+08F0 row animation_8E5
+08F1 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+08FB sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+08FE row animation_CF7
+0901 row animation_CF8
+0904 row animation_CF9
+0907 row animation_CFA
+090A row animation_CFB
+090D row animation_CFC
+0910 row animation_CFD
+0913 sheet animations/animations_D00  # the pieces of animations no constant in the code names
+0916 row animation_D2C
+0919 row animation_D2D
+091C row animation_D2E
+091F row animation_D2F
+0922 row animation_D30
+0925 row animation_D31
+0928 sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+092B row animation_CFF
+092E sheet animations/animations_D00  # the pieces of animations no constant in the code names
+0931 row animation_D01
+0934 row animation_D02
+0937 row animation_D03
+093A row animation_D04
+093D row animation_D05
+0940 row animation_D33
+0943 row animation_D34
+0946 row animation_D35
+0949 row animation_D36
+094C row animation_D37
+094F row animation_D38
+0952 row animation_D39
+0955 row animation_D06
+0958 row animation_D07
+095B row animation_D08
+095E row animation_D09
+0961 row animation_D0A
+0964 row animation_D0B
+0967 row animation_D0C
+096A row animation_D0D
+096D row animation_D3B
+0970 row animation_D3C
+0973 row animation_D3D
+0976 row animation_D3E
+0979 row animation_D3F
+097C sheet animations/animations_D40  # the pieces of animations no constant in the code names
+097F row animation_D41
+0982 sheet animations/animations_D00  # the pieces of animations no constant in the code names
+0985 row animation_D0F
+0988 row animation_D10
+098B row animation_D11
+098E row animation_D12
+0991 row animation_D13
+0994 row animation_D14
+0997 row animation_D15
+099A sheet animations/animations_D40  # the pieces of animations no constant in the code names
+099D row animation_D44
+09A0 row animation_D45
+09A3 row animation_D46
+09A6 row animation_D47
+09A9 row animation_D48
+09AC row animation_D49
+09AF sheet animations/animations_D00  # the pieces of animations no constant in the code names
+09B2 row animation_D17
+09B5 row animation_D18
+09B8 row animation_D19
+09BB row animation_D1A
+09BE row animation_D1B
+09C1 row animation_D1C
+09C4 row animation_D1D
+09C7 sheet animations/animations_D40  # the pieces of animations no constant in the code names
+09CA row animation_D4C
+09CD row animation_D4D
+09D0 row animation_D4E
+09D3 row animation_D4F
+09D6 row animation_D50
+09D9 row animation_D51
+09DC sheet animations/animations_D00  # the pieces of animations no constant in the code names
+09DF row animation_D1F
+09E2 row animation_D20
+09E5 row animation_D21
+09E8 row animation_D22
+09EB row animation_D23
+09EE row animation_D24
+09F1 row animation_D25
+09F4 sheet animations/animations_D40  # the pieces of animations no constant in the code names
+09F7 row animation_D54
+09FA row animation_D55
+09FD row animation_D56
+0A00 row animation_D57
+0A03 row animation_D58
+0A06 row animation_D59
+0A09 sheet animations/animations_D00  # the pieces of animations no constant in the code names
+0A0A row animation_D27
+0A0B row animation_D28
+0A0C row animation_D29
+0A0D sheet animations/animations_D40  # the pieces of animations no constant in the code names
+0A0E row animation_D5B
+0A0F row animation_D5C
+0A10 row animation_D5D
+0A11 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+0A1C sheet animations/animations_740  # the pieces of animations no constant in the code names
+0A20 row animation_747
+0A24 row animation_748
+0A28 row animation_749
+0A2C row animation_74A
+0A30 row animation_74B
+0A34 row animation_74C
+0A38 row animation_74D
+0A3C row animation_77B
+0A40 row animation_77C
+0A43 row animation_77D
+0A48 row animation_77E
+0A4C row animation_77F
+0A50 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0A54 row animation_781
+0A58 sheet animations/animations_740  # the pieces of animations no constant in the code names
+0A5C row animation_74F
+0A60 row animation_750
+0A64 row animation_751
+0A68 row animation_752
+0A6C row animation_753
+0A70 row animation_754
+0A74 row animation_755
+0A78 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0A7C row animation_784
+0A80 row animation_785
+0A84 row animation_786
+0A88 row animation_787
+0A8C row animation_788
+0A90 row animation_789
+0A94 sheet animations/animations_740  # the pieces of animations no constant in the code names
+0A98 row animation_757
+0A9C row animation_758
+0AA0 row animation_759
+0AA4 row animation_75A
+0AA8 row animation_75B
+0AAC row animation_75C
+0AB0 row animation_75D
+0AB4 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0AB8 row animation_78C
+0ABC row animation_78D
+0AC0 row animation_78E
+0AC4 row animation_78F
+0AC8 row animation_790
+0ACC row animation_791
+0AD0 sheet animations/animations_740  # the pieces of animations no constant in the code names
+0AD4 row animation_75F
+0AD8 row animation_760
+0ADC row animation_761
+0AE0 row animation_762
+0AE4 row animation_763
+0AE8 row animation_764
+0AEC row animation_765
+0AF0 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0AF4 row animation_794
+0AF8 row animation_795
+0AFC row animation_796
+0B00 row animation_797
+0B04 row animation_798
+0B08 row animation_799
+0B0C sheet animations/animations_740  # the pieces of animations no constant in the code names
+0B10 row animation_767
+0B14 row animation_768
+0B18 row animation_769
+0B1C row animation_76A
+0B20 row animation_76B
+0B24 row animation_76C
+0B28 row animation_76D
+0B2C sheet animations/animations_780  # the pieces of animations no constant in the code names
+0B30 row animation_79C
+0B34 row animation_79D
+0B38 row animation_79E
+0B3C row animation_79F
+0B40 row animation_7A0
+0B44 row animation_7A1
+0B48 sheet animations/animations_740  # the pieces of animations no constant in the code names
+0B4C row animation_76F
+0B50 row animation_770
+0B54 row animation_771
+0B58 row animation_772
+0B5C row animation_773
+0B60 row animation_774
+0B64 row animation_775
+0B68 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0B6C row animation_7A4
+0B70 row animation_7A5
+0B74 row animation_7A6
+0B78 row animation_7A7
+0B7C row animation_7A8
+0B80 row animation_7A9
+0B84 sheet animations/animations_740  # the pieces of animations no constant in the code names
+0B85 row animation_777
+0B86 row animation_778
+0B87 row animation_779
+0B88 sheet animations/animations_780  # the pieces of animations no constant in the code names
+0B89 row animation_7AB
+0B8A row animation_7AC
+0B8B row animation_7AD
+0B8C sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+0B96 row animation_DD6
+0B98 row animation_DD7
+0B9A row animation_DD8
+0B9C sheet animations/animations_E00  # the pieces of animations no constant in the code names
+0B9D sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+0B9E sheet animations/animations_240  # the pieces of animations no constant in the code names
+0B9F row animation_262
+0BA0 row animation_263
+0BA1 row animation_264
+0BA2 sheet animations/animations_040  # the pieces of animations no constant in the code names
+0BA7 row animation_078
+0BAC row animation_079
+0BB1 sheet animations/animations_180  # the pieces of animations no constant in the code names
+0BB6 row animation_1AB
+0BBB row animation_1AC
+0BC0 row animation_1AD
+0BC5 row animation_1AE
+0BCA row animation_1AF
+0BCF row animation_1B0
+0BD4 row animation_1B1
+0BD9 row animation_1B3
+0BDE row animation_1B5
+0BE3 row animation_1B7
+0BE8 row animation_1B9
+0BED sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+0BF2 row animation_1C5
+0BF7 row animation_1C9
+0BFC sheet animations/animations_180  # the pieces of animations no constant in the code names
+0BFE row animation_1A9
+0C00 row animation_1BB
+0C05 row animation_1BD
+0C0A row animation_1BF
+0C0F sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+0C14 row animation_1CB
+0C19 row animation_1CC
+0C37 sheet animations/animations_040  # the pieces of animations no constant in the code names
+0C3C row animation_07D
+0C41 row animation_07F
+0C46 sheet animations/animations_080  # the pieces of animations no constant in the code names
+0C4B row animation_083
+0C50 row animation_085
+0C55 row animation_087
+0C5A row animation_089
+0C5F row animation_08B
+0C64 row animation_08D
+0C69 row animation_08F
+0C6E row animation_091
+0C73 row animation_093
+0C78 row animation_095
+0C7D row animation_097
+0C82 row animation_09F
+0C87 row animation_0A1
+0C8C row animation_099
+0C91 row animation_09B
+0C96 row animation_09D
+0C9B sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+0CA0 row animation_1D3
+0CA5 row animation_1D5
+0CAA row animation_1D7
+0CAF row animation_1D9
+0CB4 row animation_1DA
+0CB9 row animation_1DB
+0CBE row animation_1DC
+0CC3 row animation_1DD
+0CC8 row animation_1DE
+0CCD row animation_1DF
+0CD2 row animation_1E0
+0CE1 row animation_1E2
+0CE6 row animation_1E3
+0CEB row animation_1E4
+0CF0 row animation_1E5
+0CF5 row animation_1E7
+0CFA row animation_1E9
+0CFF row animation_1EB
+0D04 row animation_1ED
+0D09 row animation_1EF
+0D0E row animation_1F1
+0D13 row animation_1F2
+0D18 sheet animations/animations_080  # the pieces of animations no constant in the code names
+0D1D row animation_0B0
+0D22 row animation_0B1
+0D27 row animation_0B2
+0D2C row animation_0B3
+0D31 row animation_0B9
+0D36 row animation_0BA
+0D3B row animation_0BB
+0D40 row animation_0BC
+0D45 row animation_0BD
+0D4A sheet animations/animations_100  # the pieces of animations no constant in the code names
+0D4F row animation_10A
+0D54 row animation_10C
+0D59 row animation_10D
+0D5E row animation_10E
+0D63 row animation_10F
+0D68 row animation_110
+0D6D row animation_112
+0D72 row animation_114
+0D77 row animation_116
+0D7C row animation_117
+0D81 row animation_119
+0D86 row animation_11B
+0D8B row animation_11D
+0D90 row animation_11F
+0D95 row animation_121
+0D9A row animation_123
+0D9B row animation_125
+0D9C row animation_127
+0DB0 sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+0DB5 row animation_0FD
+0DBA row animation_0FF
+0DBF sheet animations/animations_100  # the pieces of animations no constant in the code names
+0DC4 row animation_103
+0DC9 row animation_104
+0DCE row animation_105
+0DD3 row animation_106
+0DD8 row animation_107
+0DDD sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+0DE2 row animation_0CB
+0DE7 row animation_0CC
+0DEC row animation_0C8
+0DF6 row animation_0CD
+0DFB row animation_0CE
+0E00 row animation_0CF
+0E05 row animation_0DD
+0E0A row animation_0DE
+0E0F row animation_0DF
+0E14 row animation_0E0
+0E19 row animation_0D1
+0E1E row animation_0E1
+0E23 row animation_0E3
+0E2D row animation_0D3
+0E32 row animation_0D4
+0E37 row animation_0D5
+0E41 row animation_0D6
+0E46 row animation_0D7
+0E4B row animation_0DB
+0E50 row animation_0DA
+0E55 row animation_0D9
+0E5A row animation_0DC
+0E5F sheet animations/animations_080  # the pieces of animations no constant in the code names
+0E64 row animation_0A4
+0E69 row animation_0A5
+0E6E row animation_0A6
+0E73 row animation_0A7
+0E78 row animation_0AE
+0E7D sheet animations/animations_000  # the pieces of animations no constant in the code names
+0E7E sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+0E8D sheet animations/animations_180  # the pieces of animations no constant in the code names
+0E92 row animation_194
+0E97 row animation_195
+0E9C row animation_196
+0EA1 row animation_198
+0EA6 row animation_19A
+0EAB row animation_1A6
+0EB0 row animation_1A7
+0EB5 row animation_19C
+0EBA row animation_19E
+0EBF row animation_1A0
+0EC4 row animation_1A2
+0EC9 row animation_1A4
+0ECE sheet animations/animations_380  # the pieces of animations no constant in the code names
+0ED2 sheet animations/animations_100  # the pieces of animations no constant in the code names
+0ED7 row animation_12F
+0EE1 row animation_130
+0EE6 sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+0EEB row animation_1F6
+0EF0 sheet animations/animations_200  # the pieces of animations no constant in the code names
+0EF5 row animation_204
+0EFA row animation_205
+0EFF sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+0F04 row animation_1F9
+0F09 row animation_1FA
+0F0E row animation_1FB
+0F13 row animation_1FC
+0F18 row animation_1FD
+0F1D row animation_1FE
+0F22 row animation_1FF
+0F27 sheet animations/animations_200  # the pieces of animations no constant in the code names
+0F2C row animation_201
+0F31 sheet animations/animations_100  # the pieces of animations no constant in the code names
+0F36 row animation_13C
+0F3B row animation_13D
+0F40 row animation_13F
+0F45 sheet animations/animations_140  # the pieces of animations no constant in the code names
+0F4A row animation_14E
+0F4F row animation_14F
+0F54 row animation_150
+0F59 row animation_151
+0F5E row animation_152
+0F63 row animation_153
+0F68 row animation_154
+0F6D row animation_15E
+0F72 row animation_15F
+0F77 row animation_160
+0F7C row animation_155
+0F81 row animation_157
+0F86 row animation_159
+0F8B row animation_15A
+0F90 row animation_15B
+0F95 row animation_15D
+0F9A row animation_165
+0F9F row animation_161
+0FA4 row animation_162
+0FA9 row animation_164
+0FAE row animation_163
+0FB3 sheet animations/animations_380  # the pieces of animations no constant in the code names
+0FB9 sheet entry_countdown/entry_countdown  # the pieces of entry_countdown's animations
+0FC3 sheet goal/goal  # the pieces of goal's animations
+0FC4 sheet race_result/race_result  # the pieces of race_result's animations
+0FC5 row animation_2F7
+0FC6 sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+0FC7 row animation_2E9
+0FC8 row animation_2EA
+0FC9 sheet animations/animations_240  # the pieces of animations no constant in the code names
+0FCA sheet time_digits/time_digits  # the pieces of time_digits's animations
+0FD4 sheet stage_result_line/stage_result_line  # the pieces of stage_result_line's animations
+0FDC sheet place_count/place_count  # the pieces of place_count's animations
+0FE4 sheet animations/animations_000  # the pieces of animations no constant in the code names
+0FE5 row animation_008
+0FE7 row animation_009
+0FEA row animation_00A
+0FEE row animation_00B
+0FF3 row animation_00C
+0FF9 sheet rev_meter_update/rev_meter_update  # the pieces of rev_meter_update's animations
+1019 sheet speed_unit_update/speed_unit_update  # the pieces of speed_unit_update's animations
+101A sheet animations/animations_000  # the pieces of animations no constant in the code names
+101B sheet speedometer/speedometer  # the pieces of speedometer's animations
+1025 sheet animations/animations_040  # the pieces of animations no constant in the code names
+102A row animation_055
+102F sheet animations/animations_100  # the pieces of animations no constant in the code names
+1034 row animation_133
+1039 sheet title_palm_tree/title_palm_tree  # the pieces of title_palm_tree's animations
+103E sheet animations/animations_040  # the pieces of animations no constant in the code names
+1043 sheet animations/animations_140  # the pieces of animations no constant in the code names
+1048 sheet animations/animations_040  # the pieces of animations no constant in the code names
+104D sheet animations/animations_180  # the pieces of animations no constant in the code names
+104F row animation_18B
+1054 row animation_18C
+1059 row animation_18D
+105E row animation_18E
+1063 row animation_18F
+1068 row animation_190
+106D row animation_191
+1072 row animation_192
+107C row animation_187
+1081 row animation_189
+1086 row animation_18A
+108B sheet animations/animations_140  # the pieces of animations no constant in the code names
+108E row animation_17B
+1093 row animation_17C
+1098 row animation_17D
+109D row animation_17E
+10A2 row animation_17F
+10A7 sheet animations/animations_180  # the pieces of animations no constant in the code names
+10AC row animation_181
+10B1 row animation_185
+10CF row animation_182
+10D9 row animation_183
+10DE row animation_184
+10E8 sheet animations/animations_240  # the pieces of animations no constant in the code names
+10ED row animation_251
+10F2 row animation_252
+10F7 sheet animations/animations_380  # the pieces of animations no constant in the code names
+10FC sheet animations/animations_240  # the pieces of animations no constant in the code names
+1103 row animation_254
+1108 row animation_255
+110D row animation_256
+1117 row animation_258
+1123 row animation_257
+114B sheet animations/animations_140  # the pieces of animations no constant in the code names
+1150 row animation_145
+1155 sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+1157 sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+115C row animation_0E7
+1161 row animation_0E9
+1166 row animation_0EB
+116B row animation_0EC
+1170 row animation_0EE
+1175 row animation_0ED
+117A row animation_0EF
+117F row animation_0F0
+1184 row animation_0F1
+1189 row animation_0F3
+118E row animation_0F8
+1193 row animation_0F9
+1198 sheet animations/animations_340  # the pieces of animations no constant in the code names
+119C sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+11A0 sheet animations/animations_200  # the pieces of animations no constant in the code names
+11A5 row animation_21D
+11AF row animation_21F
+11B4 row animation_221
+11B9 row animation_223
+11BE row animation_226
+11C3 row animation_225
+11C8 row animation_227
+11CD row animation_228
+11D2 row animation_229
+11D7 row animation_22A
+11DC row animation_22C
+11E1 row animation_22D
+11E6 row animation_22E
+11EB row animation_22B
+11F0 row animation_22F
+11F5 row animation_230
+1218 sheet animations/animations_140  # the pieces of animations no constant in the code names
+121D row animation_147
+1222 sheet animations/animations_040  # the pieces of animations no constant in the code names
+1227 row animation_05B
+122C sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+1233 row animation_2EF
+123D row animation_2F0
+1246 sheet animations/animations_000  # the pieces of animations no constant in the code names
+124B row animation_03B
+1250 row animation_03C
+1255 row animation_03D
+125A row animation_03E
+1264 sheet animations/animations_040  # the pieces of animations no constant in the code names
+1282 sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+1287 sheet animations/animations_100  # the pieces of animations no constant in the code names
+1289 row animation_12A
+128B row animation_12B
+128D row animation_12C
+128F sheet animations/animations_140  # the pieces of animations no constant in the code names
+1294 row animation_171
+1299 sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+12B7 sheet animations/animations_000  # the pieces of animations no constant in the code names
+12C1 row animation_002
+12CB row animation_013
+12CC row animation_014
+12CD row animation_015
+12CE row animation_016
+12CF row animation_017
+12D0 row animation_018
+12D1 row animation_019
+12D2 row animation_01A
+12D3 sheet choice_flag/choice_flag  # the pieces of choice_flag's animations
+12D4 sheet animations/animations_000  # the pieces of animations no constant in the code names
+12D5 row animation_01D
+12D6 row animation_01E
+12D7 row animation_01F
+12D8 row animation_020
+12D9 row animation_021
+12DA row animation_022
+12DB row animation_023
+12DC row animation_024
+12DF sheet animations/animations_040  # the pieces of animations no constant in the code names
+12E4 row animation_05F
+12E9 row animation_060
+12EE row animation_061
+12F3 row animation_045
+12F7 row animation_048
+12FD row animation_04A
+1304 row animation_04C
+1308 sheet animations/animations_140  # the pieces of animations no constant in the code names
+130D row animation_168
+1312 row animation_173
+1317 row animation_16E
+131C row animation_176
+1321 row animation_177
+1326 row animation_178
+1330 row animation_179
+1335 row animation_16F
+133A sheet animations/animations_040  # the pieces of animations no constant in the code names
+133B row animation_06E
+1340 row animation_06F
+1386 sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+138C sheet animations/animations_100  # the pieces of animations no constant in the code names
+1391 row animation_134
+1396 row animation_138
+139B row animation_135
+13A0 row animation_136
+13A5 row animation_137
+13AC sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+13AD row animation_0C6
+13AE sheet animations/animations_040  # the pieces of animations no constant in the code names
+13B2 row animation_04E
+13B6 row animation_050
+13BB sheet animations/animations_200  # the pieces of animations no constant in the code names
+13C0 row animation_20F
+13C5 sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+13CA row animation_0F6
+13CF row animation_0F7
+13D4 row animation_0D0
+13D9 sheet animations/animations_080  # the pieces of animations no constant in the code names
+13E3 sheet animations/animations_140  # the pieces of animations no constant in the code names
+13E6 row animation_148
+13EB row animation_149
+13F0 row animation_14A
+13F5 row animation_14B
+13FA row animation_14C
+13FF row animation_14D
+1404 sheet animations/animations_380  # the pieces of animations no constant in the code names
+140A row animation_3A4
+141A sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+141F sheet animations/animations_000  # the pieces of animations no constant in the code names
+1423 sheet animations/animations_040  # the pieces of animations no constant in the code names
+1427 sheet animations/animations_140  # the pieces of animations no constant in the code names
+142C row animation_16B
+1431 sheet animations/animations_000  # the pieces of animations no constant in the code names
+1435 sheet animations/animations_1C0  # the pieces of animations no constant in the code names
+143A sheet animations/animations_200  # the pieces of animations no constant in the code names
+143D row animation_212
+1442 row animation_214
+1447 row animation_216
+144C row animation_218
+1451 row animation_21A
+1456 row animation_21B
+145B row animation_232
+1460 row animation_233
+1465 row animation_234
+146A row animation_235
+146F row animation_236
+1474 row animation_237
+1488 row animation_23B
+148D row animation_23C
+1492 row animation_23D
+1497 sheet animations/animations_240  # the pieces of animations no constant in the code names
+14A1 row animation_242
+14AB sheet animations/animations_200  # the pieces of animations no constant in the code names
+14AE sheet animations/animations_240  # the pieces of animations no constant in the code names
+14B3 row animation_245
+14B8 row animation_246
+14BE row animation_248
+14C4 row animation_24A
+14CA row animation_24C
+14D0 sheet animations/animations_380  # the pieces of animations no constant in the code names
+14DF row animation_39F
+14FD sheet animations/animations_040  # the pieces of animations no constant in the code names
+1502 sheet animations/animations_340  # the pieces of animations no constant in the code names
+1514 row animation_354
+1526 row animation_35B
+1538 row animation_35A
+153C sheet animations/animations_240  # the pieces of animations no constant in the code names
+1541 sheet animations/animations_340  # the pieces of animations no constant in the code names
+1547 row animation_35D
+154D sheet animations/animations_000  # the pieces of animations no constant in the code names
+1580 sheet animations/animations_340  # the pieces of animations no constant in the code names
+1592 sheet animations/animations_040  # the pieces of animations no constant in the code names
+1593 row animation_063
+1594 row animation_064
+1595 row animation_065
+1596 sheet animations/animations_340  # the pieces of animations no constant in the code names
+15A8 row animation_356
+15BA sheet animations/animations_300  # the pieces of animations no constant in the code names
+15C2 row animation_33F
+15CA sheet animations/animations_340  # the pieces of animations no constant in the code names
+15D2 row animation_341
+15DA row animation_342
+15E2 row animation_343
+15EA row animation_344
+15F2 row animation_345
+15FA sheet car_name_letter/car_name_letter  # the pieces of car_name_letter's animations
+1620 sheet animations/animations_340  # the pieces of animations no constant in the code names
+1622 row animation_34A
+1624 row animation_34D
+1625 row animation_34F
+1626 row animation_34E
+1627 sheet animations/animations_D40  # the pieces of animations no constant in the code names
+162B row animation_D5F
+162F row animation_D60
+1633 row animation_D61
+1637 row animation_D62
+163B row animation_D63
+163F row animation_D64
+1643 row animation_D65
+1647 sheet animations/animations_D80  # the pieces of animations no constant in the code names
+164B row animation_D94
+164F row animation_D95
+1653 row animation_D96
+1657 row animation_D97
+165B row animation_D98
+165F row animation_D99
+1663 sheet animations/animations_D40  # the pieces of animations no constant in the code names
+1667 row animation_D67
+166B row animation_D68
+166F row animation_D69
+1673 row animation_D6A
+1677 row animation_D6B
+167B row animation_D6C
+167F row animation_D6D
+1683 sheet animations/animations_D80  # the pieces of animations no constant in the code names
+1687 row animation_D9C
+168B row animation_D9D
+168F row animation_D9E
+1693 row animation_D9F
+1697 row animation_DA0
+169B row animation_DA1
+169F sheet animations/animations_D40  # the pieces of animations no constant in the code names
+16A3 row animation_D6F
+16A7 row animation_D70
+16AB row animation_D71
+16AF row animation_D72
+16B3 row animation_D73
+16B7 row animation_D74
+16BB row animation_D75
+16BF sheet animations/animations_D80  # the pieces of animations no constant in the code names
+16C3 row animation_DA4
+16C7 row animation_DA5
+16CB row animation_DA6
+16CF row animation_DA7
+16D3 row animation_DA8
+16D7 row animation_DA9
+16DB sheet animations/animations_D40  # the pieces of animations no constant in the code names
+16DF row animation_D77
+16E3 row animation_D78
+16E7 row animation_D79
+16EB row animation_D7A
+16EF row animation_D7B
+16F3 row animation_D7C
+16F7 row animation_D7D
+16FB sheet animations/animations_D80  # the pieces of animations no constant in the code names
+16FF row animation_DAC
+1703 row animation_DAD
+1707 row animation_DAE
+170B row animation_DAF
+170F row animation_DB0
+1713 row animation_DB1
+1717 sheet animations/animations_D40  # the pieces of animations no constant in the code names
+171B row animation_D7F
+171F sheet animations/animations_D80  # the pieces of animations no constant in the code names
+1723 row animation_D81
+1727 row animation_D82
+172B row animation_D83
+172F row animation_D84
+1733 row animation_D85
+1737 row animation_DB3
+173B row animation_DB4
+173F row animation_DB5
+1743 row animation_DB6
+1747 row animation_DB7
+174B row animation_DB8
+174F row animation_DB9
+1753 row animation_D86
+1757 row animation_D87
+175B row animation_D88
+175F row animation_D89
+1763 row animation_D8A
+1767 row animation_D8B
+176B row animation_D8C
+176F row animation_D8D
+1773 row animation_DBB
+1777 row animation_DBC
+177B row animation_DBD
+177F row animation_DBE
+1783 row animation_DBF
+1787 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+178B row animation_DC1
+178F sheet animations/animations_D80  # the pieces of animations no constant in the code names
+1790 row animation_D8F
+1791 row animation_D90
+1792 row animation_D91
+1793 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+1794 row animation_DC3
+1795 row animation_DC4
+1796 row animation_DC5
+1797 row animation_DD5
+17A2 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17A3 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17A4 row animation_91C
+17A5 row animation_91D
+17A6 row animation_91E
+17A7 row animation_91F
+17A8 row animation_920
+17A9 row animation_921
+17AA sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17AB row animation_8E8
+17AC row animation_8E9
+17AD row animation_8EA
+17AE row animation_8EB
+17AF row animation_8EC
+17B0 row animation_8ED
+17B1 row animation_8EE
+17B2 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17B3 row animation_924
+17B4 row animation_925
+17B5 row animation_926
+17B6 row animation_927
+17B7 row animation_928
+17B8 row animation_929
+17B9 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17BA row animation_8F0
+17BB row animation_8F1
+17BC row animation_8F2
+17BD row animation_8F3
+17BE row animation_8F4
+17BF row animation_8F5
+17C0 row animation_8F6
+17C1 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17C2 row animation_92C
+17C3 row animation_92D
+17C4 row animation_92E
+17C5 row animation_92F
+17C6 row animation_930
+17C7 row animation_931
+17C8 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17C9 row animation_8F8
+17CA row animation_8F9
+17CB row animation_8FA
+17CC row animation_8FB
+17CD row animation_8FC
+17CE row animation_8FD
+17CF row animation_8FE
+17D0 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17D1 row animation_934
+17D2 row animation_935
+17D3 row animation_936
+17D4 row animation_937
+17D5 row animation_938
+17D6 row animation_939
+17D7 sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17D8 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17D9 row animation_901
+17DA row animation_902
+17DB row animation_903
+17DC row animation_904
+17DD row animation_905
+17DE row animation_906
+17DF row animation_93B
+17E0 row animation_93C
+17E1 row animation_93D
+17E2 row animation_93E
+17E3 row animation_93F
+17E4 sheet animations/animations_940  # the pieces of animations no constant in the code names
+17E5 row animation_941
+17E6 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17E7 row animation_908
+17E8 row animation_909
+17E9 row animation_90A
+17EA row animation_90B
+17EB row animation_90C
+17EC row animation_90D
+17ED row animation_90E
+17EE sheet animations/animations_940  # the pieces of animations no constant in the code names
+17EF row animation_944
+17F0 row animation_945
+17F1 row animation_946
+17F2 row animation_947
+17F3 row animation_948
+17F4 row animation_949
+17F5 sheet animations/animations_900  # the pieces of animations no constant in the code names
+17F6 row animation_910
+17F7 row animation_911
+17F8 row animation_912
+17F9 row animation_913
+17FA row animation_914
+17FB row animation_915
+17FC sheet animations/animations_8C0  # the pieces of animations no constant in the code names
+17FE row animation_8E7
+1800 row animation_8E8
+1802 row animation_8E9
+1804 row animation_8EA
+1806 row animation_8EB
+1808 row animation_8EC
+180A row animation_8ED
+180C row animation_8EE
+180E row animation_8EF
+1810 row animation_8F0
+1812 row animation_8F1
+1814 row animation_8F2
+1816 row animation_8F3
+1818 row animation_8F4
+181A row animation_8F5
+181C row animation_8F6
+181E row animation_8F7
+1820 row animation_8F8
+1822 row animation_8F9
+1824 row animation_8FA
+1826 row animation_8FB
+1828 row animation_8FC
+182A row animation_8FD
+182C row animation_8FE
+182E row animation_8FF
+1830 sheet animations/animations_900  # the pieces of animations no constant in the code names
+1832 row animation_901
+1834 row animation_902
+1836 row animation_903
+1838 row animation_904
+183A row animation_905
+183C row animation_906
+183E row animation_907
+1840 row animation_908
+1842 row animation_909
+1844 row animation_90A
+1846 row animation_90B
+1848 row animation_90C
+184A row animation_90D
+184C row animation_90E
+184E row animation_90F
+1850 row animation_910
+1852 row animation_911
+1854 row animation_912
+1856 row animation_913
+1858 row animation_914
+185A row animation_915
+185C row animation_91B
+185E row animation_91C
+1860 row animation_91D
+1862 row animation_91E
+1864 row animation_91F
+1866 row animation_920
+1868 row animation_921
+186A row animation_923
+186C row animation_924
+186E row animation_925
+1870 row animation_926
+1872 row animation_927
+1874 row animation_928
+1876 row animation_929
+1878 row animation_92B
+187A row animation_92C
+187C row animation_92D
+187E row animation_92E
+1880 row animation_92F
+1882 row animation_930
+1884 row animation_931
+1886 row animation_933
+1888 row animation_934
+188A row animation_935
+188C row animation_936
+188E row animation_937
+1890 row animation_938
+1892 row animation_939
+1894 row animation_93B
+1896 row animation_93C
+1898 row animation_93D
+189A row animation_93E
+189C row animation_93F
+189E sheet animations/animations_940  # the pieces of animations no constant in the code names
+18A0 row animation_941
+18A2 row animation_943
+18A4 row animation_944
+18A6 row animation_945
+18A8 row animation_946
+18AA row animation_947
+18AC row animation_948
+18AE row animation_949
+18B0 sheet animations/animations_900  # the pieces of animations no constant in the code names
+18B1 row animation_917
+18B2 row animation_918
+18B3 row animation_919
+18B4 sheet animations/animations_940  # the pieces of animations no constant in the code names
+18B5 row animation_94B
+18B6 row animation_94C
+18B7 row animation_94D
+18B8 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+18BD sheet animations/animations_940  # the pieces of animations no constant in the code names
+18C0 row animation_94F
+18C3 row animation_950
+18C6 row animation_951
+18C9 row animation_952
+18CC row animation_953
+18CF row animation_954
+18D2 row animation_955
+18D5 sheet animations/animations_980  # the pieces of animations no constant in the code names
+18D8 row animation_984
+18DB row animation_985
+18DE row animation_986
+18E1 row animation_987
+18E4 row animation_988
+18E7 row animation_989
+18EA sheet animations/animations_940  # the pieces of animations no constant in the code names
+18ED row animation_957
+18F0 row animation_958
+18F3 row animation_959
+18F6 row animation_95A
+18F9 row animation_95B
+18FC row animation_95C
+18FF row animation_95D
+1902 sheet animations/animations_980  # the pieces of animations no constant in the code names
+1905 row animation_98C
+1908 row animation_98D
+190B row animation_98E
+190E row animation_98F
+1911 row animation_990
+1914 row animation_991
+1917 sheet animations/animations_940  # the pieces of animations no constant in the code names
+191A row animation_95F
+191D row animation_960
+1920 row animation_961
+1923 row animation_962
+1926 row animation_963
+1929 row animation_964
+192C row animation_965
+192F sheet animations/animations_980  # the pieces of animations no constant in the code names
+1932 row animation_994
+1935 row animation_995
+1938 row animation_996
+193B row animation_997
+193E row animation_998
+1941 row animation_999
+1944 sheet animations/animations_940  # the pieces of animations no constant in the code names
+1947 row animation_967
+194A row animation_968
+194D row animation_969
+1950 row animation_96A
+1953 row animation_96B
+1956 row animation_96C
+1959 row animation_96D
+195C sheet animations/animations_980  # the pieces of animations no constant in the code names
+195F row animation_99C
+1962 row animation_99D
+1965 row animation_99E
+1968 row animation_99F
+196B row animation_9A0
+196E row animation_9A1
+1971 sheet animations/animations_940  # the pieces of animations no constant in the code names
+1974 row animation_96F
+1977 row animation_970
+197A row animation_971
+197D row animation_972
+1980 row animation_973
+1983 row animation_974
+1986 row animation_975
+1989 sheet animations/animations_980  # the pieces of animations no constant in the code names
+198C row animation_9A4
+198F row animation_9A5
+1992 row animation_9A6
+1995 row animation_9A7
+1998 row animation_9A8
+199B row animation_9A9
+199E sheet animations/animations_940  # the pieces of animations no constant in the code names
+19A1 row animation_977
+19A4 row animation_978
+19A7 row animation_979
+19AA row animation_97A
+19AD row animation_97B
+19B0 row animation_97C
+19B3 row animation_97D
+19B6 sheet animations/animations_980  # the pieces of animations no constant in the code names
+19B9 row animation_9AC
+19BC row animation_9AD
+19BF row animation_9AE
+19C2 row animation_9AF
+19C5 row animation_9B0
+19C8 row animation_9B1
+19CB sheet animations/animations_940  # the pieces of animations no constant in the code names
+19CC row animation_97F
+19CD sheet animations/animations_980  # the pieces of animations no constant in the code names
+19CE row animation_981
+19CF row animation_9B5
+19D0 row animation_9B4
+19D1 row animation_9B3
+19D2 row animation_9B2
+19D3 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+19D8 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+19DD row animation_AEF
+19E2 row animation_AF0
+19E7 row animation_AF1
+19EC row animation_AF2
+19F1 row animation_AF3
+19F6 row animation_AF4
+19FB row animation_AF5
+1A00 sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1A05 row animation_B24
+1A0A row animation_B25
+1A0F row animation_B26
+1A14 row animation_B27
+1A19 row animation_B28
+1A1E row animation_B29
+1A23 sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+1A28 row animation_AF7
+1A2D row animation_AF8
+1A32 row animation_AF9
+1A37 row animation_AFA
+1A3C row animation_AFB
+1A41 row animation_AFC
+1A46 row animation_AFD
+1A4B sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1A50 row animation_B2C
+1A55 row animation_B2D
+1A5A row animation_B2E
+1A5F row animation_B2F
+1A64 row animation_B30
+1A69 row animation_B31
+1A6E sheet animations/animations_AC0  # the pieces of animations no constant in the code names
+1A73 row animation_AFF
+1A78 sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1A7D row animation_B01
+1A82 row animation_B02
+1A87 row animation_B03
+1A8C row animation_B04
+1A91 row animation_B05
+1A96 row animation_B33
+1A9B row animation_B34
+1AA0 row animation_B35
+1AA5 row animation_B36
+1AAA row animation_B37
+1AAF row animation_B38
+1AB4 row animation_B39
+1AB9 row animation_B06
+1ABE row animation_B07
+1AC3 row animation_B08
+1AC8 row animation_B09
+1ACD row animation_B0A
+1AD2 row animation_B0B
+1AD7 row animation_B0C
+1ADC row animation_B0D
+1AE1 row animation_B3B
+1AE6 row animation_B3C
+1AEB row animation_B3D
+1AF0 row animation_B3E
+1AF5 row animation_B3F
+1AFA sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1AFF row animation_B41
+1B04 sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1B09 row animation_B0F
+1B0E row animation_B10
+1B13 row animation_B11
+1B18 row animation_B12
+1B1D row animation_B13
+1B22 row animation_B14
+1B27 row animation_B15
+1B2C sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1B31 row animation_B44
+1B36 row animation_B45
+1B3B row animation_B46
+1B40 row animation_B47
+1B45 row animation_B48
+1B4A row animation_B49
+1B4F sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1B54 row animation_B17
+1B59 row animation_B18
+1B5E row animation_B19
+1B63 row animation_B1A
+1B68 row animation_B1B
+1B6D row animation_B1C
+1B72 row animation_B1D
+1B77 sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1B7C row animation_B4C
+1B81 row animation_B4D
+1B86 row animation_B4E
+1B8B row animation_B4F
+1B90 row animation_B50
+1B95 row animation_B51
+1B9A sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1B9B row animation_B1F
+1B9E sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1B9F row animation_B53
+1BA0 sheet animations/animations_B00  # the pieces of animations no constant in the code names
+1BA1 row animation_B21
+1BA2 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+1BB0 row animation_DD2
+1BBA row animation_DCA
+1BBD sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1BC0 row animation_B57
+1BC3 row animation_B58
+1BC6 row animation_B59
+1BC9 row animation_B5A
+1BCC row animation_B5B
+1BCF row animation_B5C
+1BD2 row animation_B5D
+1BD5 sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1BD8 row animation_B8C
+1BDB row animation_B8D
+1BDE row animation_B8E
+1BE1 row animation_B8F
+1BE4 row animation_B90
+1BE7 row animation_B91
+1BEA sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1BED row animation_B5F
+1BF0 row animation_B60
+1BF3 row animation_B61
+1BF6 row animation_B62
+1BF9 row animation_B63
+1BFC row animation_B64
+1BFF row animation_B65
+1C02 sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1C05 row animation_B94
+1C08 row animation_B95
+1C0B row animation_B96
+1C0E row animation_B97
+1C11 row animation_B98
+1C14 row animation_B99
+1C17 sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1C1A row animation_B67
+1C1D row animation_B68
+1C20 row animation_B69
+1C23 row animation_B6A
+1C26 row animation_B6B
+1C29 row animation_B6C
+1C2C row animation_B6D
+1C2F sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1C32 row animation_B9C
+1C35 row animation_B9D
+1C38 row animation_B9E
+1C3B row animation_B9F
+1C3E row animation_BA0
+1C41 row animation_BA1
+1C44 sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1C47 row animation_B6F
+1C4A row animation_B70
+1C4D row animation_B71
+1C50 row animation_B72
+1C53 row animation_B73
+1C56 row animation_B74
+1C59 row animation_B75
+1C5C sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1C5F row animation_BA4
+1C62 row animation_BA5
+1C65 row animation_BA6
+1C68 row animation_BA7
+1C6B row animation_BA8
+1C6E row animation_BA9
+1C71 sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1C74 row animation_B77
+1C77 row animation_B78
+1C7A row animation_B79
+1C7D row animation_B7A
+1C80 row animation_B7B
+1C83 row animation_B7C
+1C86 row animation_B7D
+1C89 sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1C8C row animation_BAC
+1C8F row animation_BAD
+1C92 row animation_BAE
+1C95 row animation_BAF
+1C98 row animation_BB0
+1C9B row animation_BB1
+1C9E sheet animations/animations_B40  # the pieces of animations no constant in the code names
+1CA1 row animation_B7F
+1CA4 sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1CA7 row animation_B81
+1CAA row animation_B82
+1CAD row animation_B83
+1CB0 row animation_B84
+1CB3 row animation_B85
+1CB6 row animation_BB3
+1CB9 row animation_BB4
+1CBC row animation_BB5
+1CBF row animation_BB6
+1CC2 row animation_BB7
+1CC5 row animation_BB8
+1CC8 row animation_BB9
+1CCB row animation_B86
+1CCC row animation_B87
+1CCD row animation_B88
+1CCE row animation_B89
+1CCF row animation_BBA
+1CD0 row animation_BBB
+1CD1 row animation_BBC
+1CD2 row animation_BBD
+1CD3 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+1CDC sheet animations/animations_B80  # the pieces of animations no constant in the code names
+1CDF row animation_BBF
+1CE2 sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1CE5 row animation_BC1
+1CE8 row animation_BC2
+1CEB row animation_BC3
+1CEE row animation_BC4
+1CF1 row animation_BC5
+1CF4 row animation_BF3
+1CF7 row animation_BF4
+1CFA row animation_BF5
+1CFD row animation_BF6
+1D00 row animation_BF7
+1D03 row animation_BF8
+1D06 row animation_BF9
+1D09 row animation_BC6
+1D0C row animation_BC7
+1D0F row animation_BC8
+1D12 row animation_BC9
+1D15 row animation_BCA
+1D18 row animation_BCB
+1D1B row animation_BCC
+1D1E row animation_BCD
+1D21 row animation_BFB
+1D24 row animation_BFC
+1D27 row animation_BFD
+1D2A row animation_BFE
+1D2D row animation_BFF
+1D30 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1D33 row animation_C01
+1D36 sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1D39 row animation_BCF
+1D3C row animation_BD0
+1D3F row animation_BD1
+1D42 row animation_BD2
+1D45 row animation_BD3
+1D48 row animation_BD4
+1D4B row animation_BD5
+1D4E sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1D51 row animation_C04
+1D54 row animation_C05
+1D57 row animation_C06
+1D5A row animation_C07
+1D5D row animation_C08
+1D60 row animation_C09
+1D63 sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1D66 row animation_BD7
+1D69 row animation_BD9
+1D6C row animation_BDA
+1D6F row animation_BDB
+1D72 row animation_BDC
+1D75 row animation_BDD
+1D78 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1D7B row animation_C0E
+1D7E row animation_C0F
+1D81 row animation_C10
+1D84 row animation_C11
+1D87 sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1D8A row animation_BDF
+1D8D row animation_BE0
+1D90 row animation_BE1
+1D93 row animation_BE2
+1D96 row animation_BE3
+1D99 row animation_BE4
+1D9C row animation_BE5
+1D9F sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1DA2 row animation_C14
+1DA5 row animation_C15
+1DA8 row animation_C16
+1DAB row animation_C17
+1DAE row animation_C18
+1DB1 row animation_C19
+1DB4 sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1DB7 row animation_BE7
+1DBA row animation_BE9
+1DBD row animation_BEA
+1DC0 row animation_BEB
+1DC3 row animation_BEC
+1DC6 row animation_BED
+1DC9 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1DCC row animation_C1C
+1DCF row animation_C1D
+1DD2 row animation_C1E
+1DD5 row animation_C20
+1DD8 row animation_C21
+1DDB sheet animations/animations_BC0  # the pieces of animations no constant in the code names
+1DDC row animation_BEF
+1DDD row animation_BF0
+1DDE row animation_BF1
+1DDF sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1DE0 row animation_C23
+1DE1 row animation_C24
+1DE2 row animation_C25
+1DE3 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+1DE9 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1DF2 row animation_C29
+1DF5 row animation_C2A
+1DF8 row animation_C2B
+1DFB row animation_C2C
+1DFE row animation_C2D
+1E01 sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1E04 row animation_C5C
+1E07 row animation_C5D
+1E0A row animation_C5E
+1E0D row animation_C5F
+1E10 row animation_C60
+1E13 row animation_C61
+1E16 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1E19 row animation_C2F
+1E1C row animation_C30
+1E1F row animation_C31
+1E22 row animation_C32
+1E25 row animation_C33
+1E28 row animation_C34
+1E2B row animation_C35
+1E2E sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1E31 row animation_C64
+1E34 row animation_C65
+1E37 row animation_C66
+1E3A row animation_C67
+1E3D row animation_C68
+1E40 row animation_C69
+1E43 sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1E46 row animation_C37
+1E49 row animation_C38
+1E4C row animation_C39
+1E4F row animation_C3A
+1E52 row animation_C3B
+1E55 row animation_C3C
+1E58 row animation_C3D
+1E5B sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1E5E row animation_C6C
+1E61 row animation_C6D
+1E64 row animation_C6E
+1E67 row animation_C6F
+1E6A row animation_C70
+1E6D sheet animations/animations_C00  # the pieces of animations no constant in the code names
+1E70 row animation_C3F
+1E73 sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1E76 row animation_C41
+1E79 row animation_C42
+1E7C row animation_C43
+1E7F row animation_C44
+1E82 row animation_C45
+1E85 row animation_C73
+1E88 row animation_C74
+1E8B row animation_C75
+1E8E row animation_C76
+1E91 row animation_C77
+1E94 row animation_C78
+1E97 row animation_C71
+1E9A row animation_C46
+1E9D row animation_C47
+1EA0 row animation_C48
+1EA3 row animation_C49
+1EA6 row animation_C4A
+1EA9 row animation_C4B
+1EAC row animation_C4C
+1EAF row animation_C4D
+1EB2 row animation_C7B
+1EB5 row animation_C7C
+1EB8 row animation_C7D
+1EBB row animation_C7E
+1EBE row animation_C7F
+1EC1 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1EC4 row animation_C81
+1EC7 sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1ECA row animation_C50
+1ECD row animation_C51
+1ED0 row animation_C52
+1ED3 row animation_C53
+1ED6 row animation_C54
+1ED9 row animation_C55
+1EDC sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1EDF row animation_C84
+1EE2 row animation_C85
+1EE5 row animation_C86
+1EE8 row animation_C87
+1EEB row animation_C88
+1EEE row animation_C89
+1EF1 sheet animations/animations_C40  # the pieces of animations no constant in the code names
+1EF2 row animation_C57
+1EF3 row animation_C58
+1EF4 row animation_C59
+1EF5 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1EF6 row animation_C8B
+1EF7 row animation_C8C
+1EF8 row animation_C8D
+1EF9 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+1F06 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1F09 row animation_C8F
+1F0C row animation_C90
+1F0F row animation_C91
+1F12 row animation_C92
+1F15 row animation_C93
+1F18 row animation_C94
+1F1B row animation_C95
+1F1E sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+1F21 row animation_CC4
+1F24 row animation_CC5
+1F27 row animation_CC6
+1F2A row animation_CC7
+1F2D row animation_CC8
+1F30 row animation_CC9
+1F33 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1F36 row animation_C97
+1F39 row animation_C98
+1F3C row animation_C99
+1F3F row animation_C9A
+1F42 row animation_C9B
+1F45 row animation_C9C
+1F48 row animation_C9D
+1F4B sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+1F4E row animation_CCC
+1F51 row animation_CCD
+1F54 row animation_CCE
+1F57 row animation_CCF
+1F5A row animation_CD0
+1F5D row animation_CD1
+1F60 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1F63 row animation_C9F
+1F66 row animation_CA0
+1F69 row animation_CA1
+1F6C row animation_CA2
+1F6F row animation_CA3
+1F72 row animation_CA4
+1F75 row animation_CA5
+1F78 sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+1F7B row animation_CD4
+1F7E row animation_CD5
+1F81 row animation_CD6
+1F84 row animation_CD7
+1F87 row animation_CD8
+1F8A row animation_CD9
+1F8D sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1F90 row animation_CA7
+1F96 row animation_CA9
+1F99 row animation_CAA
+1F9C row animation_CAB
+1F9F row animation_CAC
+1FA2 row animation_CAD
+1FAB sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+1FAE row animation_CDE
+1FB1 row animation_CDF
+1FB4 row animation_CE0
+1FB7 row animation_CE1
+1FBA sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1FBD row animation_CAF
+1FC0 row animation_CB0
+1FC3 row animation_CB1
+1FC6 row animation_CB2
+1FC9 row animation_CB3
+1FCC row animation_CB4
+1FCF row animation_CB5
+1FD2 sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+1FD5 row animation_CE4
+1FD8 row animation_CE5
+1FDB row animation_CE6
+1FDE row animation_CE7
+1FE1 row animation_CE8
+1FE4 row animation_CE9
+1FE7 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+1FEA row animation_CB7
+1FF0 row animation_CB9
+1FF3 row animation_CBA
+1FF6 row animation_CBB
+1FF9 row animation_CBC
+1FFC row animation_CBD
+1FFF sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+2002 row animation_CEC
+2005 row animation_CED
+2008 row animation_CEE
+200E row animation_CF0
+2011 row animation_CF1
+2014 sheet animations/animations_C80  # the pieces of animations no constant in the code names
+2015 row animation_CBF
+2016 sheet animations/animations_CC0  # the pieces of animations no constant in the code names
+2017 row animation_CC1
+2018 row animation_CF2
+2019 row animation_CF3
+201A row animation_CF4
+201B row animation_CF5
+201C sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+2029 sheet animations/animations_780  # the pieces of animations no constant in the code names
+202C row animation_7AF
+202F row animation_7B0
+2032 row animation_7B1
+2035 row animation_7B2
+2038 row animation_7B3
+203B row animation_7B4
+203E row animation_7B5
+2041 sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+2044 row animation_7E4
+2047 row animation_7E5
+204A row animation_7E6
+204D row animation_7E7
+2050 row animation_7E8
+2053 row animation_7E9
+2056 sheet animations/animations_780  # the pieces of animations no constant in the code names
+2059 row animation_7B7
+205C row animation_7B8
+205F row animation_7B9
+2062 row animation_7BA
+2065 row animation_7BB
+2068 row animation_7BC
+206B row animation_7BD
+206E sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+2071 row animation_7EC
+2074 row animation_7ED
+2077 row animation_7EE
+207A row animation_7EF
+207D row animation_7F0
+2080 row animation_7F1
+2083 sheet animations/animations_780  # the pieces of animations no constant in the code names
+2086 row animation_7BF
+2089 sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+208C row animation_7C1
+208F row animation_7C2
+2092 row animation_7C3
+2095 row animation_7C4
+2098 row animation_7C5
+209B row animation_7F3
+209E row animation_7F4
+20A1 row animation_7F5
+20A4 row animation_7F6
+20A7 row animation_7F7
+20AA row animation_7F8
+20AD row animation_7F9
+20B0 row animation_7C6
+20B3 row animation_7C7
+20B9 row animation_7C9
+20BC row animation_7CA
+20BF row animation_7CB
+20C2 row animation_7CC
+20C5 row animation_7CD
+20CE row animation_7FD
+20D1 row animation_7FE
+20D4 row animation_7FF
+20D7 sheet animations/animations_800  # the pieces of animations no constant in the code names
+20DA row animation_801
+20DD sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+20E0 row animation_7CF
+20E3 row animation_7D0
+20E6 row animation_7D1
+20E9 row animation_7D2
+20EC row animation_7D3
+20EF row animation_7D4
+20F2 row animation_7D5
+20F5 sheet animations/animations_800  # the pieces of animations no constant in the code names
+20F8 row animation_804
+20FB row animation_805
+20FE row animation_806
+2101 row animation_807
+2104 row animation_808
+2107 row animation_809
+210A sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+210D row animation_7D7
+2113 row animation_7D9
+2116 row animation_7DA
+2119 row animation_7DB
+211C row animation_7DC
+211F row animation_7DD
+2122 sheet animations/animations_800  # the pieces of animations no constant in the code names
+2125 row animation_80C
+2128 row animation_80D
+212B row animation_80E
+2131 row animation_810
+2134 row animation_811
+2137 sheet animations/animations_7C0  # the pieces of animations no constant in the code names
+2138 row animation_7DF
+2139 row animation_7E0
+213A row animation_7E1
+213B sheet animations/animations_800  # the pieces of animations no constant in the code names
+213C row animation_813
+213D row animation_814
+213E row animation_815
+213F sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+214F sheet animations/animations_A00  # the pieces of animations no constant in the code names
+2152 row animation_A1F
+2155 row animation_A20
+2158 row animation_A21
+215B row animation_A22
+215E row animation_A23
+2161 row animation_A24
+2164 row animation_A25
+2167 sheet animations/animations_A40  # the pieces of animations no constant in the code names
+216A row animation_A54
+216D row animation_A55
+2170 row animation_A56
+2173 row animation_A57
+2176 row animation_A58
+2179 row animation_A59
+217C sheet animations/animations_A00  # the pieces of animations no constant in the code names
+217F row animation_A27
+2182 row animation_A28
+2185 row animation_A29
+2188 row animation_A2A
+218B row animation_A2B
+218E row animation_A2C
+2191 row animation_A2D
+2194 sheet animations/animations_A40  # the pieces of animations no constant in the code names
+2197 row animation_A5C
+219A row animation_A5D
+219D row animation_A5E
+21A0 row animation_A5F
+21A3 row animation_A60
+21A6 row animation_A61
+21A9 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+21AC row animation_A2F
+21AF row animation_A30
+21B2 row animation_A31
+21B5 row animation_A32
+21B8 row animation_A33
+21BB row animation_A34
+21BE row animation_A35
+21C1 sheet animations/animations_A40  # the pieces of animations no constant in the code names
+21C4 row animation_A64
+21C7 row animation_A65
+21CA row animation_A66
+21CD row animation_A67
+21D0 row animation_A68
+21D3 row animation_A69
+21D6 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+21D9 row animation_A37
+21DF row animation_A39
+21E2 row animation_A3A
+21E5 row animation_A3B
+21E8 row animation_A3C
+21EB row animation_A3D
+21F4 sheet animations/animations_A40  # the pieces of animations no constant in the code names
+21F7 row animation_A6E
+21FA row animation_A6F
+21FD row animation_A70
+2200 row animation_A71
+2203 sheet animations/animations_A00  # the pieces of animations no constant in the code names
+2206 row animation_A3F
+2209 sheet animations/animations_A40  # the pieces of animations no constant in the code names
+220C row animation_A41
+220F row animation_A42
+2212 row animation_A43
+2215 row animation_A44
+2218 row animation_A45
+221B row animation_A73
+221E row animation_A74
+2221 row animation_A75
+2224 row animation_A76
+2227 row animation_A77
+222A row animation_A78
+222D row animation_A79
+2230 row animation_A46
+2233 row animation_A47
+2236 row animation_A48
+2239 row animation_A49
+223C row animation_A4A
+223F row animation_A4B
+2242 row animation_A4C
+2245 row animation_A4D
+2248 row animation_A7B
+224B row animation_A7C
+224E row animation_A7D
+2251 row animation_A7E
+2257 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+225A row animation_A81
+225D sheet animations/animations_A40  # the pieces of animations no constant in the code names
+225E row animation_A4F
+225F row animation_A50
+2260 row animation_A51
+2261 sheet animations/animations_A80  # the pieces of animations no constant in the code names
+2262 row animation_A83
+2263 row animation_A84
+2264 row animation_A85
+2265 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+226B row animation_DC9
+2271 row animation_DDA
+2273 row animation_DDB
+2275 row animation_DDC
+2277 row animation_DDD
+2279 row animation_DDE
+227C row animation_DDF
+2280 row animation_DE0
+2285 row animation_DE1
+2287 row animation_DE3
+2289 row animation_DE5
+228A row animation_DE4
+228B row animation_DE6
+228D row animation_DE7
+228E row animation_DE8
+2290 row animation_DEA
+2291 row animation_DE9
+2294 sheet animations/animations_340  # the pieces of animations no constant in the code names
+2298 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+22A5 row animation_DFA
+22A9 row animation_DFB
+22AF row animation_DFD
+22B0 row animation_DFC
+22B2 row animation_DFE
+22C3 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+22C7 sheet animations/animations_340  # the pieces of animations no constant in the code names
+22C8 row animation_367
+22CB sheet animations/animations_E00  # the pieces of animations no constant in the code names
+22D2 row animation_E04
+22D5 row animation_E05
+22DD row animation_E07
+22E0 row animation_E05
+22E1 row animation_E08
+22E5 row animation_E09
+22E6 sheet animations/animations_340  # the pieces of animations no constant in the code names
+22EB row animation_369
+22F0 row animation_36A
+22F1 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+22F5 row animation_E0C
+22F6 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+22F9 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+22FC row animation_E0E
+22FE row animation_E11
+2302 row animation_E12
+2303 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+2306 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+2309 row animation_E14
+230B sheet animations/animations_340  # the pieces of animations no constant in the code names
+230E row animation_36C
+230F row animation_36E
+2314 row animation_36F
+231F row animation_371
+2324 row animation_372
+2329 row animation_373
+232E row animation_374
+2330 row animation_375
+2334 row animation_376
+2336 row animation_377
+2338 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+233B row animation_E19
+233D row animation_E1A
+2340 row animation_E1B
+2341 row animation_E1C
+2342 row animation_E1D
+2346 row animation_E1E
+2348 row animation_E21
+2349 sheet animations/animations_340  # the pieces of animations no constant in the code names
+234B row animation_37B
+234C row animation_37C
+234E row animation_37D
+234F row animation_37E
+2352 row animation_37F
+2353 sheet animations/animations_380  # the pieces of animations no constant in the code names
+2354 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+2357 row animation_E23
+235D row animation_E24
+2360 row animation_E25
+2361 row animation_E26
+2363 row animation_E27
+2364 row animation_E28
+2367 row animation_E29
+236D row animation_E2A
+2370 row animation_E2B
+2371 row animation_E2C
+2373 row animation_E2D
+2374 sheet animations/animations_380  # the pieces of animations no constant in the code names
+2376 row animation_385
+2377 row animation_387
+2379 row animation_389
+237C row animation_38B
+2383 row animation_38D
+2386 row animation_38E
+2387 row animation_38F
+2389 row animation_393
+238B row animation_394
+238C row animation_395
+238F row animation_399
+2391 row animation_38D
+2392 row animation_39C
+2393 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+239B row animation_E2F
+239D row animation_E30
+23A0 row animation_E31
+23A1 row animation_E32
+23A4 row animation_E33
+23A7 row animation_E34
+23A9 row animation_E35
+23AC row animation_E36
+23B0 row animation_E37
+23B1 row animation_E38
+23B2 row animation_E39
+23B4 sheet animations/animations_380  # the pieces of animations no constant in the code names
+23B5 sheet animations/animations_240  # the pieces of animations no constant in the code names
+23B6 sheet title_board_palms/title_board_palms  # the pieces of title_board_palms's animations
+23B9 sheet title_seagull/title_seagull  # the pieces of title_seagull's animations
+23BD sheet animations/animations_240  # the pieces of animations no constant in the code names
+23BF sheet title_logo/title_logo  # the pieces of title_logo's animations
+23C6 sheet title_logo_stripe/title_logo_stripe  # the pieces of title_logo_stripe's animations
+23CD sheet animations/animations_240  # the pieces of animations no constant in the code names
+23CE sheet ranking/ranking  # the pieces of ranking's animations
+23CF row animation_2D3
+23D0 sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+23D1 sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23E1 sheet car_caption/car_caption  # the pieces of car_caption's animations
+23E6 sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23E7 sheet car_caption/car_caption  # the pieces of car_caption's animations
+23EA sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23EB sheet car_caption/car_caption  # the pieces of car_caption's animations
+23F6 sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23F7 sheet car_caption/car_caption  # the pieces of car_caption's animations
+23F8 sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23F9 sheet car_caption/car_caption  # the pieces of car_caption's animations
+23FA sheet name_entry_letter/name_entry_letter  # the pieces of name_entry_letter's animations
+23FE sheet car_attendant/car_attendant  # the pieces of car_attendant's animations
+2406 sheet animations/animations_240  # the pieces of animations no constant in the code names
+2407 sheet car_attendant/car_attendant  # the pieces of car_attendant's animations
+2409 row animation_269
+240E sheet animations/animations_240  # the pieces of animations no constant in the code names
+2416 row animation_270
+2418 row animation_271
+241A row animation_272
+241C row animation_273
+241E row animation_274
+2421 row animation_275
+2424 row animation_276
+2426 row animation_277
+2429 row animation_278
+242D row animation_279
+242F row animation_27B
+2434 row animation_27C
+2439 sheet animations/animations_280  # the pieces of animations no constant in the code names
+243E row animation_286
+2443 sheet entry_banner/entry_banner  # the pieces of entry_banner's animations
+2444 sheet animations/animations_280  # the pieces of animations no constant in the code names
+2445 row animation_289
+2446 row animation_28A
+2449 row animation_28C
+244A sheet waiting_banner/waiting_banner  # the pieces of waiting_banner's animations
+244B sheet animations/animations_280  # the pieces of animations no constant in the code names
+244C sheet waiting_banner/waiting_banner  # the pieces of waiting_banner's animations
+244D sheet animations/animations_280  # the pieces of animations no constant in the code names
+244F sheet waiting_banner/waiting_banner  # the pieces of waiting_banner's animations
+2451 sheet animations/animations_280  # the pieces of animations no constant in the code names
+2455 row animation_282
+245F row animation_28F
+2460 row animation_290
+2461 row animation_291
+2462 row animation_292
+2463 row animation_293
+2464 row animation_294
+2465 row animation_295
+2466 row animation_296
+2467 sheet animations/animations_240  # the pieces of animations no constant in the code names
+2469 row animation_26C
+246A sheet game_over_banner/game_over_banner  # the pieces of game_over_banner's animations
+246B sheet start_message/start_message  # the pieces of start_message's animations
+246C row animation_032
+246D sheet extend_time_message/extend_time_message  # the pieces of extend_time_message's animations
+246E sheet route_map_direction_sign/route_map_direction_sign  # the pieces of route_map_direction_sign's animations
+246F sheet animations/animations_000  # the pieces of animations no constant in the code names
+2470 sheet shift_up_hint/shift_up_hint  # the pieces of shift_up_hint's animations
+2471 sheet animations/animations_000  # the pieces of animations no constant in the code names
+2472 sheet race_result/race_result  # the pieces of race_result's animations
+247A sheet lap_timer/lap_timer  # the pieces of lap_timer's animations
+247B sheet stage_indicator_start/stage_indicator_start  # the pieces of stage_indicator_start's animations
+247D sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+247F sheet animations/animations_240  # the pieces of animations no constant in the code names
+2480 sheet animations/animations_280  # the pieces of animations no constant in the code names
+2481 row animation_2A5
+2482 row animation_283
+2483 row animation_2A7
+2484 row animation_2A8
+2485 row animation_2A9
+2486 row animation_2AA
+2487 row animation_2AB
+2488 row animation_2AC
+2489 row animation_2AD
+248A row animation_2AE
+248B row animation_2AF
+248C row animation_2B0
+248D row animation_2B1
+248E row animation_284
+2490 row animation_2B4
+2491 row animation_2B8
+2494 row animation_2BB
+2495 row animation_280
+2496 sheet automatic_panel/automatic_panel  # the pieces of automatic_panel's animations
+2497 sheet manual_panel/manual_panel  # the pieces of manual_panel's animations
+2498 sheet animations/animations_280  # the pieces of animations no constant in the code names
+2499 sheet transmission_label/transmission_label  # the pieces of transmission_label's animations
+249A sheet animations/animations_280  # the pieces of animations no constant in the code names
+249B sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+249C sheet animations/animations_280  # the pieces of animations no constant in the code names
+249D row animation_29A
+249E row animation_29B
+249F row animation_29C
+24A0 row animation_29D
+24A1 sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+24A2 row animation_2CF
+24A3 row animation_2CE
+24A4 row animation_2CD
+24A5 row animation_2CC
+24A6 row animation_2CB
+24A7 row animation_2D0
+24A8 sheet animations/animations_040  # the pieces of animations no constant in the code names
+24AD row animation_075
+24B2 row animation_076
+24B7 sheet animations/animations_0C0  # the pieces of animations no constant in the code names
+24B8 row animation_0C4
+24B9 sheet animations/animations_340  # the pieces of animations no constant in the code names
+24BE row animation_35F
+24C8 sheet animations/animations_080  # the pieces of animations no constant in the code names
+24CD row animation_0AA
+24D2 row animation_0AB
+24D7 row animation_0AC
+24DC row animation_0AD
+24E1 sheet animations/animations_E00  # the pieces of animations no constant in the code names
+24E6 row animation_E3B
+24E9 row animation_E3C
+24EB row animation_E3D
+24EE row animation_E3E
+24F0 row animation_E3F
+24F4 sheet animations/animations_E40  # the pieces of animations no constant in the code names
+24F6 row animation_E41
+24F8 row animation_E42
+24FB row animation_E43
+24FD sheet animations/animations_300  # the pieces of animations no constant in the code names
+2503 row animation_310
+2504 row animation_311
+2505 row animation_312
+2506 row animation_313
+2508 row animation_314
+2509 row animation_315
+250A row animation_316
+250B row animation_317
+250C row animation_318
+2510 row animation_319
+2511 row animation_31A
+2512 row animation_31B
+2514 row animation_31C
+2516 row animation_31D
+251D row animation_31E
+251F row animation_31F
+2522 row animation_320
+2524 row animation_321
+2528 row animation_322
+2529 row animation_323
+252B row animation_324
+252C row animation_325
+252D row animation_326
+2530 row animation_327
+2531 row animation_32C
+2533 row animation_32D
+2536 row animation_32E
+2539 row animation_32F
+253D row animation_330
+253F row animation_331
+2541 row animation_332
+2543 row animation_333
+2546 row animation_335
+2547 row animation_334
+2549 row animation_335
+254B row animation_336
+254E row animation_337
+2550 row animation_338
+2552 row animation_339
+2553 row animation_33A
+2554 row animation_33B
+2555 row animation_33C
+2556 row animation_33D
+2557 sheet animations/animations_040  # the pieces of animations no constant in the code names
+255D sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+2561 row animation_DEF
+2565 row animation_DF0
+2568 row animation_DEC
+2569 row animation_DED
+256C row animation_DF1
+256F row animation_DF3
+2570 row animation_DF1
+2574 row animation_DF2
+2575 row animation_DF7
+257A row animation_DF8
+257E row animation_DF4
+257F row animation_DF5
+2582 sheet animations/animations_340  # the pieces of animations no constant in the code names
+258B row animation_363
+2590 row animation_365
+2593 sheet animations/animations_240  # the pieces of animations no constant in the code names
+2598 sheet animations/animations_DC0  # the pieces of animations no constant in the code names
+2599 sheet animations/animations_2C0  # the pieces of animations no constant in the code names
+25A1 row animation_2FA
+25A2 row animation_2FB
+25A3 row animation_2FC
+25A6 row animation_2FD
+25A9 row animation_2FE
+25AA row animation_2FF
+25AB sheet animations/animations_300  # the pieces of animations no constant in the code names
+25AC row animation_300
+25AD row animation_303
+25B1 row animation_302
+25B5 row animation_305
+25B9 row animation_304
+25BD sheet route_map_leg/route_map_leg  # the pieces of route_map_leg's animations
+25C5 sheet animations/animations_300  # the pieces of animations no constant in the code names
+25CD row animation_309
+25DD row animation_30D
+25DE row animation_30E
+25DF sheet animations/animations_040  # the pieces of animations no constant in the code names
+25E0 row animation_067
+25E1 row animation_068
+25E2 row animation_069
+25E3 row animation_06A
+25E4 row animation_06B
+25E5 row animation_06C
+25E6 row animation_06D
+25FD sheet animations/animations_340  # the pieces of animations no constant in the code names
+25FE row animation_351
+25FF row animation_352
+2600 row animation_353
+2606 sheet animations/animations_380  # the pieces of animations no constant in the code names
+261A sheet animations/animations_040  # the pieces of animations no constant in the code names
+2631 sheet animations/animations_300  # the pieces of animations no constant in the code names
+2634 row animation_329
+2635 row animation_32A
+2636 row animation_32B
+2637 sheet checkpoint_board/checkpoint_board  # the pieces of checkpoint_board's animations
+2638 sheet animations/animations_2C0  # the pieces of animations no constant in the code names

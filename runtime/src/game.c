@@ -237,6 +237,18 @@ GAME_NORETURN void unknown_code(uint32_t address)
 	exit(3);
 }
 
+/* The MEMORY TEST's ROM part (runtime/replaced.txt): the game's, original_test_mode_memory_test_checksum, sums
+   the program ROM's code chips (from 000000) or its data chips (from 100000) as two 16-bit checks; the
+   decompiled game has no chips to measure (the code is in none of its data), so it hands back the sums the
+   program keeps for them, at 03FFF8 for the code chips and 03FFFC for the data chips, as good chips give */
+void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
+{
+	const uint32_t sums = r10 < 0x100000u ? 0x03FFF8u : 0x03FFFCu;
+
+	*p_r0 = (*p_r0 & 0xFFFF0000u) | ROM16(sums);
+	*p_r1 = (*p_r1 & 0xFFFF0000u) | ROM16(sums + 2u);
+}
+
 GAME_NORETURN void invalid_jump(uint32_t address)
 {
 	fprintf(stderr, "Jump to %06X, past its table (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);

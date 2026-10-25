@@ -857,7 +857,7 @@ static int draw_sprite(uint32_t entry, int x_offset, int y_offset, const area *i
 		for (int pen = 0; pen < pens; pen++)
 			pixels[pen] = (uint16_t)(!sprite.indirect ? (sprite.color | pen)
 				: (sprite.bits8 ? sprite.table[pen >> 4] | (pen & 0x0f) : sprite.table[pen]));
-		s32_video_sprite_observer(bank << 20 | (address & 0xfffff), source_width, source_height, sprite.bits8,
+		s32_video_sprite_observer(screen, bank << 20 | (address & 0xfffff), source_width, source_height, sprite.bits8,
 			end_pen == 0, pixels);
 	}
 

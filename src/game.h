@@ -835,6 +835,7 @@ void test_mode_memory_test(void);
 void test_mode_memory_test_run(uint16_t r0);
 uint32_t test_mode_memory_test_draw(uint32_t r0);
 void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1);
+void BOARD_ORIGINAL(test_mode_memory_test_checksum)(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1);
 uint32_t test_mode_memory_test_words(uint32_t r0, uint32_t r10);
 uint32_t test_mode_memory_test_halfwords(uint32_t r0, uint32_t r10);
 uint32_t test_mode_memory_test_bytes(uint32_t r0, uint32_t r10);

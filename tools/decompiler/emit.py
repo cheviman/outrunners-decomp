@@ -2028,7 +2028,7 @@ class FunctionWriter:
     # ---- the whole function ----
 
     def prototype(self):
-        return self.emitter.prototype(self.entry)
+        return self.emitter.definition(self.entry)
 
     def write(self):
         """The function's C. Written again (once emitter.shared_results is known), only its last steps run."""
@@ -2104,6 +2104,8 @@ class Emitter:
         self.param_widths = {}      # entry -> {register: width of the parameter} (FunctionWriter)
         self.second_entries = {}    # entry -> its other ways in (decompile.py), taken by entry_point
         self.code_addresses = {}    # address of code calls through memory slots reach -> NAME_ADDRESS
+        self.replaced = {}          # function name -> the macro its definition is written with (BOARD_ORIGINAL):
+                                    # something else puts its own in its place (decompile.py, replaced_functions)
         self.trampolines = {}       # entry -> (function, way in) of a function that only jumps to another
         self.param_names = {}       # (entry, register) -> the name symbols.txt gives a parameter or result
         self.result_names = {}      # (entry, register) -> the name a "result" line gives what a function
@@ -2412,6 +2414,15 @@ class Emitter:
         returned = self.returned(entry)
         kind = "void" if returned is None else cprint.UNSIGNED[register_bits(returned[1]) if returned[0] == "r" else 32]
         return f"{kind} {self.names[entry]}({', '.join(params) if params else 'void'})"
+
+    def definition(self, entry):
+        """The prototype a function's definition opens with: one something else puts its own in place of
+        is MACRO(name) (replaced: BOARD_ORIGINAL, game/support.h)."""
+        prototype = self.prototype(entry)
+        name = self.names[entry]
+        if name not in self.replaced:
+            return prototype
+        return prototype.replace(f" {name}(", f" {self.replaced[name]}({name})(", 1)
 
     def wrapper(self, entry):
         """A function of no parameters that calls 'entry' with zeros, for call_code()."""

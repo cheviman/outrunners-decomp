@@ -5,19 +5,24 @@
  *                 format tools/reference/s32ref uses
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    25-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]
  *                             [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]
+ *                             [--sprite-census FILE] [--tile-census FILE] [--assets FILE] [--extract ROM_SET]
+ *    The game's data is its assets pack (game/data.h): --assets, or orunners.assets beside the executable.
+ *    --extract first writes that pack from the player's ROM set (a .zip or a folder), as the first run does.
+ *    The scaffold (ORUNNERS_SCAFFOLD) runs the original code, so it reads the ROM set in rom/ instead.
  *
  *    The board runs with frame timing, as s32ref does by default, and the hashes are the ones s32ref
  *    writes, so the two compare byte by byte. --video-hashes and --video-dump draw every frame of both
  *    screens with the board's video (runtime/src/video.c): the hash of each frame, and frames as BMP, the
  *    left screen beside the right. --sound-hashes runs the sound board too (the decompiled sound program
  *    and the chips, runtime/src/sound_cpu.c and sound_chips.c), and writes for each frame the hash of its
- *    samples and of the sound board's memory.
+ *    samples and of the sound board's memory. --sprite-census and --tile-census write what the sprites and
+ *    the tilemaps draw, with the colors each pen shows, for the asset extractor (tools/palette_census.py).
  */
 #include "s32/machine.h"
 #include "s32/program.h"
@@ -25,6 +30,7 @@
 #include "s32/video.h"
 #include "sound/chips.h"
 #include "game/data.h"
+#include "game/extract.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -32,8 +38,12 @@
 #include <string.h>
 
 #define USAGE "Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]" \
-	" [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]\n"
+	" [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]" \
+	" [--sprite-census FILE] [--tile-census FILE] [--assets FILE] [--extract ROM_SET]\n"
+#define ASSETS_FILE "orunners.assets"
 #define MAX_VIDEO_DUMPS 64
+#define CENSUS_SLOTS (1u << 22)     /* open addressing for the censuses' hashes */
+#define TILE_CENSUS_EVERY 30        /* the tilemaps are looked at every this many frames */
 
 static uint64_t frames_wanted = 600;
 static FILE *hashes;
@@ -45,6 +55,76 @@ static uint64_t video_dumps[MAX_VIDEO_DUMPS];
 static int video_dump_count;
 static const char *video_dir;
 static FILE *sound_hashes;
+static FILE *sprite_census;
+static FILE *tile_census;
+static uint64_t *census_seen;       /* hashes of what the censuses wrote (0 = free) */
+
+/* Whether a census line with this hash was written already; notes it if not */
+static bool census_written(uint64_t hash)
+{
+	uint32_t slot;
+
+	if (hash == 0)
+		hash = 1;
+	for (slot = (uint32_t)hash & (CENSUS_SLOTS - 1); census_seen[slot] != 0; slot = (slot + 1) & (CENSUS_SLOTS - 1))
+		if (census_seen[slot] == hash)
+			return true;
+	census_seen[slot] = hash;
+	return false;
+}
+
+/* --sprite-census: every sprite of the ROM the list draws, with the colors its pens show on its screen, once
+   per set of colors and way of drawing it: "ADDRESS WORDS ROWS BITS OPAQUE SCREEN COLOR..." (hex; OPAQUE 1
+   when it draws the end code and goes on past it; colors RGB555, one a pen) */
+static void on_sprite_drawn(int screen, uint32_t address, int words, int rows, bool bits8, bool opaque,
+	const uint16_t *pixels)
+{
+	const int pens = bits8 ? 256 : 16;
+	uint16_t colors[256];
+	uint64_t hash = 0xcbf29ce484222325ull;
+
+	for (int pen = 0; pen < pens; pen++)
+		colors[pen] = s32_video_sprite_pixel_color(screen, pixels[pen]);
+	hash = (hash ^ (address | (uint64_t)screen << 32)) * 0x100000001b3ull;
+	hash = (hash ^ (uint64_t)((uint32_t)words << 16 | (uint32_t)rows << 2 | (opaque ? 2u : 0u) | (bits8 ? 1u : 0u)))
+		* 0x100000001b3ull;
+	for (int pen = 0; pen < pens; pen++)
+		hash = (hash ^ colors[pen]) * 0x100000001b3ull;
+	if (census_written(hash))
+		return;
+	fprintf(sprite_census, "%06X %d %d %d %d %d", address, words, rows, bits8 ? 8 : 4, opaque ? 1 : 0, screen);
+	for (int pen = 0; pen < pens; pen++)
+		fprintf(sprite_census, " %04X", colors[pen]);
+	fputc('\n', sprite_census);
+}
+
+/* --tile-census: every tile the tilemaps that are on show (every TILE_CENSUS_EVERY frames), with the colors its
+   pens show on each screen that is on (the screens share the tilemaps, not the palettes), once per set of
+   colors: "TILE COLOR TILEMAP SCREEN COLOR..." (hex; colors RGB555, one a pen) */
+static void on_tile_shown(int tilemap, uint32_t tile, uint16_t color)
+{
+	if (program_frames() % TILE_CENSUS_EVERY != 0)
+		return;
+	for (int screen = 0; screen < S32_SCREENS; screen++)
+	{
+		uint16_t colors[16];
+		uint64_t hash = 0x84222325cbf29ce4ull;
+
+		if (!s32_display_enabled(screen))
+			continue;
+		for (int pen = 0; pen < 16; pen++)
+			colors[pen] = s32_video_tile_pen_color(screen, tilemap, color, pen);
+		hash = (hash ^ (tile | (uint64_t)screen << 32)) * 0x100000001b3ull;
+		for (int pen = 0; pen < 16; pen++)
+			hash = (hash ^ colors[pen]) * 0x100000001b3ull;
+		if (census_written(hash))
+			continue;
+		fprintf(tile_census, "%04X %03X %d %d", tile, color, tilemap, screen);
+		for (int pen = 0; pen < 16; pen++)
+			fprintf(tile_census, " %04X", colors[pen]);
+		fputc('\n', tile_census);
+	}
+}
 
 static void write_file(const char *name, const void *data, size_t size)
 {
@@ -178,6 +258,11 @@ int main(int argc, char **argv)
 	const char *script_path = NULL;
 	const char *video_hashes_path = NULL;
 	const char *sound_hashes_path = NULL;
+	const char *sprite_census_path = NULL;
+	const char *tile_census_path = NULL;
+	const char *assets_path = NULL;
+	const char *extract_source = NULL;
+	char beside[1024];
 	bool frames_given = false;
 
 	for (int index = 1; index < argc; index++)
@@ -203,12 +288,65 @@ int main(int argc, char **argv)
 			video_dir = argv[++index];
 		else if (strcmp(argv[index], "--sound-hashes") == 0 && index + 1 < argc)
 			sound_hashes_path = argv[++index];
+		else if (strcmp(argv[index], "--sprite-census") == 0 && index + 1 < argc)
+			sprite_census_path = argv[++index];
+		else if (strcmp(argv[index], "--tile-census") == 0 && index + 1 < argc)
+			tile_census_path = argv[++index];
+		else if (strcmp(argv[index], "--assets") == 0 && index + 1 < argc)
+			assets_path = argv[++index];
+		else if (strcmp(argv[index], "--extract") == 0 && index + 1 < argc)
+			extract_source = argv[++index];
 		else
 		{
 			fprintf(stderr, USAGE);
 			return 1;
 		}
 	}
+#ifdef ORUNNERS_SCAFFOLD
+	(void)assets_path;
+	(void)extract_source;
+	(void)beside;
+	{
+		const char *problem = game_rom_set_load("rom");
+
+		if (problem)
+		{
+			fprintf(stderr, "rom: %s\n", problem);
+			return 1;
+		}
+	}
+#else
+	if (!assets_path)
+	{
+		/* (the executable's folder, as argv[0] gives it) */
+		const char *slash = strrchr(argv[0], '/'), *backslash = strrchr(argv[0], '\\');
+		const char *last = slash > backslash ? slash : backslash;
+
+		snprintf(beside, sizeof(beside), "%.*s" ASSETS_FILE, last ? (int)(last - argv[0] + 1) : 0, argv[0]);
+		assets_path = beside;
+	}
+	if (extract_source)
+	{
+		const char *problem = game_data_extract(extract_source, assets_path);
+
+		if (problem)
+		{
+			fprintf(stderr, "%s: %s\n", extract_source, problem);
+			return 1;
+		}
+	}
+	switch (game_data_load(assets_path))
+	{
+	case GAME_DATA_LOADED:
+		break;
+	case GAME_DATA_MISSING:
+		fprintf(stderr, "%s: no game assets\n", assets_path);
+		return 1;
+	default:
+		fprintf(stderr, "%s: the game assets cannot be read\n", assets_path);
+		return 1;
+	}
+#endif
 	if (script_path)
 	{
 		char error[256];
@@ -226,18 +364,37 @@ int main(int argc, char **argv)
 		hashes = fopen(hashes_path, "w");
 	if (video_hashes_path)
 		video_hashes = fopen(video_hashes_path, "w");
+	if (sprite_census_path || tile_census_path)
+	{
+		census_seen = calloc(CENSUS_SLOTS, sizeof(census_seen[0]));
+		if (!census_seen)
+		{
+			fprintf(stderr, "no memory for the census\n");
+			return 1;
+		}
+	}
+	if (sprite_census_path)
+	{
+		sprite_census = fopen(sprite_census_path, "w");
+		s32_video_sprite_observer = on_sprite_drawn;
+	}
+	if (tile_census_path)
+	{
+		tile_census = fopen(tile_census_path, "w");
+		s32_video_tile_observer = on_tile_shown;
+	}
 
 	s32_board.irq_changed = on_irq_changed;
 	s32_board.controls_update = on_controls_update;
 	s32_board.log = on_log;
 	s32_board.frame_timing = true;
-	s32_init(game_program_rom);
-	if (video_hashes || video_dump_count)
-		s32_video_init(game_tile_rom, sizeof(game_tile_rom), game_sprite_rom, sizeof(game_sprite_rom));
+	s32_init(game_program);
+	if (video_hashes || video_dump_count || sprite_census || tile_census)
+		s32_video_init(game_tiles, sizeof(game_tiles), game_sprites, sizeof(game_sprites));
 	if (sound_hashes_path)
 	{
-		s32_board.sound_rom = game_sound_rom;
-		s32_board.pcm_rom = game_pcm_rom;
+		s32_board.sound_rom = game_sound;
+		s32_board.pcm_rom = game_pcm;
 		sound_chips_attach();
 		sound_cpu_attach();
 		sound_hashes = fopen(sound_hashes_path, "w");
@@ -253,6 +410,11 @@ int main(int argc, char **argv)
 		fclose(video_hashes);
 	if (sound_hashes)
 		fclose(sound_hashes);
+	if (sprite_census)
+		fclose(sprite_census);
+	if (tile_census)
+		fclose(tile_census);
+	free(census_seen);
 	s32_script_free(script);
 	printf("frames:            %" PRIu64 "\n", program_frames());
 	printf("interrupts taken:  %u\n", program_interrupts());

@@ -1,0 +1,3 @@
+# The game's functions the board puts its own in place of, in every build (runtime/src/game.c):
+# tools/decompile.py writes their definitions as BOARD_ORIGINAL(name), which is original_name.
+test_mode_memory_test_checksum   # the MEMORY TEST's ROM part: the decompiled game has no ROM chips to measure

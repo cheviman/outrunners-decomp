@@ -3996,7 +3996,7 @@ uint32_t test_mode_memory_test_draw(uint32_t r0)
 /* Sums a stretch of the program ROM as two 16-bit checks, one of the even halfwords (the chip of the low
    half of each 32-bit word: IC37 or IC36) and one of the odd (IC40 or IC39): each halfword is xored in,
    the sum shifted right by one and xored with 8810 when a 1 falls out (a CRC); both start at 1. */
-void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
+void BOARD_ORIGINAL(test_mode_memory_test_checksum)(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1)
 {
 	uint32_t r0 = *p_r0;
 	uint32_t carry = 0;
