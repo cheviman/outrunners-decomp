@@ -5,13 +5,14 @@
  *                 format tools/core/system32/reference/s32ref uses
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    26-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]
  *                             [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]
- *                             [--sprite-census FILE] [--tile-census FILE] [--assets FILE] [--extract ROM_SET]
+ *                             [--sprite-census FILE] [--tile-census FILE] [--memory-census FILE]
+ *                             [--assets FILE] [--extract ROM_SET]
  *    The game's data is its assets pack (game/data.h): --assets, or orunners.assets beside the executable.
  *    --extract first writes that pack from the player's ROM set (a .zip or a folder), as the first run does.
  *    The scaffold (ORUNNERS_SCAFFOLD) runs the original code, so it reads the ROM set in rom/ instead.
@@ -23,7 +24,10 @@
  *    and the chips, runtime/src/sound_cpu.c and sound_chips.c), and writes for each frame the hash of its
  *    samples and of the sound board's memory. --sprite-census and --tile-census write what the sprites and
  *    the tilemaps draw, with the colors each pen shows, for the asset extractor (tools/palette_census.py).
+ *    --memory-census writes what memory each mem_read and mem_write of the game's C reached, by its line
+ *    (runtime/src/memory_census.c), in a build with ORUNNERS_MEMORY_CENSUS (tools/memory_census.py).
  */
+#include "s32/bus.h"
 #include "s32/machine.h"
 #include "s32/program.h"
 #include "s32/script.h"
@@ -39,7 +43,7 @@
 
 #define USAGE "Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]" \
 	" [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]" \
-	" [--sprite-census FILE] [--tile-census FILE] [--assets FILE] [--extract ROM_SET]\n"
+	" [--sprite-census FILE] [--tile-census FILE] [--memory-census FILE] [--assets FILE] [--extract ROM_SET]\n"
 #define ASSETS_FILE "orunners.assets"
 #define MAX_VIDEO_DUMPS 64
 #define CENSUS_SLOTS (1u << 22)     /* open addressing for the censuses' hashes */
@@ -260,6 +264,7 @@ int main(int argc, char **argv)
 	const char *sound_hashes_path = NULL;
 	const char *sprite_census_path = NULL;
 	const char *tile_census_path = NULL;
+	const char *memory_census_path = NULL;
 	const char *assets_path = NULL;
 	const char *extract_source = NULL;
 	char beside[1024];
@@ -292,6 +297,8 @@ int main(int argc, char **argv)
 			sprite_census_path = argv[++index];
 		else if (strcmp(argv[index], "--tile-census") == 0 && index + 1 < argc)
 			tile_census_path = argv[++index];
+		else if (strcmp(argv[index], "--memory-census") == 0 && index + 1 < argc)
+			memory_census_path = argv[++index];
 		else if (strcmp(argv[index], "--assets") == 0 && index + 1 < argc)
 			assets_path = argv[++index];
 		else if (strcmp(argv[index], "--extract") == 0 && index + 1 < argc)
@@ -415,6 +422,22 @@ int main(int argc, char **argv)
 	if (tile_census)
 		fclose(tile_census);
 	free(census_seen);
+	if (memory_census_path)
+	{
+#ifdef S32_MEMORY_CENSUS
+		FILE *census = fopen(memory_census_path, "w");
+
+		if (census)
+		{
+			s32_memory_census_write(census);
+			fclose(census);
+		}
+		else
+			fprintf(stderr, "%s: cannot be written\n", memory_census_path);
+#else
+		fprintf(stderr, "--memory-census: this build does not count memory accesses\n");
+#endif
+	}
 	s32_script_free(script);
 	printf("frames:            %" PRIu64 "\n", program_frames());
 	printf("interrupts taken:  %u\n", program_interrupts());

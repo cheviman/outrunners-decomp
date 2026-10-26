@@ -2092,8 +2092,8 @@ void fork_branch_draw(void)
 	do
 	{
 		view_record += 0x10u;
-	} while (mem_read16(view_record) == 0u);
-	if (mem_read16(view_record) == 0u)
+	} while (PROJECTED_SEGMENT(view_record)->scale == 0u);
+	if (PROJECTED_SEGMENT(view_record)->scale == 0u)
 		return;
 	r27 = view_record;
 	r27 = r27 & 0xFFFu;
@@ -2103,7 +2103,7 @@ void fork_branch_draw(void)
 	do
 	{
 		view_record += 0x10u;
-		if (mem_read16(view_record) == 0u)
+		if (PROJECTED_SEGMENT(view_record)->scale == 0u)
 			return;
 		segment = view_record & 0xFFFu;
 		segment = segment >> 4;
@@ -2111,12 +2111,12 @@ void fork_branch_draw(void)
 		distance_from_start = segment - start_position;
 		branch_distance = distance_from_start;
 	} while ((int16_t)distance_from_start < 0 || (int16_t)mem_read16(view_record + 0x16u) >= 2);
-	last_y = (int16_t)mem_read16(view_record + 6u);
+	last_y = (int16_t)PROJECTED_SEGMENT(view_record)->y;
 	rows_to_fill = 0u;
 	if (start_position <= r27)
 		rows_to_fill = 2u - last_y;
-	last_x = (int16_t)mem_read16(view_record + 4u);
-	last_scale = mem_read16(view_record);
+	last_x = (int16_t)PROJECTED_SEGMENT(view_record)->x;
+	last_scale = PROJECTED_SEGMENT(view_record)->scale;
 	if (last_scale >= 0x1FF8u)
 		last_scale = 0x1FF8u;
 	branch_distance = (uint16_t)(branch_distance << 3);
@@ -2125,14 +2125,14 @@ void fork_branch_draw(void)
 	for (;;)
 	{
 		view_record += 0x10u;
-		if (mem_read16(view_record) == 0u)
+		if (PROJECTED_SEGMENT(view_record)->scale == 0u)
 			break;
-		piece_y = (int16_t)mem_read16(view_record + 6u);
+		piece_y = (int16_t)PROJECTED_SEGMENT(view_record)->y;
 		if ((int16_t)last_y <= (int16_t)piece_y)
 			continue;
-		piece_x = (int16_t)mem_read16(view_record + 4u);
-		depth_layer = mem_read16(view_record + 8u);
-		piece_scale = mem_read16(view_record);
+		piece_x = (int16_t)PROJECTED_SEGMENT(view_record)->x;
+		depth_layer = PROJECTED_SEGMENT(view_record)->depth_layer;
+		piece_scale = PROJECTED_SEGMENT(view_record)->scale;
 		if (piece_scale >= 0x1FF8u)
 			piece_scale = 0x1FF8u;
 		segment = view_record & 0xFFFu;

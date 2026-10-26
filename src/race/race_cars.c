@@ -334,13 +334,13 @@ void race_car_draw(void)
 						if (CAR(player_car)->crash_text == 0u)
 						{
 							depth_list = screen + 0x5000u + depth_layer * 4u;
-							if (mem_read16(depth_list) == 0u)
-								mem_write16(depth_list + 2u, sprite_entry);
+							if (DEPTH_LIST(depth_list)->head == 0u)
+								DEPTH_LIST(depth_list)->tail = sprite_entry;
 							group = SCREEN(screen)->sprite_list_last + 0x10u;
-							older_group = mem_read16(depth_list);
+							older_group = DEPTH_LIST(depth_list)->head;
 							mem_write32(sprite_entry, older_group);
 							mem_write32(sprite_entry + 0x3000u, (uint16_t)(older_group + 0x300u));
-							mem_write16(depth_list, (group >> 4) | 0x8000u);
+							DEPTH_LIST(depth_list)->head = (group >> 4) | 0x8000u;
 							SCREEN(screen)->sprite_list_last = sprite_entry;
 							return;
 						}
@@ -404,13 +404,13 @@ void race_car_draw(void)
 		} while (L_009AAD);
 	}
 	depth_list = screen + 0x5000u + depth_layer * 4u;
-	if (mem_read16(depth_list) == 0u)
-		mem_write16(depth_list + 2u, sprite_entry);
+	if (DEPTH_LIST(depth_list)->head == 0u)
+		DEPTH_LIST(depth_list)->tail = sprite_entry;
 	group = SCREEN(screen)->sprite_list_last + 0x10u;
-	older_group = mem_read16(depth_list);
+	older_group = DEPTH_LIST(depth_list)->head;
 	mem_write32(sprite_entry, older_group);
 	mem_write32(sprite_entry + 0x3000u, (uint16_t)(older_group + 0x300u));
-	mem_write16(depth_list, (group >> 4) | 0x8000u);
+	DEPTH_LIST(depth_list)->head = (group >> 4) | 0x8000u;
 	SCREEN(screen)->sprite_list_last = sprite_entry;
 }
 
@@ -456,10 +456,10 @@ uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_
 	sprite_x = (uint16_t)x_offset;
 	sprite_y = (uint16_t)y_offset;
 	places += view_offset;
-	if (mem_read32(places) == 0u)
+	if ((CAR_PART_PLACE(places)->x | CAR_PART_PLACE(places)->y) == 0u)
 		return sprite_entry;
-	sprite_x = (uint16_t)((sprite_x + mem_read16(places)) * scale);
-	sprite_y = (uint16_t)((sprite_y + mem_read16(places + 2u)) * scale);
+	sprite_x = (uint16_t)((sprite_x + CAR_PART_PLACE(places)->x) * scale);
+	sprite_y = (uint16_t)((sprite_y + CAR_PART_PLACE(places)->y) * scale);
 	carry = (sprite_x >> 7) & 1u;
 	sprite_x = (uint16_t)(((int16_t)sprite_x >> 8) + carry);
 	carry = (sprite_y >> 7) & 1u;

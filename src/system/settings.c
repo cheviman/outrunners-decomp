@@ -65,7 +65,7 @@ void load_settings(uint32_t checksum)
 		settings = settings_checksum_ADDRESS;
 		if (settings_checksum == (uint16_t)new_checksum)
 		{
-			write_count = mem_read16(settings + 2u);
+			write_count = SETTINGS_COPY(settings)->write_count;
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 			eeprom_write_count = write_count;
 			backup_eeprom_write_count = write_count;
@@ -97,7 +97,7 @@ void load_settings(uint32_t checksum)
 			eeprom_write_settings();
 			return;
 		}
-		write_count = mem_read16(settings + 2u);
+		write_count = SETTINGS_COPY(settings)->write_count;
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		eeprom_write_count = write_count;
 		backup_eeprom_write_count = write_count;
@@ -387,9 +387,9 @@ void eeprom_begin(uint32_t *p_lines, uint32_t *p_lines_port)
 {
 	uint8_t lines_now = 0;
 
-	*p_lines_port = 0xC8000Eu;
-	r12 = 0xC8000Au;
-	lines_now = mem_read8(0xC8000Eu);
+	*p_lines_port = IO_2_PORT_H;
+	r12 = IO_2_PORT_F;
+	lines_now = mem_read8(IO_2_PORT_H);
 	interrupts_off();
 	*p_lines = (*p_lines & 0xFFFFFF00u) | lines_now;
 }

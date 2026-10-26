@@ -35,7 +35,7 @@ void bar_picture_start(void)
 /* Only unused code reaches it (bar_picture_start): sets up a bar of the picture: drawn on the screen
    (draw_mode 0) with animation 0 and palette 25, its width_scale and height_scale from scales, depth
    layer 3, at the middle of the screen (x A0, y 70), with a random speed_x and speed_y (-8 to 7: a byte
-   of RANDOM_D80000 shifted right 4); then bar_picture_bar_fly. */
+   of RANDOM_GENERATOR shifted right 4); then bar_picture_bar_fly. */
 void bar_picture_bar_start(void)
 {
 	uint32_t animation = 0;
@@ -52,9 +52,9 @@ void bar_picture_bar_start(void)
 	OBJECT(current_object)->depth_layer = 3u;
 	OBJECT(current_object)->x = 0xA0u;
 	OBJECT(current_object)->y = 0x70u;
-	random_x = mem_read8(RANDOM_D80000);
+	random_x = mem_read8(RANDOM_NUMBER);
 	OBJECT(current_object)->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
-	random_y = mem_read8(RANDOM_D80000);
+	random_y = mem_read8(RANDOM_NUMBER);
 	OBJECT(current_object)->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
 	OBJECT(current_object)->handler = bar_picture_bar_fly_ADDRESS;
 }
@@ -158,14 +158,14 @@ void attract_lamps_update(void)
 	leader_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->leader;
 }
 
-/* The presentation of a car in the attract mode (game mode 3, object_handlers_1A78): the picture of the
-   car screen attract_car names. By state: 0 starts car_name and staff_credits_code (with this object as
-   its presentation, kept in staff_credits_code), the screen's background (set_up_background with 001AA0
-   by screen), the picture (animation attract_car_picture_animations by the car, palette 275, draw mode
-   0) at x A0, y 60 on depth layer 0; 1 steps its animation (animation_advance) and draws it. Every
-   frame, in all states, it queues the next of the four palette records of car_presentation_palette_cycle
-   (palette_step, round and round) with queue_palette_list, so the picture's colours cycle. State 2 (the
-   palette only, no picture) is not set by its own code. */
+/* The presentation of a car in the attract mode (game mode 3, car_presentation_object_handlers): the
+   picture of the car screen attract_car names. By state: 0 starts car_name and staff_credits_code (with
+   this object as its presentation, kept in staff_credits_code), the screen's background
+   (set_up_background with 001AA0 by screen), the picture (animation attract_car_picture_animations by
+   the car, palette 275, draw mode 0) at x A0, y 60 on depth layer 0; 1 steps its animation
+   (animation_advance) and draws it. Every frame, in all states, it queues the next of the four palette
+   records of car_presentation_palette_cycle (palette_step, round and round) with queue_palette_list, so
+   the picture's colours cycle. State 2 (the palette only, no picture) is not set by its own code. */
 void car_presentation_update(void)
 {
 	uint32_t animation = 0, background_setup = 0, colour_list = 0, object = 0, palette_index = 0, routine = 0;
@@ -293,7 +293,7 @@ void staff_credits_code_show(void)
 		return;
 	}
 	next_text = staff_credits_texts_ADDRESS;
-	while ((int16_t)mem_read16(next_text) >= 0)
+	while ((int16_t)SPRITE_TEXT_RECORD(next_text)->x >= 0)
 	{
 		text_record = next_text;
 		next_text = draw_text(text_record);

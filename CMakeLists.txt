@@ -59,15 +59,15 @@ add_library(orunners_data STATIC runtime/src/game_data.c runtime/src/rom_set.c r
 target_include_directories(orunners_data PUBLIC runtime/include)
 if(ORUNNERS_ROM_FILES AND Python3_FOUND)
 	file(GLOB_RECURSE ORUNNERS_ASSET_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)
-	file(GLOB ORUNNERS_FORMAT_TOOLS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tools/formats/*.py)
+	file(GLOB ORUNNERS_FORMAT_TOOLS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tools/core/formats/*.py)
 	set(ORUNNERS_ASSETS_PACK ${ORUNNERS_BIN_DIR}/orunners.assets)
 	add_custom_command(OUTPUT ${ORUNNERS_ASSETS_PACK}
 		COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/extract_assets.py ${ORUNNERS_ROM}
 		COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/tools/make_pack.py ${ORUNNERS_ASSETS_PACK}
 		DEPENDS ${ORUNNERS_ROM_FILES} ${ORUNNERS_ASSET_FILES} ${ORUNNERS_FORMAT_TOOLS} ${CMAKE_SOURCE_DIR}/assets.json
 			${CMAKE_SOURCE_DIR}/extract_assets.py ${CMAKE_SOURCE_DIR}/tools/make_pack.py
-			${CMAKE_SOURCE_DIR}/tools/orunners_rom.py ${CMAKE_SOURCE_DIR}/tools/asset_formats.py
-			${CMAKE_SOURCE_DIR}/tools/data_formats.py
+			${CMAKE_SOURCE_DIR}/tools/orunners_rom.py ${CMAKE_SOURCE_DIR}/tools/core/asset_formats.py
+			${CMAKE_SOURCE_DIR}/tools/core/data_formats.py
 		COMMENT "Taking the assets out of the ROM set and packing them for the game")
 	add_custom_target(orunners_assets ALL DEPENDS ${ORUNNERS_ASSETS_PACK})
 	add_dependencies(orunners_data orunners_assets)
@@ -107,6 +107,13 @@ if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	else()
 		# variables are typed lvalues over the work RAM bytes (game/support.h)
 		target_compile_options(orunners_game PRIVATE -fno-strict-aliasing)
+	endif()
+
+	# a development aid: every mem_read and mem_write of the game's C counted by its line
+	# (orunners_game_headless --memory-census FILE; runtime/src/memory_census.c)
+	option(ORUNNERS_MEMORY_CENSUS "Count the game's memory accesses by line of C" OFF)
+	if(ORUNNERS_MEMORY_CENSUS)
+		target_compile_definitions(orunners_game PUBLIC S32_MEMORY_CENSUS)
 	endif()
 
 	add_executable(orunners_game_headless ports/headless/main.c)

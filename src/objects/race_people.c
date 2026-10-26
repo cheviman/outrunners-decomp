@@ -235,15 +235,15 @@ void rider_gesture_place(uint16_t scale, uint32_t car)
 	view = OBJECT(car)->race_car.view;
 	rider = (uint8_t)(rider - model);
 	seat_place = race_car_rider_places[model] + (uint16_t)(view << 4) + (rider >> 1);
-	y = (uint16_t)(OBJECT(car)->y + SCREEN(screen)->sprite_origin_y + ((int16_t)((uint32_t)(y_offset + mem_read16(seat_place + 2u)) * scale) >> 8));
-	OBJECT(current_object)->x = OBJECT(car)->x + SCREEN(screen)->sprite_origin_x + ((int16_t)((uint32_t)(x_offset + mem_read16(seat_place)) * scale) >> 8);
+	y = (uint16_t)(OBJECT(car)->y + SCREEN(screen)->sprite_origin_y + ((int16_t)((uint32_t)(y_offset + CAR_PART_PLACE(seat_place)->y) * scale) >> 8));
+	OBJECT(current_object)->x = OBJECT(car)->x + SCREEN(screen)->sprite_origin_x + ((int16_t)((uint32_t)(x_offset + CAR_PART_PLACE(seat_place)->x) * scale) >> 8);
 	OBJECT(current_object)->y = y;
 }
 
 /* The opening of a race (not in the demo): the view comes down from high above the start line to behind
-   the car, taking the car's unk_10C up by 18 and unk_10E down by 3 a step until it is 0 (80 steps from
-   FA60 and F0; camera_step), while the opening's sounds play (race_opening_sounds_play; sound_step);
-   ends when both are done. */
+   the car, taking the car's view_shift_intro up by 18 and view_pitch_intro down by 3 a step until it is
+   0 (80 steps from FA60 and F0; camera_step), while the opening's sounds play (race_opening_sounds_play;
+   sound_step); ends when both are done. */
 void race_opening_update(void)
 {
 	uint16_t view_pitch_intro = 0;
@@ -459,10 +459,10 @@ void fork_camera_update(void)
 	CAR(player_car)->view_shift_lift = 0u;
 }
 
-/* The end of the race for the screen's car: starts the objects of its ending (object_lists_14A20 by its
-   model and whether it won, or object_list_14A60 when it did not finish); when they are done (state 2)
-   sound 4F and raises screen flags bit 1, which game step 7 waits for ( the music stopped without a
-   finish). */
+/* The end of the race for the screen's car: starts the objects of its ending (ending_actor_lists by its
+   model and whether it won, or unfinished_ending_actor_count when it did not finish); when they are done
+   (state 2) sound 4F and raises screen flags bit 1, which game step 7 waits for ( the music stopped
+   without a finish). */
 void race_car_start_ending(void)
 {
 	uint8_t sound = 0;
@@ -479,23 +479,23 @@ void race_car_start_ending(void)
 		player = SCREEN(screen)->player;
 		if (RACE(SCREEN(screen)->race_copy)->finished == 0u)
 		{
-			actor_count = object_list_14A60;
+			actor_count = unfinished_ending_actor_count;
 			actor_list = unfinished_ending_actors_ADDRESS;
 		}
 		else
 		{
 			if (mem_read8(screen + 0x320u + player) != 0u)
 				ending = (uint8_t)(ending + 1u);
-			actor_list = object_lists_14A20[ending];
+			actor_list = ending_actor_lists[ending];
 			actor_count = mem_read32(actor_list);
 			actor_list += 4u;
 		}
 		do
 		{
 			actor = start_object();
-			OBJECT(actor)->handler = mem_read32(actor_list);
+			OBJECT(actor)->handler = OBJECT_LIST_PAIR(actor_list)->handler;
 			actor_list += 4u;
-			OBJECT(actor)->goal_actor.script = mem_read32(actor_list);
+			OBJECT(actor)->goal_actor.script = OBJECT_LIST_PAIR(actor_list - 0x4u)->data;
 			OBJECT(actor)->goal_actor.scene = current_object;
 			actor_list += 4u;
 			actor_count--;
@@ -522,7 +522,7 @@ void race_car_start_ending(void)
 }
 
 /* The player's car in the goal scene: its animation, palette and frame from the race record (race_copy
-   animation, unk_3E, unk_4A), its layer, place and scale from the scene object (scene: the car's drawing
+   animation, palette, frame), its layer, place and scale from the scene object (scene: the car's drawing
    object, 00974C's, whose handler is 014694 at the goal); then goal_actor_start. */
 void goal_actor_car_start(void)
 {
@@ -564,7 +564,7 @@ void goal_actor_passenger_start(void)
 }
 
 /* Places a rider in the scene's car: from the car's current frame (the car's animation and frame from
-   race_copy animation, unk_4A) the view it is drawn from (bit 6 of the frame's attributes picks the
+   race_copy animation, frame) the view it is drawn from (bit 6 of the frame's attributes picks the
    mirrored set) and the seat's offset; from the rider record (R12: a table of offsets by view, the
    animation of the first view, the palette, the frame) the rider's animation, palette and frame; scaled
    by the scene object's scale onto its place, in its layer; then goal_actor_start. */
@@ -577,18 +577,18 @@ void goal_actor_rider_place(uint32_t scene)
 	OBJECT(current_object)->depth_layer = OBJECT(scene)->depth_layer;
 	race = SCREEN(screen)->race_copy;
 	piece = SPRITE_ANIMATION(sprite_animations[RACE(race)->animation])->frames[RACE(race)->frame] + 2u;
-	view = mem_read16(piece);
+	view = SPRITE_PIECE(piece)->attributes;
 	piece += 2u;
 	view = view & 0x40u;
 	view = view >> 6;
 	view = (uint16_t)(view * 0x34u);
-	view = (uint16_t)(view + (uint16_t)(mem_read16(piece) - OBJECT(scene)->race_car.first_body_piece) / 3u);
+	view = (uint16_t)(view + (uint16_t)(SPRITE_PIECE(piece - 0x2u)->sprite - OBJECT(scene)->race_car.first_body_piece) / 3u);
 	piece += 2u;
-	y = mem_read16(piece);
-	x_offset = mem_read16(piece + 2u);
+	y = (uint16_t)SPRITE_PIECE(piece - 0x4u)->y_offset;
+	x_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->x_offset;
 	view_offsets = mem_read32(r12) + (view << 4);
-	x_offset = (uint16_t)(x_offset + mem_read16(view_offsets));
-	y = (uint16_t)(y + mem_read16(view_offsets + 2u));
+	x_offset = (uint16_t)(x_offset + CAR_PART_PLACE(view_offsets)->x);
+	y = (uint16_t)(y + CAR_PART_PLACE(view_offsets)->y);
 	animation = mem_read16(r12 + 4u) + view;
 	OBJECT(current_object)->animation = animation;
 	animation_start(animation);
@@ -622,7 +622,7 @@ void goal_actor_start(void)
    and the actor is drawn (draw_object); with bit 0 set a command (goal_actor_command_jumps): 0 tells the
    scene object it is over (its state = 2), 1 ends the actor, 2 ends the step undrawn, 3 flips it (flags
    bit 6), 4 car segment_progress + 4000, 5 a repeat whose count grows by 8 for each place behind
-   (goal_actor_place_waits by screen + 320 + unk_01). */
+   (goal_actor_place_waits by screen + 320 + player). */
 void goal_actor_run(void)
 {
 	uint32_t carry = 0;

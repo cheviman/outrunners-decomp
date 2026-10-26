@@ -10,8 +10,8 @@ temp_names 0
 stack_names 0
 context_registers 1495
 var_fields 0
-mem_access 2877
-wide_access 57
+mem_access 2465
+wide_access 79
 copy_backs 40
 invalid_jump 193
 unknown_code 0
@@ -21,6 +21,6 @@ rom_reads 26
 rom_table_reads 847
 board_replaced 1
 functions 746
-lines 40385
-casts 2860
+lines 40401
+casts 2877
 partial_writes 523

@@ -254,7 +254,7 @@ uint32_t start_object_list(uint32_t handler_list)
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = mem_read32(handler_list);
+		OBJECT(object)->handler = OBJECT_HANDLERS(handler_list)[0];
 		OBJECT(object)->unk_09 = list_index;
 		list_index++;
 		objects_left--;

@@ -54,9 +54,9 @@ void car_radio_wait_start(void)
 }
 
 /* Each frame of the race: the buttons newly pressed (screen buttons_pressed) into buttons, then
-   car_radio_update. Once the race is over (car at_goal at the goal, or unk_182) clears them, silences
-   the DJ (talk_step 5), turns the screen's two lamps off (unk_F20) and leaves car_radio_update alone,
-   without the buttons. */
+   car_radio_update. Once the race is over (car at_goal at the goal, or race_over) clears them, silences
+   the DJ (talk_step 5), turns the screen's two lamps off (button_lamps) and leaves car_radio_update
+   alone, without the buttons. */
 void car_radio_read_buttons(void)
 {
 	OBJECT(current_object)->car_radio.buttons = (uint16_t)SCREEN(screen)->buttons_pressed;
@@ -82,7 +82,7 @@ void car_radio_read_buttons(void)
    any of the three buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no
    message plays (screen dj_mouth_shapes), by talk_step: 0 message 0, 1-2 each car number (message 9 +
    number) and its car (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of
-   remarks (routine_lists_1966C), 5 nothing. */
+   remarks (dj_remark_lists), 5 nothing. */
 void car_radio_update(void)
 {
 	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
@@ -366,11 +366,11 @@ void car_radio_update(void)
 										remark_choice &= 0x3FFu;
 										if ((int32_t)remark_choice >= 0xE)
 											return;
-										remark_list = routine_lists_1966C[remark_choice];
+										remark_list = dj_remark_lists[remark_choice];
 									}
-									remark_routine = mem_read32(remark_list);
+									remark_routine = REMARK_ROUTINES(remark_list)[0];
 									remark_list += 4u;
-									if (mem_read32(remark_list) == 0u)
+									if (REMARK_ROUTINES(remark_list)[0] == 0u)
 										remark_list = 0u;
 									OBJECT(current_object)->car_radio.remark_list = remark_list;
 									switch (remark_routine)

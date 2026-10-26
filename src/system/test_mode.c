@@ -27,8 +27,8 @@ void test_mode_start(void)
 	uint32_t text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0;
 	uint32_t port_d_outputs_0_halfword = 0, port_g_outputs_0_halfword = 0;
 
-	mem_write16(0x801000u, 0u);
-	mem_write8(IO_C00074, 0x1Fu);
+	mem_write16(LINK_BOARD_ON, 0u);
+	mem_write8(EVENT_CODE, 0x1Fu);
 	init_video();
 	init_sprite_lists();
 	SCREEN(SCREEN_1)->unpack_state = 0u;
@@ -41,14 +41,14 @@ void test_mode_start(void)
 	SCREEN(SCREEN_2)->demo_flags &= ~0x100u;
 	SCREEN(SCREEN_1)->flags &= ~1u;
 	SCREEN(SCREEN_2)->flags &= ~1u;
-	mem_write32(MIXER_610040, 0u);
-	mem_write32(MIXER_610044, 0u);
-	mem_write32(MIXER_610048, 0u);
-	mem_write32(0x690040u, 0u);
-	mem_write32(0x690044u, 0u);
-	mem_write32(0x690048u, 0u);
-	mem_write8(IO_C0001C, 6u);
-	mem_write8(0xC8001Cu, 0x86u);
+	mem_write32(MIXER_1_OFFSET_0_RED, 0u);
+	mem_write32(MIXER_1_OFFSET_0_BLUE, 0u);
+	mem_write32(MIXER_1_OFFSET_1_GREEN, 0u);
+	mem_write32(MIXER_2_OFFSET_0_RED, 0u);
+	mem_write32(MIXER_2_OFFSET_0_BLUE, 0u);
+	mem_write32(MIXER_2_OFFSET_1_GREEN, 0u);
+	mem_write8(IO_1_CNT, 6u);
+	mem_write8(IO_2_CNT, 0x86u);
 	test_mode_set_up_colours();
 	test_mode_flags = 0u;
 	test_mode_cursor = 0xCu;
@@ -252,7 +252,7 @@ void test_mode_memory_test(void)
 
 	interrupts_off();
 	cell_value = test_mode_clear_text();
-	mem_write8(SOUND_701FFF, 1u);
+	mem_write8(SOUND_PROGRAM_HOLD, 1u);
 	current_object = memory_test_results_ADDRESS;
 	blank_result = 0u;
 	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
@@ -456,7 +456,7 @@ void test_mode_memory_test(void)
 	current_object = current_object + 1u;
 	init_sprite_lists();
 	failures = test_mode_memory_test_draw(failures);
-	mem_write8(SOUND_701FFF, 0u);
+	mem_write8(SOUND_PROGRAM_HOLD, 0u);
 	interrupts_on();
 	test_mode_show_exit_prompt();
 	test_mode_routine = test_mode_memory_test_run_ADDRESS;
@@ -1087,9 +1087,9 @@ void test_mode_volume_adjustment_select(uint32_t character)
 		do
 		{
 			position = (uint8_t)(mem_read8(analog_input) & ~1u);
-			mem_write8(range, position);
+			VOLUME_RANGE(range)->low = position;
 			range++;
-			mem_write8(range, position | 1u);
+			VOLUME_RANGE(range - 0x1u)->high = position | 1u;
 			controls_left--;
 			analog_input++;
 			range++;
@@ -1126,11 +1126,11 @@ void test_mode_volume_adjustment_adjust(void)
 	{
 		position = mem_read8(analog_input);
 		analog_input++;
-		if (position < mem_read8(range))
-			mem_write8(range, position);
+		if (position < VOLUME_RANGE(range)->low)
+			VOLUME_RANGE(range)->low = position;
 		range++;
-		if (mem_read8(range) < position)
-			mem_write8(range, position);
+		if (VOLUME_RANGE(range - 0x1u)->high < position)
+			VOLUME_RANGE(range - 0x1u)->high = position;
 		range++;
 		controls_left--;
 	} while (controls_left != 0u);
@@ -1286,12 +1286,12 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 	do
 	{
 		position = mem_read8(r12);
-		range_low = mem_read8(range);
+		range_low = VOLUME_RANGE(range)->low;
 		r12 = r12 + 1u;
 		range++;
 		if (position < range_low)
 			position = range_low;
-		range_high = mem_read8(range);
+		range_high = VOLUME_RANGE(range - 0x1u)->high;
 		range++;
 		if (range_high < position)
 			position = range_high;
@@ -1711,8 +1711,8 @@ void test_mode_crt_test(void)
 	uint32_t character = 0, text = 0;
 
 	character = test_mode_clear_text();
-	mem_write16(PALETTE_609C00, 0u);
-	mem_write16(0x689C00u, 0u);
+	mem_write16(BACKGROUND_COLOUR_1, 0u);
+	mem_write16(BACKGROUND_COLOUR_2, 0u);
 	text = crt_test_first_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
 	character = test_mode_crt_test_draw_bars(character);
@@ -1751,8 +1751,8 @@ void test_mode_crt_test_grid_run(uint32_t character)
 	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
 		character = test_mode_clear_text();
-		mem_write16(PALETTE_609C00, 0x733u);
-		mem_write16(0x689C00u, 0x733u);
+		mem_write16(BACKGROUND_COLOUR_1, 0x733u);
+		mem_write16(BACKGROUND_COLOUR_2, 0x733u);
 		test_mode_routine = test_mode_menu_ADDRESS;
 	}
 	test_mode_blink_prompt(character);
@@ -2232,7 +2232,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours)
 	lines_left = 5u;
 	for (;;)
 	{
-		description_byte = mem_read8(description);
+		description_byte = COIN_SETTING_DESCRIPTION(description)[0];
 		zero = description_byte == 0u;
 		description++;
 		if ((int8_t)description_byte <= 0)
@@ -2253,7 +2253,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours)
 		plural_offset = 6u;
 		test_mode_draw_count(description_byte, digit_count, plural_offset, &colours, &cell);
 		cell = r12 + 0x10u;
-		credits = mem_read8(description);
+		credits = COIN_SETTING_DESCRIPTION(description)[0];
 		colours = (colours & ~0xFFFFu) | 0x6464u;
 		digit_count = 1u;
 		plural_offset = 8u;
@@ -2276,7 +2276,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours)
 			description_byte = 0x6200u;
 			for (;;)
 			{
-				description_byte = (description_byte & ~0xFFu) | mem_read8(description);
+				description_byte = (description_byte & ~0xFFu) | COIN_SETTING_DESCRIPTION(description)[0];
 				description++;
 				if ((uint8_t)description_byte == 0u)
 					break;
@@ -2875,9 +2875,9 @@ uint32_t test_mode_bookkeeping_draw_totals(void)
 	uint32_t average_time = 0, cell = 0, coin_credits = 0, coin_sum = 0, coins_a = 0, coins_b = 0, colours = 0, credit_sum = 0, digit_count = 0, games_a = 0, games_b = 0, longest_time = 0, play_time_a = 0, play_time_b = 0, plural_offset = 0, service_credits = 0, shortest_time = 0, time_cell = 0, total_coins = 0, total_credits = 0, total_games = 0, total_time = 0;
 	uint32_t game_count = 0;
 
-	current_object = SOUND_701F00;
+	current_object = BOOKKEEPING_CHECKSUM;
 	cell = TEXT_CELL(26, 5);
-	coins_a = mem_read16(SOUND_701F06);
+	coins_a = mem_read16(BOOKKEEPING_CHUTE_A_COINS);
 	coin_sum = coins_a;
 	colours = 0x64u;
 	digit_count = 5u;
@@ -2964,7 +2964,7 @@ uint32_t test_mode_bookkeeping_draw_histogram(void)
 	uint32_t bar_blocks = 0, bar_cell = 0, bar_scale = 0, car_then_time = 0, colour = 0, colour_name = 0, digit_count = 0, digit_step = 0, divisor = 0, drawn_counts = 0, games = 0, largest_count = 0, number_cell = 0, record = 0, records_left = 0, rest_time = 0, row_cell = 0, stage_counts = 0, stages_left = 0;
 	uint32_t rounded_blocks = 0;
 
-	current_object = SOUND_701F00;
+	current_object = BOOKKEEPING_CHECKSUM;
 	stage_counts = SOUND_RAM + 0x1F24u;
 	largest_count = 0u;
 	stages_left = 7u;
@@ -3266,8 +3266,8 @@ void test_mode_exit(void)
 		if (eeprom_write_count < EEPROM_WRITE_LIMIT)
 		{
 			test_mode_on = 0u;
-			mem_write8(IO_C0001C, 4u);
-			mem_write8(0xC8001Cu, 0x80u);
+			mem_write8(IO_1_CNT, 4u);
+			mem_write8(IO_2_CNT, 0x80u);
 			return;
 		}
 		character = test_mode_clear_text();
@@ -3278,8 +3278,8 @@ void test_mode_exit(void)
 		return;
 	}
 	test_mode_on = 0u;
-	mem_write8(IO_C0001C, 4u);
-	mem_write8(0xC8001Cu, 0x80u);
+	mem_write8(IO_1_CNT, 4u);
+	mem_write8(IO_2_CNT, 0x80u);
 }
 
 /* Blinks PUSH TEST BUTTON TO EXIT under the CAUTION until TEST, then leaves the test mode as
@@ -3289,8 +3289,8 @@ void test_mode_exit_caution_wait(void)
 	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
 		test_mode_on = 0u;
-		mem_write8(IO_C0001C, 4u);
-		mem_write8(0xC8001Cu, 0x80u);
+		mem_write8(IO_1_CNT, 4u);
+		mem_write8(IO_2_CNT, 0x80u);
 		return;
 	}
 	test_mode_blink_prompt(0u);
@@ -3607,10 +3607,10 @@ void test_mode_read_controls(void)
 	uint8_t port_e_a = 0, port_e_b = 0, port_f_a = 0, port_f_b = 0;
 	uint32_t flags_before = 0, test_mode_flags_long = 0;
 
-	port_e_a = mem_read8(IO_C00008);
-	port_e_b = mem_read8(0xC80008u);
-	port_f_a = mem_read8(IO_C0000A);
-	port_f_b = mem_read8(0xC8000Au);
+	port_e_a = mem_read8(IO_1_PORT_E);
+	port_e_b = mem_read8(IO_2_PORT_E);
+	port_f_a = mem_read8(IO_1_PORT_F);
+	port_f_b = mem_read8(IO_2_PORT_F);
 	port_f_pressed = (uint8_t)(~port_f_a | ~port_f_b);
 	buttons = ((~port_e_a | ~port_e_b) & 0x33u) | ((((uint32_t)port_f_pressed << 4) | (port_f_pressed >> 4)) & 3u);
 	previous_buttons = test_mode_buttons;
@@ -3649,7 +3649,7 @@ void test_mode_read_controls(void)
 		converter_input += 2u;
 	} while (bank_then_count != 0u);
 	carry = (test_mode_flags & 4u) != 0u;
-	mem_write8(IO_C00060, carry);
+	mem_write8(ANALOG_BANK, carry);
 }
 
 /* Sends the test mode's next queued sound request (test_mode_sound_queue, test_mode_sound_queue_read) to

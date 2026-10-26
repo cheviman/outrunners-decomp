@@ -42,9 +42,9 @@ void rev_meter_update(void)
 }
 
 /* The speed in km/h at the bottom right: state 0 sets it up (digits of animation 12, units_x, digits_y)
-   and clears the screen's maximum (unk_F52), sum (unk_F54) and count (unk_F58); 1 each frame the car's
-   speed / 88 into screen shown_speed, and while moving adds it to the sum, counts it and keeps the
-   maximum (for the LCD's pages), then draws its digits from the units leftwards. */
+   and clears the screen's maximum (maximum_speed), sum (speed_sum) and count (speed_samples); 1 each
+   frame the car's speed / 88 into screen shown_speed, and while moving adds it to the sum, counts it and
+   keeps the maximum (for the LCD's pages), then draws its digits from the units leftwards. */
 void speedometer_update(void)
 {
 	uint32_t animation = 0, digit = 0, speed_kmh = 0, state_code = 0;
@@ -131,8 +131,8 @@ void speed_unit_update(void)
    5 down) change the gear within 0 and the top gear; shifting up at revs F000 or more, or down into revs
    past FFFF, spins the wheels 30 frames (car shift_spin, tyre noise 1); the gear's ratio to car
    gear_ratio, its frame drawn. Below the top gear with the revs at the limit (FF00) and the car moving,
-   after 150 frames starts the shift_up_hint once. Once the race is over (car at_goal or unk_182), 2 only
-   draws. */
+   after 150 frames starts the shift_up_hint once. Once the race is over (car at_goal or race_over), 2
+   only draws. */
 void gear_indicator_update(void)
 {
 	uint8_t buttons_pressed = 0, tyre_noise = 0;
@@ -480,7 +480,7 @@ void lap_timer_update(void)
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal * 2u);
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + (~SCREEN(screen)->current_stage_level & 1u));
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + 8u);
-				mem_write8(IO_C00074, checkpoint_signal);
+				mem_write8(EVENT_CODE, checkpoint_signal);
 				split_frames = OBJECT(current_object)->lap_timer.split_frames;
 				OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
 				if (split_frames != 1u)
@@ -645,8 +645,8 @@ void start_message_update(void)
 }
 
 /* The time left in seconds at the top centre, and the time up: state 0 waits for the race's time
-   (unk_308's +6A), takes it into car time_left and sets the digits up (time_digits_start); 1 shows it
-   during the start's countdown; 2 follows the race's time (until the screen's car has finished,
+   (host_record's time_left), takes it into car time_left and sets the digits up (time_digits_start); 1
+   shows it during the start's countdown; 2 follows the race's time (until the screen's car has finished,
    race_copy finished) and starts EXTEND TIME at each checkpoint (time_left_display_check_extension); at
    0 the time is up (car time_up) and 3 shows 0, until time comes back (the car drives on: its state 2).
    The digits flip as they change (time_digits_draw). */
@@ -929,9 +929,9 @@ void extend_time_message_start(void)
 	OBJECT(current_object)->handler = extend_time_message_blink_ADDRESS;
 	index = SCREEN(screen)->index;
 	lamp = GAME_VARIABLES + index * 4u;
-	mem_write8(lamp + 0xC3u, 1u);
-	mem_write8(lamp + 0xC2u, 0x10u);
-	mem_write8(lamp + 0xC1u, 0x10u);
+	SCREEN_LAMPS(lamp)->checkpoint_timer = 1u;
+	SCREEN_LAMPS(lamp)->checkpoint_period = 0x10u;
+	SCREEN_LAMPS(lamp)->checkpoint_blinks = 0x10u;
 	extend_time_message_blink(index);
 }
 
@@ -957,9 +957,10 @@ void extend_time_message_blink(uint32_t leftover)
 }
 
 /* The start of a stage's road (position 0 of streams 1-30): when the car (car segment) reaches it, the
-   stage the car is in becomes the one whose road is being built (screen current_stage_level = unk_A2,
-   its level; unk_A6 = unk_A3, its number; car reached_stage_start = unk_48, the segment it starts at),
-   and it ends. In the attract demo (screen demo_flags bit 8) it ends at once. */
+   stage the car is in becomes the one whose road is being built (screen current_stage_level =
+   built_stage_level, its level; current_stage = built_stage, its number; car reached_stage_start =
+   stage_start, the segment it starts at), and it ends. In the attract demo (screen demo_flags bit 8) it
+   ends at once. */
 void stage_entry_update(void)
 {
 	switch (OBJECT(current_object)->state)
@@ -1266,7 +1267,7 @@ void branch_arrow_update(void)
 			if ((int16_t)palette < 0)
 			{
 				palette_list += palette;
-				palette = mem_read16(palette_list);
+				palette = (uint16_t)OBJECT_PALETTE_STEPS(palette_list)[0];
 				palette_list += 2u;
 			}
 			OBJECT(current_object)->palette = palette;
@@ -1298,7 +1299,7 @@ void branch_arrow_update(void)
 	if ((int16_t)palette < 0)
 	{
 		palette_list += palette;
-		palette = mem_read16(palette_list);
+		palette = (uint16_t)OBJECT_PALETTE_STEPS(palette_list)[0];
 		palette_list += 2u;
 	}
 	OBJECT(current_object)->palette = palette;
@@ -1369,7 +1370,7 @@ void checkpoint_board_update(void)
 	OBJECT(current_object)->checkpoint_board.passing_order = screen + 0x390u + checkpoint * 2u * 4u;
 	do
 	{
-		row_player = OBJECT(OBJECT(current_object)->checkpoint_board.passing_order)->flags;
+		row_player = CHECKPOINT_PASS(OBJECT(current_object)->checkpoint_board.passing_order)->player;
 		do
 		{
 			do
@@ -1535,8 +1536,8 @@ void checkpoint_board_draw_row(uint32_t player)
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	car_sprite = current_object + 0x80u + player * 4u;
-	animation = mem_read16(car_sprite);
-	OBJECT(current_object)->palette = mem_read16(car_sprite + 2u);
+	animation = BOARD_CAR_SPRITE(car_sprite)->animation;
+	OBJECT(current_object)->palette = BOARD_CAR_SPRITE(car_sprite)->palette;
 	OBJECT(current_object)->depth_layer = 0x19Du;
 	OBJECT(current_object)->draw_mode = 0u;
 	animation_start(animation);

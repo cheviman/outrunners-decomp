@@ -18,9 +18,9 @@
 void start_sound_program(void)
 {
 	AS32(SCREEN(screen)->sound_queue_read) = 0x100u;
-	mem_write8(IO_C0001C, 6u);
+	mem_write8(IO_1_CNT, 6u);
 	SCREEN(screen)->sound_start_cleared = 0u;
-	mem_write8(SOUND_701FFF, 0u);
+	mem_write8(SOUND_PROGRAM_HOLD, 0u);
 }
 
 /* Requests sound R0 for the screen (queue_sound), except while the screen's demo_flags bit 8 is set,

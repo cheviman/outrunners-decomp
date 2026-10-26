@@ -87,7 +87,7 @@ void boot(void)
 		clear_address += 8u;
 		block_count--;
 	} while (block_count != 0u);
-	mem_write32(0x801000u, 0u);
+	mem_write32(LINK_BOARD_ON, 0u);
 	link_off_delay = BOARD_OFF_LOOPS;
 	do
 	{
@@ -140,7 +140,7 @@ void boot(void)
 	waiting_task_stack = 0x21F800u;
 	initialise_game();
 	lcd_start();
-	mem_write8(IRQ_D00007, 0u);
+	mem_write8(IRQ_ACKNOWLEDGE, 0u);
 	mem_write8(IRQ_D00005, 0u);
 	interrupts_on();
 	network_check();
@@ -236,8 +236,8 @@ void second_task(uint32_t entry_point)
 				{
 					L_000637 = false;
 					link_take_master_settings();
-					mem_write16(IRQ_D00008, 0x39u);
-					mem_write16(IRQ_D0000A, 1u);
+					mem_write16(IRQ_TIMER_0, 0x39u);
+					mem_write16(IRQ_TIMER_1, 1u);
 					screen_2_vblanks_high = 0u;
 					screen_2_vblanks = 0u;
 					screen_1_vblanks_high = 0u;
@@ -248,8 +248,8 @@ void second_task(uint32_t entry_point)
 					input_changes = SCREEN(SCREEN_2)->car_number;
 					SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
 					SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[input_changes];
-					mem_write8(IO_C0001C, 6u);
-					mem_write8(0xC8001Cu, 0x86u);
+					mem_write8(IO_1_CNT, 6u);
+					mem_write8(IO_2_CNT, 0x86u);
 				}
 				do
 				{
@@ -381,8 +381,8 @@ void second_task(uint32_t entry_point)
 			test_mode_frame();
 		} while (test_mode_on != 0u);
 		interrupts_off();
-		mem_write8(IO_C0001C, 4u);
-		mem_write8(0xC8001Cu, 0x80u);
+		mem_write8(IO_1_CNT, 4u);
+		mem_write8(IO_2_CNT, 0x80u);
 		fill = 0u;
 		fill_high = 0u;
 		block_count = 0x100u;
@@ -447,8 +447,8 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 			return mode;
 		if (free_play == 0u)
 		{
-			mem_write8(seat_credits, mem_read8(seat_credits) - 1u);
-			mem_write8(seat_credits + 2u, 0u);
+			SEAT_CREDITS(seat_credits)->credits--;
+			SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 		}
 		SCREEN(screen)->start_lamp_blink = 0u;
 		seat_outputs = port_d_outputs_ADDRESS + index;
@@ -461,7 +461,7 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 		return play_mode;
 	}
 	seat_credits = seat_credits_addresses[index];
-	if (mem_read8(seat_credits) == 0u)
+	if (SEAT_CREDITS(seat_credits)->credits == 0u)
 		return mode;
 	lamp_blink = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
 	SCREEN(screen)->start_lamp_blink = lamp_blink;
@@ -470,8 +470,8 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 		return mode;
 	if (free_play == 0u)
 	{
-		mem_write8(seat_credits, mem_read8(seat_credits) - 1u);
-		mem_write8(seat_credits + 2u, 0u);
+		SEAT_CREDITS(seat_credits)->credits--;
+		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 	}
 	SCREEN(screen)->start_lamp_blink = 0u;
 	seat_outputs = port_d_outputs_ADDRESS + index;
@@ -520,10 +520,10 @@ void initialise_game(void)
 {
 	uint32_t checksum = 0;
 
-	mem_write8(IO_C00074, 0x13u);
-	mem_write8(IO_C00074, 0u);
-	mem_write8(IO_C00074, 0u);
-	mem_write8(IO_C00074, 0x1Fu);
+	mem_write8(EVENT_CODE, 0x13u);
+	mem_write8(EVENT_CODE, 0u);
+	mem_write8(EVENT_CODE, 0u);
+	mem_write8(EVENT_CODE, 0x1Fu);
 	screen = SCREEN_2;
 	clear_screen_ram();
 	init_screen();

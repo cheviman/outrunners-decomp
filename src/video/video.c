@@ -119,11 +119,11 @@ uint32_t init_video(void)
 {
 	clear_video_ram();
 	load_text_font();
-	mem_write16(VIDEO_31FF00, video_control_default);
+	mem_write16(VIDEO_CONTROL, video_control_default);
 	video_registers[0] = video_control_default;
 	if (flip_screen != 0u)
 	{
-		mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) | 0x200u);
+		mem_write16(VIDEO_CONTROL, mem_read16(VIDEO_CONTROL) | 0x200u);
 		video_registers[0] |= 0x200u;
 	}
 	move_halfwords(scroll_targets_ADDRESS, zero_block_ADDRESS, 0x10u);
@@ -141,7 +141,7 @@ uint32_t reset_tile_layers(void)
 	uint32_t index = 0;
 	uint32_t first_scroll_target = 0, second_scroll_target = 0;
 
-	mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) & 0xFFFu);
+	mem_write16(VIDEO_CONTROL, mem_read16(VIDEO_CONTROL) & 0xFFFu);
 	video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
 	RAM32(video_registers_ADDRESS + 0x40u + index * 4u) = 0u;
@@ -220,7 +220,7 @@ void init_sprite_chip(void)
 	uint16_t control_flip = 0;
 	uint32_t control_register = 0, control_values = 0;
 
-	mem_write16(SPRITE_CONTROL_500000, sprite_control_mode);
+	mem_write16(SPRITE_RENDER_REQUEST, sprite_control_mode);
 	control_register = SPRITE_CONTROL + 0x4u;
 	control_flip = sprite_control_flip;
 	control_values = sprite_control_rest_ADDRESS;
@@ -248,18 +248,18 @@ void init_sprite_chip(void)
 void init_sprite_lists(void)
 {
 	move_string(sprite_ram_start_entries_ADDRESS, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
-	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_RAM_404000;
-	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_RAM_414000;
+	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_LIST_1_A;
+	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_LIST_2_A;
 	SCREEN(SCREEN_1)->next_sprite_place = 0x20C000u;
 	SCREEN(SCREEN_2)->next_sprite_place = 0x21C000u;
-	mem_write16(SPRITE_RAM_404000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_407000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_40A000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_40D000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_414000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_417000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_41A000, 0xFFFFu);
-	mem_write16(SPRITE_RAM_41D000, 0xFFFFu);
+	mem_write16(SPRITE_LIST_1_A, 0xFFFFu);
+	mem_write16(SPRITE_LIST_1_A_HALFWAY, 0xFFFFu);
+	mem_write16(SPRITE_LIST_1_B, 0xFFFFu);
+	mem_write16(SPRITE_LIST_1_B_HALFWAY, 0xFFFFu);
+	mem_write16(SPRITE_LIST_2_A, 0xFFFFu);
+	mem_write16(SPRITE_LIST_2_A_HALFWAY, 0xFFFFu);
+	mem_write16(SPRITE_LIST_2_B, 0xFFFFu);
+	mem_write16(SPRITE_LIST_2_B_HALFWAY, 0xFFFFu);
 	sprite_lists_set_up = 1u;
 	sprite_list_buffers = 0u;
 	SCREEN(SCREEN_1)->sprite_groups &= 0xFF00u;
@@ -302,17 +302,17 @@ void init_mixer(void)
    86), and the first bank of the wheels' and pedals' A/D inputs (C00060). */
 void init_io_chips(void)
 {
-	mem_write8(IO_C0001C, 6u);
-	mem_write8(IO_C0001E, 0xC8u);
-	mem_write8(IO_C00006, 0u);
-	mem_write8(IO_C0000C, 0u);
-	mem_write8(IO_C0000E, 0u);
-	mem_write8(0xC8001Cu, 0x86u);
-	mem_write8(0xC8001Eu, 0xC8u);
-	mem_write8(0xC80006u, 0u);
-	mem_write8(0xC8000Cu, 0u);
-	mem_write8(0xC8000Eu, 0u);
-	mem_write8(IO_C00060, 0u);
+	mem_write8(IO_1_CNT, 6u);
+	mem_write8(IO_1_DIRECTION, 0xC8u);
+	mem_write8(IO_1_PORT_D, 0u);
+	mem_write8(IO_1_PORT_G, 0u);
+	mem_write8(IO_1_PORT_H, 0u);
+	mem_write8(IO_2_CNT, 0x86u);
+	mem_write8(IO_2_DIRECTION, 0xC8u);
+	mem_write8(IO_2_PORT_D, 0u);
+	mem_write8(IO_2_PORT_G, 0u);
+	mem_write8(IO_2_PORT_H, 0u);
+	mem_write8(ANALOG_BANK, 0u);
 }
 
 /* Copies data into sprite RAM outside the lists at boot: 1E0 bytes from 12297C to 410000, 2400 bytes

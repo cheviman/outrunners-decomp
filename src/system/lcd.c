@@ -107,16 +107,16 @@ void lcd_write_data_nibble(uint8_t nibble)
 	uint32_t wait_count = 0;
 
 	nibble |= 0xFu;
-	mem_write8(IO_C0000C, ~nibble);
-	mem_write8(0xC8000Cu, ~nibble);
+	mem_write8(IO_1_PORT_G, ~nibble);
+	mem_write8(IO_2_PORT_G, ~nibble);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
 	nibble &= ~8u;
-	mem_write8(IO_C0000C, ~nibble);
-	mem_write8(0xC8000Cu, ~nibble);
+	mem_write8(IO_1_PORT_G, ~nibble);
+	mem_write8(IO_2_PORT_G, ~nibble);
 }
 
 /* A pause, then lcd_write_command_nibble. */
@@ -139,16 +139,16 @@ void lcd_write_command_nibble(uint8_t nibble)
 	uint32_t wait_count = 0;
 
 	nibble |= 0xBu;
-	mem_write8(IO_C0000C, ~nibble);
-	mem_write8(0xC8000Cu, ~nibble);
+	mem_write8(IO_1_PORT_G, ~nibble);
+	mem_write8(IO_2_PORT_G, ~nibble);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
 	nibble &= ~8u;
-	mem_write8(IO_C0000C, ~nibble);
-	mem_write8(0xC8000Cu, ~nibble);
+	mem_write8(IO_1_PORT_G, ~nibble);
+	mem_write8(IO_2_PORT_G, ~nibble);
 }
 
 /* After the test mode: both screens' LCD text back to SEGA Enterprises (lcd_text), their lamps off
@@ -311,8 +311,8 @@ void lcd_send_next_nibble(void)
 		lcd_busy = 0xFFu;
 		screen_1_port = (uint8_t)~lcd_restart_nibbles[lcd_init_step];
 		screen_2_port = screen_1_port | port_g_outputs[1];
-		mem_write8(IO_C0000C, screen_1_port | port_g_outputs[0]);
-		mem_write8(0xC8000Cu, screen_2_port);
+		mem_write8(IO_1_PORT_G, screen_1_port | port_g_outputs[0]);
+		mem_write8(IO_2_PORT_G, screen_2_port);
 		init_step = lcd_init_step;
 		lcd_init_step = init_step - 1u;
 		if (init_step == 1u)
@@ -336,15 +336,15 @@ void lcd_send_next_nibble(void)
 		screen_2_port = (uint8_t)send_step;
 		send_step = send_step | port_g_outputs[0];
 		screen_2_port |= port_g_outputs[1];
-		mem_write8(IO_C0000C, send_step);
-		mem_write8(0xC8000Cu, screen_2_port);
+		mem_write8(IO_1_PORT_G, send_step);
+		mem_write8(IO_2_PORT_G, screen_2_port);
 		wait_count = 0x14u;
 		do
 		{
 			wait_count--;
 		} while (wait_count != 0u);
-		mem_write8(IO_C0000C, send_step | 8u);
-		mem_write8(0xC8000Cu, screen_2_port | 8u);
+		mem_write8(IO_1_PORT_G, send_step | 8u);
+		mem_write8(IO_2_PORT_G, screen_2_port | 8u);
 		lcd_busy = 0u;
 		return;
 	}
@@ -364,15 +364,15 @@ void lcd_send_next_nibble(void)
 	}
 	screen_1_port = (uint8_t)(~(screen_1_port | 0xFu) | port_g_outputs[0]);
 	screen_2_port = (uint8_t)(~(screen_2_port | 0xFu) | port_g_outputs[1]);
-	mem_write8(IO_C0000C, screen_1_port);
-	mem_write8(0xC8000Cu, screen_2_port);
+	mem_write8(IO_1_PORT_G, screen_1_port);
+	mem_write8(IO_2_PORT_G, screen_2_port);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
-	mem_write8(IO_C0000C, screen_1_port | 8u);
-	mem_write8(0xC8000Cu, screen_2_port | 8u);
+	mem_write8(IO_1_PORT_G, screen_1_port | 8u);
+	mem_write8(IO_2_PORT_G, screen_2_port | 8u);
 	lcd_busy = 0u;
 }
 
@@ -448,7 +448,7 @@ void lcd_update(void)
 	switch (SCREEN(screen)->lcd_scroll_step)
 	{
 	case 0:
-		character = mem_read8(lcd_scroll);
+		character = TEXT_CHARACTERS(lcd_scroll)[0];
 		SCREEN(screen)->lcd_scroll = lcd_scroll + 1u;
 		if (character == 0x60u)
 			character = 7u;
@@ -460,7 +460,7 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
 		if (lcd_scroll_frames != 1u)
 			return;
-		if (mem_read8(SCREEN(screen)->lcd_scroll) != 0u)
+		if (TEXT_CHARACTERS(SCREEN(screen)->lcd_scroll)[0] != 0u)
 		{
 			SCREEN(screen)->lcd_scroll_step--;
 			return;
@@ -477,7 +477,7 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
 		if (lcd_scroll_frames != 1u)
 			return;
-		if (mem_read8(SCREEN(screen)->lcd_scroll) != 0u)
+		if (TEXT_CHARACTERS(SCREEN(screen)->lcd_scroll)[0] != 0u)
 		{
 			SCREEN(screen)->lcd_scroll_step--;
 			return;
@@ -516,7 +516,7 @@ void lcd_update(void)
 }
 
 /* Clears the cabinet's LCD: sixteen spaces, no DJ message (screen dj_mouth_shapes), no scrolling text
-   (unk_F40, unk_F44), the DJ's face off (unk_F35). */
+   (lcd_scroll_request, lcd_scroll), the DJ's face off (dj_face). */
 void clear_lcd(void)
 {
 	uint32_t text_place = 0;
@@ -549,10 +549,10 @@ void lcd_race_info_start(void)
    to it: a bar shrinking through each second (lcd_countdown_bars) with the seconds left. Then a page
    every 150 frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers,
    car_numbers + 1, in race order from order_list, this screen's own blinking; skipped with one player),
-   2 Speed (screen shown_speed), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the
-   label, 1 updates the number. When the car reaches the goal (car at_goal) goes to lcd_race_info_finish;
-   when the race is over (car race_over) shows the average and ends; while the LCD scrolls a text (screen
-   lcd_scroll) waits in lcd_race_info_paused. */
+   2 Speed (screen shown_speed), 3 Max. (screen maximum_speed), 4 Ave. (lcd_race_info_average); page_step
+   0 writes the label, 1 updates the number. When the car reaches the goal (car at_goal) goes to
+   lcd_race_info_finish; when the race is over (car race_over) shows the average and ends; while the LCD
+   scrolls a text (screen lcd_scroll) waits in lcd_race_info_paused. */
 void lcd_race_info_update(void)
 {
 	uint8_t character = 0, page = 0;
@@ -740,7 +740,7 @@ void lcd_race_info_time_page(void)
 	lcd_race_info_time();
 }
 
-/* Writes the race time (the car's unk_04, in thousandths of a second) on the LCD as
+/* Writes the race time (the car's race_time, in thousandths of a second) on the LCD as
    minutes'seconds"hundredths. */
 void lcd_race_info_time(void)
 {
@@ -775,7 +775,7 @@ void lcd_race_info_average_page(void)
 }
 
 /* Writes the average speed on the LCD: the sum of the speeds (screen speed_sum) over how many there are
-   (unk_F58), with lcd_race_info_write_number. */
+   (speed_samples), with lcd_race_info_write_number. */
 void lcd_race_info_average(void)
 {
 	uint32_t speed_samples = 0, speed_sum = 0, text_place = 0;

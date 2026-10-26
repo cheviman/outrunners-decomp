@@ -19,9 +19,10 @@
    (road_surface_fade_back; state 2). Each frame the tilemap's page word (at page_register) is the page
    table's word for page_set and near_scroll (five a set). At each new segment (segment past
    last_segment) acts on the segment's event when it changes (after the first 30 segments, event_delay):
-   4 and 5 change the background within the stage (screen stage_background_change = FF, unk_204 = 0 or 1,
-   for race_background), 1 and 2 turn the two road_tiles_change flags (0A, 0B) on and off, 3 both; a flag
-   turned on starts a road_tiles_change (the Golden Gate Bridge in race_to_goal.txt, frames 7659-8325). */
+   4 and 5 change the background within the stage (screen stage_background_change = FF,
+   stage_background_branch = 0 or 1, for race_background), 1 and 2 turn the two road_tiles_change flags
+   (0A, 0B) on and off, 3 both; a flag turned on starts a road_tiles_change (the Golden Gate Bridge in
+   race_to_goal.txt, frames 7659-8325). */
 void road_surface_update(void)
 {
 	uint32_t event = 0, fraction_shift = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, ignored_5 = 0, ignored_6 = 0, ignored_7 = 0, max_depth = 0, near_scroll = 0, object = 0, previous_depth = 0, previous_line = 0, previous_x = 0, road_palette_fades = 0, rounding = 0, stripe_count = 0;

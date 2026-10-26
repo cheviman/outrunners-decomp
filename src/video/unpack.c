@@ -23,7 +23,7 @@ void unpack(uint32_t source, uint32_t destination)
 	uint32_t back_offset = 0, copy_count = 0, copy_source = 0, flags_left = 0;
 	uint32_t length_bits = 0;
 
-	flags = mem_read8(source);
+	flags = PACKED_BYTES(source)[0];
 	flags_left = 9u;
 	source++;
 	for (;;)
@@ -31,7 +31,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags_left--;
 		if (flags_left == 0u)
 		{
-			flags = mem_read8(source);
+			flags = PACKED_BYTES(source)[0];
 			flags_left = 8u;
 			source++;
 		}
@@ -39,7 +39,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(destination, mem_read8(source));
+			mem_write8(destination, PACKED_BYTES(source)[0]);
 			destination++;
 			source++;
 			continue;
@@ -48,7 +48,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags_left--;
 		if (flags_left == 0u)
 		{
-			flags = mem_read8(source);
+			flags = PACKED_BYTES(source)[0];
 			flags_left = 8u;
 			source++;
 		}
@@ -56,7 +56,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			copy_source = (back_offset & ~0xFFFFu) | mem_read16(source);
+			copy_source = (back_offset & ~0xFFFFu) | AS16(PACKED_BYTES(source)[0]);
 			length_byte = (uint8_t)copy_source;
 			copy_source = (int32_t)copy_source >> 3;
 			length_bits = length_byte & 7u;
@@ -66,7 +66,7 @@ void unpack(uint32_t source, uint32_t destination)
 				copy_count += 2u;
 			else
 			{
-				copy_count = mem_read8(source);
+				copy_count = PACKED_BYTES(source)[0];
 				source++;
 				if (copy_count == 0u)
 					break;
@@ -79,7 +79,7 @@ void unpack(uint32_t source, uint32_t destination)
 			flags_left--;
 			if (flags_left == 0u)
 			{
-				flags = mem_read8(source);
+				flags = PACKED_BYTES(source)[0];
 				flags_left = 8u;
 				source++;
 			}
@@ -89,14 +89,14 @@ void unpack(uint32_t source, uint32_t destination)
 			flags_left--;
 			if (flags_left == 0u)
 			{
-				flags = mem_read8(source);
+				flags = PACKED_BYTES(source)[0];
 				flags_left = 8u;
 				source++;
 			}
 			carry = (uint8_t)(flags * 2u) < flags;
 			flags = (uint8_t)(flags * 2u);
 			copy_count = copy_count * 2u + carry;
-			copy_source = (back_offset & ~0xFFu) | mem_read8(source);
+			copy_source = (back_offset & ~0xFFu) | PACKED_BYTES(source)[0];
 			source++;
 			copy_count += 2u;
 		}
@@ -151,9 +151,9 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		}
 		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		source = mem_read32(request);
-		destination = mem_read32(request + 4u);
-		flags = mem_read8(source);
+		source = UNPACK_REQUEST(request)->source;
+		destination = UNPACK_REQUEST(request)->destination;
+		flags = PACKED_BYTES(source)[0];
 		flags_left = 9u;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
 		source++;
@@ -170,7 +170,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags_left--;
 		if (flags_left == 0u)
 		{
-			flags = mem_read8(source);
+			flags = PACKED_BYTES(source)[0];
 			flags_left = 8u;
 			source++;
 		}
@@ -178,7 +178,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(destination, mem_read8(source));
+			mem_write8(destination, PACKED_BYTES(source)[0]);
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
 			SCREEN(screen)->unpack_source = source + 1u;
@@ -189,7 +189,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags_left--;
 		if (flags_left == 0u)
 		{
-			flags = mem_read8(source);
+			flags = PACKED_BYTES(source)[0];
 			flags_left = 8u;
 			source++;
 		}
@@ -197,7 +197,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags = (uint8_t)(flags * 2u);
 		if (carry == 0u)
 			break;
-		copy_source = (back_offset & ~0xFFFFu) | mem_read16(source);
+		copy_source = (back_offset & ~0xFFFFu) | AS16(PACKED_BYTES(source)[0]);
 		length_byte = (uint8_t)copy_source;
 		copy_source = (int32_t)copy_source >> 3;
 		length_bits = length_byte & 7u;
@@ -218,7 +218,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
 			return copy_source;
 		}
-		copy_count = mem_read8(source);
+		copy_count = PACKED_BYTES(source)[0];
 		source++;
 		if (copy_count != 0u)
 		{
@@ -242,9 +242,9 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		}
 		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		source = mem_read32(request);
-		destination = mem_read32(request + 4u);
-		flags = mem_read8(source);
+		source = UNPACK_REQUEST(request)->source;
+		destination = UNPACK_REQUEST(request)->destination;
+		flags = PACKED_BYTES(source)[0];
 		flags_left = 9u;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
 		source++;
@@ -253,7 +253,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 	flags_left--;
 	if (flags_left == 0u)
 	{
-		flags = mem_read8(source);
+		flags = PACKED_BYTES(source)[0];
 		flags_left = 8u;
 		source++;
 	}
@@ -263,14 +263,14 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 	flags_left--;
 	if (flags_left == 0u)
 	{
-		flags = mem_read8(source);
+		flags = PACKED_BYTES(source)[0];
 		flags_left = 8u;
 		source++;
 	}
 	carry = (uint8_t)(flags * 2u) < flags;
 	flags = (uint8_t)(flags * 2u);
 	copy_count = (uint8_t)(copy_count * 2u + carry);
-	copy_source = (back_offset & ~0xFFu) | mem_read8(source);
+	copy_source = (back_offset & ~0xFFu) | PACKED_BYTES(source)[0];
 	source++;
 	copy_count++;
 	copy_source += destination;
@@ -343,12 +343,12 @@ void queue_unpack_list(uint32_t block_list)
 		unpack_write_place = SCREEN(screen)->unpack_write_place;
 		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
 		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
-		destination = mem_read32(block_list + 4u);
-		mem_write32(request, mem_read32(block_list));
-		mem_write32(request + 4u, destination);
+		destination = PACKED_BLOCK_ENTRY(block_list)->destination;
+		UNPACK_REQUEST(request)->source = PACKED_BLOCK_ENTRY(block_list)->source;
+		UNPACK_REQUEST(request)->destination = destination;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
 		block_list += 8u;
-	} while ((int32_t)mem_read32(block_list) >= 0);
+	} while ((int32_t)PACKED_BLOCK_ENTRY(block_list)->source >= 0);
 }
 
 /* Queues the tilemap pages of the list R10 to be unpacked into video RAM: each 32-bit entry a page
@@ -360,16 +360,16 @@ void queue_tile_pages(uint32_t page_list)
 {
 	uint32_t page_bits = 0, page_entry = 0, request = 0, unpack_write_place = 0;
 
-	while ((int32_t)mem_read32(page_list) >= 0)
+	while ((int32_t)TILE_PAGE_ENTRIES(page_list)[0] >= 0)
 	{
 		unpack_write_place = SCREEN(screen)->unpack_write_place;
 		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
 		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
-		page_bits = mem_read32(page_list);
+		page_bits = TILE_PAGE_ENTRIES(page_list)[0];
 		page_entry = page_bits;
 		page_bits &= ~0xFFFFFFu;
-		mem_write32(request, page_entry ^ page_bits);
-		mem_write32(request + 4u, 0x300000u + (byte_swap32(page_bits) << 8) * 4u);
+		UNPACK_REQUEST(request)->source = page_entry ^ page_bits;
+		UNPACK_REQUEST(request)->destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
 		page_list += 4u;
 	}

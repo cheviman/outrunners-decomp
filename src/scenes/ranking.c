@@ -66,13 +66,13 @@ void load_course_records(void)
 }
 
 /* The ranking in the attract mode (game mode 5, game_mode_ranking): OutRunner of OutRunners, the record
-   of three courses in turn. By state: 0 starts object_handlers_2CB8 (01AA01, 01A6CF, which
-   game_mode_ranking has started too), ranking_background and the two halves of the title
-   (ranking_title_left, ranking_title_right); 1 clears course_over; once the screen's fade is over
-   (screen flags bit 0): after three courses ends, else courses_shown + 1, 60 frames (frames_left), and
-   starts ranking_course_banner and ranking_record for the course screen record_course; 2 when the 60
-   frames are over sets course_over for a frame (the background fades out) and moves screen record_course
-   to the next of the ten courses, back to 1. */
+   of three courses in turn. By state: 0 starts ranking_objects (01AA01, 01A6CF, which game_mode_ranking
+   has started too), ranking_background and the two halves of the title (ranking_title_left,
+   ranking_title_right); 1 clears course_over; once the screen's fade is over (screen flags bit 0): after
+   three courses ends, else courses_shown + 1, 60 frames (frames_left), and starts ranking_course_banner
+   and ranking_record for the course screen record_course; 2 when the 60 frames are over sets course_over
+   for a frame (the background fades out) and moves screen record_course to the next of the ten courses,
+   back to 1. */
 void ranking_update(void)
 {
 	uint8_t next_course = 0, record_course = 0;
@@ -135,10 +135,10 @@ void ranking_update(void)
 /* The picture of the course behind the ranking, while the game mode is the ranking (screen game_mode 5).
    By state: 0 courses_shown from the ranking; for the first course I/O C0001C = 6 (C8001C = 86 for
    screen 2) and a fade in (screen fade_kind 1, unk_94 bit 0); ranking_background_load; 1 waits while the
-   pages are unpacked (screen unpack_state), then for the later courses a fade in (unk_153 3); 2 when the
-   ranking says course_over: after the third course a fade out (unk_153 0) and state 4, else a fade out
-   (unk_153 2); 3 when the fade is over, back to 0 for the next course's picture; 4 nothing more. Every
-   frame, in any game mode, the picture scrolls by 3 pixels (scroll_x - 3). */
+   pages are unpacked (screen unpack_state), then for the later courses a fade in (fade_kind 3); 2 when
+   the ranking says course_over: after the third course a fade out (fade_kind 0) and state 4, else a fade
+   out (fade_kind 2); 3 when the fade is over, back to 0 for the next course's picture; 4 nothing more.
+   Every frame, in any game mode, the picture scrolls by 3 pixels (scroll_x - 3). */
 void ranking_background_update(void)
 {
 	uint32_t scroll_x_address = 0;
@@ -152,9 +152,9 @@ void ranking_background_update(void)
 			if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
 			{
 				if (SCREEN(screen)->index != 0u)
-					mem_write8(0xC8001Cu, 0x86u);
+					mem_write8(IO_2_CNT, 0x86u);
 				else
-					mem_write8(IO_C0001C, 6u);
+					mem_write8(IO_1_CNT, 6u);
 				SCREEN(screen)->fade_kind = 1u;
 				SCREEN(screen)->flags |= 1u;
 			}
@@ -818,7 +818,7 @@ void ranking_background_load(void)
 	pages_to_copy = 4u;
 	do
 	{
-		mem_write32(page_place, mem_read32(background_pages) | (page_numbers & ~0xFFFFFFu));
+		mem_write32(page_place, TILE_PAGE_ENTRIES(background_pages)[0] | (page_numbers & ~0xFFFFFFu));
 		page_place += 4u;
 		page_numbers = page_numbers << 8;
 		pages_to_copy--;

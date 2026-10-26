@@ -22,7 +22,7 @@ void player_car_start_course(void)
 	move_string(zero_block_ADDRESS, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 	course = stage_courses[SCREEN(screen)->first_stage];
 	CAR(player_car)->course = course;
-	width_code = mem_read8(course + 8u);
+	width_code = COURSE_START(course)->width_code;
 	CAR(player_car)->width_code = (uint8_t)width_code;
 	CAR(player_car)->road_width = width_code * 0xB0u;
 	CAR(player_car)->prebuilt_segments = SCREEN(screen)->draw_distance >> 7;
@@ -153,10 +153,11 @@ void player_car_extend_course(void)
 /* Builds the next segment of the road from the course (car course): at the end of a run reads the next
    records: 0 the course ends (the car's state 3), 1 a jump to another part, 2 a fork (forks_reached, the
    race's stage count, at_fork), 3 and 5 the pitch and the heading back to 0, 4 a new stage (screen
-   built_stage_level, unk_A3; stage_segments, stage_start), 6 the goal (a goal object at this segment),
-   else a run (its length, pitch and heading steps, road width, a byte for the segments). The segment:
-   heading and pitch turned by the run's steps, the position moved along them (next_x/y/z), the width
-   eased toward the run's; written at build_offset, then built_segments and stage_segments count up. */
+   built_stage_level, built_stage; stage_segments, stage_start), 6 the goal (a goal object at this
+   segment), else a run (its length, pitch and heading steps, road width, a byte for the segments). The
+   segment: heading and pitch turned by the run's steps, the position moved along them (next_x/y/z), the
+   width eased toward the run's; written at build_offset, then built_segments and stage_segments count
+   up. */
 void player_car_build_segment(uint16_t ring_mask)
 {
 	uint16_t road_width = 0, run_width = 0;
@@ -304,10 +305,10 @@ void player_car_project_road(void)
 	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
 	uint8_t projected = 0;
 	uint16_t last_y = 0;
-	uint32_t copied_x_y = 0, copied_road_bytes = 0;
+	uint32_t copied_x_y = 0, copied_road_bytes = 0, width_code_halfword = 0, width_code_halfword_2 = 0;
 
-	view_pitch = mem_read16(SCREEN(screen)->shown_view + 0xCu);
-	view_yaw = mem_read16(SCREEN(screen)->shown_view + 0xEu);
+	view_pitch = VIEW(SCREEN(screen)->shown_view)->pitch;
+	view_yaw = VIEW(SCREEN(screen)->shown_view)->yaw;
 	matrix_zy = sine_table[view_pitch];
 	matrix_zx = sine_table[view_yaw];
 	matrix_yy = cosine_table[view_pitch];
@@ -344,14 +345,14 @@ void player_car_project_road(void)
 	car += 4u;
 	CAR(car - 0xF8u)->view_matrix_zy = matrix_zy;
 	CAR(car - 0xF8u)->view_matrix_zz = matrix_zz;
-	to_view_x = 0u - mem_read32(SCREEN(screen)->shown_view);
-	to_view_y = 0u - mem_read32(SCREEN(screen)->shown_view + 4u);
-	to_view_z = 0u - mem_read32(SCREEN(screen)->shown_view + 8u);
+	to_view_x = 0u - VIEW(SCREEN(screen)->shown_view)->x;
+	to_view_y = 0u - VIEW(SCREEN(screen)->shown_view)->y;
+	to_view_z = 0u - VIEW(SCREEN(screen)->shown_view)->z;
 	near_limit = SCREEN(screen)->eye_distance;
 	near_limit = near_limit >> 1;
 	draw_distance = SCREEN(screen)->draw_distance;
 	screen_top_y = (uint16_t)(0u - SCREEN(screen)->sprite_origin_y);
-	ring_segment = screen + 0x1FE0u + mem_read16(SCREEN(screen)->shown_view + 0x10u);
+	ring_segment = screen + 0x1FE0u + VIEW(SCREEN(screen)->shown_view)->window_offset;
 	projected_segment = screen + 0x2FF0u;
 	segments_left = draw_distance >> 7;
 	SCREEN(screen)->crest_count = 0u;
@@ -367,14 +368,18 @@ void player_car_project_road(void)
 		if (projected == 0u)
 		{
 			previous_projected = projected_segment - 0x10u;
-			copied_x_y = mem_read32(previous_projected + 4u);
-			mem_write32(projected_segment, mem_read32(previous_projected));
-			mem_write32(projected_segment + 4u, copied_x_y);
+			copied_x_y = (PROJECTED_SEGMENT(previous_projected)->x | ((uint32_t)PROJECTED_SEGMENT(previous_projected)->y << 16u));
+			PROJECTED_SEGMENT(projected_segment)->scale = PROJECTED_SEGMENT(previous_projected)->scale;
+			PROJECTED_SEGMENT(projected_segment)->width = PROJECTED_SEGMENT(previous_projected)->width;
+			PROJECTED_SEGMENT(projected_segment)->x = (uint16_t)copied_x_y;
+			PROJECTED_SEGMENT(projected_segment)->y = (uint16_t)(copied_x_y >> 16u);
 			previous_projected += 8u;
-			copied_road_bytes = mem_read32(previous_projected + 4u);
-			mem_write32(projected_segment + 8u, mem_read32(previous_projected));
-			mem_write32(projected_segment + 0xCu, copied_road_bytes);
-			mem_write16(projected_segment + 0xCu, mem_read16(ring_segment + 0x14u));
+			copied_road_bytes = AS32(PROJECTED_SEGMENT(previous_projected - 0x8u)->width_code);
+			AS32(PROJECTED_SEGMENT(projected_segment)->depth_layer) = AS32(PROJECTED_SEGMENT(previous_projected - 0x8u)->depth_layer);
+			AS32(PROJECTED_SEGMENT(projected_segment)->width_code) = copied_road_bytes;
+			width_code_halfword = mem_read16(ring_segment + 0x14u);
+			PROJECTED_SEGMENT(projected_segment)->width_code = (uint8_t)width_code_halfword;
+			PROJECTED_SEGMENT(projected_segment)->road_event = (uint8_t)(width_code_halfword >> 8u);
 			segments_left--;
 			if (segments_left == 0u)
 			{
@@ -403,7 +408,7 @@ void player_car_project_road(void)
 		x = (int32_t)(x * matrix_xx + unrotated_z * matrix_xz + fixed_point_shift) >> 14;
 		if ((int32_t)draw_distance <= (int32_t)r28 || (int32_t)r28 <= (int32_t)near_limit)
 		{
-			mem_write16(projected_segment, 0u);
+			PROJECTED_SEGMENT(projected_segment)->scale = 0u;
 			segments_left--;
 			if (segments_left == 0u)
 			{
@@ -416,7 +421,7 @@ void player_car_project_road(void)
 			continue;
 		}
 		scale = perspective_scales[r28];
-		mem_write16(projected_segment, scale);
+		PROJECTED_SEGMENT(projected_segment)->scale = scale;
 		x = x * scale;
 		r27 = r27 * scale;
 		carry = (x >> 11) & 1u;
@@ -426,13 +431,15 @@ void player_car_project_road(void)
 		r27 = r27 + carry;
 		scale = scale * mem_read16(ring_segment + 0x10u);
 		carry = (scale >> 11) & 1u;
-		mem_write16(projected_segment + 2u, ((int32_t)scale >> 12) + carry);
-		mem_write16(projected_segment + 0xCu, mem_read16(ring_segment + 0x14u));
-		mem_write16(projected_segment + 4u, x);
+		PROJECTED_SEGMENT(projected_segment)->width = ((int32_t)scale >> 12) + carry;
+		width_code_halfword_2 = mem_read16(ring_segment + 0x14u);
+		PROJECTED_SEGMENT(projected_segment)->width_code = (uint8_t)width_code_halfword_2;
+		PROJECTED_SEGMENT(projected_segment)->road_event = (uint8_t)(width_code_halfword_2 >> 8u);
+		PROJECTED_SEGMENT(projected_segment)->x = x;
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(0u - r27);
-		mem_write16(projected_segment + 6u, r27);
+		PROJECTED_SEGMENT(projected_segment)->y = r27;
 		r28 = depth_layers_by_depth[r28];
-		mem_write16(projected_segment + 8u, r28);
+		PROJECTED_SEGMENT(projected_segment)->depth_layer = r28;
 		last_y = previous_y;
 		previous_y = (uint16_t)r27;
 		if ((int16_t)last_y < (int16_t)r27)

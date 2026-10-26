@@ -21,19 +21,19 @@ void car_select_start(void)
 
 /* The car select, by state: 0 sets the screen up (unless screen entry_countdown_shown says the entry
    countdown did: clears the LCD, the title Mega Driver, sound F, DJ message 3B), the tile layer's tables
-   from 006920, the WELCOME! letters; 1 when the screen's data is unpacked (unk_B00) starts the eight
-   cars on the turntable and the rest, the default car (car_select_default_cars by the player's place in
-   the race), the time display (time_digits_start); 2 30 frames; 3 the screen's unk_F04 up to 0, then the
-   instructions (select_car_heading_show) and the car's caption (car_caption_show); 4 the wheel turns the
-   turntable (turn, turn_delay, angle; car model is the car in front) until the gas or START confirms or
-   time_left runs out: race model = the car, unk_48 = the car + 1, the car's sound
-   (car_select_car_sounds), at least 180 frames left, the transmission choice (transmission_choice_run);
-   5 the wheel picks the transmission (car transmission = car_select_wheel_transmissions by the wheel: 0
-   automatic, 1 manual) until confirmed or out of time; 6-8 when the entry time is over (entry_over)
-   marks the player ready (set_player_ready) and waits for the race's other players (players_not_ready),
-   DJ message 3C; 9 60 frames, then fade_out_music and the game's next step (screen game_mode byte 2); 10
-   stays. Every frame from 4 on: car_select_turn_to_choice and car_select_update_rowscroll; time_left
-   down by one and shown in seconds. */
+   from 006920, the WELCOME! letters; 1 when the screen's data is unpacked (unpack_state) starts the
+   eight cars on the turntable and the rest, the default car (car_select_default_cars by the player's
+   place in the race), the time display (time_digits_start); 2 30 frames; 3 the screen's
+   turntable_depth_offset up to 0, then the instructions (select_car_heading_show) and the car's caption
+   (car_caption_show); 4 the wheel turns the turntable (turn, turn_delay, angle; car model is the car in
+   front) until the gas or START confirms or time_left runs out: race model = the car, car_choice = the
+   car + 1, the car's sound (car_select_car_sounds), at least 180 frames left, the transmission choice
+   (transmission_choice_run); 5 the wheel picks the transmission (car transmission =
+   car_select_wheel_transmissions by the wheel: 0 automatic, 1 manual) until confirmed or out of time;
+   6-8 when the entry time is over (entry_over) marks the player ready (set_player_ready) and waits for
+   the race's other players (players_not_ready), DJ message 3C; 9 60 frames, then fade_out_music and the
+   game's next step (screen game_mode byte 2); 10 stays. Every frame from 4 on: car_select_turn_to_choice
+   and car_select_update_rowscroll; time_left down by one and shown in seconds. */
 void car_select_run(void)
 {
 	uint32_t zero = 0;
@@ -927,13 +927,13 @@ void turntable_scenery_show(void)
 	OBJECT(current_object)->turntable_scenery.angle = OBJECT(OBJECT(current_object)->turntable_scenery.car_select)->car_select.angle;
 	for (;;)
 	{
-		item_angle = mem_read16(item_place);
+		item_angle = TURNTABLE_SCENERY_ITEM(item_place)->angle;
 		item_place += 2u;
 		if ((int16_t)item_angle < 0)
 			break;
 		item_angle = (uint16_t)(item_angle - OBJECT(current_object)->turntable_scenery.angle);
 		item_angle = item_angle & 0xFFFu;
-		ring_radius = mem_read16(item_place);
+		ring_radius = TURNTABLE_SCENERY_ITEM(item_place - 0x2u)->radius;
 		item_place += 2u;
 		if (item_angle < 0x480u || item_angle > 0xB7Fu)
 		{
@@ -946,7 +946,7 @@ void turntable_scenery_show(void)
 		ring_radius += SCREEN(screen)->turntable_radius_offset;
 		across = (int32_t)(sine_table[item_angle] * ring_radius) >> 14;
 		point_depth = (int32_t)((0u - cosine_table[item_angle]) * ring_radius) >> 14;
-		down = (int16_t)mem_read16(item_place);
+		down = TURNTABLE_SCENERY_ITEM(item_place - 0x4u)->height;
 		point_depth += 0x140u;
 		kept_saved_place = saved_place;
 		OBJECT(current_object)->previous_place = (screen & ~0xFFFFu) | mem_read16(saved_place);
@@ -1464,7 +1464,7 @@ void transmission_label_start_automatic(void)
 	transmission_label_follow();
 }
 
-/* Sets up the label of the manual transmission's panel (sprite set 2C9, its unk_40 from
+/* Sets up the label of the manual transmission's panel (sprite set 2C9, its frame from
    car_gears_caption_frames by the car's model; the frames show 5 SPEED there for the car coin_start
    takes), then transmission_label_follow. */
 void transmission_label_start_manual(void)
@@ -1911,8 +1911,8 @@ void car_select_entries_run(void)
 				else
 				{
 					OBJECT(object)->handler = stacked_choice_flag_start_ADDRESS;
-					OBJECT(object)->stacked_choice_flag.below = mem_read32(car_flag + 0x18u);
-					mem_write32(car_flag + 0x18u, object);
+					OBJECT(object)->stacked_choice_flag.below = OBJECT(car_flag)->choice_flag.top_flag;
+					OBJECT(car_flag)->choice_flag.top_flag = object;
 				}
 				OBJECT(object)->unk_09 = racer;
 				OBJECT(object)->unk_0A = chosen_car;
@@ -2243,7 +2243,7 @@ void entry_countdown_start(void)
 }
 
 /* Shows the entry time left (RACE_COPY_1's entry_frames, frames): the seconds as the big number (its
-   unk_40), the frames into the second to the ring of cars, and on the LCD a shrinking bar
+   frame), the frames into the second to the ring of cars, and on the LCD a shrinking bar
    (entry_countdown_lcd_texts) with the seconds; when it is over clears the screen's unk_E2,
    fade_out_music, and goes on to entry_countdown_done. */
 void entry_countdown_count(void)
@@ -2667,7 +2667,7 @@ void step_palette(void)
 	if ((int16_t)palette_entry < 0)
 	{
 		list_place += palette_entry;
-		palette_entry = mem_read16(list_place);
+		palette_entry = (uint16_t)OBJECT_PALETTE_STEPS(list_place)[0];
 		list_place += 2u;
 	}
 	OBJECT(current_object)->palette = palette_entry;

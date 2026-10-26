@@ -16,13 +16,13 @@
    eye_distance-18, the course, the car on its grid place: segment 16 + grid_segment_lists by players and
    place, road_x from grid_road_place_lists, its world position; the palette of its model,
    player_car_palettes; timer 8 frames in the demo, 149 in a race with the intro view car
-   view_shift_intro/unk_10E; the gears, torque curves, crash physics, with screen is_host the race's time
-   left (race time_left: 40 seconds plus master_time_difficulty), the engine sound); 1 the countdown to
-   the start: brake full and the wheel centred until timer runs out (others read it as the frames to the
-   start), then car moving and race started; 2 driving (player_car_move): goes to 3 when the time is up
-   (car time_up), to 4 at the goal (car at_goal); counts hit_guard down; on a hit (flags bit 2, by
-   hit_kind): 3 a fork sign slows it for 15 frames (car slowed_frames), 0 scenery, 1 a road object
-   (hit_other), 2 the other player's car (hit_other): a speed change, a push and a bounce from the
+   view_shift_intro/view_pitch_intro; the gears, torque curves, crash physics, with screen is_host the
+   race's time left (race time_left: 40 seconds plus master_time_difficulty), the engine sound); 1 the
+   countdown to the start: brake full and the wheel centred until timer runs out (others read it as the
+   frames to the start), then car moving and race started; 2 driving (player_car_move): goes to 3 when
+   the time is up (car time_up), to 4 at the goal (car at_goal); counts hit_guard down; on a hit (flags
+   bit 2, by hit_kind): 3 a fork sign slows it for 15 frames (car slowed_frames), 0 scenery, 1 a road
+   object (hit_other), 2 the other player's car (hit_other): a speed change, a push and a bounce from the
    model's crash table (car crash_table, by impact_speed or the cars' speeds and places), the hit's
    sounds, a crash animation, the CRASH text (car crash_text), immune (flags bit 3), state 5; 5 the crash
    plays out: no controls, the push and the speed change die away, it bounces under gravity (sound 31 on
@@ -181,11 +181,11 @@ void player_car_update(void)
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
 								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
-								OBJECT(current_object)->player_car.speed_change = (int32_t)(speed_loss * mem_read16(crash_entry + 4u)) >> 8;
+								OBJECT(current_object)->player_car.speed_change = (int32_t)(speed_loss * CRASH_ENTRY(crash_entry)->speed_factor) >> 8;
 								hit_side = (uint16_t)CAR(player_car)->road_x;
 								hit_side = hit_side >> 15;
-								OBJECT(current_object)->player_car.sideways_push = mem_read16(crash_entry + 6u + hit_side * 2u);
-								OBJECT(current_object)->player_car.bounce_speed = mem_read16(crash_entry + 0xAu);
+								OBJECT(current_object)->player_car.sideways_push = CRASH_ENTRY(crash_entry)->push[hit_side];
+								OBJECT(current_object)->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
 								break;
 							case 1:
 								hit_object = (screen & ~0xFFFFu) | OBJECT(current_object)->player_car.hit_other;
@@ -202,14 +202,14 @@ void player_car_update(void)
 								other_record = OBJECT(current_object)->player_car.hit_other;
 								other_record = RACE_COPY_1 + (uint16_t)(other_record << 7);
 								side_gap = CAR(player_car)->road_x;
-								other_x = (int16_t)mem_read16(other_record + 0x44u);
+								other_x = RACE(other_record)->road_x;
 								own_slide = OBJECT(current_object)->player_car.sideways_speed;
-								other_slide = (int16_t)mem_read16(other_record + 0x4Eu);
+								other_slide = RACE(other_record)->sideways_speed;
 								own_speed = OBJECT(current_object)->player_car.speed;
-								impact = mem_read16(other_record + 0x4Cu);
+								impact = RACE(other_record)->speed;
 								own_speed = own_speed >> 1;
 								impact = impact >> 1;
-								other_weight = car_weights[mem_read8(other_record + 0x49u)];
+								other_weight = car_weights[RACE(other_record)->model];
 								L_007E41 = true;
 								break;
 							default:
@@ -228,23 +228,23 @@ void player_car_update(void)
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
 								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
-								OBJECT(current_object)->player_car.speed_change = (int32_t)(((int32_t)(speed_difference * mem_read16(crash_entry + 0xEu)) >> 8) * other_weight) >> 8;
+								OBJECT(current_object)->player_car.speed_change = (int32_t)(((int32_t)(speed_difference * CRASH_ENTRY(crash_entry)->car_speed_factor) >> 8) * other_weight) >> 8;
 								side_gap = side_gap - other_x + ((other_slide - own_slide) << 1);
 								hit_side = (0u - side_gap) >> 31;
-								side_gap = divide_s32(((int32_t)(side_gap * (int16_t)mem_read16(crash_entry + 8u)) >> 7) * other_weight, own_weight);
+								side_gap = divide_s32(((int32_t)(side_gap * (int16_t)CRASH_ENTRY(crash_entry)->push[1]) >> 7) * other_weight, own_weight);
 								overflow = v60_movt_overflow(side_gap, 32, 16);
 								OBJECT(current_object)->player_car.sideways_push = side_gap;
-								OBJECT(current_object)->player_car.bounce_speed = mem_read16(crash_entry + 0xAu);
+								OBJECT(current_object)->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
 							}
 							OBJECT(current_object)->state = 5u;
 							OBJECT(current_object)->player_car.step = 0u;
 							OBJECT(current_object)->player_car.state_high = 0u;
 							OBJECT(current_object)->flags |= 8u;
-							CAR(player_car)->crash_sound = mem_read8(crash_entry + 0xDu);
+							CAR(player_car)->crash_sound = CRASH_ENTRY(crash_entry)->crash_sound;
 							CAR(player_car)->crash_sound_delay = 0xAu;
-							crash_hit_sound = (uint8_t)mem_read16(crash_entry + 0xCu);
+							crash_hit_sound = (uint8_t)(CRASH_ENTRY(crash_entry)->hit_sound | ((uint32_t)CRASH_ENTRY(crash_entry)->crash_sound << 8u));
 							request_sound(crash_hit_sound);
-							crash_animation = mem_read16(crash_entry + hit_side * 2u);
+							crash_animation = CRASH_ENTRY(crash_entry)->animation[hit_side];
 							view_height_offset = player_car_view_height();
 							crash_animation = (uint16_t)(crash_animation + view_height_offset);
 							OBJECT(current_object)->animation = crash_animation;
@@ -652,10 +652,10 @@ void player_car_steer_to_stop(void)
 
 /* Keeps the race order around the screen's car: screen leader_record-6C the race records (unk_70-73 the
    players) of the leader, the last, the car just ahead and the car just behind (all itself in the demo),
-   screen leader_window_segment and unk_352 the leader's race window_segment and unk_62. When its place
-   (screen 320 + player, kept in place) changes during the race: sound 37 when the car it passed or that
-   passed it is within 160 across, else 3A. While first, blinks one of the screen's lamps (the count,
-   period and timer bytes C9-CB of its entry at checkpoint_lamp). */
+   screen leader_window_segment and leader_stage the leader's race window_segment and stage. When its
+   place (screen 320 + player, kept in place) changes during the race: sound 37 when the car it passed or
+   that passed it is within 160 across, else 3A. While first, blinks one of the screen's lamps (the
+   count, period and timer bytes C9-CB of its entry at checkpoint_lamp). */
 void player_car_check_place(void)
 {
 	uint32_t zero = 0, carry = 0;
@@ -693,11 +693,11 @@ void player_car_check_place(void)
 	if (place == 0u)
 	{
 		lamp = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		if (mem_read8(lamp + 0xC9u) == 0u)
+		if (SCREEN_LAMPS(lamp)->leader_blinks == 0u)
 		{
-			mem_write8(lamp + 0xC9u, 2u);
-			mem_write8(lamp + 0xCAu, 0x10u);
-			mem_write8(lamp + 0xCBu, 0x10u);
+			SCREEN_LAMPS(lamp)->leader_blinks = 2u;
+			SCREEN_LAMPS(lamp)->leader_period = 0x10u;
+			SCREEN_LAMPS(lamp)->leader_timer = 0x10u;
 		}
 	}
 	old_place = OBJECT(current_object)->player_car.place;
@@ -767,19 +767,19 @@ void player_car_publish(void)
 		SCREEN(screen)->shown_view = shown_view;
 	}
 	mem_write32(r12, CAR(player_car)->view_x);
-	CAR(player_car)->view_x = mem_read32(shown_view);
+	CAR(player_car)->view_x = VIEW(shown_view)->x;
 	mem_write32(r12 + 4u, CAR(player_car)->view_y);
-	CAR(player_car)->view_y = mem_read32(shown_view + 4u);
+	CAR(player_car)->view_y = VIEW(shown_view)->y;
 	mem_write32(r12 + 8u, CAR(player_car)->view_z);
-	CAR(player_car)->view_z = mem_read32(shown_view + 8u);
+	CAR(player_car)->view_z = VIEW(shown_view)->z;
 	mem_write16(r12 + 0xCu, CAR(player_car)->view_pitch);
-	CAR(player_car)->view_pitch = mem_read16(shown_view + 0xCu);
+	CAR(player_car)->view_pitch = VIEW(shown_view)->pitch;
 	mem_write16(r12 + 0xEu, CAR(player_car)->view_yaw);
-	CAR(player_car)->view_yaw = mem_read16(shown_view + 0xEu);
+	CAR(player_car)->view_yaw = VIEW(shown_view)->yaw;
 	mem_write16(r12 + 0x10u, CAR(player_car)->window_offset);
 	mem_write16(r12 + 0x14u, CAR(player_car)->segment_remaining);
 	mem_write16(r12 + 0x12u, SCREEN(screen)->horizon_line);
-	SCREEN(screen)->horizon_line = mem_read16(shown_view + 0x12u);
+	SCREEN(screen)->horizon_line = VIEW(shown_view)->horizon_line;
 	if (isdn_mode == 0u)
 	{
 		RACE(race)->world_x = OBJECT(current_object)->player_car.world_x;
@@ -898,7 +898,7 @@ void player_car_place_on_road(void)
 }
 
 /* Ends what a hit was doing to the car: no sideways_push, speed_change, bounce, no hit pending (flags
-   bit 2), and the car no longer skidding (car skidding) or slipping (unk_65). */
+   bit 2), and the car no longer skidding (car skidding) or slipping (wheel_slip). */
 void player_car_clear_hit(void)
 {
 	OBJECT(current_object)->player_car.sideways_push = 0;
@@ -1029,11 +1029,11 @@ uint32_t player_car_view_height(void)
 
 /* Moves the view with what the car does: when a rival comes close (player_car_check_rivals, rival_step)
    it starts the RIVAL SEKKIN warning (rival_warning) and pulls the view back and up (car
-   view_shift_rival to -256, unk_112 +8 a step) until the rival has gone, then lets it back; a speed gain
-   of more than A0 in a frame without wheelspin sets car hard_acceleration (hard acceleration); the view
-   nods (nod, car view_shift_nod and unk_102) one way with that hard acceleration and the other with hard
-   braking (more than 120 a frame with the brake down), easing back; and it lags the car's rises and
-   drops (car view_rise). */
+   view_shift_rival to -256, view_pitch_rival +8 a step) until the rival has gone, then lets it back; a
+   speed gain of more than A0 in a frame without wheelspin sets car hard_acceleration (hard
+   acceleration); the view nods (nod, car view_shift_nod and view_pitch_nod) one way with that hard
+   acceleration and the other with hard braking (more than 120 a frame with the brake down), easing back;
+   and it lags the car's rises and drops (car view_rise). */
 void player_car_move_view(void)
 {
 	bool L_007ACB = false, L_007AD1 = false, L_007AFA = false;

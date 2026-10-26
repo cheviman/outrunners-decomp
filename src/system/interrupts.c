@@ -35,7 +35,7 @@ void int_vector_40(void)
 	saved_r12 = r12;
 	vblank_counter++;
 	vblanks_since_start++;
-	mem_write16(IRQ_D00008, vblank_timer_period);
+	mem_write16(IRQ_TIMER_0, vblank_timer_period);
 	timer_interrupts_left = 0x22u;
 	debug_timer_rounds--;
 	if (SCREEN(screen)->index != 0u)
@@ -54,23 +54,23 @@ void int_vector_40(void)
 		else
 		{
 			send_video_registers = 0u;
-			move_halfwords(VIDEO_31FF00, video_registers_ADDRESS, 0x48u);
+			move_halfwords(VIDEO_CONTROL, video_registers_ADDRESS, 0x48u);
 		}
 		tile_bank_bits = tile_banks[0];
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[1]);
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[2]);
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[3]);
-		mem_write8(IO_C0000E, (tile_bank_bits << 6) | (tile_bank_bits >> 2));
+		mem_write8(IO_1_PORT_H, (tile_bank_bits << 6) | (tile_bank_bits >> 2));
 	}
 	finish_sprite_list();
 	send_sound_requests();
-	if (mem_read8(screen + 0xA7u) == 0u)
+	if (SCREEN(screen)->skip_scroll_update == 0u)
 		vblank_update_scrolls();
-	mem_write8(screen + 0xA7u, 0u);
+	SCREEN(screen)->skip_scroll_update = 0u;
 	if (test_mode_on == 0u)
 	{
 		calibration = read_switches_and_analog();
-		switch (mem_read8(screen))
+		switch (SCREEN(screen)->index)
 		{
 		case 0:
 			pack_seat_inputs();
@@ -79,7 +79,7 @@ void int_vector_40(void)
 			tile_bank_bits = queue_seat_inputs();
 			break;
 		default:
-			invalid_jump(vblank_seat_inputs_jumps[mem_read8(screen)]);
+			invalid_jump(vblank_seat_inputs_jumps[SCREEN(screen)->index]);
 		}
 		check_test_button(tile_bank_bits);
 		if (free_play == 0u)
@@ -89,15 +89,15 @@ void int_vector_40(void)
 	lcd_refresh();
 	count_total_time();
 	frame_ready = 0xFFu;
-	if (single_task == 0u && ((test_mode_on != 0u && mem_read8(screen) == 0u) || task_swapping != 0u))
+	if (single_task == 0u && ((test_mode_on != 0u && SCREEN(screen)->index == 0u) || task_swapping != 0u))
 		swap_tasks();
-	screen_vblank_counter = screen_vblank_counters[mem_read8(screen)];
+	screen_vblank_counter = screen_vblank_counters[SCREEN(screen)->index];
 	mem_write8(screen_vblank_counter, mem_read8(screen_vblank_counter) + 1u);
 	r12 = saved_r12;
 	screen = saved_screen;
 	r27 = saved_r27;
 	r28 = saved_r28;
-	mem_write8(IRQ_D00007, 0xFEu);
+	mem_write8(IRQ_ACKNOWLEDGE, 0xFEu);
 }
 
 /* In the vertical blank, a screen's mixer and colours: while the screen's unk_94 bit 0 is set, a step of
@@ -175,20 +175,20 @@ void vblank_update_scrolls(void)
 	new_scroll = new_scroll << 7;
 	mem_write32(VIDEO_RAM + 0x1FF24u + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
 	control_byte = (uint8_t)(video_registers[2] >> 8u);
-	mem_write8(VIDEO_31FF05, control_byte);
+	mem_write8(VIDEO_LINE_CONTROL_HIGH, control_byte);
 	video_registers[2] = (video_registers[2] & 0xFFu) | (((control_byte + 4u) & 0xECu & 0xFFu) << 8u);
 }
 
 /* The end of the vertical blank (IRQ 1): only acknowledged. */
 void int_vector_41(void)
 {
-	mem_write8(IRQ_D00007, 0xFDu);
+	mem_write8(IRQ_ACKNOWLEDGE, 0xFDu);
 }
 
 /* The sound CPU's interrupt (IRQ 2): only acknowledged. The sound program never raises it. */
 void int_vector_42(void)
 {
-	mem_write8(IRQ_D00007, 0xFBu);
+	mem_write8(IRQ_ACKNOWLEDGE, 0xFBu);
 }
 
 /* Timer 0 (IRQ 3), which int_vector_40 starts each frame at its shortest period: sends the LCD its next
@@ -203,9 +203,9 @@ void int_vector_43(void)
 	interrupts_left = timer_interrupts_left;
 	timer_interrupts_left = interrupts_left - 1u;
 	if (interrupts_left != 1u)
-		mem_write16(IRQ_D00008, lcd_timer_period);
+		mem_write16(IRQ_TIMER_0, lcd_timer_period);
 	lcd_send_next_nibble();
-	mem_write8(IRQ_D00007, 0xF7u);
+	mem_write8(IRQ_ACKNOWLEDGE, 0xF7u);
 }
 
 /* Timer 1 (IRQ 4), the link board's: outside the ISDN mode (isdn_mode) only acknowledged, which leaves
@@ -222,14 +222,14 @@ void int_vector_44(void)
 
 	if (isdn_mode == 0u)
 	{
-		mem_write8(IRQ_D00007, 0xEFu);
+		mem_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 		return;
 	}
 	link_wait_count++;
 	timer_period = 1u;
-	received_kind = mem_read8(0x800010u);
+	received_kind = mem_read8(LINK_MESSAGE_KIND);
 	message_kind = received_kind;
-	mem_write8(0x800010u, 0u);
+	mem_write8(LINK_MESSAGE_KIND, 0u);
 	if (message_kind < 4u)
 	{
 		switch (message_kind)
@@ -247,8 +247,8 @@ void int_vector_44(void)
 			invalid_jump(link_message_kind_jumps[message_kind]);
 		}
 	}
-	mem_write16(IRQ_D0000A, timer_period);
-	mem_write8(IRQ_D00007, 0xEFu);
+	mem_write16(IRQ_TIMER_1, timer_period);
+	mem_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 }
 
 /* The vectors no interrupt uses (250 of the 256): halt instructions, on into int_vector_02's. */
@@ -340,8 +340,8 @@ void count_total_time(void)
 		total_time_count = time_count;
 		return;
 	}
-	total_time = SOUND_701F10;
-	if (mem_read32(SOUND_701F10) % 0x49u != 0u)
+	total_time = BOOKKEEPING_TOTAL_TIME;
+	if (mem_read32(BOOKKEEPING_TOTAL_TIME) % 0x49u != 0u)
 	{
 		total_time_count = time_count - 0x3E8u;
 		if (mem_read32(total_time) != 0xFFFFFFFFu)
@@ -406,7 +406,7 @@ void update_lamps(void)
 	port_d = port_d_outputs[0] | checkpoint_lamp[0] | leader_lamp[0];
 	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
 		port_d |= wheel_motor[0];
-	mem_write8(IO_C00006, port_d);
+	mem_write8(IO_1_PORT_D, port_d);
 	if (checkpoint_lamp_2_blinks != 0u)
 	{
 		checkpoint_2_timer = checkpoint_lamp_2_timer;
@@ -432,7 +432,7 @@ void update_lamps(void)
 	port_d = port_d_outputs[1] | checkpoint_lamp_2 | leader_lamp_2;
 	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
 		port_d |= wheel_motor[1];
-	mem_write8(0xC80006u, port_d);
+	mem_write8(IO_2_PORT_D, port_d);
 	screen_block = SCREEN_1;
 	port_g = port_g_outputs_ADDRESS;
 	update_button_lamps(screen_block, port_g);

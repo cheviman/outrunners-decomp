@@ -71,7 +71,7 @@ void print_text_layer_list(uint32_t text_record)
 	do
 	{
 		text_record = print_text_layer(text_record);
-	} while (mem_read16(text_record) != 0xFFFFu);
+	} while (TEXT_LAYER_RECORD(text_record)->cell != 0xFFFFu);
 }
 
 /* Writes a string on the text layer: from the record R19, the cell's address (310000 + its first
@@ -82,18 +82,18 @@ uint32_t print_text_layer(uint32_t text_record)
 	uint16_t cell = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | mem_read16(text_record);
+	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
 	text_record += 2u;
-	cell = (uint16_t)((uint32_t)mem_read8(text_record) << 8);
+	cell = (uint16_t)((uint32_t)TEXT_LAYER_RECORD(text_record - 0x2u)->attribute << 8);
 	text_record++;
-	cell |= mem_read8(text_record);
+	cell |= TEXT_CHARACTERS(text_record)[0];
 	text_record++;
 	if ((uint8_t)cell != 0u)
 	{
 		do
 		{
 			mem_write16(cell_place, cell);
-			cell = (uint16_t)((cell & ~0xFFu) | mem_read8(text_record));
+			cell = (uint16_t)((cell & ~0xFFu) | TEXT_CHARACTERS(text_record)[0]);
 			cell_place += 2u;
 			text_record++;
 		} while ((uint8_t)cell != 0u);
@@ -108,7 +108,7 @@ void erase_text_layer_to_blank_character(uint32_t text_record)
 	uint16_t blank_cell = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | mem_read16(text_record);
+	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
 	blank_cell = 0u;
 	do
 	{
@@ -125,18 +125,18 @@ void print_text_layer_halfwords(uint32_t text_record)
 	uint16_t attribute = 0, character = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | mem_read16(text_record);
+	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
 	text_record += 2u;
-	attribute = (uint16_t)((uint32_t)mem_read8(text_record) << 8);
+	attribute = (uint16_t)((uint32_t)TEXT_LAYER_RECORD(text_record - 0x2u)->attribute << 8);
 	text_record++;
-	character = mem_read16(text_record);
+	character = TEXT_HALFWORD_CHARACTERS(text_record)[0];
 	text_record += 2u;
 	if (character != 0u)
 	{
 		do
 		{
 			mem_write16(cell_place, character | attribute);
-			character = mem_read16(text_record);
+			character = TEXT_HALFWORD_CHARACTERS(text_record)[0];
 			cell_place += 2u;
 			text_record += 2u;
 		} while (character != 0u);
@@ -150,7 +150,7 @@ void erase_text_layer_to_blank_cell(uint32_t text_record)
 	uint16_t blank_cell = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | mem_read16(text_record);
+	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
 	blank_cell = 0u;
 	do
 	{
@@ -315,10 +315,10 @@ uint32_t draw_text(uint32_t text_record)
 	sprite_copy = sprite + 0x3000u;
 	sprite_words_0_1 = text_sprite_words_0_1;
 	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
-	place = mem_read32(text_record);
+	place = SPRITE_TEXT_RECORD(text_record)->place;
 	place = (place << 16) | (place >> 16);
 	font = text_sprite_font;
-	attribute = text_sprite_palette | mem_read16(text_record + 4u);
+	attribute = text_sprite_palette | SPRITE_TEXT_RECORD(text_record)->attribute;
 	return draw_text_sprites(sprite_words_0_1, sprite_size, place, font, attribute, sprite, sprite_copy, text);
 }
 
@@ -333,7 +333,7 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 	uint32_t depth_layer = 0, first_sprite = 0, text_depth_list_head = 0, x_step = 0;
 	uint8_t next_character = 0;
 
-	character = mem_read8(text);
+	character = TEXT_CHARACTERS(text)[0];
 	x_step = 0x80000u;
 	text++;
 	do
@@ -359,7 +359,7 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 		mem_write16(sprite_copy, attribute);
 		sprite_copy += 2u;
 		place += x_step;
-		next_character = mem_read8(text);
+		next_character = TEXT_CHARACTERS(text)[0];
 		text++;
 		character = next_character;
 		sprite += 2u;

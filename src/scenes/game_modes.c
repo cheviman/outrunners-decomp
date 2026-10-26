@@ -39,9 +39,9 @@ void game_mode_title(void)
 		SCREEN(screen)->input_write_place = 0u;
 		SCREEN(screen)->input_read_place = 0u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x86u);
+			mem_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_C0001C, 6u);
+			mem_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->mode_step++;
 		return;
 	case 1:
@@ -87,10 +87,10 @@ void game_mode_restart(void)
 
 /* Game mode 3, the presentation of a car (car_presentation_update), by mode_step: 0 the screen cleared
    (as clear_screen), the palettes of the car's scene (scene_palettes by attract_car_scene_palettes by
-   attract_car) and 031740, object_handlers_1A78 (credit_display, coin_prompt, car_presentation) started,
-   a fade in; 1 when it is over, mode_timer 180 frames (6 seconds; the staff credits code adds 1200); 2
-   counts them down, then a fade out; 3 when it is over, link_event 3 and game mode 4 (the demo race).
-   attract_lamps_update every frame first. */
+   attract_car) and 031740, car_presentation_object_handlers (credit_display, coin_prompt,
+   car_presentation) started, a fade in; 1 when it is over, mode_timer 180 frames (6 seconds; the staff
+   credits code adds 1200); 2 counts them down, then a fade out; 3 when it is over, link_event 3 and game
+   mode 4 (the demo race). attract_lamps_update every frame first. */
 void game_mode_car_presentation(void)
 {
 	uint32_t colour_block = 0, handler_list = 0;
@@ -255,7 +255,7 @@ uint32_t demo_race_end(uint32_t left_caller)
 /* Game mode 5, the ranking (ranking_update), after the demo race and after a game, by mode_step: 0
    demo_flags bit 8 clear, the wheel motor off (wheel_motor by index), the sound off
    (reset_screen_sound), the screen cleared (as clear_screen), clear_published_car, the ranking's palette
-   (ranking_palette), object_handlers_2CB8 (credit_display, coin_prompt) and ranking_update started,
+   (ranking_palette), ranking_objects (credit_display, coin_prompt) and ranking_update started,
    mode_timer 270 frames (9 seconds), race game_over cleared; 1 waits until no fade runs
    (ranking_background fades the screen in); 2 counts the 270 frames down; 3 when no fade runs, game mode
    1 (back to the title). attract_lamps_update every frame first. */
@@ -306,7 +306,7 @@ void game_mode_ranking(void)
 }
 
 /* Game mode 6, a game (check_game_start starts it at step 0) and the demo's race (game_mode_demo_race,
-   from step 10), by game_step: 0 sound 21 (queue_sound), the screen's two lamps on (unk_F20),
+   from step 10), by game_step: 0 sound 21 (queue_sound), the screen's two lamps on (button_lamps),
    lcd_restart_frames cleared (the LCD's timer), a fade out, race game_over cleared; 1 when the fade is
    over, waits until the screen's player is in the list of the race's players (from byte 1F of the
    race_copy record of host_player), then the host itself (not on ISDN) writes 1 to the link board's
@@ -319,25 +319,25 @@ void game_mode_ranking(void)
    car_select_start started, a fade in, the screen on; 3 the car select (car_select_run goes on to 4); 4
    a fade out, entry_countdown_shown cleared, the lamps on; 5 when the fade is over, race ready cleared,
    silence_and_clear_screen, the screen off (C0001C = 4), the stage's palette (queue_stage_load), the
-   screen's car (object_handlers_346C: player_car_update, its place from screen 320 + player), step 23;
-   23 once the car has published its state (race_copy published): race_running, the race's objects
-   (object_handlers_3474; the demo's object_handlers_34C4), 24; 24 and 25 a frame each; 26 step 11, the
-   input ring's places to 0, the screen on; 11 a fade in, step 6; 6 when it is over, 7; 7 the race, until
-   its ending is over (flags bit 1, race_car_start_ending): race_running cleared, a fade out, 8; 8 when
-   it is over, the lamps on, 9; 9 the text and the tilemaps off (clear_text_layer, reset_tile_layers), no
-   objects, step 12; 12 the route map: short of the goal (race_copy finished clear) the sound off, the
-   song title Meaning of the Light (start_song_title with 003504) and sound 0B; palette
-   route_map_palette, route_map_update (object_handlers_34EC), a fade in; 13 when it is over, 14; 14 the
-   map until START (buttons_pressed bit 6) or route_map_update sets 16; 15 (nothing sets it) 16; 16 with
-   a new course record (course_record_beaten) a fade out and 18, else 21; 18 when the fade is over, no
-   objects, name_entry_update started, 19; 19 a fade in, 20; 20 the name entry (name_entry_update sets
-   21); 21 set_player_ready and 22; 21 and 22 once every player of the race is ready (players_not_ready):
-   a fade out, fade_out_music, 17; 17 when the fade is over, the game's end: the time played (the
-   backup's seconds less game_start_time) added to the seat's total (701F18 + 4 * index) and kept if the
-   longest (701F20) or the shortest (701F22), a game counted at the stage level reached (screen
-   current_stage_level, 6 at the goal: 701F24 + 2 * it), C00074 = game_end_c00074_bytes then
-   game_end_c00074_next_bytes by index, sound 1E, the sound and the tilemaps off, in_game, screen
-   race_started and unk_318 cleared, the race record's car part cleared (race_record_clear), no objects,
+   screen's car (player_car_object_handlers: player_car_update, its place from screen 320 + player), step
+   23; 23 once the car has published its state (race_copy published): race_running, the race's objects
+   (race_object_handlers; the demo's demo_race_object_handlers), 24; 24 and 25 a frame each; 26 step 11,
+   the input ring's places to 0, the screen on; 11 a fade in, step 6; 6 when it is over, 7; 7 the race,
+   until its ending is over (flags bit 1, race_car_start_ending): race_running cleared, a fade out, 8; 8
+   when it is over, the lamps on, 9; 9 the text and the tilemaps off (clear_text_layer,
+   reset_tile_layers), no objects, step 12; 12 the route map: short of the goal (race_copy finished
+   clear) the sound off, the song title Meaning of the Light (start_song_title with 003504) and sound 0B;
+   palette route_map_palette, route_map_update (route_map_object_handlers), a fade in; 13 when it is
+   over, 14; 14 the map until START (buttons_pressed bit 6) or route_map_update sets 16; 15 (nothing sets
+   it) 16; 16 with a new course record (course_record_beaten) a fade out and 18, else 21; 18 when the
+   fade is over, no objects, name_entry_update started, 19; 19 a fade in, 20; 20 the name entry
+   (name_entry_update sets 21); 21 set_player_ready and 22; 21 and 22 once every player of the race is
+   ready (players_not_ready): a fade out, fade_out_music, 17; 17 when the fade is over, the game's end:
+   the time played (the backup's seconds less game_start_time) added to the seat's total (701F18 + 4 *
+   index) and kept if the longest (701F20) or the shortest (701F22), a game counted at the stage level
+   reached (screen current_stage_level, 6 at the goal: 701F24 + 2 * it), C00074 = game_end_c00074_bytes
+   then game_end_c00074_next_bytes by index, sound 1E, the sound and the tilemaps off, in_game, screen
+   race_started and is_host cleared, the race record's car part cleared (race_record_clear), no objects,
    race game_over (the screens in the attract modes go to the ranking, race_entries_update), the lamps
    off, clear_lcd, 28; 28 game mode 5 (the ranking). The demo: 10 silence_and_clear_screen,
    clear_race_state, the stage and the car model from attract_demo_races by attract_car (the stage into
@@ -383,7 +383,7 @@ void game_mode_play(void)
 			if (zero)
 			{
 				if (SCREEN(screen)->player == SCREEN(screen)->host_player && isdn_mode == 0u)
-					mem_write8(0x80000Au, 1u);
+					mem_write8(LINK_ENTRIES_CLOSED, 1u);
 				SCREEN(screen)->game_step++;
 			}
 		}
@@ -391,10 +391,10 @@ void game_mode_play(void)
 	case 2:
 		SCREEN(screen)->demo_flags &= ~0x100u;
 		wheel_motor[SCREEN(screen)->index] = 0u;
-		SCREEN(screen)->game_start_time = mem_read32(SOUND_701F10);
+		SCREEN(screen)->game_start_time = mem_read32(BOOKKEEPING_TOTAL_TIME);
 		bookkeeping_entry = SOUND_RAM + 0x1F14u + SCREEN(screen)->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
-		mem_write8(IO_C00074, game_start_c00074_bytes[SCREEN(screen)->index]);
+		mem_write8(EVENT_CODE, game_start_c00074_bytes[SCREEN(screen)->index]);
 		if (SCREEN(screen)->entry_countdown_shown == 0u)
 			reset_screen_sound();
 		clear_screen();
@@ -411,16 +411,16 @@ void game_mode_play(void)
 		SCREEN(screen)->route_stage = 0u;
 		SCREEN(screen)->built_stage_level = 0u;
 		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(lamp_place + 0xC0u, 2u);
-		mem_write32(lamp_place + 0xC8u, 8u);
+		SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
+		SCREEN_LAMPS(lamp_place)->leader_all = 8u;
 		object = start_object();
 		OBJECT(object)->handler = car_select_start_ADDRESS;
 		SCREEN(screen)->fade_kind = 1u;
 		SCREEN(screen)->flags |= 1u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x86u);
+			mem_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_C0001C, 6u);
+			mem_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->game_step++;
 		return;
 	case 3:
@@ -431,8 +431,8 @@ void game_mode_play(void)
 		SCREEN(screen)->game_step++;
 		SCREEN(screen)->entry_countdown_shown = 0u;
 		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(lamp_place + 0xC0u, 2u);
-		mem_write32(lamp_place + 0xC8u, 8u);
+		SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
+		SCREEN_LAMPS(lamp_place)->leader_all = 8u;
 		return;
 	case 10:
 		silence_and_clear_screen();
@@ -459,9 +459,9 @@ void game_mode_play(void)
 		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x84u);
+			mem_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_C0001C, 4u);
+			mem_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
@@ -472,9 +472,9 @@ void game_mode_play(void)
 		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x84u);
+			mem_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_C0001C, 4u);
+			mem_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
@@ -487,9 +487,9 @@ void game_mode_play(void)
 		RACE(SCREEN(screen)->race)->ready = 0u;
 		silence_and_clear_screen();
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x84u);
+			mem_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_C0001C, 4u);
+			mem_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
@@ -515,9 +515,9 @@ void game_mode_play(void)
 		SCREEN(screen)->input_write_place = 0u;
 		SCREEN(screen)->input_read_place = 0u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x86u);
+			mem_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_C0001C, 6u);
+			mem_write8(IO_1_CNT, 6u);
 		return;
 	case 11:
 		SCREEN(screen)->fade_kind = 1u;
@@ -543,8 +543,8 @@ void game_mode_play(void)
 		if ((SCREEN(screen)->flags & 1u) == 0u)
 		{
 			lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-			mem_write32(lamp_place + 0xC0u, 2u);
-			mem_write32(lamp_place + 0xC8u, 8u);
+			SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
+			SCREEN_LAMPS(lamp_place)->leader_all = 8u;
 			SCREEN(screen)->game_step++;
 		}
 		return;
@@ -637,17 +637,17 @@ void game_mode_play(void)
 	case 17:
 		if ((SCREEN(screen)->flags & 1u) != 0u)
 			return;
-		time_played = mem_read32(SOUND_701F10) - SCREEN(screen)->game_start_time;
+		time_played = mem_read32(BOOKKEEPING_TOTAL_TIME) - SCREEN(screen)->game_start_time;
 		bookkeeping_entry = SOUND_RAM + 0x1F18u + SCREEN(screen)->index * 4u;
 		bookkeeping_add32(bookkeeping_entry, time_played);
-		if (mem_read16(SOUND_701F20) < (uint16_t)time_played)
+		if (mem_read16(BOOKKEEPING_LONGEST_PLAY) < (uint16_t)time_played)
 		{
-			bookkeeping_entry = SOUND_701F20;
+			bookkeeping_entry = BOOKKEEPING_LONGEST_PLAY;
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
-		if ((uint16_t)time_played < mem_read16(SOUND_701F22))
+		if ((uint16_t)time_played < mem_read16(BOOKKEEPING_SHORTEST_PLAY))
 		{
-			bookkeeping_entry = SOUND_701F22;
+			bookkeeping_entry = BOOKKEEPING_SHORTEST_PLAY;
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
 		stage_level = SCREEN(screen)->current_stage_level;
@@ -656,8 +656,8 @@ void game_mode_play(void)
 		bookkeeping_entry = SOUND_RAM + 0x1F24u + stage_level * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
 		index = SCREEN(screen)->index;
-		mem_write8(IO_C00074, game_end_c00074_bytes[index]);
-		mem_write8(IO_C00074, game_end_c00074_next_bytes[index]);
+		mem_write8(EVENT_CODE, game_end_c00074_bytes[index]);
+		mem_write8(EVENT_CODE, game_end_c00074_next_bytes[index]);
 		sound_code = 0x1Eu;
 		request_sound(sound_code);
 		reset_screen_sound();
@@ -670,8 +670,8 @@ void game_mode_play(void)
 		SCREEN(screen)->game_step = 0x1Cu;
 		RACE(SCREEN(screen)->race)->game_over = 0xFFu;
 		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(lamp_place + 0xC0u, 0u);
-		mem_write32(lamp_place + 0xC8u, 0u);
+		SCREEN_LAMPS(lamp_place)->checkpoint_all = 0u;
+		SCREEN_LAMPS(lamp_place)->leader_all = 0u;
 		clear_lcd();
 		return;
 	case 28:

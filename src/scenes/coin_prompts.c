@@ -19,7 +19,8 @@
    message 2, TURN THE IGNITION KEY (coin_prompt_start_key_prompt); else message 1 with coins in toward a
    credit or 0, a coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to
    scroll (screen lcd_scroll_request) is the message's (coin_prompt_lcd_texts: Insert Coin(s), Insert
-   More Coin(s), Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls (unk_F44). */
+   More Coin(s), Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls
+   (lcd_scroll). */
 void coin_prompt_update(void)
 {
 	uint8_t coin_units = 0, credits = 0, first_piece = 0, message = 0;

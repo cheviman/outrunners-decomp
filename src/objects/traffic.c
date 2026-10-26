@@ -11,13 +11,13 @@
  */
 #include "game.h"
 
-/* Starts the traffic of the stage the race's leader is in (object_lists_2E1F0). By state: 0 the list of
-   the stage being built (screen built_stage), traffic_level = 8 - the number of players (byte 1F of the
-   record screen host_record points at) + the game setting game_difficulty, the draw distance into screen
-   traffic_draw_distance, no traffic yet (screen traffic_count); 1 (outside the attract demo, screen
-   demo_flags bit 8) when the leader's stage (screen leader_stage) changes, takes its list with positions
-   from where the leader was then (screen leader_window_segment); starts each record (position, level,
-   handler, stop_distance, record) whose position is within the draw distance of the leader's view
+/* Starts the traffic of the stage the race's leader is in (stage_road_object_lists). By state: 0 the
+   list of the stage being built (screen built_stage), traffic_level = 8 - the number of players (byte 1F
+   of the record screen host_record points at) + the game setting game_difficulty, the draw distance into
+   screen traffic_draw_distance, no traffic yet (screen traffic_count); 1 (outside the attract demo,
+   screen demo_flags bit 8) when the leader's stage (screen leader_stage) changes, takes its list with
+   positions from where the leader was then (screen leader_window_segment); starts each record (position,
+   level, handler, stop_distance, record) whose position is within the draw distance of the leader's view
    (window_segment of the race record screen leader_record), when its level is not above traffic_level
    and fewer than 32 are on the road (screen traffic_count); then writes at F84 of the screen the
    stretches of road the players can see (each player's view, window_segment of the race records listed
@@ -36,7 +36,7 @@ void traffic_spawner_update(void)
 		OBJECT(current_object)->traffic_spawner.stage_start = 0;
 		built_stage = SCREEN(screen)->built_stage;
 		OBJECT(current_object)->traffic_spawner.stage = built_stage;
-		OBJECT(current_object)->traffic_spawner.list = object_lists_2E1F0[built_stage];
+		OBJECT(current_object)->traffic_spawner.list = stage_road_object_lists[built_stage];
 		OBJECT(current_object)->traffic_spawner.traffic_level = (uint8_t)(8u - RACE(SCREEN(screen)->host_record)->racer_count + game_difficulty);
 		SCREEN(screen)->traffic_draw_distance = SCREEN(screen)->draw_distance >> 7;
 		SCREEN(screen)->traffic_racer_list = SCREEN(screen)->host_record + 0x1Fu;
@@ -50,7 +50,7 @@ void traffic_spawner_update(void)
 			OBJECT(current_object)->traffic_spawner.stage_start = SCREEN(screen)->leader_window_segment;
 			leader_stage = SCREEN(screen)->leader_stage;
 			OBJECT(current_object)->traffic_spawner.stage = leader_stage;
-			entry = object_lists_2E1F0[leader_stage];
+			entry = stage_road_object_lists[leader_stage];
 			OBJECT(current_object)->traffic_spawner.list = entry;
 		}
 		for (;;)
@@ -312,11 +312,11 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 	if ((int16_t)position < (int16_t)window_segment || (int16_t)window_segment <= (int16_t)seen_from)
 		return;
 	car_segment_record = screen + 0x2000u + CAR(player_car)->segment_offset;
-	frame = mem_read16(car_segment_record);
-	height_difference = mem_read16(car_segment_record + 2u);
+	frame = ROAD_SEGMENT(car_segment_record)->heading;
+	height_difference = ROAD_SEGMENT(car_segment_record)->pitch;
 	segment_record = screen + 0x2000u + (((uint32_t)(uint16_t)OBJECT(current_object)->position << 5) & 0xFFFu);
-	object_height = mem_read16(segment_record + 2u);
-	frame = (uint16_t)((int16_t)((frame << 4) - ((uint32_t)mem_read16(segment_record) << 4)) >> 6);
+	object_height = ROAD_SEGMENT(segment_record)->pitch;
+	frame = (uint16_t)((int16_t)((frame << 4) - ((uint32_t)ROAD_SEGMENT(segment_record)->heading << 4)) >> 6);
 	screen_x_quarter = (uint16_t)((int16_t)OBJECT(current_object)->traffic.screen_x >> 2);
 	carry = (uint16_t)(frame + screen_x_quarter) < frame;
 	frame = (uint16_t)(frame + screen_x_quarter);
@@ -361,8 +361,8 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
    from the leader's list: each one the list's spacing behind the one before it, with its own record):
    moves and draws as the leader's family does (traffic_car_update), but lives exactly as long as the one
    before it (leader): when that one has ended it ends too (screen traffic_count, the count of the
-   traffic, less 1). The only line in the road's lists is in list 25 of object_lists_2E1F0 (a leader of
-   animation 35C and eight of 35D); the scenarios start it only for a frame or two. */
+   traffic, less 1). The only line in the road's lists is in list 25 of stage_road_object_lists (a leader
+   of animation 35C and eight of 35D); the scenarios start it only for a frame or two. */
 void traffic_follower_update(void)
 {
 	if (OBJECT(OBJECT(current_object)->traffic_follower.leader)->flags == 0u)
@@ -380,7 +380,7 @@ void traffic_follower_update(void)
 }
 
 /* The vehicle a road animal pulls (traffic_figure_start_team starts it behind a 013BA3 leader from the
-   leader's list): the covered wagons behind the horses (list 1 of object_lists_2E1F0), the sleighs
+   leader's list): the covered wagons behind the horses (list 1 of stage_road_object_lists), the sleighs
    behind the reindeer (lists 25 and 26). Moves and draws as the 013AF9 traffic does
    (traffic_stopping_car_update), and lives exactly as long as the one before it (leader): when that one
    has ended it ends too (screen traffic_count less 1). */

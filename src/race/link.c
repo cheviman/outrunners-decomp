@@ -12,8 +12,8 @@
 #include "game.h"
 
 /* Never runs in the scenarios (ISDN only): the players on this side and on the other (race_copy
-   players_this_side, unk_2A) into isdn_players_this_side and isdn_players_other_side, their sum into
-   player_count (the race's players) and half of it into machine_count (its cabinets). */
+   players_this_side, players_other_side) into isdn_players_this_side and isdn_players_other_side, their
+   sum into player_count (the race's players) and half of it into machine_count (its cabinets). */
 void isdn_count_players(void)
 {
 	uint8_t player_sum = 0, players_this_side = 0;
@@ -62,8 +62,8 @@ void game_mode_isdn_connection(void)
 		colour_block = black_background_palette_ADDRESS;
 		queue_palette(colour_block);
 		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(lamp_place + 0xC0u, 0u);
-		mem_write32(lamp_place + 0xC8u, 0u);
+		SCREEN_LAMPS(lamp_place)->checkpoint_all = 0u;
+		SCREEN_LAMPS(lamp_place)->leader_all = 0u;
 		clear_lcd();
 		handler_list = isdn_connection_objects_ADDRESS;
 		start_object_list(handler_list);
@@ -117,9 +117,9 @@ void game_mode_isdn_connection(void)
 
 /* Never runs in the scenarios: the ISDN connection screen's texts (game_mode_isdn_connection starts it
    from the list at 000F70), on the text layer (print_text_layer), by state: 0 by link_status: bit 0 ISDN
-   SUCCESS, THIS SIDE, OTHER SIDE and TOTAL with the players (race_copy players_this_side, unk_2A and
-   their sum, print_hex_byte), then 1; bits 2-3 clear ISDN FAILED, then 1; else ISDN CONECTING (sic)
-   blinking every 8 frames (its unk_10 counting); 1 nothing more. */
+   SUCCESS, THIS SIDE, OTHER SIDE and TOTAL with the players (race_copy players_this_side,
+   players_other_side and their sum, print_hex_byte), then 1; bits 2-3 clear ISDN FAILED, then 1; else
+   ISDN CONECTING (sic) blinking every 8 frames (its unk_10 counting); 1 nothing more. */
 void isdn_status_update(void)
 {
 	uint8_t link_status = 0, other_side_count = 0, players_other_side = 0, players_this_side = 0, this_side_count = 0, total_players = 0;
@@ -188,7 +188,7 @@ void network_check_again(void)
 		network_check();
 		return;
 	}
-	mem_write16(0x801000u, 0u);
+	mem_write16(LINK_BOARD_ON, 0u);
 	r12 = 0x800000u;
 	delay = BOARD_OFF_LOOPS;
 	do
@@ -220,7 +220,7 @@ void network_check(void)
 	uint8_t board_status = 0;
 	uint32_t board_flags_greeted = 0, board_flags_role = 0, board_flags_status = 0;
 
-	mem_write16(0x801000u, 0u);
+	mem_write16(LINK_BOARD_ON, 0u);
 	r12 = 0x800000u;
 	move_halfwords(machine_count_ADDRESS, zero_block_ADDRESS, 0x20u);
 	move_halfwords(r12, zero_block_ADDRESS, 8u);
@@ -232,7 +232,7 @@ void network_check(void)
 		network_check_stand_alone();
 		return;
 	}
-	mem_write8(0x801000u, 0u);
+	mem_write8(LINK_BOARD_ON, 0u);
 	text = network_check_master_text_ADDRESS;
 	if (link_master == 0u)
 		text = network_check_slave_text_ADDRESS;
@@ -249,8 +249,8 @@ void network_check(void)
 	mem_write16(r12 + 2u, 0x37u);
 	mem_write16(r12 + 4u, 0x30u);
 	mem_write8(r12 + 0x14u, 0u);
-	mem_write16(0x801002u, 0u);
-	mem_write16(0x801000u, 1u);
+	mem_write16(LINK_BOARD_FLAGS, 0u);
+	mem_write16(LINK_BOARD_ON, 1u);
 	left_caller = 0u;
 	network_check_wait_board(&ignored, &left_caller);
 	if (left_caller != 0u)
@@ -259,8 +259,8 @@ void network_check(void)
 	network_check_greeting(&board_reply, &left_caller);
 	if (left_caller != 0u)
 		return;
-	board_flags_greeted = mem_read32(0x801002u);
-	mem_write32(0x801002u, board_flags_greeted | 1u);
+	board_flags_greeted = mem_read32(LINK_BOARD_FLAGS);
+	mem_write32(LINK_BOARD_FLAGS, board_flags_greeted | 1u);
 	board_reply = wait_for_frame(board_reply);
 	left_caller = 0u;
 	network_check_wait_board(&board_reply, &left_caller);
@@ -277,8 +277,8 @@ void network_check(void)
 		return;
 	}
 	mem_write8(r12 + 4u, link_master);
-	board_flags_role = mem_read32(0x801002u);
-	mem_write32(0x801002u, board_flags_role & ~1u);
+	board_flags_role = mem_read32(LINK_BOARD_FLAGS);
+	mem_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
 	board_reply = wait_for_frame(board_reply);
 	left_caller = 0u;
 	network_check_wait_board(&board_reply, &left_caller);
@@ -288,8 +288,8 @@ void network_check(void)
 	left_caller = network_check_five_ics(board_reply, left_caller);
 	if (left_caller != 0u)
 		return;
-	board_flags_status = mem_read32(0x801002u);
-	mem_write32(0x801002u, board_flags_status | 1u);
+	board_flags_status = mem_read32(LINK_BOARD_FLAGS);
+	mem_write32(LINK_BOARD_FLAGS, board_flags_status | 1u);
 	do
 	{
 		board_reply = wait_for_frame(board_reply);
@@ -300,7 +300,7 @@ void network_check(void)
 		}
 		current_object = check_network_status_text_ADDRESS;
 		network_check_blink_text();
-		board_status = mem_read8(0x801002u);
+		board_status = mem_read8(LINK_BOARD_FLAGS);
 	} while ((int8_t)board_status >= 0);
 	network_check_clear_status_line();
 	mem_write8(r12 + 0xE20u, mem_read8(r12 + 2u));
@@ -361,15 +361,15 @@ void network_check_isdn(void)
 {
 	uint32_t delay = 0, left_caller = 0;
 
-	mem_write16(0x801000u, 0u);
+	mem_write16(LINK_BOARD_ON, 0u);
 	delay = BOARD_OFF_LOOPS;
 	do
 	{
 		delay--;
 	} while (delay != 0u);
 	mem_write8(r12 + 0x14u, 1u);
-	mem_write8(0x801002u, 0u);
-	mem_write8(0x801000u, 1u);
+	mem_write8(LINK_BOARD_FLAGS, 0u);
+	mem_write8(LINK_BOARD_ON, 1u);
 	left_caller = 0u;
 	left_caller = network_check_wait_isdn(left_caller);
 	if (left_caller != 0u)
@@ -473,8 +473,8 @@ void network_check_result(uint32_t machine)
 		print_text_layer(text);
 		text = machine_id_text_ADDRESS;
 		print_text_layer(text);
-		isdn_machine_id = mem_read8(0x800002u);
-		mem_write16(VIDEO_31F736, (isdn_machine_id + 0x30u) | 0x6000u);
+		isdn_machine_id = mem_read8(LINK_MACHINE_NUMBER);
+		mem_write16(MACHINE_ID_TEXT_CELL, (isdn_machine_id + 0x30u) | 0x6000u);
 		frames_left = 0x80u;
 		do
 		{
@@ -499,7 +499,7 @@ void network_check_result(uint32_t machine)
 		clear_text_layer();
 		return;
 	}
-	board_master = mem_read8(0x800004u);
+	board_master = mem_read8(LINK_MASTER);
 	if (board_master == 0u)
 	{
 		text = slave_machine_text_ADDRESS;
@@ -508,8 +508,8 @@ void network_check_result(uint32_t machine)
 		print_text_layer(text);
 		text = machine_id_text_ADDRESS;
 		print_text_layer(text);
-		slave_machine_id = mem_read8(0x800002u);
-		mem_write16(VIDEO_31F736, (slave_machine_id + 0x30u) | 0x6000u);
+		slave_machine_id = mem_read8(LINK_MACHINE_NUMBER);
+		mem_write16(MACHINE_ID_TEXT_CELL, (slave_machine_id + 0x30u) | 0x6000u);
 		frames_left = 0x80u;
 		do
 		{
@@ -526,8 +526,8 @@ void network_check_result(uint32_t machine)
 	print_text_layer(text);
 	text = machine_id_text_ADDRESS;
 	print_text_layer(text);
-	master_machine_id = mem_read8(0x800002u);
-	mem_write16(VIDEO_31F736, (master_machine_id + 0x30u) | 0x6000u);
+	master_machine_id = mem_read8(LINK_MACHINE_NUMBER);
+	mem_write16(MACHINE_ID_TEXT_CELL, (master_machine_id + 0x30u) | 0x6000u);
 	frames_left = 0x80u;
 	do
 	{
@@ -553,8 +553,8 @@ uint32_t network_check_board_memory(uint32_t left_caller)
 		outcome = 3u;
 	if (outcome == 3u)
 	{
-		mem_write8(IO_C0001C, 4u);
-		mem_write8(0xC8001Cu, 0x80u);
+		mem_write8(IO_1_CNT, 4u);
+		mem_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
 		network_check_error(error_texts, &ignored, &left_caller_2);
 		return left_caller_2;
@@ -692,13 +692,13 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
 		link_wait_frames = frames_left - 1u;
 		if (frames_left == 1u)
 		{
-			mem_write8(IO_C0001C, 4u);
-			mem_write8(0xC8001Cu, 0x80u);
+			mem_write8(IO_1_CNT, 4u);
+			mem_write8(IO_2_CNT, 0x80u);
 			error_texts = communication_time_out_texts_ADDRESS;
 			network_check_error(error_texts, p_board_reply, p_left_caller);
 			return;
 		}
-		board_flags = mem_read32(0x801002u);
+		board_flags = mem_read32(LINK_BOARD_FLAGS);
 	} while ((board_flags & 0x80u) == 0u);
 	network_check_clear_status_line();
 }
@@ -723,7 +723,7 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
-		board_machines = mem_read8(0x800000u);
+		board_machines = mem_read8(LINK_MACHINE_COUNT);
 	} while (board_machines == 0u);
 	link_wait_frames = 0x3Cu;
 	do
@@ -767,8 +767,8 @@ void network_check_greeting(uint32_t *p_board_reply, uint32_t *p_left_caller)
 	*p_board_reply = ((((uint32_t)(uint8_t)mem_read16(board_answer) << 8) | (uint8_t)mem_read16(board_answer + 2u)) << 8) | (uint8_t)mem_read16(board_answer + 4u);
 	if ((((((uint32_t)(uint8_t)mem_read16(r12) << 8) | (uint8_t)mem_read16(r12 + 2u)) << 8) | (uint8_t)mem_read16(r12 + 4u)) != 0x563730u || *p_board_reply != 0x5A3830u)
 	{
-		mem_write8(IO_C0001C, 4u);
-		mem_write8(0xC8001Cu, 0x80u);
+		mem_write8(IO_1_CNT, 4u);
+		mem_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
 		network_check_error(error_texts, p_board_reply, p_left_caller);
 		return;
@@ -790,8 +790,8 @@ uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
 		network_check_show_ics(ic_count, self_test);
 		return left_caller;
 	}
-	mem_write8(IO_C0001C, 4u);
-	mem_write8(0xC8001Cu, 0x80u);
+	mem_write8(IO_1_CNT, 4u);
+	mem_write8(IO_2_CNT, 0x80u);
 	clear_text_layer();
 	error_texts = communication_board_error_texts_ADDRESS;
 	print_text_layer_list(error_texts);
@@ -802,8 +802,8 @@ uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
 	ic_count = 5u;
 	self_test = (self_test & ~0xFFu) | mem_read8(r12 + 0xCu);
 	network_check_show_ics(ic_count, self_test);
-	mem_write8(IO_C0001C, 6u);
-	mem_write8(0xC8001Cu, 0x86u);
+	mem_write8(IO_1_CNT, 6u);
+	mem_write8(IO_2_CNT, 0x86u);
 	network_check_halt(&ignored, &left_caller_2);
 	return left_caller_2;
 }
@@ -819,16 +819,16 @@ void network_check_four_ics(uint32_t *p_board_reply, uint32_t *p_left_caller)
 	self_test = (board_reply & ~0xFFu) | mem_read8(r12 + 0xCu);
 	if ((uint8_t)self_test != 0u)
 	{
-		mem_write8(IO_C0001C, 4u);
-		mem_write8(0xC8001Cu, 0x80u);
+		mem_write8(IO_1_CNT, 4u);
+		mem_write8(IO_2_CNT, 0x80u);
 		clear_text_layer();
 		error_texts = communication_board_error_texts_ADDRESS;
 		print_text_layer_list(error_texts);
 		self_test = (self_test & ~0xFFu) | mem_read8(r12 + 0xCu);
 		ic_count = 4u;
 		network_check_show_ics(ic_count, self_test);
-		mem_write8(IO_C0001C, 6u);
-		mem_write8(0xC8001Cu, 0x86u);
+		mem_write8(IO_1_CNT, 6u);
+		mem_write8(IO_2_CNT, 0x86u);
 		network_check_halt(&self_test, p_left_caller);
 	}
 	else
@@ -924,8 +924,8 @@ void network_check_error(uint32_t error_texts, uint32_t *p_board_reply, uint32_t
 {
 	clear_text_layer();
 	print_text_layer_list(error_texts);
-	mem_write8(IO_C0001C, 6u);
-	mem_write8(0xC8001Cu, 0x86u);
+	mem_write8(IO_1_CNT, 6u);
+	mem_write8(IO_2_CNT, 0x86u);
 	for (;;)
 	{
 		*p_board_reply = wait_for_frame(*p_board_reply);
@@ -982,7 +982,7 @@ void link_take_master_settings(void)
 		ignored = wait_for_frame(ignored);
 		if (isdn_mode == 0u)
 			break;
-		isdn_records_ready = mem_read8(0x8006E1u);
+		isdn_records_ready = mem_read8(LINK_ISDN_RECORDS_READY);
 		if (isdn_records_ready != 0u)
 		{
 			link_isdn_receive_records();
@@ -996,7 +996,7 @@ void link_take_master_settings(void)
 	record_size = 0x80u;
 	do
 	{
-		mem_write8(car_number_slot, mem_read8(record_car_number));
+		mem_write8(car_number_slot, RACE(record_car_number - 0x2u)->car_number);
 		record_car_number = (record_car_number & ~0xFFFFu) | (uint16_t)(record_car_number + record_size);
 		car_number_slot++;
 		players_left--;
@@ -1082,7 +1082,7 @@ void race_entries_update(void)
 				player = 0u;
 				for (;;)
 				{
-					if (mem_read8(r14 + player) != 0u || mem_read8(request) == 0u)
+					if (mem_read8(r14 + player) != 0u || RACE(request - 0x19u)->entry_request == 0u)
 					{
 						player = (uint8_t)(player + 1u);
 						request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
@@ -1113,7 +1113,7 @@ void race_entries_update(void)
 					player = 0u;
 					for (;;)
 					{
-						if (mem_read8(r14 + player) != 0u || mem_read8(request) == 0u)
+						if (mem_read8(r14 + player) != 0u || RACE(request - 0x19u)->entry_request == 0u)
 						{
 							player = (uint8_t)(player + 1u);
 							request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
@@ -1139,7 +1139,7 @@ void race_entries_update(void)
 					AS32(SCREEN(r14 - 0x300u)->accepted_players) = 0u;
 					r14 = r14 + 4u;
 					SCREEN(r14 - 0x304u)->last_four_accepted_players = 0u;
-					mem_write8(0x80000Au, 1u);
+					mem_write8(LINK_ENTRIES_CLOSED, 1u);
 					r14 = r14 + 4u;
 				}
 			}
@@ -1376,7 +1376,7 @@ void race_progress_update(void)
 		{
 			SCREEN(screen)->forks_decided++;
 			mem_write8(screen + 0x34Au + pass_checkpoint, pass_branch);
-			fork_index = mem_read8(race_copy_offsets[pass_player] + 0x20E062u);
+			fork_index = RACE(GAME_VARIABLES + race_copy_offsets[pass_player])->stage;
 			fork_index = (uint8_t)(fork_index * 2u);
 			mem_write8(screen + 0x344u + pass_checkpoint, fork_next_stages[(uint8_t)(fork_index + pass_branch)]);
 		}
@@ -1388,9 +1388,9 @@ void race_progress_update(void)
    the seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count
    (010889) and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear),
    not the demo (unk_90 bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking
-   (bytes C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts object_handlers_DF74
+   (bytes C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts entry_invitation_object_handlers
    (entry_countdown_start, credit_display_update, coin_prompt_update): the invitation to join with the
-   entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), unk_153 = 1, unk_94 bit 0; 4
+   entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), fade_kind = 1, unk_94 bit 0; 4
    once player 0's entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD
    cleared (clear_lcd). */
 void entry_invitation_step(void)
@@ -1413,9 +1413,9 @@ void entry_invitation_step(void)
 		return;
 	case 3:
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(0xC8001Cu, 0x86u);
+			mem_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_C0001C, 6u);
+			mem_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->fade_kind = 1u;
 		SCREEN(screen)->flags |= 1u;
 		SCREEN(screen)->game_step++;
@@ -1426,8 +1426,8 @@ void entry_invitation_step(void)
 		reset_screen_sound();
 		AS32(SCREEN(screen)->game_mode) = 2u;
 		lamp = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(lamp + 0xC0u, 0u);
-		mem_write32(lamp + 0xC8u, 0u);
+		SCREEN_LAMPS(lamp)->checkpoint_all = 0u;
+		SCREEN_LAMPS(lamp)->leader_all = 0u;
 		clear_lcd();
 		return;
 	default:
@@ -1446,14 +1446,14 @@ void entry_invitation_step(void)
 		index = SCREEN(screen)->index;
 		wheel_motor[index] = 0u;
 		lamp = GAME_VARIABLES + index * 4u;
-		mem_write8(lamp + 0xC0u, 2u);
-		mem_write8(lamp + 0xC8u, 8u);
-		mem_write8(lamp + 0xC1u, 0xFFu);
-		mem_write8(lamp + 0xC2u, 0x10u);
-		mem_write8(lamp + 0xC3u, 1u);
-		mem_write8(lamp + 0xC9u, 0xFFu);
-		mem_write8(lamp + 0xCAu, 0x10u);
-		mem_write8(lamp + 0xCBu, 1u);
+		SCREEN_LAMPS(lamp)->checkpoint = 2u;
+		SCREEN_LAMPS(lamp)->leader = 8u;
+		SCREEN_LAMPS(lamp)->checkpoint_blinks = 0xFFu;
+		SCREEN_LAMPS(lamp)->checkpoint_period = 0x10u;
+		SCREEN_LAMPS(lamp)->checkpoint_timer = 1u;
+		SCREEN_LAMPS(lamp)->leader_blinks = 0xFFu;
+		SCREEN_LAMPS(lamp)->leader_period = 0x10u;
+		SCREEN_LAMPS(lamp)->leader_timer = 1u;
 	}
 }
 
@@ -1550,7 +1550,7 @@ void link_receive_records(void)
 	{
 		if (link_failed == 0u && link_off == 0u)
 		{
-			board_error = mem_read8(0x80000Cu);
+			board_error = mem_read8(LINK_BOARD_ERROR);
 			if (board_error != 0u)
 			{
 				link_lost();
@@ -1559,7 +1559,7 @@ void link_receive_records(void)
 			source = 0x800020u;
 			destination = RACE_COPY_1;
 			record_count = 8u;
-			second_buffer = mem_read8(0x80000Eu);
+			second_buffer = mem_read8(LINK_SECOND_BUFFER);
 			if (second_buffer == 0u)
 			{
 				link_copy_records_in(record_count, source, destination);
@@ -2149,7 +2149,7 @@ void link_send_records(void)
 		link_wait_frames = link_wait_frames_start;
 		if (link_failed != 0u || link_off != 0u)
 			return;
-		board_error = mem_read8(0x80000Cu);
+		board_error = mem_read8(LINK_BOARD_ERROR);
 		if (board_error != 0u)
 		{
 			link_lost();
@@ -2498,6 +2498,6 @@ void link_send_records(void)
 			mem_write16(board_records, RACE(race)->machine);
 			record_count--;
 		} while (record_count != 0u);
-		mem_write8(0x800006u, 0xFFu);
+		mem_write8(LINK_RECORDS_SENT, 0xFFu);
 	}
 }

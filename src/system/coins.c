@@ -20,15 +20,15 @@ void init_coins(void)
 {
 	uint8_t chip_2_port_f = 0;
 
-	chip_2_port_f = mem_read8(0xC8000Au);
+	chip_2_port_f = mem_read8(IO_2_PORT_F);
 	second_io_chip_port_f = ~chip_2_port_f & 0xFu;
 	chute_entry_offset = 0u;
 	if (free_play == 0u && second_chute_multiplier == first_chute_multiplier)
 		chute_entry_offset = 0x14u;
-	seat1_credits = mem_read8(SOUND_701F74);
-	seat1_bookkeeping_byte = mem_read8(SOUND_701F76);
-	seat2_credits = mem_read8(SOUND_701F78);
-	seat2_bookkeeping_byte = mem_read8(SOUND_701F7A);
+	seat1_credits = mem_read8(BOOKKEEPING_SEAT_1_CREDITS);
+	seat1_bookkeeping_byte = mem_read8(BOOKKEEPING_SEAT_1_BYTE);
+	seat2_credits = mem_read8(BOOKKEEPING_SEAT_2_CREDITS);
+	seat2_bookkeeping_byte = mem_read8(BOOKKEEPING_SEAT_2_BYTE);
 }
 
 /* The coins and service credits, in the vertical blank unless on free play (free_play): queues each
@@ -151,50 +151,50 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 	uint32_t meter_frames = 0;
 	uint8_t frames_on = 0;
 
-	meter_frames = mem_read16(coin_meter);
+	meter_frames = COIN_METER(coin_meter)->frames;
 	coin_meter += 2u;
 	if (meter_frames == 0u)
 	{
-		if (mem_read8(coin_meter) != 0u)
+		if (COIN_METER(coin_meter - 0x2u)->pulses_owed != 0u)
 		{
-			mem_write8(coin_meter, mem_read8(coin_meter) - 1u);
+			COIN_METER(coin_meter - 0x2u)->pulses_owed--;
 			mem_write8(r12, mem_read8(r12) | shift_by(1u, (uint8_t)meter_bit, 8));
-			mem_write16(coin_meter - 2u, 0x606u);
+			COIN_METER(coin_meter - 0x2u)->frames = 0x606u;
 		}
-		r12 = SOUND_701F74;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = SOUND_701FF0;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		return;
 	}
 	if ((uint8_t)meter_frames == 0u)
 	{
 		coin_meter--;
-		mem_write8(coin_meter, mem_read8(coin_meter) - 1u);
-		r12 = SOUND_701F74;
+		COIN_METER(coin_meter - 0x1u)->frames_off--;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = SOUND_701FF0;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		return;
 	}
-	frames_on = mem_read8(coin_meter - 2u);
-	mem_write8(coin_meter - 2u, frames_on - 1u);
+	frames_on = COIN_METER(coin_meter - 0x2u)->frames_on;
+	COIN_METER(coin_meter - 0x2u)->frames_on = frames_on - 1u;
 	if (frames_on != 1u)
 	{
-		r12 = SOUND_701F74;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = SOUND_701FF0;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
 		write_bookkeeping_credits();
 		return;
 	}
 	mem_write8(r12, mem_read8(r12) & rotate_by(0xFEu, (uint8_t)meter_bit, 8));
-	r12 = SOUND_701F74;
+	r12 = BOOKKEEPING_SEAT_1_CREDITS;
 	write_bookkeeping_credits();
 	bookkeeping_update_checksum(meter_frames);
-	r12 = SOUND_701FF0;
+	r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
 	write_bookkeeping_credits();
 }
 
@@ -221,16 +221,16 @@ uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint3
 	uint32_t zero = 0;
 	uint8_t credits = 0;
 
-	mem_write8(seat_credits, mem_read8(seat_credits) + 1u);
-	credits = mem_read8(seat_credits);
+	SEAT_CREDITS(seat_credits)->credits++;
+	credits = SEAT_CREDITS(seat_credits)->credits;
 	zero = (uint8_t)(credits - 9u) == 0u;
 	if (credits >= 9u)
 	{
-		mem_write8(seat_credits + 2u, 0u);
-		mem_write8(seat_credits + 1u, 0u);
+		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
+		SEAT_CREDITS(seat_credits)->coin_units = 0u;
 		if (zero == 0u)
 		{
-			mem_write8(seat_credits, 9u);
+			SEAT_CREDITS(seat_credits)->credits = 9u;
 			return credits_given;
 		}
 	}
@@ -254,55 +254,55 @@ uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_
 	uint32_t coin_sounds = 0, counter = 0, seat_credits = 0, units_per_bonus = 0;
 	uint32_t switch_bit = 0, owed_pulses = 0;
 
-	switch_bit = mem_read32(chute_entry);
+	switch_bit = COIN_CHUTE(chute_entry)->switch_bit;
 	chute_entry += 4u;
 	if ((released_switches & shl32(1u, (int)(switch_bit))) == 0u)
 		return credits_given;
-	coin_sounds = mem_read32(chute_entry);
+	coin_sounds = COIN_CHUTE(chute_entry - 0x4u)->coin_sounds;
 	chute_entry = chute_entry + 4u + chute_entry_offset;
-	seat_credits = mem_read32(chute_entry);
-	mem_write8(IO_C00074, mem_read8(chute_entry + 0x10u));
-	owed_pulses = mem_read32(chute_entry + 4u);
+	seat_credits = COIN_CHUTE_VARIANT(chute_entry)->credits;
+	mem_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
+	owed_pulses = COIN_CHUTE_VARIANT(chute_entry)->pulses_owed;
 	mem_write8(owed_pulses, mem_read8(owed_pulses) + 1u);
-	counter = mem_read32(chute_entry + 8u);
+	counter = COIN_CHUTE_VARIANT(chute_entry)->counter;
 	bookkeeping_increment16(counter);
-	if (mem_read8(seat_credits) >= 9u)
+	if (SEAT_CREDITS(seat_credits)->credits >= 9u)
 		return credits_given;
 	mem_write8(coin_sounds, mem_read8(coin_sounds) + 1u);
-	chute_units = mem_read8(mem_read32(chute_entry + 0xCu));
+	chute_units = mem_read8(COIN_CHUTE_VARIANT(chute_entry)->coin_units);
 	units_per_bonus = bonus_adder;
 	if (units_per_bonus != 0u)
 	{
-		bonus_units = (uint8_t)(mem_read8(seat_credits + 2u) + chute_units);
+		bonus_units = (uint8_t)(SEAT_CREDITS(seat_credits)->bonus_units + chute_units);
 		while (units_per_bonus <= bonus_units)
 		{
-			mem_write8(seat_credits + 1u, mem_read8(seat_credits + 1u) + 1u);
+			SEAT_CREDITS(seat_credits)->coin_units++;
 			bonus_units -= units_per_bonus;
 		}
-		mem_write8(seat_credits + 2u, bonus_units);
+		SEAT_CREDITS(seat_credits)->bonus_units = bonus_units;
 	}
 	units_per_credit = coins_per_credit;
-	credit_units = (uint8_t)(mem_read8(seat_credits + 1u) + chute_units);
+	credit_units = (uint8_t)(SEAT_CREDITS(seat_credits)->coin_units + chute_units);
 	do
 	{
 		if (credit_units < units_per_credit)
 		{
-			mem_write8(seat_credits + 1u, credit_units);
+			SEAT_CREDITS(seat_credits)->coin_units = credit_units;
 			return credits_given;
 		}
-		mem_write8(seat_credits, mem_read8(seat_credits) + 1u);
+		SEAT_CREDITS(seat_credits)->credits++;
 		show_title_on_credit();
 		credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
 		credit_units -= units_per_credit;
-	} while (mem_read8(seat_credits) < 9u);
+	} while (SEAT_CREDITS(seat_credits)->credits < 9u);
 	credit_units = 0u;
-	mem_write8(seat_credits + 2u, 0u);
-	mem_write8(seat_credits + 1u, credit_units);
+	SEAT_CREDITS(seat_credits)->bonus_units = 0u;
+	SEAT_CREDITS(seat_credits)->coin_units = credit_units;
 	return credits_given;
 }
 
-/* A credit on the screen R12 during the attract mode (game modes 1-5, the low byte of its unk_80) brings
-   it to the title: unk_80 = 2 (game mode 2, game_mode_title, from its first step). */
+/* A credit on the screen R12 during the attract mode (game modes 1-5, the low byte of its game_mode)
+   brings it to the title: game_mode = 2 (game mode 2, game_mode_title, from its first step). */
 void show_title_on_credit(void)
 {
 	if ((int8_t)SCREEN(r12)->game_mode > 0 && (int8_t)SCREEN(r12)->game_mode < 6)
@@ -428,11 +428,11 @@ void bookkeeping_set8(uint32_t counter, uint8_t amount)
    checksum. Not run in the scenarios. */
 void bookkeeping_clear_credits(void)
 {
-	mem_write32(SOUND_701F74, 0u);
-	mem_write32(SOUND_701F78, 0u);
+	mem_write32(BOOKKEEPING_SEAT_1_CREDITS, 0u);
+	mem_write32(BOOKKEEPING_SEAT_2_CREDITS, 0u);
 	bookkeeping_update_checksum(0u);
-	mem_write32(SOUND_701FF0, 0u);
-	mem_write32(SOUND_701FF4, 0u);
+	mem_write32(BOOKKEEPING_BACKUP_SEAT_1_CREDITS, 0u);
+	mem_write32(BOOKKEEPING_BACKUP_SEAT_2_CREDITS, 0u);
 	r12 = SOUND_RAM + 0x1FF8u;
 }
 
@@ -444,7 +444,7 @@ void bookkeeping_check(void)
 	uint16_t stored_checksum = 0;
 	uint32_t block = 0, checksum = 0, destination = 0, source = 0;
 
-	stored_checksum = mem_read16(SOUND_701F00);
+	stored_checksum = mem_read16(BOOKKEEPING_CHECKSUM);
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
 	if ((uint16_t)checksum == stored_checksum)
@@ -496,7 +496,7 @@ uint32_t bookkeeping_update_checksum(uint32_t checksum)
 
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(checksum, block);
-	mem_write16(SOUND_701F00, checksum);
+	mem_write16(BOOKKEEPING_CHECKSUM, checksum);
 	return checksum;
 }
 
@@ -508,7 +508,7 @@ void bookkeeping_check_block(void)
 
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
-	if (mem_read16(SOUND_701F00) != (uint16_t)checksum)
+	if (mem_read16(BOOKKEEPING_CHECKSUM) != (uint16_t)checksum)
 	{
 		checksum = bookkeeping_reset(checksum);
 		return;

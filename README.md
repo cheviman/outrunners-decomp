@@ -83,6 +83,24 @@ the tools verify it, extract the assets and build your own executable.
       `car_models`, the checkpoint board's `row_steps`: a family's field cannot be an array yet), and
       fields of objects of two families (the choice flags `car_select_entries_run` starts) or of any
       (`start_object_list`'s number in its list)
+- [x] The memory the code reaches through pointers, typed: a record of the work RAM or the program ROM a
+      local, a parameter or a field points at is a structure, so `mem_read16(projected_segment + 4u)` reads
+      `PROJECTED_SEGMENT(projected_segment)->x` (each screen's ring of views and the road as it projects
+      it, the sprites' depth lists, the cars' hit boxes, the crash tables, the courses' starts, the coin
+      chutes, the seats' credits and inputs, the lamps, the settings' copies, the palettes' and the packed
+      tiles' lists, the text records), and the board's registers have names (`IO_1_PORT_E`,
+      `IRQ_ACKNOWLEDGE`, `LINK_BOARD_ON`, `SPRITE_LIST_1_A`). 2,465 reads and writes still go through a
+      computed address (`tools/noise_report.py`, mem_access; 2,877 before). By what the scenarios saw each
+      reach (`tools/memory_census.py`, with the game built with `ORUNNERS_MEMORY_CENSUS`): 601 the board's
+      memories (sprite, video and palette RAM, the mixers, the RAM shared with the sound board, the I/O
+      chips, the interrupt controller), which the C reaches through the bus as the original does; 944 the
+      work RAM: pointers that step through a record a field at a time (the link's blocks of records, the
+      palette fades), the clears of whole blocks (`start_object`, `boot`), R12, R14, R27 and R28 used as
+      pointers, the arrays inside a record read with a variable index (`screen + 0x480u + player`) and the
+      fields that hold the address of a single value (the route map's and the backgrounds' video register
+      copies), which the decompiler cannot type yet; 19 the program ROM, in streams that mix widths or
+      kinds of record (the test mode's texts); and 901 run in no scenario (`unrolled_copy`, a copy nothing
+      calls, and the link between cabinets: its board's memory and the copies of the race records)
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,
@@ -273,7 +291,10 @@ and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, 
 tools goes to arcade-decomp, checked on OutRunners, and comes here as a newer commit of the submodule
 (`git submodule update --remote tools/core`). The reference the scenarios compare the game with is the core's
 too (`tools/core/system32/reference/`: `s32ref` on MAME's cores, the disassemblers' oracles, `pcmcheck`),
-which CMake builds through its `reference.cmake` with OutRunners' data library. The rest of `tools/` is
+which CMake builds through its `reference.cmake` with OutRunners' data library. `memory_census.py run`
+counts what each mem_read and mem_write of the C reaches over the scenarios, on the headless game built
+with `ORUNNERS_MEMORY_CENSUS=ON` into `build/bin-census` (`ORUNNERS_BIN_DIR`); `report` sums it into
+`build/census/memory.txt`. The rest of `tools/` is
 OutRunners' own: the ROM set (`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets'
 census and sheets, and the pack.
 

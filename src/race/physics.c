@@ -12,8 +12,8 @@
 #include "game.h"
 
 /* Loads the car's model and transmission: its handling record (car handling), its torque curves
-   (unk_50), its gear ratios (unk_54) and top gear (unk_63), the first gear's ratio (unk_64), and the
-   roadside surfaces of the first stage (player_car_next_surfaces). */
+   (torque_curves), its gear ratios (unk_54) and top gear (top_gear), the first gear's ratio (unk_64),
+   and the roadside surfaces of the first stage (player_car_next_surfaces). */
 void player_car_load_gears(void)
 {
 	uint32_t gear_list = 0, model = 0, model_transmission = 0;
@@ -70,10 +70,10 @@ void player_car_build_torque_curves(void)
 	} while (gears_left != 0u);
 }
 
-/* Takes the controls: gas, brake and wheel from the screen's pedals and wheel (screen gas, unk_102,
-   unk_100). In the demo (screen demo_flags bit 8) the car drives itself: no brake, the gas up to F0
-   (eased off while skidding), the wheel back toward the middle when off the road or slowed, else against
-   its sideways drift. */
+/* Takes the controls: gas, brake and wheel from the screen's pedals and wheel (screen gas, brake,
+   wheel). In the demo (screen demo_flags bit 8) the car drives itself: no brake, the gas up to F0 (eased
+   off while skidding), the wheel back toward the middle when off the road or slowed, else against its
+   sideways drift. */
 void player_car_read_controls(void)
 {
 	uint8_t gas = 0, wheel = 0;
@@ -181,9 +181,9 @@ void player_car_read_controls(void)
    slide, tyre noise 3, smoke on both sides); sideways_speed and sideways_push move it across (car
    road_x, within the road's half width + 60); the speed along (less its sideways angle, vector_angle)
    plus a catch-up bonus by the distance to the car ahead (car catch_up_target, unk_6A; not once
-   finished) moves it along, passing segments (car window_segment, unk_44, unk_40, unk_A4, unk_34,
-   unk_32); then player_car_world_position. In ISDN mode (isdn_mode) the race record the link brings in
-   gives all this. */
+   finished) moves it along, passing segments (car window_segment, segment, segment_offset, unk_A4,
+   segment_progress, segment_fraction); then player_car_world_position. In ISDN mode (isdn_mode) the race
+   record the link brings in gives all this. */
 void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *p_segment_fraction, uint32_t *p_segment_length)
 {
 	uint32_t segment_record = *p_segment_record;
@@ -359,7 +359,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		CAR(player_car)->segment_offset = segment_then_offset;
 		segment_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + segment_then_offset);
 		r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
-		segment_length = mem_read16(segment_record);
+		segment_length = ROAD_SEGMENT(segment_record)->heading;
 		segment_length = (uint16_t)(segment_length - mem_read16(r12));
 		segment_length = sine_table[segment_length & 0xFFFu] * road_x;
 		carry = (segment_length >> 5) & 1u;
@@ -375,7 +375,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		for (;;)
 		{
 			r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
-			segment_length = mem_read16(segment_record);
+			segment_length = ROAD_SEGMENT(segment_record)->heading;
 			segment_length = (uint16_t)(segment_length - mem_read16(r12));
 			segment_length = sine_table[segment_length & 0xFFFu] * road_x;
 			carry = (segment_length >> 5) & 1u;
@@ -406,7 +406,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		*p_segment_length = segment_length;
 		return;
 	}
-	max_road_x = mem_read16(segment_record + 0x12u);
+	max_road_x = ROAD_SEGMENT(segment_record)->half_width;
 	min_road_x = (uint16_t)(0u - max_road_x);
 	max_road_x += 0x60u;
 	min_road_x -= 0x60u;
@@ -455,13 +455,13 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 		offset_y = 0u;
 		offset_x = road_x << 7;
 		offset_z = segment_fraction << 7;
-		segment_pitch = mem_read16(segment_record + 2u);
-		segment_heading = mem_read16(segment_record);
+		segment_pitch = ROAD_SEGMENT(segment_record)->pitch;
+		segment_heading = ROAD_SEGMENT(segment_record)->heading;
 		rotate_offset(offset_y, segment_heading, segment_pitch, &offset_x, &offset_z);
-		OBJECT(current_object)->player_car.world_x = (int32_t)(offset_x * 2u + (mem_read32(segment_record + 4u) << 8)) >> 8;
-		OBJECT(current_object)->player_car.world_z = (int32_t)(offset_z * 2u + (mem_read32(segment_record + 8u) << 8)) >> 8;
+		OBJECT(current_object)->player_car.world_x = (int32_t)(offset_x * 2u + (ROAD_SEGMENT(segment_record)->x << 8)) >> 8;
+		OBJECT(current_object)->player_car.world_z = (int32_t)(offset_z * 2u + (ROAD_SEGMENT(segment_record)->z << 8)) >> 8;
 		segment_remaining = segment_length - segment_fraction;
-		height = divide_s32(mem_read32(r12 + 0xCu) * segment_fraction + mem_read32(segment_record + 0xCu) * segment_remaining, segment_length) + OBJECT(current_object)->player_car.bounce_height;
+		height = divide_s32(mem_read32(r12 + 0xCu) * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + OBJECT(current_object)->player_car.bounce_height;
 	}
 	else
 	{
@@ -475,7 +475,7 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 	OBJECT(current_object)->player_car.world_y = world_y;
 	OBJECT(current_object)->player_car.previous_world_y = previous_world_y;
 	CAR(player_car)->segment_remaining = segment_remaining;
-	heading_start = (uint16_t)((uint32_t)mem_read16(segment_record) << 4);
+	heading_start = (uint16_t)((uint32_t)ROAD_SEGMENT(segment_record)->heading << 4);
 	heading_end = (uint16_t)((uint32_t)mem_read16(r12) << 4);
 	quadrant_heading = heading_start;
 	switch (quadrant_heading >> 14)
@@ -498,10 +498,11 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 }
 
 /* Places the view behind the car: a point on the road some way back of the car (the nod, the intro, the
-   rival and road-object pulls: car view_shift_nod, unk_10C, unk_110, unk_108) and across (unk_106) and
-   above (unk_104) it (view_target_x/y/z), looking toward the road twelve segments on (vector_angles: car
-   view_yaw the yaw, unk_30 the road's pitch; car view_pitch the pitch with the view's tilt), the eye
-   screen eye_distance back from the target along those angles (angles_to_offset) in car view_x-28. */
+   rival and road-object pulls: car view_shift_nod, view_shift_intro, view_shift_rival, view_shift_lift)
+   and across (view_side) and above (view_rise) it (view_target_x/y/z), looking toward the road twelve
+   segments on (vector_angles: car view_yaw the yaw, road_pitch the road's pitch; car view_pitch the
+   pitch with the view's tilt), the eye screen eye_distance back from the target along those angles
+   (angles_to_offset) in car view_x-28. */
 void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length)
 {
 	uint16_t pitch_here = 0, tilt = 0;
@@ -523,20 +524,20 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	offset_y = 0u;
 	offset_x = (road_x + (int16_t)CAR(player_car)->view_side) << 7;
 	offset_z = segment_fraction << 7;
-	segment_pitch = mem_read16(segment_record + 2u);
-	segment_heading = mem_read16(segment_record);
+	segment_pitch = ROAD_SEGMENT(segment_record)->pitch;
+	segment_heading = ROAD_SEGMENT(segment_record)->heading;
 	rotate_offset(offset_y, segment_heading, segment_pitch, &offset_x, &offset_z);
-	OBJECT(current_object)->player_car.view_target_x = ((int32_t)(offset_x * 2u) >> 8) + mem_read32(segment_record + 4u);
-	OBJECT(current_object)->player_car.view_target_z = ((int32_t)(offset_z * 2u) >> 8) + mem_read32(segment_record + 8u);
+	OBJECT(current_object)->player_car.view_target_x = ((int32_t)(offset_x * 2u) >> 8) + ROAD_SEGMENT(segment_record)->x;
+	OBJECT(current_object)->player_car.view_target_z = ((int32_t)(offset_z * 2u) >> 8) + ROAD_SEGMENT(segment_record)->z;
 	segment_remaining = segment_length - segment_fraction;
-	OBJECT(current_object)->player_car.view_target_y = divide_s32(mem_read32(((r12 & ~0xFFFFu) | (r12 & 0xAFFFu)) + 0xCu) * segment_fraction + mem_read32(segment_record + 0xCu) * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
+	OBJECT(current_object)->player_car.view_target_y = divide_s32(mem_read32(((r12 & ~0xFFFFu) | (r12 & 0xAFFFu)) + 0xCu) * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
 	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
 	pitch = mem_read32(r12 + 4u);
 	yaw = mem_read32(r12 + 0xCu);
 	far_z = mem_read32(r12 + 8u);
-	near_x = mem_read32(segment_record + 4u);
-	near_y = mem_read32(segment_record + 0xCu);
-	near_z = mem_read32(segment_record + 8u);
+	near_x = ROAD_SEGMENT(segment_record)->x;
+	near_y = ROAD_SEGMENT(segment_record)->y;
+	near_z = ROAD_SEGMENT(segment_record)->z;
 	vector_angles(far_z, near_x, near_y, near_z, &pitch, &yaw);
 	segment_record = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
 	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
@@ -545,9 +546,9 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	pitch = mem_read32(r12 + 4u);
 	yaw = mem_read32(r12 + 0xCu);
 	far_z = mem_read32(r12 + 8u);
-	near_x = mem_read32(segment_record + 4u);
-	near_y = mem_read32(segment_record + 0xCu);
-	near_z = mem_read32(segment_record + 8u);
+	near_x = ROAD_SEGMENT(segment_record)->x;
+	near_y = ROAD_SEGMENT(segment_record)->y;
+	near_z = ROAD_SEGMENT(segment_record)->z;
 	vector_angles(far_z, near_x, near_y, near_z, &pitch, &yaw);
 	pitch = (uint16_t)(pitch << 4);
 	yaw = (uint16_t)(yaw << 4);
@@ -810,17 +811,19 @@ void angles_to_offset(uint32_t pitch, uint32_t yaw, uint32_t distance, uint32_t 
 	*p_offset_z = (int32_t)(((int32_t)(cosine_table[yaw] * pitch_cosine) >> 14) * distance) >> 14;
 }
 
-/* Unused (only unk_00AB04 lists it, for octants 1, 2, 5 and 6 of an angle): the distance along angle R0
-   that has the x distance from R11's x (+4) to the object's field 20 (that distance / the sine of R0),
-   turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the results (R2, R3). */
+/* Unused (only distance_offset_functions lists it, for octants 1, 2, 5 and 6 of an angle): the distance
+   along angle R0 that has the x distance from R11's x (+4) to the object's field 20 (that distance / the
+   sine of R0), turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the
+   results (R2, R3). */
 void distance_offset_from_x(void)
 {
 	distance_offset_at_angle();
 }
 
-/* Unused (only unk_00AB04 lists it, for octants 0, 3, 4 and 7 of an angle): the distance along angle R0
-   that has the z distance from R11's z (+8) to the object's field 28 (that distance / the cosine of R0),
-   turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the results (R2, R3). */
+/* Unused (only distance_offset_functions lists it, for octants 0, 3, 4 and 7 of an angle): the distance
+   along angle R0 that has the z distance from R11's z (+8) to the object's field 28 (that distance / the
+   cosine of R0), turned to angle R1 by distance_offset_at_angle. Its C has no body: nothing reads the
+   results (R2, R3). */
 void distance_offset_from_z(void)
 {
 	distance_offset_at_angle();
@@ -833,8 +836,8 @@ void distance_offset_at_angle(void)
 }
 
 /* Takes the roadside surfaces of the stage (screen built_stage): the two lists of
-   stage_roadside_surface_lists for it (car surface_entry_1, unk_14C), from the segment where the stage
-   starts (car surface_start) to the next one's (unk_4C). */
+   stage_roadside_surface_lists for it (car surface_entry_1, surface_entry_2), from the segment where the
+   stage starts (car surface_start) to the next one's (surface_next_start). */
 void player_car_next_surfaces(void)
 {
 	uint16_t stage_length = 0;
@@ -852,8 +855,8 @@ void player_car_next_surfaces(void)
 
 /* The drag on the car: speed squared, times the model's off-road factor while slowed (car slowed_frames)
    or off the road (car off_road, with the off-road shake); and the roadside surfaces under its wheels
-   (car surface_entry_1, unk_14C) give the effects at each side (car wheel_effect_sides: bit 0 with
-   unk_141, bit 1 with unk_142). */
+   (car surface_entry_1, surface_entry_2) give the effects at each side (car wheel_effect_sides: bit 0
+   with wheel_effect_1, bit 1 with wheel_effect_2). */
 uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width)
 {
 	uint32_t carry = 0;

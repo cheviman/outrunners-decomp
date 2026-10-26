@@ -18,8 +18,8 @@
    bank and palettes (race_background_fade_palettes, queue_palette_list), its objects
    (race_background_start_objects) and, for stages 6, 8 and 1C, its animation
    (race_background_start_lower_animation, race_background_start_upper_animation); 1 waits for a change:
-   a fork's new stage (the car's unk_CA; background 2 * screen built_stage + the branch, car branch) or
-   the road's events 4 and 5 (screen stage_background_change; background 2A + unk_A3): screen
+   a fork's new stage (the car's new_branch; background 2 * screen built_stage + the branch, car branch)
+   or the road's events 4 and 5 (screen stage_background_change; background 2A + built_stage): screen
    background_changing set, the new background's pages queued into the other half of the pages
    (page_half; queue_tile_pages); 2 changes over as the view turns away and back (the car's unk_2E;
    change_step): when it starts its palettes, tile bank and the first page word (next_page_words), at 2A0
@@ -27,7 +27,7 @@
    screen road_palette_fades) and the next, the new stage's objects (screen route_stage), at 160 its
    palette fades (race_background_fade_palettes) and the next, at 60 the last, at 0 back to state 1 with
    the animation of backgrounds 5, 7, 8, 25 and 26. Each frame scrolls it: x by the car's unk_2E (a
-   quarter of it, all of it during a change) less A0, y by the slope (the car's unk_30) and screen
+   quarter of it, all of it during a change) less A0, y by the slope (the car's road_pitch) and screen
    horizon_line, kept between 0 and 180 less the road's top line (screen road_top_line; also into screen
    background_scroll_y). */
 void race_background_update(void)
@@ -78,7 +78,7 @@ void race_background_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(r12, byte_swap32(page_number) | mem_read32(tile_pages));
+			mem_write32(r12, byte_swap32(page_number) | TILE_PAGE_ENTRIES(tile_pages)[0]);
 			page_number++;
 			page_count--;
 			tile_pages += 4u;
@@ -149,7 +149,7 @@ void race_background_update(void)
 			page_count = 9u;
 			do
 			{
-				mem_write32(r12, byte_swap32(page_half) | mem_read32(tile_pages));
+				mem_write32(r12, byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0]);
 				page_half++;
 				page_count--;
 				tile_pages += 4u;
@@ -517,8 +517,8 @@ void set_up_background(uint32_t background_setup)
 	queue_palette_list(palette_list);
 }
 
-/* Starts the background objects of stage R0 (object_lists_181B8; R0 + 1F during a change within the
-   stage, screen stage_background_change), each with its data (field 80) and this object (14). */
+/* Starts the background objects of stage R0 (stage_background_object_lists; R0 + 1F during a change
+   within the stage, screen stage_background_change), each with its data (field 80) and this object (14). */
 void race_background_start_objects(uint32_t stage)
 {
 	uint32_t object = 0, object_list = 0, objects_left = 0;
@@ -526,7 +526,7 @@ void race_background_start_objects(uint32_t stage)
 
 	if (SCREEN(screen)->stage_background_change != 0u)
 		stage = (stage & ~0xFFu) | (uint8_t)(stage + 0x1Fu);
-	object_list = object_lists_181B8[stage];
+	object_list = stage_background_object_lists[stage];
 	entry_count = mem_read32(object_list) >> 3;
 	objects_left = entry_count;
 	object_list += 4u;
@@ -535,9 +535,9 @@ void race_background_start_objects(uint32_t stage)
 		do
 		{
 			object = start_object();
-			OBJECT(object)->handler = mem_read32(object_list);
+			OBJECT(object)->handler = OBJECT_LIST_PAIR(object_list)->handler;
 			object_list += 4u;
-			OBJECT(object)->list_data = mem_read32(object_list);
+			OBJECT(object)->list_data = OBJECT_LIST_PAIR(object_list - 0x4u)->data;
 			OBJECT(object)->parent = current_object;
 			objects_left--;
 			object_list += 4u;
@@ -545,10 +545,11 @@ void race_background_start_objects(uint32_t stage)
 	}
 }
 
-/* Cycles palettes of the stage's scenery (object_lists_181B8): after delay frames, every step_frames
-   frames queues the next palette set of its list (palette_list; a negative entry goes back that many
-   bytes) with queue_palette_list, for frames_left frames (or for good when it is 0); it waits while the
-   stage's background is changing (screen background_fading) and ends when it changes again (running). */
+/* Cycles palettes of the stage's scenery (stage_background_object_lists): after delay frames, every
+   step_frames frames queues the next palette set of its list (palette_list; a negative entry goes back
+   that many bytes) with queue_palette_list, for frames_left frames (or for good when it is 0); it waits
+   while the stage's background is changing (screen background_fading) and ends when it changes again
+   (running). */
 void palette_cycle_update(void)
 {
 	uint16_t step_frames = 0;
@@ -651,18 +652,18 @@ void palette_cycle_update(void)
 	if ((int32_t)palettes < 0)
 	{
 		palette_list += palettes;
-		palettes = mem_read32(palette_list);
+		palettes = PALETTE_CYCLE_STEPS(palette_list)[0];
 		palette_list += 4u;
 	}
 	OBJECT(current_object)->palette_cycle.palette_list = palette_list;
 	queue_palette_list(palettes);
 }
 
-/* Fades the colours of the stage toward evening after a while (object_lists_181B8: Hawaii's sunset after
-   900 frames, stage 26's dusk after 300 and its night after 600): waits count frames (not while the
-   background changes, screen background_fading), then starts a palette fade (start_palette_fade) for
-   each entry of its list (fade_list: from, to, the palette, the speed), keeps them in fades and their
-   number in count, and goes on to sunset_fade_wait. */
+/* Fades the colours of the stage toward evening after a while (stage_background_object_lists: Hawaii's
+   sunset after 900 frames, stage 26's dusk after 300 and its night after 600): waits count frames (not
+   while the background changes, screen background_fading), then starts a palette fade
+   (start_palette_fade) for each entry of its list (fade_list: from, to, the palette, the speed), keeps
+   them in fades and their number in count, and goes on to sunset_fade_wait. */
 void sunset_fade_start(void)
 {
 	uint8_t blocks = 0, period = 0;
@@ -744,7 +745,7 @@ void sunset_fade_wait(void)
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
-			fade_flags = mem_read32(fade);
+			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				mem_write32(fade_slot - 4u, 0u);
@@ -762,7 +763,7 @@ void sunset_fade_wait(void)
 		fade = mem_read32(fade_slot);
 		fade_slot += 4u;
 		if (fade != 0u)
-			mem_write8(fade, 0u);
+			OBJECT(fade)->flags = 0u;
 		fades_left--;
 	} while (fades_left != 0u);
 	OBJECT(current_object)->flags = 0u;

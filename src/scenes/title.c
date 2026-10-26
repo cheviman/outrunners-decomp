@@ -16,7 +16,7 @@
    (title_screen_layer_setups by screen: scroll_x_address, scroll_y_address for the first tilemap,
    second_scroll_x_address, second_scroll_y_address for the second), the background (set_up_background
    with title_background_setups by screen) and its scrolls, picks the car of the next car presentation
-   (screen attract_car from unk_9E, which steps through the eight), starts the credits line
+   (screen attract_car from next_attract_car, which steps through the eight), starts the credits line
    (credit_display), the prompt (coin_prompt) and the eight cars driving past (title_car); 1 for 45
    frames (frames): palm trees (title_screen_start_palms) and the two tilemaps scrolled by 8 and 20 a
    frame, then the logo (title_logo, title_logo_copy), three logo cars (title_logo_car) and the three

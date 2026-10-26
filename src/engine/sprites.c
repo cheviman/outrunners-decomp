@@ -72,16 +72,16 @@ uint32_t draw_object(uint32_t routine_then_layer)
 		return routine_then_layer;
 	routine_then_layer = OBJECT(current_object)->depth_layer;
 	depth_list = screen + 0x5000u + routine_then_layer * 4u;
-	if (mem_read16(depth_list) == 0u)
-		mem_write16(depth_list + 2u, sprite_entry);
+	if (DEPTH_LIST(depth_list)->head == 0u)
+		DEPTH_LIST(depth_list)->tail = sprite_entry;
 	r12 = SCREEN(screen)->sprite_list_last + 0x10u;
-	layer_head = mem_read16(depth_list);
+	layer_head = DEPTH_LIST(depth_list)->head;
 	mem_write32(sprite_entry, layer_head);
 	mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
 	SCREEN(screen)->sprite_list_last = sprite_entry;
 	r12 = r12 >> 4;
 	r12 = (r12 & ~0xFFFFu) | (uint16_t)(r12 | 0x8000u);
-	mem_write16(depth_list, r12);
+	DEPTH_LIST(depth_list)->head = r12;
 	SCREEN(screen)->sprite_groups++;
 	return routine_then_layer;
 }
@@ -104,7 +104,7 @@ void draw_object_between_segments(uint32_t *p_leftover, uint32_t *p_sprite_entry
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = mem_read16(projected_segment);
+		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			projected_offset = (uint16_t)(projected_offset + 0x10u);
@@ -119,9 +119,9 @@ void draw_object_between_segments(uint32_t *p_leftover, uint32_t *p_sprite_entry
 				position_fraction = OBJECT(current_object)->position_fraction;
 				near_weight = (uint16_t)(0x80u - position_fraction);
 				next_x = ((next_x & ~0xFFFFu) | (uint16_t)(next_x + mem_read16(r12 + 4u))) * position_fraction;
-				x = (int32_t)(((x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u))) * near_weight + next_x) >> 7;
+				x = (int32_t)(((x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x)) * near_weight + next_x) >> 7;
 				next_y = ((next_y & ~0xFFFFu) | (uint16_t)(next_y + mem_read16(r12 + 6u))) * position_fraction;
-				y = (int32_t)(((y & ~0xFFFFu) | (uint16_t)(y + mem_read16(projected_segment + 6u))) * near_weight + next_y) >> 7;
+				y = (int32_t)(((y & ~0xFFFFu) | (uint16_t)(y + PROJECTED_SEGMENT(projected_segment)->y)) * near_weight + next_y) >> 7;
 				scale = (scale * next_x + next_scale * next_y) >> 7;
 				draw_object_at_scale((uint16_t)y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 				*p_leftover = x;
@@ -152,7 +152,7 @@ void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, 
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)mem_read16(projected_segment);
+		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			projected_offset = (uint16_t)(projected_offset + 0x10u);
@@ -164,8 +164,8 @@ void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, 
 				position_fraction = OBJECT(current_object)->position_fraction;
 				near_weight = (uint16_t)(0x80u - position_fraction);
 				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
 				scale = (scale * near_weight + next_scale * position_fraction) >> 7;
 				draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 				*p_leftover = x;
@@ -193,7 +193,7 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_spri
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)mem_read16(projected_segment);
+		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			projected_offset = (uint16_t)(projected_offset + 0x10u);
@@ -205,8 +205,8 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_spri
 				position_fraction = OBJECT(current_object)->position_fraction;
 				near_weight = (uint16_t)(0x80u - position_fraction);
 				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
 				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 11;
 				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 				*p_leftover = x;
@@ -235,7 +235,7 @@ void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)mem_read16(projected_segment);
+		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			projected_offset = (uint16_t)(projected_offset + 0x10u);
@@ -247,8 +247,8 @@ void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite
 				position_fraction = OBJECT(current_object)->position_fraction;
 				near_weight = (uint16_t)(0x80u - position_fraction);
 				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
 				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 10;
 				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 				*p_leftover = x;
@@ -276,12 +276,12 @@ void draw_object_at_car_window_segment(uint32_t *p_leftover, uint32_t *p_sprite_
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = mem_read16(projected_segment);
+		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
-			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + mem_read16(projected_segment + 6u));
+			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
 			*p_leftover = x;
 			return;
@@ -308,12 +308,12 @@ void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = mem_read16(projected_segment);
+		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
-			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + mem_read16(projected_segment + 6u));
+			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			scale = shift_by(scale, OBJECT(current_object)->scale_shift, 32) >> 4;
 			draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 			*p_leftover = x;
@@ -339,12 +339,12 @@ void draw_object_at_car_window_segment_on_road(uint32_t *p_leftover, uint32_t *p
 	{
 		projected_offset = (uint16_t)(projected_offset * 0x10u);
 		projected_segment = screen + 0x3000u + projected_offset;
-		scale = mem_read16(projected_segment);
+		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
 			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
-			y = mem_read16(projected_segment + 6u);
+			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			y = PROJECTED_SEGMENT(projected_segment)->y;
 			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
 			*p_leftover = x;
 			return;
@@ -360,7 +360,7 @@ void draw_object_at_segment_scale(uint16_t y, uint32_t projected_segment, uint32
 	uint32_t x = *p_x;
 	uint32_t scale = 0;
 
-	scale = mem_read16(projected_segment);
+	scale = PROJECTED_SEGMENT(projected_segment)->scale;
 	draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
@@ -391,14 +391,14 @@ void draw_object_at_scale(uint16_t y, uint32_t scale, uint32_t projected_segment
 	else
 	{
 		width_scale = scale;
-		OBJECT(current_object)->depth_layer = mem_read16(projected_segment + 8u);
+		OBJECT(current_object)->depth_layer = PROJECTED_SEGMENT(projected_segment)->depth_layer;
 		put_object_sprites(y, scale, width_scale, &x, p_sprite_entry);
 	}
 	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Draw mode 0: the object at x, y on the screen, less the screen's scroll (screen sprite_origin_x,
-   unk_16), at its width_scale and height_scale (put_object_sprites). */
+   sprite_origin_y), at its width_scale and height_scale (put_object_sprites). */
 void draw_object_on_screen(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 {
 	uint16_t y = 0;
@@ -814,91 +814,91 @@ void finish_sprite_list(void)
 		depth_list_size = 4u;
 		do
 		{
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_2 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_2);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_2;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_3 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_3);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_3;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_4 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_4);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_4;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_5 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_5);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_5;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_6 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_6);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_6;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_7 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_7);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_7;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
-			if (mem_read16(depth_list) != 0u)
+			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_8 = cleared_head;
-				layer_head = mem_read16(depth_list);
-				mem_write16(depth_list, new_head_8);
+				layer_head = DEPTH_LIST(depth_list)->head;
+				DEPTH_LIST(depth_list)->head = new_head_8;
 				mem_write32(chain_tail, layer_head);
 				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
-				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
 				cleared_head = empty_head;
 			}
 			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
@@ -908,9 +908,9 @@ void finish_sprite_list(void)
 	mem_write16(chain_tail, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
 	mem_write16(chain_tail + 0x3000u, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
 	sprite_list_switch += 2u;
-	mem_write16(SPRITE_RAM_400020, SPRITE_LIST_SWITCH(sprite_list_switch - 0x6u)->entry_2_jump);
+	mem_write16(SPRITE_SCREEN_1_LIST_JUMP, SPRITE_LIST_SWITCH(sprite_list_switch - 0x6u)->entry_2_jump);
 	sprite_list_switch += 2u;
-	mem_write16(SPRITE_RAM_400030, SPRITE_LIST_SWITCH(sprite_list_switch - 0x8u)->entry_3_jump);
+	mem_write16(SPRITE_SCREEN_2_LIST_JUMP, SPRITE_LIST_SWITCH(sprite_list_switch - 0x8u)->entry_3_jump);
 	sprite_list_switch += 2u;
 	sprite_list_buffers = SPRITE_LIST_SWITCH(sprite_list_switch - 0xAu)->next_buffers;
 	sprite_list_switch += 2u;
@@ -1004,13 +1004,13 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 	r12 = r12 + 2u;
 	for (;;)
 	{
-		size = mem_read16(projected_segment);
+		size = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (size != 0u && size <= 0x1200u)
 		{
-			x = (uint16_t)((int32_t)(((uint32_t)mem_read16(ring_segment + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12);
-			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + mem_read16(projected_segment + 6u));
+			x = (uint16_t)((int32_t)(((uint32_t)ROAD_SEGMENT(ring_segment)->half_width * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12);
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			if (OBJECT(current_object)->road_row.screen_centered == 0u)
-				x += mem_read16(projected_segment + 4u);
+				x += PROJECTED_SEGMENT(projected_segment)->x;
 			if ((int16_t)x > 0x1E0 || (int16_t)x < -0x1E0 || (int16_t)y > 0x80 || (int16_t)y < -0x160)
 			{
 				mem_write32(r27 + 4u, 0xF800F800u);
@@ -1106,14 +1106,14 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 			}
 			mem_write32(sprite_entry + 0x3000u, rom_offset_and_palette);
 			mem_write32(sprite_entry, rom_offset_and_palette);
-			depth_list = screen + 0x5000u + mem_read16(projected_segment + 8u) * 4u;
+			depth_list = screen + 0x5000u + PROJECTED_SEGMENT(projected_segment)->depth_layer * 4u;
 			sprite_entry += 4u;
-			if (mem_read16(depth_list) == 0u)
-				mem_write16(depth_list + 2u, sprite_entry);
-			layer_head = mem_read16(depth_list);
+			if (DEPTH_LIST(depth_list)->head == 0u)
+				DEPTH_LIST(depth_list)->tail = sprite_entry;
+			layer_head = DEPTH_LIST(depth_list)->head;
 			mem_write32(sprite_entry, layer_head);
 			mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
-			mem_write16(depth_list, ((sprite_entry - 0x10u) >> 4) | 0x8000u);
+			DEPTH_LIST(depth_list)->head = ((sprite_entry - 0x10u) >> 4) | 0x8000u;
 			SCREEN(screen)->sprite_groups++;
 			sprite_entry += 0x10u;
 		}
@@ -1225,15 +1225,15 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 	r12 = r12 + 2u;
 	for (;;)
 	{
-		size = mem_read16(projected_segment);
+		size = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (size != 0u && size <= 0x1200u)
 		{
-			pair_x = (int32_t)(((uint32_t)mem_read16(ring_segment + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12;
-			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + mem_read16(projected_segment + 6u));
+			pair_x = (int32_t)(((uint32_t)ROAD_SEGMENT(ring_segment)->half_width * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12;
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			offset_x = (uint16_t)pair_x;
-			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + mem_read16(projected_segment + 4u));
+			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + PROJECTED_SEGMENT(projected_segment)->x);
 			pair_x = (((pair_x << 16) | (pair_x >> 16)) & ~0xFFFFu) | (uint16_t)(0u - offset_x);
-			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + mem_read16(projected_segment + 4u));
+			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + PROJECTED_SEGMENT(projected_segment)->x);
 			size = shift_by(size, OBJECT(current_object)->scale_shift, 32);
 			size_index = size;
 			if (size_index >= 0x1000u)
@@ -1346,13 +1346,13 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 			mem_write32(sprite_entry + 0x3000u, rom_offset_and_palette);
 			mem_write32(sprite_entry, rom_offset_and_palette);
 			sprite_entry += 0x14u;
-			depth_list = screen + 0x5000u + mem_read16(projected_segment + 8u) * 4u;
-			if (mem_read16(depth_list) == 0u)
-				mem_write16(depth_list + 2u, sprite_entry);
-			layer_head = mem_read16(depth_list);
+			depth_list = screen + 0x5000u + PROJECTED_SEGMENT(projected_segment)->depth_layer * 4u;
+			if (DEPTH_LIST(depth_list)->head == 0u)
+				DEPTH_LIST(depth_list)->tail = sprite_entry;
+			layer_head = DEPTH_LIST(depth_list)->head;
 			mem_write32(sprite_entry, layer_head);
 			mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
-			mem_write16(depth_list, ((sprite_entry - 0x20u) >> 4) | 0x8000u);
+			DEPTH_LIST(depth_list)->head = ((sprite_entry - 0x20u) >> 4) | 0x8000u;
 			SCREEN(screen)->sprite_groups += 2u;
 			sprite_entry += 0x10u;
 		}

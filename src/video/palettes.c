@@ -111,35 +111,35 @@ void upload_palette(uint32_t colour_block)
 	uint32_t colours_0_place = 0, colours_2_3 = 0, colours_4_place = 0, colours_6_7 = 0, colours_8_place = 0, colours_10_11 = 0, colours_12_place = 0, colours_14_15 = 0;
 
 	palette_address = SCREEN(screen)->index;
-	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u | mem_read16(colour_block);
+	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u | PALETTE_BLOCK(colour_block)->place;
 	colour_block += 2u;
-	blocks_left = mem_read16(colour_block);
+	blocks_left = PALETTE_BLOCK(colour_block - 0x2u)->length;
 	blocks_left = blocks_left >> 5;
 	colour_block += 2u;
 	do
 	{
 		colours_0_place = palette_address;
 		palette_address += 8u;
-		colours_2_3 = mem_read32(colour_block + 4u);
-		mem_write32(colours_0_place, mem_read32(colour_block));
+		colours_2_3 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		mem_write32(colours_0_place, AS32(PALETTE_COLOURS(colour_block)[0]));
 		mem_write32(colours_0_place + 4u, colours_2_3);
 		colour_block += 8u;
 		colours_4_place = palette_address;
 		palette_address += 8u;
-		colours_6_7 = mem_read32(colour_block + 4u);
-		mem_write32(colours_4_place, mem_read32(colour_block));
+		colours_6_7 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		mem_write32(colours_4_place, AS32(PALETTE_COLOURS(colour_block)[0]));
 		mem_write32(colours_4_place + 4u, colours_6_7);
 		colour_block += 8u;
 		colours_8_place = palette_address;
 		palette_address += 8u;
-		colours_10_11 = mem_read32(colour_block + 4u);
-		mem_write32(colours_8_place, mem_read32(colour_block));
+		colours_10_11 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		mem_write32(colours_8_place, AS32(PALETTE_COLOURS(colour_block)[0]));
 		mem_write32(colours_8_place + 4u, colours_10_11);
 		colour_block += 8u;
 		colours_12_place = palette_address;
 		palette_address += 8u;
-		colours_14_15 = mem_read32(colour_block + 4u);
-		mem_write32(colours_12_place, mem_read32(colour_block));
+		colours_14_15 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		mem_write32(colours_12_place, AS32(PALETTE_COLOURS(colour_block)[0]));
 		mem_write32(colours_12_place + 4u, colours_14_15);
 		blocks_left--;
 		colour_block += 8u;
@@ -155,32 +155,32 @@ void upload_palette_list(uint32_t colour_list)
 
 	palette_address = SCREEN(screen)->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u;
-	entries_left = mem_read32(colour_list) >> 3;
+	entries_left = PALETTE_BLOCK_LIST(colour_list)->length >> 3;
 	colour_list += 4u;
 	do
 	{
-		colour_source = mem_read32(colour_list);
+		colour_source = PALETTE_BLOCK_ENTRY(colour_list)->colours;
 		colour_list += 4u;
-		palette_address = (palette_address & ~0xFFFFu) | mem_read16(colour_list);
+		palette_address = (palette_address & ~0xFFFFu) | PALETTE_BLOCK_ENTRY(colour_list - 0x4u)->place;
 		colour_list += 2u;
-		blocks_left = mem_read16(colour_list);
+		blocks_left = PALETTE_BLOCK_ENTRY(colour_list - 0x6u)->blocks;
 		colour_list += 2u;
 		do
 		{
-			colours_2_3 = mem_read32(colour_source + 4u);
-			mem_write32(palette_address, mem_read32(colour_source));
+			colours_2_3 = AS32(PALETTE_COLOURS(colour_source)[2]);
+			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[0]));
 			mem_write32(palette_address + 4u, colours_2_3);
 			palette_address += 8u;
-			colours_6_7 = mem_read32(colour_source + 0xCu);
-			mem_write32(palette_address, mem_read32(colour_source + 8u));
+			colours_6_7 = AS32(PALETTE_COLOURS(colour_source)[6]);
+			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[4]));
 			mem_write32(palette_address + 4u, colours_6_7);
 			palette_address += 8u;
-			colours_10_11 = mem_read32(colour_source + 0x14u);
-			mem_write32(palette_address, mem_read32(colour_source + 0x10u));
+			colours_10_11 = AS32(PALETTE_COLOURS(colour_source)[10]);
+			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[8]));
 			mem_write32(palette_address + 4u, colours_10_11);
 			palette_address += 8u;
-			colours_14_15 = mem_read32(colour_source + 0x1Cu);
-			mem_write32(palette_address, mem_read32(colour_source + 0x18u));
+			colours_14_15 = AS32(PALETTE_COLOURS(colour_source)[14]);
+			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[12]));
 			mem_write32(palette_address + 4u, colours_14_15);
 			blocks_left--;
 			palette_address += 8u;
@@ -300,21 +300,21 @@ void start_palette_fades(uint32_t fade_list)
 	uint32_t fades_left = 0, from = 0, to = 0;
 	uint32_t fade_count = 0;
 
-	fade_count = mem_read32(fade_list) / 0xCu;
+	fade_count = PALETTE_FADE_LIST(fade_list)->length / 0xCu;
 	fades_left = fade_count;
 	fade_list += 4u;
 	if (fade_count != 0u)
 	{
 		do
 		{
-			from = mem_read32(fade_list);
-			to = mem_read32(fade_list + 4u);
+			from = PALETTE_FADE_ENTRY(fade_list)->from;
+			to = PALETTE_FADE_ENTRY(fade_list)->to;
 			fade_list += 8u;
-			r12 = (r12 & ~0xFFFFu) | mem_read16(fade_list);
+			r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 			fade_list += 2u;
-			blocks = mem_read8(fade_list);
+			blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 			fade_list++;
-			period = mem_read8(fade_list);
+			period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 			fade_list++;
 			start_palette_fade(blocks, period, from, to);
 			fades_left--;
@@ -330,22 +330,22 @@ void road_surface_fade_back(uint32_t fade_list)
 	uint32_t fades_left = 0, from = 0, to = 0;
 	uint32_t fade_count = 0;
 
-	fade_count = mem_read32(fade_list) / 0xCu;
+	fade_count = PALETTE_FADE_LIST(fade_list)->length / 0xCu;
 	fades_left = fade_count;
 	fade_list += 4u;
 	if (fade_count != 0u)
 	{
 		do
 		{
-			to = mem_read32(fade_list);
+			to = PALETTE_FADE_ENTRY(fade_list)->from;
 			fade_list += 4u;
-			from = mem_read32(fade_list);
+			from = PALETTE_FADE_ENTRY(fade_list - 0x4u)->to;
 			fade_list += 4u;
-			r12 = (r12 & ~0xFFFFu) | mem_read16(fade_list);
+			r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 			fade_list += 2u;
-			blocks = mem_read8(fade_list);
+			blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 			fade_list++;
-			period = mem_read8(fade_list);
+			period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 			fade_list++;
 			start_palette_fade(blocks, period, from, to);
 			fades_left--;
@@ -362,7 +362,7 @@ void race_background_fade_palettes(uint32_t fade_list)
 	uint32_t fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, object = 0, to = 0;
 	uint32_t fade_count = 0;
 
-	fade_count = mem_read32(fade_list) / 0xCu;
+	fade_count = PALETTE_FADE_LIST(fade_list)->length / 0xCu;
 	fades_left = fade_count;
 	fade_list += 4u;
 	if (fade_count == 0u)
@@ -377,14 +377,14 @@ void race_background_fade_palettes(uint32_t fade_list)
 	fade_slot = object + 0x80u;
 	do
 	{
-		from = mem_read32(fade_list);
-		to = mem_read32(fade_list + 4u);
+		from = PALETTE_FADE_ENTRY(fade_list)->from;
+		to = PALETTE_FADE_ENTRY(fade_list)->to;
 		fade_list += 8u;
-		r12 = (r12 & ~0xFFFFu) | mem_read16(fade_list);
+		r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 		fade_list += 2u;
-		blocks = mem_read8(fade_list);
+		blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 		fade_list++;
-		period = mem_read8(fade_list);
+		period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 		fade_list++;
 		fade_object = start_palette_fade(blocks, period, from, to);
 		mem_write32(fade_slot, fade_object);
@@ -409,7 +409,7 @@ void race_background_fade_watch_update(void)
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
-			fade_flags = mem_read32(fade);
+			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				mem_write32(fade_slot - 4u, 0u);
@@ -425,7 +425,8 @@ void race_background_fade_watch_update(void)
 
 /* Starts a palette_fade of 16 colours from the palette at R10 to the one at R11, for palette offset R12
    (R0 blocks of 16 in its upload record), a step every R1 frames, the first after (screen
-   palette_fades_started mod R1) + 1 (unk_F0E counts the fades started); returns the object. */
+   palette_fades_started mod R1) + 1 (palette_fades_started counts the fades started); returns the
+   object. */
 uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to)
 {
 	uint8_t phase = 0;
@@ -496,8 +497,8 @@ void palette_fade_prepare(void)
 /* Every period frames (delay; start_palette_fade staggers the first) moves each of the 16 colours one
    step of each of red, green and blue toward the second palette (by its differences, counted down to 0)
    and queues them (queue_palette_list with its record at 28: 8 bytes, the colours, palette_offset,
-   blocks); ends when no colour moved, or when the screen fades out (screen flags bit 0, with unk_153 at
-   most 5 and even). */
+   blocks); ends when no colour moved, or when the screen fades out (screen flags bit 0, with fade_kind
+   at most 5 and even). */
 void palette_fade_step(uint32_t from_colour)
 {
 	bool L_0186AA = false, L_0186B2 = false, L_0186BA = false, L_0186CB = false, L_0186D1 = false, L_0186D7 = false, L_0186E0 = false, L_0186E9 = false, L_0186F2 = false;

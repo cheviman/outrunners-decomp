@@ -11,8 +11,8 @@
  */
 #include "game.h"
 
-/* The map of the route after the race (game step 12, object_handlers_34EC); keeps "Thank you for your
-   playing." scrolling on the LCD (F40 = 005014). By state: 0 copies its screen's tilemap register
+/* The map of the route after the race (game step 12, route_map_object_handlers); keeps "Thank you for
+   your playing." scrolling on the LCD (F40 = 005014). By state: 0 copies its screen's tilemap register
    addresses (route_map_register_sets) into 80-BC, first_branch from screen route_branches, the
    background (set_up_background with 004868 by screen and first_branch: the routes on tilemap 0 over the
    world on the second), the palette route_map_background_palette (scene_palettes[2C]) (queue_palette); 1
@@ -29,17 +29,17 @@
    3 left, 5 the map at its edge, 7 standing); a stage_result_line starts where each stage begins (5, 7,
    11), a route_map_sign (C.P) and stage + 1 where a checkpoint leg ends; when its count of legs (unk_12
    for the first leg of a stage, checkpoint_legs_left for the others) is 0 at a leg's start, the race
-   ended on it: last_leg_progress and leg_frames are worked out from the race_copy record's unk_42, the
-   car's unk_4A and the stage lengths at 700 of the screen, and unk_5800 bit 6 ends the drive after it;
-   at the end (stage 6 or a cut leg) the car stands (bit 7), FINISH (route_map_sign 1) if the goal was
-   reached (race_copy finished), 60 frames; 15 the routes (pages route_map_routes_pages) at zoom 2x where
-   the close-up map was, the steps of the zoom out into x and y, unk_5800 bit 4 (the car, the landmarks
-   and the signs end); 16 zooms out over 9 frames to 1:1 and the whole route (x scroll
-   route_map_whole_scroll_xs by first_branch, y 70), then the world's tilemap again (pages
-   route_map_world_pages); 17 sea_colour black, starts 00463C and an 004240 for each leg (stage + 1, at
-   most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is quiet (screen dj_mouth_shapes); 19
-   when the 90 frames are over sets the game's next step (screen game_mode byte 2 = 0x10 (step 16)) and
-   starts 0046BB; 20 nothing. */
+   ended on it: last_leg_progress and leg_frames are worked out from the race_copy record's segment, the
+   car's reached_stage_start and the stage lengths at 700 of the screen, and screen route_map_signals bit
+   6 ends the drive after it; at the end (stage 6 or a cut leg) the car stands (bit 7), FINISH
+   (route_map_sign 1) if the goal was reached (race_copy finished), 60 frames; 15 the routes (pages
+   route_map_routes_pages) at zoom 2x where the close-up map was, the steps of the zoom out into x and y,
+   screen route_map_signals bit 4 (the car, the landmarks and the signs end); 16 zooms out over 9 frames
+   to 1:1 and the whole route (x scroll route_map_whole_scroll_xs by first_branch, y 70), then the
+   world's tilemap again (pages route_map_world_pages); 17 sea_colour black, starts 00463C and an 004240
+   for each leg (stage + 1, at most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is quiet
+   (screen dj_mouth_shapes); 19 when the 90 frames are over sets the game's next step (screen game_mode
+   byte 2 = 0x10 (step 16)) and starts 0046BB; 20 nothing. */
 void route_map_update(void)
 {
 	bool L_003BFC = false, L_003C2D = false;
@@ -990,7 +990,7 @@ void stage_result_line_draw(void)
    fork (screen route_branches + leg - 1) from the place of its stage (route_map_stage_xs,
    route_map_stage_ys by screen route_stages + leg - 2), the map shifted by the direction
    (route_map_direction_x_shifts) and 6B down; a leg driven already shows whole (frame 7, or B for 2-5),
-   the leg the car is on (the map's unk_28) up to the frame before its progress, with the car on it
+   the leg the car is on (the map's stage) up to the frame before its progress, with the car on it
    (route_map_leg_car); legs 1-5 start the CP sign at their start (route_map_checkpoint), and leg 5, when
    the race reached the goal (race_copy finished), also the FINISH sign and the car at its end; 1 draws
    it. */

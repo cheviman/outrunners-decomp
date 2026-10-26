@@ -39,24 +39,25 @@ uint32_t course_record_beaten(void)
 /* The name entry after a race won at the goal under the course's record time (game step 18, when
    course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE
    RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two
-   lamps (unk_F20) and clears lcd_restart_frames, starts name_entry_lcd, the background
+   lamps (button_lamps) and clears lcd_restart_frames, starts name_entry_lcd, the background
    (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number
-   (time_digits_start), object_handlers_2D58 (name_entry_car, name_entry_drivers, name_entry_course_name,
-   passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the
-   name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time,
-   screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a
-   letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter
-   (turn_steps; a turn under way turns back if the wheel goes the other way), sooner the further it leans
-   (turn_delay counts down by name_entry_turn_rates by the wheel), and << and >> a letter each time; the
-   letter in front is letter, and shows blinking at the name's next place; the gas pedal let up (under
-   40) then pressed (C0 or more), START or the music button enters it with a sound
-   (name_entry_place_sounds by place): the left arrow takes the last letter back, the right arrow enters
-   a space, ED or the third letter ends the entry, as does the timer running out (the seconds left show
-   as the countdown number, time_digits_draw); then open 0, an empty name or one of the names of
+   (time_digits_start), name_entry_object_handlers (name_entry_car, name_entry_drivers,
+   name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames,
+   wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of
+   the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40
+   frames, spin_frames; a letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a
+   time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way),
+   sooner the further it leans (turn_delay counts down by name_entry_turn_rates by the wheel), and << and
+   >> a letter each time; the letter in front is letter, and shows blinking at the name's next place; the
+   gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a
+   sound (name_entry_place_sounds by place): the left arrow takes the last letter back, the right arrow
+   enters a space, ED or the third letter ends the entry, as does the timer running out (the seconds left
+   show as the countdown number, time_digits_draw); then open 0, an empty name or one of the names of
    name_entry_rejected_names (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the
-   record into the race record (unk_11 + 1, unk_16 the time, unk_12 the car's model, unk_13-15 the name,
-   unk_18 the course, screen built_stage - 15), turns the lamps off and sets the game's next step (screen
-   game_mode byte 2 = 0x15 (step 21)); 4 nothing. Every frame it draws the time and the name (draw_text). */
+   record into the race record (record_serial + 1, finish_time the time, unk_12 the car's model,
+   unk_13-15 the name, record_course the course, screen built_stage - 15), turns the lamps off and sets
+   the game's next step (screen game_mode byte 2 = 0x15 (step 21)); 4 nothing. Every frame it draws the
+   time and the name (draw_text). */
 void name_entry_update(void)
 {
 	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
