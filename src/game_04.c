@@ -80,8 +80,8 @@ void palette_fade_prepare(void)
 	r11 = OBJECT(current_object)->palette_fade.to;
 	r12 = OBJECT(current_object)->palette_fade.colour_place;
 	r13 = OBJECT(current_object)->palette_fade.difference_place;
-	r0 = ROM16(r10);
-	r1 = ROM16(r11);
+	r0 = PALETTE_COLOURS(r10)[0];
+	r1 = PALETTE_COLOURS(r11)[0];
 	mem_write16(r12, r0);
 	r12 = r12 + 2u;
 	mem_write8(r13, (r0 & 0x1Fu) - (r1 & 0x1Fu));
@@ -331,12 +331,12 @@ void palette_fade_step(uint32_t r0)
 
 /* Starts the cabinets' LCDs at boot (both, through port G of the two I/O chips): the 4-bit start
    (command nibbles 3, 3, 3, 2), display on (0C), SEGA Enterprises as both screens' text (lcd_text),
-   command 40 then the eight custom characters (rom_018B4E: the DJ's face among them); the screens' lamps
-   off (screen button_lamps), lcd_restart_frames E10. */
+   command 40 then the eight custom characters (lcd_custom_characters: the DJ's face among them); the
+   screens' lamps off (screen button_lamps), lcd_restart_frames E10. */
 void lcd_start(void)
 {
 	uint8_t r0 = 0;
-	uint32_t r0_2 = 0, r1 = 0, r9 = 0, r10 = 0;
+	uint32_t r0_2 = 0, r9 = 0, r10 = 0, text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0;
 
 	lcd_send_step = 0u;
 	lcd_busy = 0u;
@@ -365,27 +365,27 @@ void lcd_start(void)
 	lcd_command_nibble_after_pause(r0);
 	r0 = 0xC0u;
 	lcd_command_nibble_after_pause(r0);
-	r0_2 = rom_018B90;
-	r1 = rom_018B94;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = r0_2;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = r1;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = r0_2;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = r1;
-	r0_2 = rom_018B98;
-	r1 = rom_018B9C;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = r0_2;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = r1;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = r0_2;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = r1;
-	r0_2 = (r0_2 & ~0xFFu) | 0x40u;
+	text_0_to_3 = lcd_boot_text[0].text_0_to_3;
+	text_4_to_7 = lcd_boot_text[0].text_4_to_7;
+	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to_3;
+	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to_7;
+	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to_3;
+	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to_7;
+	text_8_to_11 = lcd_boot_text[0].text_8_to_11;
+	text_12_to_15 = lcd_boot_text[0].text_12_to_15;
+	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to_11;
+	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to_15;
+	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to_11;
+	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to_15;
+	r0_2 = (text_8_to_11 & ~0xFFu) | 0x40u;
 	r12 = unk_218F20_ADDRESS;
 	lcd_command_nibble_after_pause((uint8_t)r0_2);
 	r0_2 &= ~0xFFu;
 	lcd_command_nibble_after_pause((uint8_t)r0_2);
-	r10 = 0x18B4Eu;
+	r10 = lcd_custom_characters_ADDRESS;
 	for (;;)
 	{
-		r0_2 = (r0_2 & ~0xFFu) | ROM8(r10);
+		r0_2 = (r0_2 & ~0xFFu) | LCD_CHARACTER_ROWS(r10)[0];
 		r10++;
 		if ((int8_t)r0_2 < 0)
 			break;
@@ -473,23 +473,23 @@ void lcd_write_command_nibble(uint8_t r0)
    (screen button_lamps), and lcd_restart_frames 0 so that the next VBLANK starts the LCDs again. */
 void lcd_reset(void)
 {
-	uint32_t r0 = 0, r1 = 0;
+	uint32_t text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0;
 
 	lcd_restart_frames = 0u;
 	SCREEN(SCREEN_1)->button_lamps = 0u;
 	SCREEN(SCREEN_2)->button_lamps = 0u;
-	r0 = rom_018B90;
-	r1 = rom_018B94;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = r0;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = r1;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = r0;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = r1;
-	r0 = rom_018B98;
-	r1 = rom_018B9C;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = r0;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = r1;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = r0;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = r1;
+	text_0_to_3 = lcd_boot_text[0].text_0_to_3;
+	text_4_to_7 = lcd_boot_text[0].text_4_to_7;
+	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to_3;
+	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to_7;
+	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to_3;
+	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to_7;
+	text_8_to_11 = lcd_boot_text[0].text_8_to_11;
+	text_12_to_15 = lcd_boot_text[0].text_12_to_15;
+	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to_11;
+	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to_15;
+	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to_11;
+	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to_15;
 	r12 = unk_218F20_ADDRESS;
 }
 
@@ -613,10 +613,10 @@ void lcd_refresh(void)
 }
 
 /* One nibble to the LCDs each timer interrupt (int_vector_43), with the other bits of port G
-   (port_g_outputs, the lamps): while lcd_init_step counts, the start sequence (rom_018B21, from the
-   end), then idle (lcd_send_step 22); else by lcd_send_step: the cursor home command (80), then the 16
-   characters of lcd_send_buffer_1 to screen 1's LCD and of lcd_send_buffer_2 to screen 2's, a nibble at
-   a time; lcd_busy while it writes the port. */
+   (port_g_outputs, the lamps): while lcd_init_step counts, the start sequence (lcd_restart_nibbles, from
+   the end), then idle (lcd_send_step 22); else by lcd_send_step: the cursor home command (80), then the
+   16 characters of lcd_send_buffer_1 to screen 1's LCD and of lcd_send_buffer_2 to screen 2's, a nibble
+   at a time; lcd_busy while it writes the port. */
 void lcd_send_next_nibble(void)
 {
 	uint32_t carry = 0;
@@ -627,7 +627,7 @@ void lcd_send_next_nibble(void)
 	if (lcd_init_step != 0u)
 	{
 		lcd_busy = 0xFFu;
-		r0_2 = (uint8_t)~rom_018B21[lcd_init_step];
+		r0_2 = (uint8_t)~lcd_restart_nibbles[lcd_init_step];
 		r1 = r0_2 | port_g_outputs[1];
 		mem_write8(IO_C0000C, r0_2 | port_g_outputs[0]);
 		mem_write8(0xC8000Cu, r1);
@@ -695,15 +695,15 @@ void lcd_send_next_nibble(void)
 }
 
 /* The screen's LCD, each frame. With the DJ's face on (dj_face) its first two characters are the face,
-   its mouth the next shape of dj_mouth_shapes every third frame (dj_mouth_frames; rom_018AE8, pairs of
-   custom characters), closed when the string ends (a negative byte); the rest of the line (all 16
-   without the face) scrolls a text: a new lcd_scroll_request clears the line and starts lcd_scroll,
+   its mouth the next shape of dj_mouth_shapes every third frame (dj_mouth_frames; dj_face_characters,
+   pairs of custom characters), closed when the string ends (a negative byte); the rest of the line (all
+   16 without the face) scrolls a text: a new lcd_scroll_request clears the line and starts lcd_scroll,
    which shifts the text in from the right a character every 5 frames (lcd_scroll_frames; ` shows custom
    character 7), then shifts spaces in until the text has gone (lcd_scroll_step 0-3). */
 void lcd_update(void)
 {
 	uint8_t r1 = 0, r26 = 0;
-	uint32_t r0 = 0, r10 = 0, r11 = 0, lcd_scroll = 0, lcd_scroll_request = 0;
+	uint32_t r0 = 0, r10 = 0, r11 = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0;
 	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
 	r10 = screen + 0xF10u;
@@ -714,7 +714,7 @@ void lcd_update(void)
 		r11 = SCREEN(screen)->dj_mouth_shapes;
 		if (r11 == 0u)
 		{
-			AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[0];
+			AS16(SCREEN(r10 - 0xF10u)->lcd_text) = dj_face_characters[0];
 			SCREEN(screen)->dj_mouth_frames = 3u;
 			r0 = 0xDu;
 			r10 += 2u;
@@ -730,19 +730,19 @@ void lcd_update(void)
 			}
 			else
 			{
-				r0 = ROM8(r11);
+				mouth_shape = DJ_MOUTH_SHAPE_NUMBERS(r11)[0];
 				r11++;
-				if ((int8_t)r0 < 0)
+				if ((int8_t)mouth_shape < 0)
 				{
 					SCREEN(screen)->dj_mouth_shapes = 0u;
-					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[0];
+					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = dj_face_characters[0];
 					SCREEN(screen)->dj_mouth_frames = 3u;
 					r0 = 0xDu;
 					r10 += 2u;
 				}
 				else
 				{
-					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = rom_018AE8[r0];
+					AS16(SCREEN(r10 - 0xF10u)->lcd_text) = dj_face_characters[mouth_shape];
 					SCREEN(screen)->dj_mouth_shapes = r11;
 					SCREEN(screen)->dj_mouth_frames = 3u;
 					r0 = 0xDu;
@@ -823,7 +823,7 @@ void lcd_update(void)
 	case 3:
 		break;
 	default:
-		invalid_jump(rom_018A70[SCREEN(screen)->lcd_scroll_step]);
+		invalid_jump(lcd_scroll_step_jumps[SCREEN(screen)->lcd_scroll_step]);
 	}
 	lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
 	SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
@@ -864,12 +864,12 @@ void lcd_race_info_start(void)
 }
 
 /* Shows the race on the cabinet LCD. Before the start, while the car object's unk_10 counts the frames
-   to it: a bar shrinking through each second (rom_018EA0) with the seconds left. Then a page every 150
-   frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers, car_numbers + 1,
-   in race order from order_list, this screen's own blinking; skipped with one player), 2 Speed (screen
-   shown_speed), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the label, 1
-   updates the number. When the car reaches the goal (car at_goal) goes to lcd_race_info_finish; when the
-   race is over (car race_over) shows the average and ends; while the LCD scrolls a text (screen
+   to it: a bar shrinking through each second (lcd_countdown_bars) with the seconds left. Then a page
+   every 150 frames (page_frames), by page: 0 Time (lcd_race_info_time), 1 Order (the car numbers,
+   car_numbers + 1, in race order from order_list, this screen's own blinking; skipped with one player),
+   2 Speed (screen shown_speed), 3 Max. (unk_F52), 4 Ave. (lcd_race_info_average); page_step 0 writes the
+   label, 1 updates the number. When the car reaches the goal (car at_goal) goes to lcd_race_info_finish;
+   when the race is over (car race_over) shows the average and ends; while the LCD scrolls a text (screen
    lcd_scroll) waits in lcd_race_info_paused. */
 void lcd_race_info_update(void)
 {
@@ -905,7 +905,7 @@ void lcd_race_info_update(void)
 		{
 			r1 = 0u;
 			divux_pair(0x1Eu, &r0, &r1);
-			move_string(rom_018EA0[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_string(lcd_countdown_bars[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((r0 + 0x31u & 0xFFu) << 8u);
 			return;
 		}
@@ -923,7 +923,7 @@ void lcd_race_info_update(void)
 	case 2:
 		break;
 	default:
-		invalid_jump(rom_018BD4[OBJECT(current_object)->state]);
+		invalid_jump(lcd_race_info_state_jumps[OBJECT(current_object)->state]);
 	}
 	page_frames = OBJECT(current_object)->lcd_race_info.page_frames;
 	OBJECT(current_object)->lcd_race_info.page_frames = page_frames - 1u;
@@ -948,7 +948,7 @@ void lcd_race_info_update(void)
 			lcd_race_info_time();
 			return;
 		default:
-			invalid_jump(rom_018C84[OBJECT(current_object)->lcd_race_info.page_step]);
+			invalid_jump(lcd_race_info_time_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
 	case 1:
@@ -957,13 +957,13 @@ void lcd_race_info_update(void)
 		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_string(lcd_speed_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		default:
-			invalid_jump(rom_018D5C[OBJECT(current_object)->lcd_race_info.page_step]);
+			invalid_jump(lcd_race_info_speed_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		r10 = screen + 0xF1Cu;
 		shown_speed = SCREEN(screen)->shown_speed;
@@ -973,13 +973,13 @@ void lcd_race_info_update(void)
 		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			move_string(0x18F48u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_string(lcd_maximum_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		default:
-			invalid_jump(rom_018D88[OBJECT(current_object)->lcd_race_info.page_step]);
+			invalid_jump(lcd_race_info_maximum_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		r10 = screen + 0xF1Cu;
 		maximum_speed = (uint16_t)SCREEN(screen)->maximum_speed;
@@ -995,11 +995,11 @@ void lcd_race_info_update(void)
 			lcd_race_info_average();
 			return;
 		default:
-			invalid_jump(rom_018DB4[OBJECT(current_object)->lcd_race_info.page_step]);
+			invalid_jump(lcd_race_info_average_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
 	default:
-		invalid_jump(rom_018C64[OBJECT(current_object)->lcd_race_info.page]);
+		invalid_jump(lcd_race_info_page_jumps[OBJECT(current_object)->lcd_race_info.page]);
 	}
 	switch (OBJECT(current_object)->lcd_race_info.page_step)
 	{
@@ -1010,27 +1010,27 @@ void lcd_race_info_update(void)
 			switch (OBJECT(current_object)->lcd_race_info.page_step)
 			{
 			case 0:
-				move_string(0x18F3Au, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+				move_string(lcd_speed_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 				OBJECT(current_object)->lcd_race_info.page_step++;
 				break;
 			case 1:
 				break;
 			default:
-				invalid_jump(rom_018D5C[OBJECT(current_object)->lcd_race_info.page_step]);
+				invalid_jump(lcd_race_info_speed_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 			}
 			r10 = screen + 0xF1Cu;
 			shown_speed = SCREEN(screen)->shown_speed;
 			lcd_race_info_write_number(shown_speed, r10);
 			return;
 		}
-		move_string(0x18F2Cu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_string(lcd_order_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->lcd_race_info.frames = 0u;
 		OBJECT(current_object)->lcd_race_info.page_step++;
 		break;
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_018CF0[OBJECT(current_object)->lcd_race_info.page_step]);
+		invalid_jump(lcd_race_info_order_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 	}
 	r10 = screen + 0xF18u;
 	r11 = OBJECT(current_object)->lcd_race_info.order_list;
@@ -1053,7 +1053,7 @@ void lcd_race_info_update(void)
 /* Writes the Time page's label on the LCD, then the time (lcd_race_info_time). */
 void lcd_race_info_time_page(void)
 {
-	move_string(0x18F1Eu, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(lcd_time_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	OBJECT(current_object)->lcd_race_info.page_step++;
 	lcd_race_info_time();
 }
@@ -1087,7 +1087,7 @@ void lcd_race_info_time(void)
 /* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */
 void lcd_race_info_average_page(void)
 {
-	move_string(0x18F56u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(lcd_average_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 	OBJECT(current_object)->lcd_race_info.page_step++;
 	lcd_race_info_average();
 }
@@ -1161,7 +1161,7 @@ void lcd_race_info_finish(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		move_string(0x18F64u, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_string(lcd_finish_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
 		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->lcd_scroll == 0u)
 			return;
@@ -1194,7 +1194,7 @@ void lcd_race_info_finish(void)
 		lcd_race_info_time_page();
 		return;
 	default:
-		invalid_jump(rom_018E40[OBJECT(current_object)->state]);
+		invalid_jump(lcd_race_info_finish_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (SCREEN(screen)->lcd_scroll != 0u)
 		return;
@@ -1223,8 +1223,8 @@ void lcd_race_info_paused(void)
 
 /* Sets up the radio as the race starts: the car each player chose (byte 49 of its race_copy record) by
    car number in car_models (FF where none) and how many in cars_to_introduce, this screen's car number,
-   clears screen nearing_fork, gives the car the song of its model (car song = rom_019421 by car model),
-   notes the stage (screen route_stage), then car_radio_wait_start. */
+   clears screen nearing_fork, gives the car the song of its model (car song = car_model_songs by car
+   model), notes the stage (screen route_stage), then car_radio_wait_start. */
 void car_radio_start(void)
 {
 	uint32_t r0 = 0, r9 = 0, object = 0, race = 0;
@@ -1247,7 +1247,7 @@ void car_radio_start(void)
 	} while (r9 != 0u);
 	OBJECT(current_object)->car_radio.car_number = car_numbers[SCREEN(screen)->player];
 	SCREEN(screen)->nearing_fork = 0u;
-	CAR(player_car)->song = rom_019421[CAR(player_car)->model];
+	CAR(player_car)->song = car_model_songs[CAR(player_car)->model];
 	OBJECT(current_object)->car_radio.stage = SCREEN(screen)->route_stage;
 	OBJECT(current_object)->handler = car_radio_wait_start_ADDRESS;
 	car_radio_wait_start();
@@ -1285,14 +1285,14 @@ void car_radio_read_buttons(void)
 /* The radio, by state: 0 plays the car's song (car song) with its title; 1 << and >> step through the
    ten songs (both together: song 10, Jingle Bell), START does >>, the DJ/music button goes to the
    station; 2 the station: title "Mega Radio Station", DJ message 29 queued, the stage's sound
-   (rom_019458 by screen route_stage); 3 the station plays; 4-8 while screen nearing_fork is set
-   (fork_camera_update sets it, a new route_stage clears it): 3F to the screen's sound byte
+   (route_stage_radio_sounds by screen route_stage); 3 the station plays; 4-8 while screen nearing_fork
+   is set (fork_camera_update sets it, a new route_stage clears it): 3F to the screen's sound byte
    (fade_out_music_at), sound E0 after 60 frames, sound EE, 7F when it clears and after 120 frames the
-   stage's message (rom_019571 by screen current_stage_level) and sound. On the station: any of the three
-   buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no message plays (screen
-   dj_mouth_shapes), by talk_step: 0 message 0, 1-2 each car number (message 9 + number) and its car
-   (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of remarks
-   (routine_lists_1966C), 5 nothing. */
+   stage's message (stage_level_radio_messages by screen current_stage_level) and sound. On the station:
+   any of the three buttons goes back to the car's song (state 0, talk_step 4); the DJ talks when no
+   message plays (screen dj_mouth_shapes), by talk_step: 0 message 0, 1-2 each car number (message 9 +
+   number) and its car (message 1 + model), 3 message 2A, 4 the queued_message or, at random, a list of
+   remarks (routine_lists_1966C), 5 nothing. */
 void car_radio_update(void)
 {
 	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
@@ -1326,7 +1326,7 @@ void car_radio_update(void)
 					{
 						do
 						{
-							jump_target = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : rom_019044[OBJECT(current_object)->state];
+							jump_target = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : car_radio_state_jumps[OBJECT(current_object)->state];
 							switch (jump_target)
 							{
 							case 0x019068u:
@@ -1395,7 +1395,7 @@ void car_radio_update(void)
 												{
 													if (!L_019180)
 													{
-														r10 = 0x1954Cu;
+														r10 = radio_station_title_ADDRESS;
 														car_radio_show_title(r10);
 														OBJECT(current_object)->car_radio.queued_message = 0x29u;
 													}
@@ -1441,8 +1441,8 @@ void car_radio_update(void)
 											}
 											if (!L_019167 && !L_019180 && SCREEN(screen)->nearing_fork == 0u)
 											{
-												OBJECT(current_object)->car_radio.queued_message = rom_019571[SCREEN(screen)->current_stage_level];
-												r0_2 = rom_019458[SCREEN(screen)->route_stage];
+												OBJECT(current_object)->car_radio.queued_message = stage_level_radio_messages[SCREEN(screen)->current_stage_level];
+												r0_2 = route_stage_radio_sounds[SCREEN(screen)->route_stage];
 												request_sound(r0_2);
 												OBJECT(current_object)->state = 3u;
 											}
@@ -1472,8 +1472,8 @@ void car_radio_update(void)
 													OBJECT(current_object)->car_radio.timer = timer_2 - 1u;
 													if (timer_2 == 1u)
 													{
-														OBJECT(current_object)->car_radio.queued_message = rom_019571[SCREEN(screen)->current_stage_level];
-														r0_2 = rom_019458[SCREEN(screen)->route_stage];
+														OBJECT(current_object)->car_radio.queued_message = stage_level_radio_messages[SCREEN(screen)->current_stage_level];
+														r0_2 = route_stage_radio_sounds[SCREEN(screen)->route_stage];
 														request_sound(r0_2);
 														OBJECT(current_object)->state = 3u;
 													}
@@ -1487,7 +1487,7 @@ void car_radio_update(void)
 										{
 											if (!L_019118)
 											{
-												r0_2 = rom_019458[SCREEN(screen)->route_stage];
+												r0_2 = route_stage_radio_sounds[SCREEN(screen)->route_stage];
 												request_sound(r0_2);
 												OBJECT(current_object)->state++;
 											}
@@ -1613,7 +1613,7 @@ void car_radio_update(void)
 								case 5:
 									return;
 								default:
-									invalid_jump(rom_0191E0[OBJECT(current_object)->car_radio.talk_step]);
+									invalid_jump(car_radio_talk_step_jumps[OBJECT(current_object)->car_radio.talk_step]);
 								}
 								break;
 							case 0x019118u:
@@ -1708,14 +1708,14 @@ void car_radio_dj_remark_2c(void)
 	start_dj_message(r0);
 }
 
-/* Shows the title of song R0 (rom_01942C: 0 Magical Sound Shower, 1 Passing Breeze, 2 Splash Wave, 3
+/* Shows the title of song R0 (radio_songs: 0 Magical Sound Shower, 1 Passing Breeze, 2 Splash Wave, 3
    Picture the Rivers, 4 Blow Your Cool, 5 Looking for the Rainbow, 6 Speed King, 7 Adventure, 8 Sonic
    Control, 9 Last Wave, 10 Jingle Bell) and returns the song's sound. */
 uint32_t car_radio_song(uint32_t r0)
 {
 	uint32_t r0_2 = 0, r10 = 0;
 
-	r10 = rom_01942C[r0];
+	r10 = radio_songs[r0];
 	r0_2 = byte_swap32(r10);
 	r10 &= 0xFFFFFFu;
 	car_radio_show_title(r10);
@@ -1753,27 +1753,27 @@ uint32_t start_song_title(uint32_t r10)
    lcd_scroll_request), then slides in from the right (slide from D2, slowing down to a stop by speed),
    stays for time_left (60 frames) and slides out to the left speeding up; sent away early (time_left 0,
    car_radio_show_title) it leaves at 40 a frame. Drawn each frame with draw_text_at at y C8 in colours
-   that cycle every 2 frames (rom_019561 by colour_step). */
+   that cycle every 2 frames (song_title_colours by colour_step). */
 void song_title_show(void)
 {
 	bool L_019387 = false, L_01938A = false;
 	uint32_t negative = 0;
 	uint16_t r0 = 0, r5_2 = 0, speed = 0;
-	uint32_t r3 = 0, r5 = 0, r10 = 0, text = 0;
+	uint32_t r3 = 0, r5 = 0, record = 0, text = 0;
 	uint16_t time_left = 0, t1 = 0;
 	uint32_t jump_target = 0;
 
 	do
 	{
-		jump_target = L_01938A ? 0x19369u : rom_019330[OBJECT(current_object)->state];
+		jump_target = L_01938A ? 0x19369u : song_title_state_jumps[OBJECT(current_object)->state];
 		switch (jump_target)
 		{
 		case 0x019344u:
-			r10 = OBJECT(current_object)->song_title.text;
-			OBJECT(current_object)->x = ROM16(r10);
-			r10 += 2u;
-			OBJECT(current_object)->song_title.text = r10;
-			SCREEN(screen)->lcd_scroll_request = r10;
+			record = OBJECT(current_object)->song_title.text;
+			OBJECT(current_object)->x = SONG_TITLE_RECORD(record)->x;
+			record += 2u;
+			OBJECT(current_object)->song_title.text = record;
+			SCREEN(screen)->lcd_scroll_request = record;
 			OBJECT(current_object)->song_title.slide = 0xD2;
 			OBJECT(current_object)->song_title.y = 0xC8u;
 			OBJECT(current_object)->song_title.speed = 0x14u;
@@ -1801,7 +1801,7 @@ void song_title_show(void)
 						r5 = (uint8_t)(r5 + 1u);
 						OBJECT(current_object)->song_title.colour_step = r5;
 						r5 = r5 >> 1;
-						r5_2 = rom_019561[r5 & 7u];
+						r5_2 = song_title_colours[r5 & 7u];
 						text = OBJECT(current_object)->song_title.text;
 						draw_text_at(r3, r5_2, text);
 						return;
@@ -1867,7 +1867,7 @@ void song_title_show(void)
 			r5 = (uint8_t)(r5 + 1u);
 			OBJECT(current_object)->song_title.colour_step = r5;
 			r5 = r5 >> 1;
-			r5_2 = rom_019561[r5 & 7u];
+			r5_2 = song_title_colours[r5 & 7u];
 			text = OBJECT(current_object)->song_title.text;
 			draw_text_at(r3, r5_2, text);
 			return;
@@ -1886,7 +1886,7 @@ void song_title_show(void)
 			r5 = (uint8_t)(r5 + 1u);
 			OBJECT(current_object)->song_title.colour_step = r5;
 			r5 = r5 >> 1;
-			r5_2 = rom_019561[r5 & 7u];
+			r5_2 = song_title_colours[r5 & 7u];
 			text = OBJECT(current_object)->song_title.text;
 			draw_text_at(r3, r5_2, text);
 			return;
@@ -1899,7 +1899,7 @@ void song_title_show(void)
 	r5 = (uint8_t)(r5 + 1u);
 	OBJECT(current_object)->song_title.colour_step = r5;
 	r5 = r5 >> 1;
-	r5_2 = rom_019561[r5 & 7u];
+	r5_2 = song_title_colours[r5 & 7u];
 	text = OBJECT(current_object)->song_title.text;
 	draw_text_at(r3, r5_2, text);
 }
@@ -1926,19 +1926,20 @@ void start_dj_message(uint8_t r0)
 }
 
 /* The title of the attract mode. By state: 0 sets it up: clears screen 5800 and 5801 (title_logo_shine,
-   the logo's shine signal), keeps the addresses of the tilemaps' register copies (01ACCC by screen:
-   scroll_x_address, scroll_y_address for the first tilemap, second_scroll_x_address,
-   second_scroll_y_address for the second), the background (set_up_background with 01AD0C by screen) and
-   its scrolls, picks the car of the next car presentation (screen attract_car from unk_9E, which steps
-   through the eight), starts the credits line (credit_display), the prompt (coin_prompt) and the eight
-   cars driving past (title_car); 1 for 45 frames (frames): palm trees (title_screen_start_palms) and the
-   two tilemaps scrolled by 8 and 20 a frame, then the logo (title_logo, title_logo_copy), three logo
-   cars (title_logo_car) and the three lines across the logo (title_logo_stripe); 2 the same palms and
-   scrolls, with three more logo cars at each count of wave_times (120, 240, 300, 390, 450). */
+   the logo's shine signal), keeps the addresses of the tilemaps' register copies
+   (title_screen_layer_setups by screen: scroll_x_address, scroll_y_address for the first tilemap,
+   second_scroll_x_address, second_scroll_y_address for the second), the background (set_up_background
+   with title_background_setups by screen) and its scrolls, picks the car of the next car presentation
+   (screen attract_car from unk_9E, which steps through the eight), starts the credits line
+   (credit_display), the prompt (coin_prompt) and the eight cars driving past (title_car); 1 for 45
+   frames (frames): palm trees (title_screen_start_palms) and the two tilemaps scrolled by 8 and 20 a
+   frame, then the logo (title_logo, title_logo_copy), three logo cars (title_logo_car) and the three
+   lines across the logo (title_logo_stripe); 2 the same palms and scrolls, with three more logo cars at
+   each count of wave_times (120, 240, 300, 390, 450). */
 void title_screen_update(void)
 {
 	uint8_t r0 = 0, next_attract_car = 0;
-	uint32_t r1 = 0, r19 = 0, object = 0;
+	uint32_t r1 = 0, background_setup = 0, object = 0, title_screen_layer_setup = 0;
 	uint8_t t1 = 0;
 	uint32_t scroll_x_address = 0, scroll_x_address_2 = 0, second_scroll_x_address = 0, scroll_x_address_3 = 0, second_scroll_x_address_2 = 0;
 
@@ -1947,23 +1948,23 @@ void title_screen_update(void)
 	case 0:
 		SCREEN(screen)->route_map_signals &= 0xFFFFFF00u;
 		SCREEN(screen)->title_logo_shine = 0u;
-		r19 = 0x1ACCCu + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
-		OBJECT(current_object)->title_screen.tile_bank_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.pages_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.scroll_x_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.scroll_y_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.second_tile_bank_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.second_pages_address = ROM32(r19);
-		r19 += 4u;
-		OBJECT(current_object)->title_screen.second_scroll_x_address = ROM32(r19);
-		OBJECT(current_object)->title_screen.second_scroll_y_address = ROM32(r19 + 4u);
-		r19 = 0x1AD0Cu + SCREEN(screen)->index * 5u * 4u;
-		set_up_background(r19);
+		title_screen_layer_setup = title_screen_layer_setups_ADDRESS + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
+		OBJECT(current_object)->title_screen.tile_bank_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup)->tile_bank_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.pages_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x4u)->pages_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.scroll_x_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x8u)->scroll_x_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.scroll_y_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0xCu)->scroll_y_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.second_tile_bank_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x10u)->second_tile_bank_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.second_pages_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x14u)->second_pages_address;
+		title_screen_layer_setup += 4u;
+		OBJECT(current_object)->title_screen.second_scroll_x_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x18u)->second_scroll_x_address;
+		OBJECT(current_object)->title_screen.second_scroll_y_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x18u)->second_scroll_y_address;
+		background_setup = title_background_setups_ADDRESS + SCREEN(screen)->index * 5u * 4u;
+		set_up_background(background_setup);
 		mem_write16(OBJECT(current_object)->title_screen.second_scroll_y_address, 0xFFF0u);
 		mem_write16(OBJECT(current_object)->title_screen.scroll_x_address, 0x360u);
 		scroll_x_address = OBJECT(current_object)->title_screen.scroll_x_address;
@@ -2025,7 +2026,7 @@ void title_screen_update(void)
 			r0++;
 			r1--;
 		} while (r1 != 0u);
-		OBJECT(current_object)->title_screen.wave_times = 0x1ACC0u;
+		OBJECT(current_object)->title_screen.wave_times = title_logo_car_wave_frames_ADDRESS;
 		OBJECT(current_object)->title_screen.frames = 0u;
 		OBJECT(current_object)->state++;
 		return;
@@ -2036,7 +2037,7 @@ void title_screen_update(void)
 		second_scroll_x_address_2 = OBJECT(current_object)->title_screen.second_scroll_x_address;
 		mem_write16(second_scroll_x_address_2, mem_read16(second_scroll_x_address_2) + 0x14u);
 		OBJECT(current_object)->title_screen.frames++;
-		if (OBJECT(current_object)->title_screen.frames != ROM16(OBJECT(current_object)->title_screen.wave_times))
+		if (OBJECT(current_object)->title_screen.frames != TITLE_WAVE_FRAMES(OBJECT(current_object)->title_screen.wave_times)[0])
 			return;
 		r1 = 3u;
 		r0 = 0u;
@@ -2051,48 +2052,48 @@ void title_screen_update(void)
 		OBJECT(current_object)->title_screen.wave_times += 2u;
 		return;
 	default:
-		invalid_jump(rom_019CB8[OBJECT(current_object)->state]);
+		invalid_jump(title_screen_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
 /* One of the eight cars driving past at the bottom of the title (title_screen starts them, index 0-7).
-   Sets itself up from its record (01ABB4 by index: the model, whose animation rom_01AC34 gives, palette,
-   width_scale, height_scale, position, y, speed, and its depth_layer less 18F; draw mode A, frame 9) and
-   starts its driver (title_car_driver) and passenger (title_car_passenger); each frame drives on by
-   speed along a strip 4096 wide that wraps (clearing flags bit 5 as it wraps), is drawn at the position
-   less the screen's offset (rom_01ABA4 by screen car_number) and bobs a line up on odd frames (frames;
-   rest_y keeps its y meanwhile). */
+   Sets itself up from its record (title_car_records by index: the model, whose animation
+   title_car_animations gives, palette, width_scale, height_scale, position, y, speed, and its
+   depth_layer less 18F; draw mode A, frame 9) and starts its driver (title_car_driver) and passenger
+   (title_car_passenger); each frame drives on by speed along a strip 4096 wide that wraps (clearing
+   flags bit 5 as it wraps), is drawn at the position less the screen's offset (title_car_screen_offsets
+   by screen car_number) and bobs a line up on odd frames (frames; rest_y keeps its y meanwhile). */
 void title_car_drive(void)
 {
 	uint16_t r2 = 0;
-	uint32_t r0 = 0, r9 = 0, r10 = 0, object = 0;
+	uint32_t r0 = 0, r9 = 0, object = 0, title_car_record = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_019E78[state];
+	r0 = title_car_state_jumps[state];
 	switch (state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		r10 = 0x1ABB4u + ((uint32_t)OBJECT(current_object)->title_car.index << 4);
-		r0 = mem_read16(r10);
-		r9 = rom_01AC34[r0];
-		r10 += 2u;
+		title_car_record = title_car_records_ADDRESS + ((uint32_t)OBJECT(current_object)->title_car.index << 4);
+		r0 = TITLE_CAR_RECORD(title_car_record)->model;
+		r9 = title_car_animations[r0];
+		title_car_record += 2u;
 		animation_start(r9);
-		OBJECT(current_object)->palette = mem_read16(r10);
-		r10 += 2u;
-		OBJECT(current_object)->width_scale = mem_read16(r10);
-		r10 += 2u;
-		OBJECT(current_object)->height_scale = mem_read16(r10);
-		r10 += 2u;
-		OBJECT(current_object)->title_car.position = mem_read16(r10);
-		r10 += 2u;
-		OBJECT(current_object)->y = mem_read16(r10);
-		r10 += 2u;
-		OBJECT(current_object)->title_car.speed = mem_read16(r10);
+		OBJECT(current_object)->palette = TITLE_CAR_RECORD(title_car_record - 0x2u)->palette;
+		title_car_record += 2u;
+		OBJECT(current_object)->width_scale = TITLE_CAR_RECORD(title_car_record - 0x4u)->width_scale;
+		title_car_record += 2u;
+		OBJECT(current_object)->height_scale = TITLE_CAR_RECORD(title_car_record - 0x6u)->height_scale;
+		title_car_record += 2u;
+		OBJECT(current_object)->title_car.position = TITLE_CAR_RECORD(title_car_record - 0x8u)->position;
+		title_car_record += 2u;
+		OBJECT(current_object)->y = TITLE_CAR_RECORD(title_car_record - 0xAu)->y;
+		title_car_record += 2u;
+		OBJECT(current_object)->title_car.speed = TITLE_CAR_RECORD(title_car_record - 0xCu)->speed;
 		OBJECT(current_object)->frame = 9u;
 		OBJECT(current_object)->depth_layer = 0x18Fu;
-		OBJECT(current_object)->depth_layer += mem_read16(r10 + 2u);
+		OBJECT(current_object)->depth_layer += TITLE_CAR_RECORD(title_car_record - 0xCu)->depth_layer;
 		object = start_object();
 		OBJECT(object)->handler = title_car_passenger_update_ADDRESS;
 		OBJECT(object)->title_car_passenger.car = current_object;
@@ -2106,7 +2107,7 @@ void title_car_drive(void)
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_019E78[state]);
+		invalid_jump(title_car_state_jumps[state]);
 	}
 	OBJECT(current_object)->title_car.position += OBJECT(current_object)->title_car.speed;
 	if (OBJECT(current_object)->title_car.position >= 0x1000)
@@ -2115,7 +2116,7 @@ void title_car_drive(void)
 		OBJECT(current_object)->title_car.position &= 0xFFFu;
 	}
 	OBJECT(current_object)->x = OBJECT(current_object)->title_car.position;
-	OBJECT(current_object)->x -= rom_01ABA4[SCREEN(screen)->car_number];
+	OBJECT(current_object)->x -= title_car_screen_offsets[SCREEN(screen)->car_number];
 	OBJECT(current_object)->title_car.frames++;
 	r2 = OBJECT(current_object)->title_car.frames & 1u;
 	OBJECT(current_object)->title_car.rest_y = OBJECT(current_object)->y;
@@ -2125,8 +2126,9 @@ void title_car_drive(void)
 }
 
 /* The driver of a title car (the blond man at the wheel): sets up its picture by the car's model
-   (animation rom_01A012, palette rom_01A032, x_offset rom_01A062, y_offset rom_01A072, a layer in front
-   of the car), then is drawn with the car each frame (title_rider_draw). */
+   (animation title_driver_animations, palette title_driver_palettes, x_offset title_driver_x_offsets,
+   y_offset title_driver_y_offsets, a layer in front of the car), then is drawn with the car each frame
+   (title_rider_draw). */
 void title_car_driver_update(void)
 {
 	uint32_t r9 = 0, model = 0;
@@ -2135,10 +2137,10 @@ void title_car_driver_update(void)
 	{
 	case 0:
 		model = OBJECT(current_object)->title_car_driver.model;
-		OBJECT(current_object)->palette = rom_01A032[model];
-		OBJECT(current_object)->title_car_driver.x_offset = rom_01A062[model];
-		OBJECT(current_object)->title_car_driver.y_offset = rom_01A072[model];
-		r9 = rom_01A012[model];
+		OBJECT(current_object)->palette = title_driver_palettes[model];
+		OBJECT(current_object)->title_car_driver.x_offset = title_driver_x_offsets[model];
+		OBJECT(current_object)->title_car_driver.y_offset = title_driver_y_offsets[model];
+		r9 = title_driver_animations[model];
 		animation_start(r9);
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -2149,13 +2151,14 @@ void title_car_driver_update(void)
 		title_rider_draw();
 		return;
 	default:
-		invalid_jump(rom_019F58[OBJECT(current_object)->state]);
+		invalid_jump(title_car_driver_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
 /* The passenger of a title car (the red-haired woman beside the driver): sets up its picture by the
-   car's model (animation rom_01A022, palette rom_01A042, x_offset rom_01A082, y_offset rom_01A092, a
-   layer in front of the car), then is drawn with the car each frame (title_rider_draw). */
+   car's model (animation title_passenger_animations, palette title_passenger_palettes, x_offset
+   title_passenger_x_offsets, y_offset title_passenger_y_offsets, a layer in front of the car), then is
+   drawn with the car each frame (title_rider_draw). */
 void title_car_passenger_update(void)
 {
 	uint32_t r9 = 0, model = 0;
@@ -2168,13 +2171,13 @@ void title_car_passenger_update(void)
 		title_rider_draw();
 		return;
 	default:
-		invalid_jump(rom_019F6C[OBJECT(current_object)->state]);
+		invalid_jump(title_car_passenger_state_jumps[OBJECT(current_object)->state]);
 	}
 	model = OBJECT(current_object)->title_car_passenger.model;
-	OBJECT(current_object)->palette = rom_01A042[model];
-	OBJECT(current_object)->title_car_passenger.x_offset = rom_01A082[model];
-	OBJECT(current_object)->title_car_passenger.y_offset = rom_01A092[model];
-	r9 = rom_01A022[model];
+	OBJECT(current_object)->palette = title_passenger_palettes[model];
+	OBJECT(current_object)->title_car_passenger.x_offset = title_passenger_x_offsets[model];
+	OBJECT(current_object)->title_car_passenger.y_offset = title_passenger_y_offsets[model];
+	r9 = title_passenger_animations[model];
 	animation_start(r9);
 	OBJECT(current_object)->state++;
 	OBJECT(current_object)->draw_mode = 0xAu;
@@ -2184,14 +2187,14 @@ void title_car_passenger_update(void)
 
 /* Draws a rider of a title car (title_car_driver, title_car_passenger) on its car: at the car's x and y
    plus its x_offset and y_offset, bobbing with the car (bit 0 of the car's frames), at the size
-   rom_01A052 gives for the model. */
+   title_rider_scales gives for the model. */
 void title_rider_draw(void)
 {
 	uint32_t r0 = 0, model = 0;
 
 	model = OBJECT(current_object)->title_rider.model;
-	OBJECT(current_object)->width_scale = rom_01A052[model];
-	OBJECT(current_object)->height_scale = rom_01A052[model];
+	OBJECT(current_object)->width_scale = title_rider_scales[model];
+	OBJECT(current_object)->height_scale = title_rider_scales[model];
 	OBJECT(current_object)->x = OBJECT(OBJECT(current_object)->title_rider.car)->x + OBJECT(current_object)->title_rider.x_offset;
 	r0 = (uint16_t)(OBJECT(OBJECT(current_object)->title_rider.car)->y + OBJECT(current_object)->title_rider.y_offset - (OBJECT(OBJECT(current_object)->title_rider.car)->title_car.frames & 1u));
 	OBJECT(current_object)->y = r0;
@@ -2230,7 +2233,7 @@ void title_palm_tree_update(void)
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A0F0[state];
+	r0 = title_palm_tree_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2259,7 +2262,7 @@ void title_palm_tree_update(void)
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01A0F0[state]);
+		invalid_jump(title_palm_tree_state_jumps[state]);
 	}
 	if ((int16_t)OBJECT(current_object)->x <= -0x30)
 	{
@@ -2288,7 +2291,7 @@ void title_logo_update(void)
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A198[state];
+	r0 = title_logo_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2316,7 +2319,7 @@ void title_logo_update(void)
 			return;
 		}
 		palette_list = OBJECT(current_object)->title_logo.palette_list;
-		OBJECT(current_object)->palette = ROM16(palette_list);
+		OBJECT(current_object)->palette = TITLE_LOGO_PALETTES(palette_list)[0];
 		OBJECT(current_object)->title_logo.palette_list = palette_list + 2u;
 		r0 = draw_object(r0);
 		return;
@@ -2331,7 +2334,7 @@ void title_logo_update(void)
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A198[state]);
+		invalid_jump(title_logo_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo.frames;
 	OBJECT(current_object)->title_logo.frames = frames_2 - 1u;
@@ -2363,7 +2366,7 @@ void title_logo_update(void)
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 1u);
 		r1--;
 	} while (r1 != 0u);
-	OBJECT(current_object)->title_logo.palette_list = 0x1AC54u;
+	OBJECT(current_object)->title_logo.palette_list = title_logo_flash_palettes_ADDRESS;
 	OBJECT(current_object)->title_logo.frames = 6u;
 	OBJECT(current_object)->state++;
 	r0 = draw_object(r0);
@@ -2378,7 +2381,7 @@ void title_logo_copy_update(void)
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A2A8[state];
+	r0 = title_logo_copy_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2403,18 +2406,18 @@ void title_logo_copy_update(void)
 			return;
 		}
 		palette_list = OBJECT(current_object)->title_logo_copy.palette_list;
-		OBJECT(current_object)->palette = ROM16(palette_list);
+		OBJECT(current_object)->palette = TITLE_LOGO_PALETTES(palette_list)[0];
 		OBJECT(current_object)->title_logo_copy.palette_list = palette_list + 2u;
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A2A8[state]);
+		invalid_jump(title_logo_copy_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo_copy.frames;
 	OBJECT(current_object)->title_logo_copy.frames = frames_2 - 1u;
 	if (frames_2 == 1u)
 	{
-		OBJECT(current_object)->title_logo_copy.palette_list = 0x1AC62u;
+		OBJECT(current_object)->title_logo_copy.palette_list = title_logo_copy_flash_palettes_ADDRESS;
 		OBJECT(current_object)->title_logo_copy.frames = 6u;
 		OBJECT(current_object)->state++;
 		r0 = draw_object(r0);
@@ -2425,18 +2428,18 @@ void title_logo_copy_update(void)
 }
 
 /* A small car racing across the logo along one of its lines (title_screen starts three at a time, index
-   0-2): after 1, 5 or 9 frames by index, one of the eight cars at random (rom_01AC34, rom_01AC44) at a
-   quarter of its size at the left edge; 16 a frame to the right edge; the first of the three then makes
-   the logo, its board's palm trees and the lines shine (screen title_logo_shine for a frame), and it
-   ends. */
+   0-2): after 1, 5 or 9 frames by index, one of the eight cars at random (title_car_animations,
+   title_logo_car_palettes) at a quarter of its size at the left edge; 16 a frame to the right edge; the
+   first of the three then makes the logo, its board's palm trees and the lines shine (screen
+   title_logo_shine for a frame), and it ends. */
 void title_logo_car_update(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, r9 = 0, place = 0;
 	uint8_t delay = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A334[state];
+	r0 = title_logo_car_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2449,13 +2452,13 @@ void title_logo_car_update(void)
 		OBJECT(current_object)->draw_mode = 0xAu;
 		r0 = random_number();
 		r0 &= 7u;
-		r9 = rom_01AC34[r0];
+		r9 = title_car_animations[r0];
 		animation_start(r9);
-		OBJECT(current_object)->palette = rom_01AC44[r0];
+		OBJECT(current_object)->palette = title_logo_car_palettes[r0];
 		r0 = (uint32_t)OBJECT(current_object)->title_logo_car.index << 2;
-		r10 = 0x1ACB4u + r0;
-		OBJECT(current_object)->x = ROM16(r10);
-		OBJECT(current_object)->y = ROM16(r10 + 2u);
+		place = title_logo_car_places_ADDRESS + r0;
+		OBJECT(current_object)->x = TITLE_PLACE(place)->x;
+		OBJECT(current_object)->y = TITLE_PLACE(place)->y;
 		OBJECT(current_object)->width_scale = 0x40u;
 		OBJECT(current_object)->height_scale = 0x40u;
 		OBJECT(current_object)->frame = 9u;
@@ -2471,13 +2474,13 @@ void title_logo_car_update(void)
 		OBJECT(current_object)->draw_mode = 0xAu;
 		r0 = random_number();
 		r0 &= 7u;
-		r9 = rom_01AC34[r0];
+		r9 = title_car_animations[r0];
 		animation_start(r9);
-		OBJECT(current_object)->palette = rom_01AC44[r0];
+		OBJECT(current_object)->palette = title_logo_car_palettes[r0];
 		r0 = (uint32_t)OBJECT(current_object)->title_logo_car.index << 2;
-		r10 = 0x1ACB4u + r0;
-		OBJECT(current_object)->x = ROM16(r10);
-		OBJECT(current_object)->y = ROM16(r10 + 2u);
+		place = title_logo_car_places_ADDRESS + r0;
+		OBJECT(current_object)->x = TITLE_PLACE(place)->x;
+		OBJECT(current_object)->y = TITLE_PLACE(place)->y;
 		OBJECT(current_object)->width_scale = 0x40u;
 		OBJECT(current_object)->height_scale = 0x40u;
 		OBJECT(current_object)->frame = 9u;
@@ -2502,7 +2505,7 @@ void title_logo_car_update(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	default:
-		invalid_jump(rom_01A334[state]);
+		invalid_jump(title_logo_car_state_jumps[state]);
 	}
 }
 
@@ -2511,12 +2514,12 @@ void title_logo_car_update(void)
    logo (its animation from frame 0 when screen title_logo_shine is set). */
 void title_logo_stripe_update(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, r9 = 0, place = 0;
 	uint8_t frames = 0, frames_2 = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A3F4[state];
+	r0 = title_logo_stripe_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2549,7 +2552,7 @@ void title_logo_stripe_update(void)
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A3F4[state]);
+		invalid_jump(title_logo_stripe_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo_stripe.frames;
 	OBJECT(current_object)->title_logo_stripe.frames = frames_2 - 1u;
@@ -2560,9 +2563,9 @@ void title_logo_stripe_update(void)
 	animation_start(r9);
 	OBJECT(current_object)->palette = 0x270u;
 	r0 = (uint32_t)OBJECT(current_object)->title_logo_stripe.index << 2;
-	r10 = 0x1ACA8u + r0;
-	OBJECT(current_object)->x = ROM16(r10);
-	OBJECT(current_object)->y = ROM16(r10 + 2u);
+	place = title_logo_stripe_places_ADDRESS + r0;
+	OBJECT(current_object)->x = TITLE_PLACE(place)->x;
+	OBJECT(current_object)->y = TITLE_PLACE(place)->y;
 	OBJECT(current_object)->depth_layer = 0x198u;
 	OBJECT(current_object)->title_logo_stripe.frames = 0x14u;
 	OBJECT(current_object)->state++;
@@ -2588,7 +2591,7 @@ void title_board_palms_update(void)
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A4A4[state];
+	r0 = title_board_palms_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2617,7 +2620,7 @@ void title_board_palms_update(void)
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A4A4[state]);
+		invalid_jump(title_board_palms_state_jumps[state]);
 	}
 	frames = OBJECT(current_object)->title_board_palms.frames;
 	OBJECT(current_object)->title_board_palms.frames = frames - 1u;
@@ -2639,12 +2642,12 @@ void title_board_palms_update(void)
 void title_seagull_fly(void)
 {
 	uint16_t r3 = 0;
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, r9 = 0, place = 0;
 	uint8_t frames = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A544[state];
+	r0 = title_seagull_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2655,9 +2658,9 @@ void title_seagull_fly(void)
 		OBJECT(current_object)->width_scale = 0xC0u;
 		OBJECT(current_object)->height_scale = 0xC0u;
 		r0 = (uint32_t)OBJECT(current_object)->title_seagull.index << 2;
-		r10 = 0x1ACA0u + r0;
-		OBJECT(current_object)->x = ROM16(r10);
-		OBJECT(current_object)->y = ROM16(r10 + 2u);
+		place = title_seagull_places_ADDRESS + r0;
+		OBJECT(current_object)->x = TITLE_PLACE(place)->x;
+		OBJECT(current_object)->y = TITLE_PLACE(place)->y;
 		OBJECT(current_object)->depth_layer = 0x198u;
 		OBJECT(current_object)->title_seagull.frames = 9u;
 		OBJECT(current_object)->state++;
@@ -2716,14 +2719,14 @@ void title_seagull_fly(void)
 		OBJECT(current_object)->x = OBJECT(current_object)->title_seagull.centre_x;
 		OBJECT(current_object)->y = OBJECT(current_object)->title_seagull.centre_y;
 		r0 = OBJECT(current_object)->title_seagull.x_angle & 0xFFFu;
-		r3 = (uint16_t)((int16_t)rom_100C00[(uint32_t)OBJECT(current_object)->title_seagull.y_angle] >> 12);
-		OBJECT(current_object)->x += (int16_t)rom_100C00[r0] >> 9;
+		r3 = (uint16_t)((int16_t)sine_table[(uint32_t)OBJECT(current_object)->title_seagull.y_angle] >> 12);
+		OBJECT(current_object)->x += (int16_t)sine_table[r0] >> 9;
 		OBJECT(current_object)->y += r3;
 		animation_advance(0u);
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A544[state]);
+		invalid_jump(title_seagull_state_jumps[state]);
 	}
 }
 
@@ -2732,11 +2735,11 @@ void title_seagull_fly(void)
    behind the logo, 2 the SEGA logo. */
 void title_picture_draw(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, animation = 0, picture = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A680[state];
+	r0 = title_picture_state_jumps[state];
 	switch (state)
 	{
 	case 1:
@@ -2745,24 +2748,24 @@ void title_picture_draw(void)
 	case 0:
 		break;
 	default:
-		invalid_jump(rom_01A680[state]);
+		invalid_jump(title_picture_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	r0 = (uint32_t)OBJECT(current_object)->title_picture.index << 4;
-	r10 = 0x1AC70u + r0;
-	r9 = mem_read16(r10);
-	r10 += 2u;
-	animation_start(r9);
-	OBJECT(current_object)->palette = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->width_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->height_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->x = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->y = mem_read16(r10);
-	OBJECT(current_object)->depth_layer = mem_read16(r10 + 2u);
+	picture = title_pictures_ADDRESS + r0;
+	animation = PICTURE_RECORD(picture)->animation;
+	picture += 2u;
+	animation_start(animation);
+	OBJECT(current_object)->palette = PICTURE_RECORD(picture - 0x2u)->palette;
+	picture += 2u;
+	OBJECT(current_object)->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
+	picture += 2u;
+	OBJECT(current_object)->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
+	picture += 2u;
+	OBJECT(current_object)->x = PICTURE_RECORD(picture - 0x8u)->x;
+	picture += 2u;
+	OBJECT(current_object)->y = PICTURE_RECORD(picture - 0xAu)->y;
+	OBJECT(current_object)->depth_layer = PICTURE_RECORD(picture - 0xAu)->depth_layer;
 	OBJECT(current_object)->state++;
 	r0 = draw_object(r0);
 }
@@ -2774,8 +2777,8 @@ void title_picture_draw(void)
    screen 1, seat2_credits and seat2_coin_units for screen 2): with free play (free_play) or a credit
    message 2, TURN THE IGNITION KEY (coin_prompt_start_key_prompt); else message 1 with coins in toward a
    credit or 0, a coin_prompt_message in the car's colour (INSERT COIN(S)). Each frame the LCD's text to
-   scroll (screen lcd_scroll_request) is the message's (rom_01A9BC: Insert Coin(s), Insert More Coin(s),
-   Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls (unk_F44). */
+   scroll (screen lcd_scroll_request) is the message's (coin_prompt_lcd_texts: Insert Coin(s), Insert
+   More Coin(s), Turn the Ignition Key), except in game modes 6 and 7 or while a text scrolls (unk_F44). */
 void coin_prompt_update(void)
 {
 	uint8_t r0 = 0, r2 = 0, r10 = 0, r11 = 0;
@@ -2800,12 +2803,12 @@ void coin_prompt_update(void)
 		if (round_frames != 1u)
 		{
 			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-				SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+				SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
 			return;
 		}
 		break;
 	default:
-		invalid_jump(rom_01A6DC[OBJECT(current_object)->state]);
+		invalid_jump(coin_prompt_state_jumps[OBJECT(current_object)->state]);
 	}
 	OBJECT(current_object)->coin_prompt.round_frames = 0x1Eu;
 	OBJECT(current_object)->coin_prompt.car = OBJECT(current_object)->coin_prompt.next_car;
@@ -2835,7 +2838,7 @@ void coin_prompt_update(void)
 			r11 = seat2_coin_units;
 			break;
 		default:
-			invalid_jump(rom_01A744[SCREEN(screen)->index]);
+			invalid_jump(coin_prompt_screen_jumps[SCREEN(screen)->index]);
 		}
 		if (r10 != 0u)
 		{
@@ -2846,7 +2849,7 @@ void coin_prompt_update(void)
 			OBJECT(current_object)->coin_prompt.message = r0;
 			OBJECT(object)->unk_0B = OBJECT(current_object)->coin_prompt.car;
 			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-				SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+				SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
 			return;
 		}
 		if (r11 != 0u)
@@ -2861,7 +2864,7 @@ void coin_prompt_update(void)
 	OBJECT(current_object)->coin_prompt.message = r0;
 	OBJECT(object)->unk_0B = OBJECT(current_object)->coin_prompt.car;
 	if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-		SCREEN(screen)->lcd_scroll_request = rom_01A9BC[OBJECT(current_object)->coin_prompt.message];
+		SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
 }
 
 /* The little car that drives across the prompt from right to left each round (coin_prompt starts it):
@@ -2873,13 +2876,13 @@ void coin_prompt_car_drive(void)
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A7D0[state];
+	r0 = coin_prompt_car_state_jumps[state];
 	switch (state)
 	{
 	case 0:
-		r9 = rom_01A986[OBJECT(current_object)->coin_prompt_car.car];
+		r9 = coin_prompt_car_animations[OBJECT(current_object)->coin_prompt_car.car];
 		animation_start(r9);
-		r0 = (uint16_t)(rom_01A996[OBJECT(current_object)->coin_prompt_car.car_colour] + 4u);
+		r0 = (uint16_t)(coin_prompt_car_palettes[OBJECT(current_object)->coin_prompt_car.car_colour] + 4u);
 		OBJECT(current_object)->palette = r0;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->width_scale = 0x40u;
@@ -2893,7 +2896,7 @@ void coin_prompt_car_drive(void)
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01A7D0[state]);
+		invalid_jump(coin_prompt_car_state_jumps[state]);
 	}
 	t1 = OBJECT(current_object)->x - 0xEu;
 	OBJECT(current_object)->x = t1;
@@ -2906,9 +2909,9 @@ void coin_prompt_car_drive(void)
 }
 
 /* The prompt's message for a round (coin_prompt starts one every 30 frames): after 6 frames, INSERT
-   COIN(S) (message 0; 1 when coins are in, animation rom_01A9A6) in the colour of the round's car
-   (rom_01A9AC by car_colour), animating in for 22 frames over the one before, then a layer back for 30
-   frames, and ends; ends at once when the prompt's message changes. */
+   COIN(S) (message 0; 1 when coins are in, animation coin_prompt_message_animations) in the colour of
+   the round's car (coin_prompt_message_palettes by car_colour), animating in for 22 frames over the one
+   before, then a layer back for 30 frames, and ends; ends at once when the prompt's message changes. */
 void coin_prompt_message_update(void)
 {
 	uint32_t r0 = 0, r9 = 0;
@@ -2921,7 +2924,7 @@ void coin_prompt_message_update(void)
 		return;
 	}
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A84C[state];
+	r0 = coin_prompt_message_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -2932,10 +2935,10 @@ void coin_prompt_message_update(void)
 		if (frames != 1u)
 			return;
 		OBJECT(current_object)->draw_mode = 0u;
-		r9 = rom_01A9A6[OBJECT(current_object)->coin_prompt_message.message];
+		r9 = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(r9);
 		r0 = OBJECT(current_object)->coin_prompt_message.car_colour;
-		OBJECT(current_object)->palette = rom_01A9AC[r0];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[r0];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
@@ -2948,10 +2951,10 @@ void coin_prompt_message_update(void)
 		if (frames != 1u)
 			return;
 		OBJECT(current_object)->draw_mode = 0u;
-		r9 = rom_01A9A6[OBJECT(current_object)->coin_prompt_message.message];
+		r9 = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(r9);
 		r0 = OBJECT(current_object)->coin_prompt_message.car_colour;
-		OBJECT(current_object)->palette = rom_01A9AC[r0];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[r0];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
@@ -2971,7 +2974,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	default:
-		invalid_jump(rom_01A84C[state]);
+		invalid_jump(coin_prompt_message_state_jumps[state]);
 	}
 	animation_advance(0u);
 	frames_3 = OBJECT(current_object)->coin_prompt_message.frames;
@@ -3017,12 +3020,12 @@ uint32_t coin_prompt_start_key_prompt(uint32_t r1, uint8_t r2)
    runs out (24 or 30 frames) and ends. */
 void ignition_key_prompt_update(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, animation = 0, piece = 0;
 	uint16_t frames_left = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01A8F0[state];
+	r0 = ignition_key_prompt_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -3039,26 +3042,26 @@ void ignition_key_prompt_update(void)
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01A8F0[state]);
+		invalid_jump(ignition_key_prompt_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	r0 = (uint32_t)OBJECT(current_object)->ignition_key_prompt.piece << 4;
-	r10 = 0x1A95Bu + r0;
-	r9 = mem_read16(r10);
-	r10 += 2u;
-	animation_start(r9);
-	OBJECT(current_object)->palette = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->width_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->height_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->x = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->y = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->depth_layer = mem_read16(r10);
-	OBJECT(current_object)->ignition_key_prompt.frames_left = mem_read16(r10 + 2u);
+	piece = ignition_key_prompt_pieces_ADDRESS + r0;
+	animation = PICTURE_RECORD(piece)->animation;
+	piece += 2u;
+	animation_start(animation);
+	OBJECT(current_object)->palette = PICTURE_RECORD(piece - 0x2u)->palette;
+	piece += 2u;
+	OBJECT(current_object)->width_scale = PICTURE_RECORD(piece - 0x4u)->width_scale;
+	piece += 2u;
+	OBJECT(current_object)->height_scale = PICTURE_RECORD(piece - 0x6u)->height_scale;
+	piece += 2u;
+	OBJECT(current_object)->x = PICTURE_RECORD(piece - 0x8u)->x;
+	piece += 2u;
+	OBJECT(current_object)->y = PICTURE_RECORD(piece - 0xAu)->y;
+	piece += 2u;
+	OBJECT(current_object)->depth_layer = PICTURE_RECORD(piece - 0xCu)->depth_layer;
+	OBJECT(current_object)->ignition_key_prompt.frames_left = PICTURE_RECORD(piece - 0xCu)->frames_left;
 	OBJECT(current_object)->state++;
 	animation_advance(0u);
 	r0 = draw_object(r0);
@@ -3087,20 +3090,20 @@ void credit_display_update(void)
 		if (free_play != 0u)
 		{
 			OBJECT(current_object)->state++;
-			r19 = 0x1AB62u;
+			r19 = credit_free_play_text_ADDRESS;
 			ignored = draw_text(r19);
 			return;
 		}
 		OBJECT(current_object)->state += 2u;
 		break;
 	case 1:
-		r19 = 0x1AB62u;
+		r19 = credit_free_play_text_ADDRESS;
 		ignored = draw_text(r19);
 		return;
 	case 2:
 		break;
 	default:
-		invalid_jump(rom_01AA0C[OBJECT(current_object)->state]);
+		invalid_jump(credit_display_state_jumps[OBJECT(current_object)->state]);
 	}
 	switch (SCREEN(screen)->index)
 	{
@@ -3113,12 +3116,12 @@ void credit_display_update(void)
 		r11 = seat2_coin_units;
 		break;
 	default:
-		invalid_jump(rom_01AA4C[SCREEN(screen)->index]);
+		invalid_jump(credit_display_screen_jumps[SCREEN(screen)->index]);
 	}
 	if (r10 < 2u)
-		r19 = 0x1AB72u;
+		r19 = credit_singular_text_ADDRESS;
 	else
-		r19 = 0x1AB80u;
+		r19 = credit_plural_text_ADDRESS;
 	stack_10 = r10;
 	stack_14 = r11;
 	draw_text(r19);
@@ -3135,12 +3138,12 @@ void credit_display_update(void)
 	if ((uint8_t)r12 != 0u)
 	{
 		OBJECT(current_object)->credit_display.digit_kind = 0u;
-		OBJECT(current_object)->credit_display.digit = rom_01AB8E[(uint8_t)r12];
+		OBJECT(current_object)->credit_display.digit = credit_digit_characters[(uint8_t)r12];
 		OBJECT(current_object)->x = 0xACu;
 		credit_display_digit();
 	}
 	OBJECT(current_object)->credit_display.digit_kind = 0u;
-	OBJECT(current_object)->credit_display.digit = rom_01AB8E[(uint8_t)r10_2];
+	OBJECT(current_object)->credit_display.digit = credit_digit_characters[(uint8_t)r10_2];
 	OBJECT(current_object)->x = 0xB4u;
 	credit_display_digit();
 	if ((uint8_t)r11_2 != 0u)
@@ -3157,17 +3160,17 @@ void credit_display_update(void)
 }
 
 /* Draws one digit of the credits line at x and y: digit_kind picks the animation and palette
-   (rom_01AB98, rom_01AB9E: 0 the font, whose frames are its characters, 1 the coins, 2 the coins a
-   credit costs) and digit the frame. */
+   (credit_display_animations, credit_display_palettes: 0 the font, whose frames are its characters, 1
+   the coins, 2 the coins a credit costs) and digit the frame. */
 void credit_display_digit(void)
 {
 	uint32_t r0 = 0, r9 = 0;
 
 	OBJECT(current_object)->draw_mode = 0u;
 	r0 = OBJECT(current_object)->credit_display.digit_kind;
-	r9 = rom_01AB98[r0];
+	r9 = credit_display_animations[r0];
 	animation_start(r9);
-	OBJECT(current_object)->palette = rom_01AB9E[r0];
+	OBJECT(current_object)->palette = credit_display_palettes[r0];
 	OBJECT(current_object)->frame = OBJECT(current_object)->credit_display.digit;
 	draw_object(r0);
 }
@@ -3179,7 +3182,7 @@ void credit_display_digit(void)
 void demo_captions_run(void)
 {
 	uint32_t zero = 0;
-	uint32_t r10 = 0;
+	uint32_t cue = 0;
 	uint32_t t1 = 0, jump_target = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -3192,13 +3195,13 @@ void demo_captions_run(void)
 	case 1:
 		break;
 	default:
-		invalid_jump(rom_01ADF4[OBJECT(current_object)->state]);
+		invalid_jump(demo_captions_state_jumps[OBJECT(current_object)->state]);
 	}
 	OBJECT(current_object)->demo_captions.frames = (OBJECT(current_object)->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)OBJECT(current_object)->demo_captions.frames + 1u & 0xFFFFu);
-	r10 = OBJECT(current_object)->demo_captions.timeline;
-	t1 = ROM32(r10) - (uint16_t)OBJECT(current_object)->demo_captions.frames;
+	cue = OBJECT(current_object)->demo_captions.timeline;
+	t1 = DEMO_CAPTION_CUE(cue)->frame - (uint16_t)OBJECT(current_object)->demo_captions.frames;
 	zero = t1 == 0u;
-	r10 += 4u;
+	cue += 4u;
 	if ((int32_t)t1 < 0)
 	{
 		OBJECT(current_object)->flags = 0u;
@@ -3206,7 +3209,7 @@ void demo_captions_run(void)
 	}
 	if (zero)
 	{
-		jump_target = ROM32(r10);
+		jump_target = DEMO_CAPTION_CUE(cue - 0x4u)->routine;
 		switch (jump_target)
 		{
 		case 0x01AE2Du:
@@ -3289,12 +3292,12 @@ void demo_captions_start(uint8_t r0, uint32_t r1)
    0-7, 240 for 8-11), animated and drawn until frames_left runs out. */
 void demo_caption_update(void)
 {
-	uint32_t r0 = 0, r9 = 0, r10 = 0;
+	uint32_t r0 = 0, animation = 0, picture = 0;
 	uint16_t frames_left = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
-	r0 = rom_01AE98[state];
+	r0 = demo_caption_state_jumps[state];
 	switch (state)
 	{
 	case 0:
@@ -3311,26 +3314,26 @@ void demo_caption_update(void)
 		r0 = draw_object(r0);
 		return;
 	default:
-		invalid_jump(rom_01AE98[state]);
+		invalid_jump(demo_caption_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	r0 = (uint32_t)OBJECT(current_object)->demo_caption.record << 4;
-	r10 = 0x1AF00u + r0;
-	r9 = mem_read16(r10);
-	r10 += 2u;
-	animation_start(r9);
-	OBJECT(current_object)->palette = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->width_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->height_scale = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->x = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->y = mem_read16(r10);
-	r10 += 2u;
-	OBJECT(current_object)->depth_layer = mem_read16(r10);
-	OBJECT(current_object)->demo_caption.frames_left = mem_read16(r10 + 2u);
+	picture = demo_caption_pictures_ADDRESS + r0;
+	animation = PICTURE_RECORD(picture)->animation;
+	picture += 2u;
+	animation_start(animation);
+	OBJECT(current_object)->palette = PICTURE_RECORD(picture - 0x2u)->palette;
+	picture += 2u;
+	OBJECT(current_object)->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
+	picture += 2u;
+	OBJECT(current_object)->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
+	picture += 2u;
+	OBJECT(current_object)->x = PICTURE_RECORD(picture - 0x8u)->x;
+	picture += 2u;
+	OBJECT(current_object)->y = PICTURE_RECORD(picture - 0xAu)->y;
+	picture += 2u;
+	OBJECT(current_object)->depth_layer = PICTURE_RECORD(picture - 0xCu)->depth_layer;
+	OBJECT(current_object)->demo_caption.frames_left = PICTURE_RECORD(picture - 0xCu)->frames_left;
 	OBJECT(current_object)->state++;
 	animation_advance(0u);
 	r0 = draw_object(r0);
@@ -3429,7 +3432,7 @@ void kanji_text_viewer_update(void)
 			return;
 		r4_2 = 0u;
 		r5 = 0u;
-		r10 = rom_01B254[SCREEN(screen)->kanji_text_number];
+		r10 = kanji_texts[SCREEN(screen)->kanji_text_number];
 		do
 		{
 			r11 = VIDEO_RAM + 0x1040u + r5 * 0x1000u;
@@ -3442,7 +3445,7 @@ void kanji_text_viewer_update(void)
 			return;
 		r4_2 = 0u;
 		r5 = 0u;
-		r10 = rom_01B254[SCREEN(screen)->kanji_text_number];
+		r10 = kanji_texts[SCREEN(screen)->kanji_text_number];
 		do
 		{
 			r11 = VIDEO_RAM + 0x1040u + r5 * 0x1000u;
@@ -3453,7 +3456,7 @@ void kanji_text_viewer_update(void)
 	case 3:
 		return;
 	default:
-		invalid_jump(rom_01AFE8[OBJECT(current_object)->state]);
+		invalid_jump(kanji_text_viewer_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -3466,7 +3469,7 @@ void kanji_text_viewer_draw_line(uint32_t r11, uint32_t *p_r4, uint32_t *p_r10)
 
 	for (;;)
 	{
-		r13 = (int16_t)mem_read16(*p_r10);
+		r13 = KANJI_TEXT(*p_r10)[0];
 		*p_r10 += 2u;
 		if ((int32_t)r13 < 0)
 			break;
@@ -3499,19 +3502,19 @@ void kanji_text_viewer_draw_character(uint32_t r11, uint32_t r13)
 /* Only unused code reaches it (kanji_text_viewer_draw_character): draws eight rows of eight one-bit
    pixels (a byte each, from R13) at R12 on the bitmap layer, 100 bytes a row, each byte spread by the
    table at 1A6340 into eight 4-bit pixels of pen 1. */
-uint32_t kanji_text_viewer_draw_quarter(uint32_t r13)
+uint32_t kanji_text_viewer_draw_quarter(uint32_t rows)
 {
 	uint32_t r1 = 0;
 
 	r1 = 8u;
 	do
 	{
-		mem_write32(r12, byte_swap32(rom_1A6340[mem_read8(r13)]));
+		mem_write32(r12, byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(rows)[0]]));
 		r12 = r12 + 0x100u;
 		r1--;
-		r13++;
+		rows++;
 	} while (r1 != 0u);
-	return r13;
+	return rows;
 }
 
 /* Only unused code reaches it (kanji_text_viewer_draw_line): the address of character R13 of the kanji
@@ -3622,14 +3625,14 @@ void test_mode_start(void)
 	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
 	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
 	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
-	r0_2 = rom_01C378;
-	r1 = rom_01C37C;
+	r0_2 = test_mode_lcd_text;
+	r1 = test_mode_lcd_text_4_to_7;
 	AS32(SCREEN(SCREEN_1)->lcd_text) = r0_2;
 	SCREEN(SCREEN_1)->lcd_text_4_to_7 = r1;
 	AS32(SCREEN(SCREEN_2)->lcd_text) = r0_2;
 	SCREEN(SCREEN_2)->lcd_text_4_to_7 = r1;
-	r0_2 = rom_01C380;
-	r1 = rom_01C384;
+	r0_2 = test_mode_lcd_text_8_to_11;
+	r1 = test_mode_lcd_text_12_to_15;
 	SCREEN(SCREEN_1)->lcd_text_8_to_11 = r0_2;
 	SCREEN(SCREEN_1)->lcd_text_12_to_15 = r1;
 	SCREEN(SCREEN_2)->lcd_text_8_to_11 = r0_2;
@@ -3670,26 +3673,27 @@ void test_mode_menu(void)
 		test_mode_cursor++;
 	r0 = test_mode_clear_text();
 	r0 = test_mode_menu_show_write_count(r0);
-	r10 = 0x1C490u;
+	r10 = test_mode_menu_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	carry = (test_mode_flags & 1u) != 0u;
 	r0 = carry;
-	r10 = rom_01C560[r0];
+	r10 = test_mode_menu_headings[r0];
 	r0 = test_mode_draw_texts(r0, r10);
 	test_mode_draw_instructions(r0);
-	r10 = 0x310000u | rom_01C588[test_mode_cursor];
+	r10 = 0x310000u | test_mode_menu_cursor_cells[test_mode_cursor];
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_menu_run_ADDRESS;
 	test_mode_menu_run();
 }
 
 /* The menu, each frame: SERVICE moves the cursor (test_mode_cursor) down, from EXIT back to the heading;
-   TEST starts the item's page (rom_01C45C: test_mode_menu_toggle_continue, test_mode_memory_test,
-   test_mode_volume_adjustment, test_mode_input_test, test_mode_output_test, test_mode_sound_test,
-   test_mode_crt_test, test_mode_game_assignments, test_mode_coin_assignments, then the network
-   assignments, bookkeeping, backup data clear and exit pages, test_mode_network_assignments_start,
-   test_mode_bookkeeping_start, test_mode_backup_data_clear_start, test_mode_exit); the cursor's arrow
-   blinks (test_mode_blink_address, test_mode_blink_timer: 11 frames shown, 6 hidden). */
+   TEST starts the item's page (test_mode_page_jumps: test_mode_menu_toggle_continue,
+   test_mode_memory_test, test_mode_volume_adjustment, test_mode_input_test, test_mode_output_test,
+   test_mode_sound_test, test_mode_crt_test, test_mode_game_assignments, test_mode_coin_assignments, then
+   the network assignments, bookkeeping, backup data clear and exit pages,
+   test_mode_network_assignments_start, test_mode_bookkeeping_start, test_mode_backup_data_clear_start,
+   test_mode_exit); the cursor's arrow blinks (test_mode_blink_address, test_mode_blink_timer: 11 frames
+   shown, 6 hidden). */
 void test_mode_menu_run(void)
 {
 	uint32_t r0 = 0, r10 = 0;
@@ -3705,11 +3709,11 @@ void test_mode_menu_run(void)
 		if ((int8_t)r0 >= 0xD)
 			r0 = 0u;
 		test_mode_cursor = r0;
-		r10 = 0x310000u | rom_01C588[r0];
+		r10 = 0x310000u | test_mode_menu_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = rom_01C45C[test_mode_cursor];
+		test_mode_routine = test_mode_page_jumps[test_mode_cursor];
 	t1 = test_mode_blink_timer - 1u;
 	test_mode_blink_timer = t1;
 	if ((int8_t)t1 < 0)
@@ -3758,7 +3762,7 @@ void test_mode_menu_toggle_continue(void)
 	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
 	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	r0 = 0u - (0xFFFFFFFFu + carry);
-	r10 = rom_01C560[r0];
+	r10 = test_mode_menu_headings[r0];
 	test_mode_draw_texts(r0, r10);
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -3794,16 +3798,16 @@ void test_mode_memory_test(void)
 	OBJECT(current_object)->flags_high = 1u;
 	test_mode_memory_test_draw(r0);
 	r10 = 0u;
-	r0 = rom_03FFF8_ADDRESS;
+	r0 = ic37_checksum_ADDRESS;
 	test_mode_memory_test_checksum(r10, &r0, &r1);
 	t1 = r0;
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
-	if (rom_03FFF8 != t1)
+	if (ic37_checksum != t1)
 		r0_2 = (uint16_t)((r0_2 & ~0xFFu) | 3u);
 	OBJECT(current_object)->flags = (uint8_t)r0_2;
 	r0 = (r0_2 & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
-	if (rom_03FFFA != (uint16_t)r1)
+	if (ic40_checksum != (uint16_t)r1)
 		r0 = (r0 & ~0xFFu) | 3u;
 	OBJECT(current_object - 0x1u)->flags_high = r0;
 	current_object = current_object + 1u;
@@ -3814,12 +3818,12 @@ void test_mode_memory_test(void)
 	test_mode_memory_test_checksum(r10, &r0, &r1);
 	t2 = r0;
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
-	if (rom_03FFFC != t2)
+	if (ic36_checksum != t2)
 		r0_2 = (uint16_t)((r0_2 & ~0xFFu) | 3u);
 	OBJECT(current_object - 0x2u)->unk_02 = (OBJECT(current_object - 0x2u)->unk_02 & 0xFF00u) | (r0_2 & 0xFFu);
 	r0 = (r0_2 & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
-	if (rom_03FFFE != (uint16_t)r1)
+	if (ic39_checksum != (uint16_t)r1)
 		r0 = (r0 & ~0xFFu) | 3u;
 	OBJECT(current_object - 0x3u)->unk_02 = (OBJECT(current_object - 0x3u)->unk_02 & 0xFFu) | ((r0 & 0xFFu) << 8u);
 	current_object = current_object + 1u;
@@ -4018,41 +4022,41 @@ void test_mode_memory_test_run(uint16_t r0)
    TEST, GOOD or BAD. */
 uint32_t test_mode_memory_test_draw(uint32_t r0)
 {
-	uint32_t r0_2 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
-	uint8_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
-	uint16_t t2 = 0;
+	uint32_t r0_2 = 0, r9 = 0, r10 = 0, result_cells = 0, result_text = 0;
+	uint8_t colour = 0, character_0 = 0, character_1 = 0, character_2 = 0;
+	uint16_t cell = 0;
 
-	r10 = 0x1CC9Cu;
+	r10 = memory_test_page_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	r10 = memory_test_results_ADDRESS;
-	r11 = 0x1CD96u;
+	result_cells = memory_test_result_cells_ADDRESS;
 	r12 = TEXT_CELL(0, 0);
 	r9 = 0x19u;
 	do
 	{
 		r0_2 = mem_read8(r10) * 3u;
-		r13 = 0x1CDC8u + r0_2 * 2u;
-		t1 = ROM8(r13);
-		r13++;
-		r0_2 = t1;
-		t2 = ROM16(r11);
-		r11 += 2u;
-		r12 = (r12 & ~0xFFFFu) | t2;
-		t3 = ROM8(r13);
-		r13++;
-		r0_2 = (uint16_t)(r0_2 << 8) | t3;
+		result_text = memory_test_result_texts_ADDRESS + r0_2 * 2u;
+		colour = MEMORY_TEST_RESULT_TEXT(result_text)->colour;
+		result_text++;
+		r0_2 = colour;
+		cell = TEST_MODE_CELLS(result_cells)[0];
+		result_cells += 2u;
+		r12 = (r12 & ~0xFFFFu) | cell;
+		character_0 = MEMORY_TEST_RESULT_TEXT(result_text - 0x1u)->character_0;
+		result_text++;
+		r0_2 = (uint16_t)(r0_2 << 8) | character_0;
 		mem_write16(r12, r0_2);
 		r12 = r12 + 2u;
-		t4 = ROM8(r13);
-		r13++;
-		r0_2 = (r0_2 & ~0xFFu) | t4;
+		character_1 = MEMORY_TEST_RESULT_TEXT(result_text - 0x2u)->character_1;
+		result_text++;
+		r0_2 = (r0_2 & ~0xFFu) | character_1;
 		mem_write16(r12, r0_2);
 		r12 = r12 + 2u;
-		t5 = ROM8(r13);
-		r0_2 = (r0_2 & ~0xFFu) | t5;
+		character_2 = MEMORY_TEST_RESULT_TEXT(result_text - 0x3u)->character_2;
+		r0_2 = (r0_2 & ~0xFFu) | character_2;
 		mem_write16(r12, r0_2);
 		r12 = r12 + 2u;
-		r0_2 = (r0_2 & ~0xFFu) | ROM8(r13 + 1u);
+		r0_2 = (r0_2 & ~0xFFu) | MEMORY_TEST_RESULT_TEXT(result_text - 0x3u)->character_3;
 		mem_write16(r12, r0_2);
 		r12 = r12 + 2u;
 		r9--;
@@ -4547,15 +4551,15 @@ void test_mode_memory_test_blink(void)
 
 	r26 = 0x6600u;
 	r27 = TEXT_CELL(14, 25);
-	r28 = 0x1CD87u;
+	r28 = memory_test_now_testing_text_ADDRESS;
 	do
 	{
-		r26 = (uint16_t)((r26 & ~0xFFu) | ROM8(r28));
+		r26 = (uint16_t)((r26 & ~0xFFu) | TEST_MODE_CHARACTERS(r28)[0]);
 		t1 = r27;
 		r27 = r27 + 2u;
 		mem_write16(t1, mem_read16(t1) ^ r26);
 		r28 = r28 + 1u;
-	} while (ROM8(r28) != 0u);
+	} while (TEST_MODE_CHARACTERS(r28)[0] != 0u);
 }
 
 /* Starts the VOLUME ADJUSTMENT, the calibration of the wheels' and pedals' potentiometers: draws ADJUST
@@ -4566,13 +4570,13 @@ void test_mode_volume_adjustment(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1CF71u;
+	r10 = volume_adjustment_page_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
-	r10 = 0x1CFA0u;
+	r10 = volume_adjustment_controls_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 1u;
-	r10 = 0x310000u | rom_01CF9E;
+	r10 = 0x310000u | volume_adjustment_cancel_cell;
 	r0 = test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
 	test_mode_volume_adjustment_select(r0);
@@ -4596,7 +4600,7 @@ void test_mode_volume_adjustment_select(uint32_t r0)
 		test_mode_clear_cursor();
 		r0_2 = test_mode_page_cursor ^ 1u;
 		test_mode_page_cursor = r0_2;
-		r10 = 0x310000u | rom_01CF9C[r0_2];
+		r10 = 0x310000u | volume_adjustment_cursor_cells[r0_2];
 		test_mode_set_cursor(r0_2, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) == 0u)
@@ -4617,9 +4621,9 @@ void test_mode_volume_adjustment_select(uint32_t r0)
 	if (test_mode_page_cursor == 0u)
 	{
 		r0_2 = test_mode_clear_text();
-		r10 = 0x1D021u;
+		r10 = volume_adjusting_text_ADDRESS;
 		r0_2 = test_mode_draw_texts(r0_2, r10);
-		r10 = 0x1CFA0u;
+		r10 = volume_adjustment_controls_text_ADDRESS;
 		test_mode_draw_texts(r0_2, r10);
 		test_mode_show_exit_prompt();
 		r10 = volume_ranges_ADDRESS;
@@ -4689,13 +4693,13 @@ void test_mode_volume_adjustment_adjust(void)
 uint32_t test_mode_volume_adjustment_draw(uint32_t r0)
 {
 	uint16_t r0_3 = 0;
-	uint32_t r0_2 = 0, r1 = 0, r9 = 0, r10 = 0, r11 = 0;
-	uint16_t t1 = 0, t2 = 0, t3 = 0;
+	uint32_t r0_2 = 0, r1 = 0, r9 = 0, r10 = 0, bar_cells = 0;
+	uint16_t range_cell_a = 0, range_cell_b = 0, position_cell = 0;
 
-	r10 = 0x1D03Cu;
+	r10 = volume_adjustment_bars_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(0, 0);
-	r11 = 0x1D030u;
+	bar_cells = volume_adjustment_bar_cells_ADDRESS;
 	r12 = volume_ranges_ADDRESS;
 	r9 = 3u;
 	do
@@ -4707,9 +4711,9 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t r0)
 		r1 = r1 >> 3;
 		r1 = (uint8_t)(r1 - r0_2);
 		r1 = (uint8_t)(r1 + 1u);
-		t1 = ROM16(r11);
-		r11 += 2u;
-		r10 = ((r10 & ~0xFFFFu) | t1) + r0_2 * 2u;
+		range_cell_a = TEST_MODE_CELLS(bar_cells)[0];
+		bar_cells += 2u;
+		r10 = ((r10 & ~0xFFFFu) | range_cell_a) + r0_2 * 2u;
 		r0_3 = 0x6403u;
 		r12 = r12 + 1u;
 		do
@@ -4730,9 +4734,9 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t r0)
 		r1 = r1 >> 3;
 		r1 = (uint8_t)(r1 - r0_2);
 		r1 = (uint8_t)(r1 + 1u);
-		t2 = ROM16(r11);
-		r11 += 2u;
-		r10 = ((r10 & ~0xFFFFu) | t2) + r0_2 * 2u;
+		range_cell_b = TEST_MODE_CELLS(bar_cells)[0];
+		bar_cells += 2u;
+		r10 = ((r10 & ~0xFFFFu) | range_cell_b) + r0_2 * 2u;
 		r0_3 = 0x6403u;
 		r12 = r12 + 1u;
 		do
@@ -4743,15 +4747,15 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t r0)
 		} while (r1 != 0u);
 		r9--;
 	} while (r9 != 0u);
-	r11 = 0x1D030u;
+	bar_cells = volume_adjustment_bar_cells_ADDRESS;
 	r12 = test_mode_analog_inputs_ADDRESS;
 	r9 = 6u;
 	do
 	{
 		r0_2 = mem_read8(r12) >> 3;
-		t3 = ROM16(r11);
-		r11 += 2u;
-		r10 = (r10 & ~0xFFFFu) | t3;
+		position_cell = TEST_MODE_CELLS(bar_cells)[0];
+		bar_cells += 2u;
+		r10 = (r10 & ~0xFFFFu) | position_cell;
 		mem_write16(r10 + r0_2 * 2u, 0x6203u);
 		r9--;
 		r12 = r12 + 1u;
@@ -4816,13 +4820,13 @@ uint32_t test_mode_input_test_draw(uint32_t r0)
 	uint16_t r1 = 0, r2 = 0;
 	uint32_t r0_2 = 0, r2_2 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
 
-	r10 = 0x1D30Au;
+	r10 = input_test_bars_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(0, 0);
-	r11 = 0x1D380u;
+	r11 = input_test_items_ADDRESS;
 	r12 = test_mode_analog_inputs_ADDRESS;
 	r13 = volume_ranges_ADDRESS;
-	r14 = 0x1D3D8u;
+	r14 = input_test_bar_cells_ADDRESS;
 	r9 = 6u;
 	do
 	{
@@ -4842,7 +4846,7 @@ uint32_t test_mode_input_test_draw(uint32_t r0)
 		r0_2 = (uint16_t)(r0_2 << 8);
 		r0_2 = (uint16_t)(r0_2 - r2);
 		r0_2 = divide_u16(r0_2, r1);
-		r10 = (r10 & ~0xFFFFu) | ROM16(r14);
+		r10 = (r10 & ~0xFFFFu) | TEST_MODE_CELLS(r14)[0];
 		mem_write16(r10 + ((uint8_t)r0_2 >> 4) * 2u, 0x6403u);
 		r1_2 = 0x64u;
 		r2_2 = 2u;
@@ -4862,12 +4866,12 @@ uint32_t test_mode_input_test_draw(uint32_t r0)
 		carry = (mem_read32(r12) & shl32(1u, (int)(r0_2))) != 0u;
 		r11++;
 		r10 = (r10 & ~0xFFFFu) | ROM16(r11);
-		mem_write32(r10, rom_01D3C0[carry]);
+		mem_write32(r10, input_test_on_off_cells[carry]);
 		r13 = (r13 & ~0xFFu) | (uint8_t)r12;
 		carry = (mem_read32(r13) & shl32(1u, (int)(r0_2))) != 0u;
 		r11 += 2u;
 		r10 = (r10 & ~0xFFFFu) | ROM16(r11);
-		mem_write32(r10, rom_01D3C0[carry]);
+		mem_write32(r10, input_test_on_off_cells[carry]);
 		r11 += 2u;
 	} while ((int16_t)ROM16(r11) >= 0);
 	r12 = (r12 & ~0xFFu) | 8u;
@@ -4879,14 +4883,14 @@ uint32_t test_mode_input_test_draw(uint32_t r0)
 	carry = (r0_2 & 1u) != 0u;
 	r11 += 2u;
 	r10 = (r10 & ~0xFFFFu) | ROM16(r11);
-	mem_write32(r10, rom_01D3C0[carry]);
+	mem_write32(r10, input_test_on_off_cells[carry]);
 	carry = (r1_2 & 1u) != 0u;
 	r11 += 2u;
 	r10 = (r10 & ~0xFFFFu) | ROM16(r11);
-	mem_write32(r10, rom_01D3C0[carry]);
+	mem_write32(r10, input_test_on_off_cells[carry]);
 	r0_2 = r0_2 & r1_2;
 	carry = (r0_2 & 2u) != 0u;
-	mem_write32((r10 & ~0xFFFFu) | ROM16(r11 + 2u), rom_01D3C0[carry]);
+	mem_write32((r10 & ~0xFFFFu) | ROM16(r11 + 2u), input_test_on_off_cells[carry]);
 	return r0_2;
 }
 
@@ -4898,11 +4902,11 @@ void test_mode_output_test(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1D4F8u;
+	r10 = output_test_page_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 0xAu;
-	r10 = 0x310000u | rom_01D5BE;
+	r10 = 0x310000u | output_test_exit_cell;
 	test_mode_set_cursor(r0, r10);
 	test_mode_output_test_draw();
 	test_mode_routine = test_mode_output_test_run_ADDRESS;
@@ -4940,7 +4944,7 @@ void test_mode_output_test_run(void)
 			test_mode_output_test_exit();
 			break;
 		default:
-			invalid_jump(rom_01D5EC[test_mode_page_cursor]);
+			invalid_jump(test_mode_output_test_item_jumps[test_mode_page_cursor]);
 		}
 		test_mode_output_test_draw();
 	}
@@ -4967,7 +4971,7 @@ void test_mode_output_test_run(void)
 				test_mode_output_test_exit();
 				break;
 			default:
-				invalid_jump(rom_01D5EC[r0]);
+				invalid_jump(test_mode_output_test_item_jumps[r0]);
 			}
 			test_mode_output_test_draw();
 		}
@@ -4993,7 +4997,7 @@ void test_mode_output_test_run(void)
 	if ((int8_t)r0 >= 0xB)
 		r0 = 0u;
 	test_mode_page_cursor = r0;
-	r10 = 0x310000u | rom_01D5AA[r0];
+	r10 = 0x310000u | output_test_cursor_cells[r0];
 	test_mode_set_cursor(r0, r10);
 	t1 = test_mode_blink_timer - 1u;
 	test_mode_blink_timer = t1;
@@ -5015,32 +5019,32 @@ void test_mode_output_test_run(void)
 void test_mode_output_test_draw(void)
 {
 	uint32_t carry = 0;
-	uint32_t r10 = 0, r11 = 0;
+	uint32_t r10 = 0, output = 0;
 
 	r10 = TEXT_CELL(0, 0);
-	r11 = 0x1D5C0u;
+	output = output_test_outputs_ADDRESS;
 	do
 	{
-		r10 = (r10 & ~0xFFFFu) | ROM16(r11);
-		r11 += 2u;
-		r12 = ROM8(r11);
-		r11++;
+		r10 = (r10 & ~0xFFFFu) | OUTPUT_TEST_OUTPUT(output)->cell;
+		output += 2u;
+		r12 = OUTPUT_TEST_OUTPUT(output - 0x2u)->variable;
+		output++;
 		r12 = r12 + GAME_VARIABLES;
-		carry = (mem_read32(r12) & shl32(1u, (int)(ROM8(r11)))) != 0u;
-		mem_write32(r10, rom_01D618[carry]);
-		r11++;
-	} while (ROM16(r11) != 0u);
+		carry = (mem_read32(r12) & shl32(1u, (int)(OUTPUT_TEST_OUTPUT(output - 0x3u)->bit))) != 0u;
+		mem_write32(r10, output_test_on_off_cells[carry]);
+		output++;
+	} while (OUTPUT_TEST_OUTPUT(output)->cell != 0u);
 }
 
 /* Turns the output under the cursor (test_mode_page_cursor) on or off: flips its bit in the game's
    output bytes (the list at 01D5C0). */
 void test_mode_output_test_toggle(void)
 {
-	uint32_t r10 = 0, r11 = 0;
+	uint32_t r11 = 0, output = 0;
 
-	r10 = 0x1D5C2u + test_mode_page_cursor * 4u;
-	r11 = ROM8(r10) + GAME_VARIABLES;
-	mem_write32(r11, mem_read32(r11) ^ shl32(1u, (int)(ROM8(r10 + 1u))));
+	output = output_test_outputs_ADDRESS + 0x2u + test_mode_page_cursor * 4u;
+	r11 = OUTPUT_TEST_OUTPUT(output - 0x2u)->variable + GAME_VARIABLES;
+	mem_write32(r11, mem_read32(r11) ^ shl32(1u, (int)(OUTPUT_TEST_OUTPUT(output - 0x2u)->bit)));
 }
 
 /* The output test's EXIT: turns the lamps and the wheel motor off (port_d_outputs &= E0E1,
@@ -5067,11 +5071,11 @@ void test_mode_sound_test(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1D788u;
+	r10 = sound_test_page_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 2u;
-	r10 = 0x310000u | rom_01D7C4;
+	r10 = 0x310000u | sound_test_exit_cell;
 	test_mode_set_cursor(r0, r10);
 	sound_test_number_a = 0u;
 	sound_test_number_b = 0u;
@@ -5100,7 +5104,7 @@ void test_mode_sound_test_run(void)
 		if ((int8_t)r0 >= 3)
 			r0 = 0u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01D7C0[r0];
+		r10 = 0x310000u | sound_test_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
@@ -5120,7 +5124,7 @@ void test_mode_sound_test_run(void)
 			test_mode_sound_test_exit();
 			break;
 		default:
-			invalid_jump(rom_01D77C[test_mode_page_cursor]);
+			invalid_jump(test_mode_sound_test_item_jumps[test_mode_page_cursor]);
 		}
 		test_mode_sound_test_draw();
 	}
@@ -5429,12 +5433,12 @@ void test_mode_game_assignments(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1DBF8u;
+	r10 = game_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	r0 = test_mode_game_assignments_draw();
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 9u;
-	r10 = 0x310000u | rom_01DCE0;
+	r10 = 0x310000u | game_assignments_exit_cell;
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_game_assignments_run_ADDRESS;
 	test_mode_game_assignments_run();
@@ -5460,7 +5464,7 @@ void test_mode_game_assignments_run(void)
 		if ((int8_t)r0 >= 0xA)
 			r0 = 0u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01DCCE[r0];
+		r10 = 0x310000u | game_assignments_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
@@ -5489,7 +5493,7 @@ void test_mode_game_assignments_run(void)
 			test_mode_game_assignments_exit();
 			break;
 		default:
-			invalid_jump(rom_01DBD0[test_mode_page_cursor]);
+			invalid_jump(test_mode_game_assignments_item_jumps[test_mode_page_cursor]);
 		}
 	}
 	t1 = test_mode_blink_timer - 1u;
@@ -5579,11 +5583,11 @@ uint32_t test_mode_game_assignments_draw(void)
 	} while (r9 != 0u);
 	r0 = steering_wheel_reaction;
 	r0 = r0 & 1u;
-	r10 = rom_01DCE4[r0];
+	r10 = steering_wheel_reaction_texts[r0];
 	test_mode_draw_texts(r0, r10);
 	r0 = advertise_sound;
 	r0 = r0 & 1u;
-	r10 = rom_01DCEC[r0];
+	r10 = advertise_sound_texts[r0];
 	return test_mode_draw_texts(r0, r10);
 }
 

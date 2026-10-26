@@ -168,28 +168,12 @@
 #define sound_cpu_hold SOUND_RAM8(sound_cpu_hold_ADDRESS)
 
 /* data in the program ROM the code reads */
-#define fm_global_init_ADDRESS 0x0234u
-#define fm_global_init SOUND_ROM8(fm_global_init_ADDRESS)
-#define fm_operator_init_ADDRESS 0x024Au
-#define fm_operator_init SOUND_ROM8(fm_operator_init_ADDRESS)
-#define voice_chip_channels_ADDRESS 0x02E4u
-#define voice_chip_channels SOUND_ROM8(voice_chip_channels_ADDRESS)
-#define fm_patch_registers_ADDRESS 0x1534u
-#define fm_patch_registers SOUND_ROM8(fm_patch_registers_ADDRESS)
-#define fm_level_registers_ADDRESS 0x1549u
-#define fm_level_registers SOUND_ROM8(fm_level_registers_ADDRESS)
-#define fm_fnum_tables_ADDRESS 0x1565u
-#define fm_fnum_tables SOUND_ROM16(fm_fnum_tables_ADDRESS)
 #define part_templates_ADDRESS 0x1847u
 #define part_templates SOUND_ROM16(part_templates_ADDRESS)
 #define instruments_ADDRESS 0x1BC2u
 #define instruments SOUND_ROM16(instruments_ADDRESS)
 #define note_codes_ADDRESS 0x1F62u
 #define note_codes ((const uint8_t *)sound_rom_at(note_codes_ADDRESS))
-#define velocity_levels_ADDRESS 0x2016u
-#define velocity_levels SOUND_ROM8(velocity_levels_ADDRESS)
-#define pcm_pitch_tables_ADDRESS 0x20AEu
-#define pcm_pitch_tables SOUND_ROM16(pcm_pitch_tables_ADDRESS)
 #define bend_range_tables_ADDRESS 0x2546u
 #define bend_range_tables SOUND_ROM16(bend_range_tables_ADDRESS)
 #define fm_patches_ADDRESS 0x2A5Eu
@@ -326,6 +310,12 @@ struct tyre_noise
 	uint8_t duration;
 };
 
+struct register_value_pair
+{
+	uint8_t register_number;
+	uint8_t value;
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct midi_part) == 0xA, "struct midi_part has the size of the game's blocks");
@@ -333,12 +323,39 @@ _Static_assert(sizeof(struct voice) == 0x9, "struct voice has the size of the ga
 _Static_assert(sizeof(struct sequence_player) == 0x100, "struct sequence_player has the size of the game's blocks");
 _Static_assert(sizeof(struct screen_page) == 0x100, "struct screen_page has the size of the game's blocks");
 _Static_assert(sizeof(struct tyre_noise) == 0x4, "struct tyre_noise has the size of the program ROM's records");
+_Static_assert(sizeof(struct register_value_pair) == 0x2, "struct register_value_pair has the size of the program ROM's records");
 
 #define MIDI_PART(address) ((struct midi_part *)sound_ram_at(address))
 #define VOICE(address) ((struct voice *)sound_ram_at(address))
 #define SEQUENCE_PLAYER(address) ((struct sequence_player *)sound_ram_at(address))
 #define SCREEN_PAGE(address) ((struct screen_page *)sound_ram_at(address))
 #define TYRE_NOISE(address) ((const struct tyre_noise *)sound_rom_at(address))
+#define REGISTER_VALUE_PAIR(address) ((const struct register_value_pair *)sound_rom_at(address))
+#define VOICE_CHIP_CODES(address) ((const uint8_t *)sound_rom_at(address))
+#define NOTE_LEVELS(address) ((const uint8_t *)sound_rom_at(address))
+#define PCM_PITCH_STEPS(address) ((const uint16_t *)sound_rom_at(address))
+#define PCM_PITCH_RUNS(address) ((const uint16_t *)sound_rom_at(address))
+#define FM_FNUMBERS(address) ((const uint16_t *)sound_rom_at(address))
+#define FM_FNUMBER_RUNS(address) ((const uint16_t *)sound_rom_at(address))
+#define FM_REGISTER_NUMBERS(address) ((const uint8_t *)sound_rom_at(address))
+
+/* the program ROM's tables of records, by name: name[i].field */
+#define fm_global_init_ADDRESS 0x0234u
+#define fm_global_init ((const struct register_value_pair *)sound_rom_at(fm_global_init_ADDRESS))
+#define fm_operator_init_ADDRESS 0x024Au
+#define fm_operator_init ((const struct register_value_pair *)sound_rom_at(fm_operator_init_ADDRESS))
+#define voice_chip_channels_ADDRESS 0x02E4u
+#define voice_chip_channels ((const uint8_t *)sound_rom_at(voice_chip_channels_ADDRESS))
+#define fm_patch_registers_ADDRESS 0x1534u
+#define fm_patch_registers ((const uint8_t *)sound_rom_at(fm_patch_registers_ADDRESS))
+#define fm_level_registers_ADDRESS 0x1549u
+#define fm_level_registers ((const uint8_t *)sound_rom_at(fm_level_registers_ADDRESS))
+#define fm_fnum_tables_ADDRESS 0x1565u
+#define fm_fnum_tables ((const uint16_t *)sound_rom_at(fm_fnum_tables_ADDRESS))
+#define velocity_levels_ADDRESS 0x2016u
+#define velocity_levels ((const uint8_t *)sound_rom_at(velocity_levels_ADDRESS))
+#define pcm_pitch_tables_ADDRESS 0x20AEu
+#define pcm_pitch_tables ((const uint16_t *)sound_rom_at(pcm_pitch_tables_ADDRESS))
 #define MIDI_PART_ADDRESS(n) (0xE300u + (n) * 0xAu)    /* the 26 of them, from 0 */
 #define VOICE_ADDRESS(n) (0xE410u + (n) * 0x9u)    /* the 30 of them, from 0 */
 #define SEQUENCE_PLAYER_ADDRESS(n) (0xE900u + (n) * 0x100u)    /* the 16 of them, from 0 */

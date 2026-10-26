@@ -191,20 +191,20 @@ void sound_init(void)
    silent: total level 7F, release FF, no SSG-EG). Hands back the last register written in last_register. */
 uint16_t init_fm_chip(void)
 {
-	uint8_t b = 0, c = 0, fm_register = 0, value = 0;
-	uint16_t hl = 0, last_register = 0;
+	uint8_t b = 0, fm_register = 0, register_number = 0, value = 0;
+	uint16_t init_entry = 0, last_register = 0;
 
 	z80_block(17, 2);
-	hl = fm_global_init_ADDRESS;
+	init_entry = fm_global_init_ADDRESS;
 	b = 0xBu;
 	for (;;)
 	{
 		z80_block(43, 5);
-		c = SOUND_ROM8(hl);
-		hl++;
-		value = SOUND_ROM8(hl);
-		hl++;
-		fm_register = c;
+		register_number = REGISTER_VALUE_PAIR(init_entry)->register_number;
+		init_entry++;
+		value = REGISTER_VALUE_PAIR(init_entry - 0x1u)->value;
+		init_entry++;
+		fm_register = register_number;
 		write_fm(fm_register, value);
 		z80_block(8, 1);
 		b--;
@@ -213,19 +213,19 @@ uint16_t init_fm_chip(void)
 		z80_cycles(5);
 	}
 	z80_block(17, 2);
-	hl = fm_operator_init_ADDRESS;
+	init_entry = fm_operator_init_ADDRESS;
 	b = 0x24u;
 	for (;;)
 	{
 		z80_block(43, 5);
-		c = SOUND_ROM8(hl);
-		hl++;
-		value = SOUND_ROM8(hl);
-		hl++;
-		fm_register = c;
+		register_number = REGISTER_VALUE_PAIR(init_entry)->register_number;
+		init_entry++;
+		value = REGISTER_VALUE_PAIR(init_entry - 0x1u)->value;
+		init_entry++;
+		fm_register = register_number;
 		write_fm(fm_register, value);
 		z80_block(67, 6);
-		fm_register = c;
+		fm_register = register_number;
 		write_fm_part2(fm_register, value);
 		z80_block(8, 1);
 		b--;
@@ -234,7 +234,7 @@ uint16_t init_fm_chip(void)
 		z80_cycles(5);
 	}
 	z80_block(10, 1);
-	last_register = ((uint32_t)b << 8) | c;
+	last_register = ((uint32_t)b << 8) | register_number;
 	return last_register;
 }
 
@@ -296,25 +296,25 @@ void write_fm_part2(uint8_t fm_register, uint8_t value)
    voices 24-27 (the tyre noises' and the engines') not at all. */
 void init_pcm_chip(void)
 {
-	uint8_t b = 0, c = 0, pcm_register = 0, value = 0;
-	uint16_t hl = 0;
+	uint8_t b = 0, chip_code = 0, pcm_register = 0, value = 0;
+	uint16_t code_entry = 0;
 
 	z80_block(55, 6);
 	z80_write8(MULTIPCM_C009, 3u);
 	port_out(PCM_BANKS, 0x1Au);
-	hl = voice_chip_channels_ADDRESS;
+	code_entry = voice_chip_channels_ADDRESS;
 	b = 0x1Cu;
 	for (;;)
 	{
 		z80_block(13, 2);
-		c = SOUND_ROM8(hl);
-		hl++;
+		chip_code = VOICE_CHIP_CODES(code_entry)[0];
+		code_entry++;
 		do
 		{
 			z80_block(27, 3);
 		} while (z80_read8(pcm_data) & 1u);
 		z80_block(48, 5);
-		z80_write8(pcm_voice_select, c);
+		z80_write8(pcm_voice_select, chip_code);
 		value = 0x80u;
 		pcm_register = 0u;
 		write_pcm_register(pcm_register, value);
@@ -364,19 +364,19 @@ void write_pcm_register(uint8_t pcm_register, uint8_t value)
 void init_voice_channels(uint32_t unused_c)
 {
 	uint8_t b = 0;
-	uint16_t de = 0, voice = 0;
+	uint16_t code_entry = 0, voice = 0;
 	uint8_t saved_b = 0;
 
 	z80_block(27, 3);
 	voice = voice_0_chip_channel_ADDRESS;
-	de = voice_chip_channels_ADDRESS;
+	code_entry = voice_chip_channels_ADDRESS;
 	b = 0x1Eu;
 	for (;;)
 	{
 		z80_block(70, 8);
 		saved_b = b;
-		VOICE(voice - 0x1u)->chip_channel = SOUND_ROM8(de);
-		de++;
+		VOICE(voice - 0x1u)->chip_channel = VOICE_CHIP_CODES(code_entry)[0];
+		code_entry++;
 		voice += 9u;
 		b = saved_b - 1u;
 		if (b == 0u)
@@ -582,7 +582,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 	bool cut_open_hi_hat_screen_1 = false, release_note_screen_1 = false, start_voice_screen_1 = false, take_voice_screen_1 = false;
 	uint32_t carry = 0;
 	uint8_t a = 0, b = 0, bend_range = 0, c = 0, chip_channel = 0, effective_volume = 0, entry = 0, factor = 0, first_byte = 0, flags = 0, fm_register = 0, hl_2 = 0, ignored8 = 0, midi_byte = 0, midi_channel = 0, note = 0, pcm_register = 0, program = 0, value = 0;
-	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, voice = 0, voice_2 = 0;
+	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, pitch_entry = 0, voice = 0, voice_2 = 0;
 	uint8_t saved_a = 0, saved_b = 0;
 	uint16_t stack_2 = 0, saved_hl = 0;
 	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
@@ -735,7 +735,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			}
 			z80_block(88, 10);
 			de = midi_byte;
-			note_level = SOUND_ROM8(velocity_levels_ADDRESS + de);
+			note_level = velocity_levels[de];
 			a = MIDI_PART(part)->program;
 			if (a < 0xF0u)
 			{
@@ -997,8 +997,8 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 					de = split_tune;
 					stack_2 = z80_read16(hl) + de;
 					hl = pcm_pitch_tables_ADDRESS + (uint8_t)((c & 0xFu) * 2u);
-					hl = SOUND_ROM16(hl) + stack_2 + stack_2;
-					hl = z80_read16(hl);
+					pitch_entry = PCM_PITCH_RUNS(hl)[0] + stack_2 + stack_2;
+					hl = PCM_PITCH_STEPS(pitch_entry)[0];
 					hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)((c & ~0xFu) + (hl >> 8)) << 8);
 					value = split_octave + (hl >> 8);
 				}
@@ -1794,7 +1794,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 void retune_voice_screen_1(uint16_t voice)
 {
 	uint8_t c = 0, chip_channel = 0, note = 0, pcm_register = 0, value = 0;
-	uint16_t de = 0, hl = 0, tune = 0;
+	uint16_t de = 0, hl = 0, pitch_entry = 0, tune = 0;
 
 	z80_block(37, 5);
 	chip_channel = VOICE(voice)->chip_channel;
@@ -1814,10 +1814,10 @@ void retune_voice_screen_1(uint16_t voice)
 	note = VOICE(voice)->note;
 	hl = pcm_pitch_tables_ADDRESS + (uint8_t)((note & 0xFu) * 2u);
 	de = pitch_bend;
-	hl = SOUND_ROM16(hl) + de + de;
+	pitch_entry = PCM_PITCH_RUNS(hl)[0] + de + de;
 	tune = VOICE(voice)->tune;
-	hl = hl + tune + tune;
-	hl = z80_read16(hl);
+	pitch_entry = pitch_entry + tune + tune;
+	hl = PCM_PITCH_STEPS(pitch_entry)[0];
 	hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)((note & ~0xFu) + (hl >> 8)) << 8);
 	value = VOICE(voice)->octave_shift + (hl >> 8);
 	pcm_register = 3u;
@@ -2197,7 +2197,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 	bool cut_open_hi_hat_screen_2 = false, release_note_screen_2 = false, start_voice_screen_2 = false, take_voice_screen_2 = false;
 	uint32_t carry = 0;
 	uint8_t a = 0, b = 0, bend_range = 0, c = 0, chip_channel = 0, effective_volume = 0, entry = 0, factor = 0, first_byte = 0, flags = 0, fm_register = 0, hl_2 = 0, ignored8 = 0, midi_byte = 0, midi_channel = 0, note = 0, pcm_register = 0, program = 0, value = 0;
-	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, voice = 0, voice_2 = 0;
+	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, pitch_entry = 0, voice = 0, voice_2 = 0;
 	uint8_t saved_a = 0, saved_b = 0;
 	uint16_t stack_2 = 0, saved_hl = 0;
 	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
@@ -2350,7 +2350,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			}
 			z80_block(88, 10);
 			de = midi_byte;
-			note_level = SOUND_ROM8(velocity_levels_ADDRESS + de);
+			note_level = velocity_levels[de];
 			a = MIDI_PART(part)->program;
 			if (a < 0xF0u)
 			{
@@ -2612,8 +2612,8 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 					de = split_tune;
 					stack_2 = z80_read16(hl) + de;
 					hl = pcm_pitch_tables_ADDRESS + (uint8_t)((c & 0xFu) * 2u);
-					hl = SOUND_ROM16(hl) + stack_2 + stack_2;
-					hl = z80_read16(hl);
+					pitch_entry = PCM_PITCH_RUNS(hl)[0] + stack_2 + stack_2;
+					hl = PCM_PITCH_STEPS(pitch_entry)[0];
 					hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)((c & ~0xFu) + (hl >> 8)) << 8);
 					value = split_octave + (hl >> 8);
 				}
@@ -3407,7 +3407,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 void retune_voice_screen_2(uint16_t voice)
 {
 	uint8_t c = 0, chip_channel = 0, note = 0, pcm_register = 0, value = 0;
-	uint16_t de = 0, hl = 0, tune = 0;
+	uint16_t de = 0, hl = 0, pitch_entry = 0, tune = 0;
 
 	z80_block(37, 5);
 	chip_channel = VOICE(voice)->chip_channel;
@@ -3427,10 +3427,10 @@ void retune_voice_screen_2(uint16_t voice)
 	note = VOICE(voice)->note;
 	hl = pcm_pitch_tables_ADDRESS + (uint8_t)((note & 0xFu) * 2u);
 	de = pitch_bend;
-	hl = SOUND_ROM16(hl) + de + de;
+	pitch_entry = PCM_PITCH_RUNS(hl)[0] + de + de;
 	tune = VOICE(voice)->tune;
-	hl = hl + tune + tune;
-	hl = z80_read16(hl);
+	pitch_entry = pitch_entry + tune + tune;
+	hl = PCM_PITCH_STEPS(pitch_entry)[0];
 	hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)((note & ~0xFu) + (hl >> 8)) << 8);
 	value = VOICE(voice)->octave_shift + (hl >> 8);
 	pcm_register = 3u;
@@ -3509,7 +3509,7 @@ void read_midi_byte_screen_2(uint16_t *p_midi_byte_copy, uint8_t *p_midi_byte)
 void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 {
 	uint8_t a = 0, b = 0, c = 0, fm_register = 0, value = 0;
-	uint16_t channel_in_part = 0, de = 0, fm_register_2 = 0, hl = 0;
+	uint16_t channel_in_part = 0, de = 0, fm_register_2 = 0, fnum_entry = 0, hl = 0;
 	uint8_t saved_b = 0, saved_c = 0;
 	uint16_t stack_2 = 0;
 
@@ -3518,8 +3518,8 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 	pitch_bends = pitch_bends + midi_channel + midi_channel;
 	stack_2 = z80_read16(pitch_bends);
 	hl = fm_fnum_tables_ADDRESS + (uint8_t)((c & 0xFu) * 2u);
-	hl = SOUND_ROM16(hl) + stack_2 + stack_2;
-	hl = z80_read16(hl);
+	fnum_entry = FM_FNUMBER_RUNS(hl)[0] + stack_2 + stack_2;
+	hl = FM_FNUMBERS(fnum_entry)[0];
 	hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)(((c >> 1) & 0x38u) + (hl >> 8)) << 8);
 	a = fm_channel;
 	if (((a >> 2) & 1u) != 0u)
@@ -3569,7 +3569,7 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 		z80_block(63, 10);
 		saved_b = b;
 		saved_c = c;
-		a = z80_read8(de) + c;
+		a = FM_REGISTER_NUMBERS(de)[0] + c;
 		de++;
 		c = a;
 		a = z80_read8(hl);
@@ -3604,7 +3604,7 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 void retune_fm_voice(uint16_t voice, uint8_t chip_channel)
 {
 	uint8_t a = 0, d = 0, fm_register = 0, note = 0, value = 0;
-	uint16_t hl = 0;
+	uint16_t fnum_entry = 0, hl = 0;
 	uint16_t t1 = 0;
 
 	z80_block(234, 33);
@@ -3613,8 +3613,8 @@ void retune_fm_voice(uint16_t voice, uint8_t chip_channel)
 	hl = fm_fnum_tables_ADDRESS + (uint8_t)((note & 0xFu) * 2u);
 	t1 = pitch_bend;
 	d = (uint8_t)(t1 >> 8);
-	hl = SOUND_ROM16(hl) + (((uint32_t)d << 8) | (uint8_t)t1) + (((uint32_t)d << 8) | (uint8_t)t1);
-	hl = z80_read16(hl);
+	fnum_entry = FM_FNUMBER_RUNS(hl)[0] + (((uint32_t)d << 8) | (uint8_t)t1) + (((uint32_t)d << 8) | (uint8_t)t1);
+	hl = FM_FNUMBERS(fnum_entry)[0];
 	hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)(((note & ~0xFu) >> 1) + (hl >> 8)) << 8);
 	a = fm_channel;
 	if (((a >> 2) & 1u) != 0u)
@@ -3690,7 +3690,7 @@ void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t 
 		z80_block(63, 10);
 		saved_b = b;
 		saved_c = c;
-		a = SOUND_ROM8(de) + c;
+		a = FM_REGISTER_NUMBERS(de)[0] + c;
 		de++;
 		c = a;
 		a = z80_read8(hl);
@@ -3744,7 +3744,7 @@ void apply_fm_channel_volume(uint8_t chip_channel, uint16_t voice_field, uint16_
 		z80_block(63, 10);
 		saved_b = b;
 		saved_c = c;
-		a = SOUND_ROM8(de) + c;
+		a = FM_REGISTER_NUMBERS(de)[0] + c;
 		de++;
 		c = a;
 		a = z80_read8(hl);
@@ -3788,7 +3788,7 @@ void load_fm_patch(uint8_t channel_code, uint16_t *p_channel_in_part, uint16_t *
 		z80_block(62, 8);
 		saved_b = b;
 		saved_c = c;
-		a = SOUND_ROM8(register_list) + c;
+		a = FM_REGISTER_NUMBERS(register_list)[0] + c;
 		register_list++;
 		c = a;
 		value = z80_read8(hl);
@@ -3829,7 +3829,7 @@ void load_fm_patch_part2(uint8_t channel_code, uint16_t *p_channel_in_part, uint
 		z80_block(62, 8);
 		saved_b = b;
 		saved_c = c;
-		a = SOUND_ROM8(register_list) + c;
+		a = FM_REGISTER_NUMBERS(register_list)[0] + c;
 		register_list++;
 		c = a;
 		value = z80_read8(hl);

@@ -391,938 +391,916 @@
 #define rom_000001 ((const uint8_t *)rom(rom_000001_ADDRESS))
 #define rom_000002_ADDRESS 0x000002u
 #define rom_000002 ((const uint16_t *)rom(rom_000002_ADDRESS))
-#define rom_0000B4_ADDRESS 0x0000B4u
-#define rom_0000B4 ROM8(rom_0000B4_ADDRESS)
-#define rom_0000B5_ADDRESS 0x0000B5u
-#define rom_0000B5 ROM8(rom_0000B5_ADDRESS)
-#define rom_0000B6_ADDRESS 0x0000B6u
-#define rom_0000B6 ROM8(rom_0000B6_ADDRESS)
-#define rom_0000B7_ADDRESS 0x0000B7u
-#define rom_0000B7 ROM8(rom_0000B7_ADDRESS)
-#define rom_0008C4_ADDRESS 0x0008C4u
-#define rom_0008C4 ((const uint32_t *)rom(rom_0008C4_ADDRESS))
-#define rom_0008CC_ADDRESS 0x0008CCu
-#define rom_0008CC ((const uint32_t *)rom(rom_0008CC_ADDRESS))
-#define rom_000B0C_ADDRESS 0x000B0Cu
-#define rom_000B0C ((const uint32_t *)rom(rom_000B0C_ADDRESS))
-#define rom_000B14_ADDRESS 0x000B14u
-#define rom_000B14 ((const uint8_t *)rom(rom_000B14_ADDRESS))
-#define rom_000D14_ADDRESS 0x000D14u
-#define rom_000D14 ((const uint32_t *)rom(rom_000D14_ADDRESS))
-#define rom_000DAC_ADDRESS 0x000DACu
-#define rom_000DAC ((const uint32_t *)rom(rom_000DAC_ADDRESS))
-#define rom_000EB0_ADDRESS 0x000EB0u
-#define rom_000EB0 ((const uint32_t *)rom(rom_000EB0_ADDRESS))
-#define rom_000F78_ADDRESS 0x000F78u
-#define rom_000F78 ((const uint32_t *)rom(rom_000F78_ADDRESS))
-#define rom_000F80_ADDRESS 0x000F80u
-#define rom_000F80 ROM32(rom_000F80_ADDRESS)
-#define rom_000F84_ADDRESS 0x000F84u
-#define rom_000F84 ROM32(rom_000F84_ADDRESS)
-#define rom_000F88_ADDRESS 0x000F88u
-#define rom_000F88 ROM32(rom_000F88_ADDRESS)
-#define rom_000F8C_ADDRESS 0x000F8Cu
-#define rom_000F8C ROM32(rom_000F8C_ADDRESS)
-#define rom_000F90_ADDRESS 0x000F90u
-#define rom_000F90 ROM32(rom_000F90_ADDRESS)
-#define rom_001014_ADDRESS 0x001014u
-#define rom_001014 ((const uint32_t *)rom(rom_001014_ADDRESS))
-#define rom_00146C_ADDRESS 0x00146Cu
-#define rom_00146C ((const uint32_t *)rom(rom_00146C_ADDRESS))
-#define rom_001530_ADDRESS 0x001530u
-#define rom_001530 ((const uint32_t *)rom(rom_001530_ADDRESS))
-#define rom_001694_ADDRESS 0x001694u
-#define rom_001694 ((const uint32_t *)rom(rom_001694_ADDRESS))
-#define rom_0019CC_ADDRESS 0x0019CCu
-#define rom_0019CC ((const uint32_t *)rom(rom_0019CC_ADDRESS))
-#define rom_001A88_ADDRESS 0x001A88u
-#define rom_001A88 ((const uint16_t *)rom(rom_001A88_ADDRESS))
-#define rom_001A98_ADDRESS 0x001A98u
-#define rom_001A98 ((const uint8_t *)rom(rom_001A98_ADDRESS))
-#define rom_001AC8_ADDRESS 0x001AC8u
-#define rom_001AC8 ((const uint32_t *)rom(rom_001AC8_ADDRESS))
-#define rom_001CEC_ADDRESS 0x001CECu
-#define rom_001CEC ((const uint32_t *)rom(rom_001CEC_ADDRESS))
-#define rom_001DE0_ADDRESS 0x001DE0u
-#define rom_001DE0 ((const uint32_t *)rom(rom_001DE0_ADDRESS))
-#define rom_001ED0_ADDRESS 0x001ED0u
-#define rom_001ED0 ((const uint32_t *)rom(rom_001ED0_ADDRESS))
-#define rom_002088_ADDRESS 0x002088u
-#define rom_002088 ((const uint32_t *)rom(rom_002088_ADDRESS))
-#define rom_0020C8_ADDRESS 0x0020C8u
-#define rom_0020C8 ((const uint32_t *)rom(rom_0020C8_ADDRESS))
-#define rom_00221C_ADDRESS 0x00221Cu
-#define rom_00221C ((const uint32_t *)rom(rom_00221C_ADDRESS))
-#define rom_002304_ADDRESS 0x002304u
-#define rom_002304 ((const uint32_t *)rom(rom_002304_ADDRESS))
-#define rom_002384_ADDRESS 0x002384u
-#define rom_002384 ((const uint32_t *)rom(rom_002384_ADDRESS))
-#define rom_0023D4_ADDRESS 0x0023D4u
-#define rom_0023D4 ((const uint32_t *)rom(rom_0023D4_ADDRESS))
-#define rom_002424_ADDRESS 0x002424u
-#define rom_002424 ((const uint32_t *)rom(rom_002424_ADDRESS))
-#define rom_002488_ADDRESS 0x002488u
-#define rom_002488 ((const uint32_t *)rom(rom_002488_ADDRESS))
-#define rom_002564_ADDRESS 0x002564u
-#define rom_002564 ((const uint32_t *)rom(rom_002564_ADDRESS))
-#define rom_002620_ADDRESS 0x002620u
-#define rom_002620 ((const uint32_t *)rom(rom_002620_ADDRESS))
-#define rom_00266C_ADDRESS 0x00266Cu
-#define rom_00266C ((const uint32_t *)rom(rom_00266C_ADDRESS))
-#define rom_0026B8_ADDRESS 0x0026B8u
-#define rom_0026B8 ((const uint32_t *)rom(rom_0026B8_ADDRESS))
-#define rom_00279C_ADDRESS 0x00279Cu
-#define rom_00279C ((const uint32_t *)rom(rom_00279C_ADDRESS))
-#define rom_00287C_ADDRESS 0x00287Cu
-#define rom_00287C ((const uint32_t *)rom(rom_00287C_ADDRESS))
-#define rom_002960_ADDRESS 0x002960u
-#define rom_002960 ((const uint32_t *)rom(rom_002960_ADDRESS))
-#define rom_0029A4_ADDRESS 0x0029A4u
-#define rom_0029A4 ((const uint32_t *)rom(rom_0029A4_ADDRESS))
-#define rom_002C18_ADDRESS 0x002C18u
-#define rom_002C18 ((const uint8_t *)rom(rom_002C18_ADDRESS))
-#define rom_002CA4_ADDRESS 0x002CA4u
-#define rom_002CA4 ((const uint32_t *)rom(rom_002CA4_ADDRESS))
-#define rom_002CAC_ADDRESS 0x002CACu
-#define rom_002CAC ((const uint32_t *)rom(rom_002CAC_ADDRESS))
-#define rom_002CB4_ADDRESS 0x002CB4u
-#define rom_002CB4 ((const uint16_t *)rom(rom_002CB4_ADDRESS))
-#define rom_002D00_ADDRESS 0x002D00u
-#define rom_002D00 ((const uint8_t *)rom(rom_002D00_ADDRESS))
-#define rom_002D20_ADDRESS 0x002D20u
-#define rom_002D20 ((const uint8_t *)rom(rom_002D20_ADDRESS))
-#define rom_002D2A_ADDRESS 0x002D2Au
-#define rom_002D2A ((const uint16_t *)rom(rom_002D2A_ADDRESS))
-#define rom_002D40_ADDRESS 0x002D40u
-#define rom_002D40 ((const uint16_t *)rom(rom_002D40_ADDRESS))
-#define rom_002D6C_ADDRESS 0x002D6Cu
-#define rom_002D6C ((const uint8_t *)rom(rom_002D6C_ADDRESS))
-#define rom_002D98_ADDRESS 0x002D98u
-#define rom_002D98 ((const uint8_t *)rom(rom_002D98_ADDRESS))
-#define rom_002D9C_ADDRESS 0x002D9Cu
-#define rom_002D9C ((const uint16_t *)rom(rom_002D9C_ADDRESS))
-#define rom_002DAC_ADDRESS 0x002DACu
-#define rom_002DAC ((const uint16_t *)rom(rom_002DAC_ADDRESS))
-#define rom_002DBC_ADDRESS 0x002DBCu
-#define rom_002DBC ((const uint16_t *)rom(rom_002DBC_ADDRESS))
-#define rom_002DCC_ADDRESS 0x002DCCu
-#define rom_002DCC ((const uint16_t *)rom(rom_002DCC_ADDRESS))
-#define rom_002DDC_ADDRESS 0x002DDCu
-#define rom_002DDC ((const uint16_t *)rom(rom_002DDC_ADDRESS))
-#define rom_002DEC_ADDRESS 0x002DECu
-#define rom_002DEC ((const uint16_t *)rom(rom_002DEC_ADDRESS))
-#define rom_002DFC_ADDRESS 0x002DFCu
-#define rom_002DFC ((const uint16_t *)rom(rom_002DFC_ADDRESS))
-#define rom_002E10_ADDRESS 0x002E10u
-#define rom_002E10 ((const uint16_t *)rom(rom_002E10_ADDRESS))
-#define rom_002E24_ADDRESS 0x002E24u
-#define rom_002E24 ((const uint16_t *)rom(rom_002E24_ADDRESS))
-#define rom_002E38_ADDRESS 0x002E38u
-#define rom_002E38 ((const uint16_t *)rom(rom_002E38_ADDRESS))
-#define rom_002E80_ADDRESS 0x002E80u
-#define rom_002E80 ((const uint32_t *)rom(rom_002E80_ADDRESS))
-#define rom_003463_ADDRESS 0x003463u
-#define rom_003463 ((const uint8_t *)rom(rom_003463_ADDRESS))
-#define rom_003465_ADDRESS 0x003465u
-#define rom_003465 ((const uint8_t *)rom(rom_003465_ADDRESS))
-#define rom_003467_ADDRESS 0x003467u
-#define rom_003467 ((const uint8_t *)rom(rom_003467_ADDRESS))
-#define rom_003540_ADDRESS 0x003540u
-#define rom_003540 ((const uint32_t *)rom(rom_003540_ADDRESS))
-#define rom_003E28_ADDRESS 0x003E28u
-#define rom_003E28 ((const uint32_t *)rom(rom_003E28_ADDRESS))
-#define rom_003F34_ADDRESS 0x003F34u
-#define rom_003F34 ((const uint32_t *)rom(rom_003F34_ADDRESS))
-#define rom_00403A_ADDRESS 0x00403Au
-#define rom_00403A ((const uint16_t *)rom(rom_00403A_ADDRESS))
-#define rom_00403E_ADDRESS 0x00403Eu
-#define rom_00403E ((const uint16_t *)rom(rom_00403E_ADDRESS))
-#define rom_004042_ADDRESS 0x004042u
-#define rom_004042 ((const uint16_t *)rom(rom_004042_ADDRESS))
-#define rom_004064_ADDRESS 0x004064u
-#define rom_004064 ((const uint32_t *)rom(rom_004064_ADDRESS))
-#define rom_00424C_ADDRESS 0x00424Cu
-#define rom_00424C ((const uint32_t *)rom(rom_00424C_ADDRESS))
-#define rom_004280_ADDRESS 0x004280u
-#define rom_004280 ((const uint32_t *)rom(rom_004280_ADDRESS))
-#define rom_00442C_ADDRESS 0x00442Cu
-#define rom_00442C ((const uint32_t *)rom(rom_00442C_ADDRESS))
-#define rom_004474_ADDRESS 0x004474u
-#define rom_004474 ((const uint32_t *)rom(rom_004474_ADDRESS))
-#define rom_004588_ADDRESS 0x004588u
-#define rom_004588 ((const uint32_t *)rom(rom_004588_ADDRESS))
-#define rom_00462C_ADDRESS 0x00462Cu
-#define rom_00462C ((const uint16_t *)rom(rom_00462C_ADDRESS))
-#define rom_004634_ADDRESS 0x004634u
-#define rom_004634 ((const uint16_t *)rom(rom_004634_ADDRESS))
-#define rom_004648_ADDRESS 0x004648u
-#define rom_004648 ((const uint32_t *)rom(rom_004648_ADDRESS))
-#define rom_0046C8_ADDRESS 0x0046C8u
-#define rom_0046C8 ((const uint32_t *)rom(rom_0046C8_ADDRESS))
-#define rom_00477C_ADDRESS 0x00477Cu
-#define rom_00477C ((const uint32_t *)rom(rom_00477C_ADDRESS))
-#define rom_0048B8_ADDRESS 0x0048B8u
-#define rom_0048B8 ((const uint32_t *)rom(rom_0048B8_ADDRESS))
-#define rom_0048C0_ADDRESS 0x0048C0u
-#define rom_0048C0 ((const uint32_t *)rom(rom_0048C0_ADDRESS))
-#define rom_0048C8_ADDRESS 0x0048C8u
-#define rom_0048C8 ((const uint32_t *)rom(rom_0048C8_ADDRESS))
-#define rom_0048D0_ADDRESS 0x0048D0u
-#define rom_0048D0 ((const uint16_t *)rom(rom_0048D0_ADDRESS))
-#define rom_0048D4_ADDRESS 0x0048D4u
-#define rom_0048D4 ((const uint16_t *)rom(rom_0048D4_ADDRESS))
-#define rom_0048D8_ADDRESS 0x0048D8u
-#define rom_0048D8 ((const uint32_t *)rom(rom_0048D8_ADDRESS))
-#define rom_0048E0_ADDRESS 0x0048E0u
-#define rom_0048E0 ((const uint16_t *)rom(rom_0048E0_ADDRESS))
-#define rom_0048F0_ADDRESS 0x0048F0u
-#define rom_0048F0 ((const uint16_t *)rom(rom_0048F0_ADDRESS))
-#define rom_004900_ADDRESS 0x004900u
-#define rom_004900 ((const uint16_t *)rom(rom_004900_ADDRESS))
-#define rom_00492A_ADDRESS 0x00492Au
-#define rom_00492A ((const uint16_t *)rom(rom_00492A_ADDRESS))
-#define rom_004954_ADDRESS 0x004954u
-#define rom_004954 ((const uint16_t *)rom(rom_004954_ADDRESS))
-#define rom_004958_ADDRESS 0x004958u
-#define rom_004958 ((const uint16_t *)rom(rom_004958_ADDRESS))
-#define rom_00495C_ADDRESS 0x00495Cu
-#define rom_00495C ((const uint16_t *)rom(rom_00495C_ADDRESS))
-#define rom_004C0A_ADDRESS 0x004C0Au
-#define rom_004C0A ROM16(rom_004C0A_ADDRESS)
-#define rom_005058_ADDRESS 0x005058u
-#define rom_005058 ((const uint32_t *)rom(rom_005058_ADDRESS))
-#define rom_0053EC_ADDRESS 0x0053ECu
-#define rom_0053EC ((const uint32_t *)rom(rom_0053EC_ADDRESS))
-#define rom_00548C_ADDRESS 0x00548Cu
-#define rom_00548C ((const uint32_t *)rom(rom_00548C_ADDRESS))
-#define rom_005534_ADDRESS 0x005534u
-#define rom_005534 ((const uint32_t *)rom(rom_005534_ADDRESS))
-#define rom_0056C0_ADDRESS 0x0056C0u
-#define rom_0056C0 ((const uint32_t *)rom(rom_0056C0_ADDRESS))
-#define rom_005770_ADDRESS 0x005770u
-#define rom_005770 ((const uint32_t *)rom(rom_005770_ADDRESS))
-#define rom_005890_ADDRESS 0x005890u
-#define rom_005890 ((const uint32_t *)rom(rom_005890_ADDRESS))
-#define rom_005914_ADDRESS 0x005914u
-#define rom_005914 ((const uint32_t *)rom(rom_005914_ADDRESS))
-#define rom_0059C4_ADDRESS 0x0059C4u
-#define rom_0059C4 ((const uint32_t *)rom(rom_0059C4_ADDRESS))
-#define rom_005A28_ADDRESS 0x005A28u
-#define rom_005A28 ((const uint32_t *)rom(rom_005A28_ADDRESS))
-#define rom_005B50_ADDRESS 0x005B50u
-#define rom_005B50 ((const uint32_t *)rom(rom_005B50_ADDRESS))
-#define rom_005BE4_ADDRESS 0x005BE4u
-#define rom_005BE4 ((const uint32_t *)rom(rom_005BE4_ADDRESS))
-#define rom_005D68_ADDRESS 0x005D68u
-#define rom_005D68 ((const uint32_t *)rom(rom_005D68_ADDRESS))
-#define rom_005E1C_ADDRESS 0x005E1Cu
-#define rom_005E1C ((const uint32_t *)rom(rom_005E1C_ADDRESS))
-#define rom_005EC0_ADDRESS 0x005EC0u
-#define rom_005EC0 ((const uint32_t *)rom(rom_005EC0_ADDRESS))
-#define rom_005F5C_ADDRESS 0x005F5Cu
-#define rom_005F5C ((const uint32_t *)rom(rom_005F5C_ADDRESS))
-#define rom_0062B0_ADDRESS 0x0062B0u
-#define rom_0062B0 ((const uint32_t *)rom(rom_0062B0_ADDRESS))
-#define rom_006464_ADDRESS 0x006464u
-#define rom_006464 ((const uint32_t *)rom(rom_006464_ADDRESS))
-#define rom_00661C_ADDRESS 0x00661Cu
-#define rom_00661C ((const uint32_t *)rom(rom_00661C_ADDRESS))
-#define rom_00665C_ADDRESS 0x00665Cu
-#define rom_00665C ((const uint32_t *)rom(rom_00665C_ADDRESS))
-#define rom_0067A9_ADDRESS 0x0067A9u
-#define rom_0067A9 ((const uint8_t *)rom(rom_0067A9_ADDRESS))
-#define rom_0069B0_ADDRESS 0x0069B0u
-#define rom_0069B0 ((const uint8_t *)rom(rom_0069B0_ADDRESS))
-#define rom_0069B8_ADDRESS 0x0069B8u
-#define rom_0069B8 ROM16(rom_0069B8_ADDRESS)
-#define rom_0069BA_ADDRESS 0x0069BAu
-#define rom_0069BA ROM16(rom_0069BA_ADDRESS)
-#define rom_0069D8_ADDRESS 0x0069D8u
-#define rom_0069D8 ((const uint8_t *)rom(rom_0069D8_ADDRESS))
-#define rom_006D9C_ADDRESS 0x006D9Cu
-#define rom_006D9C ((const uint8_t *)rom(rom_006D9C_ADDRESS))
-#define rom_006DA4_ADDRESS 0x006DA4u
-#define rom_006DA4 ((const uint8_t *)rom(rom_006DA4_ADDRESS))
-#define rom_006DDE_ADDRESS 0x006DDEu
-#define rom_006DDE ((const uint16_t *)rom(rom_006DDE_ADDRESS))
-#define rom_006DEE_ADDRESS 0x006DEEu
-#define rom_006DEE ((const uint8_t *)rom(rom_006DEE_ADDRESS))
-#define rom_006E30_ADDRESS 0x006E30u
-#define rom_006E30 ((const uint32_t *)rom(rom_006E30_ADDRESS))
-#define rom_006E44_ADDRESS 0x006E44u
-#define rom_006E44 ((const uint32_t *)rom(rom_006E44_ADDRESS))
-#define rom_006E78_ADDRESS 0x006E78u
-#define rom_006E78 ((const uint8_t *)rom(rom_006E78_ADDRESS))
-#define rom_006E80_ADDRESS 0x006E80u
-#define rom_006E80 ((const uint16_t *)rom(rom_006E80_ADDRESS))
-#define rom_006E90_ADDRESS 0x006E90u
-#define rom_006E90 ((const uint16_t *)rom(rom_006E90_ADDRESS))
-#define rom_006EA0_ADDRESS 0x006EA0u
-#define rom_006EA0 ((const uint8_t *)rom(rom_006EA0_ADDRESS))
-#define rom_006F18_ADDRESS 0x006F18u
-#define rom_006F18 ((const uint32_t *)rom(rom_006F18_ADDRESS))
-#define rom_007164_ADDRESS 0x007164u
-#define rom_007164 ((const uint32_t *)rom(rom_007164_ADDRESS))
-#define rom_00720C_ADDRESS 0x00720Cu
-#define rom_00720C ((const uint32_t *)rom(rom_00720C_ADDRESS))
-#define rom_007917_ADDRESS 0x007917u
-#define rom_007917 ((const uint32_t *)rom(rom_007917_ADDRESS))
-#define rom_007C44_ADDRESS 0x007C44u
-#define rom_007C44 ((const uint32_t *)rom(rom_007C44_ADDRESS))
-#define rom_007CAC_ADDRESS 0x007CACu
-#define rom_007CAC ((const uint32_t *)rom(rom_007CAC_ADDRESS))
-#define rom_007D28_ADDRESS 0x007D28u
-#define rom_007D28 ((const uint32_t *)rom(rom_007D28_ADDRESS))
-#define rom_008026_ADDRESS 0x008026u
-#define rom_008026 ((const uint16_t *)rom(rom_008026_ADDRESS))
-#define rom_008038_ADDRESS 0x008038u
-#define rom_008038 ((const uint16_t *)rom(rom_008038_ADDRESS))
-#define rom_00804A_ADDRESS 0x00804Au
-#define rom_00804A ((const uint32_t *)rom(rom_00804A_ADDRESS))
-#define rom_0090AC_ADDRESS 0x0090ACu
-#define rom_0090AC ((const uint32_t *)rom(rom_0090AC_ADDRESS))
-#define rom_0091CC_ADDRESS 0x0091CCu
-#define rom_0091CC ((const uint32_t *)rom(rom_0091CC_ADDRESS))
-#define rom_00926C_ADDRESS 0x00926Cu
-#define rom_00926C ((const uint16_t *)rom(rom_00926C_ADDRESS))
-#define rom_009300_ADDRESS 0x009300u
-#define rom_009300 ((const uint16_t *)rom(rom_009300_ADDRESS))
-#define rom_009310_ADDRESS 0x009310u
-#define rom_009310 ((const uint16_t *)rom(rom_009310_ADDRESS))
-#define rom_009410_ADDRESS 0x009410u
-#define rom_009410 ((const uint16_t *)rom(rom_009410_ADDRESS))
-#define rom_009510_ADDRESS 0x009510u
-#define rom_009510 ((const uint16_t *)rom(rom_009510_ADDRESS))
-#define rom_009520_ADDRESS 0x009520u
-#define rom_009520 ((const uint16_t *)rom(rom_009520_ADDRESS))
-#define rom_009530_ADDRESS 0x009530u
-#define rom_009530 ((const uint8_t *)rom(rom_009530_ADDRESS))
-#define rom_009540_ADDRESS 0x009540u
-#define rom_009540 ((const uint32_t *)rom(rom_009540_ADDRESS))
-#define rom_009DCC_ADDRESS 0x009DCCu
-#define rom_009DCC ((const uint16_t *)rom(rom_009DCC_ADDRESS))
-#define rom_009DDC_ADDRESS 0x009DDCu
-#define rom_009DDC ((const uint16_t *)rom(rom_009DDC_ADDRESS))
-#define rom_009DEC_ADDRESS 0x009DECu
-#define rom_009DEC ((const uint16_t *)rom(rom_009DEC_ADDRESS))
-#define rom_009DFC_ADDRESS 0x009DFCu
-#define rom_009DFC ((const uint16_t *)rom(rom_009DFC_ADDRESS))
-#define rom_009E0C_ADDRESS 0x009E0Cu
-#define rom_009E0C ((const uint8_t *)rom(rom_009E0C_ADDRESS))
-#define rom_009E14_ADDRESS 0x009E14u
-#define rom_009E14 ((const uint8_t *)rom(rom_009E14_ADDRESS))
-#define rom_009E1C_ADDRESS 0x009E1Cu
-#define rom_009E1C ((const uint16_t *)rom(rom_009E1C_ADDRESS))
-#define rom_009E2C_ADDRESS 0x009E2Cu
-#define rom_009E2C ((const uint16_t *)rom(rom_009E2C_ADDRESS))
-#define rom_009E3C_ADDRESS 0x009E3Cu
-#define rom_009E3C ((const uint8_t *)rom(rom_009E3C_ADDRESS))
-#define rom_009E44_ADDRESS 0x009E44u
-#define rom_009E44 ((const uint8_t *)rom(rom_009E44_ADDRESS))
-#define rom_009E4C_ADDRESS 0x009E4Cu
-#define rom_009E4C ((const uint8_t *)rom(rom_009E4C_ADDRESS))
-#define rom_009EBC_ADDRESS 0x009EBCu
-#define rom_009EBC ((const uint32_t *)rom(rom_009EBC_ADDRESS))
-#define rom_009EDC_ADDRESS 0x009EDCu
-#define rom_009EDC ((const uint32_t *)rom(rom_009EDC_ADDRESS))
-#define rom_009F0C_ADDRESS 0x009F0Cu
-#define rom_009F0C ((const uint16_t *)rom(rom_009F0C_ADDRESS))
-#define rom_009F6C_ADDRESS 0x009F6Cu
-#define rom_009F6C ((const uint8_t *)rom(rom_009F6C_ADDRESS))
-#define rom_009F7C_ADDRESS 0x009F7Cu
-#define rom_009F7C ((const uint16_t *)rom(rom_009F7C_ADDRESS))
-#define rom_009F8C_ADDRESS 0x009F8Cu
-#define rom_009F8C ((const uint16_t *)rom(rom_009F8C_ADDRESS))
-#define rom_009F9C_ADDRESS 0x009F9Cu
-#define rom_009F9C ((const uint8_t *)rom(rom_009F9C_ADDRESS))
-#define rom_009FA4_ADDRESS 0x009FA4u
-#define rom_009FA4 ((const uint8_t *)rom(rom_009FA4_ADDRESS))
-#define rom_009FC4_ADDRESS 0x009FC4u
-#define rom_009FC4 ((const uint32_t *)rom(rom_009FC4_ADDRESS))
-#define rom_00A5F4_ADDRESS 0x00A5F4u
-#define rom_00A5F4 ((const uint32_t *)rom(rom_00A5F4_ADDRESS))
-#define rom_00A798_ADDRESS 0x00A798u
-#define rom_00A798 ((const uint32_t *)rom(rom_00A798_ADDRESS))
-#define rom_00ABC3_ADDRESS 0x00ABC3u
-#define rom_00ABC3 ((const uint8_t *)rom(rom_00ABC3_ADDRESS))
-#define rom_00ABCB_ADDRESS 0x00ABCBu
-#define rom_00ABCB ((const uint8_t *)rom(rom_00ABCB_ADDRESS))
-#define rom_00ACCB_ADDRESS 0x00ACCBu
-#define rom_00ACCB ((const uint8_t *)rom(rom_00ACCB_ADDRESS))
-#define rom_00ADCC_ADDRESS 0x00ADCCu
-#define rom_00ADCC ((const uint32_t *)rom(rom_00ADCC_ADDRESS))
-#define rom_00B04C_ADDRESS 0x00B04Cu
-#define rom_00B04C ((const uint32_t *)rom(rom_00B04C_ADDRESS))
-#define rom_00B0C0_ADDRESS 0x00B0C0u
-#define rom_00B0C0 ((const uint32_t *)rom(rom_00B0C0_ADDRESS))
-#define rom_00B6FC_ADDRESS 0x00B6FCu
-#define rom_00B6FC ((const uint8_t *)rom(rom_00B6FC_ADDRESS))
-#define rom_00B704_ADDRESS 0x00B704u
-#define rom_00B704 ((const uint8_t *)rom(rom_00B704_ADDRESS))
-#define rom_00B70C_ADDRESS 0x00B70Cu
-#define rom_00B70C ((const uint32_t *)rom(rom_00B70C_ADDRESS))
-#define rom_00B74C_ADDRESS 0x00B74Cu
-#define rom_00B74C ((const uint32_t *)rom(rom_00B74C_ADDRESS))
-#define rom_00BFCC_ADDRESS 0x00BFCCu
-#define rom_00BFCC ((const uint32_t *)rom(rom_00BFCC_ADDRESS))
-#define rom_00C024_ADDRESS 0x00C024u
-#define rom_00C024 ((const uint32_t *)rom(rom_00C024_ADDRESS))
-#define rom_00C0D4_ADDRESS 0x00C0D4u
-#define rom_00C0D4 ((const uint32_t *)rom(rom_00C0D4_ADDRESS))
-#define rom_00C118_ADDRESS 0x00C118u
-#define rom_00C118 ((const uint32_t *)rom(rom_00C118_ADDRESS))
-#define rom_00C23C_ADDRESS 0x00C23Cu
-#define rom_00C23C ((const uint32_t *)rom(rom_00C23C_ADDRESS))
-#define rom_00C2B8_ADDRESS 0x00C2B8u
-#define rom_00C2B8 ((const uint32_t *)rom(rom_00C2B8_ADDRESS))
-#define rom_00C350_ADDRESS 0x00C350u
-#define rom_00C350 ((const uint32_t *)rom(rom_00C350_ADDRESS))
-#define rom_00C44C_ADDRESS 0x00C44Cu
-#define rom_00C44C ((const uint32_t *)rom(rom_00C44C_ADDRESS))
-#define rom_00C5A8_ADDRESS 0x00C5A8u
-#define rom_00C5A8 ((const uint32_t *)rom(rom_00C5A8_ADDRESS))
-#define rom_00C66C_ADDRESS 0x00C66Cu
-#define rom_00C66C ((const uint32_t *)rom(rom_00C66C_ADDRESS))
-#define rom_00C880_ADDRESS 0x00C880u
-#define rom_00C880 ((const uint32_t *)rom(rom_00C880_ADDRESS))
-#define rom_00C8C4_ADDRESS 0x00C8C4u
-#define rom_00C8C4 ((const uint32_t *)rom(rom_00C8C4_ADDRESS))
-#define rom_00CAC8_ADDRESS 0x00CAC8u
-#define rom_00CAC8 ((const uint32_t *)rom(rom_00CAC8_ADDRESS))
-#define rom_00CBCC_ADDRESS 0x00CBCCu
-#define rom_00CBCC ((const uint32_t *)rom(rom_00CBCC_ADDRESS))
-#define rom_00CC70_ADDRESS 0x00CC70u
-#define rom_00CC70 ((const uint32_t *)rom(rom_00CC70_ADDRESS))
-#define rom_00CFC8_ADDRESS 0x00CFC8u
-#define rom_00CFC8 ((const uint32_t *)rom(rom_00CFC8_ADDRESS))
-#define rom_00CFE8_ADDRESS 0x00CFE8u
-#define rom_00CFE8 ((const uint16_t *)rom(rom_00CFE8_ADDRESS))
-#define rom_00CFF8_ADDRESS 0x00CFF8u
-#define rom_00CFF8 ((const uint32_t *)rom(rom_00CFF8_ADDRESS))
-#define rom_00D018_ADDRESS 0x00D018u
-#define rom_00D018 ((const uint16_t *)rom(rom_00D018_ADDRESS))
-#define rom_00D034_ADDRESS 0x00D034u
-#define rom_00D034 ((const uint32_t *)rom(rom_00D034_ADDRESS))
-#define rom_00D0C0_ADDRESS 0x00D0C0u
-#define rom_00D0C0 ((const uint8_t *)rom(rom_00D0C0_ADDRESS))
-#define rom_00DDB4_ADDRESS 0x00DDB4u
-#define rom_00DDB4 ((const uint32_t *)rom(rom_00DDB4_ADDRESS))
+#define boot_e80000_bytes_ADDRESS 0x0000B4u
+#define boot_e80000_bytes ROM32(boot_e80000_bytes_ADDRESS)
+#define seat_credits_addresses_ADDRESS 0x0008C4u
+#define seat_credits_addresses ((const uint32_t *)rom(seat_credits_addresses_ADDRESS))
+#define game_mode_jumps_ADDRESS 0x0008CCu
+#define game_mode_jumps ((const uint32_t *)rom(game_mode_jumps_ADDRESS))
+#define analog_calibration_addresses_ADDRESS 0x000B0Cu
+#define analog_calibration_addresses ((const uint32_t *)rom(analog_calibration_addresses_ADDRESS))
+#define analog_input_counts_ADDRESS 0x000B14u
+#define analog_input_counts ((const uint8_t *)rom(analog_input_counts_ADDRESS))
+#define first_attract_car_lists_ADDRESS 0x000D14u
+#define first_attract_car_lists ((const uint32_t *)rom(first_attract_car_lists_ADDRESS))
+#define isdn_connection_step_jumps_ADDRESS 0x000DACu
+#define isdn_connection_step_jumps ((const uint32_t *)rom(isdn_connection_step_jumps_ADDRESS))
+#define isdn_status_state_jumps_ADDRESS 0x000EB0u
+#define isdn_status_state_jumps ((const uint32_t *)rom(isdn_status_state_jumps_ADDRESS))
+#define isdn_connecting_texts_ADDRESS 0x000F78u
+#define isdn_connecting_texts ((const uint32_t *)rom(isdn_connecting_texts_ADDRESS))
+#define isdn_failed_text_ADDRESS 0x000F80u
+#define isdn_failed_text ROM32(isdn_failed_text_ADDRESS)
+#define isdn_success_text_ADDRESS 0x000F84u
+#define isdn_success_text ROM32(isdn_success_text_ADDRESS)
+#define isdn_this_side_text_ADDRESS 0x000F88u
+#define isdn_this_side_text ROM32(isdn_this_side_text_ADDRESS)
+#define isdn_other_side_text_ADDRESS 0x000F8Cu
+#define isdn_other_side_text ROM32(isdn_other_side_text_ADDRESS)
+#define isdn_total_text_ADDRESS 0x000F90u
+#define isdn_total_text ROM32(isdn_total_text_ADDRESS)
+#define title_step_jumps_ADDRESS 0x001014u
+#define title_step_jumps ((const uint32_t *)rom(title_step_jumps_ADDRESS))
+#define car_presentation_step_jumps_ADDRESS 0x00146Cu
+#define car_presentation_step_jumps ((const uint32_t *)rom(car_presentation_step_jumps_ADDRESS))
+#define demo_race_step_jumps_ADDRESS 0x001530u
+#define demo_race_step_jumps ((const uint32_t *)rom(demo_race_step_jumps_ADDRESS))
+#define car_presentation_state_jumps_ADDRESS 0x001694u
+#define car_presentation_state_jumps ((const uint32_t *)rom(car_presentation_state_jumps_ADDRESS))
+#define car_name_letter_state_jumps_ADDRESS 0x0019CCu
+#define car_name_letter_state_jumps ((const uint32_t *)rom(car_name_letter_state_jumps_ADDRESS))
+#define attract_car_picture_animations_ADDRESS 0x001A88u
+#define attract_car_picture_animations ((const uint16_t *)rom(attract_car_picture_animations_ADDRESS))
+#define attract_car_scene_palettes_ADDRESS 0x001A98u
+#define attract_car_scene_palettes ((const uint8_t *)rom(attract_car_scene_palettes_ADDRESS))
+#define car_presentation_palette_cycle_ADDRESS 0x001AC8u
+#define car_presentation_palette_cycle ((const uint32_t *)rom(car_presentation_palette_cycle_ADDRESS))
+#define attract_car_names_ADDRESS 0x001CECu
+#define attract_car_names ((const uint32_t *)rom(attract_car_names_ADDRESS))
+#define ranking_step_jumps_ADDRESS 0x001DE0u
+#define ranking_step_jumps ((const uint32_t *)rom(ranking_step_jumps_ADDRESS))
+#define name_entry_state_jumps_ADDRESS 0x001ED0u
+#define name_entry_state_jumps ((const uint32_t *)rom(name_entry_state_jumps_ADDRESS))
+#define name_entry_gas_step_jumps_ADDRESS 0x002088u
+#define name_entry_gas_step_jumps ((const uint32_t *)rom(name_entry_gas_step_jumps_ADDRESS))
+#define name_entry_place_jumps_ADDRESS 0x0020C8u
+#define name_entry_place_jumps ((const uint32_t *)rom(name_entry_place_jumps_ADDRESS))
+#define name_entry_letter_state_jumps_ADDRESS 0x00221Cu
+#define name_entry_letter_state_jumps ((const uint32_t *)rom(name_entry_letter_state_jumps_ADDRESS))
+#define name_entry_lcd_state_jumps_ADDRESS 0x002304u
+#define name_entry_lcd_state_jumps ((const uint32_t *)rom(name_entry_lcd_state_jumps_ADDRESS))
+#define name_entry_car_state_jumps_ADDRESS 0x002384u
+#define name_entry_car_state_jumps ((const uint32_t *)rom(name_entry_car_state_jumps_ADDRESS))
+#define name_entry_drivers_state_jumps_ADDRESS 0x0023D4u
+#define name_entry_drivers_state_jumps ((const uint32_t *)rom(name_entry_drivers_state_jumps_ADDRESS))
+#define name_entry_course_name_state_jumps_ADDRESS 0x002424u
+#define name_entry_course_name_state_jumps ((const uint32_t *)rom(name_entry_course_name_state_jumps_ADDRESS))
+#define ranking_state_jumps_ADDRESS 0x002488u
+#define ranking_state_jumps ((const uint32_t *)rom(ranking_state_jumps_ADDRESS))
+#define ranking_background_state_jumps_ADDRESS 0x002564u
+#define ranking_background_state_jumps ((const uint32_t *)rom(ranking_background_state_jumps_ADDRESS))
+#define ranking_title_left_state_jumps_ADDRESS 0x002620u
+#define ranking_title_left_state_jumps ((const uint32_t *)rom(ranking_title_left_state_jumps_ADDRESS))
+#define ranking_title_right_state_jumps_ADDRESS 0x00266Cu
+#define ranking_title_right_state_jumps ((const uint32_t *)rom(ranking_title_right_state_jumps_ADDRESS))
+#define ranking_course_banner_state_jumps_ADDRESS 0x0026B8u
+#define ranking_course_banner_state_jumps ((const uint32_t *)rom(ranking_course_banner_state_jumps_ADDRESS))
+#define ranking_record_character_state_jumps_ADDRESS 0x00279Cu
+#define ranking_record_character_state_jumps ((const uint32_t *)rom(ranking_record_character_state_jumps_ADDRESS))
+#define ranking_record_car_state_jumps_ADDRESS 0x00287Cu
+#define ranking_record_car_state_jumps ((const uint32_t *)rom(ranking_record_car_state_jumps_ADDRESS))
+#define passing_traffic_state_jumps_ADDRESS 0x002960u
+#define passing_traffic_state_jumps ((const uint32_t *)rom(passing_traffic_state_jumps_ADDRESS))
+#define passing_car_state_jumps_ADDRESS 0x0029A4u
+#define passing_car_state_jumps ((const uint32_t *)rom(passing_car_state_jumps_ADDRESS))
+#define ranking_background_tile_banks_ADDRESS 0x002C18u
+#define ranking_background_tile_banks ((const uint8_t *)rom(ranking_background_tile_banks_ADDRESS))
+#define ranking_mixer_addresses_ADDRESS 0x002CA4u
+#define ranking_mixer_addresses ((const uint32_t *)rom(ranking_mixer_addresses_ADDRESS))
+#define ranking_background_page_numbers_ADDRESS 0x002CACu
+#define ranking_background_page_numbers ((const uint32_t *)rom(ranking_background_page_numbers_ADDRESS))
+#define ranking_background_scroll_xs_ADDRESS 0x002CB4u
+#define ranking_background_scroll_xs ((const uint16_t *)rom(ranking_background_scroll_xs_ADDRESS))
+#define name_entry_letters_ADDRESS 0x002D00u
+#define name_entry_letters ((const uint8_t *)rom(name_entry_letters_ADDRESS))
+#define course_backgrounds_ADDRESS 0x002D20u
+#define course_backgrounds ((const uint8_t *)rom(course_backgrounds_ADDRESS))
+#define ranking_record_character_xs_ADDRESS 0x002D2Au
+#define ranking_record_character_xs ((const uint16_t *)rom(ranking_record_character_xs_ADDRESS))
+#define ranking_record_character_ys_ADDRESS 0x002D40u
+#define ranking_record_character_ys ((const uint16_t *)rom(ranking_record_character_ys_ADDRESS))
+#define name_entry_turn_rates_ADDRESS 0x002D6Cu
+#define name_entry_turn_rates ((const uint8_t *)rom(name_entry_turn_rates_ADDRESS))
+#define name_entry_place_sounds_ADDRESS 0x002D98u
+#define name_entry_place_sounds ((const uint8_t *)rom(name_entry_place_sounds_ADDRESS))
+#define certificate_car_animations_ADDRESS 0x002D9Cu
+#define certificate_car_animations ((const uint16_t *)rom(certificate_car_animations_ADDRESS))
+#define car_model_palettes_ADDRESS 0x002DACu
+#define car_model_palettes ((const uint16_t *)rom(car_model_palettes_ADDRESS))
+#define certificate_driver_animations_ADDRESS 0x002DBCu
+#define certificate_driver_animations ((const uint16_t *)rom(certificate_driver_animations_ADDRESS))
+#define certificate_driver_palettes_ADDRESS 0x002DCCu
+#define certificate_driver_palettes ((const uint16_t *)rom(certificate_driver_palettes_ADDRESS))
+#define car_model_turn_animations_ADDRESS 0x002DDCu
+#define car_model_turn_animations ((const uint16_t *)rom(car_model_turn_animations_ADDRESS))
+#define ranking_record_character_palettes_ADDRESS 0x002DECu
+#define ranking_record_character_palettes ((const uint16_t *)rom(ranking_record_character_palettes_ADDRESS))
+#define ranking_course_banner_animations_ADDRESS 0x002DFCu
+#define ranking_course_banner_animations ((const uint16_t *)rom(ranking_course_banner_animations_ADDRESS))
+#define ranking_course_banner_palettes_ADDRESS 0x002E10u
+#define ranking_course_banner_palettes ((const uint16_t *)rom(ranking_course_banner_palettes_ADDRESS))
+#define certificate_course_animations_ADDRESS 0x002E24u
+#define certificate_course_animations ((const uint16_t *)rom(certificate_course_animations_ADDRESS))
+#define certificate_course_palettes_ADDRESS 0x002E38u
+#define certificate_course_palettes ((const uint16_t *)rom(certificate_course_palettes_ADDRESS))
+#define game_step_jumps_ADDRESS 0x002E80u
+#define game_step_jumps ((const uint32_t *)rom(game_step_jumps_ADDRESS))
+#define game_start_c00074_bytes_ADDRESS 0x003463u
+#define game_start_c00074_bytes ((const uint8_t *)rom(game_start_c00074_bytes_ADDRESS))
+#define game_end_c00074_bytes_ADDRESS 0x003465u
+#define game_end_c00074_bytes ((const uint8_t *)rom(game_end_c00074_bytes_ADDRESS))
+#define game_end_c00074_next_bytes_ADDRESS 0x003467u
+#define game_end_c00074_next_bytes ((const uint8_t *)rom(game_end_c00074_next_bytes_ADDRESS))
+#define route_map_state_jumps_ADDRESS 0x003540u
+#define route_map_state_jumps ((const uint32_t *)rom(route_map_state_jumps_ADDRESS))
+#define route_map_car_state_jumps_ADDRESS 0x003E28u
+#define route_map_car_state_jumps ((const uint32_t *)rom(route_map_car_state_jumps_ADDRESS))
+#define route_map_sign_state_jumps_ADDRESS 0x003F34u
+#define route_map_sign_state_jumps ((const uint32_t *)rom(route_map_sign_state_jumps_ADDRESS))
+#define route_map_sign_animations_ADDRESS 0x00403Au
+#define route_map_sign_animations ((const uint16_t *)rom(route_map_sign_animations_ADDRESS))
+#define route_map_sign_palettes_ADDRESS 0x00403Eu
+#define route_map_sign_palettes ((const uint16_t *)rom(route_map_sign_palettes_ADDRESS))
+#define route_map_goal_xs_ADDRESS 0x004042u
+#define route_map_goal_xs ((const int16_t *)rom(route_map_goal_xs_ADDRESS))
+#define route_map_landmark_state_jumps_ADDRESS 0x004064u
+#define route_map_landmark_state_jumps ((const uint32_t *)rom(route_map_landmark_state_jumps_ADDRESS))
+#define route_map_leg_state_jumps_ADDRESS 0x00424Cu
+#define route_map_leg_state_jumps ((const uint32_t *)rom(route_map_leg_state_jumps_ADDRESS))
+#define route_map_leg_jumps_ADDRESS 0x004280u
+#define route_map_leg_jumps ((const uint32_t *)rom(route_map_leg_jumps_ADDRESS))
+#define route_map_leg_car_state_jumps_ADDRESS 0x00442Cu
+#define route_map_leg_car_state_jumps ((const uint32_t *)rom(route_map_leg_car_state_jumps_ADDRESS))
+#define route_map_leg_car_leg_jumps_ADDRESS 0x004474u
+#define route_map_leg_car_leg_jumps ((const uint32_t *)rom(route_map_leg_car_leg_jumps_ADDRESS))
+#define route_map_checkpoint_state_jumps_ADDRESS 0x004588u
+#define route_map_checkpoint_state_jumps ((const uint32_t *)rom(route_map_checkpoint_state_jumps_ADDRESS))
+#define route_map_finish_x_offsets_ADDRESS 0x00462Cu
+#define route_map_finish_x_offsets ((const uint16_t *)rom(route_map_finish_x_offsets_ADDRESS))
+#define route_map_finish_y_offsets_ADDRESS 0x004634u
+#define route_map_finish_y_offsets ((const uint16_t *)rom(route_map_finish_y_offsets_ADDRESS))
+#define route_map_direction_sign_state_jumps_ADDRESS 0x004648u
+#define route_map_direction_sign_state_jumps ((const uint32_t *)rom(route_map_direction_sign_state_jumps_ADDRESS))
+#define route_map_wait_banner_state_jumps_ADDRESS 0x0046C8u
+#define route_map_wait_banner_state_jumps ((const uint32_t *)rom(route_map_wait_banner_state_jumps_ADDRESS))
+#define game_over_banner_state_jumps_ADDRESS 0x00477Cu
+#define game_over_banner_state_jumps ((const uint32_t *)rom(game_over_banner_state_jumps_ADDRESS))
+#define route_map_close_up_pages_ADDRESS 0x0048B8u
+#define route_map_close_up_pages ((const uint32_t *)rom(route_map_close_up_pages_ADDRESS))
+#define route_map_routes_pages_ADDRESS 0x0048C0u
+#define route_map_routes_pages ((const uint32_t *)rom(route_map_routes_pages_ADDRESS))
+#define route_map_world_pages_ADDRESS 0x0048C8u
+#define route_map_world_pages ((const uint32_t *)rom(route_map_world_pages_ADDRESS))
+#define route_map_start_scroll_xs_ADDRESS 0x0048D0u
+#define route_map_start_scroll_xs ((const uint16_t *)rom(route_map_start_scroll_xs_ADDRESS))
+#define route_map_whole_scroll_xs_ADDRESS 0x0048D4u
+#define route_map_whole_scroll_xs ((const uint16_t *)rom(route_map_whole_scroll_xs_ADDRESS))
+#define route_map_sea_colour_addresses_ADDRESS 0x0048D8u
+#define route_map_sea_colour_addresses ((const uint32_t *)rom(route_map_sea_colour_addresses_ADDRESS))
+#define route_map_car_animations_ADDRESS 0x0048E0u
+#define route_map_car_animations ((const uint16_t *)rom(route_map_car_animations_ADDRESS))
+#define route_map_car_palettes_ADDRESS 0x0048F0u
+#define route_map_car_palettes ((const uint16_t *)rom(route_map_car_palettes_ADDRESS))
+#define route_map_stage_xs_ADDRESS 0x004900u
+#define route_map_stage_xs ((const uint16_t *)rom(route_map_stage_xs_ADDRESS))
+#define route_map_stage_ys_ADDRESS 0x00492Au
+#define route_map_stage_ys ((const uint16_t *)rom(route_map_stage_ys_ADDRESS))
+#define route_map_direction_x_shifts_ADDRESS 0x004954u
+#define route_map_direction_x_shifts ((const uint16_t *)rom(route_map_direction_x_shifts_ADDRESS))
+#define route_map_first_fork_leg_animations_ADDRESS 0x004958u
+#define route_map_first_fork_leg_animations ((const uint16_t *)rom(route_map_first_fork_leg_animations_ADDRESS))
+#define route_map_fork_leg_animations_ADDRESS 0x00495Cu
+#define route_map_fork_leg_animations ((const uint16_t *)rom(route_map_fork_leg_animations_ADDRESS))
+#define car_select_state_jumps_ADDRESS 0x005058u
+#define car_select_state_jumps ((const uint32_t *)rom(car_select_state_jumps_ADDRESS))
+#define car_select_choice_turn_jumps_ADDRESS 0x0053ECu
+#define car_select_choice_turn_jumps ((const uint32_t *)rom(car_select_choice_turn_jumps_ADDRESS))
+#define car_select_rowscroll_copies_jumps_ADDRESS 0x00548Cu
+#define car_select_rowscroll_copies_jumps ((const uint32_t *)rom(car_select_rowscroll_copies_jumps_ADDRESS))
+#define car_attendant_state_jumps_ADDRESS 0x005534u
+#define car_attendant_state_jumps ((const uint32_t *)rom(car_attendant_state_jumps_ADDRESS))
+#define turntable_car_state_jumps_ADDRESS 0x0056C0u
+#define turntable_car_state_jumps ((const uint32_t *)rom(turntable_car_state_jumps_ADDRESS))
+#define turntable_scenery_state_jumps_ADDRESS 0x005770u
+#define turntable_scenery_state_jumps ((const uint32_t *)rom(turntable_scenery_state_jumps_ADDRESS))
+#define welcome_letter_state_jumps_ADDRESS 0x005890u
+#define welcome_letter_state_jumps ((const uint32_t *)rom(welcome_letter_state_jumps_ADDRESS))
+#define select_car_heading_state_jumps_ADDRESS 0x005914u
+#define select_car_heading_state_jumps ((const uint32_t *)rom(select_car_heading_state_jumps_ADDRESS))
+#define select_instruction_state_jumps_ADDRESS 0x0059C4u
+#define select_instruction_state_jumps ((const uint32_t *)rom(select_instruction_state_jumps_ADDRESS))
+#define transmission_choice_state_jumps_ADDRESS 0x005A28u
+#define transmission_choice_state_jumps ((const uint32_t *)rom(transmission_choice_state_jumps_ADDRESS))
+#define automatic_panel_state_jumps_ADDRESS 0x005B50u
+#define automatic_panel_state_jumps ((const uint32_t *)rom(automatic_panel_state_jumps_ADDRESS))
+#define manual_panel_state_jumps_ADDRESS 0x005BE4u
+#define manual_panel_state_jumps ((const uint32_t *)rom(manual_panel_state_jumps_ADDRESS))
+#define car_caption_state_jumps_ADDRESS 0x005D68u
+#define car_caption_state_jumps ((const uint32_t *)rom(car_caption_state_jumps_ADDRESS))
+#define car_gears_caption_state_jumps_ADDRESS 0x005E1Cu
+#define car_gears_caption_state_jumps ((const uint32_t *)rom(car_gears_caption_state_jumps_ADDRESS))
+#define waiting_banner_state_jumps_ADDRESS 0x005EC0u
+#define waiting_banner_state_jumps ((const uint32_t *)rom(waiting_banner_state_jumps_ADDRESS))
+#define car_select_entries_state_jumps_ADDRESS 0x005F5Cu
+#define car_select_entries_state_jumps ((const uint32_t *)rom(car_select_entries_state_jumps_ADDRESS))
+#define car_select_gas_down_jumps_ADDRESS 0x0062B0u
+#define car_select_gas_down_jumps ((const uint32_t *)rom(car_select_gas_down_jumps_ADDRESS))
+#define entry_countdown_lcd_texts_ADDRESS 0x006464u
+#define entry_countdown_lcd_texts ((const uint32_t *)rom(entry_countdown_lcd_texts_ADDRESS))
+#define entry_traffic_state_jumps_ADDRESS 0x00661Cu
+#define entry_traffic_state_jumps ((const uint32_t *)rom(entry_traffic_state_jumps_ADDRESS))
+#define entry_traffic_car_state_jumps_ADDRESS 0x00665Cu
+#define entry_traffic_car_state_jumps ((const uint32_t *)rom(entry_traffic_car_state_jumps_ADDRESS))
+#define car_pass_sounds_ADDRESS 0x0067A9u
+#define car_pass_sounds ((const uint8_t *)rom(car_pass_sounds_ADDRESS))
+#define car_select_default_cars_ADDRESS 0x0069B0u
+#define car_select_default_cars ((const uint8_t *)rom(car_select_default_cars_ADDRESS))
+#define turntable_car_frames_ADDRESS 0x0069D8u
+#define turntable_car_frames ((const uint8_t *)rom(turntable_car_frames_ADDRESS))
+#define car_select_turn_delays_ADDRESS 0x006D9Cu
+#define car_select_turn_delays ((const uint8_t *)rom(car_select_turn_delays_ADDRESS))
+#define car_select_wheel_transmissions_ADDRESS 0x006DA4u
+#define car_select_wheel_transmissions ((const uint8_t *)rom(car_select_wheel_transmissions_ADDRESS))
+#define car_caption_palettes_ADDRESS 0x006DDEu
+#define car_caption_palettes ((const uint16_t *)rom(car_caption_palettes_ADDRESS))
+#define car_select_car_sounds_ADDRESS 0x006DEEu
+#define car_select_car_sounds ((const uint8_t *)rom(car_select_car_sounds_ADDRESS))
+#define automatic_panel_palette_lists_ADDRESS 0x006E30u
+#define automatic_panel_palette_lists ((const uint32_t *)rom(automatic_panel_palette_lists_ADDRESS))
+#define manual_panel_palette_lists_ADDRESS 0x006E44u
+#define manual_panel_palette_lists ((const uint32_t *)rom(manual_panel_palette_lists_ADDRESS))
+#define car_gears_caption_frames_ADDRESS 0x006E78u
+#define car_gears_caption_frames ((const uint8_t *)rom(car_gears_caption_frames_ADDRESS))
+#define choice_flag_palettes_ADDRESS 0x006E80u
+#define choice_flag_palettes ((const uint16_t *)rom(choice_flag_palettes_ADDRESS))
+#define choice_flag_number_animations_ADDRESS 0x006E90u
+#define choice_flag_number_animations ((const uint16_t *)rom(choice_flag_number_animations_ADDRESS))
+#define car_select_entries_flag_blink_ADDRESS 0x006EA0u
+#define car_select_entries_flag_blink ((const uint8_t *)rom(car_select_entries_flag_blink_ADDRESS))
+#define player_car_state_jumps_ADDRESS 0x006F18u
+#define player_car_state_jumps ((const uint32_t *)rom(player_car_state_jumps_ADDRESS))
+#define player_car_time_up_step_jumps_ADDRESS 0x007164u
+#define player_car_time_up_step_jumps ((const uint32_t *)rom(player_car_time_up_step_jumps_ADDRESS))
+#define player_car_goal_step_jumps_ADDRESS 0x00720Cu
+#define player_car_goal_step_jumps ((const uint32_t *)rom(player_car_goal_step_jumps_ADDRESS))
+#define player_car_rival_step_jumps_ADDRESS 0x007917u
+#define player_car_rival_step_jumps ((const uint32_t *)rom(player_car_rival_step_jumps_ADDRESS))
+#define rival_warning_state_jumps_ADDRESS 0x007C44u
+#define rival_warning_state_jumps ((const uint32_t *)rom(rival_warning_state_jumps_ADDRESS))
+#define rival_alarm_state_jumps_ADDRESS 0x007CACu
+#define rival_alarm_state_jumps ((const uint32_t *)rom(rival_alarm_state_jumps_ADDRESS))
+#define player_car_hit_kind_jumps_ADDRESS 0x007D28u
+#define player_car_hit_kind_jumps ((const uint32_t *)rom(player_car_hit_kind_jumps_ADDRESS))
+#define crash_place_offsets_ADDRESS 0x008026u
+#define crash_place_offsets ((const uint16_t *)rom(crash_place_offsets_ADDRESS))
+#define car_weights_ADDRESS 0x008038u
+#define car_weights ((const uint16_t *)rom(car_weights_ADDRESS))
+#define car_crash_physics_ADDRESS 0x00804Au
+#define car_crash_physics ((const uint32_t *)rom(car_crash_physics_ADDRESS))
+#define grid_road_place_lists_ADDRESS 0x0090ACu
+#define grid_road_place_lists ((const uint32_t *)rom(grid_road_place_lists_ADDRESS))
+#define grid_segment_lists_ADDRESS 0x0091CCu
+#define grid_segment_lists ((const uint32_t *)rom(grid_segment_lists_ADDRESS))
+#define player_car_steer_animations_ADDRESS 0x00926Cu
+#define player_car_steer_animations ((const uint16_t *)rom(player_car_steer_animations_ADDRESS))
+#define player_car_wheelspin_animations_ADDRESS 0x009300u
+#define player_car_wheelspin_animations ((const uint16_t *)rom(player_car_wheelspin_animations_ADDRESS))
+#define player_car_skid_animations_wheel_high_ADDRESS 0x009310u
+#define player_car_skid_animations_wheel_high ((const uint16_t *)rom(player_car_skid_animations_wheel_high_ADDRESS))
+#define player_car_skid_animations_wheel_low_ADDRESS 0x009410u
+#define player_car_skid_animations_wheel_low ((const uint16_t *)rom(player_car_skid_animations_wheel_low_ADDRESS))
+#define player_car_palettes_ADDRESS 0x009510u
+#define player_car_palettes ((const uint16_t *)rom(player_car_palettes_ADDRESS))
+#define player_car_arrival_animations_ADDRESS 0x009520u
+#define player_car_arrival_animations ((const uint16_t *)rom(player_car_arrival_animations_ADDRESS))
+#define player_car_time_up_brakes_ADDRESS 0x009530u
+#define player_car_time_up_brakes ((const uint8_t *)rom(player_car_time_up_brakes_ADDRESS))
+#define goal_stops_ADDRESS 0x009540u
+#define goal_stops ((const uint32_t *)rom(goal_stops_ADDRESS))
+#define race_car_first_body_pieces_ADDRESS 0x009DCCu
+#define race_car_first_body_pieces ((const uint16_t *)rom(race_car_first_body_pieces_ADDRESS))
+#define race_car_first_body_animations_ADDRESS 0x009DDCu
+#define race_car_first_body_animations ((const uint16_t *)rom(race_car_first_body_animations_ADDRESS))
+#define race_car_driver_animations_ADDRESS 0x009DECu
+#define race_car_driver_animations ((const uint16_t *)rom(race_car_driver_animations_ADDRESS))
+#define race_car_passenger_animations_ADDRESS 0x009DFCu
+#define race_car_passenger_animations ((const uint16_t *)rom(race_car_passenger_animations_ADDRESS))
+#define race_car_driver_gesture_masks_ADDRESS 0x009E0Cu
+#define race_car_driver_gesture_masks ((const uint8_t *)rom(race_car_driver_gesture_masks_ADDRESS))
+#define race_car_passenger_gesture_masks_ADDRESS 0x009E14u
+#define race_car_passenger_gesture_masks ((const uint8_t *)rom(race_car_passenger_gesture_masks_ADDRESS))
+#define race_car_driver_palettes_ADDRESS 0x009E1Cu
+#define race_car_driver_palettes ((const uint16_t *)rom(race_car_driver_palettes_ADDRESS))
+#define race_car_passenger_palettes_ADDRESS 0x009E2Cu
+#define race_car_passenger_palettes ((const uint16_t *)rom(race_car_passenger_palettes_ADDRESS))
+#define race_car_driver_frame_counts_ADDRESS 0x009E3Cu
+#define race_car_driver_frame_counts ((const uint8_t *)rom(race_car_driver_frame_counts_ADDRESS))
+#define race_car_passenger_frame_counts_ADDRESS 0x009E44u
+#define race_car_passenger_frame_counts ((const uint8_t *)rom(race_car_passenger_frame_counts_ADDRESS))
+#define race_car_body_wheel_kinds_ADDRESS 0x009E4Cu
+#define race_car_body_wheel_kinds ((const uint8_t *)rom(race_car_body_wheel_kinds_ADDRESS))
+#define race_car_driver_handlers_ADDRESS 0x009EBCu
+#define race_car_driver_handlers ((const uint32_t *)rom(race_car_driver_handlers_ADDRESS))
+#define race_car_passenger_handlers_ADDRESS 0x009EDCu
+#define race_car_passenger_handlers ((const uint32_t *)rom(race_car_passenger_handlers_ADDRESS))
+#define race_car_spray_palettes_ADDRESS 0x009F0Cu
+#define race_car_spray_palettes ((const uint16_t *)rom(race_car_spray_palettes_ADDRESS))
+#define race_car_spray_frame_counts_ADDRESS 0x009F6Cu
+#define race_car_spray_frame_counts ((const uint8_t *)rom(race_car_spray_frame_counts_ADDRESS))
+#define race_car_tag_palettes_ADDRESS 0x009F7Cu
+#define race_car_tag_palettes ((const uint16_t *)rom(race_car_tag_palettes_ADDRESS))
+#define race_car_tag_animations_ADDRESS 0x009F8Cu
+#define race_car_tag_animations ((const uint16_t *)rom(race_car_tag_animations_ADDRESS))
+#define race_car_blink_starts_ADDRESS 0x009F9Cu
+#define race_car_blink_starts ((const uint8_t *)rom(race_car_blink_starts_ADDRESS))
+#define race_car_tag_blink_ADDRESS 0x009FA4u
+#define race_car_tag_blink ((const uint8_t *)rom(race_car_tag_blink_ADDRESS))
+#define race_car_ending_handlers_ADDRESS 0x009FC4u
+#define race_car_ending_handlers ((const uint32_t *)rom(race_car_ending_handlers_ADDRESS))
+#define player_car_heading_quadrant_jumps_ADDRESS 0x00A5F4u
+#define player_car_heading_quadrant_jumps ((const uint32_t *)rom(player_car_heading_quadrant_jumps_ADDRESS))
+#define player_car_view_yaw_quadrant_jumps_ADDRESS 0x00A798u
+#define player_car_view_yaw_quadrant_jumps ((const uint32_t *)rom(player_car_view_yaw_quadrant_jumps_ADDRESS))
+#define car_skid_noises_ADDRESS 0x00ABC3u
+#define car_skid_noises ((const uint8_t *)rom(car_skid_noises_ADDRESS))
+#define gas_pedal_curve_ADDRESS 0x00ABCBu
+#define gas_pedal_curve ((const int8_t *)rom(gas_pedal_curve_ADDRESS))
+#define brake_pedal_curve_ADDRESS 0x00ACCBu
+#define brake_pedal_curve ((const uint8_t *)rom(brake_pedal_curve_ADDRESS))
+#define car_handlings_ADDRESS 0x00ADCCu
+#define car_handlings ((const uint32_t *)rom(car_handlings_ADDRESS))
+#define car_gear_lists_ADDRESS 0x00B04Cu
+#define car_gear_lists ((const uint32_t *)rom(car_gear_lists_ADDRESS))
+#define car_torque_curves_ADDRESS 0x00B0C0u
+#define car_torque_curves ((const uint32_t *)rom(car_torque_curves_ADDRESS))
+#define car_model_off_road_noises_ADDRESS 0x00B6FCu
+#define car_model_off_road_noises ((const uint8_t *)rom(car_model_off_road_noises_ADDRESS))
+#define car_model_off_road_shakes_ADDRESS 0x00B704u
+#define car_model_off_road_shakes ((const uint8_t *)rom(car_model_off_road_shakes_ADDRESS))
+#define wheel_effect_1_jumps_ADDRESS 0x00B70Cu
+#define wheel_effect_1_jumps ((const uint32_t *)rom(wheel_effect_1_jumps_ADDRESS))
+#define wheel_effect_2_jumps_ADDRESS 0x00B74Cu
+#define wheel_effect_2_jumps ((const uint32_t *)rom(wheel_effect_2_jumps_ADDRESS))
+#define rev_meter_state_jumps_ADDRESS 0x00BFCCu
+#define rev_meter_state_jumps ((const uint32_t *)rom(rev_meter_state_jumps_ADDRESS))
+#define speedometer_state_jumps_ADDRESS 0x00C024u
+#define speedometer_state_jumps ((const uint32_t *)rom(speedometer_state_jumps_ADDRESS))
+#define speed_unit_state_jumps_ADDRESS 0x00C0D4u
+#define speed_unit_state_jumps ((const uint32_t *)rom(speed_unit_state_jumps_ADDRESS))
+#define gear_indicator_state_jumps_ADDRESS 0x00C118u
+#define gear_indicator_state_jumps ((const uint32_t *)rom(gear_indicator_state_jumps_ADDRESS))
+#define shift_up_hint_state_jumps_ADDRESS 0x00C23Cu
+#define shift_up_hint_state_jumps ((const uint32_t *)rom(shift_up_hint_state_jumps_ADDRESS))
+#define place_count_state_jumps_ADDRESS 0x00C2B8u
+#define place_count_state_jumps ((const uint32_t *)rom(place_count_state_jumps_ADDRESS))
+#define place_number_state_jumps_ADDRESS 0x00C350u
+#define place_number_state_jumps ((const uint32_t *)rom(place_number_state_jumps_ADDRESS))
+#define lap_timer_state_jumps_ADDRESS 0x00C44Cu
+#define lap_timer_state_jumps ((const uint32_t *)rom(lap_timer_state_jumps_ADDRESS))
+#define start_message_state_jumps_ADDRESS 0x00C5A8u
+#define start_message_state_jumps ((const uint32_t *)rom(start_message_state_jumps_ADDRESS))
+#define time_left_display_state_jumps_ADDRESS 0x00C66Cu
+#define time_left_display_state_jumps ((const uint32_t *)rom(time_left_display_state_jumps_ADDRESS))
+#define stage_entry_state_jumps_ADDRESS 0x00C880u
+#define stage_entry_state_jumps ((const uint32_t *)rom(stage_entry_state_jumps_ADDRESS))
+#define goal_state_jumps_ADDRESS 0x00C8C4u
+#define goal_state_jumps ((const uint32_t *)rom(goal_state_jumps_ADDRESS))
+#define branch_arrow_state_jumps_ADDRESS 0x00CAC8u
+#define branch_arrow_state_jumps ((const uint32_t *)rom(branch_arrow_state_jumps_ADDRESS))
+#define checkpoint_board_state_jumps_ADDRESS 0x00CBCCu
+#define checkpoint_board_state_jumps ((const uint32_t *)rom(checkpoint_board_state_jumps_ADDRESS))
+#define checkpoint_board_row_state_jumps_ADDRESS 0x00CC70u
+#define checkpoint_board_row_state_jumps ((const uint32_t *)rom(checkpoint_board_row_state_jumps_ADDRESS))
+#define checkpoint_board_car_sprites_ADDRESS 0x00CFC8u
+#define checkpoint_board_car_sprites ((const uint32_t *)rom(checkpoint_board_car_sprites_ADDRESS))
+#define checkpoint_board_number_animations_ADDRESS 0x00CFE8u
+#define checkpoint_board_number_animations ((const uint16_t *)rom(checkpoint_board_number_animations_ADDRESS))
+#define checkpoint_board_time_places_ADDRESS 0x00CFF8u
+#define checkpoint_board_time_places ((const uint32_t *)rom(checkpoint_board_time_places_ADDRESS))
+#define gear_indicator_animations_ADDRESS 0x00D018u
+#define gear_indicator_animations ((const uint16_t *)rom(gear_indicator_animations_ADDRESS))
+#define stage_level_texts_ADDRESS 0x00D034u
+#define stage_level_texts ((const uint32_t *)rom(stage_level_texts_ADDRESS))
+#define lap_timer_checkpoint_states_ADDRESS 0x00D0C0u
+#define lap_timer_checkpoint_states ((const uint8_t *)rom(lap_timer_checkpoint_states_ADDRESS))
+#define entry_invitation_step_jumps_ADDRESS 0x00DDB4u
+#define entry_invitation_step_jumps ((const uint32_t *)rom(entry_invitation_step_jumps_ADDRESS))
 #define race_copy_offsets_ADDRESS 0x00E0A0u
 #define race_copy_offsets ((const uint32_t *)rom(race_copy_offsets_ADDRESS))
-#define rom_00E0C4_ADDRESS 0x00E0C4u
-#define rom_00E0C4 ((const uint32_t *)rom(rom_00E0C4_ADDRESS))
-#define rom_00E4D0_ADDRESS 0x00E4D0u
-#define rom_00E4D0 ((const uint32_t *)rom(rom_00E4D0_ADDRESS))
-#define rom_00E5B3_ADDRESS 0x00E5B3u
-#define rom_00E5B3 ((const uint8_t *)rom(rom_00E5B3_ADDRESS))
-#define rom_00E5D3_ADDRESS 0x00E5D3u
-#define rom_00E5D3 ((const uint8_t *)rom(rom_00E5D3_ADDRESS))
-#define rom_00E614_ADDRESS 0x00E614u
-#define rom_00E614 ((const uint16_t *)rom(rom_00E614_ADDRESS))
-#define rom_00EB44_ADDRESS 0x00EB44u
-#define rom_00EB44 ((const uint32_t *)rom(rom_00EB44_ADDRESS))
-#define rom_00F13C_ADDRESS 0x00F13Cu
-#define rom_00F13C ((const uint32_t *)rom(rom_00F13C_ADDRESS))
-#define rom_00F140_ADDRESS 0x00F140u
-#define rom_00F140 ((const uint32_t *)rom(rom_00F140_ADDRESS))
-#define rom_00F34C_ADDRESS 0x00F34Cu
-#define rom_00F34C ((const uint32_t *)rom(rom_00F34C_ADDRESS))
-#define rom_00F4EC_ADDRESS 0x00F4ECu
-#define rom_00F4EC ((const uint32_t *)rom(rom_00F4EC_ADDRESS))
-#define rom_00F508_ADDRESS 0x00F508u
-#define rom_00F508 ((const uint32_t *)rom(rom_00F508_ADDRESS))
-#define rom_00FF40_ADDRESS 0x00FF40u
-#define rom_00FF40 ((const uint32_t *)rom(rom_00FF40_ADDRESS))
-#define rom_010B0A_ADDRESS 0x010B0Au
-#define rom_010B0A ROM8(rom_010B0A_ADDRESS)
-#define rom_010B0B_ADDRESS 0x010B0Bu
-#define rom_010B0B ROM8(rom_010B0B_ADDRESS)
-#define rom_010B10_ADDRESS 0x010B10u
-#define rom_010B10 ROM16(rom_010B10_ADDRESS)
-#define rom_010BA0_ADDRESS 0x010BA0u
-#define rom_010BA0 ((const uint32_t *)rom(rom_010BA0_ADDRESS))
-#define rom_010BC8_ADDRESS 0x010BC8u
-#define rom_010BC8 ROM32(rom_010BC8_ADDRESS)
-#define rom_010BCC_ADDRESS 0x010BCCu
-#define rom_010BCC ROM16(rom_010BCC_ADDRESS)
-#define rom_010BCE_ADDRESS 0x010BCEu
-#define rom_010BCE ROM16(rom_010BCE_ADDRESS)
-#define rom_010BD0_ADDRESS 0x010BD0u
-#define rom_010BD0 ROM16(rom_010BD0_ADDRESS)
-#define rom_010BD2_ADDRESS 0x010BD2u
-#define rom_010BD2 ((const uint16_t *)rom(rom_010BD2_ADDRESS))
-#define rom_01168C_ADDRESS 0x01168Cu
-#define rom_01168C ((const uint32_t *)rom(rom_01168C_ADDRESS))
-#define rom_011FFC_ADDRESS 0x011FFCu
-#define rom_011FFC ((const uint32_t *)rom(rom_011FFC_ADDRESS))
-#define rom_012026_ADDRESS 0x012026u
-#define rom_012026 ((const uint8_t *)rom(rom_012026_ADDRESS))
-#define rom_01202E_ADDRESS 0x01202Eu
-#define rom_01202E ((const uint32_t *)rom(rom_01202E_ADDRESS))
-#define rom_01204E_ADDRESS 0x01204Eu
-#define rom_01204E ((const uint32_t *)rom(rom_01204E_ADDRESS))
-#define rom_0121D8_ADDRESS 0x0121D8u
-#define rom_0121D8 ((const uint16_t *)rom(rom_0121D8_ADDRESS))
-#define rom_0121E8_ADDRESS 0x0121E8u
-#define rom_0121E8 ((const uint16_t *)rom(rom_0121E8_ADDRESS))
-#define rom_012708_ADDRESS 0x012708u
-#define rom_012708 ((const uint32_t *)rom(rom_012708_ADDRESS))
-#define rom_012748_ADDRESS 0x012748u
-#define rom_012748 ((const uint32_t *)rom(rom_012748_ADDRESS))
-#define rom_0127FC_ADDRESS 0x0127FCu
-#define rom_0127FC ((const uint32_t *)rom(rom_0127FC_ADDRESS))
-#define rom_012888_ADDRESS 0x012888u
-#define rom_012888 ((const uint32_t *)rom(rom_012888_ADDRESS))
-#define rom_012914_ADDRESS 0x012914u
-#define rom_012914 ((const uint32_t *)rom(rom_012914_ADDRESS))
-#define rom_0129B8_ADDRESS 0x0129B8u
-#define rom_0129B8 ((const uint32_t *)rom(rom_0129B8_ADDRESS))
-#define rom_012A00_ADDRESS 0x012A00u
-#define rom_012A00 ((const uint32_t *)rom(rom_012A00_ADDRESS))
-#define rom_012A2C_ADDRESS 0x012A2Cu
-#define rom_012A2C ((const uint32_t *)rom(rom_012A2C_ADDRESS))
-#define rom_012ADC_ADDRESS 0x012ADCu
-#define rom_012ADC ((const uint32_t *)rom(rom_012ADC_ADDRESS))
-#define rom_012B00_ADDRESS 0x012B00u
-#define rom_012B00 ((const uint32_t *)rom(rom_012B00_ADDRESS))
-#define rom_012B90_ADDRESS 0x012B90u
-#define rom_012B90 ((const uint32_t *)rom(rom_012B90_ADDRESS))
-#define rom_012BBC_ADDRESS 0x012BBCu
-#define rom_012BBC ((const uint32_t *)rom(rom_012BBC_ADDRESS))
-#define rom_012CB8_ADDRESS 0x012CB8u
-#define rom_012CB8 ((const uint32_t *)rom(rom_012CB8_ADDRESS))
-#define rom_012DC4_ADDRESS 0x012DC4u
-#define rom_012DC4 ((const uint32_t *)rom(rom_012DC4_ADDRESS))
-#define rom_012EB0_ADDRESS 0x012EB0u
-#define rom_012EB0 ((const uint32_t *)rom(rom_012EB0_ADDRESS))
-#define rom_012FC8_ADDRESS 0x012FC8u
-#define rom_012FC8 ((const uint32_t *)rom(rom_012FC8_ADDRESS))
-#define rom_01306E_ADDRESS 0x01306Eu
-#define rom_01306E ((const uint16_t *)rom(rom_01306E_ADDRESS))
-#define rom_01308C_ADDRESS 0x01308Cu
-#define rom_01308C ((const uint32_t *)rom(rom_01308C_ADDRESS))
-#define rom_013110_ADDRESS 0x013110u
-#define rom_013110 ((const uint32_t *)rom(rom_013110_ADDRESS))
-#define rom_0131B0_ADDRESS 0x0131B0u
-#define rom_0131B0 ((const uint32_t *)rom(rom_0131B0_ADDRESS))
-#define rom_013238_ADDRESS 0x013238u
-#define rom_013238 ((const uint32_t *)rom(rom_013238_ADDRESS))
-#define rom_0132A4_ADDRESS 0x0132A4u
-#define rom_0132A4 ((const uint32_t *)rom(rom_0132A4_ADDRESS))
-#define rom_013348_ADDRESS 0x013348u
-#define rom_013348 ((const uint32_t *)rom(rom_013348_ADDRESS))
-#define rom_01345C_ADDRESS 0x01345Cu
-#define rom_01345C ((const uint32_t *)rom(rom_01345C_ADDRESS))
-#define rom_01352C_ADDRESS 0x01352Cu
-#define rom_01352C ((const uint32_t *)rom(rom_01352C_ADDRESS))
-#define rom_0135D8_ADDRESS 0x0135D8u
-#define rom_0135D8 ((const uint32_t *)rom(rom_0135D8_ADDRESS))
-#define rom_0136A8_ADDRESS 0x0136A8u
-#define rom_0136A8 ((const uint32_t *)rom(rom_0136A8_ADDRESS))
-#define rom_013778_ADDRESS 0x013778u
-#define rom_013778 ((const uint32_t *)rom(rom_013778_ADDRESS))
-#define rom_0138F8_ADDRESS 0x0138F8u
-#define rom_0138F8 ((const uint32_t *)rom(rom_0138F8_ADDRESS))
-#define rom_013B04_ADDRESS 0x013B04u
-#define rom_013B04 ((const uint32_t *)rom(rom_013B04_ADDRESS))
-#define rom_013BB0_ADDRESS 0x013BB0u
-#define rom_013BB0 ((const uint32_t *)rom(rom_013BB0_ADDRESS))
-#define rom_013D45_ADDRESS 0x013D45u
-#define rom_013D45 ((const uint8_t *)rom(rom_013D45_ADDRESS))
-#define rom_013D94_ADDRESS 0x013D94u
-#define rom_013D94 ((const uint32_t *)rom(rom_013D94_ADDRESS))
-#define rom_013DF0_ADDRESS 0x013DF0u
-#define rom_013DF0 ((const uint32_t *)rom(rom_013DF0_ADDRESS))
-#define rom_0140C8_ADDRESS 0x0140C8u
-#define rom_0140C8 ((const uint16_t *)rom(rom_0140C8_ADDRESS))
-#define rom_014114_ADDRESS 0x014114u
-#define rom_014114 ((const uint32_t *)rom(rom_014114_ADDRESS))
-#define rom_014200_ADDRESS 0x014200u
-#define rom_014200 ((const uint32_t *)rom(rom_014200_ADDRESS))
-#define rom_014360_ADDRESS 0x014360u
-#define rom_014360 ((const uint16_t *)rom(rom_014360_ADDRESS))
-#define rom_014380_ADDRESS 0x014380u
-#define rom_014380 ((const uint16_t *)rom(rom_014380_ADDRESS))
-#define rom_0143A0_ADDRESS 0x0143A0u
-#define rom_0143A0 ((const uint8_t *)rom(rom_0143A0_ADDRESS))
-#define rom_0143A6_ADDRESS 0x0143A6u
-#define rom_0143A6 ((const uint8_t *)rom(rom_0143A6_ADDRESS))
-#define rom_01440E_ADDRESS 0x01440Eu
-#define rom_01440E ((const uint16_t *)rom(rom_01440E_ADDRESS))
-#define rom_01442E_ADDRESS 0x01442Eu
-#define rom_01442E ((const uint16_t *)rom(rom_01442E_ADDRESS))
-#define rom_01444E_ADDRESS 0x01444Eu
-#define rom_01444E ((const uint16_t *)rom(rom_01444E_ADDRESS))
-#define rom_01447C_ADDRESS 0x01447Cu
-#define rom_01447C ((const uint32_t *)rom(rom_01447C_ADDRESS))
-#define rom_0144A9_ADDRESS 0x0144A9u
-#define rom_0144A9 ((const uint32_t *)rom(rom_0144A9_ADDRESS))
-#define rom_0144EC_ADDRESS 0x0144ECu
-#define rom_0144EC ((const uint32_t *)rom(rom_0144EC_ADDRESS))
-#define rom_014520_ADDRESS 0x014520u
-#define rom_014520 ((const uint32_t *)rom(rom_014520_ADDRESS))
-#define rom_0145A0_ADDRESS 0x0145A0u
-#define rom_0145A0 ((const uint32_t *)rom(rom_0145A0_ADDRESS))
-#define rom_014660_ADDRESS 0x014660u
-#define rom_014660 ROM8(rom_014660_ADDRESS)
-#define rom_014674_ADDRESS 0x014674u
-#define rom_014674 ((const uint16_t *)rom(rom_014674_ADDRESS))
-#define rom_014684_ADDRESS 0x014684u
-#define rom_014684 ((const uint16_t *)rom(rom_014684_ADDRESS))
-#define rom_0146A0_ADDRESS 0x0146A0u
-#define rom_0146A0 ((const uint32_t *)rom(rom_0146A0_ADDRESS))
-#define rom_014994_ADDRESS 0x014994u
-#define rom_014994 ((const uint32_t *)rom(rom_014994_ADDRESS))
-#define rom_014A16_ADDRESS 0x014A16u
-#define rom_014A16 ((const uint8_t *)rom(rom_014A16_ADDRESS))
+#define race_copy_player_offsets_ADDRESS 0x00E0C4u
+#define race_copy_player_offsets ((const uint32_t *)rom(race_copy_player_offsets_ADDRESS))
+#define link_board_ic_texts_ADDRESS 0x00E4D0u
+#define link_board_ic_texts ((const uint32_t *)rom(link_board_ic_texts_ADDRESS))
+#define stage_start_times_ADDRESS 0x00E5B3u
+#define stage_start_times ((const uint8_t *)rom(stage_start_times_ADDRESS))
+#define fork_next_stages_ADDRESS 0x00E5D3u
+#define fork_next_stages ((const uint8_t *)rom(fork_next_stages_ADDRESS))
+#define entry_frames_by_machines_ADDRESS 0x00E614u
+#define entry_frames_by_machines ((const uint16_t *)rom(entry_frames_by_machines_ADDRESS))
+#define draw_object_mode_jumps_ADDRESS 0x00EB44u
+#define draw_object_mode_jumps ((const uint32_t *)rom(draw_object_mode_jumps_ADDRESS))
+#define sprite_flip_x_signs_ADDRESS 0x00F13Cu
+#define sprite_flip_x_signs ((const uint32_t *)rom(sprite_flip_x_signs_ADDRESS))
+#define sprite_flip_y_signs_ADDRESS 0x00F140u
+#define sprite_flip_y_signs ((const uint32_t *)rom(sprite_flip_y_signs_ADDRESS))
+#define animation_order_jumps_ADDRESS 0x00F34Cu
+#define animation_order_jumps ((const uint32_t *)rom(animation_order_jumps_ADDRESS))
+#define smoothed_flip_signs_ADDRESS 0x00F4ECu
+#define smoothed_flip_signs ((const uint32_t *)rom(smoothed_flip_signs_ADDRESS))
+#define course_command_jumps_ADDRESS 0x00FF40u
+#define course_command_jumps ((const uint32_t *)rom(course_command_jumps_ADDRESS))
+#define sprite_control_mode_ADDRESS 0x010B0Au
+#define sprite_control_mode ROM8(sprite_control_mode_ADDRESS)
+#define sprite_control_flip_ADDRESS 0x010B0Bu
+#define sprite_control_flip ROM8(sprite_control_flip_ADDRESS)
+#define video_control_default_ADDRESS 0x010B10u
+#define video_control_default ROM16(video_control_default_ADDRESS)
+#define model_view_pitch_bases_ADDRESS 0x010BD2u
+#define model_view_pitch_bases ((const uint16_t *)rom(model_view_pitch_bases_ADDRESS))
+#define screen_fade_kind_jumps_ADDRESS 0x01168Cu
+#define screen_fade_kind_jumps ((const uint32_t *)rom(screen_fade_kind_jumps_ADDRESS))
+#define music_fade_addresses_ADDRESS 0x011FFCu
+#define music_fade_addresses ((const uint32_t *)rom(music_fade_addresses_ADDRESS))
+#define car_model_engine_samples_ADDRESS 0x012026u
+#define car_model_engine_samples ((const uint8_t *)rom(car_model_engine_samples_ADDRESS))
+#define demo_sounds_ADDRESS 0x01202Eu
+#define demo_sounds ((const uint32_t *)rom(demo_sounds_ADDRESS))
+#define demo_second_sounds_ADDRESS 0x01204Eu
+#define demo_second_sounds ((const uint32_t *)rom(demo_second_sounds_ADDRESS))
+#define octant_base_angles_ADDRESS 0x0121D8u
+#define octant_base_angles ((const uint16_t *)rom(octant_base_angles_ADDRESS))
+#define octant_angle_factors_ADDRESS 0x0121E8u
+#define octant_angle_factors ((const uint16_t *)rom(octant_angle_factors_ADDRESS))
+#define road_object_stream_state_jumps_ADDRESS 0x012708u
+#define road_object_stream_state_jumps ((const uint32_t *)rom(road_object_stream_state_jumps_ADDRESS))
+#define road_object_stream_command_jumps_ADDRESS 0x012748u
+#define road_object_stream_command_jumps ((const uint32_t *)rom(road_object_stream_command_jumps_ADDRESS))
+#define crest_clip_state_jumps_ADDRESS 0x0127FCu
+#define crest_clip_state_jumps ((const uint32_t *)rom(crest_clip_state_jumps_ADDRESS))
+#define scenery_state_jumps_ADDRESS 0x012888u
+#define scenery_state_jumps ((const uint32_t *)rom(scenery_state_jumps_ADDRESS))
+#define flashing_scenery_state_jumps_ADDRESS 0x012914u
+#define flashing_scenery_state_jumps ((const uint32_t *)rom(flashing_scenery_state_jumps_ADDRESS))
+#define scenery_pair_state_jumps_ADDRESS 0x0129B8u
+#define scenery_pair_state_jumps ((const uint32_t *)rom(scenery_pair_state_jumps_ADDRESS))
+#define overhead_scenery_state_jumps_ADDRESS 0x012A00u
+#define overhead_scenery_state_jumps ((const uint32_t *)rom(overhead_scenery_state_jumps_ADDRESS))
+#define aurora_state_jumps_ADDRESS 0x012A2Cu
+#define aurora_state_jumps ((const uint32_t *)rom(aurora_state_jumps_ADDRESS))
+#define fork_sign_state_jumps_ADDRESS 0x012ADCu
+#define fork_sign_state_jumps ((const uint32_t *)rom(fork_sign_state_jumps_ADDRESS))
+#define animated_scenery_state_jumps_ADDRESS 0x012B00u
+#define animated_scenery_state_jumps ((const uint32_t *)rom(animated_scenery_state_jumps_ADDRESS))
+#define animated_scenery_pair_state_jumps_ADDRESS 0x012B90u
+#define animated_scenery_pair_state_jumps ((const uint32_t *)rom(animated_scenery_pair_state_jumps_ADDRESS))
+#define road_crosser_state_jumps_ADDRESS 0x012BBCu
+#define road_crosser_state_jumps ((const uint32_t *)rom(road_crosser_state_jumps_ADDRESS))
+#define kangaroo_state_jumps_ADDRESS 0x012CB8u
+#define kangaroo_state_jumps ((const uint32_t *)rom(kangaroo_state_jumps_ADDRESS))
+#define moving_scenery_state_jumps_ADDRESS 0x012DC4u
+#define moving_scenery_state_jumps ((const uint32_t *)rom(moving_scenery_state_jumps_ADDRESS))
+#define swooping_helicopter_state_jumps_ADDRESS 0x012EB0u
+#define swooping_helicopter_state_jumps ((const uint32_t *)rom(swooping_helicopter_state_jumps_ADDRESS))
+#define start_gate_state_jumps_ADDRESS 0x012FC8u
+#define start_gate_state_jumps ((const uint32_t *)rom(start_gate_state_jumps_ADDRESS))
+#define start_gate_light_palettes_ADDRESS 0x01306Eu
+#define start_gate_light_palettes ((const uint16_t *)rom(start_gate_light_palettes_ADDRESS))
+#define start_flagman_state_jumps_ADDRESS 0x01308Cu
+#define start_flagman_state_jumps ((const uint32_t *)rom(start_flagman_state_jumps_ADDRESS))
+#define flagman_state_jumps_ADDRESS 0x013110u
+#define flagman_state_jumps ((const uint32_t *)rom(flagman_state_jumps_ADDRESS))
+#define start_balloon_state_jumps_ADDRESS 0x0131B0u
+#define start_balloon_state_jumps ((const uint32_t *)rom(start_balloon_state_jumps_ADDRESS))
+#define ambient_sound_state_jumps_ADDRESS 0x013238u
+#define ambient_sound_state_jumps ((const uint32_t *)rom(ambient_sound_state_jumps_ADDRESS))
+#define west_east_panel_state_jumps_ADDRESS 0x0132A4u
+#define west_east_panel_state_jumps ((const uint32_t *)rom(west_east_panel_state_jumps_ADDRESS))
+#define santa_sleigh_state_jumps_ADDRESS 0x013348u
+#define santa_sleigh_state_jumps ((const uint32_t *)rom(santa_sleigh_state_jumps_ADDRESS))
+#define goal_parade_rightward_state_jumps_ADDRESS 0x01345Cu
+#define goal_parade_rightward_state_jumps ((const uint32_t *)rom(goal_parade_rightward_state_jumps_ADDRESS))
+#define sounding_scenery_state_jumps_ADDRESS 0x01352Cu
+#define sounding_scenery_state_jumps ((const uint32_t *)rom(sounding_scenery_state_jumps_ADDRESS))
+#define goal_parade_leftward_state_jumps_ADDRESS 0x0135D8u
+#define goal_parade_leftward_state_jumps ((const uint32_t *)rom(goal_parade_leftward_state_jumps_ADDRESS))
+#define goal_parade_dragon_state_jumps_ADDRESS 0x0136A8u
+#define goal_parade_dragon_state_jumps ((const uint32_t *)rom(goal_parade_dragon_state_jumps_ADDRESS))
+#define traffic_spawner_state_jumps_ADDRESS 0x013778u
+#define traffic_spawner_state_jumps ((const uint32_t *)rom(traffic_spawner_state_jumps_ADDRESS))
+#define traffic_car_state_jumps_ADDRESS 0x0138F8u
+#define traffic_car_state_jumps ((const uint32_t *)rom(traffic_car_state_jumps_ADDRESS))
+#define traffic_stopping_car_state_jumps_ADDRESS 0x013B04u
+#define traffic_stopping_car_state_jumps ((const uint32_t *)rom(traffic_stopping_car_state_jumps_ADDRESS))
+#define traffic_figure_state_jumps_ADDRESS 0x013BB0u
+#define traffic_figure_state_jumps ((const uint32_t *)rom(traffic_figure_state_jumps_ADDRESS))
+#define traffic_shake_frame_offsets_ADDRESS 0x013D45u
+#define traffic_shake_frame_offsets ((const uint8_t *)rom(traffic_shake_frame_offsets_ADDRESS))
+#define course_length_command_jumps_ADDRESS 0x013D94u
+#define course_length_command_jumps ((const uint32_t *)rom(course_length_command_jumps_ADDRESS))
+#define fork_branch_state_jumps_ADDRESS 0x013DF0u
+#define fork_branch_state_jumps ((const uint32_t *)rom(fork_branch_state_jumps_ADDRESS))
+#define fork_branch_stage_palettes_ADDRESS 0x0140C8u
+#define fork_branch_stage_palettes ((const uint16_t *)rom(fork_branch_stage_palettes_ADDRESS))
+#define race_car_occupant_state_jumps_ADDRESS 0x014114u
+#define race_car_occupant_state_jumps ((const uint32_t *)rom(race_car_occupant_state_jumps_ADDRESS))
+#define rider_gesture_state_jumps_ADDRESS 0x014200u
+#define rider_gesture_state_jumps ((const uint32_t *)rom(rider_gesture_state_jumps_ADDRESS))
+#define rider_gesture_x_offsets_ADDRESS 0x014360u
+#define rider_gesture_x_offsets ((const uint16_t *)rom(rider_gesture_x_offsets_ADDRESS))
+#define rider_gesture_y_offsets_ADDRESS 0x014380u
+#define rider_gesture_y_offsets ((const uint16_t *)rom(rider_gesture_y_offsets_ADDRESS))
+#define rider_gesture_car_states_ADDRESS 0x0143A0u
+#define rider_gesture_car_states ((const uint8_t *)rom(rider_gesture_car_states_ADDRESS))
+#define rider_gesture_views_ADDRESS 0x0143A6u
+#define rider_gesture_views ((const uint8_t *)rom(rider_gesture_views_ADDRESS))
+#define race_car_occupant_animations_ADDRESS 0x01440Eu
+#define race_car_occupant_animations ((const uint16_t *)rom(race_car_occupant_animations_ADDRESS))
+#define race_car_rider_palettes_ADDRESS 0x01442Eu
+#define race_car_rider_palettes ((const uint16_t *)rom(race_car_rider_palettes_ADDRESS))
+#define rider_gesture_animations_ADDRESS 0x01444Eu
+#define rider_gesture_animations ((const uint16_t *)rom(rider_gesture_animations_ADDRESS))
+#define race_opening_state_jumps_ADDRESS 0x01447Cu
+#define race_opening_state_jumps ((const uint32_t *)rom(race_opening_state_jumps_ADDRESS))
+#define race_opening_sound_step_jumps_ADDRESS 0x0144A9u
+#define race_opening_sound_step_jumps ((const uint32_t *)rom(race_opening_sound_step_jumps_ADDRESS))
+#define race_opening_camera_step_jumps_ADDRESS 0x0144ECu
+#define race_opening_camera_step_jumps ((const uint32_t *)rom(race_opening_camera_step_jumps_ADDRESS))
+#define stage_end_sounds_state_jumps_ADDRESS 0x014520u
+#define stage_end_sounds_state_jumps ((const uint32_t *)rom(stage_end_sounds_state_jumps_ADDRESS))
+#define fork_camera_state_jumps_ADDRESS 0x0145A0u
+#define fork_camera_state_jumps ((const uint32_t *)rom(fork_camera_state_jumps_ADDRESS))
+#define fork_camera_lift_steps_ADDRESS 0x014674u
+#define fork_camera_lift_steps ((const uint16_t *)rom(fork_camera_lift_steps_ADDRESS))
+#define fork_camera_tilt_steps_ADDRESS 0x014684u
+#define fork_camera_tilt_steps ((const uint16_t *)rom(fork_camera_tilt_steps_ADDRESS))
+#define race_car_ending_state_jumps_ADDRESS 0x0146A0u
+#define race_car_ending_state_jumps ((const uint32_t *)rom(race_car_ending_state_jumps_ADDRESS))
+#define goal_actor_command_jumps_ADDRESS 0x014994u
+#define goal_actor_command_jumps ((const uint32_t *)rom(goal_actor_command_jumps_ADDRESS))
+#define goal_actor_place_waits_ADDRESS 0x014A16u
+#define goal_actor_place_waits ((const uint8_t *)rom(goal_actor_place_waits_ADDRESS))
 #define object_lists_14A20_ADDRESS 0x014A20u
 #define object_lists_14A20 ((const uint32_t *)rom(object_lists_14A20_ADDRESS))
 #define object_list_14A60_ADDRESS 0x014A60u
 #define object_list_14A60 ROM32(object_list_14A60_ADDRESS)
-#define rom_016B0C_ADDRESS 0x016B0Cu
-#define rom_016B0C ((const uint32_t *)rom(rom_016B0C_ADDRESS))
-#define rom_016BBC_ADDRESS 0x016BBCu
-#define rom_016BBC ((const uint32_t *)rom(rom_016BBC_ADDRESS))
-#define rom_0171E0_ADDRESS 0x0171E0u
-#define rom_0171E0 ((const uint32_t *)rom(rom_0171E0_ADDRESS))
-#define rom_017530_ADDRESS 0x017530u
-#define rom_017530 ((const uint32_t *)rom(rom_017530_ADDRESS))
-#define rom_017738_ADDRESS 0x017738u
-#define rom_017738 ((const uint32_t *)rom(rom_017738_ADDRESS))
-#define rom_017904_ADDRESS 0x017904u
-#define rom_017904 ((const uint32_t *)rom(rom_017904_ADDRESS))
-#define rom_01790C_ADDRESS 0x01790Cu
-#define rom_01790C ((const uint16_t *)rom(rom_01790C_ADDRESS))
-#define rom_017988_ADDRESS 0x017988u
-#define rom_017988 ((const uint32_t *)rom(rom_017988_ADDRESS))
-#define rom_0179A0_ADDRESS 0x0179A0u
-#define rom_0179A0 ((const uint16_t *)rom(rom_0179A0_ADDRESS))
-#define rom_017A78_ADDRESS 0x017A78u
-#define rom_017A78 ((const uint32_t *)rom(rom_017A78_ADDRESS))
-#define rom_017AE0_ADDRESS 0x017AE0u
-#define rom_017AE0 ((const uint32_t *)rom(rom_017AE0_ADDRESS))
-#define rom_017B60_ADDRESS 0x017B60u
-#define rom_017B60 ((const uint8_t *)rom(rom_017B60_ADDRESS))
-#define rom_017B7F_ADDRESS 0x017B7Fu
-#define rom_017B7F ((const uint8_t *)rom(rom_017B7F_ADDRESS))
-#define rom_017BA9_ADDRESS 0x017BA9u
-#define rom_017BA9 ((const uint8_t *)rom(rom_017BA9_ADDRESS))
-#define rom_017C08_ADDRESS 0x017C08u
-#define rom_017C08 ((const uint32_t *)rom(rom_017C08_ADDRESS))
-#define rom_017C68_ADDRESS 0x017C68u
-#define rom_017C68 ((const uint32_t *)rom(rom_017C68_ADDRESS))
-#define rom_017CB8_ADDRESS 0x017CB8u
-#define rom_017CB8 ((const uint32_t *)rom(rom_017CB8_ADDRESS))
-#define rom_017DE4_ADDRESS 0x017DE4u
-#define rom_017DE4 ((const uint32_t *)rom(rom_017DE4_ADDRESS))
-#define rom_017E98_ADDRESS 0x017E98u
-#define rom_017E98 ((const uint32_t *)rom(rom_017E98_ADDRESS))
-#define rom_017F7C_ADDRESS 0x017F7Cu
-#define rom_017F7C ((const uint32_t *)rom(rom_017F7C_ADDRESS))
-#define rom_018094_ADDRESS 0x018094u
-#define rom_018094 ((const uint32_t *)rom(rom_018094_ADDRESS))
-#define rom_01814C_ADDRESS 0x01814Cu
-#define rom_01814C ((const uint32_t *)rom(rom_01814C_ADDRESS))
+#define road_surface_state_jumps_ADDRESS 0x016B0Cu
+#define road_surface_state_jumps ((const uint32_t *)rom(road_surface_state_jumps_ADDRESS))
+#define road_surface_event_jumps_ADDRESS 0x016BBCu
+#define road_surface_event_jumps ((const uint32_t *)rom(road_surface_event_jumps_ADDRESS))
+#define road_surface_page_words_ADDRESS 0x01714Cu
+#define road_surface_page_words ROM32(road_surface_page_words_ADDRESS)
+#define road_tiles_change_state_jumps_ADDRESS 0x0171E0u
+#define road_tiles_change_state_jumps ((const uint32_t *)rom(road_tiles_change_state_jumps_ADDRESS))
+#define road_tiles_change_first_data_ADDRESS 0x017444u
+#define road_tiles_change_first_data ROM8(road_tiles_change_first_data_ADDRESS)
+#define road_tiles_change_second_data_ADDRESS 0x0174B4u
+#define road_tiles_change_second_data ROM8(road_tiles_change_second_data_ADDRESS)
+#define race_background_state_jumps_ADDRESS 0x017530u
+#define race_background_state_jumps ((const uint32_t *)rom(race_background_state_jumps_ADDRESS))
+#define race_background_change_step_jumps_ADDRESS 0x017738u
+#define race_background_change_step_jumps ((const uint32_t *)rom(race_background_change_step_jumps_ADDRESS))
+#define background_lower_animation_tile_pages_ADDRESS 0x017904u
+#define background_lower_animation_tile_pages ((const uint32_t *)rom(background_lower_animation_tile_pages_ADDRESS))
+#define background_lower_animation_page_pairs_ADDRESS 0x01790Cu
+#define background_lower_animation_page_pairs ((const uint16_t *)rom(background_lower_animation_page_pairs_ADDRESS))
+#define background_upper_animation_tile_pages_ADDRESS 0x017988u
+#define background_upper_animation_tile_pages ((const uint32_t *)rom(background_upper_animation_tile_pages_ADDRESS))
+#define background_upper_animation_page_pairs_ADDRESS 0x0179A0u
+#define background_upper_animation_page_pairs ((const uint16_t *)rom(background_upper_animation_page_pairs_ADDRESS))
+#define background_register_lists_ADDRESS 0x017A78u
+#define background_register_lists ((const uint32_t *)rom(background_register_lists_ADDRESS))
+#define background_page_words_ADDRESS 0x017AE0u
+#define background_page_words ((const uint32_t *)rom(background_page_words_ADDRESS))
+#define stage_backgrounds_ADDRESS 0x017B60u
+#define stage_backgrounds ((const uint8_t *)rom(stage_backgrounds_ADDRESS))
+#define background_tile_banks_ADDRESS 0x017B7Fu
+#define background_tile_banks ((const uint8_t *)rom(background_tile_banks_ADDRESS))
+#define stage_tile_banks_ADDRESS 0x017BA9u
+#define stage_tile_banks ((const uint8_t *)rom(stage_tile_banks_ADDRESS))
+#define palette_cycle_state_jumps_ADDRESS 0x017C08u
+#define palette_cycle_state_jumps ((const uint32_t *)rom(palette_cycle_state_jumps_ADDRESS))
+#define palette_cycle_running_jumps_ADDRESS 0x017C68u
+#define palette_cycle_running_jumps ((const uint32_t *)rom(palette_cycle_running_jumps_ADDRESS))
+#define sunset_fade_state_jumps_ADDRESS 0x017CB8u
+#define sunset_fade_state_jumps ((const uint32_t *)rom(sunset_fade_state_jumps_ADDRESS))
+#define backdrop_far_state_jumps_ADDRESS 0x017DE4u
+#define backdrop_far_state_jumps ((const uint32_t *)rom(backdrop_far_state_jumps_ADDRESS))
+#define backdrop_near_state_jumps_ADDRESS 0x017E98u
+#define backdrop_near_state_jumps ((const uint32_t *)rom(backdrop_near_state_jumps_ADDRESS))
+#define backdrop_landmark_state_jumps_ADDRESS 0x017F7Cu
+#define backdrop_landmark_state_jumps ((const uint32_t *)rom(backdrop_landmark_state_jumps_ADDRESS))
+#define backdrop_flashing_state_jumps_ADDRESS 0x018094u
+#define backdrop_flashing_state_jumps ((const uint32_t *)rom(backdrop_flashing_state_jumps_ADDRESS))
+#define backdrop_translucent_state_jumps_ADDRESS 0x01814Cu
+#define backdrop_translucent_state_jumps ((const uint32_t *)rom(backdrop_translucent_state_jumps_ADDRESS))
 #define object_lists_181B8_ADDRESS 0x0181B8u
 #define object_lists_181B8 ((const uint32_t *)rom(object_lists_181B8_ADDRESS))
-#define rom_018A70_ADDRESS 0x018A70u
-#define rom_018A70 ((const uint32_t *)rom(rom_018A70_ADDRESS))
-#define rom_018AE8_ADDRESS 0x018AE8u
-#define rom_018AE8 ((const uint16_t *)rom(rom_018AE8_ADDRESS))
-#define rom_018B21_ADDRESS 0x018B21u
-#define rom_018B21 ((const uint8_t *)rom(rom_018B21_ADDRESS))
-#define rom_018B90_ADDRESS 0x018B90u
-#define rom_018B90 ROM32(rom_018B90_ADDRESS)
-#define rom_018B94_ADDRESS 0x018B94u
-#define rom_018B94 ROM32(rom_018B94_ADDRESS)
-#define rom_018B98_ADDRESS 0x018B98u
-#define rom_018B98 ROM32(rom_018B98_ADDRESS)
-#define rom_018B9C_ADDRESS 0x018B9Cu
-#define rom_018B9C ROM32(rom_018B9C_ADDRESS)
-#define rom_018BD4_ADDRESS 0x018BD4u
-#define rom_018BD4 ((const uint32_t *)rom(rom_018BD4_ADDRESS))
-#define rom_018C64_ADDRESS 0x018C64u
-#define rom_018C64 ((const uint32_t *)rom(rom_018C64_ADDRESS))
-#define rom_018C84_ADDRESS 0x018C84u
-#define rom_018C84 ((const uint32_t *)rom(rom_018C84_ADDRESS))
-#define rom_018CF0_ADDRESS 0x018CF0u
-#define rom_018CF0 ((const uint32_t *)rom(rom_018CF0_ADDRESS))
-#define rom_018D5C_ADDRESS 0x018D5Cu
-#define rom_018D5C ((const uint32_t *)rom(rom_018D5C_ADDRESS))
-#define rom_018D88_ADDRESS 0x018D88u
-#define rom_018D88 ((const uint32_t *)rom(rom_018D88_ADDRESS))
-#define rom_018DB4_ADDRESS 0x018DB4u
-#define rom_018DB4 ((const uint32_t *)rom(rom_018DB4_ADDRESS))
-#define rom_018E40_ADDRESS 0x018E40u
-#define rom_018E40 ((const uint32_t *)rom(rom_018E40_ADDRESS))
-#define rom_018EA0_ADDRESS 0x018EA0u
-#define rom_018EA0 ((const uint32_t *)rom(rom_018EA0_ADDRESS))
-#define rom_019044_ADDRESS 0x019044u
-#define rom_019044 ((const uint32_t *)rom(rom_019044_ADDRESS))
-#define rom_0191E0_ADDRESS 0x0191E0u
-#define rom_0191E0 ((const uint32_t *)rom(rom_0191E0_ADDRESS))
-#define rom_019330_ADDRESS 0x019330u
-#define rom_019330 ((const uint32_t *)rom(rom_019330_ADDRESS))
-#define rom_019421_ADDRESS 0x019421u
-#define rom_019421 ((const uint8_t *)rom(rom_019421_ADDRESS))
-#define rom_01942C_ADDRESS 0x01942Cu
-#define rom_01942C ((const uint32_t *)rom(rom_01942C_ADDRESS))
-#define rom_019458_ADDRESS 0x019458u
-#define rom_019458 ((const uint8_t *)rom(rom_019458_ADDRESS))
-#define rom_019561_ADDRESS 0x019561u
-#define rom_019561 ((const uint16_t *)rom(rom_019561_ADDRESS))
-#define rom_019571_ADDRESS 0x019571u
-#define rom_019571 ((const uint8_t *)rom(rom_019571_ADDRESS))
+#define lcd_scroll_step_jumps_ADDRESS 0x018A70u
+#define lcd_scroll_step_jumps ((const uint32_t *)rom(lcd_scroll_step_jumps_ADDRESS))
+#define dj_face_characters_ADDRESS 0x018AE8u
+#define dj_face_characters ((const uint16_t *)rom(dj_face_characters_ADDRESS))
+#define lcd_restart_nibbles_ADDRESS 0x018B21u
+#define lcd_restart_nibbles ((const uint8_t *)rom(lcd_restart_nibbles_ADDRESS))
+#define lcd_race_info_state_jumps_ADDRESS 0x018BD4u
+#define lcd_race_info_state_jumps ((const uint32_t *)rom(lcd_race_info_state_jumps_ADDRESS))
+#define lcd_race_info_page_jumps_ADDRESS 0x018C64u
+#define lcd_race_info_page_jumps ((const uint32_t *)rom(lcd_race_info_page_jumps_ADDRESS))
+#define lcd_race_info_time_step_jumps_ADDRESS 0x018C84u
+#define lcd_race_info_time_step_jumps ((const uint32_t *)rom(lcd_race_info_time_step_jumps_ADDRESS))
+#define lcd_race_info_order_step_jumps_ADDRESS 0x018CF0u
+#define lcd_race_info_order_step_jumps ((const uint32_t *)rom(lcd_race_info_order_step_jumps_ADDRESS))
+#define lcd_race_info_speed_step_jumps_ADDRESS 0x018D5Cu
+#define lcd_race_info_speed_step_jumps ((const uint32_t *)rom(lcd_race_info_speed_step_jumps_ADDRESS))
+#define lcd_race_info_maximum_step_jumps_ADDRESS 0x018D88u
+#define lcd_race_info_maximum_step_jumps ((const uint32_t *)rom(lcd_race_info_maximum_step_jumps_ADDRESS))
+#define lcd_race_info_average_step_jumps_ADDRESS 0x018DB4u
+#define lcd_race_info_average_step_jumps ((const uint32_t *)rom(lcd_race_info_average_step_jumps_ADDRESS))
+#define lcd_race_info_finish_state_jumps_ADDRESS 0x018E40u
+#define lcd_race_info_finish_state_jumps ((const uint32_t *)rom(lcd_race_info_finish_state_jumps_ADDRESS))
+#define lcd_countdown_bars_ADDRESS 0x018EA0u
+#define lcd_countdown_bars ((const uint32_t *)rom(lcd_countdown_bars_ADDRESS))
+#define lcd_time_label_ADDRESS 0x018F1Eu
+#define lcd_time_label ROM8(lcd_time_label_ADDRESS)
+#define lcd_order_label_ADDRESS 0x018F2Cu
+#define lcd_order_label ROM8(lcd_order_label_ADDRESS)
+#define lcd_speed_label_ADDRESS 0x018F3Au
+#define lcd_speed_label ROM8(lcd_speed_label_ADDRESS)
+#define lcd_maximum_label_ADDRESS 0x018F48u
+#define lcd_maximum_label ROM8(lcd_maximum_label_ADDRESS)
+#define lcd_average_label_ADDRESS 0x018F56u
+#define lcd_average_label ROM8(lcd_average_label_ADDRESS)
+#define lcd_finish_label_ADDRESS 0x018F64u
+#define lcd_finish_label ROM8(lcd_finish_label_ADDRESS)
+#define car_radio_state_jumps_ADDRESS 0x019044u
+#define car_radio_state_jumps ((const uint32_t *)rom(car_radio_state_jumps_ADDRESS))
+#define car_radio_talk_step_jumps_ADDRESS 0x0191E0u
+#define car_radio_talk_step_jumps ((const uint32_t *)rom(car_radio_talk_step_jumps_ADDRESS))
+#define song_title_state_jumps_ADDRESS 0x019330u
+#define song_title_state_jumps ((const uint32_t *)rom(song_title_state_jumps_ADDRESS))
+#define car_model_songs_ADDRESS 0x019421u
+#define car_model_songs ((const uint8_t *)rom(car_model_songs_ADDRESS))
+#define radio_songs_ADDRESS 0x01942Cu
+#define radio_songs ((const uint32_t *)rom(radio_songs_ADDRESS))
+#define route_stage_radio_sounds_ADDRESS 0x019458u
+#define route_stage_radio_sounds ((const uint8_t *)rom(route_stage_radio_sounds_ADDRESS))
+#define song_title_colours_ADDRESS 0x019561u
+#define song_title_colours ((const uint16_t *)rom(song_title_colours_ADDRESS))
+#define stage_level_radio_messages_ADDRESS 0x019571u
+#define stage_level_radio_messages ((const uint8_t *)rom(stage_level_radio_messages_ADDRESS))
 #define dj_messages_ADDRESS 0x019576u
 #define dj_messages ((const uint32_t *)rom(dj_messages_ADDRESS))
 #define routine_lists_1966C_ADDRESS 0x01966Cu
 #define routine_lists_1966C ((const uint32_t *)rom(routine_lists_1966C_ADDRESS))
-#define rom_019CB8_ADDRESS 0x019CB8u
-#define rom_019CB8 ((const uint32_t *)rom(rom_019CB8_ADDRESS))
-#define rom_019E78_ADDRESS 0x019E78u
-#define rom_019E78 ((const uint32_t *)rom(rom_019E78_ADDRESS))
-#define rom_019F58_ADDRESS 0x019F58u
-#define rom_019F58 ((const uint32_t *)rom(rom_019F58_ADDRESS))
-#define rom_019F6C_ADDRESS 0x019F6Cu
-#define rom_019F6C ((const uint32_t *)rom(rom_019F6C_ADDRESS))
-#define rom_01A012_ADDRESS 0x01A012u
-#define rom_01A012 ((const uint16_t *)rom(rom_01A012_ADDRESS))
-#define rom_01A022_ADDRESS 0x01A022u
-#define rom_01A022 ((const uint16_t *)rom(rom_01A022_ADDRESS))
-#define rom_01A032_ADDRESS 0x01A032u
-#define rom_01A032 ((const uint16_t *)rom(rom_01A032_ADDRESS))
-#define rom_01A042_ADDRESS 0x01A042u
-#define rom_01A042 ((const uint16_t *)rom(rom_01A042_ADDRESS))
-#define rom_01A052_ADDRESS 0x01A052u
-#define rom_01A052 ((const uint16_t *)rom(rom_01A052_ADDRESS))
-#define rom_01A062_ADDRESS 0x01A062u
-#define rom_01A062 ((const uint16_t *)rom(rom_01A062_ADDRESS))
-#define rom_01A072_ADDRESS 0x01A072u
-#define rom_01A072 ((const uint16_t *)rom(rom_01A072_ADDRESS))
-#define rom_01A082_ADDRESS 0x01A082u
-#define rom_01A082 ((const uint16_t *)rom(rom_01A082_ADDRESS))
-#define rom_01A092_ADDRESS 0x01A092u
-#define rom_01A092 ((const uint16_t *)rom(rom_01A092_ADDRESS))
-#define rom_01A0F0_ADDRESS 0x01A0F0u
-#define rom_01A0F0 ((const uint32_t *)rom(rom_01A0F0_ADDRESS))
-#define rom_01A198_ADDRESS 0x01A198u
-#define rom_01A198 ((const uint32_t *)rom(rom_01A198_ADDRESS))
-#define rom_01A2A8_ADDRESS 0x01A2A8u
-#define rom_01A2A8 ((const uint32_t *)rom(rom_01A2A8_ADDRESS))
-#define rom_01A334_ADDRESS 0x01A334u
-#define rom_01A334 ((const uint32_t *)rom(rom_01A334_ADDRESS))
-#define rom_01A3F4_ADDRESS 0x01A3F4u
-#define rom_01A3F4 ((const uint32_t *)rom(rom_01A3F4_ADDRESS))
-#define rom_01A4A4_ADDRESS 0x01A4A4u
-#define rom_01A4A4 ((const uint32_t *)rom(rom_01A4A4_ADDRESS))
-#define rom_01A544_ADDRESS 0x01A544u
-#define rom_01A544 ((const uint32_t *)rom(rom_01A544_ADDRESS))
-#define rom_01A680_ADDRESS 0x01A680u
-#define rom_01A680 ((const uint32_t *)rom(rom_01A680_ADDRESS))
-#define rom_01A6DC_ADDRESS 0x01A6DCu
-#define rom_01A6DC ((const uint32_t *)rom(rom_01A6DC_ADDRESS))
-#define rom_01A744_ADDRESS 0x01A744u
-#define rom_01A744 ((const uint32_t *)rom(rom_01A744_ADDRESS))
-#define rom_01A7D0_ADDRESS 0x01A7D0u
-#define rom_01A7D0 ((const uint32_t *)rom(rom_01A7D0_ADDRESS))
-#define rom_01A84C_ADDRESS 0x01A84Cu
-#define rom_01A84C ((const uint32_t *)rom(rom_01A84C_ADDRESS))
-#define rom_01A8F0_ADDRESS 0x01A8F0u
-#define rom_01A8F0 ((const uint32_t *)rom(rom_01A8F0_ADDRESS))
-#define rom_01A986_ADDRESS 0x01A986u
-#define rom_01A986 ((const uint16_t *)rom(rom_01A986_ADDRESS))
-#define rom_01A996_ADDRESS 0x01A996u
-#define rom_01A996 ((const uint16_t *)rom(rom_01A996_ADDRESS))
-#define rom_01A9A6_ADDRESS 0x01A9A6u
-#define rom_01A9A6 ((const uint16_t *)rom(rom_01A9A6_ADDRESS))
-#define rom_01A9AC_ADDRESS 0x01A9ACu
-#define rom_01A9AC ((const uint16_t *)rom(rom_01A9AC_ADDRESS))
-#define rom_01A9BC_ADDRESS 0x01A9BCu
-#define rom_01A9BC ((const uint32_t *)rom(rom_01A9BC_ADDRESS))
-#define rom_01AA0C_ADDRESS 0x01AA0Cu
-#define rom_01AA0C ((const uint32_t *)rom(rom_01AA0C_ADDRESS))
-#define rom_01AA4C_ADDRESS 0x01AA4Cu
-#define rom_01AA4C ((const uint32_t *)rom(rom_01AA4C_ADDRESS))
-#define rom_01AB8E_ADDRESS 0x01AB8Eu
-#define rom_01AB8E ((const uint8_t *)rom(rom_01AB8E_ADDRESS))
-#define rom_01AB98_ADDRESS 0x01AB98u
-#define rom_01AB98 ((const uint16_t *)rom(rom_01AB98_ADDRESS))
-#define rom_01AB9E_ADDRESS 0x01AB9Eu
-#define rom_01AB9E ((const uint16_t *)rom(rom_01AB9E_ADDRESS))
-#define rom_01ABA4_ADDRESS 0x01ABA4u
-#define rom_01ABA4 ((const uint16_t *)rom(rom_01ABA4_ADDRESS))
-#define rom_01AC34_ADDRESS 0x01AC34u
-#define rom_01AC34 ((const uint16_t *)rom(rom_01AC34_ADDRESS))
-#define rom_01AC44_ADDRESS 0x01AC44u
-#define rom_01AC44 ((const uint16_t *)rom(rom_01AC44_ADDRESS))
-#define rom_01ADF4_ADDRESS 0x01ADF4u
-#define rom_01ADF4 ((const uint32_t *)rom(rom_01ADF4_ADDRESS))
-#define rom_01AE98_ADDRESS 0x01AE98u
-#define rom_01AE98 ((const uint32_t *)rom(rom_01AE98_ADDRESS))
-#define rom_01AFE8_ADDRESS 0x01AFE8u
-#define rom_01AFE8 ((const uint32_t *)rom(rom_01AFE8_ADDRESS))
-#define rom_01B254_ADDRESS 0x01B254u
-#define rom_01B254 ((const uint32_t *)rom(rom_01B254_ADDRESS))
-#define rom_01C378_ADDRESS 0x01C378u
-#define rom_01C378 ROM32(rom_01C378_ADDRESS)
-#define rom_01C37C_ADDRESS 0x01C37Cu
-#define rom_01C37C ROM32(rom_01C37C_ADDRESS)
-#define rom_01C380_ADDRESS 0x01C380u
-#define rom_01C380 ROM32(rom_01C380_ADDRESS)
-#define rom_01C384_ADDRESS 0x01C384u
-#define rom_01C384 ROM32(rom_01C384_ADDRESS)
-#define rom_01C45C_ADDRESS 0x01C45Cu
-#define rom_01C45C ((const uint32_t *)rom(rom_01C45C_ADDRESS))
-#define rom_01C560_ADDRESS 0x01C560u
-#define rom_01C560 ((const uint32_t *)rom(rom_01C560_ADDRESS))
-#define rom_01C588_ADDRESS 0x01C588u
-#define rom_01C588 ((const uint16_t *)rom(rom_01C588_ADDRESS))
-#define rom_01CF9C_ADDRESS 0x01CF9Cu
-#define rom_01CF9C ((const uint16_t *)rom(rom_01CF9C_ADDRESS))
-#define rom_01CF9E_ADDRESS 0x01CF9Eu
-#define rom_01CF9E ROM16(rom_01CF9E_ADDRESS)
-#define rom_01D3C0_ADDRESS 0x01D3C0u
-#define rom_01D3C0 ((const uint32_t *)rom(rom_01D3C0_ADDRESS))
-#define rom_01D5AA_ADDRESS 0x01D5AAu
-#define rom_01D5AA ((const uint16_t *)rom(rom_01D5AA_ADDRESS))
-#define rom_01D5BE_ADDRESS 0x01D5BEu
-#define rom_01D5BE ROM16(rom_01D5BE_ADDRESS)
-#define rom_01D5EC_ADDRESS 0x01D5ECu
-#define rom_01D5EC ((const uint32_t *)rom(rom_01D5EC_ADDRESS))
-#define rom_01D618_ADDRESS 0x01D618u
-#define rom_01D618 ((const uint32_t *)rom(rom_01D618_ADDRESS))
-#define rom_01D77C_ADDRESS 0x01D77Cu
-#define rom_01D77C ((const uint32_t *)rom(rom_01D77C_ADDRESS))
-#define rom_01D7C0_ADDRESS 0x01D7C0u
-#define rom_01D7C0 ((const uint16_t *)rom(rom_01D7C0_ADDRESS))
-#define rom_01D7C4_ADDRESS 0x01D7C4u
-#define rom_01D7C4 ROM16(rom_01D7C4_ADDRESS)
-#define rom_01DBD0_ADDRESS 0x01DBD0u
-#define rom_01DBD0 ((const uint32_t *)rom(rom_01DBD0_ADDRESS))
-#define rom_01DCCE_ADDRESS 0x01DCCEu
-#define rom_01DCCE ((const uint16_t *)rom(rom_01DCCE_ADDRESS))
-#define rom_01DCE0_ADDRESS 0x01DCE0u
-#define rom_01DCE0 ROM16(rom_01DCE0_ADDRESS)
-#define rom_01DCE4_ADDRESS 0x01DCE4u
-#define rom_01DCE4 ((const uint32_t *)rom(rom_01DCE4_ADDRESS))
-#define rom_01DCEC_ADDRESS 0x01DCECu
-#define rom_01DCEC ((const uint32_t *)rom(rom_01DCEC_ADDRESS))
-#define rom_01E0D8_ADDRESS 0x01E0D8u
-#define rom_01E0D8 ((const uint32_t *)rom(rom_01E0D8_ADDRESS))
-#define rom_01E0E4_ADDRESS 0x01E0E4u
-#define rom_01E0E4 ((const uint32_t *)rom(rom_01E0E4_ADDRESS))
-#define rom_01E200_ADDRESS 0x01E200u
-#define rom_01E200 ((const uint16_t *)rom(rom_01E200_ADDRESS))
-#define rom_01E206_ADDRESS 0x01E206u
-#define rom_01E206 ((const uint16_t *)rom(rom_01E206_ADDRESS))
-#define rom_01E20C_ADDRESS 0x01E20Cu
-#define rom_01E20C ROM16(rom_01E20C_ADDRESS)
-#define rom_01E220_ADDRESS 0x01E220u
-#define rom_01E220 ((const uint32_t *)rom(rom_01E220_ADDRESS))
-#define rom_01E61C_ADDRESS 0x01E61Cu
-#define rom_01E61C ((const uint32_t *)rom(rom_01E61C_ADDRESS))
-#define rom_01E67C_ADDRESS 0x01E67Cu
-#define rom_01E67C ((const uint16_t *)rom(rom_01E67C_ADDRESS))
-#define rom_01E682_ADDRESS 0x01E682u
-#define rom_01E682 ROM16(rom_01E682_ADDRESS)
-#define rom_01E684_ADDRESS 0x01E684u
-#define rom_01E684 ((const uint32_t *)rom(rom_01E684_ADDRESS))
-#define rom_01E68C_ADDRESS 0x01E68Cu
-#define rom_01E68C ((const uint32_t *)rom(rom_01E68C_ADDRESS))
-#define rom_01EEAE_ADDRESS 0x01EEAEu
-#define rom_01EEAE ((const uint16_t *)rom(rom_01EEAE_ADDRESS))
-#define rom_01EEB0_ADDRESS 0x01EEB0u
-#define rom_01EEB0 ROM16(rom_01EEB0_ADDRESS)
-#define rom_01F282_ADDRESS 0x01F282u
-#define rom_01F282 ROM16(rom_01F282_ADDRESS)
-#define rom_01F302_ADDRESS 0x01F302u
-#define rom_01F302 ROM16(rom_01F302_ADDRESS)
-#define rom_01F504_ADDRESS 0x01F504u
-#define rom_01F504 ROM16(rom_01F504_ADDRESS)
+#define title_screen_state_jumps_ADDRESS 0x019CB8u
+#define title_screen_state_jumps ((const uint32_t *)rom(title_screen_state_jumps_ADDRESS))
+#define title_car_state_jumps_ADDRESS 0x019E78u
+#define title_car_state_jumps ((const uint32_t *)rom(title_car_state_jumps_ADDRESS))
+#define title_car_driver_state_jumps_ADDRESS 0x019F58u
+#define title_car_driver_state_jumps ((const uint32_t *)rom(title_car_driver_state_jumps_ADDRESS))
+#define title_car_passenger_state_jumps_ADDRESS 0x019F6Cu
+#define title_car_passenger_state_jumps ((const uint32_t *)rom(title_car_passenger_state_jumps_ADDRESS))
+#define title_driver_animations_ADDRESS 0x01A012u
+#define title_driver_animations ((const uint16_t *)rom(title_driver_animations_ADDRESS))
+#define title_passenger_animations_ADDRESS 0x01A022u
+#define title_passenger_animations ((const uint16_t *)rom(title_passenger_animations_ADDRESS))
+#define title_driver_palettes_ADDRESS 0x01A032u
+#define title_driver_palettes ((const uint16_t *)rom(title_driver_palettes_ADDRESS))
+#define title_passenger_palettes_ADDRESS 0x01A042u
+#define title_passenger_palettes ((const uint16_t *)rom(title_passenger_palettes_ADDRESS))
+#define title_rider_scales_ADDRESS 0x01A052u
+#define title_rider_scales ((const uint16_t *)rom(title_rider_scales_ADDRESS))
+#define title_driver_x_offsets_ADDRESS 0x01A062u
+#define title_driver_x_offsets ((const uint16_t *)rom(title_driver_x_offsets_ADDRESS))
+#define title_driver_y_offsets_ADDRESS 0x01A072u
+#define title_driver_y_offsets ((const uint16_t *)rom(title_driver_y_offsets_ADDRESS))
+#define title_passenger_x_offsets_ADDRESS 0x01A082u
+#define title_passenger_x_offsets ((const uint16_t *)rom(title_passenger_x_offsets_ADDRESS))
+#define title_passenger_y_offsets_ADDRESS 0x01A092u
+#define title_passenger_y_offsets ((const uint16_t *)rom(title_passenger_y_offsets_ADDRESS))
+#define title_palm_tree_state_jumps_ADDRESS 0x01A0F0u
+#define title_palm_tree_state_jumps ((const uint32_t *)rom(title_palm_tree_state_jumps_ADDRESS))
+#define title_logo_state_jumps_ADDRESS 0x01A198u
+#define title_logo_state_jumps ((const uint32_t *)rom(title_logo_state_jumps_ADDRESS))
+#define title_logo_copy_state_jumps_ADDRESS 0x01A2A8u
+#define title_logo_copy_state_jumps ((const uint32_t *)rom(title_logo_copy_state_jumps_ADDRESS))
+#define title_logo_car_state_jumps_ADDRESS 0x01A334u
+#define title_logo_car_state_jumps ((const uint32_t *)rom(title_logo_car_state_jumps_ADDRESS))
+#define title_logo_stripe_state_jumps_ADDRESS 0x01A3F4u
+#define title_logo_stripe_state_jumps ((const uint32_t *)rom(title_logo_stripe_state_jumps_ADDRESS))
+#define title_board_palms_state_jumps_ADDRESS 0x01A4A4u
+#define title_board_palms_state_jumps ((const uint32_t *)rom(title_board_palms_state_jumps_ADDRESS))
+#define title_seagull_state_jumps_ADDRESS 0x01A544u
+#define title_seagull_state_jumps ((const uint32_t *)rom(title_seagull_state_jumps_ADDRESS))
+#define title_picture_state_jumps_ADDRESS 0x01A680u
+#define title_picture_state_jumps ((const uint32_t *)rom(title_picture_state_jumps_ADDRESS))
+#define coin_prompt_state_jumps_ADDRESS 0x01A6DCu
+#define coin_prompt_state_jumps ((const uint32_t *)rom(coin_prompt_state_jumps_ADDRESS))
+#define coin_prompt_screen_jumps_ADDRESS 0x01A744u
+#define coin_prompt_screen_jumps ((const uint32_t *)rom(coin_prompt_screen_jumps_ADDRESS))
+#define coin_prompt_car_state_jumps_ADDRESS 0x01A7D0u
+#define coin_prompt_car_state_jumps ((const uint32_t *)rom(coin_prompt_car_state_jumps_ADDRESS))
+#define coin_prompt_message_state_jumps_ADDRESS 0x01A84Cu
+#define coin_prompt_message_state_jumps ((const uint32_t *)rom(coin_prompt_message_state_jumps_ADDRESS))
+#define ignition_key_prompt_state_jumps_ADDRESS 0x01A8F0u
+#define ignition_key_prompt_state_jumps ((const uint32_t *)rom(ignition_key_prompt_state_jumps_ADDRESS))
+#define coin_prompt_car_animations_ADDRESS 0x01A986u
+#define coin_prompt_car_animations ((const uint16_t *)rom(coin_prompt_car_animations_ADDRESS))
+#define coin_prompt_car_palettes_ADDRESS 0x01A996u
+#define coin_prompt_car_palettes ((const uint16_t *)rom(coin_prompt_car_palettes_ADDRESS))
+#define coin_prompt_message_animations_ADDRESS 0x01A9A6u
+#define coin_prompt_message_animations ((const uint16_t *)rom(coin_prompt_message_animations_ADDRESS))
+#define coin_prompt_message_palettes_ADDRESS 0x01A9ACu
+#define coin_prompt_message_palettes ((const uint16_t *)rom(coin_prompt_message_palettes_ADDRESS))
+#define coin_prompt_lcd_texts_ADDRESS 0x01A9BCu
+#define coin_prompt_lcd_texts ((const uint32_t *)rom(coin_prompt_lcd_texts_ADDRESS))
+#define credit_display_state_jumps_ADDRESS 0x01AA0Cu
+#define credit_display_state_jumps ((const uint32_t *)rom(credit_display_state_jumps_ADDRESS))
+#define credit_display_screen_jumps_ADDRESS 0x01AA4Cu
+#define credit_display_screen_jumps ((const uint32_t *)rom(credit_display_screen_jumps_ADDRESS))
+#define credit_digit_characters_ADDRESS 0x01AB8Eu
+#define credit_digit_characters ((const uint8_t *)rom(credit_digit_characters_ADDRESS))
+#define credit_display_animations_ADDRESS 0x01AB98u
+#define credit_display_animations ((const uint16_t *)rom(credit_display_animations_ADDRESS))
+#define credit_display_palettes_ADDRESS 0x01AB9Eu
+#define credit_display_palettes ((const uint16_t *)rom(credit_display_palettes_ADDRESS))
+#define title_car_screen_offsets_ADDRESS 0x01ABA4u
+#define title_car_screen_offsets ((const uint16_t *)rom(title_car_screen_offsets_ADDRESS))
+#define title_car_animations_ADDRESS 0x01AC34u
+#define title_car_animations ((const uint16_t *)rom(title_car_animations_ADDRESS))
+#define title_logo_car_palettes_ADDRESS 0x01AC44u
+#define title_logo_car_palettes ((const uint16_t *)rom(title_logo_car_palettes_ADDRESS))
+#define title_logo_car_wave_frames_ADDRESS 0x01ACC0u
+#define title_logo_car_wave_frames ROM16(title_logo_car_wave_frames_ADDRESS)
+#define demo_captions_state_jumps_ADDRESS 0x01ADF4u
+#define demo_captions_state_jumps ((const uint32_t *)rom(demo_captions_state_jumps_ADDRESS))
+#define demo_caption_state_jumps_ADDRESS 0x01AE98u
+#define demo_caption_state_jumps ((const uint32_t *)rom(demo_caption_state_jumps_ADDRESS))
+#define kanji_text_viewer_state_jumps_ADDRESS 0x01AFE8u
+#define kanji_text_viewer_state_jumps ((const uint32_t *)rom(kanji_text_viewer_state_jumps_ADDRESS))
+#define kanji_texts_ADDRESS 0x01B254u
+#define kanji_texts ((const uint32_t *)rom(kanji_texts_ADDRESS))
+#define test_mode_lcd_text_ADDRESS 0x01C378u
+#define test_mode_lcd_text ROM32(test_mode_lcd_text_ADDRESS)
+#define test_mode_lcd_text_4_to_7_ADDRESS 0x01C37Cu
+#define test_mode_lcd_text_4_to_7 ROM32(test_mode_lcd_text_4_to_7_ADDRESS)
+#define test_mode_lcd_text_8_to_11_ADDRESS 0x01C380u
+#define test_mode_lcd_text_8_to_11 ROM32(test_mode_lcd_text_8_to_11_ADDRESS)
+#define test_mode_lcd_text_12_to_15_ADDRESS 0x01C384u
+#define test_mode_lcd_text_12_to_15 ROM32(test_mode_lcd_text_12_to_15_ADDRESS)
+#define test_mode_page_jumps_ADDRESS 0x01C45Cu
+#define test_mode_page_jumps ((const uint32_t *)rom(test_mode_page_jumps_ADDRESS))
+#define test_mode_menu_headings_ADDRESS 0x01C560u
+#define test_mode_menu_headings ((const uint32_t *)rom(test_mode_menu_headings_ADDRESS))
+#define test_mode_menu_cursor_cells_ADDRESS 0x01C588u
+#define test_mode_menu_cursor_cells ((const uint16_t *)rom(test_mode_menu_cursor_cells_ADDRESS))
+#define volume_adjustment_cursor_cells_ADDRESS 0x01CF9Cu
+#define volume_adjustment_cursor_cells ((const uint16_t *)rom(volume_adjustment_cursor_cells_ADDRESS))
+#define volume_adjustment_cancel_cell_ADDRESS 0x01CF9Eu
+#define volume_adjustment_cancel_cell ROM16(volume_adjustment_cancel_cell_ADDRESS)
+#define input_test_on_off_cells_ADDRESS 0x01D3C0u
+#define input_test_on_off_cells ((const uint32_t *)rom(input_test_on_off_cells_ADDRESS))
+#define output_test_cursor_cells_ADDRESS 0x01D5AAu
+#define output_test_cursor_cells ((const uint16_t *)rom(output_test_cursor_cells_ADDRESS))
+#define output_test_exit_cell_ADDRESS 0x01D5BEu
+#define output_test_exit_cell ROM16(output_test_exit_cell_ADDRESS)
+#define test_mode_output_test_item_jumps_ADDRESS 0x01D5ECu
+#define test_mode_output_test_item_jumps ((const uint32_t *)rom(test_mode_output_test_item_jumps_ADDRESS))
+#define output_test_on_off_cells_ADDRESS 0x01D618u
+#define output_test_on_off_cells ((const uint32_t *)rom(output_test_on_off_cells_ADDRESS))
+#define test_mode_sound_test_item_jumps_ADDRESS 0x01D77Cu
+#define test_mode_sound_test_item_jumps ((const uint32_t *)rom(test_mode_sound_test_item_jumps_ADDRESS))
+#define sound_test_cursor_cells_ADDRESS 0x01D7C0u
+#define sound_test_cursor_cells ((const uint16_t *)rom(sound_test_cursor_cells_ADDRESS))
+#define sound_test_exit_cell_ADDRESS 0x01D7C4u
+#define sound_test_exit_cell ROM16(sound_test_exit_cell_ADDRESS)
+#define test_mode_game_assignments_item_jumps_ADDRESS 0x01DBD0u
+#define test_mode_game_assignments_item_jumps ((const uint32_t *)rom(test_mode_game_assignments_item_jumps_ADDRESS))
+#define game_assignments_cursor_cells_ADDRESS 0x01DCCEu
+#define game_assignments_cursor_cells ((const uint16_t *)rom(game_assignments_cursor_cells_ADDRESS))
+#define game_assignments_exit_cell_ADDRESS 0x01DCE0u
+#define game_assignments_exit_cell ROM16(game_assignments_exit_cell_ADDRESS)
+#define steering_wheel_reaction_texts_ADDRESS 0x01DCE4u
+#define steering_wheel_reaction_texts ((const uint32_t *)rom(steering_wheel_reaction_texts_ADDRESS))
+#define advertise_sound_texts_ADDRESS 0x01DCECu
+#define advertise_sound_texts ((const uint32_t *)rom(advertise_sound_texts_ADDRESS))
+#define test_mode_coin_assignments_item_jumps_ADDRESS 0x01E0D8u
+#define test_mode_coin_assignments_item_jumps ((const uint32_t *)rom(test_mode_coin_assignments_item_jumps_ADDRESS))
+#define test_mode_coin_assignments_manual_item_jumps_ADDRESS 0x01E0E4u
+#define test_mode_coin_assignments_manual_item_jumps ((const uint32_t *)rom(test_mode_coin_assignments_manual_item_jumps_ADDRESS))
+#define coin_assignments_cursor_cells_ADDRESS 0x01E200u
+#define coin_assignments_cursor_cells ((const uint16_t *)rom(coin_assignments_cursor_cells_ADDRESS))
+#define coin_manual_cursor_cells_ADDRESS 0x01E206u
+#define coin_manual_cursor_cells ((const uint16_t *)rom(coin_manual_cursor_cells_ADDRESS))
+#define coin_manual_exit_cell_ADDRESS 0x01E20Cu
+#define coin_manual_exit_cell ROM16(coin_manual_exit_cell_ADDRESS)
+#define coin_setting_descriptions_ADDRESS 0x01E220u
+#define coin_setting_descriptions ((const uint32_t *)rom(coin_setting_descriptions_ADDRESS))
+#define test_mode_network_assignments_item_jumps_ADDRESS 0x01E61Cu
+#define test_mode_network_assignments_item_jumps ((const uint32_t *)rom(test_mode_network_assignments_item_jumps_ADDRESS))
+#define network_assignments_cursor_cells_ADDRESS 0x01E67Cu
+#define network_assignments_cursor_cells ((const uint16_t *)rom(network_assignments_cursor_cells_ADDRESS))
+#define network_assignments_exit_cell_ADDRESS 0x01E682u
+#define network_assignments_exit_cell ROM16(network_assignments_exit_cell_ADDRESS)
+#define communication_texts_ADDRESS 0x01E684u
+#define communication_texts ((const uint32_t *)rom(communication_texts_ADDRESS))
+#define privilege_mode_texts_ADDRESS 0x01E68Cu
+#define privilege_mode_texts ((const uint32_t *)rom(privilege_mode_texts_ADDRESS))
+#define backup_data_clear_cursor_cells_ADDRESS 0x01EEAEu
+#define backup_data_clear_cursor_cells ((const uint16_t *)rom(backup_data_clear_cursor_cells_ADDRESS))
+#define backup_data_clear_no_cell_ADDRESS 0x01EEB0u
+#define backup_data_clear_no_cell ROM16(backup_data_clear_no_cell_ADDRESS)
+#define test_mode_instructions_text_ADDRESS 0x01F282u
+#define test_mode_instructions_text ROM16(test_mode_instructions_text_ADDRESS)
+#define test_mode_palettes_1_bytes_ADDRESS 0x01F302u
+#define test_mode_palettes_1_bytes ROM16(test_mode_palettes_1_bytes_ADDRESS)
+#define test_mode_palettes_2_bytes_ADDRESS 0x01F504u
+#define test_mode_palettes_2_bytes ROM16(test_mode_palettes_2_bytes_ADDRESS)
 #define road_object_streams_ADDRESS 0x020800u
 #define road_object_streams ((const uint32_t *)rom(road_object_streams_ADDRESS))
 #define object_lists_2E1F0_ADDRESS 0x02E1F0u
 #define object_lists_2E1F0 ((const uint32_t *)rom(object_lists_2E1F0_ADDRESS))
-#define rom_0318CC_ADDRESS 0x0318CCu
-#define rom_0318CC ((const uint32_t *)rom(rom_0318CC_ADDRESS))
-#define rom_0319F0_ADDRESS 0x0319F0u
-#define rom_0319F0 ((const uint32_t *)rom(rom_0319F0_ADDRESS))
-#define rom_031B14_ADDRESS 0x031B14u
-#define rom_031B14 ((const uint32_t *)rom(rom_031B14_ADDRESS))
-#define rom_031C38_ADDRESS 0x031C38u
-#define rom_031C38 ((const uint32_t *)rom(rom_031C38_ADDRESS))
-#define rom_031CB8_ADDRESS 0x031CB8u
-#define rom_031CB8 ((const uint32_t *)rom(rom_031CB8_ADDRESS))
-#define rom_031DDC_ADDRESS 0x031DDCu
-#define rom_031DDC ((const uint32_t *)rom(rom_031DDC_ADDRESS))
-#define rom_031E7C_ADDRESS 0x031E7Cu
-#define rom_031E7C ROM32(rom_031E7C_ADDRESS)
-#define rom_031E80_ADDRESS 0x031E80u
-#define rom_031E80 ROM32(rom_031E80_ADDRESS)
-#define rom_031E84_ADDRESS 0x031E84u
-#define rom_031E84 ROM32(rom_031E84_ADDRESS)
-#define rom_031E88_ADDRESS 0x031E88u
-#define rom_031E88 ROM32(rom_031E88_ADDRESS)
-#define rom_031E8C_ADDRESS 0x031E8Cu
-#define rom_031E8C ROM32(rom_031E8C_ADDRESS)
-#define rom_032BA4_ADDRESS 0x032BA4u
-#define rom_032BA4 ((const uint32_t *)rom(rom_032BA4_ADDRESS))
-#define rom_034138_ADDRESS 0x034138u
-#define rom_034138 ((const uint32_t *)rom(rom_034138_ADDRESS))
-#define rom_034308_ADDRESS 0x034308u
-#define rom_034308 ROM32(rom_034308_ADDRESS)
-#define rom_03CC00_ADDRESS 0x03CC00u
-#define rom_03CC00 ((const uint32_t *)rom(rom_03CC00_ADDRESS))
-#define rom_03CC80_ADDRESS 0x03CC80u
-#define rom_03CC80 ((const uint8_t *)rom(rom_03CC80_ADDRESS))
-#define rom_03F82A_ADDRESS 0x03F82Au
-#define rom_03F82A ROM16(rom_03F82A_ADDRESS)
-#define rom_03F82C_ADDRESS 0x03F82Cu
-#define rom_03F82C ROM16(rom_03F82C_ADDRESS)
-#define rom_03F85C_ADDRESS 0x03F85Cu
-#define rom_03F85C ((const uint32_t *)rom(rom_03F85C_ADDRESS))
-#define rom_03FAC4_ADDRESS 0x03FAC4u
-#define rom_03FAC4 ((const uint32_t *)rom(rom_03FAC4_ADDRESS))
-#define rom_03FACC_ADDRESS 0x03FACCu
-#define rom_03FACC ((const uint32_t *)rom(rom_03FACC_ADDRESS))
-#define rom_03FFF8_ADDRESS 0x03FFF8u
-#define rom_03FFF8 ROM16(rom_03FFF8_ADDRESS)
-#define rom_03FFFA_ADDRESS 0x03FFFAu
-#define rom_03FFFA ROM16(rom_03FFFA_ADDRESS)
-#define rom_03FFFC_ADDRESS 0x03FFFCu
-#define rom_03FFFC ROM16(rom_03FFFC_ADDRESS)
-#define rom_03FFFE_ADDRESS 0x03FFFEu
-#define rom_03FFFE ROM16(rom_03FFFE_ADDRESS)
-#define rom_100000_ADDRESS 0x100000u
-#define rom_100000 ROM32(rom_100000_ADDRESS)
-#define rom_100C00_ADDRESS 0x100C00u
-#define rom_100C00 ((const uint16_t *)rom(rom_100C00_ADDRESS))
-#define rom_101400_ADDRESS 0x101400u
-#define rom_101400 ((const uint16_t *)rom(rom_101400_ADDRESS))
-#define rom_103400_ADDRESS 0x103400u
-#define rom_103400 ((const uint16_t *)rom(rom_103400_ADDRESS))
-#define rom_109694_ADDRESS 0x109694u
-#define rom_109694 ((const uint32_t *)rom(rom_109694_ADDRESS))
-#define rom_122B5C_ADDRESS 0x122B5Cu
-#define rom_122B5C ROM32(rom_122B5C_ADDRESS)
-#define rom_122B60_ADDRESS 0x122B60u
-#define rom_122B60 ROM32(rom_122B60_ADDRESS)
-#define rom_122B64_ADDRESS 0x122B64u
-#define rom_122B64 ROM16(rom_122B64_ADDRESS)
-#define rom_122B66_ADDRESS 0x122B66u
-#define rom_122B66 ROM16(rom_122B66_ADDRESS)
-#define rom_1598CC_ADDRESS 0x1598CCu
-#define rom_1598CC ((const uint32_t *)rom(rom_1598CC_ADDRESS))
-#define rom_159AFC_ADDRESS 0x159AFCu
-#define rom_159AFC ((const uint32_t *)rom(rom_159AFC_ADDRESS))
-#define rom_18D25C_ADDRESS 0x18D25Cu
-#define rom_18D25C ((const uint32_t *)rom(rom_18D25C_ADDRESS))
-#define rom_19A340_ADDRESS 0x19A340u
-#define rom_19A340 ((const uint16_t *)rom(rom_19A340_ADDRESS))
-#define rom_1A0340_ADDRESS 0x1A0340u
-#define rom_1A0340 ((const uint16_t *)rom(rom_1A0340_ADDRESS))
-#define rom_1A6340_ADDRESS 0x1A6340u
-#define rom_1A6340 ((const uint32_t *)rom(rom_1A6340_ADDRESS))
+#define background_palettes_ADDRESS 0x0318CCu
+#define background_palettes ((const uint32_t *)rom(background_palettes_ADDRESS))
+#define background_leaving_fades_ADDRESS 0x0319F0u
+#define background_leaving_fades ((const uint32_t *)rom(background_leaving_fades_ADDRESS))
+#define background_palette_fades_ADDRESS 0x031B14u
+#define background_palette_fades ((const uint32_t *)rom(background_palette_fades_ADDRESS))
+#define stage_road_palettes_ADDRESS 0x031C38u
+#define stage_road_palettes ((const uint32_t *)rom(stage_road_palettes_ADDRESS))
+#define background_road_palettes_ADDRESS 0x031CB8u
+#define background_road_palettes ((const uint32_t *)rom(background_road_palettes_ADDRESS))
+#define scene_palettes_ADDRESS 0x031DDCu
+#define scene_palettes ((const uint32_t *)rom(scene_palettes_ADDRESS))
+#define car_select_palette_ADDRESS 0x031E7Cu
+#define car_select_palette ROM32(car_select_palette_ADDRESS)
+#define ranking_palette_ADDRESS 0x031E80u
+#define ranking_palette ROM32(ranking_palette_ADDRESS)
+#define route_map_palette_ADDRESS 0x031E84u
+#define route_map_palette ROM32(route_map_palette_ADDRESS)
+#define title_palette_ADDRESS 0x031E88u
+#define title_palette ROM32(title_palette_ADDRESS)
+#define route_map_background_palette_ADDRESS 0x031E8Cu
+#define route_map_background_palette ROM32(route_map_background_palette_ADDRESS)
+#define stage_road_page_sets_ADDRESS 0x03CC80u
+#define stage_road_page_sets ((const uint8_t *)rom(stage_road_page_sets_ADDRESS))
+#define vblank_timer_period_ADDRESS 0x03F82Au
+#define vblank_timer_period ROM16(vblank_timer_period_ADDRESS)
+#define lcd_timer_period_ADDRESS 0x03F82Cu
+#define lcd_timer_period ROM16(lcd_timer_period_ADDRESS)
+#define link_message_kind_jumps_ADDRESS 0x03F85Cu
+#define link_message_kind_jumps ((const uint32_t *)rom(link_message_kind_jumps_ADDRESS))
+#define vblank_seat_inputs_jumps_ADDRESS 0x03FAC4u
+#define vblank_seat_inputs_jumps ((const uint32_t *)rom(vblank_seat_inputs_jumps_ADDRESS))
+#define screen_vblank_counters_ADDRESS 0x03FACCu
+#define screen_vblank_counters ((const uint32_t *)rom(screen_vblank_counters_ADDRESS))
+#define ic37_checksum_ADDRESS 0x03FFF8u
+#define ic37_checksum ROM16(ic37_checksum_ADDRESS)
+#define ic40_checksum_ADDRESS 0x03FFFAu
+#define ic40_checksum ROM16(ic40_checksum_ADDRESS)
+#define ic36_checksum_ADDRESS 0x03FFFCu
+#define ic36_checksum ROM16(ic36_checksum_ADDRESS)
+#define ic39_checksum_ADDRESS 0x03FFFEu
+#define ic39_checksum ROM16(ic39_checksum_ADDRESS)
+#define blank_sprite_places_ADDRESS 0x100000u
+#define blank_sprite_places ROM32(blank_sprite_places_ADDRESS)
+#define sine_table_ADDRESS 0x100C00u
+#define sine_table ((const int16_t *)rom(sine_table_ADDRESS))
+#define cosine_table_ADDRESS 0x101400u
+#define cosine_table ((const int16_t *)rom(cosine_table_ADDRESS))
+#define arctangents_ADDRESS 0x103400u
+#define arctangents ((const uint16_t *)rom(arctangents_ADDRESS))
+#define no_background_tile_pages_ADDRESS 0x109684u
+#define no_background_tile_pages ROM32(no_background_tile_pages_ADDRESS)
+#define background_tile_page_lists_ADDRESS 0x109694u
+#define background_tile_page_lists ((const uint32_t *)rom(background_tile_page_lists_ADDRESS))
+#define text_sprite_words_0_1_ADDRESS 0x122B5Cu
+#define text_sprite_words_0_1 ROM32(text_sprite_words_0_1_ADDRESS)
+#define text_sprite_size_ADDRESS 0x122B60u
+#define text_sprite_size ROM32(text_sprite_size_ADDRESS)
+#define text_sprite_font_ADDRESS 0x122B64u
+#define text_sprite_font ROM16(text_sprite_font_ADDRESS)
+#define text_sprite_palette_ADDRESS 0x122B66u
+#define text_sprite_palette ROM16(text_sprite_palette_ADDRESS)
+#define no_background_palettes_ADDRESS 0x13F9D4u
+#define no_background_palettes ROM32(no_background_palettes_ADDRESS)
+#define race_car_rider_places_ADDRESS 0x18D25Cu
+#define race_car_rider_places ((const uint32_t *)rom(race_car_rider_places_ADDRESS))
+#define perspective_scales_ADDRESS 0x19A340u
+#define perspective_scales ((const uint16_t *)rom(perspective_scales_ADDRESS))
+#define depth_layers_by_depth_ADDRESS 0x1A0340u
+#define depth_layers_by_depth ((const uint16_t *)rom(depth_layers_by_depth_ADDRESS))
+#define kanji_row_pixels_ADDRESS 0x1A6340u
+#define kanji_row_pixels ((const uint32_t *)rom(kanji_row_pixels_ADDRESS))
 
 /* the board's registers (read and written through the bus) */
 #define VIDEO_31F736 0x31F736u
@@ -1396,8 +1374,41 @@
 #define object_handlers_DF74_ADDRESS 0x00DF78u
 #define unk_010309_ADDRESS 0x010309u
 #define unk_010425_ADDRESS 0x010425u
+#define credit_free_play_text_ADDRESS 0x01AB62u
+#define credit_singular_text_ADDRESS 0x01AB72u
+#define credit_plural_text_ADDRESS 0x01AB80u
+#define title_logo_flash_palettes_ADDRESS 0x01AC54u
+#define title_logo_copy_flash_palettes_ADDRESS 0x01AC62u
 #define timeline_1AFC0_ADDRESS 0x01AFC0u
 #define unk_01B248_ADDRESS 0x01B248u
+#define test_mode_menu_text_ADDRESS 0x01C490u
+#define memory_test_page_text_ADDRESS 0x01CC9Cu
+#define memory_test_now_testing_text_ADDRESS 0x01CD87u
+#define memory_test_result_cells_ADDRESS 0x01CD96u
+#define volume_adjustment_page_text_ADDRESS 0x01CF71u
+#define volume_adjustment_controls_text_ADDRESS 0x01CFA0u
+#define volume_adjusting_text_ADDRESS 0x01D021u
+#define volume_adjustment_bar_cells_ADDRESS 0x01D030u
+#define volume_adjustment_bars_text_ADDRESS 0x01D03Cu
+#define input_test_bars_text_ADDRESS 0x01D30Au
+#define input_test_items_ADDRESS 0x01D380u
+#define input_test_bar_cells_ADDRESS 0x01D3D8u
+#define output_test_page_text_ADDRESS 0x01D4F8u
+#define sound_test_page_text_ADDRESS 0x01D788u
+#define game_assignments_page_text_ADDRESS 0x01DBF8u
+#define game_assignments_setting_places_ADDRESS 0x01DD14u
+#define coin_assignments_page_text_ADDRESS 0x01E0F4u
+#define coin_manual_page_text_ADDRESS 0x01E13Fu
+#define coin_assignments_line_text_ADDRESS 0x01E20Eu
+#define coin_assignments_setting_places_ADDRESS 0x01E44Du
+#define network_assignments_page_text_ADDRESS 0x01E62Cu
+#define network_assignments_setting_places_ADDRESS 0x01E6E0u
+#define time_digit_steps_ADDRESS 0x01E970u
+#define car_colour_names_ADDRESS 0x01ED94u
+#define backup_data_clear_page_text_ADDRESS 0x01EE79u
+#define backup_data_clear_completed_text_ADDRESS 0x01EEB2u
+#define test_mode_palettes_1_ADDRESS 0x01F304u
+#define test_mode_palettes_2_ADDRESS 0x01F506u
 #define unk_030B60_ADDRESS 0x030B60u
 #define vector_table_ADDRESS 0x03F000u
 
@@ -3684,6 +3695,693 @@ struct object_list
 	uint8_t pad_02[0xFE];
 };
 
+struct road_row_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t size_table;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t spacing;
+	uint16_t count;
+	uint32_t hit_box_along;
+	uint8_t pad_14[0x4];
+};
+
+struct road_object_stream_entry
+{
+	int16_t position;
+	uint16_t command;
+	uint32_t handler;
+	uint32_t parameter;
+};
+
+struct flashing_scenery_record
+{
+	uint16_t animation;
+	uint32_t palettes;
+	uint8_t flags;
+	uint8_t size_table;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t spacing;
+	uint16_t count;
+	uint32_t hit_box_along;
+	uint8_t pad_16[0x4];
+};
+
+struct aurora_record
+{
+	uint32_t animations;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t animation_frames;
+};
+
+struct road_crosser_record
+{
+	uint16_t animation;
+	uint16_t crossing_animation;
+	uint16_t palette;
+	uint8_t flags;
+	int8_t side;
+	int16_t x_offset;
+	uint16_t trigger_distance;
+	int16_t x_speed;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+};
+
+struct moving_scenery_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t trigger_distance;
+	int16_t x_speed;
+	int16_t y_speed;
+	int16_t road_speed;
+};
+
+struct swooping_helicopter_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t trigger_distance;
+	int16_t x_speed;
+	int16_t y_speed;
+	int16_t road_speed;
+	uint8_t dive_frames;
+	int16_t dive_y_speed;
+};
+
+struct start_gate_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t spacing;
+	uint16_t count;
+	uint32_t hit_box_along;
+	uint8_t pad_14[0x4];
+};
+
+struct flagman_record
+{
+	uint16_t animation;
+	uint16_t waving_animation;
+	uint16_t palette;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+};
+
+struct start_balloon_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+};
+
+struct santa_sleigh_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	int8_t side;
+	int16_t x_offset;
+	int16_t x_speed;
+	uint16_t sound;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+};
+
+struct goal_parade_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	int8_t side;
+	int16_t x_offset;
+	int16_t x_speed;
+	uint8_t draw_mode;
+	uint8_t scale_shift;
+};
+
+struct sounding_scenery_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t flags;
+	uint8_t size_table;
+	uint8_t scale_shift;
+	int8_t side;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t spacing;
+	uint16_t count;
+	uint16_t sound;
+};
+
+struct traffic_record
+{
+	uint32_t sprite;
+	int16_t side;
+	int16_t x_offset;
+	int16_t speed;
+};
+
+struct traffic_sprite_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t passing_sound;
+	uint8_t hit_sound;
+	uint16_t weight;
+	uint16_t hit_box[0x4];
+};
+
+struct traffic_spawn_entry
+{
+	int16_t position;
+	uint16_t level;
+	uint32_t handler;
+	uint32_t stop_distance;
+	uint32_t record;
+};
+
+struct traffic_line_record
+{
+	uint32_t spacing;
+};
+
+struct backdrop_record
+{
+	uint32_t animation;
+	uint16_t palette;
+	uint16_t panorama_x;
+	uint16_t height;
+	uint16_t half_width;
+	uint32_t approach_distance;
+};
+
+struct car_select_tilemap_setup
+{
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t second_scroll_x_address;
+	uint32_t second_scroll_y_address;
+	uint32_t rowscroll_address;
+	uint32_t rowselect_address;
+	uint32_t background;
+	uint16_t video_register_bits;
+	uint8_t pad_1E[0x2];
+};
+
+struct animation_palette
+{
+	uint16_t animation;
+	uint16_t palette;
+};
+
+struct turntable_scenery_group
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint16_t size;
+	uint16_t item_list_offset;
+};
+
+struct welcome_letter_place
+{
+	uint16_t x;
+	uint8_t letter;
+	uint8_t pad_03[0x1];
+};
+
+struct select_instruction_piece
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint16_t x;
+	uint16_t y;
+};
+
+struct traffic_path_step
+{
+	uint16_t size;
+	uint16_t x;
+	uint16_t y;
+};
+
+struct palette_cycle_record
+{
+	uint16_t delay;
+	uint16_t frames_left;
+	uint32_t palette_list;
+	uint32_t step_frames;
+};
+
+struct sunset_fade_record
+{
+	uint32_t delay;
+	uint32_t fade_list;
+};
+
+struct palette_fade_list
+{
+	uint32_t length;
+};
+
+struct palette_fade_entry
+{
+	uint32_t from;
+	uint32_t to;
+	uint16_t palette_offset;
+	uint8_t blocks;
+	uint8_t period;
+};
+
+struct goal_stop
+{
+	uint16_t position;
+	int16_t x;
+	uint16_t speed;
+};
+
+struct crash_physics
+{
+	uint16_t bounce_damping;
+	uint16_t speed_change_decay;
+	uint16_t push_decay;
+	uint16_t gravity;
+};
+
+struct car_handling
+{
+	uint32_t steering;
+	uint8_t pad_04[0x4];
+	uint32_t off_road_drag;
+	int32_t spin_start_force;
+	int32_t spin_end_force;
+	int32_t spin_drive_force;
+	uint8_t pad_18[0x2];
+	uint16_t half_width;
+	int32_t brake_factor;
+	int32_t grip;
+	int32_t slide_factor;
+};
+
+struct gear_list
+{
+	uint8_t top_gear;
+	uint8_t first_ratio;
+};
+
+struct torque_point
+{
+	int16_t speed;
+	uint16_t force;
+};
+
+struct roadside_surface
+{
+	int16_t end;
+	uint16_t inner_edge;
+	uint16_t outer_edge;
+	uint8_t inner_effect;
+	uint8_t outer_effect;
+};
+
+struct stage_roadside_surfaces
+{
+	uint32_t first;
+	uint32_t second;
+};
+
+struct sprite_animation
+{
+	uint8_t frame_time;
+	uint8_t pad_01[0x3];
+	int32_t frames[];
+};
+
+struct sprite_frame
+{
+	uint16_t piece_count;
+};
+
+struct sprite_piece
+{
+	uint16_t attributes;
+	uint16_t sprite;
+	int16_t y_offset;
+	int16_t x_offset;
+};
+
+struct sprite_size_step
+{
+	uint16_t source_size;
+	uint16_t rom_offset;
+	uint16_t height;
+	uint16_t height_bits;
+	uint16_t width;
+	uint16_t width_bits;
+};
+
+struct checkpoint_board_place
+{
+	uint16_t x;
+	uint16_t y;
+};
+
+struct sprite_list_switch
+{
+	uint32_t list;
+	uint16_t end_word;
+	uint16_t entry_2_jump;
+	uint16_t entry_3_jump;
+	uint16_t next_buffers;
+	uint32_t next_list;
+	uint32_t next_limit;
+};
+
+struct item_hit_box
+{
+	uint16_t along_start;
+	uint16_t along_end;
+	uint16_t across_start;
+	uint16_t across_end;
+};
+
+struct course_fork
+{
+	uint8_t branch_stages[0x2];
+	uint32_t branch_courses[0x2];
+};
+
+struct screen_hardware
+{
+	uint16_t sprite_screen_bit;
+	uint32_t palette_ram;
+	uint32_t mixer;
+	uint32_t io_chip;
+	uint8_t pad_0E[0x2];
+};
+
+struct screen_view_default
+{
+	uint32_t draw_distances;
+	uint16_t eye_distance;
+	uint16_t sprite_origin_x;
+	uint16_t sprite_origin_y;
+	uint16_t view_pitch_bases[0x8];
+};
+
+struct hidden_layer_pair
+{
+	uint8_t first_layer;
+	uint8_t second_layer;
+};
+
+struct screen_fade_start
+{
+	uint8_t level;
+	int8_t step;
+	uint8_t end;
+	uint8_t channels;
+};
+
+struct background_registers
+{
+	uint32_t pages_address;
+	uint32_t tile_banks_address;
+	uint32_t zoom_x_address;
+	uint32_t zoom_y_address;
+	uint32_t zoom_centre_x_address;
+	uint32_t zoom_centre_y_address;
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t second_scroll_x_address;
+	uint32_t second_scroll_y_address;
+	uint32_t video_mask;
+	uint32_t mixer_address;
+};
+
+struct background_setup
+{
+	uint32_t pages;
+	uint32_t second_pages;
+	uint8_t tile_bank;
+	uint8_t second_tile_bank;
+	uint8_t priority;
+	uint8_t second_priority;
+	uint32_t tile_pages;
+	uint32_t palette_list;
+};
+
+struct bar_picture_bar
+{
+	uint32_t target;
+	uint32_t scales;
+};
+
+struct course_record
+{
+	uint8_t model;
+	uint8_t name[0x3];
+	uint16_t time;
+};
+
+struct ranking_background_registers
+{
+	uint32_t tile_bank_address;
+	uint32_t pages_address;
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t zoom_x_address;
+	uint32_t zoom_y_address;
+	uint32_t zoom_center_x_address;
+	uint32_t zoom_center_y_address;
+	uint32_t cleared_scroll_x_address;
+	uint32_t cleared_scroll_y_address;
+	uint32_t second_scroll_x_address;
+	uint32_t second_scroll_y_address;
+};
+
+struct demo_race_choice
+{
+	uint8_t stage;
+	uint8_t model;
+};
+
+struct attract_lamp_step
+{
+	uint8_t checkpoint;
+	uint8_t leader;
+};
+
+struct route_map_registers
+{
+	uint32_t pages_address;
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t zoom_x_address;
+	uint32_t zoom_y_address;
+	uint32_t zoom_center_x_address;
+	uint32_t zoom_center_y_address;
+	uint32_t register_scroll_x_address;
+	uint32_t register_scroll_y_address;
+	uint32_t tile_bank_address;
+	uint32_t second_pages_address;
+	uint32_t second_scroll_x_address;
+	uint32_t second_scroll_y_address;
+	uint32_t second_register_scroll_x_address;
+	uint32_t second_register_scroll_y_address;
+	uint32_t second_tile_bank_address;
+};
+
+struct route_map_leg_car_place
+{
+	uint16_t x;
+	uint16_t y;
+	uint16_t frame;
+	uint8_t pad_06[0x2];
+};
+
+struct stage_result_text
+{
+	uint16_t attribute;
+	uint8_t characters[0x7];
+};
+
+struct stage_result_place_text
+{
+	uint16_t attribute;
+	uint8_t characters[0x4];
+};
+
+struct route_map_landmark_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint16_t width_scale;
+	uint16_t height_scale;
+	int16_t x_offset;
+	int16_t y_offset;
+	uint16_t half_rate;
+	uint8_t pad_0E[0x2];
+};
+
+struct sound_cue
+{
+	uint8_t time;
+	uint8_t sound;
+};
+
+struct road_surface_layer_setup
+{
+	uint16_t video_mask;
+	uint16_t video_bits;
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t tile_bank_address;
+	uint32_t page_register;
+	uint32_t mixer_address;
+	uint32_t line_scroll_table;
+	uint32_t line_select_table;
+};
+
+struct race_background_layer_setup
+{
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t tile_bank_address;
+	uint32_t page_word_address;
+	uint32_t mixer_address;
+};
+
+struct song_title_record
+{
+	uint16_t x;
+};
+
+struct title_screen_layer_setup
+{
+	uint32_t tile_bank_address;
+	uint32_t pages_address;
+	uint32_t scroll_x_address;
+	uint32_t scroll_y_address;
+	uint32_t second_tile_bank_address;
+	uint32_t second_pages_address;
+	uint32_t second_scroll_x_address;
+	uint32_t second_scroll_y_address;
+};
+
+struct title_car_record
+{
+	uint16_t model;
+	uint16_t palette;
+	uint16_t width_scale;
+	uint16_t height_scale;
+	uint16_t position;
+	uint16_t y;
+	uint16_t speed;
+	uint16_t depth_layer;
+};
+
+struct lcd_text_line
+{
+	uint32_t text_0_to_3;
+	uint32_t text_4_to_7;
+	uint32_t text_8_to_11;
+	uint32_t text_12_to_15;
+};
+
+struct title_place
+{
+	uint16_t x;
+	uint16_t y;
+};
+
+struct picture_record
+{
+	uint16_t animation;
+	uint16_t palette;
+	uint16_t width_scale;
+	uint16_t height_scale;
+	uint16_t x;
+	uint16_t y;
+	uint16_t depth_layer;
+	uint16_t frames_left;
+};
+
+struct demo_caption_cue
+{
+	uint32_t frame;
+	uint32_t routine;
+};
+
+struct memory_test_result_text
+{
+	uint8_t colour;
+	uint8_t character_0;
+	uint8_t character_1;
+	uint8_t character_2;
+	uint8_t character_3;
+	uint8_t pad_05[0x1];
+};
+
+struct output_test_output
+{
+	uint16_t cell;
+	uint8_t variable;
+	uint8_t bit;
+};
+
+struct coin_setting_record
+{
+	uint8_t coins;
+	uint8_t bonus;
+	uint8_t first_multiplier;
+	uint8_t second_multiplier;
+};
+
+struct privilege_mode_setting
+{
+	uint8_t master;
+	uint8_t isdn;
+};
+
+struct time_digit_step
+{
+	uint32_t divisor;
+	uint32_t cell_step;
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
@@ -3692,6 +4390,80 @@ _Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of t
 _Static_assert(sizeof(struct object_area) == 0x8000, "struct object_area has the size of the game's blocks");
 _Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
 _Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the size of the game's blocks");
+_Static_assert(sizeof(struct road_row_record) == 0x18, "struct road_row_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct road_object_stream_entry) == 0xC, "struct road_object_stream_entry has the size of the program ROM's records");
+_Static_assert(sizeof(struct flashing_scenery_record) == 0x1A, "struct flashing_scenery_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct aurora_record) == 0x8, "struct aurora_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct road_crosser_record) == 0x10, "struct road_crosser_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct moving_scenery_record) == 0x14, "struct moving_scenery_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct swooping_helicopter_record) == 0x17, "struct swooping_helicopter_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct start_gate_record) == 0x18, "struct start_gate_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct flagman_record) == 0xB, "struct flagman_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct start_balloon_record) == 0x9, "struct start_balloon_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct santa_sleigh_record) == 0xE, "struct santa_sleigh_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct goal_parade_record) == 0xC, "struct goal_parade_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct sounding_scenery_record) == 0x12, "struct sounding_scenery_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct traffic_record) == 0xA, "struct traffic_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct traffic_sprite_record) == 0x10, "struct traffic_sprite_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct traffic_spawn_entry) == 0x10, "struct traffic_spawn_entry has the size of the program ROM's records");
+_Static_assert(sizeof(struct traffic_line_record) == 0x4, "struct traffic_line_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct backdrop_record) == 0x10, "struct backdrop_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct car_select_tilemap_setup) == 0x20, "struct car_select_tilemap_setup has the size of the program ROM's records");
+_Static_assert(sizeof(struct animation_palette) == 0x4, "struct animation_palette has the size of the program ROM's records");
+_Static_assert(sizeof(struct turntable_scenery_group) == 0x8, "struct turntable_scenery_group has the size of the program ROM's records");
+_Static_assert(sizeof(struct welcome_letter_place) == 0x4, "struct welcome_letter_place has the size of the program ROM's records");
+_Static_assert(sizeof(struct select_instruction_piece) == 0x8, "struct select_instruction_piece has the size of the program ROM's records");
+_Static_assert(sizeof(struct traffic_path_step) == 0x6, "struct traffic_path_step has the size of the program ROM's records");
+_Static_assert(sizeof(struct palette_cycle_record) == 0xC, "struct palette_cycle_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct sunset_fade_record) == 0x8, "struct sunset_fade_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct palette_fade_list) == 0x4, "struct palette_fade_list has the size of the program ROM's records");
+_Static_assert(sizeof(struct palette_fade_entry) == 0xC, "struct palette_fade_entry has the size of the program ROM's records");
+_Static_assert(sizeof(struct goal_stop) == 0x6, "struct goal_stop has the size of the program ROM's records");
+_Static_assert(sizeof(struct crash_physics) == 0x8, "struct crash_physics has the size of the program ROM's records");
+_Static_assert(sizeof(struct car_handling) == 0x28, "struct car_handling has the size of the program ROM's records");
+_Static_assert(sizeof(struct gear_list) == 0x2, "struct gear_list has the size of the program ROM's records");
+_Static_assert(sizeof(struct torque_point) == 0x4, "struct torque_point has the size of the program ROM's records");
+_Static_assert(sizeof(struct roadside_surface) == 0x8, "struct roadside_surface has the size of the program ROM's records");
+_Static_assert(sizeof(struct stage_roadside_surfaces) == 0x8, "struct stage_roadside_surfaces has the size of the program ROM's records");
+_Static_assert(sizeof(struct sprite_animation) == 0x4, "struct sprite_animation has the size of the program ROM's records");
+_Static_assert(sizeof(struct sprite_frame) == 0x2, "struct sprite_frame has the size of the program ROM's records");
+_Static_assert(sizeof(struct sprite_piece) == 0x8, "struct sprite_piece has the size of the program ROM's records");
+_Static_assert(sizeof(struct sprite_size_step) == 0xC, "struct sprite_size_step has the size of the program ROM's records");
+_Static_assert(sizeof(struct checkpoint_board_place) == 0x4, "struct checkpoint_board_place has the size of the program ROM's records");
+_Static_assert(sizeof(struct sprite_list_switch) == 0x14, "struct sprite_list_switch has the size of the program ROM's records");
+_Static_assert(sizeof(struct item_hit_box) == 0x8, "struct item_hit_box has the size of the program ROM's records");
+_Static_assert(sizeof(struct course_fork) == 0xA, "struct course_fork has the size of the program ROM's records");
+_Static_assert(sizeof(struct screen_hardware) == 0x10, "struct screen_hardware has the size of the program ROM's records");
+_Static_assert(sizeof(struct screen_view_default) == 0x1A, "struct screen_view_default has the size of the program ROM's records");
+_Static_assert(sizeof(struct hidden_layer_pair) == 0x2, "struct hidden_layer_pair has the size of the program ROM's records");
+_Static_assert(sizeof(struct screen_fade_start) == 0x4, "struct screen_fade_start has the size of the program ROM's records");
+_Static_assert(sizeof(struct background_registers) == 0x30, "struct background_registers has the size of the program ROM's records");
+_Static_assert(sizeof(struct background_setup) == 0x14, "struct background_setup has the size of the program ROM's records");
+_Static_assert(sizeof(struct bar_picture_bar) == 0x8, "struct bar_picture_bar has the size of the program ROM's records");
+_Static_assert(sizeof(struct course_record) == 0x6, "struct course_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct ranking_background_registers) == 0x30, "struct ranking_background_registers has the size of the program ROM's records");
+_Static_assert(sizeof(struct demo_race_choice) == 0x2, "struct demo_race_choice has the size of the program ROM's records");
+_Static_assert(sizeof(struct attract_lamp_step) == 0x2, "struct attract_lamp_step has the size of the program ROM's records");
+_Static_assert(sizeof(struct route_map_registers) == 0x40, "struct route_map_registers has the size of the program ROM's records");
+_Static_assert(sizeof(struct route_map_leg_car_place) == 0x8, "struct route_map_leg_car_place has the size of the program ROM's records");
+_Static_assert(sizeof(struct stage_result_text) == 0x9, "struct stage_result_text has the size of the program ROM's records");
+_Static_assert(sizeof(struct stage_result_place_text) == 0x6, "struct stage_result_place_text has the size of the program ROM's records");
+_Static_assert(sizeof(struct route_map_landmark_record) == 0x10, "struct route_map_landmark_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct sound_cue) == 0x2, "struct sound_cue has the size of the program ROM's records");
+_Static_assert(sizeof(struct road_surface_layer_setup) == 0x20, "struct road_surface_layer_setup has the size of the program ROM's records");
+_Static_assert(sizeof(struct race_background_layer_setup) == 0x14, "struct race_background_layer_setup has the size of the program ROM's records");
+_Static_assert(sizeof(struct song_title_record) == 0x2, "struct song_title_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct title_screen_layer_setup) == 0x20, "struct title_screen_layer_setup has the size of the program ROM's records");
+_Static_assert(sizeof(struct title_car_record) == 0x10, "struct title_car_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct lcd_text_line) == 0x10, "struct lcd_text_line has the size of the program ROM's records");
+_Static_assert(sizeof(struct title_place) == 0x4, "struct title_place has the size of the program ROM's records");
+_Static_assert(sizeof(struct picture_record) == 0x10, "struct picture_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct demo_caption_cue) == 0x8, "struct demo_caption_cue has the size of the program ROM's records");
+_Static_assert(sizeof(struct memory_test_result_text) == 0x6, "struct memory_test_result_text has the size of the program ROM's records");
+_Static_assert(sizeof(struct output_test_output) == 0x4, "struct output_test_output has the size of the program ROM's records");
+_Static_assert(sizeof(struct coin_setting_record) == 0x4, "struct coin_setting_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct privilege_mode_setting) == 0x2, "struct privilege_mode_setting has the size of the program ROM's records");
+_Static_assert(sizeof(struct time_digit_step) == 0x8, "struct time_digit_step has the size of the program ROM's records");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
@@ -3699,5 +4471,236 @@ _Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the 
 #define OBJECT_AREA(address) ((struct object_area *)ram(address))
 #define RACE(address) ((struct race *)ram(address))
 #define OBJECT_LIST(address) ((struct object_list *)ram(address))
+#define ROAD_ROW_RECORD(address) ((const struct road_row_record *)rom(address))
+#define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)rom(address))
+#define FLASHING_SCENERY_RECORD(address) ((const struct flashing_scenery_record *)rom(address))
+#define FLASHING_SCENERY_PALETTES(address) ((const int16_t *)rom(address))
+#define AURORA_RECORD(address) ((const struct aurora_record *)rom(address))
+#define AURORA_ANIMATIONS(address) ((const int16_t *)rom(address))
+#define ROAD_CROSSER_RECORD(address) ((const struct road_crosser_record *)rom(address))
+#define MOVING_SCENERY_RECORD(address) ((const struct moving_scenery_record *)rom(address))
+#define SWOOPING_HELICOPTER_RECORD(address) ((const struct swooping_helicopter_record *)rom(address))
+#define START_GATE_RECORD(address) ((const struct start_gate_record *)rom(address))
+#define FLAGMAN_RECORD(address) ((const struct flagman_record *)rom(address))
+#define START_BALLOON_RECORD(address) ((const struct start_balloon_record *)rom(address))
+#define SANTA_SLEIGH_RECORD(address) ((const struct santa_sleigh_record *)rom(address))
+#define GOAL_PARADE_RECORD(address) ((const struct goal_parade_record *)rom(address))
+#define SOUNDING_SCENERY_RECORD(address) ((const struct sounding_scenery_record *)rom(address))
+#define TRAFFIC_RECORD(address) ((const struct traffic_record *)rom(address))
+#define TRAFFIC_SPRITE_RECORD(address) ((const struct traffic_sprite_record *)rom(address))
+#define TRAFFIC_SPAWN_ENTRY(address) ((const struct traffic_spawn_entry *)rom(address))
+#define TRAFFIC_LINE_RECORD(address) ((const struct traffic_line_record *)rom(address))
+#define TRAFFIC_LINE_FOLLOWERS(address) ((const uint32_t *)rom(address))
+#define BACKDROP_RECORD(address) ((const struct backdrop_record *)rom(address))
+#define CAR_SELECT_TILEMAP_SETUP(address) ((const struct car_select_tilemap_setup *)rom(address))
+#define ANIMATION_PALETTE(address) ((const struct animation_palette *)rom(address))
+#define TURNTABLE_SCENERY_GROUP(address) ((const struct turntable_scenery_group *)rom(address))
+#define WELCOME_LETTER_PLACE(address) ((const struct welcome_letter_place *)rom(address))
+#define SELECT_INSTRUCTION_PIECE(address) ((const struct select_instruction_piece *)rom(address))
+#define TRAFFIC_PATH_STEP(address) ((const struct traffic_path_step *)rom(address))
+#define GOAL_ACTOR_SCRIPT_WORDS(address) ((const uint16_t *)rom(address))
+#define PALETTE_CYCLE_RECORD(address) ((const struct palette_cycle_record *)rom(address))
+#define PALETTE_CYCLE_STEPS(address) ((const uint32_t *)rom(address))
+#define SUNSET_FADE_RECORD(address) ((const struct sunset_fade_record *)rom(address))
+#define PALETTE_FADE_LIST(address) ((const struct palette_fade_list *)rom(address))
+#define PALETTE_FADE_ENTRY(address) ((const struct palette_fade_entry *)rom(address))
+#define GRID_SEGMENTS(address) ((const uint16_t *)rom(address))
+#define GRID_ROAD_PLACES(address) ((const uint32_t *)rom(address))
+#define GOAL_STOP(address) ((const struct goal_stop *)rom(address))
+#define CRASH_PHYSICS(address) ((const struct crash_physics *)rom(address))
+#define WHEEL_STEERING(address) ((const int8_t *)rom(address))
+#define CAR_HANDLING(address) ((const struct car_handling *)rom(address))
+#define GEAR_LIST(address) ((const struct gear_list *)rom(address))
+#define TORQUE_POINT(address) ((const struct torque_point *)rom(address))
+#define ROADSIDE_SURFACE(address) ((const struct roadside_surface *)rom(address))
+#define STAGE_ROADSIDE_SURFACES(address) ((const struct stage_roadside_surfaces *)rom(address))
+#define OBJECT_PALETTE_STEPS(address) ((const int16_t *)rom(address))
+#define SPRITE_ANIMATION(address) ((const struct sprite_animation *)rom(address))
+#define SPRITE_ANIMATION_POINTER(address) ((const uint32_t *)rom(address))
+#define SPRITE_FRAME(address) ((const struct sprite_frame *)rom(address))
+#define SPRITE_PIECE(address) ((const struct sprite_piece *)rom(address))
+#define SPRITE_SIZE_STEP(address) ((const struct sprite_size_step *)rom(address))
+#define SPRITE_PALETTE_WORDS(address) ((const uint16_t *)rom(address))
+#define SPRITE_PALETTE_POINTER(address) ((const uint32_t *)rom(address))
+#define CAR_GEAR_RATIOS(address) ((const uint8_t *)rom(address))
+#define CHECKPOINT_BOARD_PLACE(address) ((const struct checkpoint_board_place *)rom(address))
+#define SPRITE_LIST_SWITCH(address) ((const struct sprite_list_switch *)rom(address))
+#define SPRITE_LIST_SWITCH_POINTER(address) ((const uint32_t *)rom(address))
+#define ITEM_HIT_BOX(address) ((const struct item_hit_box *)rom(address))
+#define COURSE_POINTER(address) ((const uint32_t *)rom(address))
+#define COURSE_FORK(address) ((const struct course_fork *)rom(address))
+#define ROAD_PROJECTION_PATTERN(address) ((const uint8_t *)rom(address))
+#define ROAD_ROW_SIZE_STEPS(address) ((const uint8_t *)rom(address))
+#define ROAD_ROW_SIZE_STEPS_POINTER(address) ((const uint32_t *)rom(address))
+#define ROAD_ROW_SIZE_SHIFTS(address) ((const int8_t *)rom(address))
+#define ROAD_ROW_SIZE_SHIFTS_POINTER(address) ((const uint32_t *)rom(address))
+#define SCREEN_HARDWARE(address) ((const struct screen_hardware *)rom(address))
+#define SCREEN_HARDWARE_POINTER(address) ((const uint32_t *)rom(address))
+#define DRAW_DISTANCE_LIST(address) ((const uint16_t *)rom(address))
+#define SCREEN_VIEW_DEFAULT(address) ((const struct screen_view_default *)rom(address))
+#define SPRITE_CONTROL_VALUES(address) ((const uint8_t *)rom(address))
+#define HIDDEN_LAYER_PAIR(address) ((const struct hidden_layer_pair *)rom(address))
+#define SCREEN_FADE_START(address) ((const struct screen_fade_start *)rom(address))
+#define TEXT_FONT_ROWS(address) ((const uint8_t *)rom(address))
+#define TEXT_CHARACTERS(address) ((const uint8_t *)rom(address))
+#define BACKGROUND_REGISTERS(address) ((const struct background_registers *)rom(address))
+#define BACKGROUND_SETUP(address) ((const struct background_setup *)rom(address))
+#define FIRST_ATTRACT_CARS(address) ((const uint8_t *)rom(address))
+#define BAR_PICTURE_BAR(address) ((const struct bar_picture_bar *)rom(address))
+#define STAFF_CREDITS_CODE_CONTROLS(address) ((const uint8_t *)rom(address))
+#define CAR_NAME_LETTERS(address) ((const uint8_t *)rom(address))
+#define COURSE_RECORD(address) ((const struct course_record *)rom(address))
+#define REJECTED_NAMES(address) ((const uint32_t *)rom(address))
+#define RANKING_BACKGROUND_REGISTERS(address) ((const struct ranking_background_registers *)rom(address))
+#define DEMO_RACE_CHOICE(address) ((const struct demo_race_choice *)rom(address))
+#define ATTRACT_LAMP_STEP(address) ((const struct attract_lamp_step *)rom(address))
+#define ROUTE_MAP_REGISTERS(address) ((const struct route_map_registers *)rom(address))
+#define ROUTE_MAP_LEG_CAR_PLACE(address) ((const struct route_map_leg_car_place *)rom(address))
+#define STAGE_RESULT_TEXT(address) ((const struct stage_result_text *)rom(address))
+#define STAGE_RESULT_PLACE_TEXT(address) ((const struct stage_result_place_text *)rom(address))
+#define ROUTE_MAP_LANDMARK_RECORD(address) ((const struct route_map_landmark_record *)rom(address))
+#define SOUND_CUE(address) ((const struct sound_cue *)rom(address))
+#define ROAD_SURFACE_LAYER_SETUP(address) ((const struct road_surface_layer_setup *)rom(address))
+#define ROAD_TILES_CHANGE_BYTES(address) ((const uint8_t *)rom(address))
+#define RACE_BACKGROUND_LAYER_SETUP(address) ((const struct race_background_layer_setup *)rom(address))
+#define BACKGROUND_PAGE_WORD_STEPS(address) ((const uint32_t *)rom(address))
+#define PALETTE_COLOURS(address) ((const uint16_t *)rom(address))
+#define SONG_TITLE_RECORD(address) ((const struct song_title_record *)rom(address))
+#define TITLE_SCREEN_LAYER_SETUP(address) ((const struct title_screen_layer_setup *)rom(address))
+#define TITLE_WAVE_FRAMES(address) ((const uint16_t *)rom(address))
+#define TITLE_CAR_RECORD(address) ((const struct title_car_record *)rom(address))
+#define LCD_TEXT_LINE(address) ((const struct lcd_text_line *)rom(address))
+#define LCD_CHARACTER_ROWS(address) ((const uint8_t *)rom(address))
+#define DJ_MOUTH_SHAPE_NUMBERS(address) ((const uint8_t *)rom(address))
+#define TITLE_PLACE(address) ((const struct title_place *)rom(address))
+#define PICTURE_RECORD(address) ((const struct picture_record *)rom(address))
+#define TITLE_LOGO_PALETTES(address) ((const uint16_t *)rom(address))
+#define DEMO_CAPTION_CUE(address) ((const struct demo_caption_cue *)rom(address))
+#define KANJI_TEXT(address) ((const int16_t *)rom(address))
+#define KANJI_CHARACTER_ROWS(address) ((const uint8_t *)rom(address))
+#define TEST_MODE_CELLS(address) ((const uint16_t *)rom(address))
+#define MEMORY_TEST_RESULT_TEXT(address) ((const struct memory_test_result_text *)rom(address))
+#define TEST_MODE_CHARACTERS(address) ((const uint8_t *)rom(address))
+#define OUTPUT_TEST_OUTPUT(address) ((const struct output_test_output *)rom(address))
+#define TEST_MODE_SETTING_PLACES(address) ((const uint8_t *)rom(address))
+#define COIN_SETTING_RECORD(address) ((const struct coin_setting_record *)rom(address))
+#define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)rom(address))
+#define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)rom(address))
+
+/* the program ROM's tables of records, by name: name[i].field */
+#define bar_picture_bars_ADDRESS 0x0011B1u
+#define bar_picture_bars ((const struct bar_picture_bar *)rom(bar_picture_bars_ADDRESS))
+#define attract_lamp_steps_ADDRESS 0x001607u
+#define attract_lamp_steps ((const struct attract_lamp_step *)rom(attract_lamp_steps_ADDRESS))
+#define staff_credits_code_sequence_ADDRESS 0x001ADCu
+#define staff_credits_code_sequence ((const uint8_t *)rom(staff_credits_code_sequence_ADDRESS))
+#define ranking_background_register_sets_ADDRESS 0x002C44u
+#define ranking_background_register_sets ((const struct ranking_background_registers *)rom(ranking_background_register_sets_ADDRESS))
+#define default_course_records_ADDRESS 0x002CC4u
+#define default_course_records ((const struct course_record *)rom(default_course_records_ADDRESS))
+#define name_entry_rejected_names_ADDRESS 0x002D7Cu
+#define name_entry_rejected_names ((const uint32_t *)rom(name_entry_rejected_names_ADDRESS))
+#define attract_demo_races_ADDRESS 0x0034F4u
+#define attract_demo_races ((const struct demo_race_choice *)rom(attract_demo_races_ADDRESS))
+#define route_map_register_sets_ADDRESS 0x0047E8u
+#define route_map_register_sets ((const struct route_map_registers *)rom(route_map_register_sets_ADDRESS))
+#define route_map_start_leg_car_places_ADDRESS 0x004964u
+#define route_map_start_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_start_leg_car_places_ADDRESS))
+#define route_map_first_fork_leg_car_places_ADDRESS 0x0049A4u
+#define route_map_first_fork_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_first_fork_leg_car_places_ADDRESS))
+#define route_map_fork_leg_car_places_ADDRESS 0x004A24u
+#define route_map_fork_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_fork_leg_car_places_ADDRESS))
+#define stage_result_labels_ADDRESS 0x004BA4u
+#define stage_result_labels ((const struct stage_result_text *)rom(stage_result_labels_ADDRESS))
+#define stage_result_places_ADDRESS 0x004BDAu
+#define stage_result_places ((const struct stage_result_place_text *)rom(stage_result_places_ADDRESS))
+#define stage_result_retire_ADDRESS 0x004C0Au
+#define stage_result_retire ((const struct stage_result_text *)rom(stage_result_retire_ADDRESS))
+#define route_map_landmarks_ADDRESS 0x004C14u
+#define route_map_landmarks ((const struct route_map_landmark_record *)rom(route_map_landmarks_ADDRESS))
+#define traffic_path_ADDRESS 0x0067B2u
+#define traffic_path ((const struct traffic_path_step *)rom(traffic_path_ADDRESS))
+#define car_select_tilemap_setups_ADDRESS 0x006920u
+#define car_select_tilemap_setups ((const struct car_select_tilemap_setup *)rom(car_select_tilemap_setups_ADDRESS))
+#define turntable_car_looks_ADDRESS 0x0069B8u
+#define turntable_car_looks ((const struct animation_palette *)rom(turntable_car_looks_ADDRESS))
+#define turntable_scenery_groups_ADDRESS 0x006A18u
+#define turntable_scenery_groups ((const struct turntable_scenery_group *)rom(turntable_scenery_groups_ADDRESS))
+#define welcome_letter_places_ADDRESS 0x006DACu
+#define welcome_letter_places ((const struct welcome_letter_place *)rom(welcome_letter_places_ADDRESS))
+#define select_instruction_pieces_ADDRESS 0x006DF6u
+#define select_instruction_pieces ((const struct select_instruction_piece *)rom(select_instruction_pieces_ADDRESS))
+#define driver_couple_looks_ADDRESS 0x006E58u
+#define driver_couple_looks ((const struct animation_palette *)rom(driver_couple_looks_ADDRESS))
+#define stage_roadside_surface_lists_ADDRESS 0x00B78Cu
+#define stage_roadside_surface_lists ((const struct stage_roadside_surfaces *)rom(stage_roadside_surface_lists_ADDRESS))
+#define checkpoint_board_car_places_ADDRESS 0x00CF68u
+#define checkpoint_board_car_places ((const struct checkpoint_board_place *)rom(checkpoint_board_car_places_ADDRESS))
+#define checkpoint_board_number_places_ADDRESS 0x00CF88u
+#define checkpoint_board_number_places ((const struct checkpoint_board_place *)rom(checkpoint_board_number_places_ADDRESS))
+#define checkpoint_board_behind_places_ADDRESS 0x00CFA8u
+#define checkpoint_board_behind_places ((const struct checkpoint_board_place *)rom(checkpoint_board_behind_places_ADDRESS))
+#define sprite_list_switches_ADDRESS 0x00F508u
+#define sprite_list_switches ((const uint32_t *)rom(sprite_list_switches_ADDRESS))
+#define hidden_layer_pairs_ADDRESS 0x010B06u
+#define hidden_layer_pairs ((const struct hidden_layer_pair *)rom(hidden_layer_pairs_ADDRESS))
+#define screen_hardware_records_ADDRESS 0x010BA0u
+#define screen_hardware_records ((const uint32_t *)rom(screen_hardware_records_ADDRESS))
+#define screen_view_defaults_ADDRESS 0x010BC8u
+#define screen_view_defaults ((const struct screen_view_default *)rom(screen_view_defaults_ADDRESS))
+#define screen_fade_starts_ADDRESS 0x01173Au
+#define screen_fade_starts ((const struct screen_fade_start *)rom(screen_fade_starts_ADDRESS))
+#define race_opening_sound_cues_ADDRESS 0x014660u
+#define race_opening_sound_cues ((const struct sound_cue *)rom(race_opening_sound_cues_ADDRESS))
+#define stage_end_sound_cues_ADDRESS 0x01466Fu
+#define stage_end_sound_cues ((const struct sound_cue *)rom(stage_end_sound_cues_ADDRESS))
+#define road_surface_layer_setups_ADDRESS 0x01710Cu
+#define road_surface_layer_setups ((const struct road_surface_layer_setup *)rom(road_surface_layer_setups_ADDRESS))
+#define race_background_layer_setups_ADDRESS 0x017A50u
+#define race_background_layer_setups ((const struct race_background_layer_setup *)rom(race_background_layer_setups_ADDRESS))
+#define lcd_custom_characters_ADDRESS 0x018B4Eu
+#define lcd_custom_characters ((const uint8_t *)rom(lcd_custom_characters_ADDRESS))
+#define lcd_boot_text_ADDRESS 0x018B90u
+#define lcd_boot_text ((const struct lcd_text_line *)rom(lcd_boot_text_ADDRESS))
+#define radio_station_title_ADDRESS 0x01954Cu
+#define radio_station_title ((const struct song_title_record *)rom(radio_station_title_ADDRESS))
+#define ignition_key_prompt_pieces_ADDRESS 0x01A95Bu
+#define ignition_key_prompt_pieces ((const struct picture_record *)rom(ignition_key_prompt_pieces_ADDRESS))
+#define title_car_records_ADDRESS 0x01ABB4u
+#define title_car_records ((const struct title_car_record *)rom(title_car_records_ADDRESS))
+#define title_pictures_ADDRESS 0x01AC70u
+#define title_pictures ((const struct picture_record *)rom(title_pictures_ADDRESS))
+#define title_seagull_places_ADDRESS 0x01ACA0u
+#define title_seagull_places ((const struct title_place *)rom(title_seagull_places_ADDRESS))
+#define title_logo_stripe_places_ADDRESS 0x01ACA8u
+#define title_logo_stripe_places ((const struct title_place *)rom(title_logo_stripe_places_ADDRESS))
+#define title_logo_car_places_ADDRESS 0x01ACB4u
+#define title_logo_car_places ((const struct title_place *)rom(title_logo_car_places_ADDRESS))
+#define title_screen_layer_setups_ADDRESS 0x01ACCCu
+#define title_screen_layer_setups ((const struct title_screen_layer_setup *)rom(title_screen_layer_setups_ADDRESS))
+#define title_background_setups_ADDRESS 0x01AD0Cu
+#define title_background_setups ((const struct background_setup *)rom(title_background_setups_ADDRESS))
+#define demo_caption_pictures_ADDRESS 0x01AF00u
+#define demo_caption_pictures ((const struct picture_record *)rom(demo_caption_pictures_ADDRESS))
+#define memory_test_result_texts_ADDRESS 0x01CDC8u
+#define memory_test_result_texts ((const struct memory_test_result_text *)rom(memory_test_result_texts_ADDRESS))
+#define output_test_outputs_ADDRESS 0x01D5C0u
+#define output_test_outputs ((const struct output_test_output *)rom(output_test_outputs_ADDRESS))
+#define coin_setting_records_ADDRESS 0x01E3E8u
+#define coin_setting_records ((const struct coin_setting_record *)rom(coin_setting_records_ADDRESS))
+#define privilege_mode_settings_ADDRESS 0x01E6E5u
+#define privilege_mode_settings ((const struct privilege_mode_setting *)rom(privilege_mode_settings_ADDRESS))
+#define sprite_palettes_ADDRESS 0x032BA4u
+#define sprite_palettes ((const uint32_t *)rom(sprite_palettes_ADDRESS))
+#define sprite_animations_ADDRESS 0x034138u
+#define sprite_animations ((const uint32_t *)rom(sprite_animations_ADDRESS))
+#define fork_branch_piece_animation_ADDRESS 0x034308u
+#define fork_branch_piece_animation ((const uint32_t *)rom(fork_branch_piece_animation_ADDRESS))
+#define stage_courses_ADDRESS 0x03CC00u
+#define stage_courses ((const uint32_t *)rom(stage_courses_ADDRESS))
+#define road_row_size_step_lists_ADDRESS 0x1598CCu
+#define road_row_size_step_lists ((const uint32_t *)rom(road_row_size_step_lists_ADDRESS))
+#define road_row_size_shift_lists_ADDRESS 0x159AFCu
+#define road_row_size_shift_lists ((const uint32_t *)rom(road_row_size_shift_lists_ADDRESS))
 
 #endif

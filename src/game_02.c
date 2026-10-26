@@ -14,15 +14,15 @@
 /* The entries to a race, each frame. Player 0's screen keeps them in its record: once every entry is
    taken (it means to wait for each record's entry_serial_seen, but compares player 0's own each time), a
    player's entry_request not yet accepted (accepted_players) is accepted: entrant = that player,
-   entry_serial + 1, and the first one starts entry_frames at 600 (rom_00E614), cut to 40 once every
-   player is in; entry_frames counting down to 0 closes the entries (entrant FF, entry_serial + 1,
-   accepted_players cleared, 1 to the link board's 80000A). Every screen: when some player's race is over
-   (race game_over) an idle screen (game steps 1-5) goes to step 5 (cleared_on_race_over cleared), and
-   while player 0's entry_frames runs to step 7 (entry_invitation_step); each new entry_serial of player
-   0's record (entry_serial_seen) adds its entrant to the screen's entrants (entrant_count), or the close
-   clears them (and entry_accepted); the screen's own player accepted: its entry_request cleared,
-   entry_accepted, the first entrant into host_player and is_host when that is itself; the host keeps
-   racer_count and race_order in its record from the entrants. */
+   entry_serial + 1, and the first one starts entry_frames at 600 (entry_frames_by_machines), cut to 40
+   once every player is in; entry_frames counting down to 0 closes the entries (entrant FF, entry_serial
+   + 1, accepted_players cleared, 1 to the link board's 80000A). Every screen: when some player's race is
+   over (race game_over) an idle screen (game steps 1-5) goes to step 5 (cleared_on_race_over cleared),
+   and while player 0's entry_frames runs to step 7 (entry_invitation_step); each new entry_serial of
+   player 0's record (entry_serial_seen) adds its entrant to the screen's entrants (entrant_count), or
+   the close clears them (and entry_accepted); the screen's own player accepted: its entry_request
+   cleared, entry_accepted, the first entrant into host_player and is_host when that is itself; the host
+   keeps racer_count and race_order in its record from the entrants. */
 void race_entries_update(void)
 {
 	uint32_t zero = 0;
@@ -54,7 +54,7 @@ void race_entries_update(void)
 				r1 = 0u;
 				if (stand_alone == 0u)
 					r1 = machine_count;
-				r9 = rom_00E614[r1];
+				r9 = entry_frames_by_machines[r1];
 				r13 = r12 + 0x19u;
 				r1 = player_count;
 				r3 = 0u;
@@ -191,16 +191,16 @@ void race_entries_update(void)
    (against counted_stages) has passed a checkpoint (stage_count - 1): pass_player, pass_checkpoint,
    pass_order (counted_passes), pass_branch (the side of the road it was on: race road_x bit 15),
    pass_time (race_time in hundredths plus the order), pass_count + 1; the first to pass a checkpoint
-   before the goal adds the time of the stage its branch leads to (rom_00E5B3 by rom_00E5D3[stage * 2 +
-   branch]) plus the setting for that checkpoint (master_time_difficulty) to time_left. Once the race has
-   started (race_started) race_time + 34 and time_left - 1 a frame, and one pass of sorting race_order:
-   the finished (race finished) first by finish_time, then by distance (race segment_fraction-43). Every
-   screen from the host's record (host_record): the leader's segment and stage (leader_window_segment,
-   leader_stage), each player's place (places, its own in place); each new pass: pass_seen (screen and
-   race), checkpoints_passed, checkpoint_passes, the order and the time by player and by order
-   (checkpoint_orders, checkpoint_order, checkpoint_times_by_player, checkpoint_times); the first car
-   past a fork decides the route: forks_decided + 1, its branch in route_branches and the stage it leads
-   to in route_stages. */
+   before the goal adds the time of the stage its branch leads to (stage_start_times by
+   fork_next_stages[stage * 2 + branch]) plus the setting for that checkpoint (master_time_difficulty) to
+   time_left. Once the race has started (race_started) race_time + 34 and time_left - 1 a frame, and one
+   pass of sorting race_order: the finished (race finished) first by finish_time, then by distance (race
+   segment_fraction-43). Every screen from the host's record (host_record): the leader's segment and
+   stage (leader_window_segment, leader_stage), each player's place (places, its own in place); each new
+   pass: pass_seen (screen and race), checkpoints_passed, checkpoint_passes, the order and the time by
+   player and by order (checkpoint_orders, checkpoint_order, checkpoint_times_by_player,
+   checkpoint_times); the first car past a fork decides the route: forks_decided + 1, its branch in
+   route_branches and the stage it leads to in route_stages. */
 void race_progress_update(void)
 {
 	uint8_t r1 = 0, r5 = 0, pass_branch = 0, pass_count = 0, pass_count_2 = 0, player = 0;
@@ -259,7 +259,7 @@ void race_progress_update(void)
 					r0 = RACE(race_5)->stage;
 					r0 = (uint8_t)(r0 * 2u);
 					r0 = (uint8_t)(r0 + r5);
-					RACE(race)->time_left += (int8_t)(rom_00E5B3[rom_00E5D3[r0]] + master_time_difficulty[r3]) * 0x1Eu;
+					RACE(race)->time_left += (int8_t)(stage_start_times[fork_next_stages[r0]] + master_time_difficulty[r3]) * 0x1Eu;
 				}
 			}
 		}
@@ -356,7 +356,7 @@ void race_progress_update(void)
 			mem_write8(screen + 0x34Au + pass_checkpoint, pass_branch);
 			r0 = mem_read8(race_copy_offsets[pass_player] + 0x20E062u);
 			r0 = (uint8_t)(r0 * 2u);
-			mem_write8(screen + 0x344u + pass_checkpoint, rom_00E5D3[(uint8_t)(r0 + pass_branch)]);
+			mem_write8(screen + 0x344u + pass_checkpoint, fork_next_stages[(uint8_t)(r0 + pass_branch)]);
 		}
 	}
 }
@@ -409,7 +409,7 @@ void entry_invitation_step(void)
 		clear_lcd();
 		return;
 	default:
-		invalid_jump(rom_00DDB4[SCREEN(screen)->game_step]);
+		invalid_jump(entry_invitation_step_jumps[SCREEN(screen)->game_step]);
 	}
 	if ((SCREEN(screen)->flags & 1u) == 0u)
 	{
@@ -454,18 +454,18 @@ uint32_t players_not_ready(void)
 {
 	uint32_t zero = 0;
 	uint32_t r1 = 0, race = 0;
-	uint8_t t1 = 0;
+	uint8_t ready = 0;
 
 	race = SCREEN(screen)->host_record + 0x1Fu;
 	r1 = RACE(race - 0x1Fu)->racer_count;
 	race++;
 	do
 	{
-		t1 = mem_read8(0x20FC5Cu + rom_00E0C4[mem_read8(race)]);
-		zero = t1 == 0u;
+		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[mem_read8(race)])->ready;
+		zero = ready == 0u;
 		r1--;
 		race++;
-	} while ((r1 != 0u) & (t1 != 0u));
+	} while ((r1 != 0u) & (ready != 0u));
 	return zero;
 }
 
@@ -1481,17 +1481,17 @@ void link_send_records(void)
 }
 
 /* Draws the object's sprite, unless flags bit 1 is set or the screen's sprite list is full: field 3E
-   picks the routine (rom_00EB44): some project the object's road position (1C) with its offsets (20, 24)
-   and set fields 30 and 32 to where it lands and 3C to the road's depth layer there, some draw it at the
-   screen position in 30 and 32, some copy a ready sprite entry from the address in field 38; then links
-   it into the depth list of layer 3C (screen + 5000). */
+   picks the routine (draw_object_mode_jumps): some project the object's road position (1C) with its
+   offsets (20, 24) and set fields 30 and 32 to where it lands and 3C to the road's depth layer there,
+   some draw it at the screen position in 30 and 32, some copy a ready sprite entry from the address in
+   field 38; then links it into the depth list of layer 3C (screen + 5000). */
 uint32_t draw_object(uint32_t r0)
 {
 	uint32_t r2 = 0, r10 = 0, r11 = 0, left_caller = 0;
 
 	if ((OBJECT(current_object)->flags & 2u) != 0u)
 		return r0;
-	r0 = rom_00EB44[OBJECT(current_object)->draw_mode];
+	r0 = draw_object_mode_jumps[OBJECT(current_object)->draw_mode];
 	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
 	if (SCREEN(screen)->sprite_list_limit <= r10)
 		return r0;
@@ -1884,58 +1884,58 @@ void draw_object_on_screen(uint32_t *p_r0, uint32_t *p_r10)
 /* Writes the object's frame (animation, frame) into the screen's sprite list at R10 and its copy at +
    3000, a sprite of 8 halfwords for each piece: its word flipped by flags bits 6-7, its size from
    0x122B74 by size_step scaled by R2 (height) and R3 (width), placed at R0, R1 plus its offsets scaled
-   the same way (signs flipped by the flags: rom_00F13C, rom_00F140), its palette word from rom_032BA4 by
-   palette; R10 past them. */
+   the same way (signs flipped by the flags: sprite_flip_x_signs, sprite_flip_y_signs), its palette word
+   from sprite_palettes by palette; R10 past them. */
 void put_object_sprites(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint16_t r0 = (uint16_t)*p_r0;
 	uint32_t r10 = *p_r10;
 	uint16_t r0_2 = 0, r1_2 = 0, r2_2 = 0, r3_2 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r19 = 0;
 	uint32_t r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r26 = 0;
-	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint16_t source_size = 0, rom_offset = 0, palette_word = 0, height = 0, height_bits = 0, width = 0, width_bits = 0;
 
 	r8 = (uint16_t)r0;
 	r9 = (uint16_t)r1;
 	r16 = r2;
 	r15 = r3;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->animation] + 4u + OBJECT(current_object)->frame * 4u);
-	r13 = rom_032BA4[OBJECT(current_object)->palette];
+	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame];
+	r13 = sprite_palettes[OBJECT(current_object)->palette];
 	r19 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
 	r26 = r19;
 	r26 = r26 >> 5;
-	r17 = r15 * rom_00F13C[r26];
-	r18 = r16 * rom_00F140[r26];
-	r11 = mem_read16(r12);
+	r17 = r15 * sprite_flip_x_signs[r26];
+	r18 = r16 * sprite_flip_y_signs[r26];
+	r11 = SPRITE_FRAME(r12)->piece_count;
 	r12 = r12 + 2u;
 	do
 	{
-		r0_2 = mem_read16(r12) ^ r19;
+		r0_2 = SPRITE_PIECE(r12)->attributes ^ r19;
 		r26 = OBJECT(current_object)->size_step * 3u;
 		r12 = r12 + 2u;
-		r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
-		t1 = ROM16(r14);
+		r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+		source_size = SPRITE_SIZE_STEP(r14)->source_size;
 		r14 = r14 + 2u;
-		r1_2 = t1;
-		t2 = ROM16(r14);
+		r1_2 = source_size;
+		rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 		r14 = r14 + 2u;
-		r6 = t2;
-		t3 = mem_read16(r13);
+		r6 = rom_offset;
+		palette_word = SPRITE_PALETTE_WORDS(r13)[0];
 		r13 += 2u;
-		r7 = t3;
-		t4 = ROM16(r14);
+		r7 = palette_word;
+		height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 		r14 = r14 + 2u;
-		t5 = ROM16(r14);
+		height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 		r14 = r14 + 2u;
-		r2_2 = (((t4 * r16) >> 8) & 0x3FFu) | t5;
-		t6 = ROM16(r14);
+		r2_2 = (((height * r16) >> 8) & 0x3FFu) | height_bits;
+		width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 		r14 = r14 + 2u;
-		t7 = ROM16(r14);
+		width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 		r14 = r14 + 2u;
-		r3_2 = (((t6 * r15) >> 8) & 0x3FFu) | t7 | SCREEN(screen)->sprite_screen_bit;
+		r3_2 = (((width * r15) >> 8) & 0x3FFu) | width_bits | SCREEN(screen)->sprite_screen_bit;
 		r12 = r12 + 2u;
-		r4 = (uint16_t)(((int32_t)((int16_t)mem_read16(r12) * r18) >> 8) + r9);
+		r4 = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset * r18) >> 8) + r9);
 		r12 = r12 + 2u;
-		r5 = (uint16_t)(((int32_t)((int16_t)mem_read16(r12) * r17) >> 8) + r8);
+		r5 = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset * r17) >> 8) + r8);
 		mem_write16(r10 + 0x3000u, r0_2);
 		mem_write16(r10, r0_2);
 		r10 += 2u;
@@ -1968,40 +1968,40 @@ void put_object_sprites(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, u
 }
 
 /* Draw mode 8: the first piece of the animation's frame at its own size (no zoom, no flip), at x, y on
-   the screen (less sprite_origin_x, sprite_origin_y), with the first word of its palette (rom_032BA4),
-   into the sprite list and its halfway copy alike. */
+   the screen (less sprite_origin_x, sprite_origin_y), with the first word of its palette
+   (sprite_palettes), into the sprite list and its halfway copy alike. */
 void draw_object_one_piece(uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint32_t r10 = *p_r10;
-	uint16_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0;
+	uint16_t r2 = 0, r3 = 0, r4 = 0, r5 = 0, attributes = 0, palette_word = 0, rom_offset = 0, source_size = 0;
 	uint32_t r26 = 0;
 
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->animation] + 4u + OBJECT(current_object)->frame * 4u) + 2u;
-	r0 = mem_read16(r12);
+	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
+	attributes = SPRITE_PIECE(r12)->attributes;
 	r26 = OBJECT(current_object)->size_step * 3u;
 	r12 = r12 + 2u;
-	r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
-	r1 = ROM16(r14);
+	r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+	source_size = SPRITE_SIZE_STEP(r14)->source_size;
 	r14 = r14 + 2u;
-	r6 = ROM16(r14);
-	r7 = mem_read16(rom_032BA4[OBJECT(current_object)->palette]);
+	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
+	palette_word = SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0];
 	r14 = r14 + 2u;
-	r2 = ROM16(r14);
+	r2 = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 	r14 = r14 + 2u;
-	r2 |= ROM16(r14);
+	r2 |= SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 	r14 = r14 + 2u;
-	r3 = ROM16(r14);
+	r3 = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 	r14 = r14 + 2u;
-	r3 = r3 | ROM16(r14) | SCREEN(screen)->sprite_screen_bit;
+	r3 = r3 | SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits | SCREEN(screen)->sprite_screen_bit;
 	r12 = r12 + 2u;
-	r4 = (uint16_t)(mem_read16(r12) + (OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y));
+	r4 = (uint16_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset + (OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y));
 	r12 = r12 + 2u;
-	r5 = (uint16_t)(mem_read16(r12) + (OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x));
-	mem_write16(r10 + 0x3000u, r0);
-	mem_write16(r10, r0);
+	r5 = (uint16_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset + (OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x));
+	mem_write16(r10 + 0x3000u, attributes);
+	mem_write16(r10, attributes);
 	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r1);
-	mem_write16(r10, r1);
+	mem_write16(r10 + 0x3000u, source_size);
+	mem_write16(r10, source_size);
 	r10 += 2u;
 	mem_write16(r10 + 0x3000u, r2);
 	mem_write16(r10, r2);
@@ -2015,15 +2015,15 @@ void draw_object_one_piece(uint32_t *p_r0, uint32_t *p_r10)
 	mem_write16(r10 + 0x3000u, r5);
 	mem_write16(r10, r5);
 	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r6);
-	mem_write16(r10, r6);
+	mem_write16(r10 + 0x3000u, rom_offset);
+	mem_write16(r10, rom_offset);
 	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r7);
-	mem_write16(r10, r7);
+	mem_write16(r10 + 0x3000u, palette_word);
+	mem_write16(r10, palette_word);
 	r10 += 2u;
 	r12 = r12 + 2u;
 	r14 = r14 + 2u;
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | r0;
+	*p_r0 = (*p_r0 & 0xFFFF0000u) | attributes;
 	*p_r10 = r10;
 }
 
@@ -2053,17 +2053,17 @@ uint32_t draw_object_command(uint32_t r10)
 
 /* Draw mode A: every piece of the animation's frame at x, y on the screen (less sprite_origin_x,
    sprite_origin_y), zoomed by width_scale and height_scale, flipped by flags bits 6-7 (with bit 7 the
-   pieces' offsets are negated, rom_00F4EC), each with its palette word; the halfway copy (+3000) is
-   drawn from the averages of this frame's x, y, width_scale and height_scale and the last frame's, kept
-   in the ring of sprite places (next_sprite_place, 16 bytes a record; the object's field 50 points at
-   its record) when flags bit 5 says it was drawn the frame before. Keeps this frame's values in a new
-   record and sets flags bit 5. */
+   pieces' offsets are negated, smoothed_flip_signs), each with its palette word; the halfway copy
+   (+3000) is drawn from the averages of this frame's x, y, width_scale and height_scale and the last
+   frame's, kept in the ring of sprite places (next_sprite_place, 16 bytes a record; the object's field
+   50 points at its record) when flags bit 5 says it was drawn the frame before. Keeps this frame's
+   values in a new record and sets flags bit 5. */
 void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 {
 	uint32_t r10 = *p_r10;
 	uint16_t r4 = 0, r9 = 0, r15 = 0, r16 = 0, r19 = 0, r26_2 = 0, sprite_screen_bit = 0;
 	uint32_t r0 = 0, r1 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0, r13 = 0, r15_2 = 0, r18 = 0, r26 = 0, height_scale = 0, width_scale = 0;
-	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, palette_word = 0;
 	uint32_t flags = 0, flags_long = 0;
 
 	r28 = OBJECT(current_object)->previous_place;
@@ -2109,17 +2109,17 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 	r27 = r27 + 8u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & 0xEFFFu);
 	SCREEN(screen)->next_sprite_place = r27;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->animation] + 4u + OBJECT(current_object)->frame * 4u);
-	r13 = rom_032BA4[OBJECT(current_object)->palette];
+	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame];
+	r13 = sprite_palettes[OBJECT(current_object)->palette];
 	r19 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
 	r26 = r19;
-	r18 = rom_00F4EC[r26 >> 5];
-	r28 = mem_read16(r12);
+	r18 = smoothed_flip_signs[r26 >> 5];
+	r28 = SPRITE_FRAME(r12)->piece_count;
 	r11 = r10 + 0x3000u;
 	r12 = r12 + 2u;
 	do
 	{
-		r27 = (r27 & ~0xFFFFu) | mem_read16(r12);
+		r27 = (r27 & ~0xFFFFu) | SPRITE_PIECE(r12)->attributes;
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 ^ r19);
 		mem_write16(r10, r27);
 		r10 += 2u;
@@ -2127,34 +2127,34 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 		r11 += 2u;
 		r26 = OBJECT(current_object)->size_step * 3u;
 		r12 = r12 + 2u;
-		r14 = 0x122B74u + (uint16_t)(r26 + mem_read16(r12)) * 4u;
-		t1 = ROM16(r14);
+		r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+		source_size = SPRITE_SIZE_STEP(r14)->source_size;
 		r14 = r14 + 2u;
-		r15 = t1;
+		r15 = source_size;
 		mem_write16(r10, r15);
 		r10 += 2u;
 		mem_write16(r11, r15);
 		r11 += 2u;
-		t2 = ROM16(r14);
+		rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 		r14 = r14 + 2u;
-		r26_2 = t2;
-		t3 = ROM16(r14);
+		r26_2 = rom_offset;
+		height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 		r14 = r14 + 2u;
-		r15_2 = t3;
-		t4 = ROM16(r14);
+		r15_2 = height;
+		height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 		r14 = r14 + 2u;
-		r9 = t4;
+		r9 = height_bits;
 		mem_write16(r10, (((r15_2 * height_scale) >> 8) & 0x3FFu) | r9);
 		r10 += 2u;
 		mem_write16(r11, (((r15_2 * r7) >> 8) & 0x3FFu) | r9);
 		r11 += 2u;
-		t5 = ROM16(r14);
+		width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 		r14 = r14 + 2u;
-		r15_2 = t5;
+		r15_2 = width;
 		r16 = ((r15_2 * r6) >> 8) & 0x3FFu;
-		t6 = ROM16(r14);
+		width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 		r14 = r14 + 2u;
-		r9 = t6;
+		r9 = width_bits;
 		r15_2 = (((r15_2 * width_scale) >> 8) & 0x3FFu) | r9;
 		r16 |= r9;
 		sprite_screen_bit = SCREEN(screen)->sprite_screen_bit;
@@ -2163,13 +2163,13 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 		mem_write16(r11, r16 | sprite_screen_bit);
 		r11 += 2u;
 		r12 = r12 + 2u;
-		r15_2 = (int16_t)mem_read16(r12) * r18;
+		r15_2 = SPRITE_PIECE(r12 - 0x4u)->y_offset * r18;
 		mem_write16(r10, ((int32_t)(r15_2 * height_scale) >> 8) + r1);
 		r10 += 2u;
 		mem_write16(r11, ((int32_t)(r15_2 * r7) >> 8) + r5);
 		r11 += 2u;
 		r12 = r12 + 2u;
-		r15_2 = (int16_t)mem_read16(r12) * r18;
+		r15_2 = SPRITE_PIECE(r12 - 0x6u)->x_offset * r18;
 		mem_write16(r10, ((int32_t)(r15_2 * width_scale) >> 8) + r0);
 		r10 += 2u;
 		mem_write16(r11, (uint32_t)((int32_t)(r15_2 * r6) >> 8) + r4);
@@ -2178,9 +2178,9 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 		r10 += 2u;
 		mem_write16(r11, r26_2);
 		r11 += 2u;
-		t7 = mem_read16(r13);
+		palette_word = SPRITE_PALETTE_WORDS(r13)[0];
 		r13 += 2u;
-		r27 = (r27 & ~0xFFFFu) | t7;
+		r27 = (r27 & ~0xFFFFu) | palette_word;
 		mem_write16(r10, r27);
 		r10 += 2u;
 		mem_write16(r11, r27);
@@ -2198,7 +2198,7 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
    frame 0, -2 starts the animation whose number is the next entry. */
 uint32_t animation_advance(uint32_t r7)
 {
-	uint32_t r7_2 = 0, r8 = 0, r9 = 0, frame = 0;
+	uint32_t r7_2 = 0, frame = 0, next_animation = 0, sprite_animation = 0;
 	uint8_t frame_countdown = 0;
 	uint32_t t1 = 0;
 
@@ -2211,11 +2211,11 @@ uint32_t animation_advance(uint32_t r7)
 	OBJECT(current_object)->frame_countdown = OBJECT(current_object)->frame_time;
 	OBJECT(current_object)->frame++;
 	frame = OBJECT(current_object)->frame;
-	r8 = rom_034138[OBJECT(current_object)->animation];
-	if ((int32_t)mem_read32(r8 + 4u + frame * 4u) > 0)
+	sprite_animation = sprite_animations[OBJECT(current_object)->animation];
+	if (SPRITE_ANIMATION(sprite_animation)->frames[frame] > 0)
 		return r7;
-	t1 = 0u - mem_read32(r8 + 4u + frame * 4u);
-	r7_2 = rom_00F34C[t1];
+	t1 = 0u - SPRITE_ANIMATION(sprite_animation)->frames[frame];
+	r7_2 = animation_order_jumps[t1];
 	switch (t1)
 	{
 	case 0:
@@ -2223,55 +2223,56 @@ uint32_t animation_advance(uint32_t r7)
 		OBJECT(current_object)->frame--;
 		return r7_2;
 	case 2:
-		r9 = mem_read32(r8 + 8u + frame * 4u);
-		animation_start(r9);
+		next_animation = SPRITE_ANIMATION(sprite_animation)->frames[frame + 1u];
+		animation_start(next_animation);
 		return r7_2;
 	case 1:
 		OBJECT(current_object)->frame = 0u;
 		return r7_2;
 	default:
-		invalid_jump(rom_00F34C[t1]);
+		invalid_jump(animation_order_jumps[t1]);
 	}
 }
 
-/* Starts animation R9 (rom_034138[R9] is its record) at its first frame: frame_time and frame_countdown
-   from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and height zoom of
-   the screen-position drawing, draw_object_on_screen: 100 the sprite's own size). */
+/* Starts animation R9 (sprite_animations[R9] is its record) at its first frame: frame_time and
+   frame_countdown from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and
+   height zoom of the screen-position drawing, draw_object_on_screen: 100 the sprite's own size). */
 void animation_start(uint32_t r9)
 {
-	uint8_t r9_2 = 0;
+	uint8_t frame_time = 0;
 
 	OBJECT(current_object)->animation = r9;
-	r9_2 = mem_read8(rom_034138[r9]);
-	OBJECT(current_object)->frame_time = r9_2;
-	OBJECT(current_object)->frame_countdown = r9_2;
+	frame_time = SPRITE_ANIMATION(sprite_animations[r9])->frame_time;
+	OBJECT(current_object)->frame_time = frame_time;
+	OBJECT(current_object)->frame_countdown = frame_time;
 	OBJECT(current_object)->size_step = 0u;
 	OBJECT(current_object)->width_scale = 0x100u;
 	OBJECT(current_object)->height_scale = 0x100u;
 	OBJECT(current_object)->frame = 0u;
 }
 
-/* Finishes the screen's sprite list in the vertical blank (int_vector_40): picks a record of rom_00F508
-   by the screen (index) and sprite_list_buffers; when groups were drawn (sprite_groups), chains the
-   depth lists from layer 0 to 415 (depth_lists: the list's start entry jumps to the first layer's newest
-   group, each layer's tail to the next layer's head; the heads cleared), in the list and its halfway
-   copy, and ends the chain with the record's word (a jump on to sprite entry 3, screen 2's list, after
-   screen 1's; entry 4, the end, after screen 2's); points sprite RAM entries 2 and 3 (the jumps to each
-   screen's list) at the halfway copy of the list just finished and at the other screen's finished list;
-   then the next buffer (sprite_list_buffers, sprite_list_last, sprite_list_limit) and sprite_groups 0. */
+/* Finishes the screen's sprite list in the vertical blank (int_vector_40): picks a record of
+   sprite_list_switches by the screen (index) and sprite_list_buffers; when groups were drawn
+   (sprite_groups), chains the depth lists from layer 0 to 415 (depth_lists: the list's start entry jumps
+   to the first layer's newest group, each layer's tail to the next layer's head; the heads cleared), in
+   the list and its halfway copy, and ends the chain with the record's word (a jump on to sprite entry 3,
+   screen 2's list, after screen 1's; entry 4, the end, after screen 2's); points sprite RAM entries 2
+   and 3 (the jumps to each screen's list) at the halfway copy of the list just finished and at the other
+   screen's finished list; then the next buffer (sprite_list_buffers, sprite_list_last,
+   sprite_list_limit) and sprite_groups 0. */
 void finish_sprite_list(void)
 {
 	uint16_t r3 = 0, r4 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r9 = 0, r10 = 0, r11 = 0, sprite_list_switch = 0;
 	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
 
 	r9 = SCREEN(screen)->index;
 	r9 = (uint8_t)(r9 * 2u);
 	r9 = r9 | (uint8_t)sprite_list_buffers;
 	r9 = (uint8_t)(r9 * 2u);
-	r19 = rom_00F508[r9 | (uint8_t)(sprite_list_buffers >> 8u)];
-	r10 = mem_read32(r19);
-	r19 += 4u;
+	sprite_list_switch = sprite_list_switches[r9 | (uint8_t)(sprite_list_buffers >> 8u)];
+	r10 = SPRITE_LIST_SWITCH(sprite_list_switch)->list;
+	sprite_list_switch += 4u;
 	if (SCREEN(screen)->sprite_groups != 0u)
 	{
 		r11 = screen + 0x5000u;
@@ -2373,17 +2374,17 @@ void finish_sprite_list(void)
 			r1--;
 		} while (r1 != 0u);
 	}
-	mem_write16(r10, mem_read16(r19));
-	mem_write16(r10 + 0x3000u, mem_read16(r19));
-	r19 += 2u;
-	mem_write16(SPRITE_RAM_400020, mem_read16(r19));
-	r19 += 2u;
-	mem_write16(SPRITE_RAM_400030, mem_read16(r19));
-	r19 += 2u;
-	sprite_list_buffers = mem_read16(r19);
-	r19 += 2u;
-	SCREEN(screen)->sprite_list_last = mem_read32(r19);
-	SCREEN(screen)->sprite_list_limit = mem_read32(r19 + 4u);
+	mem_write16(r10, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
+	mem_write16(r10 + 0x3000u, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
+	sprite_list_switch += 2u;
+	mem_write16(SPRITE_RAM_400020, SPRITE_LIST_SWITCH(sprite_list_switch - 0x6u)->entry_2_jump);
+	sprite_list_switch += 2u;
+	mem_write16(SPRITE_RAM_400030, SPRITE_LIST_SWITCH(sprite_list_switch - 0x8u)->entry_3_jump);
+	sprite_list_switch += 2u;
+	sprite_list_buffers = SPRITE_LIST_SWITCH(sprite_list_switch - 0xAu)->next_buffers;
+	sprite_list_switch += 2u;
+	SCREEN(screen)->sprite_list_last = SPRITE_LIST_SWITCH(sprite_list_switch - 0xCu)->next_list;
+	SCREEN(screen)->sprite_list_limit = SPRITE_LIST_SWITCH(sprite_list_switch - 0xCu)->next_limit;
 	SCREEN(screen)->sprite_groups = 0u;
 }
 
@@ -2402,7 +2403,7 @@ void finish_sprite_list(void)
 void road_row_draw(uint32_t r7, uint32_t r15)
 {
 	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_table = 0, spacing = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_size_step = 0;
 	uint16_t t1 = 0;
 	uint32_t flags = 0, flags_long = 0, t2 = 0;
 
@@ -2459,14 +2460,14 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 	r9 = spacing << 4;
 	r8 = spacing << 5;
 	r17 = r1;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->animation] + 4u + OBJECT(current_object)->frame * 4u) + 2u;
-	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->palette]) << 16;
+	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
+	r16 = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
 	r0 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
 	r0 = r0 & 0xC0u;
-	r0 = r0 ^ mem_read16(r12);
+	r0 = r0 ^ SPRITE_PIECE(r12)->attributes;
 	r12 = r12 + 2u;
-	r1 = mem_read16(r12);
-	r13 = 0x122B74u + r1 * 4u;
+	r1 = SPRITE_PIECE(r12 - 0x2u)->sprite;
+	size_steps = 0x122B74u + r1 * 4u;
 	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
 	OBJECT(current_object)->size_step = 0xFFu;
 	r12 = r12 + 2u;
@@ -2501,22 +2502,22 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 				r4 = 0xFFFu;
 			r4 = r4 >> 5;
 			size_table = OBJECT(current_object)->road_row.size_table;
-			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[size_table] + r4), 32);
-			r4 = mem_read8(rom_1598CC[size_table] + r4);
-			if (r4 != OBJECT(current_object)->size_step)
+			r3_2 = shift_by(r3_2, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[r4], 32);
+			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[r4];
+			if (sprite_size_step != OBJECT(current_object)->size_step)
 			{
-				OBJECT(current_object)->size_step = r4;
-				r4 = r13 + r4 * 3u * 4u;
-				r0 = (r0 & 0xFFFFu) | ((uint32_t)ROM16(r4) << 16);
-				r4 += 2u;
-				r7 = ROM16(r4);
-				r4 += 2u;
-				r14 = ROM16(r4);
-				r4 += 2u;
-				r1 = ROM16(r4);
-				r4 += 2u;
-				r15 = ROM16(r4);
-				r2 = ROM16(r4 + 2u) | SCREEN(screen)->sprite_screen_bit;
+				OBJECT(current_object)->size_step = sprite_size_step;
+				sprite_size_step = size_steps + sprite_size_step * 3u * 4u;
+				r0 = (r0 & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
+				sprite_size_step += 2u;
+				r7 = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
+				sprite_size_step += 2u;
+				r14 = SPRITE_SIZE_STEP(sprite_size_step - 0x4u)->height;
+				sprite_size_step += 2u;
+				r1 = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
+				sprite_size_step += 2u;
+				r15 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
+				r2 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
 				r7 |= r16;
 			}
 			r4_2 = (uint16_t)((r3_2 * r15) >> 8);
@@ -2599,7 +2600,7 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 			break;
 		}
 	}
-	r26_2 = rom_100000;
+	r26_2 = blank_sprite_places;
 	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
@@ -2622,7 +2623,7 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 void road_row_pair_draw(uint32_t r7, uint32_t r15)
 {
 	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r21 = 0, r26 = 0, r30 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r13 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_table = 0, spacing = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_size_step = 0;
 	uint16_t t1 = 0;
 	uint32_t flags = 0, flags_long = 0, t2 = 0;
 
@@ -2680,14 +2681,14 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 	r9 = spacing << 4;
 	r8 = spacing << 5;
 	r17 = r1;
-	r12 = mem_read32(rom_034138[OBJECT(current_object)->animation] + 4u + OBJECT(current_object)->frame * 4u) + 2u;
-	r16 = (uint32_t)mem_read16(rom_032BA4[OBJECT(current_object)->palette]) << 16;
+	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
+	r16 = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
 	r0 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
 	r0 = r0 & 0xC0u;
-	r0 = r0 ^ mem_read16(r12);
+	r0 = r0 ^ SPRITE_PIECE(r12)->attributes;
 	r12 = r12 + 2u;
-	r1 = mem_read16(r12);
-	r13 = 0x122B74u + r1 * 4u;
+	r1 = SPRITE_PIECE(r12 - 0x2u)->sprite;
+	size_steps = 0x122B74u + r1 * 4u;
 	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
 	OBJECT(current_object)->size_step = 0xFFu;
 	r12 = r12 + 2u;
@@ -2708,22 +2709,22 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 				r4 = 0xFFFu;
 			r4 = r4 >> 5;
 			size_table = OBJECT(current_object)->road_row.size_table;
-			r3_2 = shift_by(r3_2, (uint8_t)(int8_t)mem_read8(rom_159AFC[size_table] + r4), 32);
-			r4 = mem_read8(rom_1598CC[size_table] + r4);
-			if (r4 != OBJECT(current_object)->size_step)
+			r3_2 = shift_by(r3_2, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[r4], 32);
+			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[r4];
+			if (sprite_size_step != OBJECT(current_object)->size_step)
 			{
-				OBJECT(current_object)->size_step = r4;
-				r4 = r13 + r4 * 3u * 4u;
-				r0 = (r0 & 0xFFFFu) | ((uint32_t)ROM16(r4) << 16);
-				r4 += 2u;
-				r7 = ROM16(r4);
-				r4 += 2u;
-				r14 = ROM16(r4);
-				r4 += 2u;
-				r1 = ROM16(r4);
-				r4 += 2u;
-				r15 = ROM16(r4);
-				r2 = ROM16(r4 + 2u) | SCREEN(screen)->sprite_screen_bit;
+				OBJECT(current_object)->size_step = sprite_size_step;
+				sprite_size_step = size_steps + sprite_size_step * 3u * 4u;
+				r0 = (r0 & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
+				sprite_size_step += 2u;
+				r7 = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
+				sprite_size_step += 2u;
+				r14 = SPRITE_SIZE_STEP(sprite_size_step - 0x4u)->height;
+				sprite_size_step += 2u;
+				r1 = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
+				sprite_size_step += 2u;
+				r15 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
+				r2 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
 				r7 |= r16;
 			}
 			r4_2 = (uint16_t)((r3_2 * r15) >> 8);
@@ -2838,7 +2839,7 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 			break;
 		}
 	}
-	r26_2 = rom_100000;
+	r26_2 = blank_sprite_places;
 	mem_write32(r27, r26_2);
 	r27 = r27 + 4u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
@@ -2854,18 +2855,18 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 	SCREEN(screen)->next_sprite_place = r27;
 }
 
-/* Starts the race's course (rom_03CC00 by screen first_stage, car course): clears the ring of segments,
-   the first road width, and builds the segments as far as the view reaches (screen draw_distance >> 7,
-   prebuilt_segments); the first stage into the stage history. */
+/* Starts the race's course (stage_courses by screen first_stage, car course): clears the ring of
+   segments, the first road width, and builds the segments as far as the view reaches (screen
+   draw_distance >> 7, prebuilt_segments); the first stage into the stage history. */
 void player_car_start_course(void)
 {
 	uint16_t r0 = 0, r5 = 0;
-	uint32_t r11 = 0;
+	uint32_t course = 0;
 
 	move_string(0x100800u, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
-	r11 = rom_03CC00[SCREEN(screen)->first_stage];
-	CAR(player_car)->course = r11;
-	r0 = mem_read8(r11 + 8u);
+	course = stage_courses[SCREEN(screen)->first_stage];
+	CAR(player_car)->course = course;
+	r0 = mem_read8(course + 8u);
 	CAR(player_car)->width_code = (uint8_t)r0;
 	CAR(player_car)->road_width = r0 * 0xB0u;
 	CAR(player_car)->prebuilt_segments = SCREEN(screen)->draw_distance >> 7;
@@ -2885,7 +2886,7 @@ void player_car_start_course(void)
    stage's data queued (queue_stage_load) and the branch_arrow. */
 void player_car_extend_course(void)
 {
-	uint8_t r1_2 = 0;
+	uint8_t branch_stages = 0;
 	uint16_t r1 = 0, r5 = 0, window_offset = 0;
 	uint32_t r0 = 0, r2 = 0, r11 = 0, course = 0, forks_reached = 0, object = 0, race = 0;
 
@@ -2912,15 +2913,15 @@ void player_car_extend_course(void)
 	course = CAR(player_car)->course;
 	r0 = mem_read8(screen + 0x349u + forks_reached);
 	CAR(player_car)->branch = r0;
-	r1_2 = ROM8(course + r0);
-	CAR(player_car)->course = ROM32(course + 2u + r0 * 4u);
-	SCREEN(screen)->route_stage = r1_2;
+	branch_stages = COURSE_FORK(course)->branch_stages[r0];
+	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[r0];
+	SCREEN(screen)->route_stage = branch_stages;
 	CAR(player_car)->new_branch = 0xFFu;
 	SCREEN(screen)->route_stage_level++;
 	r2 = CAR(player_car)->forks_taken;
 	mem_write8(player_car + 0xD7u + r2, r0);
 	r2 = (uint8_t)(r2 + 1u);
-	mem_write8(player_car + 0xD1u + r2, r1_2);
+	mem_write8(player_car + 0xD1u + r2, branch_stages);
 	CAR(player_car)->forks_taken = r2;
 	CAR(player_car)->at_fork = 0u;
 	queue_stage_load();
@@ -2974,7 +2975,7 @@ void player_car_extend_course(void)
 			CAR(player_car)->course = r11 + 4u;
 			continue;
 		default:
-			invalid_jump(rom_00FF40[0u - r0]);
+			invalid_jump(course_command_jumps[0u - r0]);
 		}
 	}
 	CAR(player_car)->run_left = r0;
@@ -3060,7 +3061,7 @@ void player_car_build_segment(uint16_t r5)
 				CAR(player_car)->course = r11 + 4u;
 				continue;
 			default:
-				invalid_jump(rom_00FF40[0u - r0]);
+				invalid_jump(course_command_jumps[0u - r0]);
 			}
 		}
 		CAR(player_car)->run_left = r0;
@@ -3104,10 +3105,10 @@ void player_car_build_segment(uint16_t r5)
 	CAR(player_car)->pitch_angle = (((uint32_t)(int16_t)CAR(player_car)->pitch_step << 8) + CAR(player_car)->pitch_angle) & 0xFFFFFFFu;
 	r2 = (uint16_t)(CAR(player_car)->pitch_angle >> 16u);
 	r4 = (uint16_t)(CAR(player_car)->heading_angle >> 16u);
-	r1 = (int16_t)rom_100C00[r2];
-	r2 = (int16_t)rom_101400[r2];
-	r3 = (int16_t)rom_100C00[r4];
-	r4 = (int16_t)rom_101400[r4];
+	r1 = sine_table[r2];
+	r2 = cosine_table[r2];
+	r3 = sine_table[r4];
+	r4 = cosine_table[r4];
 	CAR(player_car)->next_x_fine += (int32_t)(r3 * r2) >> 13;
 	CAR(player_car)->next_y_fine -= r1 << 1;
 	CAR(player_car)->next_z_fine += (int32_t)(r2 * r4) >> 13;
@@ -3144,17 +3145,17 @@ void player_car_project_road(void)
 {
 	uint32_t carry = 0;
 	uint16_t r5 = 0, r21 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, r29 = 0, car = 0, draw_distance = 0;
-	uint8_t t1 = 0;
-	uint16_t t4 = 0;
-	uint32_t t2 = 0, t3 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, car = 0, draw_distance = 0, projection_pattern = 0;
+	uint8_t projected = 0;
+	uint16_t t3 = 0;
+	uint32_t t1 = 0, t2 = 0;
 
 	r1 = mem_read16(SCREEN(screen)->shown_view + 0xCu);
 	r2 = mem_read16(SCREEN(screen)->shown_view + 0xEu);
-	r16 = (int16_t)rom_100C00[r1];
-	r15 = (int16_t)rom_100C00[r2];
-	r13 = (int16_t)rom_101400[r1];
-	r10 = (int16_t)rom_101400[r2];
+	r16 = sine_table[r1];
+	r15 = sine_table[r2];
+	r13 = cosine_table[r1];
+	r10 = cosine_table[r2];
 	r8 = 0xFFFFFFF2u;
 	r11 = 0u - r15;
 	r12 = r16 * r15;
@@ -3200,23 +3201,23 @@ void player_car_project_road(void)
 	SCREEN(screen)->crest_count = 0u;
 	r21 = 0x7FFFu;
 	SCREEN(screen)->crest_heights = r5 + 0xE0u;
-	r29 = 0x10509u;
+	projection_pattern = 0x10509u;
 	for (;;)
 	{
 		r18 = ((r18 + 0x20u) & ~0xFFFFu) | ((r18 + 0x20u) & 0xAFFFu);
-		t1 = ROM8(r29);
-		r29++;
+		projected = ROAD_PROJECTION_PATTERN(projection_pattern)[0];
+		projection_pattern++;
 		r19 += 0x10u;
-		if (t1 == 0u)
+		if (projected == 0u)
 		{
 			r26 = r19 - 0x10u;
-			t2 = mem_read32(r26 + 4u);
+			t1 = mem_read32(r26 + 4u);
 			mem_write32(r19, mem_read32(r26));
-			mem_write32(r19 + 4u, t2);
+			mem_write32(r19 + 4u, t1);
 			r26 += 8u;
-			t3 = mem_read32(r26 + 4u);
+			t2 = mem_read32(r26 + 4u);
 			mem_write32(r19 + 8u, mem_read32(r26));
-			mem_write32(r19 + 0xCu, t3);
+			mem_write32(r19 + 0xCu, t2);
 			mem_write16(r19 + 0xCu, mem_read16(r18 + 0x14u));
 			r9--;
 			if (r9 == 0u)
@@ -3258,7 +3259,7 @@ void player_car_project_road(void)
 			}
 			continue;
 		}
-		r5_2 = rom_19A340[r28];
+		r5_2 = perspective_scales[r28];
 		mem_write16(r19, r5_2);
 		r26 = r26 * r5_2;
 		r27 = r27 * r5_2;
@@ -3274,11 +3275,11 @@ void player_car_project_road(void)
 		mem_write16(r19 + 4u, r26);
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(0u - r27);
 		mem_write16(r19 + 6u, r27);
-		r28 = rom_1A0340[r28];
+		r28 = depth_layers_by_depth[r28];
 		mem_write16(r19 + 8u, r28);
-		t4 = r21;
+		t3 = r21;
 		r21 = (uint16_t)r27;
-		if ((int16_t)t4 < (int16_t)r27)
+		if ((int16_t)t3 < (int16_t)r27)
 		{
 			note_road_crest();
 			r9--;
@@ -3324,10 +3325,10 @@ void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32
 	uint32_t r2 = *p_r2;
 	uint32_t r3_2 = 0, r4_2 = 0, r5 = 0, r6 = 0, r7 = 0, r9 = 0;
 
-	r5 = (int16_t)rom_100C00[r4];
-	r6 = (int16_t)rom_101400[r4];
-	r4_2 = (int16_t)rom_101400[r3];
-	r3_2 = (int16_t)rom_100C00[r3];
+	r5 = sine_table[r4];
+	r6 = cosine_table[r4];
+	r4_2 = cosine_table[r3];
+	r3_2 = sine_table[r3];
 	r7 = r0;
 	r9 = 0u - r1;
 	r1 = (int32_t)(r1 * r4_2 + ((int32_t)(r7 * r3_2) >> 14) * r5 + ((int32_t)(r2 * r3_2) >> 14) * r6) >> 14;
@@ -3337,40 +3338,41 @@ void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32
 }
 
 /* Sets up the constants of the screen's block at boot: index (0 for the block at 208000, 1 at 218000)
-   and by it (rom_010BA0) sprite_screen_bit, palette_ram, mixer and io_chip; eye_distance, draw_distance
-   (the second of the draw distances at 010BE2), sprite_origin_x, sprite_origin_y and view_pitch_base
-   from 010BCC (010BC8 holds the draw distances' address); and stage_lengths: for each of the 31 roads of
-   rom_03CC00 (the courses player_car_start_course starts by screen first_stage) the sum of its sections'
-   lengths (the first halfword of each 6-byte record; the negative ones are commands: -1 goes on at the
-   address it holds, -4 is 4 bytes long, -2 and -6 end it), and branch_road_length (14A) after them. */
+   and by it (screen_hardware_records) sprite_screen_bit, palette_ram, mixer and io_chip; eye_distance,
+   draw_distance (the second of the draw distances at 010BE2), sprite_origin_x, sprite_origin_y and
+   view_pitch_base from 010BCC (010BC8 holds the draw distances' address); and stage_lengths: for each of
+   the 31 roads of stage_courses (the courses player_car_start_course starts by screen first_stage) the
+   sum of its sections' lengths (the first halfword of each 6-byte record; the negative ones are
+   commands: -1 goes on at the address it holds, -4 is 4 bytes long, -2 and -6 end it), and
+   branch_road_length (14A) after them. */
 uint32_t init_screen(void)
 {
 	bool L_013DB6 = false;
 	uint16_t r8 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r9 = 0, r10 = 0, r11 = 0;
+	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r11 = 0, screen_hardware = 0;
 	uint32_t t1 = 0;
 
 	r1 = screen >> 16;
 	r1 = r1 & 1u;
 	SCREEN(screen)->index = r1;
-	r2 = rom_010BA0[r1];
-	SCREEN(screen)->sprite_screen_bit = mem_read16(r2);
-	r2 += 2u;
-	SCREEN(screen)->palette_ram = mem_read32(r2);
-	r2 += 4u;
-	SCREEN(screen)->mixer = mem_read32(r2);
-	SCREEN(screen)->io_chip = mem_read32(r2 + 4u);
-	SCREEN(screen)->draw_distance = mem_read16(rom_010BC8 + 2u);
-	SCREEN(screen)->eye_distance = rom_010BCC;
-	SCREEN(screen)->sprite_origin_x = rom_010BCE;
-	SCREEN(screen)->sprite_origin_y = rom_010BD0;
-	SCREEN(screen)->view_pitch_base = rom_010BD2[0];
-	r10 = rom_03CC00_ADDRESS;
+	screen_hardware = screen_hardware_records[r1];
+	SCREEN(screen)->sprite_screen_bit = SCREEN_HARDWARE(screen_hardware)->sprite_screen_bit;
+	screen_hardware += 2u;
+	SCREEN(screen)->palette_ram = SCREEN_HARDWARE(screen_hardware - 0x2u)->palette_ram;
+	screen_hardware += 4u;
+	SCREEN(screen)->mixer = SCREEN_HARDWARE(screen_hardware - 0x6u)->mixer;
+	SCREEN(screen)->io_chip = SCREEN_HARDWARE(screen_hardware - 0x6u)->io_chip;
+	SCREEN(screen)->draw_distance = DRAW_DISTANCE_LIST(screen_view_defaults[0].draw_distances)[1];
+	SCREEN(screen)->eye_distance = screen_view_defaults[0].eye_distance;
+	SCREEN(screen)->sprite_origin_x = screen_view_defaults[0].sprite_origin_x;
+	SCREEN(screen)->sprite_origin_y = screen_view_defaults[0].sprite_origin_y;
+	SCREEN(screen)->view_pitch_base = screen_view_defaults[0].view_pitch_bases[0];
+	r10 = stage_courses_ADDRESS;
 	r11 = screen + 0x700u;
 	r9 = 0x1Fu;
 	do
 	{
-		r12 = ROM32(r10);
+		r12 = COURSE_POINTER(r10)[0];
 		r0 = 0u;
 		r8 = 0u;
 		r10 += 4u;
@@ -3384,7 +3386,7 @@ uint32_t init_screen(void)
 				if ((int16_t)r0 >= 0)
 					break;
 				t1 = (uint16_t)~r0;
-				r0 = rom_013D94[t1];
+				r0 = course_length_command_jumps[t1];
 				switch (t1)
 				{
 				case 2:
@@ -3401,7 +3403,7 @@ uint32_t init_screen(void)
 					L_013DB6 = true;
 					break;
 				default:
-					invalid_jump(rom_013D94[t1]);
+					invalid_jump(course_length_command_jumps[t1]);
 				}
 				if (L_013DB6)
 					break;
@@ -3443,8 +3445,8 @@ uint32_t init_video(void)
 {
 	clear_video_ram();
 	load_text_font();
-	mem_write16(VIDEO_31FF00, rom_010B10);
-	video_registers[0] = rom_010B10;
+	mem_write16(VIDEO_31FF00, video_control_default);
+	video_registers[0] = video_control_default;
 	if (flip_screen != 0u)
 	{
 		mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) | 0x200u);
@@ -3542,24 +3544,24 @@ void clear_tile_page(uint16_t r9)
 void init_sprite_chip(void)
 {
 	uint16_t r0 = 0;
-	uint32_t r18 = 0, r19 = 0;
+	uint32_t r18 = 0, control_values = 0;
 
-	mem_write16(SPRITE_CONTROL_500000, rom_010B0A);
+	mem_write16(SPRITE_CONTROL_500000, sprite_control_mode);
 	r18 = SPRITE_CONTROL + 0x4u;
-	r0 = rom_010B0B;
-	r19 = 0x10B0Cu;
+	r0 = sprite_control_flip;
+	control_values = 0x10B0Cu;
 	if (flip_screen != 0u)
 		r0 = r0 ^ 3u;
 	mem_write16(r18, r0);
 	r18 += 2u;
-	mem_write16(r18, ROM8(r19));
-	r19++;
+	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
+	control_values++;
 	r18 += 2u;
-	mem_write16(r18, ROM8(r19));
-	r19++;
+	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
+	control_values++;
 	r18 += 2u;
-	mem_write16(r18, ROM8(r19));
-	mem_write16(r18 + 2u, ROM8(r19 + 1u));
+	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
+	mem_write16(r18 + 2u, SPRITE_CONTROL_VALUES(control_values)[1]);
 	init_sprite_lists();
 }
 
@@ -3604,21 +3606,21 @@ void clear_sprite_group_count(void)
    RAM, each showing two of the four layers). */
 void init_mixer(void)
 {
-	uint32_t r0 = 0, r1 = 0, r10 = 0, mixer = 0;
+	uint32_t first_layer = 0, hidden_layer_pair = 0, mixer = 0, second_layer = 0;
 
 	mixer = SCREEN(screen)->mixer;
 	move_halfwords_backward(mixer, 0x10AB6u, 0x28u);
 	move_halfwords(screen + 0x160u, 0x10AB6u, 0x28u);
 	move_string(0x10AB6u, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
-	r10 = 0x10B06u + SCREEN(screen)->index * 2u;
-	r0 = ROM8(r10);
-	r1 = ROM8(r10 + 1u);
-	mem_write16(mixer + r0 * 2u, 0u);
-	mem_write16(mixer + r1 * 2u, 0u);
-	mem_write16(screen + 0x160u + r0 * 2u, 0u);
-	mem_write16(screen + 0x160u + r1 * 2u, 0u);
-	mem_write16(screen + 0x1B0u + r0 * 2u, 0u);
-	mem_write16(screen + 0x1B0u + r1 * 2u, 0u);
+	hidden_layer_pair = hidden_layer_pairs_ADDRESS + SCREEN(screen)->index * 2u;
+	first_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->first_layer;
+	second_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->second_layer;
+	mem_write16(mixer + first_layer * 2u, 0u);
+	mem_write16(mixer + second_layer * 2u, 0u);
+	mem_write16(screen + 0x160u + first_layer * 2u, 0u);
+	mem_write16(screen + 0x160u + second_layer * 2u, 0u);
+	mem_write16(screen + 0x1B0u + first_layer * 2u, 0u);
+	mem_write16(screen + 0x1B0u + second_layer * 2u, 0u);
 }
 
 /* Sets up the two I/O chips at boot: ports D, G and H outputs and cleared (the coin meters, lamps, LCD,
@@ -4951,14 +4953,14 @@ void upload_boot_palettes(void)
 	upload_palette(r19);
 }
 
-/* Queues the palette of the stage the screen goes to (rom_031DDC by screen route_stage) through
+/* Queues the palette of the stage the screen goes to (scene_palettes by screen route_stage) through
    queue_palette (the palette queue at screen + 900). Used by player_car_extend_course and the game's
    code (002E74). */
 void queue_stage_load(void)
 {
 	uint32_t r19 = 0;
 
-	r19 = rom_031DDC[SCREEN(screen)->route_stage];
+	r19 = scene_palettes[SCREEN(screen)->route_stage];
 	queue_palette(r19);
 }
 
@@ -5127,74 +5129,74 @@ void step_screen_fade(void)
 	uint32_t carry = 0;
 	uint8_t r0 = 0;
 	uint16_t r9 = 0;
-	uint32_t r1 = 0, r19 = 0;
+	uint32_t r1 = 0, r19 = 0, fade_start = 0;
 
 	switch (SCREEN(screen)->fade_kind)
 	{
 	case 0:
-		r19 = 0x1173Au;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = screen_fade_starts_ADDRESS;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 1:
-		r19 = 0x1173Eu;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = 0x1173Eu;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 2:
-		r19 = 0x11742u;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = 0x11742u;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 3:
-		r19 = 0x11746u;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = 0x11746u;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 4:
-		r19 = 0x1174Au;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = 0x1174Au;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 5:
-		r19 = 0x1174Eu;
-		SCREEN(screen)->fade_level = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_step = ROM8(r19);
-		r19++;
-		SCREEN(screen)->fade_end = ROM8(r19);
-		SCREEN(screen)->fade_channels = ROM8(r19 + 1u);
+		fade_start = 0x1174Eu;
+		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		fade_start++;
+		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		fade_start++;
+		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 6:
 		break;
 	default:
-		invalid_jump(rom_01168C[SCREEN(screen)->fade_kind]);
+		invalid_jump(screen_fade_kind_jumps[SCREEN(screen)->fade_kind]);
 	}
 	r9 = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
 	SCREEN(screen)->fade_level = (uint8_t)r9;
@@ -5232,9 +5234,9 @@ void load_shadowed_text_font(void)
 {
 	uint32_t carry = 0;
 	uint8_t r0 = 0;
-	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r18 = 0, r19 = 0;
+	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r18 = 0, font_rows = 0;
 
-	r19 = 0x103C20u;
+	font_rows = 0x103C20u;
 	r18 = VIDEO_RAM + 0x18000u;
 	r5 = 1u;
 	r1 = 0x80u;
@@ -5244,10 +5246,10 @@ void load_shadowed_text_font(void)
 		r6 = 0u;
 		do
 		{
-			r0 = ROM8(r19);
+			r0 = TEXT_FONT_ROWS(font_rows)[0];
 			r2 = 4u;
 			r4 = 0u;
-			r19++;
+			font_rows++;
 			do
 			{
 				carry = (uint8_t)(r0 * 2u) < r0;
@@ -5500,11 +5502,11 @@ void draw_text_at(uint32_t r3, uint16_t r5, uint32_t r18)
 	if (SCREEN(screen)->sprite_list_limit <= r10)
 		return;
 	r11 = r10 + 0x3000u;
-	r1 = rom_122B5C;
+	r1 = text_sprite_words_0_1;
 	r3 = (r3 << 16) | (r3 >> 16);
-	r2 = rom_122B60 | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
-	r4 = rom_122B64;
-	r5 |= rom_122B66;
+	r2 = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	r4 = text_sprite_font;
+	r5 |= text_sprite_palette;
 	r18 = draw_text_sprites(r1, r2, r3, r4, r5, r10, r11, r18);
 }
 
@@ -5520,12 +5522,12 @@ uint32_t draw_text(uint32_t r19)
 	if (SCREEN(screen)->sprite_list_limit <= r10)
 		return r18;
 	r11 = r10 + 0x3000u;
-	r1 = rom_122B5C;
-	r2 = rom_122B60 | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	r1 = text_sprite_words_0_1;
+	r2 = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
 	r3 = mem_read32(r19);
 	r3 = (r3 << 16) | (r3 >> 16);
-	r4 = rom_122B64;
-	r5 = rom_122B66 | mem_read16(r19 + 4u);
+	r4 = text_sprite_font;
+	r5 = text_sprite_palette | mem_read16(r19 + 4u);
 	return draw_text_sprites(r1, r2, r3, r4, r5, r10, r11, r18);
 }
 
@@ -5867,7 +5869,7 @@ void start_sound_program(void)
 }
 
 /* Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when
-   only the sounds the table at 01202E allows play, and only with advertise_sound set. */
+   only the sounds the table at 01202E (demo_sounds) allows play, and only with advertise_sound set. */
 void request_sound(uint8_t r0)
 {
 	uint32_t r2 = 0;
@@ -5880,7 +5882,7 @@ void request_sound(uint8_t r0)
 	if (advertise_sound != 0u)
 	{
 		r2 = (uint8_t)r0;
-		if ((rom_01202E[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
+		if ((demo_sounds[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
 		{
 			queue_sound(r0);
 			return;
@@ -5904,7 +5906,7 @@ void queue_sound(uint8_t r0)
 /* Unused: puts sound R0 in the screen's second ring of 32 sound requests (second_sound_queue_write, the
    requests from 842; send_sound_requests sends them to the command byte 8 after the first ring's), as
    request_sound does for the first: while demo_flags bit 8 is set only the sounds the table at 01204E
-   allows, and only with advertise_sound set. */
+   (demo_second_sounds) allows, and only with advertise_sound set. */
 void request_second_sound(uint8_t r0)
 {
 	uint32_t r2 = 0, second_sound_queue_write = 0;
@@ -5920,7 +5922,7 @@ void request_second_sound(uint8_t r0)
 	else if (advertise_sound != 0u)
 	{
 		r2 = (uint8_t)r0;
-		if ((rom_01204E[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
+		if ((demo_second_sounds[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
 		{
 			r2 = screen + 0x841u;
 			second_sound_queue_write = SCREEN(r2 - 0x841u)->second_sound_queue_write;
@@ -5933,9 +5935,9 @@ void request_second_sound(uint8_t r0)
 }
 
 /* Starts the car's engine sound on the screen's channel of the sound board: the model's engine sample
-   (rom_012026) and the engine's loudness by the transmission (10, or 30, 6 dB louder, with the
-   transmission's value set), then the revs on (1) and the requests for the sample and the pitch (A0);
-   silent in the demo without sound. */
+   (car_model_engine_samples) and the engine's loudness by the transmission (10, or 30, 6 dB louder, with
+   the transmission's value set), then the revs on (1) and the requests for the sample and the pitch
+   (A0); silent in the demo without sound. */
 void player_car_start_engine_sound(void)
 {
 	uint8_t r0 = 0;
@@ -5949,7 +5951,7 @@ void player_car_start_engine_sound(void)
 		return;
 	}
 	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + SOUND_ENGINE_SAMPLE_1, rom_012026[CAR(player_car)->model]);
+	mem_write8(r10 + SOUND_ENGINE_SAMPLE_1, car_model_engine_samples[CAR(player_car)->model]);
 	r0 = 0x10u;
 	if (CAR(player_car)->transmission != 0u)
 		r0 = 0x30u;

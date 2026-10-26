@@ -101,9 +101,18 @@ the tools verify it, extract the assets and build your own executable.
       start, and the memory test's ROM part is the board's (`runtime/replaced.txt`: the decompiled game has
       no ROM chips to sum). `tools/rom_in_executables.py` finds no stretch of the ROM in any executable,
       and the 16 scenarios are identical in state, picture and sound with the game on its pack
-- [ ] The C reads the program's data by name: 598 reads still go through a ROM address
-      (`tools/noise_report.py`, rom_reads) and 843 through tables named after their address; the data's
-      text files are grouped by 64 KB of the ROM until the tables have names. Other ports
+- [x] The C reads the program's data by name: the records of the program ROM are structures
+      (`ROAD_ROW_RECORD(road_row_record)->animation`, `SPRITE_SIZE_STEP(size_step)->source_size`, the
+      car's `car_handlings[model]`), the lists they lead to are typed
+      (`FLASHING_SCENERY_PALETTES(palettes)[0]`), and every table has a name: none
+      is named after its address any more (`tools/noise_report.py`, rom_names: 709 uses before), and 26
+      reads still go through a ROM address (rom_reads, 598 before). Those are the course's stream, whose
+      commands have operands of different widths behind one pointer (16, `player_car_extend_course` and
+      `player_car_build_segment`); the input test's list, which one pointer walks through two layouts in a
+      row (9); and the road objects' stream after a fork, read through the object's field in one operand
+      (1). 51 ROM addresses the code uses as values are still numbers (raw_rom_addresses, 101 before). The
+      data's text files are grouped by 64 KB of the ROM until they are cut where the tables start
+- [ ] Other ports
 
 ## Getting started
 

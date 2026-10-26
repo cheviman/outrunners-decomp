@@ -28,14 +28,14 @@ void test_mode_game_assignments_advertise(void)
    back to the menu. */
 void test_mode_game_assignments_exit(void)
 {
-	uint32_t r10 = 0;
+	uint32_t setting_places = 0;
 
-	r10 = 0x1DD14u;
+	setting_places = game_assignments_setting_places_ADDRESS;
 	current_object = settings_magic_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | ROM8(r10);
-		r10++;
+		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
 			test_mode_routine = test_mode_menu_ADDRESS;
@@ -63,11 +63,11 @@ void test_mode_coin_assignments_show(void)
 	uint32_t r0 = 0, r1 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1E0F4u;
+	r10 = coin_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	test_mode_coin_assignments_draw(&r0, &r1);
 	test_mode_draw_instructions(r0);
-	r10 = 0x310000u | rom_01E200[test_mode_page_cursor];
+	r10 = 0x310000u | coin_assignments_cursor_cells[test_mode_page_cursor];
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_coin_assignments_run_ADDRESS;
 	test_mode_coin_assignments_run(r1);
@@ -95,7 +95,7 @@ void test_mode_coin_assignments_run(uint32_t r1)
 		if ((int8_t)r1 <= (int8_t)r0)
 			r0 = 0u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01E200[r0];
+		r10 = 0x310000u | coin_assignments_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
@@ -125,7 +125,7 @@ void test_mode_coin_assignments_run(uint32_t r1)
 			test_mode_coin_assignments_manual_exit();
 			break;
 		default:
-			invalid_jump(rom_01E0D8[test_mode_page_cursor]);
+			invalid_jump(test_mode_coin_assignments_item_jumps[test_mode_page_cursor]);
 		}
 	}
 	t1 = test_mode_blink_timer - 1u;
@@ -142,12 +142,13 @@ void test_mode_coin_assignments_run(uint32_t r1)
 }
 
 /* Draws the coin/credit setting: its number (coin_setting + 1) and what it gives, from its description
-   (rom_01E220): up to five lines of "n COIN(S) m CREDIT(S)", or a text (FREE PLAY, MANUAL SETTING). */
+   (coin_setting_descriptions): up to five lines of "n COIN(S) m CREDIT(S)", or a text (FREE PLAY, MANUAL
+   SETTING). */
 void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 {
 	uint32_t zero = 0;
 	uint16_t r26 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r9 = 0, r10 = 0, r11 = 0, line_text = 0;
 
 	current_object = settings_magic_ADDRESS;
 	r10 = TEXT_CELL(32, 9);
@@ -155,7 +156,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 	r2 = 2u;
 	r0 = coin_setting + 1u;
 	test_mode_draw_number(r2, &r0, &r1, &r10);
-	r11 = rom_01E220[coin_setting];
+	r11 = coin_setting_descriptions[coin_setting];
 	r26 = 0u;
 	r12 = TEXT_CELL(17, 10);
 	r9 = 5u;
@@ -168,13 +169,13 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 			break;
 		r1 = (r1 & ~0xFFFFu) | 0x6400u;
 		r10 = r12;
-		r13 = 0x1E20Eu;
+		line_text = coin_assignments_line_text_ADDRESS;
 		do
 		{
 			mem_write16(r10, r1);
-			r1 = (r1 & ~0xFFu) | ROM8(r13);
+			r1 = (r1 & ~0xFFu) | TEST_MODE_CHARACTERS(line_text)[0];
 			r10 += 2u;
-			r13++;
+			line_text++;
 		} while ((uint8_t)r1 != 0u);
 		r10 = r12;
 		r1 = (r1 & ~0xFFFFu) | 0x6464u;
@@ -221,7 +222,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 /* COIN/CREDIT SETTING: the next of the 26 settings (coin_setting, after FREE PLAY back to */
 void test_mode_coin_assignments_next_setting(void)
 {
-	uint32_t r0 = 0, r10 = 0, ignored = 0, ignored_2 = 0;
+	uint32_t r0 = 0, ignored = 0, ignored_2 = 0, setting = 0;
 
 	do
 	{
@@ -230,8 +231,8 @@ void test_mode_coin_assignments_next_setting(void)
 		if ((int8_t)r0 >= 0x1A)
 			r0 = 0u;
 		coin_setting = r0;
-		r10 = 0x1E3E8u + r0 * 4u;
-		if ((int8_t)ROM8(r10) < 0)
+		setting = coin_setting_records_ADDRESS + r0 * 4u;
+		if ((int8_t)COIN_SETTING_RECORD(setting)->coins < 0)
 		{
 			coins_per_credit = 1u;
 			bonus_adder = 0xFFu;
@@ -241,13 +242,13 @@ void test_mode_coin_assignments_next_setting(void)
 			test_mode_coin_assignments_draw(&ignored, &ignored_2);
 			return;
 		}
-	} while (r0 != 0u && coins_per_credit == ROM8(r10) && bonus_adder == ROM8(r10 + 1u) && first_chute_multiplier == ROM8(r10 + 2u));
-	coins_per_credit = ROM8(r10);
-	r10++;
-	bonus_adder = ROM8(r10);
-	r10++;
-	first_chute_multiplier = ROM8(r10);
-	second_chute_multiplier = ROM8(r10 + 1u);
+	} while (r0 != 0u && coins_per_credit == COIN_SETTING_RECORD(setting)->coins && bonus_adder == COIN_SETTING_RECORD(setting)->bonus && first_chute_multiplier == COIN_SETTING_RECORD(setting)->first_multiplier);
+	coins_per_credit = COIN_SETTING_RECORD(setting)->coins;
+	setting++;
+	bonus_adder = COIN_SETTING_RECORD(setting - 0x1u)->bonus;
+	setting++;
+	first_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->first_multiplier;
+	second_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->second_multiplier;
 	free_play = 0u;
 	test_mode_coin_assignments_draw(&ignored, &ignored_2);
 }
@@ -261,12 +262,12 @@ void test_mode_coin_assignments_manual_start(uint32_t r1)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1E13Fu;
+	r10 = coin_manual_page_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	r0 = test_mode_coin_assignments_manual_draw(r1);
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 3u;
-	r10 = 0x310000u | rom_01E20C;
+	r10 = 0x310000u | coin_manual_exit_cell;
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_coin_assignments_manual_run_ADDRESS;
 }
@@ -293,7 +294,7 @@ void test_mode_coin_assignments_manual_run(void)
 		if ((int8_t)r1 <= (int8_t)r0)
 			r0 = 0u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01E206[r0];
+		r10 = 0x310000u | coin_manual_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
@@ -314,7 +315,7 @@ void test_mode_coin_assignments_manual_run(void)
 			test_mode_coin_assignments_manual_exit();
 			break;
 		default:
-			invalid_jump(rom_01E0E4[test_mode_page_cursor]);
+			invalid_jump(test_mode_coin_assignments_manual_item_jumps[test_mode_page_cursor]);
 		}
 	}
 	t1 = test_mode_blink_timer - 1u;
@@ -517,13 +518,13 @@ void test_mode_coin_assignments_manual_exit(void)
    in the shared RAM (bookkeeping_clear_credits); back to the menu. */
 void test_mode_coin_assignments_exit(void)
 {
-	uint32_t r10 = 0;
+	uint32_t setting_places = 0;
 
-	r10 = 0x1E44Du;
+	setting_places = coin_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | ROM8(r10);
-		r10++;
+		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
 			test_mode_routine = test_mode_menu_ADDRESS;
@@ -544,7 +545,7 @@ void test_mode_network_assignments_start(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1E62Cu;
+	r10 = network_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(r0, r10);
 	current_object = settings_magic_ADDRESS;
 	if (stand_alone != 0u)
@@ -560,7 +561,7 @@ void test_mode_network_assignments_start(void)
 	r0 = test_mode_network_assignments_draw();
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 3u;
-	r10 = 0x310000u | rom_01E682;
+	r10 = 0x310000u | network_assignments_exit_cell;
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_network_assignments_run_ADDRESS;
 	test_mode_network_assignments_run();
@@ -592,7 +593,7 @@ void test_mode_network_assignments_run(void)
 		else
 			r0 = r0 ^ 3u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01E67C[r0];
+		r10 = 0x310000u | network_assignments_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) != 0u)
@@ -614,7 +615,7 @@ void test_mode_network_assignments_run(void)
 			test_mode_network_assignments_exit();
 			break;
 		default:
-			invalid_jump(rom_01E61C[r0]);
+			invalid_jump(test_mode_network_assignments_item_jumps[r0]);
 		}
 	}
 	t1 = test_mode_blink_timer - 1u;
@@ -640,10 +641,10 @@ uint32_t test_mode_network_assignments_draw(void)
 	current_object = settings_magic_ADDRESS;
 	r0 = stand_alone;
 	r0 = r0 & 1u;
-	r10 = rom_01E684[r0];
+	r10 = communication_texts[r0];
 	test_mode_draw_texts(r0, r10);
 	r0 = test_mode_privilege_mode;
-	r10 = rom_01E68C[r0];
+	r10 = privilege_mode_texts[r0];
 	test_mode_draw_texts(r0, r10);
 	r10 = TEXT_CELL(33, 14);
 	r1 = 0x64u;
@@ -697,7 +698,7 @@ void test_mode_network_assignments_toggle_communication(uint32_t r0)
    cannot be reached); redraws. */
 void test_mode_network_assignments_toggle_privilege_mode(void)
 {
-	uint32_t r0 = 0, r10 = 0, ignored = 0;
+	uint32_t r0 = 0, ignored = 0, setting = 0;
 	uint8_t t1 = 0;
 
 	r0 = test_mode_privilege_mode;
@@ -706,9 +707,9 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 	if ((int8_t)t1 < 0)
 		r0 = 1u;
 	test_mode_privilege_mode = r0;
-	r10 = 0x1E6E5u + r0 * 2u;
-	link_master = ROM8(r10);
-	isdn_mode = ROM8(r10 + 1u);
+	setting = privilege_mode_settings_ADDRESS + r0 * 2u;
+	link_master = PRIVILEGE_MODE_SETTING(setting)->master;
+	isdn_mode = PRIVILEGE_MODE_SETTING(setting)->isdn;
 	ignored = test_mode_network_assignments_draw();
 }
 
@@ -726,13 +727,13 @@ void test_mode_network_assignments_step_cabinet_id(void)
    the menu. */
 void test_mode_network_assignments_exit(void)
 {
-	uint32_t r10 = 0;
+	uint32_t setting_places = 0;
 
-	r10 = 0x1E6E0u;
+	setting_places = network_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | ROM8(r10);
-		r10++;
+		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
 			test_mode_routine = test_mode_menu_ADDRESS;
@@ -890,7 +891,7 @@ uint32_t test_mode_bookkeeping_draw_histogram(void)
 {
 	uint32_t carry = 0;
 	uint16_t r0_2 = 0, r1 = 0, r3 = 0;
-	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r4 = 0, r5 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0;
+	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r4 = 0, r5 = 0, r9 = 0, r10 = 0, r11 = 0, colour_name = 0, digit_step = 0, divisor = 0;
 	uint32_t t1 = 0;
 
 	current_object = SOUND_701F00;
@@ -949,26 +950,26 @@ uint32_t test_mode_bookkeeping_draw_histogram(void)
 		else
 		{
 			r12 = r10;
-			r13 = 0x1ED94u + r0 * 3u * 2u;
-			r0_2 = (uint16_t)(0x6400u | ROM8(r13));
+			colour_name = car_colour_names_ADDRESS + r0 * 3u * 2u;
+			r0_2 = (uint16_t)(0x6400u | TEST_MODE_CHARACTERS(colour_name)[0]);
 			mem_write16(r12, r0_2);
-			r13++;
-			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | ROM8(r13));
+			colour_name++;
+			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[0]);
 			r12 = r12 + 2u;
 			mem_write16(r12, r0_2);
-			r13++;
-			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | ROM8(r13));
+			colour_name++;
+			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[0]);
 			r12 = r12 + 2u;
 			mem_write16(r12, r0_2);
-			r13++;
-			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | ROM8(r13));
+			colour_name++;
+			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[0]);
 			r12 = r12 + 2u;
 			mem_write16(r12, r0_2);
-			r13++;
-			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | ROM8(r13));
+			colour_name++;
+			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[0]);
 			r12 = r12 + 2u;
 			mem_write16(r12, r0_2);
-			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | ROM8(r13 + 1u));
+			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[1]);
 			r12 = r12 + 2u;
 			mem_write16(r12, r0_2);
 			r0_2 = (uint16_t)((r0_2 & ~0xFFu) | mem_read8(r11));
@@ -984,20 +985,20 @@ uint32_t test_mode_bookkeeping_draw_histogram(void)
 			r11++;
 			r0 = mem_read16(r11);
 			r3 = 0x6430u;
-			r13 = 0x1E970u;
+			digit_step = time_digit_steps_ADDRESS;
 			r11 += 2u;
 			r12 = r12 + 4u;
 			do
 			{
 				r1_2 = 0u;
-				r2 = ROM32(r13);
-				r13 += 4u;
-				divux_pair(r2, &r0, &r1_2);
+				divisor = TIME_DIGIT_STEP(digit_step)->divisor;
+				digit_step += 4u;
+				divux_pair(divisor, &r0, &r1_2);
 				mem_write16(r12, r0 + r3);
-				r12 = r12 + ROM32(r13);
+				r12 = r12 + TIME_DIGIT_STEP(digit_step - 0x4u)->cell_step;
 				r0 = r1_2;
-				r13 += 4u;
-			} while ((int32_t)ROM32(r13) >= 0);
+				digit_step += 4u;
+			} while ((int32_t)TIME_DIGIT_STEP(digit_step)->divisor >= 0);
 		}
 		r9--;
 		r10 += 0x80u;
@@ -1092,11 +1093,11 @@ void test_mode_backup_data_clear_start(void)
 	uint32_t r0 = 0, r10 = 0;
 
 	r0 = test_mode_clear_text();
-	r10 = 0x1EE79u;
+	r10 = backup_data_clear_page_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
 	test_mode_draw_instructions(r0);
 	test_mode_page_cursor = 1u;
-	r10 = 0x310000u | rom_01EEB0;
+	r10 = 0x310000u | backup_data_clear_no_cell;
 	test_mode_set_cursor(r0, r10);
 	test_mode_routine = test_mode_backup_data_clear_run_ADDRESS;
 	test_mode_backup_data_clear_run();
@@ -1119,7 +1120,7 @@ void test_mode_backup_data_clear_run(void)
 		test_mode_clear_cursor();
 		r0 = test_mode_page_cursor ^ 1u;
 		test_mode_page_cursor = r0;
-		r10 = 0x310000u | rom_01EEAE[r0];
+		r10 = 0x310000u | backup_data_clear_cursor_cells[r0];
 		test_mode_set_cursor(r0, r10);
 	}
 	if ((test_mode_buttons_pressed & 2u) == 0u)
@@ -1141,9 +1142,9 @@ void test_mode_backup_data_clear_run(void)
 	{
 		mem_write16(test_mode_blink_address, 0x6A7Fu);
 		r0 = bookkeeping_reset(r0);
-		r10 = 0x1EEB2u;
+		r10 = backup_data_clear_completed_text_ADDRESS;
 		test_mode_draw_texts(r0, r10);
-		r10 = 0x310000u | rom_01F282;
+		r10 = 0x310000u | test_mode_instructions_text;
 		r0 = 0x6Eu;
 		test_mode_colour_line(r0, r10);
 		test_mode_show_exit_prompt();
@@ -1238,12 +1239,12 @@ uint32_t test_mode_set_up_colours(void)
 	r26 = 0x733u;
 	set_halfwords(PALETTE_RAM + 0x8000u, 0x4000u, r26);
 	set_halfwords(0x688000u, 0x4000u, r26);
-	r0 = rom_01F302;
+	r0 = test_mode_palettes_1_bytes;
 	r0 = r0 >> 1;
-	move_halfwords(PALETTE_RAM + 0x9E00u, 0x1F304u, r0);
-	r0 = rom_01F504;
+	move_halfwords(PALETTE_RAM + 0x9E00u, test_mode_palettes_1_ADDRESS, r0);
+	r0 = test_mode_palettes_2_bytes;
 	r0 = r0 >> 1;
-	move_string(0x1F506u, r0, 0x689E00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(test_mode_palettes_2_ADDRESS, r0, 0x689E00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
 	r27 = r27 & ~0x8000u;
 	r0_2 = 0u;
 	r9 = 0x20u;
@@ -1298,7 +1299,7 @@ void test_mode_draw_instructions(uint32_t r0)
 {
 	uint32_t r10 = 0;
 
-	r10 = rom_01F282_ADDRESS;
+	r10 = test_mode_instructions_text_ADDRESS;
 	r0 = test_mode_draw_texts(r0, r10);
 }
 
@@ -1645,7 +1646,7 @@ void int_vector_40(void)
 	saved_r12 = r12;
 	vblank_counter++;
 	vblanks_since_start++;
-	mem_write16(IRQ_D00008, rom_03F82A);
+	mem_write16(IRQ_D00008, vblank_timer_period);
 	timer_interrupts_left = 0x22u;
 	debug_timer_rounds--;
 	if (SCREEN(screen)->index != 0u)
@@ -1689,7 +1690,7 @@ void int_vector_40(void)
 			r0 = queue_seat_inputs();
 			break;
 		default:
-			invalid_jump(rom_03FAC4[mem_read8(screen)]);
+			invalid_jump(vblank_seat_inputs_jumps[mem_read8(screen)]);
 		}
 		check_test_button(r0);
 		if (free_play == 0u)
@@ -1701,7 +1702,7 @@ void int_vector_40(void)
 	frame_ready = 0xFFu;
 	if (single_task == 0u && ((test_mode_on != 0u && mem_read8(screen) == 0u) || task_swapping != 0u))
 		swap_tasks();
-	r0 = rom_03FACC[mem_read8(screen)];
+	r0 = screen_vblank_counters[mem_read8(screen)];
 	mem_write8(r0, mem_read8(r0) + 1u);
 	r12 = saved_r12;
 	screen = saved_screen;
@@ -1813,7 +1814,7 @@ void int_vector_43(void)
 	t1 = timer_interrupts_left;
 	timer_interrupts_left = t1 - 1u;
 	if (t1 != 1u)
-		mem_write16(IRQ_D00008, rom_03F82C);
+		mem_write16(IRQ_D00008, lcd_timer_period);
 	lcd_send_next_nibble();
 	mem_write8(IRQ_D00007, 0xF7u);
 }
@@ -1854,7 +1855,7 @@ void int_vector_44(void)
 		case 2:
 			break;
 		default:
-			invalid_jump(rom_03F85C[r0]);
+			invalid_jump(link_message_kind_jumps[r0]);
 		}
 	}
 	mem_write16(IRQ_D0000A, r1);

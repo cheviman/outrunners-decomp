@@ -349,17 +349,17 @@ C002  io  pcm_register_select   u8
 
 # ======== tables of the program ROM ========
 
-0234  table  fm_global_init      u8
-024A  table  fm_operator_init    u8
-02E4  table  voice_chip_channels u8
-1534  table  fm_patch_registers  u8
-1549  table  fm_level_registers  u8
-1565  table  fm_fnum_tables      u16
+0234  table  fm_global_init      register_value_pair
+024A  table  fm_operator_init    register_value_pair
+02E4  table  voice_chip_channels voice_chip_codes
+1534  table  fm_patch_registers  fm_register_numbers
+1549  table  fm_level_registers  fm_register_numbers
+1565  table  fm_fnum_tables      fm_fnumber_runs
 1847  table  part_templates      u16
 1BC2  table  instruments         u16
 1F62  table  note_codes          u8
-2016  table  velocity_levels     u8
-20AE  table  pcm_pitch_tables    u16
+2016  table  velocity_levels     note_levels
+20AE  table  pcm_pitch_tables    pcm_pitch_runs
 2546  table  bend_range_tables   u16
 2A5E  table  fm_patches          u16
 2DA5  table  drum_kits           u16
@@ -622,3 +622,26 @@ local  update_tyre_noise_screen_2    3E56,3E60  iy  noise  tyre_noise
 local  update_tyre_noise_screen_2    3E3D,3E52  ix  page  screen_page
 local  sequence_tick                 3F04,3F21,3F62,3F81  iy  page  screen_page
 local  step_player                   4059  ix  player  sequence_player
+
+# ======== records and runs the pointers walk, in the sound ROM (rom names, batch B6) ========
+# The same driver as SegaSonic's (its sound_symbols.txt names these the same way)
+struct register_value_pair 2 rom        # a register number and the value written to it: fm_global_init (0234, 11 pairs) and fm_operator_init (024A, 36 pairs), init_fm_chip "ld c,(hl); inc hl; ld a,(hl); inc hl" at 01F2-01F5 and 0200-0203
+field register_value_pair 00 register_number u8   # the YM3438's register (fm_global_init 22-2B, fm_operator_init 40-9E)
+field register_value_pair 01 value u8             # what is written to it
+elements voice_chip_codes u8            # voice_chip_channels (02E4): each voice's chip_channel, 00-06, 08-0E, 10-16, 18-1A for the 24 MultiPCM voices, then 80-82, 84-86 for the YM3438's 6 channels (init_voice_channels 030B "ld a,(de)", 030D "inc de"; init_pcm_chip 02A0 "ld c,(hl)", 02A1 "inc hl")
+elements note_levels u8                 # velocity_levels (2016): by note-on velocity 0-127, the note's level 00-FF on a curve (play_midi_message_screen_1 0425, screen_2 0C60: "ld a,(hl)" at velocity_levels + velocity)
+elements pcm_pitch_steps u16            # a semitone's run of MultiPCM pitches, one per pitch bend step: read at the run + 2 x the bend (+ 2 x the voice's tune): play_midi_message_screen_1 05A0, screen_2 0DDB, retune_voice_screen_1 0717, screen_2 0F53
+elements pcm_pitch_runs u16 pcm_pitch_steps     # pcm_pitch_tables (20AE): by semitone (note & 0F), the address of its run of pitches (0599, 0705, 0DD4, 0F42: "ld a,(hl); inc hl; ld h,(hl)")
+elements fm_fnumbers u16                # a semitone's run of YM3438 F-numbers, one per pitch bend step: read at the run + 2 x the bend (start_fm_note 12F9, retune_fm_voice 13F5)
+elements fm_fnumber_runs u16 fm_fnumbers        # fm_fnum_tables (1565): by semitone, the address of its run of F-numbers (12F2, 13EB)
+elements fm_register_numbers u8         # YM3438 register numbers the channel within its part is added to: fm_patch_registers (1534, 21: load_fm_patch 1508, load_fm_patch_part2 1527, "ld a,(de); add a,c") and fm_level_registers (1549, the 4 total levels: apply_fm_music_volume 1490, apply_fm_channel_volume 14DE)
+local  init_fm_chip                  01ED,01F3,01F5,01FB,0201,0203  hl  init_entry
+local  init_pcm_chip                 029B,02A1  hl  code_entry
+local  init_pcm_chip                 02A0  c  chip_code
+local  init_voice_channels           0305,030D  de  code_entry
+local  play_midi_message_screen_1    059F  hl  pitch_entry  pcm_pitch_steps
+local  play_midi_message_screen_2    0DDA  hl  pitch_entry  pcm_pitch_steps
+local  retune_voice_screen_1         0715  hl  pitch_entry  pcm_pitch_steps
+local  retune_voice_screen_2         0F52  hl  pitch_entry  pcm_pitch_steps
+local  start_fm_note                 12F8  hl  fnum_entry  fm_fnumbers
+local  retune_fm_voice               13F4  hl  fnum_entry  fm_fnumbers
