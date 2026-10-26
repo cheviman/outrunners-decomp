@@ -263,11 +263,12 @@ submodule): the V60/V70 and Z80 decoders and lifters, the static analysis, the d
 translator, the checks and the data and asset formats. `tools/game_profile.py` tells the core about
 OutRunners (its ROM set, `orunners_rom.py`; its structures, the registers the program shares, its board),
 and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, `recompile.py`,
-`disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`) run the core's. A change to the
-decompiler itself goes to arcade-decomp, checked on both games, and comes here as a newer commit of the
-submodule (`git submodule update --remote tools/core`). The rest of
-`tools/` is OutRunners' own: the ROM set, the scenarios' runner, the assets' census and sheets, the pack,
-and the reference tools built on MAME's cores (`tools/reference/`).
+`disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`, `check_scenarios.py`,
+`verify_rom.py`, `render_state.py`, `memory_census.py`) run the core's. A change to the decompiler or those
+tools goes to arcade-decomp, checked on both games, and comes here as a newer commit of the submodule
+(`git submodule update --remote tools/core`). The rest of `tools/` is OutRunners' own: the ROM set
+(`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets' census and sheets, the pack, and
+the reference tools built on MAME's cores (`tools/reference/`).
 
 ## Legal
 

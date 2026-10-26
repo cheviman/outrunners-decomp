@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GAME = "OutRunners (arcade, Sega System Multi 32)"      # in the generated files' headers
 ROM_SET_TITLE = "OutRunners (orunners, World)"
 CPU = "V70"
+BINARY = "orunners"                             # its executables: orunners_game_headless, orunners_headless
 GUARD = "ORUNNERS"                           # the generated headers' include guards: ORUNNERS_GAME_H...
 
 # the program's structures, registers and variables (decompiler/pointers.py, memory.py, signatures.py)
