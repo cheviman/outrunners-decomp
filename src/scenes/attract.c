@@ -18,7 +18,7 @@
 void bar_picture_start(void)
 {
 	uint32_t bar = 0, object = 0;
-	uint32_t scales = 0, target_x_long = 0;
+	uint32_t scales = 0;
 
 	bar = bar_picture_bars_ADDRESS;
 	do
@@ -26,9 +26,7 @@ void bar_picture_start(void)
 		object = start_object();
 		OBJECT(object)->handler = bar_picture_bar_start_ADDRESS;
 		scales = BAR_PICTURE_BAR(bar)->scales;
-		target_x_long = BAR_PICTURE_BAR(bar)->target;
-		OBJECT(object)->bar_picture.target_x = (uint16_t)target_x_long;
-		OBJECT(object)->bar_picture.target_y = (uint16_t)(target_x_long >> 16u);
+		OBJECT(object)->list_data = BAR_PICTURE_BAR(bar)->target;
 		OBJECT(object)->bar_picture.scales = scales;
 		bar += 8u;
 	} while ((int32_t)BAR_PICTURE_BAR(bar)->target >= 0);

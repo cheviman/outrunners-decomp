@@ -92,14 +92,14 @@ void player_car_update(void)
 				grid_road_place = GRID_ROAD_PLACES(grid_road_place_lists[grid_list])[grid_place];
 				CAR(player_car)->road_x = (uint16_t)grid_road_place;
 				CAR(player_car)->segment_remaining = (uint16_t)(grid_road_place >> 16u);
-				OBJECT(current_object)->player_car.heading = (OBJECT(start_record)->flags | ((uint32_t)OBJECT(start_record)->flags_high << 8u));
+				OBJECT(current_object)->player_car.heading = ROAD_SEGMENT(start_record)->heading;
 				start_record += 2u;
-				OBJECT(current_object)->player_car.pitch = OBJECT(start_record - 0x2u)->unk_02;
+				OBJECT(current_object)->player_car.pitch = ROAD_SEGMENT(start_record - 0x2u)->pitch;
 				start_record += 2u;
-				OBJECT(current_object)->player_car.world_x = grid_road_place + OBJECT(start_record - 0x4u)->handler;
+				OBJECT(current_object)->player_car.world_x = grid_road_place + ROAD_SEGMENT(start_record - 0x4u)->x;
 				start_record += 4u;
-				OBJECT(current_object)->player_car.world_z = (OBJECT(start_record - 0x8u)->slot | ((uint32_t)OBJECT(start_record - 0x8u)->unk_09 << 8u) | ((uint32_t)OBJECT(start_record - 0x8u)->unk_0A << 16u) | ((uint32_t)OBJECT(start_record - 0x8u)->unk_0B << 24u));
-				OBJECT(current_object)->player_car.world_y = (OBJECT(start_record - 0x8u)->state | ((uint32_t)OBJECT(start_record - 0x8u)->unk_0D << 8u) | ((uint32_t)OBJECT(start_record - 0x8u)->unk_0E << 16u) | ((uint32_t)OBJECT(start_record - 0x8u)->unk_0F << 24u));
+				OBJECT(current_object)->player_car.world_z = ROAD_SEGMENT(start_record - 0x8u)->z;
+				OBJECT(current_object)->player_car.world_y = ROAD_SEGMENT(start_record - 0x8u)->y;
 				OBJECT(current_object)->palette = player_car_palettes[CAR(player_car)->model];
 				OBJECT(current_object)->player_car.timer = 8u;
 				if ((SCREEN(screen)->demo_flags & 0x100u) == 0u)
@@ -858,7 +858,7 @@ void clear_published_car(void)
 	mem_write16(r12 + 0x14u, 0u);
 	SCREEN(screen)->horizon_line = 0u;
 	mem_write16(r12 + 0x12u, 0u);
-	OBJECT(current_object)->unk_C8 &= 0xFFFF0000u;
+	OBJECT(current_object)->player_car.bounce_height &= 0xFFFF0000u;
 	RACE(race)->bounce_height = 0;
 }
 

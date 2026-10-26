@@ -357,9 +357,9 @@ void name_entry_update(void)
 		} while (L_00209D);
 		OBJECT(current_object)->name_entry.open = 0u;
 		mem_write8(current_object + 0xA0u + name_place, 0u);
-		entered_name = AS32(OBJECT(current_object)->name_entry.name);
+		entered_name = OBJECT(current_object)->name_entry.name_word;
 		if (entered_name == 0u)
-			AS32(OBJECT(current_object)->name_entry.name) = 0x2D2D2Du;
+			OBJECT(current_object)->name_entry.name_word = 0x2D2D2Du;
 		else
 		{
 			rejected_name = name_entry_rejected_names_ADDRESS;
@@ -369,7 +369,7 @@ void name_entry_update(void)
 				rejected_name += 4u;
 				if (entered_name == element)
 				{
-					AS32(OBJECT(current_object)->name_entry.name) = 0x2D2D2Du;
+					OBJECT(current_object)->name_entry.name_word = 0x2D2D2Du;
 					break;
 				}
 			}
@@ -388,7 +388,7 @@ void name_entry_update(void)
 			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
 			RACE(race)->record_model = CAR(player_car)->model;
 			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
-			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->unk_A0 >> 8u);
+			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
 			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
 			OBJECT(current_object)->state++;
 		}
@@ -405,7 +405,7 @@ void name_entry_update(void)
 			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
 			RACE(race)->record_model = CAR(player_car)->model;
 			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
-			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->unk_A0 >> 8u);
+			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
 			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
 			OBJECT(current_object)->state++;
 		}

@@ -1369,7 +1369,7 @@ void checkpoint_board_update(void)
 	OBJECT(current_object)->checkpoint_board.passing_order = screen + 0x390u + checkpoint * 2u * 4u;
 	do
 	{
-		row_player = mem_read8(OBJECT(current_object)->checkpoint_board.passing_order);
+		row_player = OBJECT(OBJECT(current_object)->checkpoint_board.passing_order)->flags;
 		do
 		{
 			do

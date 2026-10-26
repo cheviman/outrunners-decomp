@@ -44,11 +44,13 @@ pointers.CONTEXT_KINDS = {20: ("object", 0), 23: ("car", 0), 25: ("screen", 0)}
 pointers.OBJECT_REGISTERS = (20,)
 pointers.OWN_REGISTERS = (20,)
 pointers.HANDLER_FIELD = ("object", 4)
-pointers.VARIABLE_BLOCKS = {0x20E600: 0x80}       # the settings, which the test mode walks with R20
+pointers.VARIABLE_BLOCKS = {0x20E600: 0x80,      # the settings, which the test mode walks with R20
+                            0x20E716: 0x19}      # the memory test's results, which it writes through R20
 pointers.WORK_RAM = (0x200000, 0x220000)
 pointers.BASE_KINDS = {0x208000: ("screen", 0), 0x218000: ("screen", 0)}
 pointers.PAGE_LINK_KINDS = {"screen": ("object", 0)}
-pointers.NESTED = {"screen": ((0x1000, 0x200, "car"),),
+pointers.NESTED = {"screen": ((0x1000, 0x200, "car"),)
+                  + tuple((0x2000 + 0x20 * n, 0x20, "road_segment") for n in range(128)),    # the course's ring
                    "object_area": ((0x100, 0x100, "object"), (0x200, 0x100, "object_list"),
                                    (0x300, 0x100, "object_list"))
                    + tuple((0x400 + 0x100 * n, 0x100, "object") for n in range(124))}

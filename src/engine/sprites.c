@@ -603,11 +603,11 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 	y = (uint32_t)(int16_t)OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y;
 	width_scale = OBJECT(current_object)->width_scale;
 	height_scale = OBJECT(current_object)->height_scale;
-	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
+	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->flags_upper << 16u));
 	flags_long = flags | 0x20u;
 	OBJECT(current_object)->flags = (uint8_t)flags_long;
 	OBJECT(current_object)->flags_high = (uint8_t)(flags_long >> 8u);
-	OBJECT(current_object)->unk_02 = (uint16_t)(flags_long >> 16u);
+	OBJECT(current_object)->flags_upper = (uint16_t)(flags_long >> 16u);
 	if ((flags & 0x20u) == 0u)
 	{
 		halfway_x = (uint16_t)x;
@@ -969,11 +969,11 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->next_sprite_place;
 	places_mask = 0xEFFFu;
-	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
+	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->flags_upper << 16u));
 	flags_long = flags | 0x20u;
 	OBJECT(current_object)->flags = (uint8_t)flags_long;
 	OBJECT(current_object)->flags_high = (uint8_t)(flags_long >> 8u);
-	OBJECT(current_object)->unk_02 = (uint16_t)(flags_long >> 16u);
+	OBJECT(current_object)->flags_upper = (uint16_t)(flags_long >> 16u);
 	if ((flags & 0x20u) != 0u)
 	{
 		r28 = OBJECT(current_object)->road_row.previous_sprites;
@@ -1190,11 +1190,11 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->next_sprite_place;
 	places_mask = 0xEFFFu;
-	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
+	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->flags_upper << 16u));
 	flags_long = flags | 0x20u;
 	OBJECT(current_object)->flags = (uint8_t)flags_long;
 	OBJECT(current_object)->flags_high = (uint8_t)(flags_long >> 8u);
-	OBJECT(current_object)->unk_02 = (uint16_t)(flags_long >> 16u);
+	OBJECT(current_object)->flags_upper = (uint16_t)(flags_long >> 16u);
 	if ((flags & 0x20u) != 0u)
 	{
 		r28 = OBJECT(current_object)->road_row.previous_sprites;

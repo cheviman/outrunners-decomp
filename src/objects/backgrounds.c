@@ -537,8 +537,8 @@ void race_background_start_objects(uint32_t stage)
 			object = start_object();
 			OBJECT(object)->handler = mem_read32(object_list);
 			object_list += 4u;
-			OBJECT(object)->unk_80 = mem_read32(object_list);
-			OBJECT(object)->unk_14 = current_object;
+			OBJECT(object)->list_data = mem_read32(object_list);
+			OBJECT(object)->parent = current_object;
 			objects_left--;
 			object_list += 4u;
 		} while (objects_left != 0u);

@@ -208,11 +208,11 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 	{
 		drag = (drag * drag) >> 16;
 		start_road_x = (uint16_t)CAR(player_car)->road_x;
-		road_half_width = mem_read16(segment_record + 0x12u);
+		road_half_width = ROAD_SEGMENT(segment_record)->half_width;
 		half_width = CAR_HANDLING(r12)->half_width;
 		drag = player_car_road_drag(drag, start_road_x, road_half_width, half_width);
 	}
-	segment_pitch = mem_read16(segment_record + 2u);
+	segment_pitch = ROAD_SEGMENT(segment_record)->pitch;
 	RACE(SCREEN(screen)->race)->segment_pitch = segment_pitch;
 	road_force = ((int32_t)sine_table[segment_pitch] >> 1) - (drag + 0x1800u);
 	gas = OBJECT(current_object)->player_car.gas;

@@ -20,7 +20,7 @@ void car_radio_start(void)
 	uint32_t object = 0, player = 0, race = 0, racers_left = 0;
 
 	object = current_object + 0x80u;
-	AS32(OBJECT(object - 0x80u)->car_radio.car_models) = 0xFFFFFFFFu;
+	OBJECT(object - 0x80u)->list_data = 0xFFFFFFFFu;
 	OBJECT(object - 0x80u)->unk_84 = 0xFFFFu;
 	OBJECT(object - 0x80u)->unk_86 = 0xFFu;
 	OBJECT(object - 0x80u)->unk_87 = 0xFFu;

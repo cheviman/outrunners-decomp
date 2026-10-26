@@ -362,14 +362,14 @@ void ranking_record_start(void)
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
-	AT8(OBJECT(text_place - 0x81u)->unk_80, 1) = initial;
+	OBJECT(text_place - 0x81u)->list_data = (OBJECT(text_place - 0x81u)->list_data & 0xFFFF00FFu) | ((initial & 0xFFu) << 8u);
 	initial = mem_read8(initial_place);
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
-	AT8(OBJECT(text_place - 0x82u)->unk_80, 2) = initial;
+	OBJECT(text_place - 0x82u)->list_data = (OBJECT(text_place - 0x82u)->list_data & 0xFF00FFFFu) | ((initial & 0xFFu) << 16u);
 	text_place++;
-	AT8(OBJECT(text_place - 0x83u)->unk_80, 3) = 0u;
+	OBJECT(text_place - 0x83u)->list_data &= 0xFFFFFFu;
 	record_time = course_record_times[record_offset >> 1];
 	text_place++;
 	time_to_text(record_time, text_place);

@@ -256,8 +256,7 @@ void test_mode_memory_test(void)
 	current_object = memory_test_results_ADDRESS;
 	blank_result = 0u;
 	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
-	OBJECT(current_object)->flags = 1u;
-	OBJECT(current_object)->flags_high = 1u;
+	AS16(memory_test_results[0]) = 0x101u;
 	test_mode_memory_test_draw(cell_value);
 	memory_start = 0u;
 	rom_check = LOW_ROM_TESTED_BYTES;
@@ -266,14 +265,14 @@ void test_mode_memory_test(void)
 	even_chip_result = (uint16_t)((rom_check & ~0xFFu) | 2u);
 	if (ic37_checksum != low_rom_check)
 		even_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 3u);
-	OBJECT(current_object)->flags = (uint8_t)even_chip_result;
+	memory_test_results[0] = (uint8_t)even_chip_result;
 	odd_chip_result = (even_chip_result & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic40_checksum != (uint16_t)odd_check)
 		odd_chip_result = (odd_chip_result & ~0xFFu) | 3u;
-	OBJECT(current_object - 0x1u)->flags_high = odd_chip_result;
+	memory_test_results[1] = odd_chip_result;
 	current_object = current_object + 1u;
-	OBJECT(current_object - 0x2u)->unk_02 = 0x101u;
+	AS16(memory_test_results[2]) = 0x101u;
 	test_mode_memory_test_draw(odd_chip_result);
 	memory_start = 0x100000u;
 	rom_check = HIGH_ROM_TESTED_BYTES;
@@ -282,14 +281,14 @@ void test_mode_memory_test(void)
 	even_chip_result = (uint16_t)((rom_check & ~0xFFu) | 2u);
 	if (ic36_checksum != high_rom_check)
 		even_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 3u);
-	OBJECT(current_object - 0x2u)->unk_02 = (OBJECT(current_object - 0x2u)->unk_02 & 0xFF00u) | (even_chip_result & 0xFFu);
+	memory_test_results[2] = (uint8_t)even_chip_result;
 	odd_chip_result = (even_chip_result & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic39_checksum != (uint16_t)odd_check)
 		odd_chip_result = (odd_chip_result & ~0xFFu) | 3u;
-	OBJECT(current_object - 0x3u)->unk_02 = (OBJECT(current_object - 0x3u)->unk_02 & 0xFFu) | ((odd_chip_result & 0xFFu) << 8u);
+	memory_test_results[3] = odd_chip_result;
 	current_object = current_object + 1u;
-	OBJECT(current_object - 0x4u)->handler = 0x1010101u;
+	AS32(memory_test_results[4]) = 0x1010101u;
 	test_mode_memory_test_draw(odd_chip_result);
 	memory_start = 0x300000u;
 	failures = 0x20000u;
@@ -298,30 +297,27 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if (video_lane_0_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x4u)->handler = (OBJECT(current_object - 0x4u)->handler & 0xFFFFFF00u) | (chip_result & 0xFFu);
+	memory_test_results[4] = chip_result;
 	video_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (video_lane_1_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x5u)->handler = (OBJECT(current_object - 0x5u)->handler & 0xFFFF00FFu) | ((chip_result & 0xFFu) << 8u);
+	memory_test_results[5] = chip_result;
 	video_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (video_lane_2_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x6u)->handler = (OBJECT(current_object - 0x6u)->handler & 0xFF00FFFFu) | ((chip_result & 0xFFu) << 16u);
+	memory_test_results[6] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & 0xF000u) != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x7u)->handler = (OBJECT(current_object - 0x7u)->handler & 0xFFFFFFu) | ((chip_result & 0xFFu) << 24u);
+	memory_test_results[7] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = init_video();
-	OBJECT(current_object - 0x8u)->slot = 1u;
-	OBJECT(current_object - 0x8u)->unk_09 = 1u;
-	OBJECT(current_object - 0x8u)->unk_0A = 1u;
-	OBJECT(current_object - 0x8u)->unk_0B = 1u;
+	AS32(memory_test_results[8]) = 0x1010101u;
 	test_mode_memory_test_draw(cell_value);
 	memory_start = 0x400000u;
 	failures = 0x20000u;
@@ -330,28 +326,27 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if (sprite_lane_0_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x8u)->slot = chip_result;
+	memory_test_results[8] = chip_result;
 	sprite_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (sprite_lane_1_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x9u)->unk_09 = chip_result;
+	memory_test_results[9] = chip_result;
 	sprite_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (sprite_lane_2_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0xAu)->unk_0A = chip_result;
+	memory_test_results[10] = chip_result;
 	sprite_lane_3_failures = failures & 0xF000u;
 	failures = sprite_lane_3_failures;
 	chip_result = 2u;
 	current_object = current_object + 1u;
-	OBJECT(current_object - 0xBu)->unk_0B = chip_result;
+	memory_test_results[11] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	OBJECT(current_object - 0xCu)->state = 1u;
-	OBJECT(current_object - 0xCu)->unk_0D = 1u;
+	AS16(memory_test_results[12]) = 0x101u;
 	test_mode_memory_test_draw(failures);
 	memory_start = 0x600000u;
 	failures = 0x4000u;
@@ -359,16 +354,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0xCu)->state = chip_result;
+	memory_test_results[12] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & 0xFF00u) != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0xDu)->unk_0D = chip_result;
+	memory_test_results[13] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	OBJECT(current_object - 0xEu)->unk_0E = 1u;
-	OBJECT(current_object - 0xEu)->unk_0F = 1u;
+	AS16(memory_test_results[14]) = 0x101u;
 	test_mode_memory_test_draw(cell_value);
 	memory_start = PALETTE_RAM + 0x4000u;
 	failures = 0x4000u;
@@ -376,15 +370,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0xEu)->unk_0E = chip_result;
+	memory_test_results[14] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & 0xFF00u) != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0xFu)->unk_0F = chip_result;
+	memory_test_results[15] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	OBJECT(current_object - 0x10u)->unk_10 = 0x101u;
+	AS16(memory_test_results[16]) = 0x101u;
 	test_mode_memory_test_draw(cell_value);
 	memory_start = 0x680000u;
 	failures = 0x4000u;
@@ -392,16 +386,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x10u)->unk_10 = (OBJECT(current_object - 0x10u)->unk_10 & 0xFF00u) | (chip_result & 0xFFu);
+	memory_test_results[16] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & 0xFF00u) != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x11u)->unk_10 = (OBJECT(current_object - 0x11u)->unk_10 & 0xFFu) | ((chip_result & 0xFFu) << 8u);
+	memory_test_results[17] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	OBJECT(current_object - 0x12u)->unk_12 = 1u;
-	OBJECT(current_object - 0x12u)->unk_13 = 1u;
+	AS16(memory_test_results[18]) = 0x101u;
 	test_mode_memory_test_draw(cell_value);
 	memory_start = 0x684000u;
 	failures = 0x4000u;
@@ -409,15 +402,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x12u)->unk_12 = chip_result;
+	memory_test_results[18] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & 0xFF00u) != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x13u)->unk_13 = chip_result;
+	memory_test_results[19] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	OBJECT(current_object - 0x14u)->unk_14 = 0x1010101u;
+	AS32(memory_test_results[20]) = 0x1010101u;
 	test_mode_memory_test_draw(cell_value);
 	move_halfwords(SPRITE_RAM, WORK_RAM, 0x10000u);
 	memory_start = 0x200000u;
@@ -427,29 +420,29 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x14u)->unk_14 = (OBJECT(current_object - 0x14u)->unk_14 & 0xFFFFFF00u) | (chip_result & 0xFFu);
+	memory_test_results[20] = chip_result;
 	work_byte_1_failures = failures & 0xFF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_1_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x15u)->unk_14 = (OBJECT(current_object - 0x15u)->unk_14 & 0xFFFF00FFu) | ((chip_result & 0xFFu) << 8u);
+	memory_test_results[21] = chip_result;
 	work_byte_2_failures = failures & 0xFF0000u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_2_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x16u)->unk_14 = (OBJECT(current_object - 0x16u)->unk_14 & 0xFF00FFFFu) | ((chip_result & 0xFFu) << 16u);
+	memory_test_results[22] = chip_result;
 	work_byte_3_failures = failures & ~0xFFFFFFu;
 	failures = work_byte_3_failures;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_3_failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x17u)->unk_14 = (OBJECT(current_object - 0x17u)->unk_14 & 0xFFFFFFu) | ((chip_result & 0xFFu) << 24u);
+	memory_test_results[23] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	OBJECT(current_object - 0x18u)->unk_18 = (OBJECT(current_object - 0x18u)->unk_18 & 0xFFFFFF00u) | 0x1u;
+	memory_test_results[24] = 1u;
 	test_mode_memory_test_draw(failures);
 	move_halfwords(SPRITE_RAM, SOUND_RAM, 0x1000u);
 	memory_start = 0x700000u;
@@ -459,7 +452,7 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	OBJECT(current_object - 0x18u)->unk_18 = (OBJECT(current_object - 0x18u)->unk_18 & 0xFFFFFF00u) | (chip_result & 0xFFu);
+	memory_test_results[24] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
 	failures = test_mode_memory_test_draw(failures);

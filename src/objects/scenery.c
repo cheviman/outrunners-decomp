@@ -93,7 +93,7 @@ uint32_t road_object_stream_start_object(uint16_t position, uint32_t entry)
 	OBJECT(object)->position = position + OBJECT(current_object)->road_object_stream.stage_start;
 	OBJECT(object)->handler = ROAD_OBJECT_STREAM_ENTRY(entry - 0x4u)->handler;
 	entry += 4u;
-	OBJECT(object)->unk_18 = ROAD_OBJECT_STREAM_ENTRY(entry - 0x8u)->parameter;
+	OBJECT(object)->parameter = ROAD_OBJECT_STREAM_ENTRY(entry - 0x8u)->parameter;
 	entry += 4u;
 	OBJECT(current_object)->road_object_stream.stream = entry;
 	return entry;

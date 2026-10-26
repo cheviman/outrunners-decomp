@@ -444,7 +444,7 @@ void network_check_result(uint32_t machine)
 		RACE(race)->master_free_play = free_play;
 		RACE(race)->master_game_difficulty = game_difficulty;
 		RACE(race)->master_time_difficulty_0 = time_difficulty[0];
-		RACE(race)->unk_0C = time_difficulty[1];
+		RACE(race)->master_time_difficulty_1 = time_difficulty[1];
 		RACE(race)->master_time_difficulty_2_5 = ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u));
 		move_halfwords(race + 0x30u, SOUND_RAM + 0x1F32u, 0x1Eu);
 	}
@@ -870,7 +870,7 @@ void network_check_blink_text(void)
 		return;
 	cell = 0x310000u | 0xF000u | (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
 	current_object = current_object + 2u;
-	character = (uint16_t)((uint32_t)(uint8_t)OBJECT(current_object - 0x2u)->unk_02 << 8);
+	character = (uint16_t)((uint32_t)(uint8_t)OBJECT(current_object - 0x2u)->flags_upper << 8);
 	current_object = current_object + 1u;
 	for (;;)
 	{
@@ -1018,13 +1018,13 @@ void link_take_master_settings(void)
 		init_coins();
 		bookkeeping_clear_credits();
 	}
-	if (advertise_sound == RACE(race)->master_advertise_sound && steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game_difficulty == RACE(race)->master_game_difficulty && ((uint8_t)time_difficulty[0] | ((uint32_t)(uint8_t)time_difficulty[1] << 8u)) == ((uint8_t)RACE(race)->master_time_difficulty_0 | ((uint32_t)RACE(race)->unk_0C << 8u)) && ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u)) == RACE(race)->master_time_difficulty_2_5 && coins_changed == 0u)
+	if (advertise_sound == RACE(race)->master_advertise_sound && steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game_difficulty == RACE(race)->master_game_difficulty && ((uint8_t)time_difficulty[0] | ((uint32_t)(uint8_t)time_difficulty[1] << 8u)) == ((uint8_t)RACE(race)->master_time_difficulty_0 | ((uint32_t)RACE(race)->master_time_difficulty_1 << 8u)) && ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u)) == RACE(race)->master_time_difficulty_2_5 && coins_changed == 0u)
 		return;
 	advertise_sound = RACE(race)->master_advertise_sound;
 	steering_wheel_reaction = RACE(race)->master_steering_wheel_reaction;
 	game_difficulty = RACE(race)->master_game_difficulty;
 	time_difficulty[0] = RACE(race)->master_time_difficulty_0;
-	time_difficulty[1] = RACE(race)->unk_0C;
+	time_difficulty[1] = RACE(race)->master_time_difficulty_1;
 	time_difficulty_2_long = RACE(race)->master_time_difficulty_2_5;
 	time_difficulty[2] = (uint8_t)time_difficulty_2_long;
 	time_difficulty[3] = (uint8_t)(time_difficulty_2_long >> 8u);
@@ -2222,10 +2222,10 @@ void link_send_records(void)
 			mem_write16(board_records, RACE(race - 0x5Cu)->ready);
 			race--;
 			board_records -= 2u;
-			mem_write16(board_records, RACE(race - 0x5Bu)->unk_5B);
+			mem_write16(board_records, RACE(race - 0x5Bu)->link_pad_5B);
 			race--;
 			board_records -= 2u;
-			mem_write16(board_records, RACE(race - 0x5Au)->unk_5A);
+			mem_write16(board_records, RACE(race - 0x5Au)->link_pad_5A);
 			race--;
 			board_records -= 2u;
 			mem_write16(board_records, (uint8_t)(RACE(race - 0x59u)->car_flags >> 8u));
@@ -2459,7 +2459,7 @@ void link_send_records(void)
 			mem_write16(board_records, (uint8_t)RACE(race - 0xDu)->master_time_difficulty_2_5);
 			race--;
 			board_records -= 2u;
-			mem_write16(board_records, RACE(race - 0xCu)->unk_0C);
+			mem_write16(board_records, RACE(race - 0xCu)->master_time_difficulty_1);
 			race--;
 			board_records -= 2u;
 			mem_write16(board_records, (uint8_t)RACE(race - 0xBu)->master_time_difficulty_0);

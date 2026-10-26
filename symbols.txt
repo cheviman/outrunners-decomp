@@ -1845,7 +1845,7 @@ field car 32 segment_fraction u16
 field car 34 segment_progress u32
 field car 38 road_x s16
 field car 3A segment_remaining u16
-field car 3C window_record u32
+field car 3C window_record u32 road_segment   # the ring's segment the car's window starts at
 field car 40 segment_offset u16
 field car 42 window_segment u16
 field car 44 segment u16
@@ -2059,6 +2059,7 @@ scoped object name_entry 9A name_x u16
 scoped object name_entry 9C name_y u16
 scoped object name_entry 9E name_attribute u16
 scoped object name_entry A0 name u8
+scoped object name_entry A0 name_word u32   # the name's letters read as one word (name_entry_update: its bytes 1-2 are the record's record_name_rest)
 scoped object name_entry A4 time_x u16
 scoped object name_entry A6 time_y u16
 scoped object name_entry A8 time_attribute u16
@@ -3575,7 +3576,7 @@ comment test_mode_coin_assignments_next_setting COIN/CREDIT SETTING: the next of
 20E70E  var  test_mode_buttons_pressed u8
 20E70F  var  test_mode_buttons_released u8
 20E710  var  test_mode_analog_inputs u8
-20E716  var  memory_test_results u8
+20E716  var  memory_test_results[25] u8
 20E72F  var  test_mode_blink_timer s8
 20E730  var  sound_test_number_a u8
 20E731  var  sound_test_number_b u8
@@ -5065,11 +5066,11 @@ param player_car_world_position R11 segment_record
 param player_car_world_position R13 road_x
 param player_car_world_position R15 segment_fraction
 param player_car_world_position R17 segment_length
-param player_car_place_view R11 segment_record
+param player_car_place_view R11 segment_record road_segment
 param player_car_place_view R13 road_x
 param player_car_place_view R15 segment_fraction
 param player_car_place_view R17 segment_length
-param player_car_drive R11 segment_record
+param player_car_drive R11 segment_record road_segment
 param player_car_drive R13 road_x
 param player_car_drive R15 segment_fraction
 param player_car_drive R17 segment_length
@@ -5879,7 +5880,7 @@ local player_car_build_segment 00FF08,00FF1B R1 run_width
 local player_car_build_segment 00FDF9,00FE0B R2 pitch_cosine     # the pitch angle's index, then its cosine
 local player_car_build_segment 00FE13 R3 heading_sine
 local player_car_build_segment 00FDFE,00FE1B R4 heading_cosine
-local player_car_build_segment 00FE75 R11 ring_segment
+local player_car_build_segment 00FE75 R11 ring_segment road_segment   # the segment it writes, at build_offset in the ring
 local player_car_build_segment 00FEE1 R11 course_place
 # player_car_project_road: the view's rotation (view_matrix_*), then each segment from the window
 local player_car_project_road 010070 R1 view_pitch    # "movz.hw C[D0[R25]], R1": the shown view's
@@ -5901,7 +5902,7 @@ local player_car_project_road 010158,0101B1,0101CB,0101D5 R26 x
 local player_car_project_road 010170 R7 unrotated_z
 local player_car_project_road 01026C,010270 R26 previous_projected
 local player_car_project_road 010123 R9 segments_left
-local player_car_project_road 010115 R18 ring_segment
+local player_car_project_road 010115 R18 ring_segment road_segment   # the window's segment, where the projection starts
 local player_car_project_road 01011B R19 projected_segment
 local player_car_project_road 01012D,010211 R21 previous_y   # the last projected segment's y (7FFF: none yet)
 local player_car_project_road 01020E t1 last_y
@@ -7696,3 +7697,23 @@ local traffic_car_draw 0139B8 s8 saved_seen_from
 01C241  file  system/test_mode          # the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
 03F500  file  system/interrupts         # the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
 03FFF0  file  system/main               # the reset
+
+# ======== the 79 fields named after their offset ========
+struct road_segment 20     # a segment of the course's ring (screen + 2000, 128 of them, build_offset & FFF): player_car_build_segment writes it
+field road_segment 00 heading u16        # the heading angle's high half (car heading_angle)
+field road_segment 02 pitch u16          # the pitch angle's high half (car pitch_angle)
+field road_segment 04 x u32              # where it is in the world (car next_x, next_z, next_y)
+field road_segment 08 z u32
+field road_segment 0C y u32
+field road_segment 10 width u16          # the road's width
+field road_segment 12 half_width u16
+field road_segment 14 width_code u8      # the course run's width code (0 at a fork)
+field road_segment 15 road_event u8      # car road_event at the segment
+field object 02 flags_upper u16          # bits 16-31 of the object's flags word, which the draw routines read and write with flags and flags_high as one word
+field object 14 parent u32 object        # the object that started it (race_background_start_objects; families name it presentation, panel, leader)
+field object 18 parameter u32            # what the list or the road's stream that starts it gives it (road_object_stream_start_object: the entry's parameter; families read their record there)
+field object 80 list_data u32            # the data the object list that starts it gives it (object_lists: data -> field 80)
+field race 0C master_time_difficulty_1 u8    # the time difficulty the master cabinet sends (link_send_records, link_take_master_settings)
+field race 5A link_pad_5A u8             # sent with the record (link_send_records); nothing else reads or writes it
+field race 5B link_pad_5B u8
+local clear_published_car entry R20 car_object object.player_car   # the screen's car's object (player_car_update calls it)

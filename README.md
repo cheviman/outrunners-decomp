@@ -54,8 +54,9 @@ the tools verify it, extract the assets and build your own executable.
       scratch registers whose last value the next function may read, still named after them (1,495 uses,
       which `tools/noise_report.py` counts). The game's structures are typed (`tools/core/decompiler/pointers.py`, with `tools/game_profile.py`'s structures):
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
-      1000 of the block) and the block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as
-      `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, each player's race record
+      1000 of the block), the course's ring of segments (128 of 0x20 bytes from 2000 of the block) and the
+      block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as `OBJECT(p)->field`,
+      `CAR(p)->field`, `ROAD_SEGMENT(p)->field` and `SCREEN(p)->field`, each player's race record
       (`RACE(p)`, which `symbols.txt` declares with the fields that point at it) and the objects' area
       below each screen's block (`OBJECT_AREA(screen - 0x8000u)`: the lists of the objects, their slots);
       what the code reaches by its own address in the screens' blocks and the race records reads as their
@@ -76,12 +77,12 @@ the tools verify it, extract the assets and build your own executable.
       (`symbols.txt`'s param, result and local lines: 2,100 were named after a register and 565 values the
       decompiler works out once were numbered), and so are the values a string move fills with; where a
       partial write chains two values of a register into one variable, its name says both
-      (`model_then_animation`). Every variable has a name; 79 uses of fields are still named after
-      their offset (`tools/noise_report.py`, unk_fields): the bytes that code reading or writing several
-      fields at once covers with no field name (the object's word above `flags_high` the most), the memory
-      test walking the RAM byte by byte with
-      the object register, pointers that may be either of two families, the bytes of a family's arrays,
-      and two bytes of the race record nothing reads
+      (`model_then_animation`). Every variable has a name, and every field but 11 uses of fields still
+      named after their offset (`tools/noise_report.py`, unk_fields; 79 before): the bytes of two
+      families' arrays, which their start clears as a word, a halfword and two bytes (the car radio's
+      `car_models`, the checkpoint board's `row_steps`: a family's field cannot be an array yet), and
+      fields of objects of two families (the choice flags `car_select_entries_run` starts) or of any
+      (`start_object_list`'s number in its list)
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,

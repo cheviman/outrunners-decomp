@@ -275,19 +275,19 @@ void player_car_build_segment(uint16_t ring_mask)
 	CAR(player_car)->next_z = CAR(player_car)->next_z_fine;
 	CAR(player_car)->next_z = (int32_t)CAR(player_car)->next_z >> 8;
 	ring_segment = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + CAR(player_car)->build_offset);
-	mem_write16(ring_segment, (uint16_t)(CAR(player_car)->heading_angle >> 16u));
-	mem_write16(ring_segment + 2u, (uint16_t)(CAR(player_car)->pitch_angle >> 16u));
-	mem_write32(ring_segment + 4u, CAR(player_car)->next_x);
-	mem_write32(ring_segment + 8u, CAR(player_car)->next_z);
-	mem_write32(ring_segment + 0xCu, CAR(player_car)->next_y);
-	mem_write8(ring_segment + 0x15u, CAR(player_car)->road_event);
+	ROAD_SEGMENT(ring_segment)->heading = (uint16_t)(CAR(player_car)->heading_angle >> 16u);
+	ROAD_SEGMENT(ring_segment)->pitch = (uint16_t)(CAR(player_car)->pitch_angle >> 16u);
+	ROAD_SEGMENT(ring_segment)->x = CAR(player_car)->next_x;
+	ROAD_SEGMENT(ring_segment)->z = CAR(player_car)->next_z;
+	ROAD_SEGMENT(ring_segment)->y = CAR(player_car)->next_y;
+	ROAD_SEGMENT(ring_segment)->road_event = CAR(player_car)->road_event;
 	road_width = CAR(player_car)->road_width;
-	mem_write16(ring_segment + 0x10u, road_width);
-	mem_write16(ring_segment + 0x12u, road_width >> 1);
+	ROAD_SEGMENT(ring_segment)->width = road_width;
+	ROAD_SEGMENT(ring_segment)->half_width = road_width >> 1;
 	if (CAR(player_car)->width_changing == 0u)
-		mem_write8(ring_segment + 0x14u, CAR(player_car)->width_code);
+		ROAD_SEGMENT(ring_segment)->width_code = CAR(player_car)->width_code;
 	else
-		mem_write8(ring_segment + 0x14u, 0u);
+		ROAD_SEGMENT(ring_segment)->width_code = 0u;
 	CAR(player_car)->build_offset = (ring_segment + 0x20u) & ring_mask;
 	CAR(player_car)->built_segments++;
 	CAR(player_car)->stage_segments++;

@@ -314,7 +314,7 @@
 #define test_mode_analog_inputs_ADDRESS 0x20E710u
 #define test_mode_analog_inputs RAM8(test_mode_analog_inputs_ADDRESS)
 #define memory_test_results_ADDRESS 0x20E716u
-#define memory_test_results RAM8(memory_test_results_ADDRESS)
+#define memory_test_results ((uint8_t *)ram(memory_test_results_ADDRESS))
 #define test_mode_blink_timer_ADDRESS 0x20E72Fu
 #define test_mode_blink_timer RAM8S(test_mode_blink_timer_ADDRESS)
 #define sound_test_number_a_ADDRESS 0x20E730u
@@ -1539,7 +1539,7 @@ struct object
 	{
 		struct
 		{
-			uint16_t unk_02;
+			uint16_t flags_upper;
 			uint32_t handler;
 			uint8_t slot;
 			uint8_t unk_09;
@@ -1552,8 +1552,8 @@ struct object
 			uint16_t unk_10;
 			uint8_t unk_12;
 			uint8_t unk_13;
-			uint32_t unk_14;
-			uint32_t unk_18;
+			uint32_t parent;
+			uint32_t parameter;
 			int16_t position;
 			uint8_t unk_1E;
 			uint8_t pad_1F[0x1];
@@ -1595,7 +1595,7 @@ struct object
 			uint32_t unk_74;
 			uint32_t unk_78;
 			uint32_t unk_7C;
-			uint32_t unk_80;
+			uint32_t list_data;
 			uint16_t unk_84;
 			uint8_t unk_86;
 			uint8_t unk_87;
@@ -2242,8 +2242,11 @@ struct object
 			uint16_t name_x;
 			uint16_t name_y;
 			uint16_t name_attribute;
-			uint8_t name;
-			uint8_t pad_A1[0x3];
+			union
+			{
+				uint32_t name_word;
+				uint8_t name;
+			};
 			uint16_t time_x;
 			uint16_t time_y;
 			uint16_t time_attribute;
@@ -3734,7 +3737,7 @@ struct race
 	uint8_t master_free_play;
 	uint8_t master_game_difficulty;
 	int8_t master_time_difficulty_0;
-	uint8_t unk_0C;
+	uint8_t master_time_difficulty_1;
 	uint32_t master_time_difficulty_2_5;
 	uint8_t record_serial;
 	uint8_t record_model;
@@ -3783,8 +3786,8 @@ struct race
 	uint16_t segment_pitch;
 	int16_t bounce_height;
 	uint16_t car_flags;
-	uint8_t unk_5A;
-	uint8_t unk_5B;
+	uint8_t link_pad_5A;
+	uint8_t link_pad_5B;
 	uint8_t ready;
 	uint8_t started;
 	uint8_t finished;
@@ -4496,6 +4499,20 @@ struct time_digit_step
 	uint32_t cell_step;
 };
 
+struct road_segment
+{
+	uint16_t heading;
+	uint16_t pitch;
+	uint32_t x;
+	uint32_t z;
+	uint32_t y;
+	uint16_t width;
+	uint16_t half_width;
+	uint8_t width_code;
+	uint8_t road_event;
+	uint8_t pad_16[0xA];
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
@@ -4578,6 +4595,7 @@ _Static_assert(sizeof(struct output_test_output) == 0x4, "struct output_test_out
 _Static_assert(sizeof(struct coin_setting_record) == 0x4, "struct coin_setting_record has the size of the program ROM's records");
 _Static_assert(sizeof(struct privilege_mode_setting) == 0x2, "struct privilege_mode_setting has the size of the program ROM's records");
 _Static_assert(sizeof(struct time_digit_step) == 0x8, "struct time_digit_step has the size of the program ROM's records");
+_Static_assert(sizeof(struct road_segment) == 0x20, "struct road_segment has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
@@ -4700,6 +4718,7 @@ _Static_assert(sizeof(struct time_digit_step) == 0x8, "struct time_digit_step ha
 #define COIN_SETTING_RECORD(address) ((const struct coin_setting_record *)rom(address))
 #define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)rom(address))
 #define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)rom(address))
+#define ROAD_SEGMENT(address) ((struct road_segment *)ram(address))
 
 /* the program ROM's tables of records, by name: name[i].field */
 #define bar_picture_bars_ADDRESS 0x0011B1u
