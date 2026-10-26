@@ -5,7 +5,7 @@ Description: extracts the game's assets from the user's own ROM set, driven by a
              n64decomp/sm64)
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    25-10-2026
+Modified:    26-10-2026
 Author:      Sebastian Toyos
 
 Usage:
@@ -346,9 +346,31 @@ def rom_tables(start, end):
     return found
 
 
-def program_block(address):
-    """The file of a program data piece no subject takes yet: the 64 KB of the program ROM it is in."""
-    return f"program_{address >> 16:02X}"
+def subjects_of(places, symbols_path, sources, folder, code_size):
+    """The file of each data piece by its subject, as the C has the code (symbols_path's file lines): a
+    piece the C names takes the subject of the C file that names it the most; another one inside the code's
+    chip (below code_size), the subject of the stretch of code it lies in (the original's linker laid the
+    tables out beside the code that reads them); the rest go with the piece before them
+    (data_formats.export). 'folder' is the C's folder the subjects are in (src/, src/sound/). Returns an
+    address -> file name function for export's default_group."""
+    stretches = sorted((int(address, 16), path) for address, path in
+                       re.findall(r"^([0-9A-F]{4,6})\s+file\s+(\S+)", symbols_path.read_text(encoding="utf-8"), re.M))
+    names = {name for _, name in places}
+    uses = {}
+    for source in sources:
+        text = source.read_text(encoding="ascii", errors="replace")
+        subject = source.relative_to(folder).with_suffix("").as_posix()
+        for name, count in Counter(re.findall(r"\b(\w+?)(?:_ADDRESS)?\b", text)).items():
+            if name in names:
+                uses.setdefault(name, Counter())[subject] += count
+    by_address = {address: uses[name].most_common(1)[0][0] for address, name in places if name in uses}
+
+    def subject(address):
+        if address in by_address:
+            return by_address[address]
+        inside = [path for start, path in stretches if start <= address]
+        return inside[-1] if inside and address < code_size else None
+    return subject
 
 
 def extract(asset, data, region_of):
@@ -360,13 +382,18 @@ def extract(asset, data, region_of):
         code = data_formats.v60_code(region_of("program"), ROOT / "symbols.txt", start, end)
         # the chips' mirrors are no data of their own: kept, as the code is
         mirrors = [tuple(int(value, 0) for value in pair) for pair in asset.get("mirrors", [])]
+        game_c = sorted(source for source in (ROOT / "src").rglob("*.c") if "sound" not in source.parts)
         return data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),
-                                   default_group=program_block)
+                                   default_group=subjects_of(places, ROOT / "symbols.txt", game_c, ROOT / "src",
+                                                             0x40000))
     if kind == "sound_data":
         symbols = ROOT / asset["symbols"]
-        return data_formats.export(data, asset["offset"], data_formats.sound_pieces(symbols, asset["size"]),
-                                   ROOT / asset["formats"], path, data_formats.z80_code(data, symbols),
-                                   default_group=lambda address: f"sound_{address >> 13:02X}")
+        places = data_formats.sound_pieces(symbols, asset["size"])
+        sound_c = sorted((ROOT / "src" / "sound").glob("*.c"))
+        return data_formats.export(data, asset["offset"], places, ROOT / asset["formats"], path,
+                                   data_formats.z80_code(data, symbols),
+                                   default_group=subjects_of(places, symbols, sound_c, ROOT / "src" / "sound",
+                                                             0xA000))
     if kind == "sprite_records":
         return extract_sprites(asset, data, region_of("program"), path)
     if kind == "pcm_headers":

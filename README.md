@@ -118,8 +118,9 @@ the tools verify it, extract the assets and build your own executable.
       (1). Every ROM address the code uses as a value has a name (a data or table line, or a constant
       line for a number that only looks like one: 101 before) but two (raw_rom_addresses): the switches
       that go on through the original's own jump target in `car_radio_update` and `song_title_show`,
-      where the code's address stands for "go on here", as the cases do. The data's text files are
-      grouped by 64 KB of the ROM until they are cut where the tables start
+      where the code's address stands for "go on here", as the cases do. The data's text files go by
+      subject, as the C does: a table goes with the C file that reads it the most
+      (`assets/data/race/course.txt` holds the courses `src/race/course.c` builds the road from)
 - [x] The C by subject, as the original's modules lay it out (`symbols.txt`'s file lines, a file a subject,
       some taking several stretches of the program): `src/system/` (the main program, the settings, the
       inputs, coins and bookkeeping, sound requests, the LCD, the interrupts, the test mode), `src/video/`
@@ -248,9 +249,12 @@ scenarios. The formats:
 - `assets/sound/pcm_headers.txt` and `assets/sound/samples/`: the MultiPCM's 512 sample headers as text,
   and its samples as 8-bit WAV files, one byte a sample: `common.wav` and `bank_2.wav`-`bank_7.wav`, each
   with a JSON of the samples the headers start in it.
-- `assets/data/` and `assets/sound/data/`: the program's and the sound program's data as text files, a
-  section a piece (cut where `symbols.txt` names a place and where the C reads a table), and
-  `layout.json`, the pieces in order; the code is left out (the C replaces it).
+- `assets/data/` and `assets/sound/data/`: the program's and the sound program's data as text files by
+  subject, the C's subjects (`assets/data/race/course.txt`, `assets/sound/data/voices.txt`): a table goes
+  with the C file that reads it the most, a piece no C file reads with the code it lies in, and one past
+  the code with the piece before it. A file has a section a piece (cut where `symbols.txt` names a place
+  and where the C reads a table), and `layout.json` has the pieces in order; the code is left out (the C
+  replaces it).
 
 `python tools/make_pack.py` packs them for the game (`--check` compares what the pack puts in the board's
 memory with the set, the code left out; `--layout` writes `runtime/src/pack_layout.c`, the pieces without
