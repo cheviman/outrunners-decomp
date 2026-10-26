@@ -276,8 +276,6 @@ void palette_fade_step(uint32_t r0)
 																		break;
 																	if (L_0186AA)
 																		break;
-																	if (L_0186AA)
-																		break;
 																	if (L_0186F2 || (int8_t)mem_read8(r10) > 0)
 																	{
 																		L_0186F2 = false;
@@ -288,8 +286,6 @@ void palette_fade_step(uint32_t r0)
 																	}
 																} while (L_0186BA);
 																if (L_0186CB)
-																	break;
-																if (L_0186AA)
 																	break;
 																if (L_0186AA)
 																	break;
@@ -508,7 +504,7 @@ void lcd_refresh(void)
 	uint8_t r0 = 0;
 	uint8_t t2 = 0;
 	uint16_t t1 = 0;
-	uint32_t lcd_text_4_to_7 = 0, lcd_text_12_to_15 = 0, lcd_text_4_to_7_2 = 0, lcd_text_12_to_15_2 = 0;
+	uint32_t lcd_text_4_to_7 = 0, lcd_send_buffer_1_0_long = 0, lcd_text_12_to_15 = 0, lcd_send_buffer_1_8_long = 0, lcd_text_4_to_7_2 = 0, lcd_send_buffer_2_0_long = 0, lcd_text_12_to_15_2 = 0, lcd_send_buffer_2_8_long = 0, lcd_send_buffer_1_0_long_2 = 0, lcd_send_buffer_1_8_long_2 = 0, lcd_send_buffer_2_0_long_2 = 0, lcd_send_buffer_2_8_long_2 = 0;
 
 	t1 = lcd_restart_frames;
 	lcd_restart_frames = t1 - 1u;
@@ -527,17 +523,45 @@ void lcd_refresh(void)
 	{
 		lcd_send_step = 0u;
 		lcd_text_4_to_7 = SCREEN(SCREEN_1)->lcd_text_4_to_7;
-		AS32(lcd_send_buffer_1[0]) = AS32(SCREEN(SCREEN_1)->lcd_text);
-		AS32(lcd_send_buffer_1[4]) = lcd_text_4_to_7;
+		lcd_send_buffer_1_0_long = AS32(SCREEN(SCREEN_1)->lcd_text);
+		lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long;
+		lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long >> 8u);
+		lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long >> 16u);
+		lcd_send_buffer_1[3] = (uint8_t)(lcd_send_buffer_1_0_long >> 24u);
+		lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to_7;
+		lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
+		lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
+		lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
 		lcd_text_12_to_15 = SCREEN(SCREEN_1)->lcd_text_12_to_15;
-		AS32(lcd_send_buffer_1[8]) = SCREEN(SCREEN_1)->lcd_text_8_to_11;
-		AS32(lcd_send_buffer_1[12]) = lcd_text_12_to_15;
+		lcd_send_buffer_1_8_long = SCREEN(SCREEN_1)->lcd_text_8_to_11;
+		lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long;
+		lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long >> 8u);
+		lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long >> 16u);
+		lcd_send_buffer_1[11] = (uint8_t)(lcd_send_buffer_1_8_long >> 24u);
+		lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to_15;
+		lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
+		lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
+		lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
 		lcd_text_4_to_7_2 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
-		AS32(lcd_send_buffer_2[0]) = AS32(SCREEN(SCREEN_2)->lcd_text);
-		AS32(lcd_send_buffer_2[4]) = lcd_text_4_to_7_2;
+		lcd_send_buffer_2_0_long = AS32(SCREEN(SCREEN_2)->lcd_text);
+		lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long;
+		lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long >> 8u);
+		lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long >> 16u);
+		lcd_send_buffer_2[3] = (uint8_t)(lcd_send_buffer_2_0_long >> 24u);
+		lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7_2;
+		lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7_2 >> 8u);
+		lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7_2 >> 16u);
+		lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7_2 >> 24u);
 		lcd_text_12_to_15_2 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
-		AS32(lcd_send_buffer_2[8]) = SCREEN(SCREEN_2)->lcd_text_8_to_11;
-		AS32(lcd_send_buffer_2[12]) = lcd_text_12_to_15_2;
+		lcd_send_buffer_2_8_long = SCREEN(SCREEN_2)->lcd_text_8_to_11;
+		lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long;
+		lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long >> 8u);
+		lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long >> 16u);
+		lcd_send_buffer_2[11] = (uint8_t)(lcd_send_buffer_2_8_long >> 24u);
+		lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15_2;
+		lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15_2 >> 8u);
+		lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15_2 >> 16u);
+		lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15_2 >> 24u);
 		return;
 	}
 	t2 = r0;
@@ -547,17 +571,45 @@ void lcd_refresh(void)
 	lcd_write_command_nibble(r0);
 	lcd_send_step = 0u;
 	lcd_text_4_to_7 = SCREEN(SCREEN_1)->lcd_text_4_to_7;
-	AS32(lcd_send_buffer_1[0]) = AS32(SCREEN(SCREEN_1)->lcd_text);
-	AS32(lcd_send_buffer_1[4]) = lcd_text_4_to_7;
+	lcd_send_buffer_1_0_long_2 = AS32(SCREEN(SCREEN_1)->lcd_text);
+	lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long_2;
+	lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 8u);
+	lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 16u);
+	lcd_send_buffer_1[3] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 24u);
+	lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to_7;
+	lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
+	lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
+	lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
 	lcd_text_12_to_15 = SCREEN(SCREEN_1)->lcd_text_12_to_15;
-	AS32(lcd_send_buffer_1[8]) = SCREEN(SCREEN_1)->lcd_text_8_to_11;
-	AS32(lcd_send_buffer_1[12]) = lcd_text_12_to_15;
+	lcd_send_buffer_1_8_long_2 = SCREEN(SCREEN_1)->lcd_text_8_to_11;
+	lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long_2;
+	lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 8u);
+	lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 16u);
+	lcd_send_buffer_1[11] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 24u);
+	lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to_15;
+	lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
+	lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
+	lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
 	lcd_text_4_to_7_2 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
-	AS32(lcd_send_buffer_2[0]) = AS32(SCREEN(SCREEN_2)->lcd_text);
-	AS32(lcd_send_buffer_2[4]) = lcd_text_4_to_7_2;
+	lcd_send_buffer_2_0_long_2 = AS32(SCREEN(SCREEN_2)->lcd_text);
+	lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long_2;
+	lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 8u);
+	lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 16u);
+	lcd_send_buffer_2[3] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 24u);
+	lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7_2;
+	lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7_2 >> 8u);
+	lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7_2 >> 16u);
+	lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7_2 >> 24u);
 	lcd_text_12_to_15_2 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
-	AS32(lcd_send_buffer_2[8]) = SCREEN(SCREEN_2)->lcd_text_8_to_11;
-	AS32(lcd_send_buffer_2[12]) = lcd_text_12_to_15_2;
+	lcd_send_buffer_2_8_long_2 = SCREEN(SCREEN_2)->lcd_text_8_to_11;
+	lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long_2;
+	lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 8u);
+	lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 16u);
+	lcd_send_buffer_2[11] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 24u);
+	lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15_2;
+	lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15_2 >> 8u);
+	lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15_2 >> 16u);
+	lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15_2 >> 24u);
 }
 
 /* One nibble to the LCDs each timer interrupt (int_vector_43), with the other bits of port G
@@ -854,7 +906,7 @@ void lcd_race_info_update(void)
 			r1 = 0u;
 			divux_pair(0x1Eu, &r0, &r1);
 			move_string(rom_018EA0[(r1 + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
-			AT8(SCREEN(screen)->lcd_text_8_to_11, 1) = r0 + 0x31u;
+			SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((r0 + 0x31u & 0xFFu) << 8u);
 			return;
 		}
 		OBJECT(current_object)->lcd_race_info.racer_count = RACE(SCREEN(screen)->host_record)->racer_count;
@@ -1016,19 +1068,19 @@ void lcd_race_info_time(void)
 	r1 = 0u;
 	divx_pair(0xAu, &r0, &r1);
 	r10 = screen + 0xF20u - 1u;
-	AT8(SCREEN(r10 - 0xF1Fu)->lcd_text_12_to_15, 3) = r1 + 0x30u;
+	SCREEN(r10 - 0xF1Fu)->lcd_text_12_to_15 = (SCREEN(r10 - 0xF1Fu)->lcd_text_12_to_15 & 0xFFFFFFu) | ((r1 + 0x30u & 0xFFu) << 24u);
 	r1 = 0u;
 	divx_pair(0xAu, &r0, &r1);
 	r10--;
-	AT8(SCREEN(r10 - 0xF1Eu)->lcd_text_12_to_15, 2) = r1 + 0x30u;
+	SCREEN(r10 - 0xF1Eu)->lcd_text_12_to_15 = (SCREEN(r10 - 0xF1Eu)->lcd_text_12_to_15 & 0xFF00FFFFu) | ((r1 + 0x30u & 0xFFu) << 16u);
 	r1 = 0u;
 	divx_pair(0xAu, &r0, &r1);
 	r10 = r10 - 1u - 1u;
-	AS8(SCREEN(r10 - 0xF1Cu)->lcd_text_12_to_15) = r1 + 0x30u;
+	SCREEN(r10 - 0xF1Cu)->lcd_text_12_to_15 = (SCREEN(r10 - 0xF1Cu)->lcd_text_12_to_15 & 0xFFFFFF00u) | (r1 + 0x30u & 0xFFu);
 	r1 = 0u;
 	divx_pair(6u, &r0, &r1);
 	r10--;
-	AT8(SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11, 3) = r1 + 0x30u;
+	SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 & 0xFFFFFFu) | ((r1 + 0x30u & 0xFFu) << 24u);
 	mem_write8(r10 - 1u - 1u, r0 + 0x30u);
 }
 
@@ -1073,32 +1125,32 @@ void lcd_race_info_write_number(uint32_t r0, uint32_t r10)
 	if (zero)
 	{
 		r10--;
-		AT8(SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11, 3) = r1 + r2;
+		SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 & 0xFFFFFFu) | ((r1 + r2 & 0xFFu) << 24u);
 		r10--;
-		AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 2) = 0x20u;
-		AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 1) = 0x20u;
+		SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFF00FFFFu) | 0x200000u;
+		SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFFFF00FFu) | 0x2000u;
 		return;
 	}
 	r10--;
-	AT8(SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11, 3) = r1 + r2;
+	SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Bu)->lcd_text_8_to_11 & 0xFFFFFFu) | ((r1 + r2 & 0xFFu) << 24u);
 	r1 = 0u;
 	divx_pair(0xAu, &r0, &r1);
 	zero = (uint32_t)(r0 == 0u);
 	if (zero)
 	{
 		r10--;
-		AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 2) = r1 + r2;
-		AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 1) = 0x20u;
+		SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFF00FFFFu) | ((r1 + r2 & 0xFFu) << 16u);
+		SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFFFF00FFu) | 0x2000u;
 		return;
 	}
 	r10--;
-	AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 2) = r1 + r2;
+	SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFF00FFFFu) | ((r1 + r2 & 0xFFu) << 16u);
 	if (r0 == 0u)
 	{
-		AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 1) = 0x20u;
+		SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFFFF00FFu) | 0x2000u;
 		return;
 	}
-	AT8(SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11, 1) = r0 + r2;
+	SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 = (SCREEN(r10 - 0xF1Au)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((r0 + r2 & 0xFFu) << 8u);
 }
 
 /* The car has reached the goal: shows */
@@ -1248,7 +1300,7 @@ void car_radio_update(void)
 	uint16_t buttons = 0;
 	uint32_t r0 = 0, r10 = 0, object = 0, song = 0;
 	uint8_t t1 = 0, timer = 0, timer_2 = 0, timer_3 = 0, cars_to_introduce = 0;
-	uint32_t target1 = 0, target2 = 0;
+	uint32_t jump_target = 0;
 
 	object = OBJECT(current_object)->car_radio.title;
 	if (object != 0u && (OBJECT(object)->flags & 1u) == 0u)
@@ -1274,8 +1326,8 @@ void car_radio_update(void)
 					{
 						do
 						{
-							target1 = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : rom_019044[OBJECT(current_object)->state];
-							switch (target1)
+							jump_target = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : rom_019044[OBJECT(current_object)->state];
+							switch (jump_target)
 							{
 							case 0x019068u:
 								r0 = CAR(player_car)->song;
@@ -1531,8 +1583,7 @@ void car_radio_update(void)
 									if (mem_read32(r10) == 0u)
 										r10 = 0u;
 									OBJECT(current_object)->car_radio.remark_list = r10;
-									target2 = r0;
-									switch (target2)
+									switch (r0)
 									{
 									case 0x01929Eu:
 										car_radio_dj_leader();
@@ -1556,7 +1607,7 @@ void car_radio_update(void)
 										car_radio_dj_remark_2c();
 										return;
 									default:
-										invalid_jump(target2);
+										invalid_jump(r0);
 									}
 									break;
 								case 5:
@@ -1584,7 +1635,7 @@ void car_radio_update(void)
 								L_019180 = true;
 								break;
 							default:
-								invalid_jump(target1);
+								invalid_jump(jump_target);
 							}
 						} while (L_019118);
 					} while (L_019132);
@@ -1710,12 +1761,12 @@ void song_title_show(void)
 	uint16_t r0 = 0, r5_2 = 0, speed = 0;
 	uint32_t r3 = 0, r5 = 0, r10 = 0, text = 0;
 	uint16_t time_left = 0, t1 = 0;
-	uint32_t target1 = 0;
+	uint32_t jump_target = 0;
 
 	do
 	{
-		target1 = L_01938A ? 0x19369u : rom_019330[OBJECT(current_object)->state];
-		switch (target1)
+		jump_target = L_01938A ? 0x19369u : rom_019330[OBJECT(current_object)->state];
+		switch (jump_target)
 		{
 		case 0x019344u:
 			r10 = OBJECT(current_object)->song_title.text;
@@ -1744,7 +1795,7 @@ void song_title_show(void)
 					OBJECT(current_object)->song_title.time_left = t1;
 					if ((int16_t)time_left > 1)
 					{
-						r3 = AS32(OBJECT(current_object)->song_title.slide);
+						r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 						r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 + OBJECT(current_object)->x);
 						r5 = OBJECT(current_object)->song_title.colour_step;
 						r5 = (uint8_t)(r5 + 1u);
@@ -1758,9 +1809,10 @@ void song_title_show(void)
 					if (negative)
 					{
 						OBJECT(current_object)->state += 2u;
-						r3 = AS32(OBJECT(current_object)->song_title.slide);
+						r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 						r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - 0x28u);
-						AS32(OBJECT(current_object)->song_title.slide) = r3;
+						OBJECT(current_object)->song_title.slide = (uint16_t)r3;
+						OBJECT(current_object)->song_title.y = (uint16_t)(r3 >> 16u);
 						if ((int16_t)r3 <= -0xD2)
 						{
 							OBJECT(current_object)->flags = 0u;
@@ -1770,11 +1822,12 @@ void song_title_show(void)
 					else
 					{
 						OBJECT(current_object)->state++;
-						r3 = AS32(OBJECT(current_object)->song_title.slide);
+						r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 						r0 = (uint16_t)(OBJECT(current_object)->song_title.speed + 1u);
 						r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - r0);
 						OBJECT(current_object)->song_title.speed = r0;
-						AS32(OBJECT(current_object)->song_title.slide) = r3;
+						OBJECT(current_object)->song_title.slide = (uint16_t)r3;
+						OBJECT(current_object)->song_title.y = (uint16_t)(r3 >> 16u);
 						if ((int16_t)r3 <= -0xD2)
 						{
 							OBJECT(current_object)->flags = 0u;
@@ -1784,11 +1837,12 @@ void song_title_show(void)
 				}
 				else
 				{
-					r3 = AS32(OBJECT(current_object)->song_title.slide);
+					r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 					speed = OBJECT(current_object)->song_title.speed;
 					r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - speed);
 					OBJECT(current_object)->song_title.speed = speed - 1u;
-					AS32(OBJECT(current_object)->song_title.slide) = r3;
+					OBJECT(current_object)->song_title.slide = (uint16_t)r3;
+					OBJECT(current_object)->song_title.y = (uint16_t)(r3 >> 16u);
 					L_019387 = (uint16_t)r3 == 0u;
 				}
 			} while (L_019387);
@@ -1797,11 +1851,12 @@ void song_title_show(void)
 			L_01938A = true;
 			break;
 		case 0x019394u:
-			r3 = AS32(OBJECT(current_object)->song_title.slide);
+			r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 			r0 = (uint16_t)(OBJECT(current_object)->song_title.speed + 1u);
 			r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - r0);
 			OBJECT(current_object)->song_title.speed = r0;
-			AS32(OBJECT(current_object)->song_title.slide) = r3;
+			OBJECT(current_object)->song_title.slide = (uint16_t)r3;
+			OBJECT(current_object)->song_title.y = (uint16_t)(r3 >> 16u);
 			if ((int16_t)r3 <= -0xD2)
 			{
 				OBJECT(current_object)->flags = 0u;
@@ -1817,9 +1872,10 @@ void song_title_show(void)
 			draw_text_at(r3, r5_2, text);
 			return;
 		case 0x0193BAu:
-			r3 = AS32(OBJECT(current_object)->song_title.slide);
+			r3 = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 			r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 - 0x28u);
-			AS32(OBJECT(current_object)->song_title.slide) = r3;
+			OBJECT(current_object)->song_title.slide = (uint16_t)r3;
+			OBJECT(current_object)->song_title.y = (uint16_t)(r3 >> 16u);
 			if ((int16_t)r3 <= -0xD2)
 			{
 				OBJECT(current_object)->flags = 0u;
@@ -1835,7 +1891,7 @@ void song_title_show(void)
 			draw_text_at(r3, r5_2, text);
 			return;
 		default:
-			invalid_jump(target1);
+			invalid_jump(jump_target);
 		}
 	} while (L_01938A);
 	r3 = (r3 & ~0xFFFFu) | (uint16_t)(r3 + OBJECT(current_object)->x);
@@ -1889,7 +1945,7 @@ void title_screen_update(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		AS8(SCREEN(screen)->route_map_signals) = 0u;
+		SCREEN(screen)->route_map_signals &= 0xFFFFFF00u;
 		SCREEN(screen)->title_logo_shine = 0u;
 		r19 = 0x1ACCCu + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
 		OBJECT(current_object)->title_screen.tile_bank_address = ROM32(r19);
@@ -1942,7 +1998,7 @@ void title_screen_update(void)
 		second_scroll_x_address = OBJECT(current_object)->title_screen.second_scroll_x_address;
 		mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) + 0x14u);
 		t1 = (uint8_t)OBJECT(current_object)->title_screen.frames;
-		AS8(OBJECT(current_object)->title_screen.frames) = t1 - 1u;
+		OBJECT(current_object)->title_screen.frames = (OBJECT(current_object)->title_screen.frames & 0xFF00u) | (t1 - 1u & 0xFFu);
 		if (t1 != 1u)
 			return;
 		object = start_object();
@@ -2148,7 +2204,7 @@ void title_screen_start_palms(void)
 {
 	uint32_t object = 0;
 
-	AS8(OBJECT(current_object)->title_screen.palm_frames)++;
+	OBJECT(current_object)->title_screen.palm_frames = (OBJECT(current_object)->title_screen.palm_frames & 0xFF00u) | ((uint8_t)OBJECT(current_object)->title_screen.palm_frames + 1u & 0xFFu);
 	if ((OBJECT(current_object)->title_screen.palm_frames & 7u) == 0u)
 	{
 		object = start_object();
@@ -3124,13 +3180,13 @@ void demo_captions_run(void)
 {
 	uint32_t zero = 0;
 	uint32_t r10 = 0;
-	uint32_t t1 = 0, target1 = 0;
+	uint32_t t1 = 0, jump_target = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->demo_captions.timeline = timeline_1AFC0_ADDRESS;
-		AS16(OBJECT(current_object)->demo_captions.frames) = 0u;
+		OBJECT(current_object)->demo_captions.frames &= 0xFFFF0000u;
 		OBJECT(current_object)->state++;
 		return;
 	case 1:
@@ -3138,7 +3194,7 @@ void demo_captions_run(void)
 	default:
 		invalid_jump(rom_01ADF4[OBJECT(current_object)->state]);
 	}
-	AS16(OBJECT(current_object)->demo_captions.frames)++;
+	OBJECT(current_object)->demo_captions.frames = (OBJECT(current_object)->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)OBJECT(current_object)->demo_captions.frames + 1u & 0xFFFFu);
 	r10 = OBJECT(current_object)->demo_captions.timeline;
 	t1 = ROM32(r10) - (uint16_t)OBJECT(current_object)->demo_captions.frames;
 	zero = t1 == 0u;
@@ -3150,8 +3206,8 @@ void demo_captions_run(void)
 	}
 	if (zero)
 	{
-		target1 = ROM32(r10);
-		switch (target1)
+		jump_target = ROM32(r10);
+		switch (jump_target)
 		{
 		case 0x01AE2Du:
 			demo_captions_head_to_head();
@@ -3163,7 +3219,7 @@ void demo_captions_run(void)
 			demo_captions_music_select();
 			break;
 		default:
-			invalid_jump(target1);
+			invalid_jump(jump_target);
 		}
 		OBJECT(current_object)->demo_captions.timeline += 8u;
 	}
@@ -3295,13 +3351,16 @@ void kanji_text_viewer_update(void)
 {
 	uint16_t r4 = 0;
 	uint32_t r3 = 0, r4_2 = 0, r5 = 0, r10 = 0, r11 = 0;
+	uint32_t video_registers_0_long = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		AS8(SCREEN(screen)->unpack_state) = 0u;
+		SCREEN(screen)->unpack_state &= 0xFF00u;
 		init_video();
-		AS32(video_registers[0]) &= ~0x800u;
+		video_registers_0_long = (video_registers[0] | ((uint32_t)video_registers[1] << 16u)) & ~0x800u;
+		video_registers[0] = (uint16_t)video_registers_0_long;
+		video_registers[1] = (uint16_t)(video_registers_0_long >> 16u);
 		video_registers[1] = 0xFu;
 		video_registers[70] = 0xFFu;
 		video_registers[68] = 0u;
@@ -3501,6 +3560,7 @@ void test_mode_start(void)
 {
 	uint16_t r0 = 0;
 	uint32_t r0_2 = 0, r1 = 0;
+	uint32_t port_d_outputs_0_halfword = 0, port_g_outputs_0_halfword = 0;
 
 	mem_write16(0x801000u, 0u);
 	mem_write8(IO_C00074, 0x1Fu);
@@ -3556,8 +3616,12 @@ void test_mode_start(void)
 	leader_lamp_2_timer = 0u;
 	SCREEN(SCREEN_1)->button_lamps = 0u;
 	SCREEN(SCREEN_2)->button_lamps = 0u;
-	AS16(port_d_outputs[0]) &= 0xE0E1u;
-	AS16(port_g_outputs[0]) &= ~0x403u;
+	port_d_outputs_0_halfword = (port_d_outputs[0] | ((uint32_t)port_d_outputs[1] << 8u)) & 0xE0E1u;
+	port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
+	port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
+	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
+	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
+	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
 	r0_2 = rom_01C378;
 	r1 = rom_01C37C;
 	AS32(SCREEN(SCREEN_1)->lcd_text) = r0_2;
@@ -3684,11 +3748,15 @@ void test_mode_menu_toggle_continue(void)
 {
 	uint32_t carry = 0;
 	uint32_t r0 = 0, r10 = 0;
-	uint32_t t1 = 0;
+	uint32_t t1 = 0, test_mode_flags_long = 0;
 
-	t1 = AS32(test_mode_flags);
+	t1 = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
 	carry = (t1 & 1u) != 0u;
-	AS32(test_mode_flags) = t1 ^ 1u;
+	test_mode_flags_long = t1 ^ 1u;
+	test_mode_flags = (uint8_t)test_mode_flags_long;
+	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	r0 = 0u - (0xFFFFFFFFu + carry);
 	r10 = rom_01C560[r0];
 	test_mode_draw_texts(r0, r10);
@@ -3748,12 +3816,12 @@ void test_mode_memory_test(void)
 	r0_2 = (uint16_t)((r0 & ~0xFFu) | 2u);
 	if (rom_03FFFC != t2)
 		r0_2 = (uint16_t)((r0_2 & ~0xFFu) | 3u);
-	AS8(OBJECT(current_object - 0x2u)->unk_02) = (uint8_t)r0_2;
+	OBJECT(current_object - 0x2u)->unk_02 = (OBJECT(current_object - 0x2u)->unk_02 & 0xFF00u) | (r0_2 & 0xFFu);
 	r0 = (r0_2 & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (rom_03FFFE != (uint16_t)r1)
 		r0 = (r0 & ~0xFFu) | 3u;
-	AT8(OBJECT(current_object - 0x3u)->unk_02, 1) = r0;
+	OBJECT(current_object - 0x3u)->unk_02 = (OBJECT(current_object - 0x3u)->unk_02 & 0xFFu) | ((r0 & 0xFFu) << 8u);
 	current_object = current_object + 1u;
 	OBJECT(current_object - 0x4u)->handler = 0x1010101u;
 	test_mode_memory_test_draw(r0);
@@ -3764,24 +3832,24 @@ void test_mode_memory_test(void)
 	r1_2 = 2u;
 	if (t3 != 0u)
 		r1_2 = 3u;
-	AS8(OBJECT(current_object - 0x4u)->handler) = r1_2;
+	OBJECT(current_object - 0x4u)->handler = (OBJECT(current_object - 0x4u)->handler & 0xFFFFFF00u) | (r1_2 & 0xFFu);
 	t4 = r0 & 0xF0u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t4 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x5u)->handler, 1) = r1_2;
+	OBJECT(current_object - 0x5u)->handler = (OBJECT(current_object - 0x5u)->handler & 0xFFFF00FFu) | ((r1_2 & 0xFFu) << 8u);
 	t5 = r0 & 0xF00u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t5 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x6u)->handler, 2) = r1_2;
+	OBJECT(current_object - 0x6u)->handler = (OBJECT(current_object - 0x6u)->handler & 0xFF00FFFFu) | ((r1_2 & 0xFFu) << 16u);
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if ((r0 & 0xF000u) != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x7u)->handler, 3) = r1_2;
+	OBJECT(current_object - 0x7u)->handler = (OBJECT(current_object - 0x7u)->handler & 0xFFFFFFu) | ((r1_2 & 0xFFu) << 24u);
 	current_object = current_object + 1u;
 	r0 = init_video();
 	OBJECT(current_object - 0x8u)->slot = 1u;
@@ -3858,12 +3926,12 @@ void test_mode_memory_test(void)
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
-	AS8(OBJECT(current_object - 0x10u)->unk_10) = r1_2;
+	OBJECT(current_object - 0x10u)->unk_10 = (OBJECT(current_object - 0x10u)->unk_10 & 0xFF00u) | (r1_2 & 0xFFu);
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if ((r0 & 0xFF00u) != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x11u)->unk_10, 1) = r1_2;
+	OBJECT(current_object - 0x11u)->unk_10 = (OBJECT(current_object - 0x11u)->unk_10 & 0xFFu) | ((r1_2 & 0xFFu) << 8u);
 	current_object = current_object + 1u;
 	r0 = test_mode_set_up_colours();
 	OBJECT(current_object - 0x12u)->unk_12 = 1u;
@@ -3893,29 +3961,29 @@ void test_mode_memory_test(void)
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
-	AS8(OBJECT(current_object - 0x14u)->unk_14) = r1_2;
+	OBJECT(current_object - 0x14u)->unk_14 = (OBJECT(current_object - 0x14u)->unk_14 & 0xFFFFFF00u) | (r1_2 & 0xFFu);
 	t10 = r0 & 0xFF00u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t10 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x15u)->unk_14, 1) = r1_2;
+	OBJECT(current_object - 0x15u)->unk_14 = (OBJECT(current_object - 0x15u)->unk_14 & 0xFFFF00FFu) | ((r1_2 & 0xFFu) << 8u);
 	t11 = r0 & 0xFF0000u;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t11 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x16u)->unk_14, 2) = r1_2;
+	OBJECT(current_object - 0x16u)->unk_14 = (OBJECT(current_object - 0x16u)->unk_14 & 0xFF00FFFFu) | ((r1_2 & 0xFFu) << 16u);
 	t12 = r0 & ~0xFFFFFFu;
 	r0 = t12;
 	r1_2 = 2u;
 	current_object = current_object + 1u;
 	if (t12 != 0u)
 		r1_2 = 3u;
-	AT8(OBJECT(current_object - 0x17u)->unk_14, 3) = r1_2;
+	OBJECT(current_object - 0x17u)->unk_14 = (OBJECT(current_object - 0x17u)->unk_14 & 0xFFFFFFu) | ((r1_2 & 0xFFu) << 24u);
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	AS8(OBJECT(current_object - 0x18u)->unk_18) = 1u;
+	OBJECT(current_object - 0x18u)->unk_18 = (OBJECT(current_object - 0x18u)->unk_18 & 0xFFFFFF00u) | 0x1u;
 	test_mode_memory_test_draw(r0);
 	move_halfwords(SPRITE_RAM, SOUND_RAM, 0x1000u);
 	r10 = 0x700000u;
@@ -3925,7 +3993,7 @@ void test_mode_memory_test(void)
 	r1_2 = 2u;
 	if ((uint8_t)r0 != 0u)
 		r1_2 = 3u;
-	AS8(OBJECT(current_object - 0x18u)->unk_18) = r1_2;
+	OBJECT(current_object - 0x18u)->unk_18 = (OBJECT(current_object - 0x18u)->unk_18 & 0xFFFFFF00u) | (r1_2 & 0xFFu);
 	current_object = current_object + 1u;
 	init_sprite_lists();
 	r0 = test_mode_memory_test_draw(r0);
@@ -4980,8 +5048,14 @@ void test_mode_output_test_toggle(void)
    goes back to the menu. */
 void test_mode_output_test_exit(void)
 {
-	AS16(port_d_outputs[0]) &= 0xE0E1u;
-	AS16(port_g_outputs[0]) &= ~0x403u;
+	uint32_t port_d_outputs_0_halfword = 0, port_g_outputs_0_halfword = 0;
+
+	port_d_outputs_0_halfword = (port_d_outputs[0] | ((uint32_t)port_d_outputs[1] << 8u)) & 0xE0E1u;
+	port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
+	port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
+	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
+	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
+	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
 

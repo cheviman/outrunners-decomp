@@ -359,9 +359,9 @@ void entry_countdown_count(void)
 	if (zero == 0u)
 	{
 		r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 0x30u);
-		AS8(SCREEN(screen)->lcd_text_8_to_11) = r0;
+		SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFFFF00u) | (r0 & 0xFFu);
 	}
-	AT8(SCREEN(screen)->lcd_text_8_to_11, 1) = r1 + 0x30u;
+	SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((r1 + 0x30u & 0xFFu) << 8u);
 	r0 = draw_object(r0);
 }
 
@@ -513,27 +513,22 @@ void entry_traffic_car_drive(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		r0 = random_number();
-		r1 = byte_swap32(r0);
-		r0 &= 7u;
-		OBJECT(current_object)->entry_traffic_car.car = r0;
-		r10 = rom_0069B8_ADDRESS + r0 * 4u;
-		r9 = ROM16(r10);
-		OBJECT(current_object)->palette = ROM16(rom_000002_ADDRESS + r10);
-		animation_start(r9);
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->depth_layer = 3u;
-		OBJECT(current_object)->frame = 6u;
-		OBJECT(current_object)->state++;
-		t1 = r1 & 0x7Fu;
-		r1 = (r1 & ~0xFFu) | t1;
-		if (t1 == 0u)
+		break;
+	case 3:
+		if (OBJECT(current_object)->entry_traffic_car.spin_delay != 0u)
 		{
-			OBJECT(current_object)->entry_traffic_car.spin_delay = 0x2Du;
-			OBJECT(current_object)->state += 2u;
-		}
-		if ((int32_t)r1 >= 0)
-		{
+			spin_delay = OBJECT(current_object)->entry_traffic_car.spin_delay;
+			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay - 1u;
+			if (spin_delay == 1u)
+			{
+				ignored = animation_advance(0u);
+				ignored = animation_advance(ignored);
+				ignored = animation_advance(ignored);
+				ignored = animation_advance(ignored);
+				animation_advance(ignored);
+				r0_2 = 4u;
+				set_tyre_noise(r0_2);
+			}
 			path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 			OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 			r10 = 0x67B2u + path_step * 3u * 2u;
@@ -552,54 +547,6 @@ void entry_traffic_car_drive(void)
 			request_sound(r0_2);
 			OBJECT(current_object)->flags = 0u;
 			return;
-		}
-		OBJECT(current_object)->frame = 7u;
-		OBJECT(current_object)->state++;
-		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
-		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
-		r10 = 0x67B2u + path_step * 3u * 2u;
-		r0 = ROM16(r10);
-		r10 += 2u;
-		if (r0 == 0u)
-		{
-			r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
-			request_sound(r0_2);
-			OBJECT(current_object)->flags = 0u;
-			return;
-		}
-		OBJECT(current_object)->width_scale = r0;
-		OBJECT(current_object)->height_scale = r0;
-		r0 = (uint16_t)(0x96u - ROM16(r10));
-		OBJECT(current_object)->x = r0;
-		OBJECT(current_object)->y = ROM16(r10 + 2u);
-		r0 = draw_object(r0);
-		return;
-	case 3:
-		if (OBJECT(current_object)->entry_traffic_car.spin_delay != 0u)
-		{
-			spin_delay = OBJECT(current_object)->entry_traffic_car.spin_delay;
-			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay - 1u;
-			if (spin_delay != 1u)
-			{
-				path_step = OBJECT(current_object)->entry_traffic_car.path_step;
-				OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
-				r10 = 0x67B2u + path_step * 3u * 2u;
-				r0 = ROM16(r10);
-				r10 += 2u;
-				if (r0 != 0u)
-				{
-					OBJECT(current_object)->width_scale = r0;
-					OBJECT(current_object)->height_scale = r0;
-					OBJECT(current_object)->x = ROM16(r10);
-					OBJECT(current_object)->y = ROM16(r10 + 2u);
-					r0 = draw_object(r0);
-					return;
-				}
-				r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
-				request_sound(r0_2);
-				OBJECT(current_object)->flags = 0u;
-				return;
-			}
 		}
 		ignored = animation_advance(0u);
 		ignored = animation_advance(ignored);
@@ -650,28 +597,35 @@ void entry_traffic_car_drive(void)
 		{
 			spin_delay_2 = OBJECT(current_object)->entry_traffic_car.spin_delay;
 			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay_2 - 1u;
-			if (spin_delay_2 != 1u)
+			if (spin_delay_2 == 1u)
 			{
-				path_step = OBJECT(current_object)->entry_traffic_car.path_step;
-				OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
-				r10 = 0x67B2u + path_step * 3u * 2u;
-				r0 = ROM16(r10);
-				r10 += 2u;
-				if (r0 == 0u)
-				{
-					r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
-					request_sound(r0_2);
-					OBJECT(current_object)->flags = 0u;
-					return;
-				}
-				OBJECT(current_object)->width_scale = r0;
-				OBJECT(current_object)->height_scale = r0;
-				r0 = (uint16_t)(0x96u - ROM16(r10));
-				OBJECT(current_object)->x = r0;
-				OBJECT(current_object)->y = ROM16(r10 + 2u);
-				r0 = draw_object(r0);
+				ignored = animation_advance(0u);
+				ignored = animation_advance(ignored);
+				ignored = animation_advance(ignored);
+				ignored = animation_advance(ignored);
+				animation_advance(ignored);
+				r0_2 = 4u;
+				set_tyre_noise(r0_2);
+			}
+			path_step = OBJECT(current_object)->entry_traffic_car.path_step;
+			OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
+			r10 = 0x67B2u + path_step * 3u * 2u;
+			r0 = ROM16(r10);
+			r10 += 2u;
+			if (r0 == 0u)
+			{
+				r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
+				request_sound(r0_2);
+				OBJECT(current_object)->flags = 0u;
 				return;
 			}
+			OBJECT(current_object)->width_scale = r0;
+			OBJECT(current_object)->height_scale = r0;
+			r0 = (uint16_t)(0x96u - ROM16(r10));
+			OBJECT(current_object)->x = r0;
+			OBJECT(current_object)->y = ROM16(r10 + 2u);
+			r0 = draw_object(r0);
+			return;
 		}
 		ignored = animation_advance(0u);
 		ignored = animation_advance(ignored);
@@ -722,6 +676,66 @@ void entry_traffic_car_drive(void)
 	default:
 		invalid_jump(rom_00665C[OBJECT(current_object)->state]);
 	}
+	r0 = random_number();
+	r1 = byte_swap32(r0);
+	r0 &= 7u;
+	OBJECT(current_object)->entry_traffic_car.car = r0;
+	r10 = rom_0069B8_ADDRESS + r0 * 4u;
+	r9 = ROM16(r10);
+	OBJECT(current_object)->palette = ROM16(rom_000002_ADDRESS + r10);
+	animation_start(r9);
+	OBJECT(current_object)->draw_mode = 0xAu;
+	OBJECT(current_object)->depth_layer = 3u;
+	OBJECT(current_object)->frame = 6u;
+	OBJECT(current_object)->state++;
+	t1 = r1 & 0x7Fu;
+	r1 = (r1 & ~0xFFu) | t1;
+	if (t1 == 0u)
+	{
+		OBJECT(current_object)->entry_traffic_car.spin_delay = 0x2Du;
+		OBJECT(current_object)->state += 2u;
+	}
+	if ((int32_t)r1 >= 0)
+	{
+		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
+		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
+		r10 = 0x67B2u + path_step * 3u * 2u;
+		r0 = ROM16(r10);
+		r10 += 2u;
+		if (r0 != 0u)
+		{
+			OBJECT(current_object)->width_scale = r0;
+			OBJECT(current_object)->height_scale = r0;
+			OBJECT(current_object)->x = ROM16(r10);
+			OBJECT(current_object)->y = ROM16(r10 + 2u);
+			r0 = draw_object(r0);
+			return;
+		}
+		r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
+		request_sound(r0_2);
+		OBJECT(current_object)->flags = 0u;
+		return;
+	}
+	OBJECT(current_object)->frame = 7u;
+	OBJECT(current_object)->state++;
+	path_step = OBJECT(current_object)->entry_traffic_car.path_step;
+	OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
+	r10 = 0x67B2u + path_step * 3u * 2u;
+	r0 = ROM16(r10);
+	r10 += 2u;
+	if (r0 == 0u)
+	{
+		r0_2 = rom_0067A9[OBJECT(current_object)->entry_traffic_car.car];
+		request_sound(r0_2);
+		OBJECT(current_object)->flags = 0u;
+		return;
+	}
+	OBJECT(current_object)->width_scale = r0;
+	OBJECT(current_object)->height_scale = r0;
+	r0 = (uint16_t)(0x96u - ROM16(r10));
+	OBJECT(current_object)->x = r0;
+	OBJECT(current_object)->y = ROM16(r10 + 2u);
+	r0 = draw_object(r0);
 }
 
 /* Gives the object the next palette (palette, an index into the sprites' palette words, rom_032BA4) of
@@ -774,7 +788,7 @@ void player_car_update(void)
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r17 = 0, r19 = 0, crash_sound = 0, gravity = 0, hit_object = 0, ignored = 0, model = 0, object = 0, object_2 = 0;
 	uint8_t hit_guard = 0, crash_sound_delay = 0;
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
-	uint32_t target1 = 0, t1 = 0;
+	uint32_t jump_target = 0, t1 = 0;
 
 	wheel_motor[SCREEN(screen)->index] = 0u;
 	player_car_check_place();
@@ -784,8 +798,8 @@ void player_car_update(void)
 	{
 		do
 		{
-			target1 = L_0071FB ? 0x7134u : L_007F31 ? 0x70B9u : rom_006F18[OBJECT(current_object)->state];
-			switch (target1)
+			jump_target = L_0071FB ? 0x7134u : L_007F31 ? 0x70B9u : rom_006F18[OBJECT(current_object)->state];
+			switch (jump_target)
 			{
 			case 0x006F30u:
 				SCREEN(screen)->current_stage = SCREEN(screen)->built_stage;
@@ -822,15 +836,16 @@ void player_car_update(void)
 				CAR(player_car)->segment_offset = r0_2;
 				object = (object & ~0xFFFFu) | (uint16_t)(object + r0_2);
 				r1 = mem_read32(rom_0090AC[r2] + r1 * 4u);
-				AS32(CAR(player_car)->road_x) = r1;
-				OBJECT(current_object)->player_car.heading = AS16(OBJECT(object)->flags);
+				CAR(player_car)->road_x = (uint16_t)r1;
+				CAR(player_car)->segment_remaining = (uint16_t)(r1 >> 16u);
+				OBJECT(current_object)->player_car.heading = (OBJECT(object)->flags | ((uint32_t)OBJECT(object)->flags_high << 8u));
 				object += 2u;
 				OBJECT(current_object)->player_car.pitch = OBJECT(object - 0x2u)->unk_02;
 				object += 2u;
 				OBJECT(current_object)->player_car.world_x = r1 + OBJECT(object - 0x4u)->handler;
 				object += 4u;
-				OBJECT(current_object)->player_car.world_z = AS32(OBJECT(object - 0x8u)->slot);
-				OBJECT(current_object)->player_car.world_y = AS32(OBJECT(object - 0x8u)->state);
+				OBJECT(current_object)->player_car.world_z = (OBJECT(object - 0x8u)->slot | ((uint32_t)OBJECT(object - 0x8u)->unk_09 << 8u) | ((uint32_t)OBJECT(object - 0x8u)->unk_0A << 16u) | ((uint32_t)OBJECT(object - 0x8u)->unk_0B << 24u));
+				OBJECT(current_object)->player_car.world_y = (OBJECT(object - 0x8u)->state | ((uint32_t)OBJECT(object - 0x8u)->unk_0D << 8u) | ((uint32_t)OBJECT(object - 0x8u)->unk_0E << 16u) | ((uint32_t)OBJECT(object - 0x8u)->unk_0F << 24u));
 				OBJECT(current_object)->palette = rom_009510[CAR(player_car)->model];
 				OBJECT(current_object)->player_car.timer = 8u;
 				if ((SCREEN(screen)->demo_flags & 0x100u) == 0u)
@@ -1289,7 +1304,7 @@ void player_car_update(void)
 				L_007F31 = true;
 				break;
 			default:
-				invalid_jump(target1);
+				invalid_jump(jump_target);
 			}
 		} while (L_0071FB);
 	} while (L_007F31);
@@ -1525,7 +1540,7 @@ void player_car_publish(void)
 		RACE(race)->wheel_effect_2 = CAR(player_car)->wheel_effect_2;
 		RACE(race)->speed = OBJECT(current_object)->player_car.speed;
 		RACE(race)->sideways_speed = OBJECT(current_object)->player_car.sideways_speed;
-		RACE(race)->car_flags = AS16(OBJECT(current_object)->flags);
+		RACE(race)->car_flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
 		RACE(race)->segment_fraction = CAR(player_car)->segment_fraction;
 		RACE(race)->segment = CAR(player_car)->segment;
 		RACE(race)->road_x = CAR(player_car)->road_x;
@@ -1589,7 +1604,7 @@ void clear_published_car(void)
 	mem_write16(r12 + 0x14u, 0u);
 	SCREEN(screen)->horizon_line = 0u;
 	mem_write16(r12 + 0x12u, 0u);
-	AS16(OBJECT(current_object)->unk_C8) = 0u;
+	OBJECT(current_object)->unk_C8 &= 0xFFFF0000u;
 	RACE(race)->bounce_height = 0;
 }
 
@@ -1770,14 +1785,14 @@ void player_car_move_view(void)
 	uint16_t r0 = 0, r1 = 0, r2 = 0, last_negated_speed = 0;
 	uint32_t r0_2 = 0, object = 0;
 	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t7 = 0, t9 = 0;
-	uint32_t target1 = 0, t6 = 0, t8 = 0;
+	uint32_t jump_target = 0, t6 = 0, t8 = 0;
 
 	do
 	{
 		do
 		{
-			target1 = L_007AD1 ? 0x792Bu : L_007AFA ? 0x792Bu : rom_007917[OBJECT(current_object)->player_car.rival_step];
-			switch (target1)
+			jump_target = L_007AD1 ? 0x792Bu : L_007AFA ? 0x792Bu : rom_007917[OBJECT(current_object)->player_car.rival_step];
+			switch (jump_target)
 			{
 			case 0x007927u:
 				OBJECT(current_object)->player_car.rival_step++;
@@ -1841,7 +1856,7 @@ void player_car_move_view(void)
 				L_007AFA = true;
 				break;
 			default:
-				invalid_jump(target1);
+				invalid_jump(jump_target);
 			}
 		} while (L_007AD1);
 	} while (L_007AFA);
@@ -1994,12 +2009,12 @@ void player_car_check_rivals(void)
 	race = SCREEN(screen)->race_copy;
 	race_2 = SCREEN(screen)->ahead_record;
 	r12 = SCREEN(screen)->behind_record;
-	r0 = AS32(RACE(race)->segment_fraction);
+	r0 = (RACE(race)->segment_fraction | ((uint32_t)RACE(race)->segment << 16u));
 	speed = RACE(race)->speed;
 	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 << 9);
 	if (race_2 != race)
 	{
-		r2 = AS32(RACE(race_2)->segment_fraction);
+		r2 = (RACE(race_2)->segment_fraction | ((uint32_t)RACE(race_2)->segment << 16u));
 		r2 = ((r2 & ~0xFFFFu) | (uint16_t)(r2 << 9)) - r0;
 		r3 = RACE(race_2)->speed - speed;
 		if (OBJECT(current_object)->player_car.rival_near == 0u)
@@ -2054,7 +2069,7 @@ void player_car_check_rivals(void)
 		OBJECT(current_object)->player_car.rival_hold--;
 		return;
 	}
-	r2 = AS32(RACE(r12)->segment_fraction);
+	r2 = (RACE(r12)->segment_fraction | ((uint32_t)RACE(r12)->segment << 16u));
 	r2 = ((r2 & ~0xFFFFu) | (uint16_t)(r2 << 9)) - r0;
 	r3 = RACE(r12)->speed - speed;
 	if (OBJECT(current_object)->player_car.rival_near == 0u)
@@ -2390,8 +2405,8 @@ void race_car_draw(void)
 		r13 = r13 & 1u;
 		if ((uint8_t)(OBJECT(current_object)->race_car.wheel_turn >> 24u) != r13)
 		{
-			AT8(OBJECT(current_object)->race_car.wheel_turn, 3) = r13;
-			AS16(OBJECT(current_object)->race_car.wheel_turn) = 0u;
+			OBJECT(current_object)->race_car.wheel_turn = (OBJECT(current_object)->race_car.wheel_turn & 0xFFFFFFu) | ((r13 & 0xFFu) << 24u);
+			OBJECT(current_object)->race_car.wheel_turn &= 0xFFFF0000u;
 		}
 		r13 = (uint16_t)(r13 + AS16(CAR(player_car)->brake_lights));
 		r13 = (uint16_t)(r13 + RACE(race)->palette);
@@ -4301,14 +4316,14 @@ void lap_timer_update(void)
 	bool L_00C4B3 = false;
 	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r19 = 0, checkpoint_time = 0, object = 0, player = 0;
 	uint16_t split_frames = 0;
-	uint32_t state = 0, target1 = 0;
+	uint32_t state = 0, jump_target = 0;
 
 	state = OBJECT(current_object)->state;
 	r0 = rom_00C44C[state];
 	do
 	{
-		target1 = L_00C4B3 ? 0xC4B3u : rom_00C44C[state];
-		switch (target1)
+		jump_target = L_00C4B3 ? 0xC4B3u : rom_00C44C[state];
+		switch (jump_target)
 		{
 		case 0x00C45Cu:
 			r9 = 0x2Du;
@@ -4327,34 +4342,47 @@ void lap_timer_update(void)
 			OBJECT(current_object)->state++;
 			return;
 		case 0x00C4B3u:
-			r19 = current_object + 0x80u;
-			r10 = r19 + 6u;
-			player = SCREEN(screen)->player;
-			r1 = mem_read8(screen + 0x480u + player);
-			if (OBJECT(current_object)->lap_timer.checkpoints == r1)
+			for (;;)
 			{
-				r0 = CAR(player_car)->race_time / 0xAu - CAR(player_car)->checkpoint_time;
+				r19 = current_object + 0x80u;
+				r10 = r19 + 6u;
+				player = SCREEN(screen)->player;
+				r1 = mem_read8(screen + 0x480u + player);
+				if (OBJECT(current_object)->lap_timer.checkpoints == r1)
+					break;
+				OBJECT(current_object)->lap_timer.checkpoints = r1;
+				r1 = (uint8_t)(r1 - 1u);
+				OBJECT(current_object)->state = rom_00D0C0[r1];
+				r1 = (uint8_t)(r1 << 3);
+				r0 = mem_read16(screen + 0x3C0u + (uint8_t)(r1 + player) * 2u);
+				checkpoint_time = CAR(player_car)->checkpoint_time;
+				CAR(player_car)->checkpoint_time = r0;
+				r0 -= checkpoint_time;
 				time_to_text(r0, r10);
-				draw_text(r19);
-				r0 = draw_object(r0);
-				return;
+				OBJECT(current_object)->lap_timer.text_attribute = 0xB0u;
+				OBJECT(current_object)->lap_timer.split_frames = 0xB4u;
+				r0 = (r0 & ~0xFFu) | SCREEN(screen)->index;
+				r0 = (r0 & ~0xFFu) | (uint8_t)(r0 * 2u);
+				r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + (~SCREEN(screen)->current_stage_level & 1u));
+				r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 8u);
+				mem_write8(IO_C00074, r0);
+				split_frames = OBJECT(current_object)->lap_timer.split_frames;
+				OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
+				if (split_frames != 1u)
+				{
+					r19 = current_object + 0x80u;
+					draw_text(r19);
+					r0 = draw_object(r0);
+					return;
+				}
+				OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
+				OBJECT(current_object)->state--;
 			}
-			OBJECT(current_object)->lap_timer.checkpoints = r1;
-			r1 = (uint8_t)(r1 - 1u);
-			OBJECT(current_object)->state = rom_00D0C0[r1];
-			r1 = (uint8_t)(r1 << 3);
-			r0 = mem_read16(screen + 0x3C0u + (uint8_t)(r1 + player) * 2u);
-			checkpoint_time = CAR(player_car)->checkpoint_time;
-			CAR(player_car)->checkpoint_time = r0;
-			r0 -= checkpoint_time;
+			r0 = CAR(player_car)->race_time / 0xAu - CAR(player_car)->checkpoint_time;
 			time_to_text(r0, r10);
-			OBJECT(current_object)->lap_timer.text_attribute = 0xB0u;
-			OBJECT(current_object)->lap_timer.split_frames = 0xB4u;
-			r0 = (r0 & ~0xFFu) | SCREEN(screen)->index;
-			r0 = (r0 & ~0xFFu) | (uint8_t)(r0 * 2u);
-			r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + (~SCREEN(screen)->current_stage_level & 1u));
-			r0 = (r0 & ~0xFFu) | (uint8_t)(r0 + 8u);
-			mem_write8(IO_C00074, r0);
+			draw_text(r19);
+			r0 = draw_object(r0);
+			return;
 		case 0x00C53Bu:
 			split_frames = OBJECT(current_object)->lap_timer.split_frames;
 			OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
@@ -4375,7 +4403,7 @@ void lap_timer_update(void)
 			r0 = draw_object(r0);
 			return;
 		default:
-			invalid_jump(target1);
+			invalid_jump(jump_target);
 		}
 	} while (L_00C4B3);
 }
@@ -4614,7 +4642,6 @@ void time_digits_start(void)
    squeezes shut and opens again as the new one; leading zeros are left out. */
 void time_digits_draw(uint32_t r0)
 {
-	bool L_00C73B = false;
 	uint32_t negative = 0;
 	uint8_t r1 = 0, r2 = 0;
 	uint16_t r3 = 0;
@@ -4637,84 +4664,15 @@ void time_digits_draw(uint32_t r0)
 		r3 = mem_read16(r18);
 		r18 += 6u;
 		r4 = r0;
-		do
+		if (t1 != 0u)
 		{
-			if (L_00C73B || t1 != 0u)
+			if (negative == 0u)
 			{
-				if (L_00C73B || negative == 0u)
-				{
-					L_00C73B = false;
-					r4 = mem_read32(r18 - 4u);
-					t2 = r3;
-					r3 = (uint16_t)(t2 - 0x40u);
-					mem_write16(r18 - 6u, r3);
-					if (t2 != 0x40u)
-					{
-						if (r19 == 3u || r4 != 0u)
-						{
-							OBJECT(current_object)->frame = r2;
-							OBJECT(current_object)->width_scale = r3;
-							stack_4 = r0;
-							stack_8 = r18;
-							stack_C = r19;
-							draw_object(r0);
-							r19 = stack_C;
-							r18 = stack_8;
-							r0 = stack_4;
-						}
-					}
-					else
-					{
-						mem_write8(r18 - 8u, 0xFFu);
-						mem_write8(r18 - 7u, r1);
-						mem_write32(r18 - 4u, r0);
-					}
-				}
-				else
-				{
-					r3 += 0x40u;
-					mem_write16(r18 - 6u, r3);
-					if ((uint8_t)r3 != 0u)
-					{
-						if (r19 == 3u || r4 != 0u)
-						{
-							OBJECT(current_object)->frame = r2;
-							OBJECT(current_object)->width_scale = r3;
-							stack_4 = r0;
-							stack_8 = r18;
-							stack_C = r19;
-							draw_object(r0);
-							r19 = stack_C;
-							r18 = stack_8;
-							r0 = stack_4;
-						}
-					}
-					else
-					{
-						mem_write8(r18 - 8u, 0u);
-						if (r19 == 3u || r4 != 0u)
-						{
-							OBJECT(current_object)->frame = r2;
-							OBJECT(current_object)->width_scale = r3;
-							stack_4 = r0;
-							stack_8 = r18;
-							stack_C = r19;
-							draw_object(r0);
-							r19 = stack_C;
-							r18 = stack_8;
-							r0 = stack_4;
-						}
-					}
-				}
-			}
-			else
-			{
-				if (r2 != r1)
-				{
-					mem_write8(r18 - 8u, 1u);
-					L_00C73B = true;
-				}
-				if (!L_00C73B)
+				r4 = mem_read32(r18 - 4u);
+				t2 = r3;
+				r3 = (uint16_t)(t2 - 0x40u);
+				mem_write16(r18 - 6u, r3);
+				if (t2 != 0x40u)
 				{
 					if (r19 == 3u || r4 != 0u)
 					{
@@ -4729,8 +4687,94 @@ void time_digits_draw(uint32_t r0)
 						r0 = stack_4;
 					}
 				}
+				else
+				{
+					mem_write8(r18 - 8u, 0xFFu);
+					mem_write8(r18 - 7u, r1);
+					mem_write32(r18 - 4u, r0);
+				}
 			}
-		} while (L_00C73B);
+			else
+			{
+				r3 += 0x40u;
+				mem_write16(r18 - 6u, r3);
+				if ((uint8_t)r3 != 0u)
+				{
+					if (r19 == 3u || r4 != 0u)
+					{
+						OBJECT(current_object)->frame = r2;
+						OBJECT(current_object)->width_scale = r3;
+						stack_4 = r0;
+						stack_8 = r18;
+						stack_C = r19;
+						draw_object(r0);
+						r19 = stack_C;
+						r18 = stack_8;
+						r0 = stack_4;
+					}
+				}
+				else
+				{
+					mem_write8(r18 - 8u, 0u);
+					if (r19 == 3u || r4 != 0u)
+					{
+						OBJECT(current_object)->frame = r2;
+						OBJECT(current_object)->width_scale = r3;
+						stack_4 = r0;
+						stack_8 = r18;
+						stack_C = r19;
+						draw_object(r0);
+						r19 = stack_C;
+						r18 = stack_8;
+						r0 = stack_4;
+					}
+				}
+			}
+		}
+		else if (r2 == r1)
+		{
+			if (r19 == 3u || r4 != 0u)
+			{
+				OBJECT(current_object)->frame = r2;
+				OBJECT(current_object)->width_scale = r3;
+				stack_4 = r0;
+				stack_8 = r18;
+				stack_C = r19;
+				draw_object(r0);
+				r19 = stack_C;
+				r18 = stack_8;
+				r0 = stack_4;
+			}
+		}
+		else
+		{
+			mem_write8(r18 - 8u, 1u);
+			r4 = mem_read32(r18 - 4u);
+			t2 = r3;
+			r3 = (uint16_t)(t2 - 0x40u);
+			mem_write16(r18 - 6u, r3);
+			if (t2 != 0x40u)
+			{
+				if (r19 == 3u || r4 != 0u)
+				{
+					OBJECT(current_object)->frame = r2;
+					OBJECT(current_object)->width_scale = r3;
+					stack_4 = r0;
+					stack_8 = r18;
+					stack_C = r19;
+					draw_object(r0);
+					r19 = stack_C;
+					r18 = stack_8;
+					r0 = stack_4;
+				}
+			}
+			else
+			{
+				mem_write8(r18 - 8u, 0xFFu);
+				mem_write8(r18 - 7u, r1);
+				mem_write32(r18 - 4u, r0);
+			}
+		}
 		r0 = r0 >> 4;
 		OBJECT(current_object)->x -= 0x12u;
 		r19--;
@@ -4841,7 +4885,7 @@ void stage_entry_spare_return(void)
 void goal_update(void)
 {
 	uint8_t r0_2 = 0;
-	uint32_t r0 = 0, r9 = 0, r10 = 0, r19 = 0, ignored = 0, object = 0, object_2 = 0;
+	uint32_t r0 = 0, r9 = 0, r10 = 0, r19 = 0, ignored_2 = 0, object = 0, object_2 = 0;
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
 	uint32_t state = 0;
 
@@ -4911,7 +4955,7 @@ void goal_update(void)
 		r19 = 0xD08Eu;
 		draw_text(r19);
 		r19 = current_object + 0x80u;
-		ignored = draw_text(r19);
+		ignored_2 = draw_text(r19);
 		return;
 	case 5:
 		timer_3 = OBJECT(current_object)->goal.timer;
@@ -4921,7 +4965,7 @@ void goal_update(void)
 			r19 = 0xD08Eu;
 			draw_text(r19);
 			r19 = current_object + 0x80u;
-			ignored = draw_text(r19);
+			ignored_2 = draw_text(r19);
 			return;
 		}
 		OBJECT(current_object)->flags = 0u;
@@ -4937,7 +4981,7 @@ void goal_update(void)
 		r19 = 0xD08Eu;
 		draw_text(r19);
 		r19 = current_object + 0x80u;
-		ignored = draw_text(r19);
+		ignored_2 = draw_text(r19);
 		return;
 	}
 	r10 = 0xD0AEu;
@@ -4963,7 +5007,7 @@ void goal_update(void)
 	r19 = 0xD08Eu;
 	draw_text(r19);
 	r19 = current_object + 0x80u;
-	ignored = draw_text(r19);
+	ignored_2 = draw_text(r19);
 }
 
 /* With two players, the result at the end of the race: the screen's place in big letters (animation 2F8:
@@ -5161,7 +5205,7 @@ void checkpoint_board_update(void)
 	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r21 = 0, checkpoint = 0, leave_segment = 0, object = 0, player = 0, race = 0;
 	uint8_t blink_timer = 0, rows_left = 0;
 	uint16_t t1 = 0, t4 = 0;
-	uint32_t target1 = 0, t2 = 0, t3 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint32_t jump_target = 0, t2 = 0, t3 = 0, t5 = 0, t6 = 0, t7 = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -5214,8 +5258,8 @@ void checkpoint_board_update(void)
 		{
 			do
 			{
-				target1 = L_00CCFC ? 0xCCECu : L_00CCFC ? 0xCCECu : rom_00CC70[mem_read8(current_object + 0xF0u + r21)];
-				switch (target1)
+				jump_target = L_00CCFC ? 0xCCECu : L_00CCFC ? 0xCCECu : rom_00CC70[mem_read8(current_object + 0xF0u + r21)];
+				switch (jump_target)
 				{
 				case 0x00CC84u:
 					OBJECT(current_object)->checkpoint_board.rows_shown++;
@@ -5330,7 +5374,7 @@ void checkpoint_board_update(void)
 				case 0x00CD55u:
 					break;
 				default:
-					invalid_jump(target1);
+					invalid_jump(jump_target);
 				}
 			} while (L_00CCFC);
 		} while (L_00CCFC);
@@ -5776,7 +5820,7 @@ void network_check_result(uint32_t r0)
 		RACE(race)->master_game_difficulty = game_difficulty;
 		RACE(race)->master_time_difficulty_0 = time_difficulty[0];
 		RACE(race)->unk_0C = time_difficulty[1];
-		RACE(race)->master_time_difficulty_2_5 = AS32(time_difficulty[2]);
+		RACE(race)->master_time_difficulty_2_5 = ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u));
 		move_halfwords(race + 0x30u, SOUND_RAM + 0x1F32u, 0x1Eu);
 	}
 	clear_text_layer();
@@ -6145,29 +6189,29 @@ uint32_t network_check_five_ics(uint32_t r2, uint32_t left_caller)
 void network_check_four_ics(uint32_t *p_r2, uint32_t *p_left_caller)
 {
 	uint32_t r2 = *p_r2;
-	uint32_t r0 = 0, r2_2 = 0, r19 = 0, left_caller_2 = 0;
+	uint32_t r0 = 0, r2_2 = 0, r19 = 0;
 
 	r2_2 = (r2 & ~0xFFu) | mem_read8(r12 + 0xCu);
-	if ((uint8_t)r2_2 == 0u)
+	if ((uint8_t)r2_2 != 0u)
+	{
+		mem_write8(IO_C0001C, 4u);
+		mem_write8(0xC8001Cu, 0x80u);
+		clear_text_layer();
+		r19 = 0xE464u;
+		print_text_layer_list(r19);
+		r2_2 = (r2_2 & ~0xFFu) | mem_read8(r12 + 0xCu);
+		r0 = 4u;
+		network_check_show_ics(r0, r2_2);
+		mem_write8(IO_C0001C, 6u);
+		mem_write8(0xC8001Cu, 0x86u);
+		network_check_halt(&r2_2, p_left_caller);
+	}
+	else
 	{
 		r0 = 4u;
 		network_check_show_ics(r0, r2_2);
-		*p_r2 = r2_2;
-		return;
 	}
-	mem_write8(IO_C0001C, 4u);
-	mem_write8(0xC8001Cu, 0x80u);
-	clear_text_layer();
-	r19 = 0xE464u;
-	print_text_layer_list(r19);
-	r2_2 = (r2_2 & ~0xFFu) | mem_read8(r12 + 0xCu);
-	r0 = 4u;
-	network_check_show_ics(r0, r2_2);
-	mem_write8(IO_C0001C, 6u);
-	mem_write8(0xC8001Cu, 0x86u);
-	network_check_halt(&r2_2, &left_caller_2);
 	*p_r2 = r2_2;
-	*p_left_caller = left_caller_2;
 }
 
 /* Shows R0 of the link board's ICs (IC17, IC23, IC11, IC10, IC9), each GOOD or BAD by its bit in R2
@@ -6199,7 +6243,7 @@ void network_check_blink_text(void)
 	network_check_blink_counter++;
 	if ((network_check_blink_counter & 0xFu) != 0u)
 		return;
-	r19 = 0x310000u | 0xF000u | AS16(OBJECT(current_object)->flags);
+	r19 = 0x310000u | 0xF000u | (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
 	current_object = current_object + 2u;
 	r18 = (uint16_t)((uint32_t)(uint8_t)OBJECT(current_object - 0x2u)->unk_02 << 8);
 	current_object = current_object + 1u;
@@ -6298,6 +6342,7 @@ void link_take_master_settings(void)
 	uint16_t r1 = 0;
 	uint32_t r0 = 0, r9 = 0, r10 = 0, r11 = 0, ignored = 0, race = 0;
 	uint8_t t1 = 0;
+	uint32_t time_difficulty_2_long = 0;
 
 	if (test_mode_on != 0u)
 		return;
@@ -6348,13 +6393,17 @@ void link_take_master_settings(void)
 		init_coins();
 		bookkeeping_clear_credits();
 	}
-	if (advertise_sound == RACE(race)->master_advertise_sound && steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game_difficulty == RACE(race)->master_game_difficulty && AS16(time_difficulty[0]) == AS16(RACE(race)->master_time_difficulty_0) && AS32(time_difficulty[2]) == RACE(race)->master_time_difficulty_2_5 && r9 == 0u)
+	if (advertise_sound == RACE(race)->master_advertise_sound && steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game_difficulty == RACE(race)->master_game_difficulty && ((uint8_t)time_difficulty[0] | ((uint32_t)(uint8_t)time_difficulty[1] << 8u)) == ((uint8_t)RACE(race)->master_time_difficulty_0 | ((uint32_t)RACE(race)->unk_0C << 8u)) && ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u)) == RACE(race)->master_time_difficulty_2_5 && r9 == 0u)
 		return;
 	advertise_sound = RACE(race)->master_advertise_sound;
 	steering_wheel_reaction = RACE(race)->master_steering_wheel_reaction;
 	game_difficulty = RACE(race)->master_game_difficulty;
 	time_difficulty[0] = RACE(race)->master_time_difficulty_0;
 	time_difficulty[1] = RACE(race)->unk_0C;
-	AS32(time_difficulty[2]) = RACE(race)->master_time_difficulty_2_5;
+	time_difficulty_2_long = RACE(race)->master_time_difficulty_2_5;
+	time_difficulty[2] = (uint8_t)time_difficulty_2_long;
+	time_difficulty[3] = (uint8_t)(time_difficulty_2_long >> 8u);
+	time_difficulty[4] = (uint8_t)(time_difficulty_2_long >> 16u);
+	time_difficulty[5] = (uint8_t)(time_difficulty_2_long >> 24u);
 	save_settings();
 }

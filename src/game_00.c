@@ -23,7 +23,7 @@ void boot(void)
 {
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r10 = 0, r11 = 0;
 	uint32_t stack_100004 = 0;
-	uint32_t psw1 = 0;
+	uint32_t psw = 0;
 
 	load_privileged(5u, vector_table_ADDRESS);
 	r10 = 0xA4u;
@@ -57,8 +57,8 @@ void boot(void)
 		r11++;
 	} while (r1 != 0u);
 	stack_100004 = 0u;
-	psw1 = stack_100004;
-	psw_write(psw1);
+	psw = stack_100004;
+	psw_write(psw);
 	load_privileged(2u, 0x210000u);
 	load_privileged(3u, 0x210000u);
 	load_privileged(4u, 0x210000u);
@@ -611,14 +611,14 @@ void second_task(uint32_t entry_point)
 {
 	bool L_000637 = false, L_000719 = false, L_00077F = false;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r10 = 0;
-	uint32_t target1 = 0;
+	uint32_t jump_target = 0;
 
 	for (;;)
 	{
 		for (;;)
 		{
-			target1 = L_000719 ? 1u : L_000637 ? 1u : entry_point;
-			switch (target1)
+			jump_target = L_000719 ? 1u : L_000637 ? 1u : entry_point;
+			switch (jump_target)
 			{
 			case 0x000000u:
 				break;
@@ -700,7 +700,7 @@ void second_task(uint32_t entry_point)
 					break;
 				break;
 			default:
-				invalid_jump(target1);
+				invalid_jump(jump_target);
 			}
 			if (L_00077F)
 				break;
@@ -1111,25 +1111,26 @@ void link_send_seat_inputs(uint8_t r0, uint32_t r2, uint32_t *p_r10, uint32_t *p
 		SCREEN(r2 - 0x41u)->link_event_data_3 = 0u;
 		SCREEN(r2 - 0x41u)->link_event_data_4 = 0u;
 		SCREEN(r2 - 0x41u)->link_event = 0u;
-		*p_r11 = r11;
-		return;
 	}
-	mem_write16(r11, 0u);
-	r11 += 2u;
-	mem_write16(r11, (uint8_t)r0);
-	t1 = mem_read8(r10);
-	r10++;
-	r11 += 2u;
-	mem_write16(r11, (uint8_t)~t1);
-	t2 = mem_read8(r10);
-	r10++;
-	r11 += 2u;
-	mem_write16(r11, t2);
-	t3 = mem_read8(r10);
-	r10++;
-	r11 += 2u;
-	mem_write16(r11, t3);
-	r11 += 2u;
+	else
+	{
+		mem_write16(r11, 0u);
+		r11 += 2u;
+		mem_write16(r11, (uint8_t)r0);
+		t1 = mem_read8(r10);
+		r10++;
+		r11 += 2u;
+		mem_write16(r11, (uint8_t)~t1);
+		t2 = mem_read8(r10);
+		r10++;
+		r11 += 2u;
+		mem_write16(r11, t2);
+		t3 = mem_read8(r10);
+		r10++;
+		r11 += 2u;
+		mem_write16(r11, t3);
+		r11 += 2u;
+	}
 	*p_r10 = r10;
 	*p_r11 = r11;
 }
@@ -1286,7 +1287,7 @@ void game_mode_isdn_connection(void)
 		break;
 	case 5:
 		mode_timer = (uint8_t)SCREEN(screen)->mode_timer;
-		AS8(SCREEN(screen)->mode_timer) = mode_timer - 1u;
+		SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | (mode_timer - 1u & 0xFFu);
 		if (mode_timer == 1u)
 		{
 			SCREEN(screen)->fade_kind = 0u;
@@ -1306,13 +1307,13 @@ void game_mode_isdn_connection(void)
 	{
 		isdn_count_players();
 		SCREEN(screen)->mode_step++;
-		AS8(SCREEN(screen)->mode_timer) = 0x96u;
+		SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | 0x96u;
 		return;
 	}
 	if ((link_status & 0xCu) == 0u)
 	{
 		SCREEN(screen)->mode_step++;
-		AS8(SCREEN(screen)->mode_timer) = 0x96u;
+		SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | 0x96u;
 		return;
 	}
 }
@@ -1443,7 +1444,7 @@ void game_mode_title(void)
 void bar_picture_start(void)
 {
 	uint32_t r19 = 0, object = 0;
-	uint32_t t1 = 0;
+	uint32_t t1 = 0, target_x_long = 0;
 
 	r19 = 0x11B1u;
 	do
@@ -1451,7 +1452,9 @@ void bar_picture_start(void)
 		object = start_object();
 		OBJECT(object)->handler = bar_picture_bar_start_ADDRESS;
 		t1 = ROM32(r19 + 4u);
-		AS32(OBJECT(object)->bar_picture.target_x) = ROM32(r19);
+		target_x_long = ROM32(r19);
+		OBJECT(object)->bar_picture.target_x = (uint16_t)target_x_long;
+		OBJECT(object)->bar_picture.target_y = (uint16_t)(target_x_long >> 16u);
 		OBJECT(object)->bar_picture.scales = t1;
 		r19 += 8u;
 	} while ((int32_t)ROM32(r19) >= 0);
@@ -1465,12 +1468,15 @@ void bar_picture_bar_start(void)
 {
 	uint32_t r9 = 0;
 	uint8_t t1 = 0, t2 = 0;
+	uint32_t width_scale_long = 0;
 
 	OBJECT(current_object)->draw_mode = 0u;
 	r9 = 0u;
 	animation_start(r9);
 	OBJECT(current_object)->palette = 0x25u;
-	AS32(OBJECT(current_object)->width_scale) = OBJECT(current_object)->bar_picture.scales;
+	width_scale_long = OBJECT(current_object)->bar_picture.scales;
+	OBJECT(current_object)->width_scale = (uint16_t)width_scale_long;
+	OBJECT(current_object)->height_scale = (uint16_t)(width_scale_long >> 16u);
 	OBJECT(current_object)->depth_layer = 3u;
 	OBJECT(current_object)->x = 0xA0u;
 	OBJECT(current_object)->y = 0x70u;
@@ -1681,7 +1687,7 @@ uint32_t demo_race_set_up(void)
 	clear_sprite_group_count();
 	clear_text_layer();
 	SCREEN(screen)->mode_step++;
-	AS8(SCREEN(screen)->mode_timer) = 0u;
+	SCREEN(screen)->mode_timer &= 0xFF00u;
 	SCREEN(screen)->game_step = 0xAu;
 	left_caller = 1u;
 	return left_caller;
@@ -1692,9 +1698,9 @@ void demo_race_fade_in(void)
 {
 	uint8_t t1 = 0;
 
-	AS8(SCREEN(screen)->mode_timer)++;
+	SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | ((uint8_t)SCREEN(screen)->mode_timer + 1u & 0xFFu);
 	t1 = (uint8_t)SCREEN(screen)->mode_timer & 1u;
-	AS8(SCREEN(screen)->mode_timer) = t1;
+	SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | (t1 & 0xFFu);
 	if (t1 == 0u)
 	{
 		SCREEN(screen)->fade_kind = 1u;
@@ -1942,17 +1948,8 @@ void staff_credits_code_read_controls(uint32_t r2, uint32_t *p_r0, uint32_t *p_z
 	r2_2 = (r2_2 & ~0xFFu) | (uint8_t)SCREEN(screen)->buttons;
 	if ((r2_2 & 0x10u) != 0u)
 		r1 |= 1u;
-	if ((r2_2 & 0x20u) == 0u)
-	{
-		OBJECT(current_object)->staff_credits_code.controls_held = r1;
-		t1 = ~r0_2 & r1;
-		zero = t1 == 0u;
-		r0_3 = t1;
-		*p_r0 = (*p_r0 & 0xFFFFFF00u) | r0_3;
-		*p_zero = zero;
-		return;
-	}
-	r1 |= 2u;
+	if ((r2_2 & 0x20u) != 0u)
+		r1 |= 2u;
 	OBJECT(current_object)->staff_credits_code.controls_held = r1;
 	t1 = ~r0_2 & r1;
 	zero = t1 == 0u;
@@ -2257,11 +2254,11 @@ void name_entry_update(void)
 	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
 	uint8_t r0 = 0, r1 = 0;
 	uint16_t r0_3 = 0, buttons_pressed = 0, buttons_pressed_2 = 0;
-	uint32_t r0_2 = 0, r1_2 = 0, r10 = 0, r19 = 0, ignored = 0, letter = 0, object = 0, object_2 = 0, race = 0;
+	uint32_t r0_2 = 0, r1_2 = 0, r10 = 0, r19 = 0, ignored_2 = 0, letter = 0, object = 0, object_2 = 0, race = 0;
 	uint32_t stack_4 = 0, stack_8 = 0;
 	uint8_t t1 = 0, turn_delay = 0, t2 = 0;
 	uint16_t spin_frames = 0, timer = 0, timer_2 = 0;
-	uint32_t target1 = 0, target2 = 0, t3 = 0;
+	uint32_t jump_target = 0, jump_target_2 = 0, t3 = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -2321,7 +2318,7 @@ void name_entry_update(void)
 			r19 = current_object + 0xA4u;
 			draw_text(r19);
 			r19 = current_object + 0x9Au;
-			ignored = draw_text(r19);
+			ignored_2 = draw_text(r19);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -2419,8 +2416,8 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.letter = ((OBJECT(current_object)->name_entry.wheel_angle + 0x40u) & 0xFFFu) >> 7;
 		do
 		{
-			target1 = L_00209D ? 0x2090u : rom_002088[OBJECT(current_object)->name_entry.gas_step];
-			switch (target1)
+			jump_target = L_00209D ? 0x2090u : rom_002088[OBJECT(current_object)->name_entry.gas_step];
+			switch (jump_target)
 			{
 			case 0x002090u:
 				if (!L_00209D && SCREEN(screen)->gas >= 0x40u)
@@ -2446,8 +2443,8 @@ void name_entry_update(void)
 						{
 							do
 							{
-								target2 = L_00212C ? 0x20D4u : L_0020FB ? 0x20D4u : rom_0020C8[r1_2];
-								switch (target2)
+								jump_target_2 = L_00212C ? 0x20D4u : L_0020FB ? 0x20D4u : rom_0020C8[r1_2];
+								switch (jump_target_2)
 								{
 								case 0x0020D4u:
 									do
@@ -2509,7 +2506,7 @@ void name_entry_update(void)
 										break;
 									break;
 								default:
-									invalid_jump(target2);
+									invalid_jump(jump_target_2);
 								}
 								if (L_002133)
 									break;
@@ -2538,7 +2535,7 @@ void name_entry_update(void)
 						r19 = current_object + 0xA4u;
 						draw_text(r19);
 						r19 = current_object + 0x9Au;
-						ignored = draw_text(r19);
+						ignored_2 = draw_text(r19);
 						return;
 					}
 				}
@@ -2547,7 +2544,7 @@ void name_entry_update(void)
 				L_00209D = true;
 				break;
 			default:
-				invalid_jump(target1);
+				invalid_jump(jump_target);
 			}
 		} while (L_00209D);
 		OBJECT(current_object)->name_entry.open = 0u;
@@ -2607,7 +2604,7 @@ void name_entry_update(void)
 		r19 = current_object + 0xA4u;
 		draw_text(r19);
 		r19 = current_object + 0x9Au;
-		ignored = draw_text(r19);
+		ignored_2 = draw_text(r19);
 		return;
 	case 4:
 		break;
@@ -2617,7 +2614,7 @@ void name_entry_update(void)
 	r19 = current_object + 0xA4u;
 	draw_text(r19);
 	r19 = current_object + 0x9Au;
-	ignored = draw_text(r19);
+	ignored_2 = draw_text(r19);
 }
 
 /* A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow
@@ -4104,7 +4101,7 @@ void route_map_update(void)
 	uint8_t r0_2 = 0;
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r19 = 0, branch_road_length = 0, object = 0, route_branches = 0, stage_lengths = 0;
 	uint8_t timer = 0, timer_2 = 0, t1 = 0, timer_3 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, timer_4 = 0, timer_5 = 0;
-	uint32_t target1 = 0, zoom_x_address = 0, zoom_y_address = 0, scroll_x_address = 0, scroll_x_address_2 = 0, scroll_y_address = 0, scroll_x_address_3 = 0, scroll_y_address_2 = 0, scroll_x_address_4 = 0, scroll_y_address_3 = 0, scroll_x_address_5 = 0, scroll_x_address_6 = 0, scroll_x_address_7 = 0, scroll_x_address_8 = 0, scroll_y_address_4 = 0, scroll_x_address_9 = 0, scroll_y_address_5 = 0, scroll_x_address_10 = 0, scroll_x_address_11 = 0, scroll_x_address_12 = 0, zoom_x_address_2 = 0, zoom_y_address_2 = 0, scroll_x_address_13 = 0, scroll_y_address_6 = 0, second_scroll_x_address = 0, second_scroll_y_address = 0;
+	uint32_t jump_target = 0, zoom_x_address = 0, zoom_y_address = 0, scroll_x_address = 0, scroll_x_address_2 = 0, scroll_y_address = 0, scroll_x_address_3 = 0, scroll_y_address_2 = 0, scroll_x_address_4 = 0, scroll_y_address_3 = 0, scroll_x_address_5 = 0, scroll_x_address_6 = 0, scroll_x_address_7 = 0, scroll_x_address_8 = 0, scroll_y_address_4 = 0, scroll_x_address_9 = 0, scroll_y_address_5 = 0, scroll_x_address_10 = 0, scroll_x_address_11 = 0, scroll_x_address_12 = 0, zoom_x_address_2 = 0, zoom_y_address_2 = 0, scroll_x_address_13 = 0, scroll_y_address_6 = 0, second_scroll_x_address = 0, second_scroll_y_address = 0;
 
 	if ((SCREEN(screen)->lcd_scroll | SCREEN(screen)->lcd_scroll_request) == 0u)
 		SCREEN(screen)->lcd_scroll_request = 0x5014u;
@@ -4124,8 +4121,8 @@ void route_map_update(void)
 							{
 								do
 								{
-									target1 = L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003C2D ? 0x383Au : rom_003540[OBJECT(current_object)->state];
-									switch (target1)
+									jump_target = L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003BFC ? 0x383Au : L_003C2D ? 0x383Au : rom_003540[OBJECT(current_object)->state];
+									switch (jump_target)
 									{
 									case 0x003594u:
 										SCREEN(screen)->route_map_signals = 0u;
@@ -4684,7 +4681,7 @@ void route_map_update(void)
 									case 0x003E1Au:
 										return;
 									default:
-										invalid_jump(target1);
+										invalid_jump(jump_target);
 									}
 								} while (L_003BFC);
 							} while (L_003BFC);
@@ -6096,141 +6093,28 @@ void car_select_skew_floor(uint16_t r0)
    (car_select angle) with turntable_draw, and animated. */
 void car_attendant_run(void)
 {
-	bool L_0055F8 = false;
 	uint32_t negative = 0;
 	uint16_t r1 = 0;
-	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r3 = 0, r9 = 0, ignored = 0, radius = 0;
+	uint32_t r0 = 0, r1_2 = 0, r2 = 0, r3 = 0, r9 = 0, ignored_2 = 0, radius = 0;
 	uint16_t t1 = 0;
-	uint32_t target1 = 0;
 
-	do
+	switch (OBJECT(current_object)->state)
 	{
-		target1 = L_0055F8 ? 0x557Du : rom_005534[OBJECT(current_object)->state];
-		switch (target1)
+	case 0:
+		OBJECT(current_object)->draw_mode = 0xAu;
+		r9 = 0x269u;
+		OBJECT(current_object)->palette = 0x7Cu;
+		animation_start(r9);
+		OBJECT(current_object)->car_attendant.angle = OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle + 0x100u;
+		OBJECT(current_object)->car_attendant.radius = 0x160u;
+		OBJECT(current_object)->car_attendant.size = 0xC0u;
+		OBJECT(current_object)->state++;
+	case 1:
+		if (((((uint32_t)CAR(player_car)->model << 9) - OBJECT(current_object)->car_attendant.angle) & 0xFFFu) != 0u)
 		{
-		case 0x005548u:
-			OBJECT(current_object)->draw_mode = 0xAu;
-			r9 = 0x269u;
-			OBJECT(current_object)->palette = 0x7Cu;
-			animation_start(r9);
-			OBJECT(current_object)->car_attendant.angle = OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle + 0x100u;
-			OBJECT(current_object)->car_attendant.radius = 0x160u;
-			OBJECT(current_object)->car_attendant.size = 0xC0u;
-			OBJECT(current_object)->state++;
-		case 0x00557Du:
-			if (L_0055F8 || ((((uint32_t)CAR(player_car)->model << 9) - OBJECT(current_object)->car_attendant.angle) & 0xFFFu) == 0u)
-			{
-				if (!L_0055F8)
-				{
-					if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.car_chosen == 0u)
-					{
-						r0 = OBJECT(current_object)->car_attendant.angle;
-						r0 = (uint16_t)(r0 - 0x40u);
-						r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
-						r0 = r0 & 0xFFFu;
-						r1_2 = (int16_t)rom_100C00[r0];
-						r3 = 0u - (int16_t)rom_101400[r0];
-						radius = OBJECT(current_object)->car_attendant.radius;
-						r1_2 = (int32_t)(r1_2 * radius) >> 14;
-						r2 = 0x6Cu;
-						r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
-						turntable_draw(r1_2, r2, r3);
-						ignored = animation_advance(0u);
-						return;
-					}
-					OBJECT(current_object)->car_attendant.side_offset = 0;
-					OBJECT(current_object)->state = 3u;
-				}
-				r0 = (uint16_t)OBJECT(current_object)->car_attendant.side_offset;
-				r1 = (uint16_t)((uint32_t)CAR(player_car)->transmission << 7);
-				if (r0 == r1)
-				{
-					if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.transmission_chosen == 0u)
-					{
-						r9 = 0x269u;
-						if (OBJECT(current_object)->animation != 0x269u)
-							animation_start(r9);
-						r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
-						r0 = (uint16_t)(r0 - 0x40u);
-						r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
-						r0 = r0 & 0xFFFu;
-						r1_2 = (int16_t)rom_100C00[r0];
-						r3 = 0u - (int16_t)rom_101400[r0];
-						radius = OBJECT(current_object)->car_attendant.radius;
-						r1_2 = (int32_t)(r1_2 * radius) >> 14;
-						r2 = 0x6Cu;
-						r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
-						turntable_draw(r1_2, r2, r3);
-						ignored = animation_advance(0u);
-						return;
-					}
-					OBJECT(current_object)->car_attendant.angle += OBJECT(current_object)->car_attendant.side_offset;
-					r9 = 0x267u;
-					if (CAR(player_car)->transmission != 0u)
-						r9 = 0x268u;
-					animation_start(r9);
-					OBJECT(current_object)->state++;
-					r0 = OBJECT(current_object)->car_attendant.angle;
-					r0 = (uint16_t)(r0 - 0x40u);
-					r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
-					r0 = r0 & 0xFFFu;
-					r1_2 = (int16_t)rom_100C00[r0];
-					r3 = 0u - (int16_t)rom_101400[r0];
-					radius = OBJECT(current_object)->car_attendant.radius;
-					r1_2 = (int32_t)(r1_2 * radius) >> 14;
-					r2 = 0x6Cu;
-					r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
-					turntable_draw(r1_2, r2, r3);
-					ignored = animation_advance(0u);
-					return;
-				}
-				if ((int16_t)r1 < (int16_t)r0)
-				{
-					OBJECT(current_object)->flags &= 0xBFu;
-					r0 = (uint16_t)(r0 - 0x20u);
-				}
-				else
-				{
-					OBJECT(current_object)->flags |= 0x40u;
-					r0 = (uint16_t)(r0 + 0x20u);
-				}
-				OBJECT(current_object)->car_attendant.side_offset = r0;
-				r9 = 0x266u;
-				if (OBJECT(current_object)->animation == 0x266u)
-				{
-					r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
-					r0 = (uint16_t)(r0 - 0x40u);
-					r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
-					r0 = r0 & 0xFFFu;
-					r1_2 = (int16_t)rom_100C00[r0];
-					r3 = 0u - (int16_t)rom_101400[r0];
-					radius = OBJECT(current_object)->car_attendant.radius;
-					r1_2 = (int32_t)(r1_2 * radius) >> 14;
-					r2 = 0x6Cu;
-					r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
-					turntable_draw(r1_2, r2, r3);
-					ignored = animation_advance(0u);
-					return;
-				}
-				animation_start(r9);
-				r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
-				r0 = (uint16_t)(r0 - 0x40u);
-				r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
-				r0 = r0 & 0xFFFu;
-				r1_2 = (int16_t)rom_100C00[r0];
-				r3 = 0u - (int16_t)rom_101400[r0];
-				radius = OBJECT(current_object)->car_attendant.radius;
-				r1_2 = (int32_t)(r1_2 * radius) >> 14;
-				r2 = 0x6Cu;
-				r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
-				turntable_draw(r1_2, r2, r3);
-				ignored = animation_advance(0u);
-				return;
-			}
 			r9 = 0x266u;
 			animation_start(r9);
 			OBJECT(current_object)->state++;
-		case 0x0055A6u:
 			r0 = OBJECT(current_object)->car_attendant.angle;
 			t1 = (r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle) << 4;
 			negative = t1 >> 15;
@@ -6253,11 +6137,21 @@ void car_attendant_run(void)
 				r0 = (uint16_t)(r0 - 0x20u);
 				OBJECT(current_object)->car_attendant.angle = r0;
 			}
-			break;
-		case 0x0055F8u:
-			L_0055F8 = true;
-			break;
-		case 0x00566Au:
+			r0 = (uint16_t)(r0 - 0x40u);
+			r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+			r0 = r0 & 0xFFFu;
+			r1_2 = (int16_t)rom_100C00[r0];
+			r3 = 0u - (int16_t)rom_101400[r0];
+			radius = OBJECT(current_object)->car_attendant.radius;
+			r1_2 = (int32_t)(r1_2 * radius) >> 14;
+			r2 = 0x6Cu;
+			r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+			turntable_draw(r1_2, r2, r3);
+			ignored_2 = animation_advance(0u);
+			return;
+		}
+		if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.car_chosen == 0u)
+		{
 			r0 = OBJECT(current_object)->car_attendant.angle;
 			r0 = (uint16_t)(r0 - 0x40u);
 			r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
@@ -6269,12 +6163,139 @@ void car_attendant_run(void)
 			r2 = 0x6Cu;
 			r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
 			turntable_draw(r1_2, r2, r3);
-			ignored = animation_advance(0u);
+			ignored_2 = animation_advance(0u);
 			return;
-		default:
-			invalid_jump(target1);
 		}
-	} while (L_0055F8);
+		OBJECT(current_object)->car_attendant.side_offset = 0;
+		OBJECT(current_object)->state = 3u;
+		break;
+	case 2:
+		r0 = OBJECT(current_object)->car_attendant.angle;
+		t1 = (r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle) << 4;
+		negative = t1 >> 15;
+		if (t1 == 0u)
+		{
+			r9 = 0x269u;
+			animation_start(r9);
+			OBJECT(current_object)->flags &= 0xBFu;
+			OBJECT(current_object)->state--;
+		}
+		else if (negative)
+		{
+			OBJECT(current_object)->flags |= 0x40u;
+			r0 = (uint16_t)(r0 + 0x20u);
+			OBJECT(current_object)->car_attendant.angle = r0;
+		}
+		else
+		{
+			OBJECT(current_object)->flags &= 0xBFu;
+			r0 = (uint16_t)(r0 - 0x20u);
+			OBJECT(current_object)->car_attendant.angle = r0;
+		}
+		r0 = (uint16_t)(r0 - 0x40u);
+		r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+		r0 = r0 & 0xFFFu;
+		r1_2 = (int16_t)rom_100C00[r0];
+		r3 = 0u - (int16_t)rom_101400[r0];
+		radius = OBJECT(current_object)->car_attendant.radius;
+		r1_2 = (int32_t)(r1_2 * radius) >> 14;
+		r2 = 0x6Cu;
+		r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+		turntable_draw(r1_2, r2, r3);
+		ignored_2 = animation_advance(0u);
+		return;
+	case 3:
+		break;
+	case 4:
+		r0 = OBJECT(current_object)->car_attendant.angle;
+		r0 = (uint16_t)(r0 - 0x40u);
+		r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+		r0 = r0 & 0xFFFu;
+		r1_2 = (int16_t)rom_100C00[r0];
+		r3 = 0u - (int16_t)rom_101400[r0];
+		radius = OBJECT(current_object)->car_attendant.radius;
+		r1_2 = (int32_t)(r1_2 * radius) >> 14;
+		r2 = 0x6Cu;
+		r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+		turntable_draw(r1_2, r2, r3);
+		ignored_2 = animation_advance(0u);
+		return;
+	default:
+		invalid_jump(rom_005534[OBJECT(current_object)->state]);
+	}
+	r0 = (uint16_t)OBJECT(current_object)->car_attendant.side_offset;
+	r1 = (uint16_t)((uint32_t)CAR(player_car)->transmission << 7);
+	if (r0 != r1)
+	{
+		if ((int16_t)r1 < (int16_t)r0)
+		{
+			OBJECT(current_object)->flags &= 0xBFu;
+			r0 = (uint16_t)(r0 - 0x20u);
+		}
+		else
+		{
+			OBJECT(current_object)->flags |= 0x40u;
+			r0 = (uint16_t)(r0 + 0x20u);
+		}
+		OBJECT(current_object)->car_attendant.side_offset = r0;
+		r9 = 0x266u;
+		if (OBJECT(current_object)->animation != 0x266u)
+			animation_start(r9);
+		r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
+		r0 = (uint16_t)(r0 - 0x40u);
+		r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+		r0 = r0 & 0xFFFu;
+		r1_2 = (int16_t)rom_100C00[r0];
+		r3 = 0u - (int16_t)rom_101400[r0];
+		radius = OBJECT(current_object)->car_attendant.radius;
+		r1_2 = (int32_t)(r1_2 * radius) >> 14;
+		r2 = 0x6Cu;
+		r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+		turntable_draw(r1_2, r2, r3);
+		ignored_2 = animation_advance(0u);
+		return;
+	}
+	if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.transmission_chosen != 0u)
+	{
+		OBJECT(current_object)->car_attendant.angle += OBJECT(current_object)->car_attendant.side_offset;
+		r9 = 0x267u;
+		if (CAR(player_car)->transmission != 0u)
+			r9 = 0x268u;
+		animation_start(r9);
+		OBJECT(current_object)->state++;
+		r0 = OBJECT(current_object)->car_attendant.angle;
+		r0 = (uint16_t)(r0 - 0x40u);
+		r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+		r0 = r0 & 0xFFFu;
+		r1_2 = (int16_t)rom_100C00[r0];
+		r3 = 0u - (int16_t)rom_101400[r0];
+		radius = OBJECT(current_object)->car_attendant.radius;
+		r1_2 = (int32_t)(r1_2 * radius) >> 14;
+		r2 = 0x6Cu;
+		r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+		turntable_draw(r1_2, r2, r3);
+		ignored_2 = animation_advance(0u);
+		return;
+	}
+	r9 = 0x269u;
+	if (OBJECT(current_object)->animation == 0x269u)
+	{
+		r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
+		r0 = (uint16_t)(r0 - 0x40u);
+		r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
+		r0 = r0 & 0xFFFu;
+		r1_2 = (int16_t)rom_100C00[r0];
+		r3 = 0u - (int16_t)rom_101400[r0];
+		radius = OBJECT(current_object)->car_attendant.radius;
+		r1_2 = (int32_t)(r1_2 * radius) >> 14;
+		r2 = 0x6Cu;
+		r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
+		turntable_draw(r1_2, r2, r3);
+		ignored_2 = animation_advance(0u);
+		return;
+	}
+	animation_start(r9);
+	r0 = (uint16_t)(r0 + OBJECT(current_object)->car_attendant.angle);
 	r0 = (uint16_t)(r0 - 0x40u);
 	r0 = (uint16_t)(r0 - OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle);
 	r0 = r0 & 0xFFFu;
@@ -6285,7 +6306,7 @@ void car_attendant_run(void)
 	r2 = 0x6Cu;
 	r3 = ((int32_t)(r3 * radius) >> 14) + 0x140u;
 	turntable_draw(r1_2, r2, r3);
-	ignored = animation_advance(0u);
+	ignored_2 = animation_advance(0u);
 }
 
 /* One of the eight cars on the car select's turntable (car: its model and its place, car << 9), by
@@ -6543,7 +6564,7 @@ void select_car_heading_show(void)
 		OBJECT(current_object)->select_car_heading.timer = timer - 1u;
 		if (timer == 1u)
 		{
-			AS8(OBJECT(current_object)->select_car_heading.timer) = 0xAu;
+			OBJECT(current_object)->select_car_heading.timer = (OBJECT(current_object)->select_car_heading.timer & 0xFF00u) | 0xAu;
 			OBJECT(current_object)->state++;
 		}
 		r0 = draw_object(r0);
@@ -6558,7 +6579,7 @@ void select_car_heading_show(void)
 		OBJECT(current_object)->select_car_heading.timer = timer - 1u;
 		if (timer == 1u)
 		{
-			AS8(OBJECT(current_object)->select_car_heading.timer) = 0xAu;
+			OBJECT(current_object)->select_car_heading.timer = (OBJECT(current_object)->select_car_heading.timer & 0xFF00u) | 0xAu;
 			OBJECT(current_object)->state++;
 		}
 		r0 = draw_object(r0);
@@ -6573,7 +6594,7 @@ void select_car_heading_show(void)
 		OBJECT(current_object)->select_car_heading.timer = timer_2 - 1u;
 		if (timer_2 == 1u)
 		{
-			AS8(OBJECT(current_object)->select_car_heading.timer) = 0x14u;
+			OBJECT(current_object)->select_car_heading.timer = (OBJECT(current_object)->select_car_heading.timer & 0xFF00u) | 0x14u;
 			OBJECT(current_object)->state--;
 		}
 		return;
@@ -7286,7 +7307,7 @@ void car_select_entries_run(void)
 	{
 	case 0:
 		OBJECT(current_object)->car_select_entries.race_order = SCREEN(screen)->host_record + 0x1Fu;
-		AS8(OBJECT(current_object)->car_select_entries.shown_players) = 0u;
+		OBJECT(current_object)->car_select_entries.shown_players &= 0xFFFFFF00u;
 		OBJECT(current_object)->car_select_entries.frames = 0u;
 		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->lcd_scroll != 0u)

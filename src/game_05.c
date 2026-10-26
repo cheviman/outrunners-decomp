@@ -191,34 +191,28 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 		r9--;
 		r12 = r12 + 0x80u;
 	}
-	if (r9 == 0u)
+	if (r9 != 0u)
 	{
-		*p_r0 = r0;
-		*p_r1 = r1;
-		return;
-	}
-	r10 = r12;
-	do
-	{
-		move_string(screen, 0u, r10, 0x11u, 2u, 1u, 0u, r26, &r27, &r28);
-		r9--;
-		r10 += 0x80u;
-	} while (r9 != 0u);
-	if (zero)
-	{
-		*p_r0 = r0;
-		*p_r1 = r1;
-		return;
-	}
-	r0 = 0x6200u;
-	for (;;)
-	{
-		r0 = (r0 & ~0xFFu) | mem_read8(r11);
-		r11++;
-		if ((uint8_t)r0 == 0u)
-			break;
-		mem_write16(r12, r0);
-		r12 = r12 + 2u;
+		r10 = r12;
+		do
+		{
+			move_string(screen, 0u, r10, 0x11u, 2u, 1u, 0u, r26, &r27, &r28);
+			r9--;
+			r10 += 0x80u;
+		} while (r9 != 0u);
+		if (zero == 0u)
+		{
+			r0 = 0x6200u;
+			for (;;)
+			{
+				r0 = (r0 & ~0xFFu) | mem_read8(r11);
+				r11++;
+				if ((uint8_t)r0 == 0u)
+					break;
+				mem_write16(r12, r0);
+				r12 = r12 + 2u;
+			}
+		}
 	}
 	*p_r0 = r0;
 	*p_r1 = r1;
@@ -227,7 +221,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_r0, uint32_t *p_r1)
 /* COIN/CREDIT SETTING: the next of the 26 settings (coin_setting, after FREE PLAY back to */
 void test_mode_coin_assignments_next_setting(void)
 {
-	uint32_t r0 = 0, r10 = 0, ignored = 0;
+	uint32_t r0 = 0, r10 = 0, ignored = 0, ignored_2 = 0;
 
 	do
 	{
@@ -244,7 +238,7 @@ void test_mode_coin_assignments_next_setting(void)
 			first_chute_multiplier = 1u;
 			second_chute_multiplier = 1u;
 			free_play = 0xFFu;
-			test_mode_coin_assignments_draw(&ignored, &ignored);
+			test_mode_coin_assignments_draw(&ignored, &ignored_2);
 			return;
 		}
 	} while (r0 != 0u && coins_per_credit == ROM8(r10) && bonus_adder == ROM8(r10 + 1u) && first_chute_multiplier == ROM8(r10 + 2u));
@@ -255,7 +249,7 @@ void test_mode_coin_assignments_next_setting(void)
 	first_chute_multiplier = ROM8(r10);
 	second_chute_multiplier = ROM8(r10 + 1u);
 	free_play = 0u;
-	test_mode_coin_assignments_draw(&ignored, &ignored);
+	test_mode_coin_assignments_draw(&ignored, &ignored_2);
 }
 
 /* Opens the coin assignments' MANUAL SETTING page: clears the text, draws its texts (COIN TO CREDIT,
@@ -1187,10 +1181,14 @@ void test_mode_backup_data_clear_wait(void)
 void test_mode_exit(void)
 {
 	uint32_t r0 = 0, r10 = 0;
-	uint32_t t1 = 0;
+	uint32_t t1 = 0, test_mode_flags_long = 0;
 
-	t1 = AS32(test_mode_flags);
-	AS32(test_mode_flags) = t1 & ~2u;
+	t1 = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
+	test_mode_flags_long = t1 & ~2u;
+	test_mode_flags = (uint8_t)test_mode_flags_long;
+	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	if ((t1 & 2u) != 0u)
 	{
 		save_settings();
@@ -1415,15 +1413,8 @@ void test_mode_draw_count(uint32_t r0, uint32_t r2, uint32_t r3, uint32_t *p_r1,
 	uint32_t r1 = *p_r1;
 
 	r1 = r1 << 8;
-	if (r0 <= 1u)
-	{
-		mem_write16(*p_r10 + r3 * 2u, r1);
-		r1 = byte_swap32(r1 << 8);
-		test_mode_draw_number(r2, &r0, &r1, p_r10);
-		*p_r1 = r1;
-		return;
-	}
-	r1 |= 0x53u;
+	if (r0 > 1u)
+		r1 |= 0x53u;
 	mem_write16(*p_r10 + r3 * 2u, r1);
 	r1 = byte_swap32(r1 << 8);
 	test_mode_draw_number(r2, &r0, &r1, p_r10);
@@ -1441,7 +1432,7 @@ void test_mode_draw_number(uint32_t r2, uint32_t *p_r0, uint32_t *p_r1, uint32_t
 
 	r10 = r10 + r2 + r2;
 	r3 = (uint16_t)((uint16_t)((uint32_t)(uint8_t)r1 << 8) | 0x30u);
-	for (;;)
+	do
 	{
 		r1_2 = 0u;
 		divux_pair(0xAu, p_r0, &r1_2);
@@ -1449,23 +1440,19 @@ void test_mode_draw_number(uint32_t r2, uint32_t *p_r0, uint32_t *p_r1, uint32_t
 		r10 -= 2u;
 		mem_write16(r10, r1_2);
 		if (*p_r0 == 0u)
-			break;
-		r2--;
-		if (r2 == 0u)
 		{
-			*p_r1 = r1_2;
-			*p_r10 = r10;
-			return;
-		}
-	}
-	for (;;)
-	{
-		r2--;
-		if (r2 == 0u)
+			for (;;)
+			{
+				r2--;
+				if (r2 == 0u)
+					break;
+				r10 -= 2u;
+				mem_write16(r10, 0u);
+			}
 			break;
-		r10 -= 2u;
-		mem_write16(r10, 0u);
-	}
+		}
+		r2--;
+	} while (r2 != 0u);
 	*p_r1 = r1_2;
 	*p_r10 = r10;
 }
@@ -1547,7 +1534,7 @@ void test_mode_read_controls(void)
 	uint8_t r0 = 0, r1 = 0, r2 = 0, r3 = 0;
 	uint32_t r0_2 = 0, r2_2 = 0, r10 = 0, r11 = 0;
 	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-	uint32_t t5 = 0;
+	uint32_t t5 = 0, test_mode_flags_long = 0;
 
 	t1 = mem_read8(IO_C00008);
 	t2 = mem_read8(0xC80008u);
@@ -1560,9 +1547,13 @@ void test_mode_read_controls(void)
 	test_mode_buttons_previous = r1;
 	test_mode_buttons_pressed = ~r1 & r0;
 	test_mode_buttons_released = r1 & ~r0;
-	t5 = AS32(test_mode_flags);
+	t5 = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
 	carry = (t5 & 4u) != 0u;
-	AS32(test_mode_flags) = t5 ^ 4u;
+	test_mode_flags_long = t5 ^ 4u;
+	test_mode_flags = (uint8_t)test_mode_flags_long;
+	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	r0_2 = carry;
 	r10 = IO_PORTS + 0x50u + r0_2 * 4u;
 	r11 = test_mode_analog_inputs_ADDRESS + r0_2 * 4u;
@@ -1795,7 +1786,7 @@ void vblank_update_scrolls(void)
 	mem_write32(VIDEO_RAM + 0x1FF24u + r1 * 4u, (((int32_t)((r2 << 7) - r3) >> 1) + r3) >> 7);
 	r0_2 = (uint8_t)(video_registers[2] >> 8u);
 	mem_write8(VIDEO_31FF05, r0_2);
-	AT8(video_registers[2], 1) = (r0_2 + 4u) & 0xECu;
+	video_registers[2] = (video_registers[2] & 0xFFu) | (((r0_2 + 4u) & 0xECu & 0xFFu) << 8u);
 }
 
 /* The end of the vertical blank (IRQ 1): only acknowledged. */

@@ -1401,6 +1401,9 @@
 #define unk_030B60_ADDRESS 0x030B60u
 #define vector_table_ADDRESS 0x03F000u
 
+/* numbers the code uses, by name (symbols.txt constant lines) */
+
+
 /* the game's structures in work RAM */
 #pragma pack(push, 1)
 struct object

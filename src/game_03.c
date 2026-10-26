@@ -281,13 +281,8 @@ void fork_sign_hit_check(uint32_t *p_r7, uint32_t *p_r15)
    animated_scenery and flashing_scenery (and 012FBC). */
 void road_row_crash_check(uint32_t *p_r7, uint32_t *p_r15)
 {
-	uint32_t r7 = *p_r7;
-	uint32_t r15 = *p_r15;
-
 	r27 = 0u;
-	road_row_hit_check(&r7, &r15);
-	*p_r7 = r7;
-	*p_r15 = r15;
+	road_row_hit_check(p_r7, p_r15);
 }
 
 /* Whether the screen's car hits an item of the row, unless the car's object has flags bit 3 set: the
@@ -666,7 +661,6 @@ void road_object_stream_read(void)
 {
 	uint16_t r0 = 0;
 	uint32_t r1 = 0, r10 = 0, built_stage = 0, left_caller = 0;
-	uint32_t target1 = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -703,8 +697,7 @@ void road_object_stream_read(void)
 		r1 = rom_012748[ROM16(r10)];
 		left_caller = 0u;
 		r10 += 2u;
-		target1 = r1;
-		switch (target1)
+		switch (r1)
 		{
 		case 0x012758u:
 			r10 = road_object_stream_start_object(r0, r10);
@@ -719,7 +712,7 @@ void road_object_stream_read(void)
 			left_caller = road_object_stream_fork(r10);
 			break;
 		default:
-			invalid_jump(target1);
+			invalid_jump(r1);
 		}
 		if (left_caller != 0u)
 			return;
@@ -1761,7 +1754,7 @@ void swooping_helicopter_update(void)
 void start_gate_update(void)
 {
 	uint16_t r1 = 0, position = 0;
-	uint32_t r0 = 0, r9 = 0, r10 = 0, ignored = 0;
+	uint32_t r0 = 0, r9 = 0, r10 = 0, ignored = 0, ignored_2 = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
@@ -1801,7 +1794,7 @@ void start_gate_update(void)
 		OBJECT(current_object)->start_gate.end_position = position + r1;
 		return;
 	case 1:
-		road_row_crash_check(&ignored, &ignored);
+		road_row_crash_check(&ignored, &ignored_2);
 		r0 = draw_object(r0);
 		return;
 	case 2:
@@ -4020,7 +4013,6 @@ void fork_camera_update(void)
    finish). */
 void race_car_start_ending(void)
 {
-	bool L_0146F4 = false;
 	uint8_t r0_2 = 0;
 	uint32_t r0 = 0, r10 = 0, actor = 0, player = 0;
 
@@ -4033,34 +4025,30 @@ void race_car_start_ending(void)
 		OBJECT(current_object)->x += 0xA0u;
 		OBJECT(current_object)->y += 0xDEu;
 		player = SCREEN(screen)->player;
-		for (;;)
+		if (RACE(SCREEN(screen)->race_copy)->finished == 0u)
 		{
-			if (L_0146F4 || RACE(SCREEN(screen)->race_copy)->finished == 0u)
-			{
-				if (!L_0146F4)
-				{
-					r0 = object_list_14A60;
-					r10 = 0x14A64u;
-				}
-				do
-				{
-					actor = start_object();
-					OBJECT(actor)->handler = mem_read32(r10);
-					r10 += 4u;
-					OBJECT(actor)->goal_actor.script = mem_read32(r10);
-					OBJECT(actor)->goal_actor.scene = current_object;
-					r10 += 4u;
-					r0--;
-				} while (r0 != 0u);
-				return;
-			}
+			r0 = object_list_14A60;
+			r10 = 0x14A64u;
+		}
+		else
+		{
 			if (mem_read8(screen + 0x320u + player) != 0u)
 				r0 = (uint8_t)(r0 + 1u);
 			r10 = object_lists_14A20[r0];
 			r0 = mem_read32(r10);
 			r10 += 4u;
-			L_0146F4 = true;
 		}
+		do
+		{
+			actor = start_object();
+			OBJECT(actor)->handler = mem_read32(r10);
+			r10 += 4u;
+			OBJECT(actor)->goal_actor.script = mem_read32(r10);
+			OBJECT(actor)->goal_actor.scene = current_object;
+			r10 += 4u;
+			r0--;
+		} while (r0 != 0u);
+		break;
 	case 1:
 	case 3:
 		break;
@@ -4368,7 +4356,7 @@ void goal_actor_run(void)
 			r0 = draw_object(r0);
 			return;
 		case 4:
-			AS16(CAR(player_car)->segment_progress) += 0x4000u;
+			CAR(player_car)->segment_progress = (CAR(player_car)->segment_progress & 0xFFFF0000u) | ((uint16_t)CAR(player_car)->segment_progress + 0x4000u & 0xFFFFu);
 			t3 = r10;
 			script = OBJECT(current_object)->goal_actor.script;
 			OBJECT(current_object)->goal_actor.script = t3;
@@ -4407,7 +4395,7 @@ void goal_actor_run(void)
    turned on starts a road_tiles_change (the Golden Gate Bridge in race_to_goal.txt, frames 7659-8325). */
 void road_surface_update(void)
 {
-	uint32_t r0 = 0, r4 = 0, r5 = 0, r6 = 0, r13 = 0, r15 = 0, r16 = 0, r18 = 0, event = 0, ignored = 0, object = 0, road_palette_fades = 0;
+	uint32_t r0 = 0, r4 = 0, r5 = 0, r6 = 0, r13 = 0, r15 = 0, r16 = 0, r18 = 0, event = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, ignored_5 = 0, ignored_6 = 0, ignored_7 = 0, object = 0, road_palette_fades = 0;
 	uint8_t t1 = 0, t2 = 0, t3 = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -4418,7 +4406,7 @@ void road_surface_update(void)
 		OBJECT(current_object)->state++;
 		return;
 	case 1:
-		road_surface_lines(&ignored, &ignored, &ignored, &ignored, &ignored, &ignored, &ignored);
+		road_surface_lines(&ignored, &ignored_2, &ignored_3, &ignored_4, &ignored_5, &ignored_6, &ignored_7);
 		OBJECT(current_object)->road_surface.points_buffer ^= 0x60u;
 		OBJECT(current_object)->state++;
 		if (OBJECT(current_object)->road_surface.segment_page_set == 0u)
@@ -4581,13 +4569,10 @@ void road_surface_start(void)
    line's scroll into near_scroll. */
 void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t *p_r13, uint32_t *p_r15, uint32_t *p_r16, uint32_t *p_r18)
 {
-	uint32_t r4 = *p_r4;
-	uint32_t r5 = *p_r5;
-	uint32_t r6 = *p_r6;
 	bool L_016E09 = false, L_016E73 = false, leave_loop = false, leave_loop_2 = false, leave_loop_3 = false, leave_loop_4 = false, leave_loop_5 = false, next_round = false;
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint16_t r0_2 = 0, r18 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r19 = 0, r26 = 0, ignored = 0, sprite_origin_y = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r19 = 0, r26 = 0, ignored = 0, ignored_2 = 0, sprite_origin_y = 0;
 	uint32_t stack_4 = 0;
 	uint16_t t1 = 0, t3 = 0;
 	uint32_t t2 = 0, t4 = 0, t5 = 0;
@@ -4601,8 +4586,8 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 	r12 = OBJECT(current_object)->road_surface.line_select_table + r0 * 4u;
 	r13 = RACE(SCREEN(screen)->race_copy)->window_segment;
 	r14 = r14 & ~0xFFFFu;
-	r15 = 0xFFFFFFF4u;
-	r16 = 0x800u;
+	*p_r15 = 0xFFFFFFF4u;
+	*p_r16 = 0x800u;
 	sprite_origin_y = (int16_t)SCREEN(screen)->sprite_origin_y;
 	r18 = 0xFFu;
 	r19 = 1u;
@@ -4672,9 +4657,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 											r9 = t2 - r1;
 											if ((int32_t)t2 <= (int32_t)r1)
 											{
-												r4 = r1;
-												r5 = r2;
-												r6 = r3;
+												*p_r4 = r1;
+												*p_r5 = r2;
+												*p_r6 = r3;
 												r13--;
 												if (r13 != 0u)
 												{
@@ -4740,20 +4725,15 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 											}
 											SCREEN(screen)->road_top_line = r1;
 											mem_write16(r26, 0xFFFFu);
-											road_surface_fill_skipped_lines((uint8_t)r15, r16, r18, &r5, &r6);
+											road_surface_fill_skipped_lines((uint8_t)*p_r15, *p_r16, r18, p_r5, p_r6);
 											OBJECT(current_object)->road_surface.near_scroll = mem_read16(stack_4 - 2u);
-											*p_r4 = r4;
-											*p_r5 = r5;
-											*p_r6 = r6;
 											*p_r13 = r13;
-											*p_r15 = r15;
-											*p_r16 = r16;
 											*p_r18 = (*p_r18 & 0xFFFF0000u) | r18;
 											return;
 										}
-										r4 = r1;
-										r5 = r2;
-										r6 = r3;
+										*p_r4 = r1;
+										*p_r5 = r2;
+										*p_r6 = r3;
 										r13--;
 										if (r13 != 0u)
 										{
@@ -4775,7 +4755,7 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 										leave_loop_5 = true;
 										break;
 									}
-									road_surface_fill_lines(r0, r1, r2, r3, (uint8_t)r15, r16, r18, &r4, &r5, &r6, &ignored, &ignored, &r11, &zero);
+									road_surface_fill_lines(r0, r1, r2, r3, (uint8_t)*p_r15, *p_r16, r18, p_r4, p_r5, p_r6, &ignored, &ignored_2, &r11, &zero);
 									L_016E73 = zero == 0u;
 								} while (L_016E73);
 								if (leave_loop_5)
@@ -4791,9 +4771,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 						{
 							r19 = 0u;
 							OBJECT(current_object)->road_surface.skipped_line = 0u;
-							r4 = r1;
-							r5 = r2;
-							r6 = r3;
+							*p_r4 = r1;
+							*p_r5 = r2;
+							*p_r6 = r3;
 							r13--;
 							if (r13 != 0u)
 							{
@@ -4816,9 +4796,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 							L_016E09 = r9 == 1u;
 							if (!L_016E09)
 							{
-								OBJECT(current_object)->road_surface.skipped_x = r5;
-								OBJECT(current_object)->road_surface.skipped_depth = r6;
-								road_surface_fill_lines(r0, r1, r2, r3, (uint8_t)r15, r16, r18, &r4, &r5, &r6, &r7, &r8, &r11, &zero);
+								OBJECT(current_object)->road_surface.skipped_x = *p_r5;
+								OBJECT(current_object)->road_surface.skipped_depth = *p_r6;
+								road_surface_fill_lines(r0, r1, r2, r3, (uint8_t)*p_r15, *p_r16, r18, p_r4, p_r5, p_r6, &r7, &r8, &r11, &zero);
 								OBJECT(current_object)->road_surface.skipped_x_step = r7;
 								OBJECT(current_object)->road_surface.skipped_depth_step = r8;
 								r19 = 0u;
@@ -4866,14 +4846,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 		}
 		SCREEN(screen)->road_top_line = r1;
 		mem_write16(r26, 0xFFFFu);
-		road_surface_fill_skipped_lines((uint8_t)r15, r16, r18, &r5, &r6);
+		road_surface_fill_skipped_lines((uint8_t)*p_r15, *p_r16, r18, p_r5, p_r6);
 		OBJECT(current_object)->road_surface.near_scroll = mem_read16(stack_4 - 2u);
-		*p_r4 = r4;
-		*p_r5 = r5;
-		*p_r6 = r6;
 		*p_r13 = r13;
-		*p_r15 = r15;
-		*p_r16 = r16;
 		*p_r18 = (*p_r18 & 0xFFFF0000u) | r18;
 		return;
 	}
@@ -4883,14 +4858,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 	{
 		SCREEN(screen)->road_top_line = r1;
 		mem_write16(r26, 0xFFFFu);
-		road_surface_fill_skipped_lines((uint8_t)r15, r16, r18, &r5, &r6);
+		road_surface_fill_skipped_lines((uint8_t)*p_r15, *p_r16, r18, p_r5, p_r6);
 		OBJECT(current_object)->road_surface.near_scroll = mem_read16(stack_4 - 2u);
-		*p_r4 = r4;
-		*p_r5 = r5;
-		*p_r6 = r6;
 		*p_r13 = r13;
-		*p_r15 = r15;
-		*p_r16 = r16;
 		*p_r18 = (*p_r18 & 0xFFFF0000u) | r18;
 		return;
 	}
@@ -4905,14 +4875,9 @@ void road_surface_lines(uint32_t *p_r4, uint32_t *p_r5, uint32_t *p_r6, uint32_t
 	}
 	SCREEN(screen)->road_top_line = r1;
 	mem_write16(r26, 0xFFFFu);
-	road_surface_fill_skipped_lines((uint8_t)r15, r16, r18, &r5, &r6);
+	road_surface_fill_skipped_lines((uint8_t)*p_r15, *p_r16, r18, p_r5, p_r6);
 	OBJECT(current_object)->road_surface.near_scroll = mem_read16(stack_4 - 2u);
-	*p_r4 = r4;
-	*p_r5 = r5;
-	*p_r6 = r6;
 	*p_r13 = r13;
-	*p_r15 = r15;
-	*p_r16 = r16;
 	*p_r18 = (*p_r18 & 0xFFFF0000u) | r18;
 }
 
@@ -4923,7 +4888,7 @@ void road_surface_halfway_lines(uint32_t r4, uint32_t r5, uint32_t r6, uint32_t 
 {
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint16_t r0_2 = 0, r26 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r7 = 0, r8 = 0, r9 = 0, r11 = 0, r13_2 = 0, r19 = 0, ignored = 0;
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r7 = 0, r8 = 0, r9 = 0, r11 = 0, r13_2 = 0, r19 = 0, ignored = 0, ignored_2 = 0;
 	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0;
 	uint32_t t5 = 0, t6 = 0, t7 = 0;
 
@@ -4999,7 +4964,7 @@ void road_surface_halfway_lines(uint32_t r4, uint32_t r5, uint32_t r6, uint32_t 
 			{
 				if (r9 != 1u)
 				{
-					road_surface_fill_lines(r0, r1, r2, r3, r15, r16, r18, &r4, &r5, &r6, &ignored, &ignored, &r11, &zero);
+					road_surface_fill_lines(r0, r1, r2, r3, r15, r16, r18, &r4, &r5, &r6, &ignored, &ignored_2, &r11, &zero);
 					if (zero == 0u)
 					{
 						road_surface_fill_skipped_lines(r15, r16, r18, &r5, &r6);

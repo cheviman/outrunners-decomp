@@ -51,8 +51,8 @@ the tools verify it, extract the assets and build your own executable.
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
       says so (`left_caller`). The registers the whole program shares are globals, a copy for each task:
       `current_object`, `player_car` and `screen` (named by `symbols.txt`), and R12, R14, R27 and R28,
-      scratch registers whose last value the next function may read, still named after them (1,490 uses,
-      which `tools/noise_report.py` counts). The game's structures are typed (`tools/decompiler/pointers.py`):
+      scratch registers whose last value the next function may read, still named after them (1,495 uses,
+      which `tools/noise_report.py` counts). The game's structures are typed (`tools/core/decompiler/pointers.py`, with `tools/game_profile.py`'s structures):
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
       1000 of the block) and the block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as
       `OBJECT(p)->field`, `CAR(p)->field` and `SCREEN(p)->field`, each player's race record
@@ -72,8 +72,10 @@ the tools verify it, extract the assets and build your own executable.
       program is named in `sound_symbols.txt`: one driver for both screens, each with its page of commands,
       eight sequence players and a queue of MIDI messages, played on 24 MultiPCM voices and the YM3438's
       six channels, and the engine and tyre noise the game drives through the page (the game's side of the
-      shared RAM has the same names). Every variable has a name; 56 uses of fields are still named after
-      their offset (`tools/noise_report.py`, unk_fields): the memory test walking the RAM byte by byte with
+      shared RAM has the same names). Every variable has a name; 79 uses of fields are still named after
+      their offset (`tools/noise_report.py`, unk_fields): the bytes that code reading or writing several
+      fields at once covers with no field name (the object's word above `flags_high` the most), the memory
+      test walking the RAM byte by byte with
       the object register, pointers that may be either of two families, the bytes of a family's arrays,
       and two bytes of the race record nothing reads
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
@@ -99,8 +101,8 @@ the tools verify it, extract the assets and build your own executable.
       start, and the memory test's ROM part is the board's (`runtime/replaced.txt`: the decompiled game has
       no ROM chips to sum). `tools/rom_in_executables.py` finds no stretch of the ROM in any executable,
       and the 16 scenarios are identical in state, picture and sound with the game on its pack
-- [ ] The C reads the program's data by name: 599 reads still go through a ROM address
-      (`tools/noise_report.py`, rom_reads) and 839 through tables named after their address; the data's
+- [ ] The C reads the program's data by name: 598 reads still go through a ROM address
+      (`tools/noise_report.py`, rom_reads) and 843 through tables named after their address; the data's
       text files are grouped by 64 KB of the ROM until the tables have names. Other ports
 
 ## Getting started
@@ -108,6 +110,15 @@ the tools verify it, extract the assets and build your own executable.
 Requirements: Python 3.10 or newer, CMake 3.20 or newer and a C11 / C++17 compiler (Visual Studio Build
 Tools on Windows). The window port needs SDL2 2.32: on Windows its development package for Visual C++
 (`SDL2-devel-2.32.10-VC.zip`) unpacked in `build/downloads/sdl2/`, elsewhere the system's.
+
+The decompiler, the analysis tools and the asset formats are a project of their own,
+[arcade-decomp](https://github.com/cheviman/arcade-decomp), which this repository keeps in `tools/core/` as
+a git submodule: clone it with the submodule (`git submodule update --init` in a clone made without it).
+The build needs it to take the assets out of your ROM set:
+
+```bash
+git clone --recursive https://github.com/cheviman/outrunners-decomp
+```
 
 1. Put your MAME `orunners.zip`, or the files inside it, in `rom/`, and check it:
 
@@ -220,13 +231,17 @@ their bytes, which the first run fills from the player's set).
 
 ## Tools
 
-`tools/` starts as a copy of segasonic-decomp's tools at commit `c329452`: the disassemblers and lifters
-of the V60 (which decode the V70's code as they are) and the Z80, the decompiler, the checks, and the
-reference tools built on MAME's cores. They are adapted to the Multi 32 and to OutRunners as each step
-needs them: `orunners_rom.py` replaced `sonic_rom.py`, and the decompiler's settings (the registers the
-program shares, R24 as the base of its variables, the object handler's field) are OutRunners'. Some of
-SegaSonic's names stay in them until `symbols.txt` gives OutRunners' own. SegaSonic's own data formats and
-stage scripts were left out.
+`tools/core/` is [arcade-decomp](https://github.com/cheviman/arcade-decomp), the decompiler and analysis
+tools OutRunners shares with [segasonic-decomp](https://github.com/cheviman/segasonic-decomp) (a git
+submodule): the V60/V70 and Z80 decoders and lifters, the static analysis, the decompiler, the scaffold's
+translator, the checks and the data and asset formats. `tools/game_profile.py` tells the core about
+OutRunners (its ROM set, `orunners_rom.py`; its structures, the registers the program shares, its board),
+and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, `recompile.py`,
+`disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`) run the core's. A change to the
+decompiler itself goes to arcade-decomp, checked on both games, and comes here as a newer commit of the
+submodule (`git submodule update --remote tools/core`). The rest of
+`tools/` is OutRunners' own: the ROM set, the scenarios' runner, the assets' census and sheets, the pack,
+and the reference tools built on MAME's cores (`tools/reference/`).
 
 ## Legal
 
