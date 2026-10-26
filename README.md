@@ -61,7 +61,7 @@ the tools verify it, extract the assets and build your own executable.
       what the code reaches by its own address in the screens' blocks and the race records reads as their
       fields (`SCREEN(SCREEN_1)->game_mode`, `RACE(RACE_COPY_1)->entry_frames`), an object whose handler
       is set to a family's function as that family's, and the variables' arrays by element
-      (`time_difficulty[2]`, `video_registers[8 + r0 * 2]`). The objects' code is
+      (`time_difficulty[1]`, `video_registers[16]`). The objects' code is
       named and commented, family by family (the scenery and traffic along the road, the player's car and
       the race display, the radio and its DJ, the title, attract and select screens, the route map, the
       name entry), with each family's own fields, and so is the rest of the game's code: the boot and the
@@ -72,7 +72,11 @@ the tools verify it, extract the assets and build your own executable.
       program is named in `sound_symbols.txt`: one driver for both screens, each with its page of commands,
       eight sequence players and a queue of MIDI messages, played on 24 MultiPCM voices and the YM3438's
       six channels, and the engine and tyre noise the game drives through the page (the game's side of the
-      shared RAM has the same names). Every variable has a name; 79 uses of fields are still named after
+      shared RAM has the same names). Every parameter, result and local variable is named by what it holds
+      (`symbols.txt`'s param, result and local lines: 2,100 were named after a register and 565 values the
+      decompiler works out once were numbered), and so are the values a string move fills with; where a
+      partial write chains two values of a register into one variable, its name says both
+      (`model_then_animation`). Every variable has a name; 79 uses of fields are still named after
       their offset (`tools/noise_report.py`, unk_fields): the bytes that code reading or writing several
       fields at once covers with no field name (the object's word above `flags_high` the most), the memory
       test walking the RAM byte by byte with
@@ -110,8 +114,11 @@ the tools verify it, extract the assets and build your own executable.
       commands have operands of different widths behind one pointer (16, `player_car_extend_course` and
       `player_car_build_segment`); the input test's list, which one pointer walks through two layouts in a
       row (9); and the road objects' stream after a fork, read through the object's field in one operand
-      (1). 51 ROM addresses the code uses as values are still numbers (raw_rom_addresses, 101 before). The
-      data's text files are grouped by 64 KB of the ROM until they are cut where the tables start
+      (1). Every ROM address the code uses as a value has a name (a data or table line, or a constant
+      line for a number that only looks like one: 101 before) but two (raw_rom_addresses): the switches
+      that go on through the original's own jump target in `car_radio_update` and `song_title_show`,
+      where the code's address stands for "go on here", as the cases do. The data's text files are
+      grouped by 64 KB of the ROM until they are cut where the tables start
 - [ ] Other ports
 
 ## Getting started

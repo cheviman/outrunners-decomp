@@ -645,3 +645,49 @@ local  retune_voice_screen_1         0715  hl  pitch_entry  pcm_pitch_steps
 local  retune_voice_screen_2         0F52  hl  pitch_entry  pcm_pitch_steps
 local  start_fm_note                 12F8  hl  fnum_entry  fm_fnumbers
 local  retune_fm_voice               13F4  hl  fnum_entry  fm_fnumbers
+
+# ======== locals (batch L6) ========
+local  drum_timeout_tick             0163  t1  wait_ticks           # drum_timeout_wait before it is counted down
+local  drum_timeout_tick             017E  t1  voices_left          # drum_timeout_voices_left before it is counted down
+local  drum_timeout_tick             018B  t1  drum_timeout         # the voice's drum_timeout before it is counted down
+local  drum_timeout_tick             0188,019A  hl  cursor          # drum_timeout_cursor: the voice's drum_timeout, then its flags (4 bytes back)
+local  drum_timeout_tick             019B  a   voice_flags
+local  drum_timeout_tick             019C  c   saved_flags
+local  write_fm_channel              0216  t1  channel_code         # fm_channel: bit 2 picks the chip's part
+local  write_fm_channel              0212  b   saved_value
+local  play_midi_message_screen_1    0686  t2  negated_bend         # a downward bend's steps, made positive
+local  play_midi_message_screen_1    06A0  t2  negated_step         # the pitch step of bend_range_tables, negated for a downward bend
+local  play_midi_message_screen_1    0773  t1  modulation_wheel     # CC 1's value: shifted right four times (rra) into the depth 0-7
+local  play_midi_message_screen_1    0774  t1  wheel_halved
+local  play_midi_message_screen_1    0775  t1  wheel_quartered
+local  play_midi_message_screen_1    08BC  t3  part_volume          # CC 7: the value doubled (and 1 added when not 0), 0-FF
+local  play_midi_message_screen_1    0839  t3  music_volume         # CC 10: the value doubled (and 1 added when not 0), 0-FF
+local  play_midi_message_screen_2    0EC3  t2  negated_bend
+local  play_midi_message_screen_2    0EDD  t2  negated_step
+local  play_midi_message_screen_2    0FAF  t1  modulation_wheel
+local  play_midi_message_screen_2    0FB0  t1  wheel_halved
+local  play_midi_message_screen_2    0FB1  t1  wheel_quartered
+local  play_midi_message_screen_2    10F8  t3  part_volume
+local  play_midi_message_screen_2    1075  t3  music_volume
+local  retune_fm_voice               13EF  t1  bend                 # pitch_bend
+local  retune_fm_voice               13EF  d   bend_high
+local  retune_fm_voice               1408,141F  d  part_channel     # the channel within its part of the chip
+local  retune_fm_voice               1400  a   channel_code         # fm_channel: bit 2 picks the chip's part
+local  retune_fm_voice               13EA  hl  run_entry            # fm_fnum_tables' entry for the note's semitone
+local  retune_fm_voice               13F8,13FF  hl  fnumber         # the F-number, then with the block (the note's octave) in bits 11-13
+local  engine_sweep_tick             3B1E  p1  lower_position
+local  engine_sweep_tick             3B1A  p1  higher_position
+local  engine_sweep_tick             3AFA  a   wait_ticks           # engine_sweep_wait
+local  engine_sweep_tick             3B27  a   revs                 # the revs at the position (engine_sweep_revs; 0 at its ends)
+local  engine_sweep_tick             3B12,3B1A,3B1E  h  sweep_high  # the position in engine_sweep_revs, high byte and low byte
+local  engine_sweep_tick             3B0E,3B1A,3B1E  l  sweep_low
+local  sequence_tick                 3EF0  t1  countdown            # screen_1_tick_countdown before it is counted down
+local  step_player                   4046  p1  delta_time_left      # the player's delta time less one tick
+local  step_player                   40AA  t1  controller           # the control change's controller number (10: the music volume)
+local  start_sound                   4217  t1  swapped_player       # the player, before "ex de,hl" puts it in hl
+local  start_sound                   4211,4214  hl  command_header  # the command's header (sound_commands)
+local  start_sound                   4217,4246,424A,427E,4290,42A1  de  header
+local  start_sound                   4218  a   header_flags
+local  start_sound                   4274,4298  a   priority        # the header's low four bits, against the player's
+local  start_song                    423E  t1  swapped_player
+local  start_song                    4238,423B  hl  song_record     # the song's record (songs)

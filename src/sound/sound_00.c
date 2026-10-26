@@ -3,7 +3,7 @@
  *    Description: the sound program's functions, part 00 (in the order of their Z80 addresses)
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    26-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -93,17 +93,17 @@ void sound_main_loop(void)
    bit 0) for stop_flagged_voices. Instrument notes are counted down too, but never stopped by it. */
 void drum_timeout_tick(void)
 {
-	uint8_t a = 0, c = 0;
-	uint16_t hl = 0;
-	uint8_t t1 = 0, t2 = 0, t3 = 0;
+	uint8_t saved_flags = 0, voice_flags = 0;
+	uint16_t cursor = 0;
+	uint8_t wait_ticks = 0, voices_left = 0, drum_timeout = 0;
 
 	z80_block(31, 4);
 	if ((drum_timeout_pass & 1u) == 0u)
 	{
 		z80_block(26, 3);
-		t1 = drum_timeout_wait;
-		drum_timeout_wait = t1 - 1u;
-		if (t1 != 1u)
+		wait_ticks = drum_timeout_wait;
+		drum_timeout_wait = wait_ticks - 1u;
+		if (wait_ticks != 1u)
 		{
 			z80_cycles(6);
 			return;
@@ -116,39 +116,39 @@ void drum_timeout_tick(void)
 		return;
 	}
 	z80_block(31, 3);
-	t2 = drum_timeout_voices_left;
-	drum_timeout_voices_left = t2 - 1u;
-	if (t2 == 1u)
+	voices_left = drum_timeout_voices_left;
+	drum_timeout_voices_left = voices_left - 1u;
+	if (voices_left == 1u)
 	{
 		z80_block(35, 4);
 		drum_timeout_pass &= ~1u;
 		return;
 	}
 	z80_block(37, 3);
-	hl = drum_timeout_cursor;
-	t3 = z80_read8(hl);
-	z80_write8(hl, t3 - 1u);
-	if (t3 != 1u)
+	cursor = drum_timeout_cursor;
+	drum_timeout = z80_read8(cursor);
+	z80_write8(cursor, drum_timeout - 1u);
+	if (drum_timeout != 1u)
 	{
 		z80_block(47, 4);
-		drum_timeout_cursor = hl + 9u;
+		drum_timeout_cursor = cursor + 9u;
 		return;
 	}
 	z80_block(49, 6);
-	hl -= 4u;
-	a = z80_read8(hl);
-	c = a;
-	if ((a & 0x81u) == 0u)
+	cursor -= 4u;
+	voice_flags = z80_read8(cursor);
+	saved_flags = voice_flags;
+	if ((voice_flags & 0x81u) == 0u)
 	{
 		z80_block(28, 4);
-		if ((c & 0x70u) >= 0x50u)
+		if ((saved_flags & 0x70u) >= 0x50u)
 		{
 			z80_block(15, 2);
-			z80_write8(hl, z80_read8(hl) | 1u);
+			z80_write8(cursor, z80_read8(cursor) | 1u);
 		}
 	}
 	z80_block(47, 4);
-	drum_timeout_cursor = hl + 0xDu;
+	drum_timeout_cursor = cursor + 0xDu;
 }
 
 /* Sets the sound up at reset: the MultiPCM (init_pcm_chip) and the YM3438 (init_fm_chip); both screens'
@@ -242,21 +242,21 @@ uint16_t init_fm_chip(void)
    when it is set, else write_fm); hands fm_register back with value in its high byte. */
 uint16_t write_fm_channel(uint8_t fm_register, uint8_t value)
 {
-	uint8_t b = 0;
+	uint8_t saved_value = 0;
 	uint16_t bc = 0, bc_2 = 0;
-	uint8_t t1 = 0;
+	uint8_t channel_code = 0;
 
 	z80_block(39, 6);
-	b = value;
-	t1 = fm_channel;
-	value = b;
-	if (((t1 >> 2) & 1u) != 0u)
+	saved_value = value;
+	channel_code = fm_channel;
+	value = saved_value;
+	if (((channel_code >> 2) & 1u) != 0u)
 	{
-		bc = (fm_register & 0xFFu) | ((uint32_t)b << 8);
+		bc = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
 		write_fm_part2((uint8_t)bc, value);
 		return bc;
 	}
-	bc_2 = (fm_register & 0xFFu) | ((uint32_t)b << 8);
+	bc_2 = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
 	write_fm((uint8_t)bc_2, value);
 	return bc_2;
 }
@@ -585,7 +585,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, pitch_entry = 0, voice = 0, voice_2 = 0;
 	uint8_t saved_a = 0, saved_b = 0;
 	uint16_t stack_2 = 0, saved_hl = 0;
-	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint8_t negated_bend = 0, negated_step = 0, modulation_wheel = 0, wheel_halved = 0, wheel_quartered = 0, part_volume = 0, music_volume = 0;
 
 	c = (uint8_t)message_byte;
 	z80_block(37, 4);
@@ -1125,9 +1125,9 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 		if ((c & 1u) == 0u)
 		{
 			z80_block(18, 3);
-			t1 = ~a + 1u;
-			a = t1;
-			if (t1 == 0u)
+			negated_bend = ~a + 1u;
+			a = negated_bend;
+			if (negated_bend == 0u)
 			{
 				z80_block(4, 1);
 				a--;
@@ -1146,9 +1146,9 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 		{
 			z80_block(22, 4);
 			c--;
-			t2 = ~a + 1u;
-			a = t2;
-			if (t2 == 0u)
+			negated_step = ~a + 1u;
+			a = negated_step;
+			if (negated_step == 0u)
 			{
 				z80_block(4, 1);
 				a--;
@@ -1214,15 +1214,15 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 		if (a == 1u)
 		{
 			z80_block(123, 19);
-			t3 = c;
-			a = (t3 >> 1) | (carry << 7);
-			carry = t3 & 1u;
-			t4 = a;
-			a = (t4 >> 1) | (carry << 7);
-			carry = t4 & 1u;
-			t5 = a;
-			a = (t5 >> 1) | (carry << 7);
-			carry = t5 & 1u;
+			modulation_wheel = c;
+			a = (modulation_wheel >> 1) | (carry << 7);
+			carry = modulation_wheel & 1u;
+			wheel_halved = a;
+			a = (wheel_halved >> 1) | (carry << 7);
+			carry = wheel_halved & 1u;
+			wheel_quartered = a;
+			a = (wheel_quartered >> 1) | (carry << 7);
+			carry = wheel_quartered & 1u;
 			a = ((a >> 1) | (carry << 7)) & 7u;
 			c = a;
 			voice_modulation = a;
@@ -1277,9 +1277,9 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 		if (a == 7u)
 		{
 			z80_block(18, 3);
-			t6 = c * 2u;
-			a = t6;
-			if (t6 != 0u)
+			part_volume = c * 2u;
+			a = part_volume;
+			if (part_volume != 0u)
 			{
 				z80_block(4, 1);
 				a++;
@@ -1363,9 +1363,9 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 		if (a == 0x10u)
 		{
 			z80_block(18, 3);
-			t7 = c * 2u;
-			a = t7;
-			if (t7 != 0u)
+			music_volume = c * 2u;
+			a = music_volume;
+			if (music_volume != 0u)
 			{
 				z80_block(4, 1);
 				a++;
@@ -2200,7 +2200,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 	uint16_t bc = 0, de = 0, hl = 0, ignored16 = 0, midi_byte_copy = 0, music_part = 0, pitch_bends = 0, pitch_entry = 0, voice = 0, voice_2 = 0;
 	uint8_t saved_a = 0, saved_b = 0;
 	uint16_t stack_2 = 0, saved_hl = 0;
-	uint8_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0;
+	uint8_t negated_bend = 0, negated_step = 0, modulation_wheel = 0, wheel_halved = 0, wheel_quartered = 0, part_volume = 0, music_volume = 0;
 
 	c = (uint8_t)message_byte;
 	z80_block(37, 4);
@@ -2740,9 +2740,9 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 		if ((c & 1u) == 0u)
 		{
 			z80_block(18, 3);
-			t1 = ~a + 1u;
-			a = t1;
-			if (t1 == 0u)
+			negated_bend = ~a + 1u;
+			a = negated_bend;
+			if (negated_bend == 0u)
 			{
 				z80_block(4, 1);
 				a--;
@@ -2761,9 +2761,9 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 		{
 			z80_block(22, 4);
 			c--;
-			t2 = ~a + 1u;
-			a = t2;
-			if (t2 == 0u)
+			negated_step = ~a + 1u;
+			a = negated_step;
+			if (negated_step == 0u)
 			{
 				z80_block(4, 1);
 				a--;
@@ -2829,15 +2829,15 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 		if (a == 1u)
 		{
 			z80_block(123, 19);
-			t3 = c;
-			a = (t3 >> 1) | (carry << 7);
-			carry = t3 & 1u;
-			t4 = a;
-			a = (t4 >> 1) | (carry << 7);
-			carry = t4 & 1u;
-			t5 = a;
-			a = (t5 >> 1) | (carry << 7);
-			carry = t5 & 1u;
+			modulation_wheel = c;
+			a = (modulation_wheel >> 1) | (carry << 7);
+			carry = modulation_wheel & 1u;
+			wheel_halved = a;
+			a = (wheel_halved >> 1) | (carry << 7);
+			carry = wheel_halved & 1u;
+			wheel_quartered = a;
+			a = (wheel_quartered >> 1) | (carry << 7);
+			carry = wheel_quartered & 1u;
 			a = ((a >> 1) | (carry << 7)) & 7u;
 			c = a;
 			voice_modulation = a;
@@ -2892,9 +2892,9 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 		if (a == 7u)
 		{
 			z80_block(18, 3);
-			t6 = c * 2u;
-			a = t6;
-			if (t6 != 0u)
+			part_volume = c * 2u;
+			a = part_volume;
+			if (part_volume != 0u)
 			{
 				z80_block(4, 1);
 				a++;
@@ -2978,9 +2978,9 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 		if (a == 0x10u)
 		{
 			z80_block(18, 3);
-			t7 = c * 2u;
-			a = t7;
-			if (t7 != 0u)
+			music_volume = c * 2u;
+			a = music_volume;
+			if (music_volume != 0u)
 			{
 				z80_block(4, 1);
 				a++;
@@ -3603,41 +3603,41 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
    from fm_fnum_tables at pitch_bend and the block from its octave (A4, then A0, on its part). */
 void retune_fm_voice(uint16_t voice, uint8_t chip_channel)
 {
-	uint8_t a = 0, d = 0, fm_register = 0, note = 0, value = 0;
-	uint16_t fnum_entry = 0, hl = 0;
-	uint16_t t1 = 0;
+	uint8_t bend_high = 0, channel_code = 0, fm_register = 0, note = 0, part_channel = 0, value = 0;
+	uint16_t fnum_entry = 0, fnumber = 0, run_entry = 0;
+	uint16_t bend = 0;
 
 	z80_block(234, 33);
 	fm_channel = chip_channel & 7u;
 	note = VOICE(voice)->note;
-	hl = fm_fnum_tables_ADDRESS + (uint8_t)((note & 0xFu) * 2u);
-	t1 = pitch_bend;
-	d = (uint8_t)(t1 >> 8);
-	fnum_entry = FM_FNUMBER_RUNS(hl)[0] + (((uint32_t)d << 8) | (uint8_t)t1) + (((uint32_t)d << 8) | (uint8_t)t1);
-	hl = FM_FNUMBERS(fnum_entry)[0];
-	hl = (hl & 0xFFu) | ((uint32_t)(uint8_t)(((note & ~0xFu) >> 1) + (hl >> 8)) << 8);
-	a = fm_channel;
-	if (((a >> 2) & 1u) != 0u)
+	run_entry = fm_fnum_tables_ADDRESS + (uint8_t)((note & 0xFu) * 2u);
+	bend = pitch_bend;
+	bend_high = (uint8_t)(bend >> 8);
+	fnum_entry = FM_FNUMBER_RUNS(run_entry)[0] + (((uint32_t)bend_high << 8) | (uint8_t)bend) + (((uint32_t)bend_high << 8) | (uint8_t)bend);
+	fnumber = FM_FNUMBERS(fnum_entry)[0];
+	fnumber = (fnumber & 0xFFu) | ((uint32_t)(uint8_t)(((note & ~0xFu) >> 1) + (fnumber >> 8)) << 8);
+	channel_code = fm_channel;
+	if (((channel_code >> 2) & 1u) != 0u)
 	{
 		z80_block(47, 7);
-		d = a & 3u;
-		value = (uint8_t)(hl >> 8);
-		fm_register = 0xA4u | d;
+		part_channel = channel_code & 3u;
+		value = (uint8_t)(fnumber >> 8);
+		fm_register = 0xA4u | part_channel;
 		write_fm_part2(fm_register, value);
 		z80_block(58, 9);
-		value = (uint8_t)hl;
-		fm_register = 0xA0u | d;
+		value = (uint8_t)fnumber;
+		fm_register = 0xA0u | part_channel;
 		write_fm_part2(fm_register, value);
 		return;
 	}
 	z80_block(40, 6);
-	d = a;
-	value = (uint8_t)(hl >> 8);
-	fm_register = 0xA4u | d;
+	part_channel = channel_code;
+	value = (uint8_t)(fnumber >> 8);
+	fm_register = 0xA4u | part_channel;
 	write_fm(fm_register, value);
 	z80_block(58, 9);
-	value = (uint8_t)hl;
-	fm_register = 0xA0u | d;
+	value = (uint8_t)fnumber;
+	fm_register = 0xA0u | part_channel;
 	write_fm(fm_register, value);
 }
 
@@ -4107,8 +4107,8 @@ void set_engine_sample(uint8_t sample)
    engine_sweep_down and the position over every tick. */
 void engine_sweep_tick(void)
 {
-	uint8_t a = 0, h = 0, l = 0;
-	uint16_t t1 = 0, t2 = 0;
+	uint8_t revs = 0, sweep_high = 0, sweep_low = 0, wait_ticks = 0;
+	uint16_t lower_position = 0, higher_position = 0;
 
 	z80_block(27, 3);
 	if (engine_sweep_on == 0u)
@@ -4129,39 +4129,39 @@ void engine_sweep_tick(void)
 		return;
 	}
 	z80_block(27, 3);
-	a = engine_sweep_wait;
-	if (a != 0u)
+	wait_ticks = engine_sweep_wait;
+	if (wait_ticks != 0u)
 	{
 		z80_block(27, 3);
-		engine_sweep_wait = a - 1u;
+		engine_sweep_wait = wait_ticks - 1u;
 		return;
 	}
 	z80_block(81, 9);
 	engine_sweep_wait = 0x40u;
-	l = engine_sweep_position_low;
-	h = engine_sweep_position_high;
+	sweep_low = engine_sweep_position_low;
+	sweep_high = engine_sweep_position_high;
 	if (engine_sweep_down != 0u)
 	{
 		z80_block(6, 1);
-		t1 = (((uint32_t)h << 8) | l) - 1u;
-		h = (uint8_t)(t1 >> 8);
-		l = (uint8_t)t1;
+		lower_position = (((uint32_t)sweep_high << 8) | sweep_low) - 1u;
+		sweep_high = (uint8_t)(lower_position >> 8);
+		sweep_low = (uint8_t)lower_position;
 	}
 	else
 	{
 		z80_block(16, 2);
-		t2 = (((uint32_t)h << 8) | l) + 1u;
-		h = (uint8_t)(t2 >> 8);
-		l = (uint8_t)t2;
+		higher_position = (((uint32_t)sweep_high << 8) | sweep_low) + 1u;
+		sweep_high = (uint8_t)(higher_position >> 8);
+		sweep_low = (uint8_t)higher_position;
 	}
 	z80_block(55, 7);
-	engine_sweep_position_low = l;
-	engine_sweep_position_high = h;
-	a = z80_read8((uint16_t)(((uint32_t)h << 8) | l));
-	if (a != 0u)
+	engine_sweep_position_low = sweep_low;
+	engine_sweep_position_high = sweep_high;
+	revs = z80_read8((uint16_t)(((uint32_t)sweep_high << 8) | sweep_low));
+	if (revs != 0u)
 	{
 		z80_block(43, 4);
-		screen_1_engine_revs = a;
+		screen_1_engine_revs = revs;
 		screen_1_engine_requests = 0x20u;
 		return;
 	}
@@ -4344,13 +4344,13 @@ void sequence_tick(void)
 {
 	uint8_t e = 0;
 	uint16_t de = 0, hl = 0, page = 0, player_address = 0, queue_pointer = 0, screen_page = 0;
-	uint8_t t1 = 0;
+	uint8_t countdown = 0;
 
 	z80_block(31, 3);
 	screen_page = screen_1_tick_countdown_ADDRESS;
-	t1 = screen_1_tick_countdown;
-	screen_1_tick_countdown = t1 - 1u;
-	if (t1 == 1u)
+	countdown = screen_1_tick_countdown;
+	screen_1_tick_countdown = countdown - 1u;
+	if (countdown == 1u)
 	{
 		z80_block(55, 7);
 		SCREEN_PAGE(screen_page - 0x40u)->tick_countdown = 4u;
@@ -4593,8 +4593,8 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 	uint16_t de = 0, hl = 0, player = 0, player_address_2 = 0, sequence_player = 0;
 	uint8_t stack_10001 = 0, saved_e = 0;
 	uint16_t stack_2 = 0, saved_player = 0;
-	uint8_t t2 = 0;
-	uint16_t t1 = 0;
+	uint8_t controller = 0;
+	uint16_t delta_time_left = 0;
 
 	e = (uint8_t)queue_pointer;
 	z80_block(17, 3);
@@ -4608,9 +4608,9 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 	sequence_player = (player_address & ~0xFFu) | 7u;
 	delta_time_low = SEQUENCE_PLAYER(sequence_player - 0x7u)->delta_time_low;
 	sequence_player = (sequence_player & ~0xFFu) | (uint8_t)(sequence_player - 1u);
-	t1 = (((uint32_t)z80_read8(sequence_player) << 8) | delta_time_low) - 1u;
-	b = (uint8_t)(t1 >> 8);
-	c = (uint8_t)t1;
+	delta_time_left = (((uint32_t)z80_read8(sequence_player) << 8) | delta_time_low) - 1u;
+	b = (uint8_t)(delta_time_left >> 8);
+	c = (uint8_t)delta_time_left;
 	a = 0u;
 	if (0u != c)
 	{
@@ -4788,9 +4788,9 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 								e++;
 								hl = next_sequence_byte(hl, player);
 								z80_block(24, 3);
-								t2 = a;
+								controller = a;
 								a = z80_read8(hl);
-								if (t2 == 0x10u)
+								if (controller == 0x10u)
 								{
 									z80_block(37, 5);
 									c = a;
@@ -5029,31 +5029,31 @@ void take_sound_command(uint16_t player_address, uint16_t page, uint8_t command)
    channel A's and stop controls. */
 void start_sound(uint16_t player_address, uint8_t command)
 {
-	uint8_t a = 0, song = 0;
-	uint16_t de = 0, hl = 0, player = 0, sequence_player = 0;
-	uint16_t t1 = 0;
+	uint8_t header_flags = 0, priority = 0, song = 0;
+	uint16_t command_header = 0, header = 0, player = 0, sequence_player = 0;
+	uint16_t swapped_player = 0;
 
 	z80_block(27, 2);
-	hl = sound_commands_ADDRESS;
-	hl = read_table_word(hl, command);
+	command_header = sound_commands_ADDRESS;
+	command_header = read_table_word(command_header, command);
 	z80_block(29, 5);
-	t1 = player_address;
-	de = hl;
-	sequence_player = t1;
-	a = z80_read8(de);
-	if (a >> 7 != 0u)
+	swapped_player = player_address;
+	header = command_header;
+	sequence_player = swapped_player;
+	header_flags = z80_read8(header);
+	if (header_flags >> 7 != 0u)
 	{
 		z80_block(18, 3);
-		if (((a >> 6) & 1u) != 0u)
+		if (((header_flags >> 6) & 1u) != 0u)
 		{
 			z80_block(29, 4);
 			sequence_player = (sequence_player & 0xFFu) | ((uint32_t)(uint8_t)((sequence_player >> 8) + 1u) << 8);
 			sequence_player = (sequence_player & 0xFFu) | ((uint32_t)(uint8_t)((sequence_player >> 8) + 1u) << 8);
 			sequence_player = (sequence_player & 0xFFu) | ((uint32_t)(uint8_t)((sequence_player >> 8) + 1u) << 8);
-			select_channel_player(&de, &sequence_player);
+			select_channel_player(&header, &sequence_player);
 			z80_block(46, 7);
-			a = z80_read8(de) & 0xFu;
-			if (a < (z80_read8(sequence_player) & 0xFu))
+			priority = z80_read8(header) & 0xFu;
+			if (priority < (z80_read8(sequence_player) & 0xFu))
 			{
 				z80_block(10, 1);
 				return;
@@ -5061,12 +5061,12 @@ void start_sound(uint16_t player_address, uint8_t command)
 			z80_block(17, 1);
 			sequence_player = clear_player(sequence_player);
 			z80_block(87, 12);
-			de++;
-			SEQUENCE_PLAYER(sequence_player)->flags = a;
+			header++;
+			SEQUENCE_PLAYER(sequence_player)->flags = priority;
 			sequence_player = (sequence_player & ~0xFFu) | 2u;
-			SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)de;
+			SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)header;
 			sequence_player = (sequence_player & ~0xFFu) | (uint8_t)(sequence_player + 1u);
-			SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = de >> 8;
+			SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = header >> 8;
 			sequence_player = (sequence_player & ~0xFFu) | 7u;
 			SEQUENCE_PLAYER(sequence_player - 0x7u)->delta_time_low = 1u;
 			sequence_player &= ~0xFFu;
@@ -5077,8 +5077,8 @@ void start_sound(uint16_t player_address, uint8_t command)
 		z80_block(54, 9);
 		sequence_player = (sequence_player & 0xFFu) | ((uint32_t)(uint8_t)((sequence_player >> 8) + 1u) << 8);
 		sequence_player = (sequence_player & 0xFFu) | ((uint32_t)(uint8_t)((sequence_player >> 8) + 1u) << 8);
-		a = z80_read8(de) & 0xFu;
-		if (a < (z80_read8(sequence_player) & 0xFu))
+		priority = z80_read8(header) & 0xFu;
+		if (priority < (z80_read8(sequence_player) & 0xFu))
 		{
 			z80_block(10, 1);
 			return;
@@ -5086,13 +5086,13 @@ void start_sound(uint16_t player_address, uint8_t command)
 		z80_block(17, 1);
 		sequence_player = clear_player(sequence_player);
 		z80_block(7, 1);
-		SEQUENCE_PLAYER(sequence_player)->flags = a;
+		SEQUENCE_PLAYER(sequence_player)->flags = priority;
 		z80_block(80, 11);
-		de++;
+		header++;
 		sequence_player = (sequence_player & ~0xFFu) | 2u;
-		SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)de;
+		SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)header;
 		sequence_player = (sequence_player & ~0xFFu) | (uint8_t)(sequence_player + 1u);
-		SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = de >> 8;
+		SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = header >> 8;
 		sequence_player = (sequence_player & ~0xFFu) | 7u;
 		SEQUENCE_PLAYER(sequence_player - 0x7u)->delta_time_low = 1u;
 		sequence_player &= ~0xFFu;
@@ -5100,14 +5100,14 @@ void start_sound(uint16_t player_address, uint8_t command)
 		return;
 	}
 	z80_block(18, 3);
-	if (((a >> 6) & 1u) != 0u)
+	if (((header_flags >> 6) & 1u) != 0u)
 	{
 		z80_block(80, 11);
-		de++;
+		header++;
 		sequence_player = (sequence_player & ~0xFFu) | 2u;
-		SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)de;
+		SEQUENCE_PLAYER(sequence_player - 0x2u)->position_low = (uint8_t)header;
 		sequence_player = (sequence_player & ~0xFFu) | (uint8_t)(sequence_player + 1u);
-		SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = de >> 8;
+		SEQUENCE_PLAYER(sequence_player - 0x3u)->position_high = header >> 8;
 		sequence_player = (sequence_player & ~0xFFu) | 7u;
 		SEQUENCE_PLAYER(sequence_player - 0x7u)->delta_time_low = 1u;
 		sequence_player &= ~0xFFu;
@@ -5115,25 +5115,25 @@ void start_sound(uint16_t player_address, uint8_t command)
 		return;
 	}
 	z80_block(18, 3);
-	if (((a >> 5) & 1u) != 0u)
+	if (((header_flags >> 5) & 1u) != 0u)
 	{
-		start_sequence(de, sequence_player);
+		start_sequence(header, sequence_player);
 		return;
 	}
 	z80_block(18, 3);
-	if (((a >> 4) & 1u) == 0u)
+	if (((header_flags >> 4) & 1u) == 0u)
 		z80_block(10, 1);
 	z80_block(17, 1);
 	sequence_player = clear_player(sequence_player);
 	z80_block(82, 12);
-	de++;
-	song = z80_read8(de);
+	header++;
+	song = z80_read8(header);
 	SEQUENCE_PLAYER(sequence_player)->flags |= 0x20u;
-	de++;
+	header++;
 	sequence_player = (sequence_player & ~0xFFu) | 0x20u;
-	SEQUENCE_PLAYER(sequence_player - 0x20u)->playlist_low = (uint8_t)de;
+	SEQUENCE_PLAYER(sequence_player - 0x20u)->playlist_low = (uint8_t)header;
 	sequence_player++;
-	SEQUENCE_PLAYER(sequence_player - 0x21u)->playlist_high = de >> 8;
+	SEQUENCE_PLAYER(sequence_player - 0x21u)->playlist_high = header >> 8;
 	player = sequence_player & ~0xFFu;
 	start_song(player, song);
 }
@@ -5141,16 +5141,16 @@ void start_sound(uint16_t player_address, uint8_t command)
 /* Starts song 'song' (songs) on the player: start_sequence with its record. */
 void start_song(uint16_t player, uint8_t song)
 {
-	uint16_t header = 0, hl = 0, player_2 = 0;
-	uint16_t t1 = 0;
+	uint16_t header = 0, player_2 = 0, song_record = 0;
+	uint16_t swapped_player = 0;
 
 	z80_block(27, 2);
-	hl = songs_ADDRESS;
-	hl = read_table_word(hl, song);
+	song_record = songs_ADDRESS;
+	song_record = read_table_word(song_record, song);
 	z80_block(21, 3);
-	t1 = player;
-	header = hl;
-	player_2 = t1;
+	swapped_player = player;
+	header = song_record;
+	player_2 = swapped_player;
 	start_sequence(header, player_2);
 }
 

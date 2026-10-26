@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    26-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -715,6 +715,10 @@
 #define race_car_passenger_handlers ((const uint32_t *)rom(race_car_passenger_handlers_ADDRESS))
 #define race_car_spray_palettes_ADDRESS 0x009F0Cu
 #define race_car_spray_palettes ((const uint16_t *)rom(race_car_spray_palettes_ADDRESS))
+#define race_car_spray_2_animations_ADDRESS 0x009F2Cu
+#define race_car_spray_2_animations ROM16(race_car_spray_2_animations_ADDRESS)
+#define race_car_spray_1_animations_ADDRESS 0x009F4Cu
+#define race_car_spray_1_animations ROM16(race_car_spray_1_animations_ADDRESS)
 #define race_car_spray_frame_counts_ADDRESS 0x009F6Cu
 #define race_car_spray_frame_counts ((const uint8_t *)rom(race_car_spray_frame_counts_ADDRESS))
 #define race_car_tag_palettes_ADDRESS 0x009F7Cu
@@ -953,6 +957,8 @@
 #define object_lists_14A20 ((const uint32_t *)rom(object_lists_14A20_ADDRESS))
 #define object_list_14A60_ADDRESS 0x014A60u
 #define object_list_14A60 ROM32(object_list_14A60_ADDRESS)
+#define unfinished_ending_actors_ADDRESS 0x014A64u
+#define unfinished_ending_actors ROM32(unfinished_ending_actors_ADDRESS)
 #define road_surface_state_jumps_ADDRESS 0x016B0Cu
 #define road_surface_state_jumps ((const uint32_t *)rom(road_surface_state_jumps_ADDRESS))
 #define road_surface_event_jumps_ADDRESS 0x016BBCu
@@ -1183,6 +1189,8 @@
 #define sound_test_cursor_cells ((const uint16_t *)rom(sound_test_cursor_cells_ADDRESS))
 #define sound_test_exit_cell_ADDRESS 0x01D7C4u
 #define sound_test_exit_cell ROM16(sound_test_exit_cell_ADDRESS)
+#define sound_test_codes_ADDRESS 0x01D7C6u
+#define sound_test_codes ROM8(sound_test_codes_ADDRESS)
 #define test_mode_game_assignments_item_jumps_ADDRESS 0x01DBD0u
 #define test_mode_game_assignments_item_jumps ((const uint32_t *)rom(test_mode_game_assignments_item_jumps_ADDRESS))
 #define game_assignments_cursor_cells_ADDRESS 0x01DCCEu
@@ -1279,6 +1287,12 @@
 #define cosine_table ((const int16_t *)rom(cosine_table_ADDRESS))
 #define arctangents_ADDRESS 0x103400u
 #define arctangents ((const uint16_t *)rom(arctangents_ADDRESS))
+#define boot_tile_pages_5d_ADDRESS 0x109420u
+#define boot_tile_pages_5d ROM32(boot_tile_pages_5d_ADDRESS)
+#define boot_tile_pages_5e_ADDRESS 0x109428u
+#define boot_tile_pages_5e ROM32(boot_tile_pages_5e_ADDRESS)
+#define boot_tile_pages_29_to_4e_ADDRESS 0x109578u
+#define boot_tile_pages_29_to_4e ROM32(boot_tile_pages_29_to_4e_ADDRESS)
 #define no_background_tile_pages_ADDRESS 0x109684u
 #define no_background_tile_pages ROM32(no_background_tile_pages_ADDRESS)
 #define background_tile_page_lists_ADDRESS 0x109694u
@@ -1291,6 +1305,14 @@
 #define text_sprite_font ROM16(text_sprite_font_ADDRESS)
 #define text_sprite_palette_ADDRESS 0x122B66u
 #define text_sprite_palette ROM16(text_sprite_palette_ADDRESS)
+#define entry_countdown_palette_fades_ADDRESS 0x13F66Cu
+#define entry_countdown_palette_fades ROM32(entry_countdown_palette_fades_ADDRESS)
+#define name_entry_palette_fades_ADDRESS 0x13F6C0u
+#define name_entry_palette_fades ROM32(name_entry_palette_fades_ADDRESS)
+#define manual_picked_palettes_ADDRESS 0x13F95Cu
+#define manual_picked_palettes ROM32(manual_picked_palettes_ADDRESS)
+#define automatic_picked_palettes_ADDRESS 0x13F998u
+#define automatic_picked_palettes ROM32(automatic_picked_palettes_ADDRESS)
 #define no_background_palettes_ADDRESS 0x13F9D4u
 #define no_background_palettes ROM32(no_background_palettes_ADDRESS)
 #define race_car_rider_places_ADDRESS 0x18D25Cu
@@ -1301,6 +1323,8 @@
 #define depth_layers_by_depth ((const uint16_t *)rom(depth_layers_by_depth_ADDRESS))
 #define kanji_row_pixels_ADDRESS 0x1A6340u
 #define kanji_row_pixels ((const uint32_t *)rom(kanji_row_pixels_ADDRESS))
+#define kanji_font_ADDRESS 0x1CF000u
+#define kanji_font ROM8(kanji_font_ADDRESS)
 
 /* the board's registers (read and written through the bus) */
 #define VIDEO_31F736 0x31F736u
@@ -1368,12 +1392,57 @@
 #define object_handlers_3474_ADDRESS 0x003478u
 #define object_handlers_34C4_ADDRESS 0x0034C8u
 #define object_handlers_34EC_ADDRESS 0x0034F0u
+#define rival_warning_text_ADDRESS 0x007CDBu
+#define steer_frames_by_steering_ADDRESS 0x0092BCu
 #define unk_009EFC_ADDRESS 0x009EFCu
 #define unk_009FE4_ADDRESS 0x009FE4u
 #define unk_00AB04_ADDRESS 0x00AB04u
+#define check_point_lcd_text_branch_0_ADDRESS 0x00CB98u
+#define check_point_lcd_text_branch_1_ADDRESS 0x00CBACu
+#define total_time_text_ADDRESS 0x00D08Eu
+#define branch_arrow_palette_steps_ADDRESS 0x00D0A0u
+#define dream_flying_song_title_ADDRESS 0x00D0AEu
+#define entry_invitation_objects_ADDRESS 0x00DF74u
 #define object_handlers_DF74_ADDRESS 0x00DF78u
+#define network_check_text_ADDRESS 0x00DF84u
+#define communication_success_text_ADDRESS 0x00DF98u
+#define machine_id_text_ADDRESS 0x00DFB4u
+#define communication_failed_text_ADDRESS 0x00DFCEu
+#define stand_alone_machine_text_ADDRESS 0x00DFEAu
+#define master_machine_text_ADDRESS 0x00E00Cu
+#define slave_machine_text_ADDRESS 0x00E034u
+#define isdn_machine_text_ADDRESS 0x00E055u
+#define network_check_master_text_ADDRESS 0x00E10Cu
+#define network_check_slave_text_ADDRESS 0x00E128u
+#define network_check_isdn_text_ADDRESS 0x00E143u
+#define board_check_text_ADDRESS 0x00E15Eu
+#define wait_text_ADDRESS 0x00E170u
+#define check_dualport_ram_characters_ADDRESS 0x00E17Au
+#define check_network_status_text_ADDRESS 0x00E1B6u
+#define check_trans_end_text_ADDRESS 0x00E1D6u
+#define network_error_text_ADDRESS 0x00E40Eu
+#define connection_error_texts_ADDRESS 0x00E422u
+#define communication_board_error_texts_ADDRESS 0x00E464u
+#define communication_time_out_texts_ADDRESS 0x00E484u
 #define unk_010309_ADDRESS 0x010309u
 #define unk_010425_ADDRESS 0x010425u
+#define segment_projection_pattern_ADDRESS 0x010509u
+#define mixer_register_defaults_ADDRESS 0x010AB6u
+#define sprite_control_rest_ADDRESS 0x010B0Cu
+#define video_register_defaults_ADDRESS 0x010B12u
+#define sprite_ram_start_entries_ADDRESS 0x010BF4u
+#define last_colour_tables_ADDRESS 0x010C44u
+#define bookkeeping_defaults_ADDRESS 0x011458u
+#define seat1_first_chute_entry_ADDRESS 0x0114D4u
+#define seat1_second_chute_entry_ADDRESS 0x011504u
+#define seat2_first_chute_entry_ADDRESS 0x011534u
+#define seat2_second_chute_entry_ADDRESS 0x011564u
+#define screen_fade_from_black_ADDRESS 0x01173Eu
+#define screen_fade_to_white_ADDRESS 0x011742u
+#define screen_fade_from_white_ADDRESS 0x011746u
+#define screen_fade_to_red_tint_ADDRESS 0x01174Au
+#define screen_fade_from_red_tint_ADDRESS 0x01174Eu
+#define car_hit_box_sizes_ADDRESS 0x0126BCu
 #define credit_free_play_text_ADDRESS 0x01AB62u
 #define credit_singular_text_ADDRESS 0x01AB72u
 #define credit_plural_text_ADDRESS 0x01AB80u
@@ -1382,6 +1451,7 @@
 #define timeline_1AFC0_ADDRESS 0x01AFC0u
 #define unk_01B248_ADDRESS 0x01B248u
 #define test_mode_menu_text_ADDRESS 0x01C490u
+#define test_mode_write_count_text_ADDRESS 0x01C5A2u
 #define memory_test_page_text_ADDRESS 0x01CC9Cu
 #define memory_test_now_testing_text_ADDRESS 0x01CD87u
 #define memory_test_result_cells_ADDRESS 0x01CD96u
@@ -1390,30 +1460,55 @@
 #define volume_adjusting_text_ADDRESS 0x01D021u
 #define volume_adjustment_bar_cells_ADDRESS 0x01D030u
 #define volume_adjustment_bars_text_ADDRESS 0x01D03Cu
+#define input_test_page_text_ADDRESS 0x01D26Cu
 #define input_test_bars_text_ADDRESS 0x01D30Au
 #define input_test_items_ADDRESS 0x01D380u
 #define input_test_bar_cells_ADDRESS 0x01D3D8u
 #define output_test_page_text_ADDRESS 0x01D4F8u
 #define sound_test_page_text_ADDRESS 0x01D788u
+#define crt_test_first_page_text_ADDRESS 0x01D9C7u
+#define crt_test_second_page_text_ADDRESS 0x01D9DCu
 #define game_assignments_page_text_ADDRESS 0x01DBF8u
 #define game_assignments_setting_places_ADDRESS 0x01DD14u
 #define coin_assignments_page_text_ADDRESS 0x01E0F4u
 #define coin_manual_page_text_ADDRESS 0x01E13Fu
 #define coin_assignments_line_text_ADDRESS 0x01E20Eu
+#define no_bonus_adder_text_ADDRESS 0x01E39Eu
+#define bonus_free_play_text_ADDRESS 0x01E3BCu
+#define bonus_adder_text_ADDRESS 0x01E3CBu
 #define coin_assignments_setting_places_ADDRESS 0x01E44Du
 #define network_assignments_page_text_ADDRESS 0x01E62Cu
 #define network_assignments_setting_places_ADDRESS 0x01E6E0u
 #define time_digit_steps_ADDRESS 0x01E970u
+#define bookkeeping_first_page_text_ADDRESS 0x01EA5Cu
+#define bookkeeping_second_page_text_ADDRESS 0x01EBB9u
 #define car_colour_names_ADDRESS 0x01ED94u
 #define backup_data_clear_page_text_ADDRESS 0x01EE79u
 #define backup_data_clear_completed_text_ADDRESS 0x01EEB2u
+#define eeprom_caution_text_ADDRESS 0x01EF12u
+#define exit_prompt_text_ADDRESS 0x01F2BCu
+#define continue_prompt_text_ADDRESS 0x01F2DEu
 #define test_mode_palettes_1_ADDRESS 0x01F304u
 #define test_mode_palettes_2_ADDRESS 0x01F506u
 #define unk_030B60_ADDRESS 0x030B60u
+#define boot_palette_9e00_ADDRESS 0x03153Cu
+#define black_background_palette_ADDRESS 0x031740u
 #define vector_table_ADDRESS 0x03F000u
+#define zero_block_ADDRESS 0x100800u
+#define one_bit_font_ADDRESS 0x103C20u
+#define text_font_ADDRESS 0x104020u
+#define indirect_colour_tables_ADDRESS 0x107020u
+#define solid_colour_blocks_ADDRESS 0x12297Cu
+#define boot_palette_8000_ADDRESS 0x153904u
 
 /* numbers the code uses, by name (symbols.txt constant lines) */
-
+#define SECONDS_PER_MINUTE 0x3Cu
+#define SECONDS_PER_HOUR 0xE10u
+#define EEPROM_WRITE_LIMIT 0x2710u
+#define SECONDS_PER_DAY 0x15180u
+#define BOARD_OFF_LOOPS 0x16000u
+#define LOW_ROM_TESTED_BYTES 0x3FFF8u
+#define HIGH_ROM_TESTED_BYTES 0xFF000u
 
 /* the game's structures in work RAM */
 #pragma pack(push, 1)
@@ -4698,6 +4793,8 @@ _Static_assert(sizeof(struct time_digit_step) == 0x8, "struct time_digit_step ha
 #define fork_branch_piece_animation ((const uint32_t *)rom(fork_branch_piece_animation_ADDRESS))
 #define stage_courses_ADDRESS 0x03CC00u
 #define stage_courses ((const uint32_t *)rom(stage_courses_ADDRESS))
+#define sprite_size_steps_ADDRESS 0x122B74u
+#define sprite_size_steps ((const struct sprite_size_step *)rom(sprite_size_steps_ADDRESS))
 #define road_row_size_step_lists_ADDRESS 0x1598CCu
 #define road_row_size_step_lists ((const uint32_t *)rom(road_row_size_step_lists_ADDRESS))
 #define road_row_size_shift_lists_ADDRESS 0x159AFCu

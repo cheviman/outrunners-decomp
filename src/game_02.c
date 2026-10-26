@@ -3,7 +3,7 @@
  *    Description: the game's functions, part 02 (in the order of their V60 addresses)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    26-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -27,86 +27,86 @@ void race_entries_update(void)
 {
 	uint32_t zero = 0;
 	uint8_t entrant = 0, entrants = 0, entry_serial = 0;
-	uint16_t r2 = 0, r9 = 0;
-	uint32_t r0 = 0, r1 = 0, r3 = 0, r13 = 0, race = 0, race_2 = 0;
+	uint16_t next_entry_frames = 0, record_size = 0;
+	uint32_t entrant_count = 0, entrant_list = 0, entry_frames = 0, machines = 0, other_race = 0, player = 0, players_left = 0, race = 0, request = 0;
 	uint8_t game_over = 0;
-	uint16_t t1 = 0;
+	uint16_t old_entry_frames = 0;
 	uint32_t last_four_entrants = 0, race_order_long = 0;
 
 	race = SCREEN(screen)->race;
 	r12 = RACE_COPY_1;
 	if (SCREEN(screen)->player == 0u)
 	{
-		r1 = player_count;
-		r2 = 0x80u;
+		players_left = player_count;
+		record_size = 0x80u;
 		entry_serial = RACE(race)->entry_serial;
-		race_2 = r12 + 0x1Cu;
+		other_race = r12 + 0x1Cu;
 		r14 = screen + 0x300u;
-		r0 = RACE(race)->entry_frames;
+		entry_frames = RACE(race)->entry_frames;
 		do
 		{
-			r1--;
-		} while ((r1 != 0u) & (RACE(race_2 - 0x1Cu)->entry_serial_seen == entry_serial));
-		if (RACE(race_2 - 0x1Cu)->entry_serial_seen == entry_serial)
+			players_left--;
+		} while ((players_left != 0u) & (RACE(other_race - 0x1Cu)->entry_serial_seen == entry_serial));
+		if (RACE(other_race - 0x1Cu)->entry_serial_seen == entry_serial)
 		{
-			if (r0 == 0u)
+			if (entry_frames == 0u)
 			{
-				r1 = 0u;
+				machines = 0u;
 				if (stand_alone == 0u)
-					r1 = machine_count;
-				r9 = entry_frames_by_machines[r1];
-				r13 = r12 + 0x19u;
-				r1 = player_count;
-				r3 = 0u;
+					machines = machine_count;
+				next_entry_frames = entry_frames_by_machines[machines];
+				request = r12 + 0x19u;
+				players_left = player_count;
+				player = 0u;
 				for (;;)
 				{
-					if (mem_read8(r14 + r3) != 0u || mem_read8(r13) == 0u)
+					if (mem_read8(r14 + player) != 0u || mem_read8(request) == 0u)
 					{
-						r3 = (uint8_t)(r3 + 1u);
-						r13 = (r13 & ~0xFFFFu) | (uint16_t)(r13 + r2);
-						r1--;
-						if (r1 == 0u)
+						player = (uint8_t)(player + 1u);
+						request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
+						players_left--;
+						if (players_left == 0u)
 							break;
 						continue;
 					}
-					mem_write8(r14 + r3, 0xFFu);
-					RACE(race)->entrant = r3;
+					mem_write8(r14 + player, 0xFFu);
+					RACE(race)->entrant = player;
 					RACE(race)->entry_serial++;
-					r0 = r9;
-					if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || r0 <= 0x28u)
+					entry_frames = next_entry_frames;
+					if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || entry_frames <= 0x28u)
 						break;
-					r0 = 0x28u;
+					entry_frames = 0x28u;
 					break;
 				}
 			}
 			else
 			{
-				t1 = r0;
-				r0 = (uint16_t)(t1 - 1u);
-				r9 = (uint16_t)r0;
-				if (t1 != 1u)
+				old_entry_frames = entry_frames;
+				entry_frames = (uint16_t)(old_entry_frames - 1u);
+				next_entry_frames = (uint16_t)entry_frames;
+				if (old_entry_frames != 1u)
 				{
-					r13 = r12 + 0x19u;
-					r1 = player_count;
-					r3 = 0u;
+					request = r12 + 0x19u;
+					players_left = player_count;
+					player = 0u;
 					for (;;)
 					{
-						if (mem_read8(r14 + r3) != 0u || mem_read8(r13) == 0u)
+						if (mem_read8(r14 + player) != 0u || mem_read8(request) == 0u)
 						{
-							r3 = (uint8_t)(r3 + 1u);
-							r13 = (r13 & ~0xFFFFu) | (uint16_t)(r13 + r2);
-							r1--;
-							if (r1 == 0u)
+							player = (uint8_t)(player + 1u);
+							request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
+							players_left--;
+							if (players_left == 0u)
 								break;
 							continue;
 						}
-						mem_write8(r14 + r3, 0xFFu);
-						RACE(race)->entrant = r3;
+						mem_write8(r14 + player, 0xFFu);
+						RACE(race)->entrant = player;
 						RACE(race)->entry_serial++;
-						r0 = r9;
-						if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || r0 <= 0x28u)
+						entry_frames = next_entry_frames;
+						if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || entry_frames <= 0x28u)
 							break;
-						r0 = 0x28u;
+						entry_frames = 0x28u;
 						break;
 					}
 				}
@@ -122,17 +122,17 @@ void race_entries_update(void)
 				}
 			}
 		}
-		RACE(race)->entry_frames = r0;
+		RACE(race)->entry_frames = entry_frames;
 	}
-	r1 = player_count;
-	race_2 = r12 + 0x28u;
+	players_left = player_count;
+	other_race = r12 + 0x28u;
 	do
 	{
-		game_over = RACE(race_2 - 0x28u)->game_over;
+		game_over = RACE(other_race - 0x28u)->game_over;
 		zero = game_over == 0u;
-		race_2 += 0x80u;
-		r1--;
-	} while ((r1 != 0u) & (game_over == 0u));
+		other_race += 0x80u;
+		players_left--;
+	} while ((players_left != 0u) & (game_over == 0u));
 	if (zero)
 	{
 		if (RACE(r12)->entry_frames != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
@@ -155,16 +155,16 @@ void race_entries_update(void)
 		SCREEN(screen)->entry_accepted = 0u;
 		return;
 	}
-	r13 = screen + 0x30Fu;
-	r1 = SCREEN(r13 - 0x30Fu)->entrant_count;
-	r1 = (uint8_t)(r1 + 1u);
-	SCREEN(r13 - 0x30Fu)->entrant_count = r1;
-	mem_write8(r13 + r1, entrant);
+	entrant_list = screen + 0x30Fu;
+	entrant_count = SCREEN(entrant_list - 0x30Fu)->entrant_count;
+	entrant_count = (uint8_t)(entrant_count + 1u);
+	SCREEN(entrant_list - 0x30Fu)->entrant_count = entrant_count;
+	mem_write8(entrant_list + entrant_count, entrant);
 	if (SCREEN(screen)->player == entrant)
 	{
 		RACE(race)->entry_request = 0u;
 		SCREEN(screen)->entry_accepted = 0xFFu;
-		entrants = SCREEN(r13 - 0x30Fu)->entrants;
+		entrants = SCREEN(entrant_list - 0x30Fu)->entrants;
 		SCREEN(screen)->host_player = entrants;
 		if (SCREEN(screen)->player == entrants)
 			SCREEN(screen)->is_host = 0xFFu;
@@ -172,11 +172,11 @@ void race_entries_update(void)
 	if (SCREEN(screen)->entry_accepted != 0u && SCREEN(screen)->is_host != 0u)
 	{
 		r14 = race + 0x1Fu;
-		RACE(r14 - 0x1Fu)->racer_count = SCREEN(r13 - 0x30Fu)->entrant_count;
+		RACE(r14 - 0x1Fu)->racer_count = SCREEN(entrant_list - 0x30Fu)->entrant_count;
 		r14 = r14 + 1u;
-		r13++;
-		last_four_entrants = SCREEN(r13 - 0x310u)->last_four_entrants;
-		race_order_long = AS32(SCREEN(r13 - 0x310u)->entrants);
+		entrant_list++;
+		last_four_entrants = SCREEN(entrant_list - 0x310u)->last_four_entrants;
+		race_order_long = AS32(SCREEN(entrant_list - 0x310u)->entrants);
 		RACE(r14 - 0x20u)->race_order = (uint8_t)race_order_long;
 		RACE(r14 - 0x20u)->race_order_1 = (uint8_t)(race_order_long >> 8u);
 		RACE(r14 - 0x20u)->race_order_2 = (uint8_t)(race_order_long >> 16u);
@@ -203,11 +203,11 @@ void race_entries_update(void)
    route_branches and the stage it leads to in route_stages. */
 void race_progress_update(void)
 {
-	uint8_t r1 = 0, r5 = 0, pass_branch = 0, pass_count = 0, pass_count_2 = 0, player = 0;
-	uint16_t r4 = 0, pass_time = 0;
-	uint32_t r0 = 0, r2 = 0, r3 = 0, r4_2 = 0, r5_2 = 0, r6 = 0, r13 = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, race = 0, race_2 = 0, race_3 = 0, race_4 = 0, race_5 = 0, race_6 = 0, racer_count = 0, racer_count_2 = 0;
-	uint8_t t2 = 0;
-	uint32_t t1 = 0, t3 = 0, t4 = 0, t5 = 0;
+	uint8_t branch = 0, host_pass_count = 0, pass_branch = 0, pass_count = 0, place = 0, player = 0;
+	uint16_t order = 0, pass_time = 0;
+	uint32_t ahead_player = 0, ahead_race = 0, checked_race = 0, checkpoint = 0, checkpoint_offset = 0, comparisons_left = 0, fork_index = 0, host_order = 0, host_racer_count = 0, next_player = 0, order_entry = 0, order_place = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, passing_race = 0, race = 0, racer = 0, racer_count = 0, racers_left = 0, sort_place = 0;
+	uint8_t racer_total = 0;
+	uint32_t pass_counter = 0, swapped_player = 0, player_checkpoint_count = 0, checkpoint_pass_count = 0;
 
 	race = SCREEN(screen)->race;
 	r12 = SCREEN(screen)->host_record;
@@ -215,51 +215,51 @@ void race_progress_update(void)
 		return;
 	if (SCREEN(screen)->is_host != 0u)
 	{
-		race_4 = r12 + 0x1Fu;
-		racer_count_2 = RACE(race_4 - 0x1Fu)->racer_count;
-		pass_count_2 = RACE(race)->pass_count;
-		race_4++;
-		r13 = race_4;
-		r0 = racer_count_2;
+		host_order = r12 + 0x1Fu;
+		host_racer_count = RACE(host_order - 0x1Fu)->racer_count;
+		host_pass_count = RACE(race)->pass_count;
+		host_order++;
+		order_entry = host_order;
+		racers_left = host_racer_count;
 		do
 		{
-			race_3 = race_copy_offsets[mem_read8(r13)] + GAME_VARIABLES;
-			r0--;
-			r13++;
-		} while ((r0 != 0u) & (RACE(race_3)->pass_seen == pass_count_2));
-		if (RACE(race_3)->pass_seen == pass_count_2)
+			checked_race = race_copy_offsets[mem_read8(order_entry)] + GAME_VARIABLES;
+			racers_left--;
+			order_entry++;
+		} while ((racers_left != 0u) & (RACE(checked_race)->pass_seen == host_pass_count));
+		if (RACE(checked_race)->pass_seen == host_pass_count)
 		{
-			r13 = race_4;
+			order_entry = host_order;
 			r14 = screen + 0x330u;
-			r0 = racer_count_2;
+			racers_left = host_racer_count;
 			do
 			{
-				r2 = mem_read8(r13);
-				race_5 = race_copy_offsets[r2] + GAME_VARIABLES;
-				r0--;
-				r13++;
-			} while ((r0 != 0u) & (mem_read8(r14 + r2) == RACE(race_5)->stage_count));
-			if (mem_read8(r14 + r2) != RACE(race_5)->stage_count)
+				racer = mem_read8(order_entry);
+				passing_race = race_copy_offsets[racer] + GAME_VARIABLES;
+				racers_left--;
+				order_entry++;
+			} while ((racers_left != 0u) & (mem_read8(r14 + racer) == RACE(passing_race)->stage_count));
+			if (mem_read8(r14 + racer) != RACE(passing_race)->stage_count)
 			{
-				r3 = RACE(race_5)->stage_count;
-				mem_write8(r14 + r2, r3);
-				RACE(race)->pass_player = r2;
-				r3 = (uint8_t)(r3 - 1u);
-				RACE(race)->pass_checkpoint = r3;
-				r4 = mem_read8(screen + 0x338u + r3);
-				t1 = screen + 0x338u + r3;
-				mem_write8(t1, mem_read8(t1) + 1u);
-				RACE(race)->pass_order = (uint8_t)r4;
-				r5 = (uint8_t)((uint16_t)RACE(race_5)->road_x >> 15);
-				RACE(race)->pass_branch = r5;
-				RACE(race)->pass_time = RACE(race)->race_time / 0xAu + r4;
+				checkpoint = RACE(passing_race)->stage_count;
+				mem_write8(r14 + racer, checkpoint);
+				RACE(race)->pass_player = racer;
+				checkpoint = (uint8_t)(checkpoint - 1u);
+				RACE(race)->pass_checkpoint = checkpoint;
+				order = mem_read8(screen + 0x338u + checkpoint);
+				pass_counter = screen + 0x338u + checkpoint;
+				mem_write8(pass_counter, mem_read8(pass_counter) + 1u);
+				RACE(race)->pass_order = (uint8_t)order;
+				branch = (uint8_t)((uint16_t)RACE(passing_race)->road_x >> 15);
+				RACE(race)->pass_branch = branch;
+				RACE(race)->pass_time = RACE(race)->race_time / 0xAu + order;
 				RACE(race)->pass_count++;
-				if (r4 == 0u && r3 != 5u)
+				if (order == 0u && checkpoint != 5u)
 				{
-					r0 = RACE(race_5)->stage;
-					r0 = (uint8_t)(r0 * 2u);
-					r0 = (uint8_t)(r0 + r5);
-					RACE(race)->time_left += (int8_t)(stage_start_times[fork_next_stages[r0]] + master_time_difficulty[r3]) * 0x1Eu;
+					fork_index = RACE(passing_race)->stage;
+					fork_index = (uint8_t)(fork_index * 2u);
+					fork_index = (uint8_t)(fork_index + branch);
+					RACE(race)->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + master_time_difficulty[checkpoint]) * 0x1Eu;
 				}
 			}
 		}
@@ -269,67 +269,67 @@ void race_progress_update(void)
 			if (RACE(race)->time_left != 0u)
 				RACE(race)->time_left--;
 		}
-		race_6 = race + 0x1Fu;
-		racer_count = RACE(race_6 - 0x1Fu)->racer_count;
-		t2 = racer_count;
-		r0 = (uint8_t)(t2 - 1u);
-		race_6++;
-		if ((int8_t)t2 > 1)
+		sort_place = race + 0x1Fu;
+		racer_count = RACE(sort_place - 0x1Fu)->racer_count;
+		racer_total = racer_count;
+		comparisons_left = (uint8_t)(racer_total - 1u);
+		sort_place++;
+		if ((int8_t)racer_total > 1)
 		{
-			r4_2 = RACE(race_6 - 0x20u)->race_order;
-			race_2 = race_copy_offsets[r4_2] + GAME_VARIABLES;
-			race_6++;
+			ahead_player = RACE(sort_place - 0x20u)->race_order;
+			ahead_race = race_copy_offsets[ahead_player] + GAME_VARIABLES;
+			sort_place++;
 			if (SCREEN(screen)->race_started != 0u)
 			{
 				do
 				{
-					r6 = mem_read8(race_6);
-					r14 = race_copy_offsets[r6] + GAME_VARIABLES;
-					race_6++;
-					if (RACE(race_2)->finished != 0u)
+					next_player = mem_read8(sort_place);
+					r14 = race_copy_offsets[next_player] + GAME_VARIABLES;
+					sort_place++;
+					if (RACE(ahead_race)->finished != 0u)
 					{
-						if (RACE(r14)->finished == 0u || RACE(race_2)->finish_time <= RACE(r14)->finish_time)
+						if (RACE(r14)->finished == 0u || RACE(ahead_race)->finish_time <= RACE(r14)->finish_time)
 						{
-							t3 = r6;
-							r6 = r4_2;
-							r4_2 = t3;
-							race_2 = r14;
+							swapped_player = next_player;
+							next_player = ahead_player;
+							ahead_player = swapped_player;
+							ahead_race = r14;
 						}
 					}
-					else if ((RACE(r14)->segment_fraction | ((uint32_t)RACE(r14)->segment << 16u)) <= (RACE(race_2)->segment_fraction | ((uint32_t)RACE(race_2)->segment << 16u)))
+					else if ((RACE(r14)->segment_fraction | ((uint32_t)RACE(r14)->segment << 16u)) <= (RACE(ahead_race)->segment_fraction | ((uint32_t)RACE(ahead_race)->segment << 16u)))
 					{
-						t3 = r6;
-						r6 = r4_2;
-						r4_2 = t3;
-						race_2 = r14;
+						swapped_player = next_player;
+						next_player = ahead_player;
+						ahead_player = swapped_player;
+						ahead_race = r14;
 					}
-					mem_write8(race_6 - 2u, r6);
-					r0--;
-				} while (r0 != 0u);
-				mem_write8(race_6 - 1u, r4_2);
+					mem_write8(sort_place - 2u, next_player);
+					comparisons_left--;
+				} while (comparisons_left != 0u);
+				mem_write8(sort_place - 1u, ahead_player);
 			}
 		}
 	}
-	race_2 = r12 + 0x1Fu;
-	r0 = RACE(race_2 - 0x1Fu)->racer_count;
-	r1 = 0u;
-	race_2++;
-	r2 = RACE(race_2 - 0x20u)->race_order;
+	order_place = r12 + 0x1Fu;
+	racers_left = RACE(order_place - 0x1Fu)->racer_count;
+	place = 0u;
+	order_place++;
+	racer = RACE(order_place - 0x20u)->race_order;
 	player = SCREEN(screen)->player;
-	r14 = race_copy_offsets[r2] + GAME_VARIABLES;
+	r14 = race_copy_offsets[racer] + GAME_VARIABLES;
 	SCREEN(screen)->leader_window_segment = RACE(r14)->window_segment;
 	SCREEN(screen)->leader_stage = RACE(r14)->stage;
-	race_2++;
+	order_place++;
 	do
 	{
-		mem_write8(screen + 0x320u + r2, r1);
-		if (r2 == player)
-			SCREEN(screen)->place = r1;
-		r2 = mem_read8(race_2);
-		r1++;
-		r0--;
-		race_2++;
-	} while (r0 != 0u);
+		mem_write8(screen + 0x320u + racer, place);
+		if (racer == player)
+			SCREEN(screen)->place = place;
+		racer = mem_read8(order_place);
+		place++;
+		racers_left--;
+		order_place++;
+	} while (racers_left != 0u);
 	if (SCREEN(screen)->pass_seen != RACE(r12)->pass_count)
 	{
 		pass_count = RACE(r12)->pass_count;
@@ -340,23 +340,23 @@ void race_progress_update(void)
 		pass_order = RACE(r12)->pass_order;
 		pass_branch = RACE(r12)->pass_branch;
 		pass_time = RACE(r12)->pass_time;
-		r5_2 = pass_checkpoint * 2u;
-		t4 = screen + 0x480u + pass_player;
-		mem_write8(t4, mem_read8(t4) + 1u);
-		t5 = screen + 0x35Au + pass_checkpoint;
-		mem_write8(t5, mem_read8(t5) + 1u);
-		mem_write8(screen + 0x360u + r5_2 * 4u + pass_player, pass_order);
-		mem_write8(screen + 0x390u + r5_2 * 4u + pass_order, pass_player);
-		r5_2 = r5_2 * 2u;
-		mem_write16(screen + 0x3C0u + r5_2 * 4u + pass_player * 2u, pass_time);
-		mem_write16(screen + 0x420u + r5_2 * 4u + pass_order * 2u, pass_time);
+		checkpoint_offset = pass_checkpoint * 2u;
+		player_checkpoint_count = screen + 0x480u + pass_player;
+		mem_write8(player_checkpoint_count, mem_read8(player_checkpoint_count) + 1u);
+		checkpoint_pass_count = screen + 0x35Au + pass_checkpoint;
+		mem_write8(checkpoint_pass_count, mem_read8(checkpoint_pass_count) + 1u);
+		mem_write8(screen + 0x360u + checkpoint_offset * 4u + pass_player, pass_order);
+		mem_write8(screen + 0x390u + checkpoint_offset * 4u + pass_order, pass_player);
+		checkpoint_offset = checkpoint_offset * 2u;
+		mem_write16(screen + 0x3C0u + checkpoint_offset * 4u + pass_player * 2u, pass_time);
+		mem_write16(screen + 0x420u + checkpoint_offset * 4u + pass_order * 2u, pass_time);
 		if (pass_order == 0u && pass_checkpoint != 5u)
 		{
 			SCREEN(screen)->forks_decided++;
 			mem_write8(screen + 0x34Au + pass_checkpoint, pass_branch);
-			r0 = mem_read8(race_copy_offsets[pass_player] + 0x20E062u);
-			r0 = (uint8_t)(r0 * 2u);
-			mem_write8(screen + 0x344u + pass_checkpoint, fork_next_stages[(uint8_t)(r0 + pass_branch)]);
+			fork_index = mem_read8(race_copy_offsets[pass_player] + 0x20E062u);
+			fork_index = (uint8_t)(fork_index * 2u);
+			mem_write8(screen + 0x344u + pass_checkpoint, fork_next_stages[(uint8_t)(fork_index + pass_branch)]);
 		}
 	}
 }
@@ -373,7 +373,7 @@ void race_progress_update(void)
    cleared (clear_lcd). */
 void entry_invitation_step(void)
 {
-	uint32_t r10 = 0, ignored_2 = 0, index = 0;
+	uint32_t ignored_2 = 0, index = 0, lamp = 0, object_list = 0;
 
 	switch (SCREEN(screen)->game_step)
 	{
@@ -386,8 +386,8 @@ void entry_invitation_step(void)
 		break;
 	case 2:
 		SCREEN(screen)->game_step++;
-		r10 = 0xDF74u;
-		ignored_2 = start_object_list(r10);
+		object_list = entry_invitation_objects_ADDRESS;
+		ignored_2 = start_object_list(object_list);
 		return;
 	case 3:
 		if (SCREEN(screen)->index != 0u)
@@ -403,9 +403,9 @@ void entry_invitation_step(void)
 			return;
 		reset_screen_sound();
 		AS32(SCREEN(screen)->game_mode) = 2u;
-		r10 = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		mem_write32(r10 + 0xC0u, 0u);
-		mem_write32(r10 + 0xC8u, 0u);
+		lamp = GAME_VARIABLES + SCREEN(screen)->index * 4u;
+		mem_write32(lamp + 0xC0u, 0u);
+		mem_write32(lamp + 0xC8u, 0u);
 		clear_lcd();
 		return;
 	default:
@@ -423,15 +423,15 @@ void entry_invitation_step(void)
 		SCREEN(screen)->demo_flags &= ~0x100u;
 		index = SCREEN(screen)->index;
 		wheel_motor[index] = 0u;
-		r10 = GAME_VARIABLES + index * 4u;
-		mem_write8(r10 + 0xC0u, 2u);
-		mem_write8(r10 + 0xC8u, 8u);
-		mem_write8(r10 + 0xC1u, 0xFFu);
-		mem_write8(r10 + 0xC2u, 0x10u);
-		mem_write8(r10 + 0xC3u, 1u);
-		mem_write8(r10 + 0xC9u, 0xFFu);
-		mem_write8(r10 + 0xCAu, 0x10u);
-		mem_write8(r10 + 0xCBu, 1u);
+		lamp = GAME_VARIABLES + index * 4u;
+		mem_write8(lamp + 0xC0u, 2u);
+		mem_write8(lamp + 0xC8u, 8u);
+		mem_write8(lamp + 0xC1u, 0xFFu);
+		mem_write8(lamp + 0xC2u, 0x10u);
+		mem_write8(lamp + 0xC3u, 1u);
+		mem_write8(lamp + 0xC9u, 0xFFu);
+		mem_write8(lamp + 0xCAu, 0x10u);
+		mem_write8(lamp + 0xCBu, 1u);
 	}
 }
 
@@ -439,7 +439,7 @@ void entry_invitation_step(void)
    checkpoint passes, the times), from the zeros at 100800. */
 void race_record_clear(void)
 {
-	move_string(0x100800u, 0x28u, SCREEN(screen)->race + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(zero_block_ADDRESS, 0x28u, SCREEN(screen)->race + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 /* Marks the screen's player ready in its race record (unk_5C), after its selections. */
@@ -453,19 +453,19 @@ void set_player_ready(void)
 uint32_t players_not_ready(void)
 {
 	uint32_t zero = 0;
-	uint32_t r1 = 0, race = 0;
+	uint32_t race = 0, racers_left = 0;
 	uint8_t ready = 0;
 
 	race = SCREEN(screen)->host_record + 0x1Fu;
-	r1 = RACE(race - 0x1Fu)->racer_count;
+	racers_left = RACE(race - 0x1Fu)->racer_count;
 	race++;
 	do
 	{
 		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[mem_read8(race)])->ready;
 		zero = ready == 0u;
-		r1--;
+		racers_left--;
 		race++;
-	} while ((r1 != 0u) & (ready != 0u));
+	} while ((racers_left != 0u) & (ready != 0u));
 	return zero;
 }
 
@@ -477,41 +477,41 @@ uint32_t players_not_ready(void)
 void course_records_update(void)
 {
 	uint16_t finish_time = 0;
-	uint32_t r8 = 0, r9 = 0, r10 = 0, r13 = 0, ignored = 0, race = 0;
-	uint8_t t1 = 0;
+	uint32_t backup_record = 0, ignored = 0, players_left = 0, race = 0, record_offset = 0, seen_serials = 0;
+	uint8_t seen_serial = 0;
 
-	r10 = screen + 0x328u;
-	r9 = player_count;
+	seen_serials = screen + 0x328u;
+	players_left = player_count;
 	race = RACE_2;
 	do
 	{
 		race += 0x80u;
-		t1 = mem_read8(r10);
-		r10++;
-		if (RACE(race)->record_serial != t1)
+		seen_serial = mem_read8(seen_serials);
+		seen_serials++;
+		if (RACE(race)->record_serial != seen_serial)
 		{
-			mem_write8(r10 - 1u, RACE(race)->record_serial);
+			mem_write8(seen_serials - 1u, RACE(race)->record_serial);
 			finish_time = RACE(race)->finish_time;
-			r8 = RACE(race)->record_course;
-			r8 = (uint8_t)(r8 * 6u);
-			r12 = course_records_ADDRESS + r8;
+			record_offset = RACE(race)->record_course;
+			record_offset = (uint8_t)(record_offset * 6u);
+			r12 = course_records_ADDRESS + record_offset;
 			if (finish_time <= mem_read16(r12 + 4u))
 			{
 				mem_write16(r12 + 4u, finish_time);
 				mem_write8(r12, RACE(race)->record_model);
 				mem_write8(r12 + 1u, RACE(race)->record_name);
 				mem_write16(r12 + 2u, RACE(race)->record_name_rest);
-				r13 = SOUND_RAM + 0x1F32u + r8;
-				mem_write32(r13, mem_read32(r12));
-				mem_write16(r13 + 4u, mem_read16(r12 + 4u));
+				backup_record = SOUND_RAM + 0x1F32u + record_offset;
+				mem_write32(backup_record, mem_read32(r12));
+				mem_write16(backup_record + 4u, mem_read16(r12 + 4u));
 				bookkeeping_update_checksum(ignored);
-				r13 = SOUND_RAM + 0x1FAEu + r8;
-				mem_write32(r13, mem_read32(r12));
-				mem_write16(r13 + 4u, mem_read16(r12 + 4u));
+				backup_record = SOUND_RAM + 0x1FAEu + record_offset;
+				mem_write32(backup_record, mem_read32(r12));
+				mem_write16(backup_record + 4u, mem_read16(r12 + 4u));
 			}
 		}
-		r9--;
-	} while (r9 != 0u);
+		players_left--;
+	} while (players_left != 0u);
 }
 
 /* Takes the race records of all the players into 20FC00 (80 bytes each, by player), each frame: alone
@@ -520,597 +520,597 @@ void course_records_update(void)
    80000E is set), or link_lost when its error byte 80000C is set. */
 void link_receive_records(void)
 {
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
-	uint8_t t1 = 0, t2 = 0;
-	uint32_t t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0, t64 = 0, t65 = 0, t66 = 0;
+	uint32_t destination = 0, pairs_left = 0, record_count = 0, source = 0;
+	uint8_t board_error = 0, second_buffer = 0;
+	uint32_t block_00 = 0, bytes_04 = 0, block_08 = 0, bytes_0C = 0, block_10 = 0, bytes_14 = 0, block_18 = 0, bytes_1C = 0, block_20 = 0, bytes_24 = 0, block_28 = 0, bytes_2C = 0, block_30 = 0, bytes_34 = 0, block_38 = 0, bytes_3C = 0, block_40 = 0, bytes_44 = 0, block_48 = 0, bytes_4C = 0, block_50 = 0, bytes_54 = 0, block_58 = 0, bytes_5C = 0, block_60 = 0, bytes_64 = 0, block_68 = 0, bytes_6C = 0, block_70 = 0, bytes_74 = 0, block_78 = 0, bytes_7C = 0, block_80 = 0, bytes_84 = 0, block_88 = 0, bytes_8C = 0, block_90 = 0, bytes_94 = 0, block_98 = 0, bytes_9C = 0, block_A0 = 0, bytes_A4 = 0, block_A8 = 0, bytes_AC = 0, block_B0 = 0, bytes_B4 = 0, block_B8 = 0, bytes_BC = 0, block_C0 = 0, bytes_C4 = 0, block_C8 = 0, bytes_CC = 0, block_D0 = 0, bytes_D4 = 0, block_D8 = 0, bytes_DC = 0, block_E0 = 0, bytes_E4 = 0, block_E8 = 0, bytes_EC = 0, block_F0 = 0, bytes_F4 = 0, block_F8 = 0, bytes_FC = 0;
 
 	if (isdn_mode == 0u)
 	{
 		if (link_failed == 0u && link_off == 0u)
 		{
-			t1 = mem_read8(0x80000Cu);
-			if (t1 != 0u)
+			board_error = mem_read8(0x80000Cu);
+			if (board_error != 0u)
 			{
 				link_lost();
 				return;
 			}
-			r10 = 0x800020u;
-			r11 = RACE_COPY_1;
-			r1 = 8u;
-			t2 = mem_read8(0x80000Eu);
-			if (t2 == 0u)
+			source = 0x800020u;
+			destination = RACE_COPY_1;
+			record_count = 8u;
+			second_buffer = mem_read8(0x80000Eu);
+			if (second_buffer == 0u)
 			{
-				link_copy_records_in(r1, r10, r11);
+				link_copy_records_in(record_count, source, destination);
 				return;
 			}
-			r10 += 0x700u;
-			link_copy_records_in(r1, r10, r11);
+			source += 0x700u;
+			link_copy_records_in(record_count, source, destination);
 			return;
 		}
-		r10 = RACE_1;
-		r11 = RACE_COPY_1;
-		r1 = 1u;
+		source = RACE_1;
+		destination = RACE_COPY_1;
+		pairs_left = 1u;
 	}
 	else
 	{
-		r10 = 0x21E000u;
-		r11 = RACE_COPY_1;
-		r1 = 4u;
+		source = 0x21E000u;
+		destination = RACE_COPY_1;
+		pairs_left = 4u;
 	}
 	do
 	{
-		t3 = r11;
-		r11 += 8u;
-		t4 = mem_read32(r10 + 4u);
-		mem_write32(t3, mem_read32(r10));
-		mem_write32(t3 + 4u, t4);
-		r10 += 8u;
-		t5 = r11;
-		r11 += 8u;
-		t6 = mem_read32(r10 + 4u);
-		mem_write32(t5, mem_read32(r10));
-		mem_write32(t5 + 4u, t6);
-		r10 += 8u;
-		t7 = r11;
-		r11 += 8u;
-		t8 = mem_read32(r10 + 4u);
-		mem_write32(t7, mem_read32(r10));
-		mem_write32(t7 + 4u, t8);
-		r10 += 8u;
-		t9 = r11;
-		r11 += 8u;
-		t10 = mem_read32(r10 + 4u);
-		mem_write32(t9, mem_read32(r10));
-		mem_write32(t9 + 4u, t10);
-		r10 += 8u;
-		t11 = r11;
-		r11 += 8u;
-		t12 = mem_read32(r10 + 4u);
-		mem_write32(t11, mem_read32(r10));
-		mem_write32(t11 + 4u, t12);
-		r10 += 8u;
-		t13 = r11;
-		r11 += 8u;
-		t14 = mem_read32(r10 + 4u);
-		mem_write32(t13, mem_read32(r10));
-		mem_write32(t13 + 4u, t14);
-		r10 += 8u;
-		t15 = r11;
-		r11 += 8u;
-		t16 = mem_read32(r10 + 4u);
-		mem_write32(t15, mem_read32(r10));
-		mem_write32(t15 + 4u, t16);
-		r10 += 8u;
-		t17 = r11;
-		r11 += 8u;
-		t18 = mem_read32(r10 + 4u);
-		mem_write32(t17, mem_read32(r10));
-		mem_write32(t17 + 4u, t18);
-		r10 += 8u;
-		t19 = r11;
-		r11 += 8u;
-		t20 = mem_read32(r10 + 4u);
-		mem_write32(t19, mem_read32(r10));
-		mem_write32(t19 + 4u, t20);
-		r10 += 8u;
-		t21 = r11;
-		r11 += 8u;
-		t22 = mem_read32(r10 + 4u);
-		mem_write32(t21, mem_read32(r10));
-		mem_write32(t21 + 4u, t22);
-		r10 += 8u;
-		t23 = r11;
-		r11 += 8u;
-		t24 = mem_read32(r10 + 4u);
-		mem_write32(t23, mem_read32(r10));
-		mem_write32(t23 + 4u, t24);
-		r10 += 8u;
-		t25 = r11;
-		r11 += 8u;
-		t26 = mem_read32(r10 + 4u);
-		mem_write32(t25, mem_read32(r10));
-		mem_write32(t25 + 4u, t26);
-		r10 += 8u;
-		t27 = r11;
-		r11 += 8u;
-		t28 = mem_read32(r10 + 4u);
-		mem_write32(t27, mem_read32(r10));
-		mem_write32(t27 + 4u, t28);
-		r10 += 8u;
-		t29 = r11;
-		r11 += 8u;
-		t30 = mem_read32(r10 + 4u);
-		mem_write32(t29, mem_read32(r10));
-		mem_write32(t29 + 4u, t30);
-		r10 += 8u;
-		t31 = r11;
-		r11 += 8u;
-		t32 = mem_read32(r10 + 4u);
-		mem_write32(t31, mem_read32(r10));
-		mem_write32(t31 + 4u, t32);
-		r10 += 8u;
-		t33 = r11;
-		r11 += 8u;
-		t34 = mem_read32(r10 + 4u);
-		mem_write32(t33, mem_read32(r10));
-		mem_write32(t33 + 4u, t34);
-		r10 += 8u;
-		t35 = r11;
-		r11 += 8u;
-		t36 = mem_read32(r10 + 4u);
-		mem_write32(t35, mem_read32(r10));
-		mem_write32(t35 + 4u, t36);
-		r10 += 8u;
-		t37 = r11;
-		r11 += 8u;
-		t38 = mem_read32(r10 + 4u);
-		mem_write32(t37, mem_read32(r10));
-		mem_write32(t37 + 4u, t38);
-		r10 += 8u;
-		t39 = r11;
-		r11 += 8u;
-		t40 = mem_read32(r10 + 4u);
-		mem_write32(t39, mem_read32(r10));
-		mem_write32(t39 + 4u, t40);
-		r10 += 8u;
-		t41 = r11;
-		r11 += 8u;
-		t42 = mem_read32(r10 + 4u);
-		mem_write32(t41, mem_read32(r10));
-		mem_write32(t41 + 4u, t42);
-		r10 += 8u;
-		t43 = r11;
-		r11 += 8u;
-		t44 = mem_read32(r10 + 4u);
-		mem_write32(t43, mem_read32(r10));
-		mem_write32(t43 + 4u, t44);
-		r10 += 8u;
-		t45 = r11;
-		r11 += 8u;
-		t46 = mem_read32(r10 + 4u);
-		mem_write32(t45, mem_read32(r10));
-		mem_write32(t45 + 4u, t46);
-		r10 += 8u;
-		t47 = r11;
-		r11 += 8u;
-		t48 = mem_read32(r10 + 4u);
-		mem_write32(t47, mem_read32(r10));
-		mem_write32(t47 + 4u, t48);
-		r10 += 8u;
-		t49 = r11;
-		r11 += 8u;
-		t50 = mem_read32(r10 + 4u);
-		mem_write32(t49, mem_read32(r10));
-		mem_write32(t49 + 4u, t50);
-		r10 += 8u;
-		t51 = r11;
-		r11 += 8u;
-		t52 = mem_read32(r10 + 4u);
-		mem_write32(t51, mem_read32(r10));
-		mem_write32(t51 + 4u, t52);
-		r10 += 8u;
-		t53 = r11;
-		r11 += 8u;
-		t54 = mem_read32(r10 + 4u);
-		mem_write32(t53, mem_read32(r10));
-		mem_write32(t53 + 4u, t54);
-		r10 += 8u;
-		t55 = r11;
-		r11 += 8u;
-		t56 = mem_read32(r10 + 4u);
-		mem_write32(t55, mem_read32(r10));
-		mem_write32(t55 + 4u, t56);
-		r10 += 8u;
-		t57 = r11;
-		r11 += 8u;
-		t58 = mem_read32(r10 + 4u);
-		mem_write32(t57, mem_read32(r10));
-		mem_write32(t57 + 4u, t58);
-		r10 += 8u;
-		t59 = r11;
-		r11 += 8u;
-		t60 = mem_read32(r10 + 4u);
-		mem_write32(t59, mem_read32(r10));
-		mem_write32(t59 + 4u, t60);
-		r10 += 8u;
-		t61 = r11;
-		r11 += 8u;
-		t62 = mem_read32(r10 + 4u);
-		mem_write32(t61, mem_read32(r10));
-		mem_write32(t61 + 4u, t62);
-		r10 += 8u;
-		t63 = r11;
-		r11 += 8u;
-		t64 = mem_read32(r10 + 4u);
-		mem_write32(t63, mem_read32(r10));
-		mem_write32(t63 + 4u, t64);
-		r10 += 8u;
-		t65 = r11;
-		r11 += 8u;
-		t66 = mem_read32(r10 + 4u);
-		mem_write32(t65, mem_read32(r10));
-		mem_write32(t65 + 4u, t66);
-		r1--;
-		r10 += 8u;
-	} while (r1 != 0u);
+		block_00 = destination;
+		destination += 8u;
+		bytes_04 = mem_read32(source + 4u);
+		mem_write32(block_00, mem_read32(source));
+		mem_write32(block_00 + 4u, bytes_04);
+		source += 8u;
+		block_08 = destination;
+		destination += 8u;
+		bytes_0C = mem_read32(source + 4u);
+		mem_write32(block_08, mem_read32(source));
+		mem_write32(block_08 + 4u, bytes_0C);
+		source += 8u;
+		block_10 = destination;
+		destination += 8u;
+		bytes_14 = mem_read32(source + 4u);
+		mem_write32(block_10, mem_read32(source));
+		mem_write32(block_10 + 4u, bytes_14);
+		source += 8u;
+		block_18 = destination;
+		destination += 8u;
+		bytes_1C = mem_read32(source + 4u);
+		mem_write32(block_18, mem_read32(source));
+		mem_write32(block_18 + 4u, bytes_1C);
+		source += 8u;
+		block_20 = destination;
+		destination += 8u;
+		bytes_24 = mem_read32(source + 4u);
+		mem_write32(block_20, mem_read32(source));
+		mem_write32(block_20 + 4u, bytes_24);
+		source += 8u;
+		block_28 = destination;
+		destination += 8u;
+		bytes_2C = mem_read32(source + 4u);
+		mem_write32(block_28, mem_read32(source));
+		mem_write32(block_28 + 4u, bytes_2C);
+		source += 8u;
+		block_30 = destination;
+		destination += 8u;
+		bytes_34 = mem_read32(source + 4u);
+		mem_write32(block_30, mem_read32(source));
+		mem_write32(block_30 + 4u, bytes_34);
+		source += 8u;
+		block_38 = destination;
+		destination += 8u;
+		bytes_3C = mem_read32(source + 4u);
+		mem_write32(block_38, mem_read32(source));
+		mem_write32(block_38 + 4u, bytes_3C);
+		source += 8u;
+		block_40 = destination;
+		destination += 8u;
+		bytes_44 = mem_read32(source + 4u);
+		mem_write32(block_40, mem_read32(source));
+		mem_write32(block_40 + 4u, bytes_44);
+		source += 8u;
+		block_48 = destination;
+		destination += 8u;
+		bytes_4C = mem_read32(source + 4u);
+		mem_write32(block_48, mem_read32(source));
+		mem_write32(block_48 + 4u, bytes_4C);
+		source += 8u;
+		block_50 = destination;
+		destination += 8u;
+		bytes_54 = mem_read32(source + 4u);
+		mem_write32(block_50, mem_read32(source));
+		mem_write32(block_50 + 4u, bytes_54);
+		source += 8u;
+		block_58 = destination;
+		destination += 8u;
+		bytes_5C = mem_read32(source + 4u);
+		mem_write32(block_58, mem_read32(source));
+		mem_write32(block_58 + 4u, bytes_5C);
+		source += 8u;
+		block_60 = destination;
+		destination += 8u;
+		bytes_64 = mem_read32(source + 4u);
+		mem_write32(block_60, mem_read32(source));
+		mem_write32(block_60 + 4u, bytes_64);
+		source += 8u;
+		block_68 = destination;
+		destination += 8u;
+		bytes_6C = mem_read32(source + 4u);
+		mem_write32(block_68, mem_read32(source));
+		mem_write32(block_68 + 4u, bytes_6C);
+		source += 8u;
+		block_70 = destination;
+		destination += 8u;
+		bytes_74 = mem_read32(source + 4u);
+		mem_write32(block_70, mem_read32(source));
+		mem_write32(block_70 + 4u, bytes_74);
+		source += 8u;
+		block_78 = destination;
+		destination += 8u;
+		bytes_7C = mem_read32(source + 4u);
+		mem_write32(block_78, mem_read32(source));
+		mem_write32(block_78 + 4u, bytes_7C);
+		source += 8u;
+		block_80 = destination;
+		destination += 8u;
+		bytes_84 = mem_read32(source + 4u);
+		mem_write32(block_80, mem_read32(source));
+		mem_write32(block_80 + 4u, bytes_84);
+		source += 8u;
+		block_88 = destination;
+		destination += 8u;
+		bytes_8C = mem_read32(source + 4u);
+		mem_write32(block_88, mem_read32(source));
+		mem_write32(block_88 + 4u, bytes_8C);
+		source += 8u;
+		block_90 = destination;
+		destination += 8u;
+		bytes_94 = mem_read32(source + 4u);
+		mem_write32(block_90, mem_read32(source));
+		mem_write32(block_90 + 4u, bytes_94);
+		source += 8u;
+		block_98 = destination;
+		destination += 8u;
+		bytes_9C = mem_read32(source + 4u);
+		mem_write32(block_98, mem_read32(source));
+		mem_write32(block_98 + 4u, bytes_9C);
+		source += 8u;
+		block_A0 = destination;
+		destination += 8u;
+		bytes_A4 = mem_read32(source + 4u);
+		mem_write32(block_A0, mem_read32(source));
+		mem_write32(block_A0 + 4u, bytes_A4);
+		source += 8u;
+		block_A8 = destination;
+		destination += 8u;
+		bytes_AC = mem_read32(source + 4u);
+		mem_write32(block_A8, mem_read32(source));
+		mem_write32(block_A8 + 4u, bytes_AC);
+		source += 8u;
+		block_B0 = destination;
+		destination += 8u;
+		bytes_B4 = mem_read32(source + 4u);
+		mem_write32(block_B0, mem_read32(source));
+		mem_write32(block_B0 + 4u, bytes_B4);
+		source += 8u;
+		block_B8 = destination;
+		destination += 8u;
+		bytes_BC = mem_read32(source + 4u);
+		mem_write32(block_B8, mem_read32(source));
+		mem_write32(block_B8 + 4u, bytes_BC);
+		source += 8u;
+		block_C0 = destination;
+		destination += 8u;
+		bytes_C4 = mem_read32(source + 4u);
+		mem_write32(block_C0, mem_read32(source));
+		mem_write32(block_C0 + 4u, bytes_C4);
+		source += 8u;
+		block_C8 = destination;
+		destination += 8u;
+		bytes_CC = mem_read32(source + 4u);
+		mem_write32(block_C8, mem_read32(source));
+		mem_write32(block_C8 + 4u, bytes_CC);
+		source += 8u;
+		block_D0 = destination;
+		destination += 8u;
+		bytes_D4 = mem_read32(source + 4u);
+		mem_write32(block_D0, mem_read32(source));
+		mem_write32(block_D0 + 4u, bytes_D4);
+		source += 8u;
+		block_D8 = destination;
+		destination += 8u;
+		bytes_DC = mem_read32(source + 4u);
+		mem_write32(block_D8, mem_read32(source));
+		mem_write32(block_D8 + 4u, bytes_DC);
+		source += 8u;
+		block_E0 = destination;
+		destination += 8u;
+		bytes_E4 = mem_read32(source + 4u);
+		mem_write32(block_E0, mem_read32(source));
+		mem_write32(block_E0 + 4u, bytes_E4);
+		source += 8u;
+		block_E8 = destination;
+		destination += 8u;
+		bytes_EC = mem_read32(source + 4u);
+		mem_write32(block_E8, mem_read32(source));
+		mem_write32(block_E8 + 4u, bytes_EC);
+		source += 8u;
+		block_F0 = destination;
+		destination += 8u;
+		bytes_F4 = mem_read32(source + 4u);
+		mem_write32(block_F0, mem_read32(source));
+		mem_write32(block_F0 + 4u, bytes_F4);
+		source += 8u;
+		block_F8 = destination;
+		destination += 8u;
+		bytes_FC = mem_read32(source + 4u);
+		mem_write32(block_F8, mem_read32(source));
+		mem_write32(block_F8 + 4u, bytes_FC);
+		pairs_left--;
+		source += 8u;
+	} while (pairs_left != 0u);
 }
 
 /* ISDN mode: copies the eight race records from the link board (800600) to 21E000, where
    link_receive_records takes them; the link interrupt (int_vector_44) does it on the board's command 3. */
 void link_isdn_receive_records(void)
 {
-	uint32_t r1 = 0, r10 = 0, r11 = 0;
+	uint32_t board_records = 0, race_records = 0, record_count = 0;
 
-	r10 = 0x800600u;
-	r11 = 0x21E000u;
-	r1 = 8u;
-	link_copy_records_in(r1, r10, r11);
+	board_records = 0x800600u;
+	race_records = 0x21E000u;
+	record_count = 8u;
+	link_copy_records_in(record_count, board_records, race_records);
 }
 
 /* Copies R1 race records from the link board's memory at R10 (a byte in each halfword) to R11: their
    first 70 bytes, 80 apart. */
-void link_copy_records_in(uint32_t r1, uint32_t r10, uint32_t r11)
+void link_copy_records_in(uint32_t record_count, uint32_t board_records, uint32_t race_records)
 {
 	do
 	{
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11++;
-		r10 += 2u;
-		mem_write8(r11, (uint8_t)mem_read16(r10));
-		r11 += 0x11u;
-		r1--;
-		r10 += 2u;
-	} while (r1 != 0u);
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records++;
+		board_records += 2u;
+		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		race_records += 0x11u;
+		record_count--;
+		board_records += 2u;
+	} while (record_count != 0u);
 }
 
 /* Sends this machine's two race records to the link board, each frame (not in ISDN mode, nor alone):
@@ -1119,363 +1119,363 @@ void link_copy_records_in(uint32_t r1, uint32_t r10, uint32_t r11)
    nothing sets). */
 void link_send_records(void)
 {
-	uint32_t r1 = 0, r11 = 0, race = 0;
-	uint8_t t1 = 0;
+	uint32_t board_records = 0, race = 0, record_count = 0;
+	uint8_t board_error = 0;
 
 	if (isdn_mode == 0u)
 	{
 		link_wait_frames = link_wait_frames_start;
 		if (link_failed != 0u || link_off != 0u)
 			return;
-		t1 = mem_read8(0x80000Cu);
-		if (t1 != 0u)
+		board_error = mem_read8(0x80000Cu);
+		if (board_error != 0u)
 		{
 			link_lost();
 			return;
 		}
 		race = RACE_COPY_1;
-		r11 = 0x800FE0u;
-		r1 = 2u;
+		board_records = 0x800FE0u;
+		record_count = 2u;
 		do
 		{
 			race = race - 0x10u - 1u;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x6Fu)->race_time >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x6Fu)->race_time >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x6Eu)->race_time >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x6Eu)->race_time >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x6Du)->race_time >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x6Du)->race_time >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x6Cu)->race_time);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x6Cu)->race_time);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x6Bu)->time_left >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x6Bu)->time_left >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x6Au)->time_left);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x6Au)->time_left);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x69u)->pass_time >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x69u)->pass_time >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x68u)->pass_time);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x68u)->pass_time);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x67u)->pass_branch);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x67u)->pass_branch);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x66u)->pass_order);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x66u)->pass_order);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x65u)->pass_checkpoint);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x65u)->pass_checkpoint);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x64u)->pass_player);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x64u)->pass_player);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x63u)->pass_count);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x63u)->pass_count);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x62u)->stage);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x62u)->stage);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x61u)->pass_seen);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x61u)->pass_seen);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x60u)->stage_count);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x60u)->stage_count);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Fu)->published);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Fu)->published);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Eu)->finished);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Eu)->finished);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Du)->started);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Du)->started);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Cu)->ready);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Cu)->ready);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Bu)->unk_5B);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Bu)->unk_5B);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5Au)->unk_5A);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5Au)->unk_5A);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x59u)->car_flags >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x59u)->car_flags >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x58u)->car_flags);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x58u)->car_flags);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x57u)->bounce_height >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x57u)->bounce_height >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x56u)->bounce_height);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x56u)->bounce_height);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x55u)->segment_pitch >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x55u)->segment_pitch >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x54u)->segment_pitch);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x54u)->segment_pitch);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x53u)->hard_acceleration);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x53u)->hard_acceleration);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x52u)->wheel_effect_2);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x52u)->wheel_effect_2);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x51u)->wheel_effect_1);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x51u)->wheel_effect_1);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x50u)->wheel_effect_sides);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x50u)->wheel_effect_sides);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x4Fu)->sideways_speed >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x4Fu)->sideways_speed >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x4Eu)->sideways_speed);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x4Eu)->sideways_speed);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x4Du)->speed >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x4Du)->speed >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x4Cu)->speed);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x4Cu)->speed);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x4Bu)->view_slot);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x4Bu)->view_slot);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x4Au)->frame);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x4Au)->frame);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x49u)->model);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x49u)->model);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x48u)->car_choice);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x48u)->car_choice);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x47u)->window_segment >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x47u)->window_segment >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x46u)->window_segment);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x46u)->window_segment);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x45u)->road_x >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x45u)->road_x >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x44u)->road_x);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x44u)->road_x);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x43u)->segment >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x43u)->segment >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x42u)->segment);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x42u)->segment);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x41u)->segment_fraction >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x41u)->segment_fraction >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x40u)->segment_fraction);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x40u)->segment_fraction);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x3Fu)->palette >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x3Fu)->palette >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x3Eu)->palette);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x3Eu)->palette);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x3Du)->animation >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x3Du)->animation >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x3Cu)->animation);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x3Cu)->animation);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x3Bu)->world_z >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x3Bu)->world_z >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x3Au)->world_z >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x3Au)->world_z >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x39u)->world_z >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x39u)->world_z >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x38u)->world_z);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x38u)->world_z);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x37u)->world_y >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x37u)->world_y >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x36u)->world_y >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x36u)->world_y >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x35u)->world_y >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x35u)->world_y >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x34u)->world_y);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x34u)->world_y);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x33u)->world_x >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x33u)->world_x >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x32u)->world_x >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x32u)->world_x >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x31u)->world_x >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x31u)->world_x >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x30u)->world_x);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x30u)->world_x);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Fu)->link_brake);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Fu)->link_brake);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Eu)->link_gas);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Eu)->link_gas);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Du)->link_wheel);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Du)->link_wheel);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Cu)->link_buttons);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Cu)->link_buttons);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Bu)->link_status);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Bu)->link_status);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2Au)->players_other_side);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2Au)->players_other_side);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x29u)->players_this_side);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x29u)->players_this_side);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x28u)->game_over);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x28u)->game_over);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x27u)->race_order_4_7 >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x27u)->race_order_4_7 >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x26u)->race_order_4_7 >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x26u)->race_order_4_7 >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x25u)->race_order_4_7 >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x25u)->race_order_4_7 >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x24u)->race_order_4_7);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x24u)->race_order_4_7);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x23u)->race_order_3);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x23u)->race_order_3);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x22u)->race_order_2);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x22u)->race_order_2);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x21u)->race_order_1);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x21u)->race_order_1);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x20u)->race_order);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x20u)->race_order);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x1Fu)->racer_count);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x1Fu)->racer_count);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x1Eu)->entrant);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x1Eu)->entrant);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x1Du)->entry_serial);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x1Du)->entry_serial);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x1Cu)->entry_serial_seen);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x1Cu)->entry_serial_seen);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x1Bu)->entry_frames >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x1Bu)->entry_frames >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x1Au)->entry_frames);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x1Au)->entry_frames);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x19u)->entry_request);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x19u)->entry_request);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x18u)->record_course);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x18u)->record_course);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x17u)->finish_time >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x17u)->finish_time >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x16u)->finish_time);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x16u)->finish_time);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x15u)->record_name_rest >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x15u)->record_name_rest >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0x14u)->record_name_rest);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0x14u)->record_name_rest);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x13u)->record_name);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x13u)->record_name);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x12u)->record_model);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x12u)->record_model);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x11u)->record_serial);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x11u)->record_serial);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0x10u)->master_time_difficulty_2_5 >> 24u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0x10u)->master_time_difficulty_2_5 >> 24u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0xFu)->master_time_difficulty_2_5 >> 16u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0xFu)->master_time_difficulty_2_5 >> 16u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)(RACE(race - 0xEu)->master_time_difficulty_2_5 >> 8u));
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)(RACE(race - 0xEu)->master_time_difficulty_2_5 >> 8u));
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0xDu)->master_time_difficulty_2_5);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0xDu)->master_time_difficulty_2_5);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0xCu)->unk_0C);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0xCu)->unk_0C);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, (uint8_t)RACE(race - 0xBu)->master_time_difficulty_0);
+			board_records -= 2u;
+			mem_write16(board_records, (uint8_t)RACE(race - 0xBu)->master_time_difficulty_0);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0xAu)->master_game_difficulty);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0xAu)->master_game_difficulty);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x9u)->master_free_play);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x9u)->master_free_play);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x8u)->master_coin_setting);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x8u)->master_coin_setting);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x7u)->master_bonus_adder);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x7u)->master_bonus_adder);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x6u)->master_first_chute_multiplier);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x6u)->master_first_chute_multiplier);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x5u)->master_coins_per_credit);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x5u)->master_coins_per_credit);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x4u)->master_steering_wheel_reaction);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x4u)->master_steering_wheel_reaction);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x3u)->master_advertise_sound);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x3u)->master_advertise_sound);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x2u)->car_number);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x2u)->car_number);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race - 0x1u)->player);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race - 0x1u)->player);
 			race--;
-			r11 -= 2u;
-			mem_write16(r11, RACE(race)->machine);
-			r1--;
-		} while (r1 != 0u);
+			board_records -= 2u;
+			mem_write16(board_records, RACE(race)->machine);
+			record_count--;
+		} while (record_count != 0u);
 		mem_write8(0x800006u, 0xFFu);
 	}
 }
@@ -1485,74 +1485,74 @@ void link_send_records(void)
    offsets (20, 24) and set fields 30 and 32 to where it lands and 3C to the road's depth layer there,
    some draw it at the screen position in 30 and 32, some copy a ready sprite entry from the address in
    field 38; then links it into the depth list of layer 3C (screen + 5000). */
-uint32_t draw_object(uint32_t r0)
+uint32_t draw_object(uint32_t routine_then_layer)
 {
-	uint32_t r2 = 0, r10 = 0, r11 = 0, left_caller = 0;
+	uint32_t depth_list = 0, layer_head = 0, left_caller = 0, sprite_entry = 0;
 
 	if ((OBJECT(current_object)->flags & 2u) != 0u)
-		return r0;
-	r0 = draw_object_mode_jumps[OBJECT(current_object)->draw_mode];
-	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
-	if (SCREEN(screen)->sprite_list_limit <= r10)
-		return r0;
+		return routine_then_layer;
+	routine_then_layer = draw_object_mode_jumps[OBJECT(current_object)->draw_mode];
+	sprite_entry = SCREEN(screen)->sprite_list_last + 0x10u;
+	if (SCREEN(screen)->sprite_list_limit <= sprite_entry)
+		return routine_then_layer;
 	left_caller = 0u;
-	switch (r0)
+	switch (routine_then_layer)
 	{
 	case 0x00EF32u:
-		draw_object_on_screen(&r0, &r10);
+		draw_object_on_screen(&routine_then_layer, &sprite_entry);
 		break;
 	case 0x00F104u:
-		r10 = draw_object_entry(r10);
+		sprite_entry = draw_object_entry(sprite_entry);
 		break;
 	case 0x00EB74u:
-		draw_object_between_segments(&r0, &r10, &left_caller);
+		draw_object_between_segments(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00EEBFu:
-		draw_object_at_car_window_segment_on_road(&r0, &r10, &left_caller);
+		draw_object_at_car_window_segment_on_road(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00EE37u:
-		draw_object_at_car_window_segment(&r0, &r10, &left_caller);
+		draw_object_at_car_window_segment(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00EC1Bu:
-		draw_object_from_road_edge(&r0, &r10, &left_caller);
+		draw_object_from_road_edge(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00F126u:
-		r10 = draw_object_command(r10);
+		sprite_entry = draw_object_command(sprite_entry);
 		break;
 	case 0x00ECCDu:
-		draw_object_from_road_edge_unshifted(&r0, &r10, &left_caller);
+		draw_object_from_road_edge_unshifted(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00F04Eu:
-		draw_object_one_piece(&r0, &r10);
+		draw_object_one_piece(&routine_then_layer, &sprite_entry);
 		break;
 	case 0x00EE75u:
-		draw_object_at_segment(&r0, &r10, &left_caller);
+		draw_object_at_segment(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	case 0x00F15Cu:
-		draw_object_smoothed(&r0, &r10);
+		draw_object_smoothed(&routine_then_layer, &sprite_entry);
 		break;
 	case 0x00ED82u:
-		draw_object_from_road_edge_doubled(&r0, &r10, &left_caller);
+		draw_object_from_road_edge_doubled(&routine_then_layer, &sprite_entry, &left_caller);
 		break;
 	default:
-		invalid_jump(r0);
+		invalid_jump(routine_then_layer);
 	}
 	if (left_caller != 0u)
-		return r0;
-	r0 = OBJECT(current_object)->depth_layer;
-	r11 = screen + 0x5000u + r0 * 4u;
-	if (mem_read16(r11) == 0u)
-		mem_write16(r11 + 2u, r10);
+		return routine_then_layer;
+	routine_then_layer = OBJECT(current_object)->depth_layer;
+	depth_list = screen + 0x5000u + routine_then_layer * 4u;
+	if (mem_read16(depth_list) == 0u)
+		mem_write16(depth_list + 2u, sprite_entry);
 	r12 = SCREEN(screen)->sprite_list_last + 0x10u;
-	r2 = mem_read16(r11);
-	mem_write32(r10, r2);
-	mem_write32(r10 + 0x3000u, (uint16_t)(r2 + 0x300u));
-	SCREEN(screen)->sprite_list_last = r10;
+	layer_head = mem_read16(depth_list);
+	mem_write32(sprite_entry, layer_head);
+	mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
+	SCREEN(screen)->sprite_list_last = sprite_entry;
 	r12 = r12 >> 4;
 	r12 = (r12 & ~0xFFFFu) | (uint16_t)(r12 | 0x8000u);
-	mem_write16(r11, r12);
+	mem_write16(depth_list, r12);
 	SCREEN(screen)->sprite_groups++;
-	return r0;
+	return routine_then_layer;
 }
 
 /* Draw mode 2: the object between the road's segment at its position (field 1C, counted from the view
@@ -1560,325 +1560,325 @@ uint32_t draw_object(uint32_t r0)
    up by fields 20 and 24 scaled by each segment's scale (draw_object_at_scale). Its size, meant as the
    two segments' scales by the fraction, multiplies them by the second point's offsets instead (R4 and R5
    used twice): a slip in the game's code; nothing in the scenarios draws with it. */
-void draw_object_between_segments(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_between_segments(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r11 = 0, position = 0, position_fraction = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint32_t near_weight = 0, next_scale = 0, next_x = 0, next_y = 0, position = 0, position_fraction = 0, projected_offset = 0, projected_segment = 0, scale = 0, x = 0, y = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (uint16_t)(r0 + 0x10u);
-			r12 = screen + 0x3000u + r0;
-			r3 = (int16_t)mem_read16(r12);
-			if (r3 != 0u)
+			projected_offset = (uint16_t)(projected_offset + 0x10u);
+			r12 = screen + 0x3000u + projected_offset;
+			next_scale = (int16_t)mem_read16(r12);
+			if (next_scale != 0u)
 			{
-				r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
-				r1 = (int32_t)(OBJECT(current_object)->y_offset * r2) >> 12;
-				r4 = (int32_t)(OBJECT(current_object)->x_offset * r3) >> 12;
-				r5 = (int32_t)(OBJECT(current_object)->y_offset * r3) >> 12;
+				x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
+				y = (int32_t)(OBJECT(current_object)->y_offset * scale) >> 12;
+				next_x = (int32_t)(OBJECT(current_object)->x_offset * next_scale) >> 12;
+				next_y = (int32_t)(OBJECT(current_object)->y_offset * next_scale) >> 12;
 				position_fraction = OBJECT(current_object)->position_fraction;
-				r6 = (uint16_t)(0x80u - position_fraction);
-				r4 = ((r4 & ~0xFFFFu) | (uint16_t)(r4 + mem_read16(r12 + 4u))) * position_fraction;
-				r0 = (int32_t)(((r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u))) * r6 + r4) >> 7;
-				r5 = ((r5 & ~0xFFFFu) | (uint16_t)(r5 + mem_read16(r12 + 6u))) * position_fraction;
-				r1 = (int32_t)(((r1 & ~0xFFFFu) | (uint16_t)(r1 + mem_read16(r11 + 6u))) * r6 + r5) >> 7;
-				r2 = (r2 * r4 + r3 * r5) >> 7;
-				draw_object_at_scale((uint16_t)r1, r2, r11, &r0, p_r10, p_left_caller);
-				*p_r0 = r0;
+				near_weight = (uint16_t)(0x80u - position_fraction);
+				next_x = ((next_x & ~0xFFFFu) | (uint16_t)(next_x + mem_read16(r12 + 4u))) * position_fraction;
+				x = (int32_t)(((x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u))) * near_weight + next_x) >> 7;
+				next_y = ((next_y & ~0xFFFFu) | (uint16_t)(next_y + mem_read16(r12 + 6u))) * position_fraction;
+				y = (int32_t)(((y & ~0xFFFFu) | (uint16_t)(y + mem_read16(projected_segment + 6u))) * near_weight + next_y) >> 7;
+				scale = (scale * next_x + next_scale * next_y) >> 7;
+				draw_object_at_scale((uint16_t)y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+				*p_leftover = x;
 				return;
 			}
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode 5: the object on the road's surface between its segment (field 1C) and the next by the
    fraction in field 28, across at field 20 from the road's edge on side field 3F (the segment's half
    width times the side), its size the two segments' scales by the fraction shifted by scale_shift
    (draw_object_at_shifted_scale). */
-void draw_object_from_road_edge(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t near_weight = 0, next_scale = 0, position = 0, position_fraction = 0, projected_offset = 0, projected_segment = 0, ring_offset = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
-	r1 = position;
+	ring_offset = position;
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = (int16_t)mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = (int16_t)mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (uint16_t)(r0 + 0x10u);
-			r12 = screen + 0x3000u + r0;
-			r3 = (int16_t)mem_read16(r12);
-			if (r3 != 0u)
+			projected_offset = (uint16_t)(projected_offset + 0x10u);
+			r12 = screen + 0x3000u + projected_offset;
+			next_scale = (int16_t)mem_read16(r12);
+			if (next_scale != 0u)
 			{
-				r1 = (uint16_t)(r1 << 5);
+				ring_offset = (uint16_t)(ring_offset << 5);
 				position_fraction = OBJECT(current_object)->position_fraction;
-				r4 = (uint16_t)(0x80u - position_fraction);
-				r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
-				r2 = (r2 * r4 + r3 * position_fraction) >> 7;
-				draw_object_at_shifted_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-				*p_r0 = r0;
+				near_weight = (uint16_t)(0x80u - position_fraction);
+				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				scale = (scale * near_weight + next_scale * position_fraction) >> 7;
+				draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+				*p_leftover = x;
 				return;
 			}
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode 7: as draw_object_from_road_edge, at the size of scale_shift 0 whatever the object's. */
-void draw_object_from_road_edge_unshifted(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t near_weight = 0, next_scale = 0, position = 0, position_fraction = 0, projected_offset = 0, projected_segment = 0, ring_offset = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
-	r1 = position;
+	ring_offset = position;
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = (int16_t)mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = (int16_t)mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (uint16_t)(r0 + 0x10u);
-			r12 = screen + 0x3000u + r0;
-			r3 = (int16_t)mem_read16(r12);
-			if (r3 != 0u)
+			projected_offset = (uint16_t)(projected_offset + 0x10u);
+			r12 = screen + 0x3000u + projected_offset;
+			next_scale = (int16_t)mem_read16(r12);
+			if (next_scale != 0u)
 			{
-				r1 = (uint16_t)(r1 << 5);
+				ring_offset = (uint16_t)(ring_offset << 5);
 				position_fraction = OBJECT(current_object)->position_fraction;
-				r4 = (uint16_t)(0x80u - position_fraction);
-				r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
-				r2 = (int32_t)(r2 * r4 + r3 * position_fraction) >> 11;
-				draw_object_at_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-				*p_r0 = r0;
+				near_weight = (uint16_t)(0x80u - position_fraction);
+				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 11;
+				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+				*p_leftover = x;
 				return;
 			}
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode B (the traffic cars'): as draw_object_from_road_edge, at twice the size of
    draw_object_from_road_edge_unshifted (scale_shift 1) whatever the object's. */
-void draw_object_from_road_edge_doubled(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1_2 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, position = 0, position_fraction = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t near_weight = 0, next_scale = 0, position = 0, position_fraction = 0, projected_offset = 0, projected_segment = 0, ring_offset = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
-	r1 = position;
+	ring_offset = position;
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = (int16_t)mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = (int16_t)mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (uint16_t)(r0 + 0x10u);
-			r12 = screen + 0x3000u + r0;
-			r3 = (int16_t)mem_read16(r12);
-			if (r3 != 0u)
+			projected_offset = (uint16_t)(projected_offset + 0x10u);
+			r12 = screen + 0x3000u + projected_offset;
+			next_scale = (int16_t)mem_read16(r12);
+			if (next_scale != 0u)
 			{
-				r1 = (uint16_t)(r1 << 5);
+				ring_offset = (uint16_t)(ring_offset << 5);
 				position_fraction = OBJECT(current_object)->position_fraction;
-				r4 = (uint16_t)(0x80u - position_fraction);
-				r0 = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (r1 & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				r0 = (int32_t)((int16_t)(((int32_t)(r0 * r2) >> 12) + mem_read16(r11 + 4u)) * r4 + (int16_t)(((int32_t)(r0 * r3) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
-				r1_2 = (uint16_t)((int32_t)((int16_t)mem_read16(r11 + 6u) * r4 + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
-				r2 = (int32_t)(r2 * r4 + r3 * position_fraction) >> 10;
-				draw_object_at_scale(r1_2, r2, r11, &r0, p_r10, p_left_caller);
-				*p_r0 = r0;
+				near_weight = (uint16_t)(0x80u - position_fraction);
+				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
+				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + mem_read16(projected_segment + 4u)) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + mem_read16(r12 + 4u)) * position_fraction) >> 7;
+				y = (uint16_t)((int32_t)((int16_t)mem_read16(projected_segment + 6u) * near_weight + (int16_t)mem_read16(r12 + 6u) * position_fraction) >> 7);
+				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 10;
+				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+				*p_leftover = x;
 				return;
 			}
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode 4: as draw_object_at_segment, but the segment counted from the screen car's own
    window_segment instead of the view drawn (race_copy window_segment). */
-void draw_object_at_car_window_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_car_window_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t position = 0, projected_offset = 0, projected_segment = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = CAR(player_car)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
-			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
-			r1 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r2) >> 12) + mem_read16(r11 + 6u));
-			draw_object_at_segment_scale(r1, r11, &r0, p_r10, p_left_caller);
-			*p_r0 = r0;
+			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
+			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + mem_read16(projected_segment + 6u));
+			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
+			*p_leftover = x;
 			return;
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode 9: the object at the road's segment of its position (field 1C, counted from the view drawn:
    race_copy window_segment), offset across and up by fields 20 and 24 scaled by the segment's scale, its
    size that scale shifted by scale_shift; not drawn when the segment is behind or not projected. */
-void draw_object_at_segment(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t position = 0, projected_offset = 0, projected_segment = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
-			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
-			r1 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r2) >> 12) + mem_read16(r11 + 6u));
-			r2 = shift_by(r2, OBJECT(current_object)->scale_shift, 32) >> 4;
-			draw_object_at_scale(r1, r2, r11, &r0, p_r10, p_left_caller);
-			*p_r0 = r0;
+			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
+			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + mem_read16(projected_segment + 6u));
+			scale = shift_by(scale, OBJECT(current_object)->scale_shift, 32) >> 4;
+			draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+			*p_leftover = x;
 			return;
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draw mode 3: as draw_object_at_car_window_segment, on the road's surface (no up offset). */
-void draw_object_at_car_window_segment_on_road(uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_car_window_segment_on_road(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint16_t r1 = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0, position = 0;
-	uint16_t window_segment = 0, t1 = 0;
+	uint16_t y = 0;
+	uint32_t position = 0, projected_offset = 0, projected_segment = 0, scale = 0, x = 0;
+	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)OBJECT(current_object)->position;
 	window_segment = CAR(player_car)->window_segment;
-	t1 = position;
-	r0 = (uint16_t)(t1 - window_segment);
-	if ((int16_t)window_segment <= (int16_t)t1)
+	segment = position;
+	projected_offset = (uint16_t)(segment - window_segment);
+	if ((int16_t)window_segment <= (int16_t)segment)
 	{
-		r0 = (uint16_t)(r0 * 0x10u);
-		r11 = screen + 0x3000u + r0;
-		r2 = mem_read16(r11);
-		if (r2 != 0u)
+		projected_offset = (uint16_t)(projected_offset * 0x10u);
+		projected_segment = screen + 0x3000u + projected_offset;
+		scale = mem_read16(projected_segment);
+		if (scale != 0u)
 		{
-			r0 = (int32_t)(OBJECT(current_object)->x_offset * r2) >> 12;
-			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + mem_read16(r11 + 4u));
-			r1 = mem_read16(r11 + 6u);
-			draw_object_at_segment_scale(r1, r11, &r0, p_r10, p_left_caller);
-			*p_r0 = r0;
+			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
+			x = (x & ~0xFFFFu) | (uint16_t)(x + mem_read16(projected_segment + 4u));
+			y = mem_read16(projected_segment + 6u);
+			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
+			*p_leftover = x;
 			return;
 		}
 	}
 	*p_left_caller = 1u;
-	*p_r0 = r0;
+	*p_leftover = projected_offset;
 }
 
 /* Draws the object at R0, R1 at the projected segment R11's own scale (draw_object_at_shifted_scale). */
-void draw_object_at_segment_scale(uint16_t r1, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_segment_scale(uint16_t y, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint32_t r0 = *p_r0;
-	uint32_t r2 = 0;
+	uint32_t x = *p_x;
+	uint32_t scale = 0;
 
-	r2 = mem_read16(r11);
-	draw_object_at_shifted_scale(r1, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | (r0 & 0xFFFFu);
+	scale = mem_read16(projected_segment);
+	draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Draws the object at R0, R1 at the scale R2 shifted by its scale_shift (and >> 4)
    (draw_object_at_scale). */
-void draw_object_at_shifted_scale(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint32_t r0 = *p_r0;
+	uint32_t x = *p_x;
 
-	r2 = shift_by(r2, OBJECT(current_object)->scale_shift, 32) >> 4;
-	draw_object_at_scale(r1, r2, r11, &r0, p_r10, p_left_caller);
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | (r0 & 0xFFFFu);
+	scale = shift_by(scale, OBJECT(current_object)->scale_shift, 32) >> 4;
+	draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Places a road object projected at R0, R1 with size R2 (both scales): x and y; off the screen (x beyond
    1A0 or -1A0, y beyond 80 or -160) back to draw_object's caller undrawn; the depth_layer of the
    projected segment R11 (+8), then put_object_sprites. */
-void draw_object_at_scale(uint16_t r1, uint32_t r2, uint32_t r11, uint32_t *p_r0, uint32_t *p_r10, uint32_t *p_left_caller)
+void draw_object_at_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
-	uint32_t r0 = *p_r0;
-	uint32_t r3 = 0;
+	uint32_t x = *p_x;
+	uint32_t width_scale = 0;
 
-	OBJECT(current_object)->x = r0;
-	OBJECT(current_object)->y = r1;
-	if ((int16_t)r0 > 0x1A0 || (int16_t)r0 < -0x1A0 || (int16_t)r1 > 0x80 || (int16_t)r1 < -0x160)
+	OBJECT(current_object)->x = x;
+	OBJECT(current_object)->y = y;
+	if ((int16_t)x > 0x1A0 || (int16_t)x < -0x1A0 || (int16_t)y > 0x80 || (int16_t)y < -0x160)
 		*p_left_caller = 1u;
 	else
 	{
-		r3 = r2;
-		OBJECT(current_object)->depth_layer = mem_read16(r11 + 8u);
-		put_object_sprites(r1, r2, r3, &r0, p_r10);
+		width_scale = scale;
+		OBJECT(current_object)->depth_layer = mem_read16(projected_segment + 8u);
+		put_object_sprites(y, scale, width_scale, &x, p_sprite_entry);
 	}
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | (r0 & 0xFFFFu);
+	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Draw mode 0: the object at x, y on the screen, less the screen's scroll (screen sprite_origin_x,
    unk_16), at its width_scale and height_scale (put_object_sprites). */
-void draw_object_on_screen(uint32_t *p_r0, uint32_t *p_r10)
+void draw_object_on_screen(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 {
-	uint16_t r1 = 0;
-	uint32_t r0 = 0, height_scale = 0, width_scale = 0;
+	uint16_t y = 0;
+	uint32_t height_scale = 0, width_scale = 0, x = 0;
 
-	r0 = (uint16_t)(OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x);
-	r1 = (uint16_t)(OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y);
+	x = (uint16_t)(OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x);
+	y = (uint16_t)(OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y);
 	height_scale = OBJECT(current_object)->height_scale;
 	width_scale = OBJECT(current_object)->width_scale;
-	put_object_sprites(r1, height_scale, width_scale, &r0, p_r10);
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | (r0 & 0xFFFFu);
+	put_object_sprites(y, height_scale, width_scale, &x, p_sprite_entry);
+	*p_leftover = (*p_leftover & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Writes the object's frame (animation, frame) into the screen's sprite list at R10 and its copy at +
@@ -1886,169 +1886,169 @@ void draw_object_on_screen(uint32_t *p_r0, uint32_t *p_r10)
    0x122B74 by size_step scaled by R2 (height) and R3 (width), placed at R0, R1 plus its offsets scaled
    the same way (signs flipped by the flags: sprite_flip_x_signs, sprite_flip_y_signs), its palette word
    from sprite_palettes by palette; R10 past them. */
-void put_object_sprites(uint16_t r1, uint32_t r2, uint32_t r3, uint32_t *p_r0, uint32_t *p_r10)
+void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale, uint32_t *p_x, uint32_t *p_sprite_entry)
 {
-	uint16_t r0 = (uint16_t)*p_r0;
-	uint32_t r10 = *p_r10;
-	uint16_t r0_2 = 0, r1_2 = 0, r2_2 = 0, r3_2 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r19 = 0;
-	uint32_t r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r26 = 0;
+	uint16_t x = (uint16_t)*p_x;
+	uint32_t sprite_entry = *p_sprite_entry;
+	uint16_t attributes = 0, flip_bits = 0, frame_x = 0, frame_y = 0, sprite_height = 0, sprite_palette_word = 0, sprite_rom_offset = 0, sprite_source_size = 0, sprite_width = 0, sprite_x = 0, sprite_y = 0;
+	uint32_t flip_index = 0, frame_height_scale = 0, frame_width_scale = 0, palette_words = 0, piece_count = 0, signed_height_scale = 0, signed_width_scale = 0, size_step_offset = 0;
 	uint16_t source_size = 0, rom_offset = 0, palette_word = 0, height = 0, height_bits = 0, width = 0, width_bits = 0;
 
-	r8 = (uint16_t)r0;
-	r9 = (uint16_t)r1;
-	r16 = r2;
-	r15 = r3;
+	frame_x = (uint16_t)x;
+	frame_y = (uint16_t)y;
+	frame_height_scale = height_scale;
+	frame_width_scale = width_scale;
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame];
-	r13 = sprite_palettes[OBJECT(current_object)->palette];
-	r19 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
-	r26 = r19;
-	r26 = r26 >> 5;
-	r17 = r15 * sprite_flip_x_signs[r26];
-	r18 = r16 * sprite_flip_y_signs[r26];
-	r11 = SPRITE_FRAME(r12)->piece_count;
+	palette_words = sprite_palettes[OBJECT(current_object)->palette];
+	flip_bits = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
+	flip_index = flip_bits;
+	flip_index = flip_index >> 5;
+	signed_width_scale = frame_width_scale * sprite_flip_x_signs[flip_index];
+	signed_height_scale = frame_height_scale * sprite_flip_y_signs[flip_index];
+	piece_count = SPRITE_FRAME(r12)->piece_count;
 	r12 = r12 + 2u;
 	do
 	{
-		r0_2 = SPRITE_PIECE(r12)->attributes ^ r19;
-		r26 = OBJECT(current_object)->size_step * 3u;
+		attributes = SPRITE_PIECE(r12)->attributes ^ flip_bits;
+		size_step_offset = OBJECT(current_object)->size_step * 3u;
 		r12 = r12 + 2u;
-		r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+		r14 = sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
 		source_size = SPRITE_SIZE_STEP(r14)->source_size;
 		r14 = r14 + 2u;
-		r1_2 = source_size;
+		sprite_source_size = source_size;
 		rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 		r14 = r14 + 2u;
-		r6 = rom_offset;
-		palette_word = SPRITE_PALETTE_WORDS(r13)[0];
-		r13 += 2u;
-		r7 = palette_word;
+		sprite_rom_offset = rom_offset;
+		palette_word = SPRITE_PALETTE_WORDS(palette_words)[0];
+		palette_words += 2u;
+		sprite_palette_word = palette_word;
 		height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 		r14 = r14 + 2u;
 		height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 		r14 = r14 + 2u;
-		r2_2 = (((height * r16) >> 8) & 0x3FFu) | height_bits;
+		sprite_height = (((height * frame_height_scale) >> 8) & 0x3FFu) | height_bits;
 		width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 		r14 = r14 + 2u;
 		width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 		r14 = r14 + 2u;
-		r3_2 = (((width * r15) >> 8) & 0x3FFu) | width_bits | SCREEN(screen)->sprite_screen_bit;
+		sprite_width = (((width * frame_width_scale) >> 8) & 0x3FFu) | width_bits | SCREEN(screen)->sprite_screen_bit;
 		r12 = r12 + 2u;
-		r4 = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset * r18) >> 8) + r9);
+		sprite_y = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset * signed_height_scale) >> 8) + frame_y);
 		r12 = r12 + 2u;
-		r5 = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset * r17) >> 8) + r8);
-		mem_write16(r10 + 0x3000u, r0_2);
-		mem_write16(r10, r0_2);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r1_2);
-		mem_write16(r10, r1_2);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r2_2);
-		mem_write16(r10, r2_2);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r3_2);
-		mem_write16(r10, r3_2);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r4);
-		mem_write16(r10, r4);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r5);
-		mem_write16(r10, r5);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r6);
-		mem_write16(r10, r6);
-		r10 += 2u;
-		mem_write16(r10 + 0x3000u, r7);
-		mem_write16(r10, r7);
-		r10 += 2u;
-		r11--;
+		sprite_x = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset * signed_width_scale) >> 8) + frame_x);
+		mem_write16(sprite_entry + 0x3000u, attributes);
+		mem_write16(sprite_entry, attributes);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_source_size);
+		mem_write16(sprite_entry, sprite_source_size);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_height);
+		mem_write16(sprite_entry, sprite_height);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_width);
+		mem_write16(sprite_entry, sprite_width);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_y);
+		mem_write16(sprite_entry, sprite_y);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_x);
+		mem_write16(sprite_entry, sprite_x);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_rom_offset);
+		mem_write16(sprite_entry, sprite_rom_offset);
+		sprite_entry += 2u;
+		mem_write16(sprite_entry + 0x3000u, sprite_palette_word);
+		mem_write16(sprite_entry, sprite_palette_word);
+		sprite_entry += 2u;
+		piece_count--;
 		r12 = r12 + 2u;
-	} while (r11 != 0u);
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | r0_2;
-	*p_r10 = r10;
+	} while (piece_count != 0u);
+	*p_x = (*p_x & 0xFFFF0000u) | attributes;
+	*p_sprite_entry = sprite_entry;
 }
 
 /* Draw mode 8: the first piece of the animation's frame at its own size (no zoom, no flip), at x, y on
    the screen (less sprite_origin_x, sprite_origin_y), with the first word of its palette
    (sprite_palettes), into the sprite list and its halfway copy alike. */
-void draw_object_one_piece(uint32_t *p_r0, uint32_t *p_r10)
+void draw_object_one_piece(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 {
-	uint32_t r10 = *p_r10;
-	uint16_t r2 = 0, r3 = 0, r4 = 0, r5 = 0, attributes = 0, palette_word = 0, rom_offset = 0, source_size = 0;
-	uint32_t r26 = 0;
+	uint32_t sprite_entry = *p_sprite_entry;
+	uint16_t attributes = 0, palette_word = 0, rom_offset = 0, source_size = 0, sprite_height = 0, sprite_width = 0, sprite_x = 0, sprite_y = 0;
+	uint32_t size_step_offset = 0;
 
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
 	attributes = SPRITE_PIECE(r12)->attributes;
-	r26 = OBJECT(current_object)->size_step * 3u;
+	size_step_offset = OBJECT(current_object)->size_step * 3u;
 	r12 = r12 + 2u;
-	r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+	r14 = sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
 	source_size = SPRITE_SIZE_STEP(r14)->source_size;
 	r14 = r14 + 2u;
 	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 	palette_word = SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0];
 	r14 = r14 + 2u;
-	r2 = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
+	sprite_height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 	r14 = r14 + 2u;
-	r2 |= SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
+	sprite_height |= SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 	r14 = r14 + 2u;
-	r3 = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
+	sprite_width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 	r14 = r14 + 2u;
-	r3 = r3 | SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits | SCREEN(screen)->sprite_screen_bit;
+	sprite_width = sprite_width | SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits | SCREEN(screen)->sprite_screen_bit;
 	r12 = r12 + 2u;
-	r4 = (uint16_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset + (OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y));
+	sprite_y = (uint16_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset + (OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y));
 	r12 = r12 + 2u;
-	r5 = (uint16_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset + (OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x));
-	mem_write16(r10 + 0x3000u, attributes);
-	mem_write16(r10, attributes);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, source_size);
-	mem_write16(r10, source_size);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r2);
-	mem_write16(r10, r2);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r3);
-	mem_write16(r10, r3);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r4);
-	mem_write16(r10, r4);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, r5);
-	mem_write16(r10, r5);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, rom_offset);
-	mem_write16(r10, rom_offset);
-	r10 += 2u;
-	mem_write16(r10 + 0x3000u, palette_word);
-	mem_write16(r10, palette_word);
-	r10 += 2u;
+	sprite_x = (uint16_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset + (OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x));
+	mem_write16(sprite_entry + 0x3000u, attributes);
+	mem_write16(sprite_entry, attributes);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, source_size);
+	mem_write16(sprite_entry, source_size);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, sprite_height);
+	mem_write16(sprite_entry, sprite_height);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, sprite_width);
+	mem_write16(sprite_entry, sprite_width);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, sprite_y);
+	mem_write16(sprite_entry, sprite_y);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, sprite_x);
+	mem_write16(sprite_entry, sprite_x);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, rom_offset);
+	mem_write16(sprite_entry, rom_offset);
+	sprite_entry += 2u;
+	mem_write16(sprite_entry + 0x3000u, palette_word);
+	mem_write16(sprite_entry, palette_word);
+	sprite_entry += 2u;
 	r12 = r12 + 2u;
 	r14 = r14 + 2u;
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | attributes;
-	*p_r10 = r10;
+	*p_leftover = (*p_leftover & 0xFFFF0000u) | attributes;
+	*p_sprite_entry = sprite_entry;
 }
 
 /* Draw mode 1: copies a ready 16-byte sprite entry, from the address in fields 38-3B (animation and
    palette read as one 32-bit address), into the sprite list and its halfway copy, with the screen's bit
    in its fourth word (sprite_screen_bit). Not run in the scenarios. */
-uint32_t draw_object_entry(uint32_t r10)
+uint32_t draw_object_entry(uint32_t sprite_entry)
 {
-	move_halfwords(r10, (OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u);
-	move_string((OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
-	mem_write16(r10 + 6u, mem_read16(r10 + 6u) | SCREEN(screen)->sprite_screen_bit);
-	mem_write16(r10 + 0x3006u, mem_read16(r10 + 0x3006u) | SCREEN(screen)->sprite_screen_bit);
-	r10 += 0x10u;
-	return r10;
+	move_halfwords(sprite_entry, (OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u);
+	move_string((OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u, sprite_entry + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
+	mem_write16(sprite_entry + 6u, mem_read16(sprite_entry + 6u) | SCREEN(screen)->sprite_screen_bit);
+	mem_write16(sprite_entry + 0x3006u, mem_read16(sprite_entry + 0x3006u) | SCREEN(screen)->sprite_screen_bit);
+	sprite_entry += 0x10u;
+	return sprite_entry;
 }
 
 /* Draw mode 6: copies a ready 16-byte entry from the address in fields 38-3B into the sprite list and
    its halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's
    clip. */
-uint32_t draw_object_command(uint32_t r10)
+uint32_t draw_object_command(uint32_t sprite_entry)
 {
-	move_halfwords(r10, (OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u);
-	move_string((OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u, r10 + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
-	r10 += 0x10u;
-	return r10;
+	move_halfwords(sprite_entry, (OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u);
+	move_string((OBJECT(current_object)->animation | ((uint32_t)OBJECT(current_object)->palette << 16u)), 8u, sprite_entry + 0x3000u, 8u, 2u, 0u, 0u, 0u, &r27, &r28);
+	sprite_entry += 0x10u;
+	return sprite_entry;
 }
 
 /* Draw mode A: every piece of the animation's frame at x, y on the screen (less sprite_origin_x,
@@ -2058,18 +2058,18 @@ uint32_t draw_object_command(uint32_t r10)
    frame's, kept in the ring of sprite places (next_sprite_place, 16 bytes a record; the object's field
    50 points at its record) when flags bit 5 says it was drawn the frame before. Keeps this frame's
    values in a new record and sets flags bit 5. */
-void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
+void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 {
-	uint32_t r10 = *p_r10;
-	uint16_t r4 = 0, r9 = 0, r15 = 0, r16 = 0, r19 = 0, r26_2 = 0, sprite_screen_bit = 0;
-	uint32_t r0 = 0, r1 = 0, r5 = 0, r6 = 0, r7 = 0, r11 = 0, r13 = 0, r15_2 = 0, r18 = 0, r26 = 0, height_scale = 0, width_scale = 0;
+	uint32_t sprite_entry = *p_sprite_entry;
+	uint16_t flip_bits = 0, halfway_width = 0, halfway_x = 0, piece_height_bits = 0, piece_width_bits = 0, sprite_rom_offset = 0, sprite_screen_bit = 0, sprite_source_size = 0;
+	uint32_t copy_entry = 0, flip_index = 0, halfway_height_scale = 0, halfway_width_scale = 0, halfway_y = 0, height_scale = 0, offset_sign = 0, offset_x = 0, offset_y = 0, palette_words = 0, piece_height = 0, piece_width = 0, size_step_offset = 0, width_scale = 0, x = 0, y = 0;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, palette_word = 0;
 	uint32_t flags = 0, flags_long = 0;
 
 	r28 = OBJECT(current_object)->previous_place;
 	r27 = SCREEN(screen)->next_sprite_place;
-	r0 = (uint32_t)(int16_t)OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x;
-	r1 = (uint32_t)(int16_t)OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y;
+	x = (uint32_t)(int16_t)OBJECT(current_object)->x - SCREEN(screen)->sprite_origin_x;
+	y = (uint32_t)(int16_t)OBJECT(current_object)->y - SCREEN(screen)->sprite_origin_y;
 	width_scale = OBJECT(current_object)->width_scale;
 	height_scale = OBJECT(current_object)->height_scale;
 	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
@@ -2079,170 +2079,170 @@ void draw_object_smoothed(uint32_t *p_r0, uint32_t *p_r10)
 	OBJECT(current_object)->unk_02 = (uint16_t)(flags_long >> 16u);
 	if ((flags & 0x20u) == 0u)
 	{
-		r4 = (uint16_t)r0;
-		r5 = r1;
-		r6 = width_scale;
-		r7 = height_scale;
+		halfway_x = (uint16_t)x;
+		halfway_y = y;
+		halfway_width_scale = width_scale;
+		halfway_height_scale = height_scale;
 	}
 	else
 	{
-		r7 = mem_read16(r28);
+		halfway_height_scale = mem_read16(r28);
 		r28 = r28 + 2u;
-		r6 = mem_read16(r28);
+		halfway_width_scale = mem_read16(r28);
 		r28 = r28 + 2u;
-		r5 = (int16_t)mem_read16(r28);
+		halfway_y = (int16_t)mem_read16(r28);
 		r28 = r28 + 2u;
-		r4 = (uint16_t)((int32_t)((int16_t)mem_read16(r28) + r0) >> 1);
-		r5 = (int32_t)(r5 + r1) >> 1;
-		r6 = (r6 + width_scale) >> 1;
-		r7 = (r7 + height_scale) >> 1;
+		halfway_x = (uint16_t)((int32_t)((int16_t)mem_read16(r28) + x) >> 1);
+		halfway_y = (int32_t)(halfway_y + y) >> 1;
+		halfway_width_scale = (halfway_width_scale + width_scale) >> 1;
+		halfway_height_scale = (halfway_height_scale + height_scale) >> 1;
 	}
 	OBJECT(current_object)->previous_place = r27;
 	mem_write16(r27, height_scale);
 	r27 = r27 + 2u;
 	mem_write16(r27, width_scale);
 	r27 = r27 + 2u;
-	mem_write16(r27, r1);
+	mem_write16(r27, y);
 	r27 = r27 + 2u;
-	mem_write16(r27, r0);
+	mem_write16(r27, x);
 	r27 = r27 + 2u;
 	r27 = r27 + 8u;
 	r27 = (r27 & ~0xFFFFu) | (r27 & 0xEFFFu);
 	SCREEN(screen)->next_sprite_place = r27;
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame];
-	r13 = sprite_palettes[OBJECT(current_object)->palette];
-	r19 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
-	r26 = r19;
-	r18 = smoothed_flip_signs[r26 >> 5];
+	palette_words = sprite_palettes[OBJECT(current_object)->palette];
+	flip_bits = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
+	flip_index = flip_bits;
+	offset_sign = smoothed_flip_signs[flip_index >> 5];
 	r28 = SPRITE_FRAME(r12)->piece_count;
-	r11 = r10 + 0x3000u;
+	copy_entry = sprite_entry + 0x3000u;
 	r12 = r12 + 2u;
 	do
 	{
 		r27 = (r27 & ~0xFFFFu) | SPRITE_PIECE(r12)->attributes;
-		r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 ^ r19);
-		mem_write16(r10, r27);
-		r10 += 2u;
-		mem_write16(r11, r27);
-		r11 += 2u;
-		r26 = OBJECT(current_object)->size_step * 3u;
+		r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 ^ flip_bits);
+		mem_write16(sprite_entry, r27);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, r27);
+		copy_entry += 2u;
+		size_step_offset = OBJECT(current_object)->size_step * 3u;
 		r12 = r12 + 2u;
-		r14 = 0x122B74u + (uint16_t)(r26 + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
+		r14 = sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(r12 - 0x2u)->sprite) * 4u;
 		source_size = SPRITE_SIZE_STEP(r14)->source_size;
 		r14 = r14 + 2u;
-		r15 = source_size;
-		mem_write16(r10, r15);
-		r10 += 2u;
-		mem_write16(r11, r15);
-		r11 += 2u;
+		sprite_source_size = source_size;
+		mem_write16(sprite_entry, sprite_source_size);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, sprite_source_size);
+		copy_entry += 2u;
 		rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 		r14 = r14 + 2u;
-		r26_2 = rom_offset;
+		sprite_rom_offset = rom_offset;
 		height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
 		r14 = r14 + 2u;
-		r15_2 = height;
+		piece_height = height;
 		height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 		r14 = r14 + 2u;
-		r9 = height_bits;
-		mem_write16(r10, (((r15_2 * height_scale) >> 8) & 0x3FFu) | r9);
-		r10 += 2u;
-		mem_write16(r11, (((r15_2 * r7) >> 8) & 0x3FFu) | r9);
-		r11 += 2u;
+		piece_height_bits = height_bits;
+		mem_write16(sprite_entry, (((piece_height * height_scale) >> 8) & 0x3FFu) | piece_height_bits);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, (((piece_height * halfway_height_scale) >> 8) & 0x3FFu) | piece_height_bits);
+		copy_entry += 2u;
 		width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 		r14 = r14 + 2u;
-		r15_2 = width;
-		r16 = ((r15_2 * r6) >> 8) & 0x3FFu;
+		piece_width = width;
+		halfway_width = ((piece_width * halfway_width_scale) >> 8) & 0x3FFu;
 		width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 		r14 = r14 + 2u;
-		r9 = width_bits;
-		r15_2 = (((r15_2 * width_scale) >> 8) & 0x3FFu) | r9;
-		r16 |= r9;
+		piece_width_bits = width_bits;
+		piece_width = (((piece_width * width_scale) >> 8) & 0x3FFu) | piece_width_bits;
+		halfway_width |= piece_width_bits;
 		sprite_screen_bit = SCREEN(screen)->sprite_screen_bit;
-		mem_write16(r10, r15_2 | sprite_screen_bit);
-		r10 += 2u;
-		mem_write16(r11, r16 | sprite_screen_bit);
-		r11 += 2u;
+		mem_write16(sprite_entry, piece_width | sprite_screen_bit);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, halfway_width | sprite_screen_bit);
+		copy_entry += 2u;
 		r12 = r12 + 2u;
-		r15_2 = SPRITE_PIECE(r12 - 0x4u)->y_offset * r18;
-		mem_write16(r10, ((int32_t)(r15_2 * height_scale) >> 8) + r1);
-		r10 += 2u;
-		mem_write16(r11, ((int32_t)(r15_2 * r7) >> 8) + r5);
-		r11 += 2u;
+		offset_y = SPRITE_PIECE(r12 - 0x4u)->y_offset * offset_sign;
+		mem_write16(sprite_entry, ((int32_t)(offset_y * height_scale) >> 8) + y);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, ((int32_t)(offset_y * halfway_height_scale) >> 8) + halfway_y);
+		copy_entry += 2u;
 		r12 = r12 + 2u;
-		r15_2 = SPRITE_PIECE(r12 - 0x6u)->x_offset * r18;
-		mem_write16(r10, ((int32_t)(r15_2 * width_scale) >> 8) + r0);
-		r10 += 2u;
-		mem_write16(r11, (uint32_t)((int32_t)(r15_2 * r6) >> 8) + r4);
-		r11 += 2u;
-		mem_write16(r10, r26_2);
-		r10 += 2u;
-		mem_write16(r11, r26_2);
-		r11 += 2u;
-		palette_word = SPRITE_PALETTE_WORDS(r13)[0];
-		r13 += 2u;
+		offset_x = SPRITE_PIECE(r12 - 0x6u)->x_offset * offset_sign;
+		mem_write16(sprite_entry, ((int32_t)(offset_x * width_scale) >> 8) + x);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, (uint32_t)((int32_t)(offset_x * halfway_width_scale) >> 8) + halfway_x);
+		copy_entry += 2u;
+		mem_write16(sprite_entry, sprite_rom_offset);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, sprite_rom_offset);
+		copy_entry += 2u;
+		palette_word = SPRITE_PALETTE_WORDS(palette_words)[0];
+		palette_words += 2u;
 		r27 = (r27 & ~0xFFFFu) | palette_word;
-		mem_write16(r10, r27);
-		r10 += 2u;
-		mem_write16(r11, r27);
-		r11 += 2u;
+		mem_write16(sprite_entry, r27);
+		sprite_entry += 2u;
+		mem_write16(copy_entry, r27);
+		copy_entry += 2u;
 		r28 = r28 - 1u;
 		r12 = r12 + 2u;
 	} while (r28 != 0u);
-	*p_r0 = r0;
-	*p_r10 = r10;
+	*p_leftover = x;
+	*p_sprite_entry = sprite_entry;
 }
 
 /* Steps the object's animation: nothing while frame_time is 0; when frame_countdown runs out (back to
    frame_time), the next frame. A frame's entry in the record (32 bits at +4 + frame * 4) is the address
    of its data when positive, else an order: 0 holds the frame before (frame_time 0), -1 goes back to
    frame 0, -2 starts the animation whose number is the next entry. */
-uint32_t animation_advance(uint32_t r7)
+uint32_t animation_advance(uint32_t leftover)
 {
-	uint32_t r7_2 = 0, frame = 0, next_animation = 0, sprite_animation = 0;
+	uint32_t frame = 0, next_animation = 0, order_routine = 0, sprite_animation = 0;
 	uint8_t frame_countdown = 0;
-	uint32_t t1 = 0;
+	uint32_t order = 0;
 
 	if (OBJECT(current_object)->frame_time == 0u)
-		return r7;
+		return leftover;
 	frame_countdown = OBJECT(current_object)->frame_countdown;
 	OBJECT(current_object)->frame_countdown = frame_countdown - 1u;
 	if ((int8_t)frame_countdown > 1)
-		return r7;
+		return leftover;
 	OBJECT(current_object)->frame_countdown = OBJECT(current_object)->frame_time;
 	OBJECT(current_object)->frame++;
 	frame = OBJECT(current_object)->frame;
 	sprite_animation = sprite_animations[OBJECT(current_object)->animation];
 	if (SPRITE_ANIMATION(sprite_animation)->frames[frame] > 0)
-		return r7;
-	t1 = 0u - SPRITE_ANIMATION(sprite_animation)->frames[frame];
-	r7_2 = animation_order_jumps[t1];
-	switch (t1)
+		return leftover;
+	order = 0u - SPRITE_ANIMATION(sprite_animation)->frames[frame];
+	order_routine = animation_order_jumps[order];
+	switch (order)
 	{
 	case 0:
 		OBJECT(current_object)->frame_time = 0u;
 		OBJECT(current_object)->frame--;
-		return r7_2;
+		return order_routine;
 	case 2:
 		next_animation = SPRITE_ANIMATION(sprite_animation)->frames[frame + 1u];
 		animation_start(next_animation);
-		return r7_2;
+		return order_routine;
 	case 1:
 		OBJECT(current_object)->frame = 0u;
-		return r7_2;
+		return order_routine;
 	default:
-		invalid_jump(animation_order_jumps[t1]);
+		invalid_jump(animation_order_jumps[order]);
 	}
 }
 
 /* Starts animation R9 (sprite_animations[R9] is its record) at its first frame: frame_time and
    frame_countdown from the record's first byte, size_step 0, and fields 34 and 36 to 100 (the width and
    height zoom of the screen-position drawing, draw_object_on_screen: 100 the sprite's own size). */
-void animation_start(uint32_t r9)
+void animation_start(uint32_t animation)
 {
 	uint8_t frame_time = 0;
 
-	OBJECT(current_object)->animation = r9;
-	frame_time = SPRITE_ANIMATION(sprite_animations[r9])->frame_time;
+	OBJECT(current_object)->animation = animation;
+	frame_time = SPRITE_ANIMATION(sprite_animations[animation])->frame_time;
 	OBJECT(current_object)->frame_time = frame_time;
 	OBJECT(current_object)->frame_countdown = frame_time;
 	OBJECT(current_object)->size_step = 0u;
@@ -2262,120 +2262,120 @@ void animation_start(uint32_t r9)
    sprite_list_limit) and sprite_groups 0. */
 void finish_sprite_list(void)
 {
-	uint16_t r3 = 0, r4 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r9 = 0, r10 = 0, r11 = 0, sprite_list_switch = 0;
-	uint16_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
+	uint16_t copy_distance = 0, depth_list_size = 0;
+	uint32_t chain_tail = 0, cleared_head = 0, depth_list = 0, empty_head = 0, layer_head = 0, layer_octets = 0, sprite_list_switch = 0, switch_index = 0;
+	uint16_t new_head = 0, new_head_2 = 0, new_head_3 = 0, new_head_4 = 0, new_head_5 = 0, new_head_6 = 0, new_head_7 = 0, new_head_8 = 0;
 
-	r9 = SCREEN(screen)->index;
-	r9 = (uint8_t)(r9 * 2u);
-	r9 = r9 | (uint8_t)sprite_list_buffers;
-	r9 = (uint8_t)(r9 * 2u);
-	sprite_list_switch = sprite_list_switches[r9 | (uint8_t)(sprite_list_buffers >> 8u)];
-	r10 = SPRITE_LIST_SWITCH(sprite_list_switch)->list;
+	switch_index = SCREEN(screen)->index;
+	switch_index = (uint8_t)(switch_index * 2u);
+	switch_index = switch_index | (uint8_t)sprite_list_buffers;
+	switch_index = (uint8_t)(switch_index * 2u);
+	sprite_list_switch = sprite_list_switches[switch_index | (uint8_t)(sprite_list_buffers >> 8u)];
+	chain_tail = SPRITE_LIST_SWITCH(sprite_list_switch)->list;
 	sprite_list_switch += 4u;
 	if (SCREEN(screen)->sprite_groups != 0u)
 	{
-		r11 = screen + 0x5000u;
-		r1 = 0x34u;
-		r0 = 0u;
-		r2 = 0u;
-		r3 = 0x300u;
-		r4 = 4u;
+		depth_list = screen + 0x5000u;
+		layer_octets = 0x34u;
+		empty_head = 0u;
+		cleared_head = 0u;
+		copy_distance = 0x300u;
+		depth_list_size = 4u;
 		do
 		{
-			if (mem_read16(r11) != 0u)
+			if (mem_read16(depth_list) != 0u)
 			{
-				t1 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t1);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t2 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t2);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_2 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_2);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t3 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t3);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_3 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_3);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t4 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t4);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_4 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_4);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t5 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t5);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_5 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_5);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t6 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t6);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_6 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_6);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t7 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t7);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_7 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_7);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			if (mem_read16(r11) != 0u)
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			if (mem_read16(depth_list) != 0u)
 			{
-				t8 = r2;
-				r2 = mem_read16(r11);
-				mem_write16(r11, t8);
-				mem_write32(r10, r2);
-				mem_write32(r10 + 0x3000u, (uint16_t)(r2 + r3));
-				r10 = (r10 & ~0xFFFFu) | mem_read16(r11 + 2u);
-				r2 = r0;
+				new_head_8 = cleared_head;
+				layer_head = mem_read16(depth_list);
+				mem_write16(depth_list, new_head_8);
+				mem_write32(chain_tail, layer_head);
+				mem_write32(chain_tail + 0x3000u, (uint16_t)(layer_head + copy_distance));
+				chain_tail = (chain_tail & ~0xFFFFu) | mem_read16(depth_list + 2u);
+				cleared_head = empty_head;
 			}
-			r11 = (r11 & ~0xFFFFu) | (uint16_t)(r11 + r4);
-			r1--;
-		} while (r1 != 0u);
+			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			layer_octets--;
+		} while (layer_octets != 0u);
 	}
-	mem_write16(r10, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
-	mem_write16(r10 + 0x3000u, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
+	mem_write16(chain_tail, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
+	mem_write16(chain_tail + 0x3000u, SPRITE_LIST_SWITCH(sprite_list_switch - 0x4u)->end_word);
 	sprite_list_switch += 2u;
 	mem_write16(SPRITE_RAM_400020, SPRITE_LIST_SWITCH(sprite_list_switch - 0x6u)->entry_2_jump);
 	sprite_list_switch += 2u;
@@ -2400,44 +2400,44 @@ void finish_sprite_list(void)
    previous_sprites) and the depth list of its road segment (screen + 5000). Sets flags bit 5 and keeps
    where its sprites went in previous_sprites. Used by scenery, fork_sign, animated_scenery,
    flashing_scenery and overhead_scenery (and 01351E). */
-void road_row_draw(uint32_t r7, uint32_t r15)
+void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 {
-	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r6 = 0, r21 = 0, r26 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6_2 = 0, r8 = 0, r9 = 0, r10 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_size_step = 0;
-	uint16_t t1 = 0;
-	uint32_t flags = 0, flags_long = 0, t2 = 0;
+	uint16_t places_mask = 0, previous_word = 0, sprite_width = 0, view_end = 0, x = 0, y = 0;
+	uint32_t attributes_and_size = 0, blank_place = 0, depth_list = 0, first_position = 0, item_count = 0, item_position = 0, items_left = 0, layer_head = 0, palette_word = 0, positions_moved = 0, projected_segment = 0, projected_step = 0, ring_segment = 0, ring_step = 0, size = 0, size_index = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_entry = 0, sprite_size_step = 0, sprite_then_height_bits = 0, window_then_width_bits = 0;
+	uint16_t items_in_view = 0;
+	uint32_t flags = 0, flags_long = 0, previous_first_position = 0;
 
-	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
-	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
-	r2 = RACE(SCREEN(screen)->race_copy)->window_segment;
-	r3 = (uint16_t)(r2 + (SCREEN(screen)->draw_distance >> 7));
+	item_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	item_count = (uint16_t)OBJECT(current_object)->road_row.end_position;
+	window_then_width_bits = RACE(SCREEN(screen)->race_copy)->window_segment;
+	view_end = (uint16_t)(window_then_width_bits + (SCREEN(screen)->draw_distance >> 7));
 	spacing = OBJECT(current_object)->road_row.spacing;
-	if ((int16_t)r1 <= (int16_t)r2)
+	if ((int16_t)item_count <= (int16_t)window_then_width_bits)
 	{
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
 	}
-	if ((int16_t)r3 <= (int16_t)r0)
+	if ((int16_t)view_end <= (int16_t)item_position)
 		return;
-	while ((int16_t)r0 < (int16_t)r2)
+	while ((int16_t)item_position < (int16_t)window_then_width_bits)
 	{
-		r0 = (uint16_t)(r0 + spacing);
+		item_position = (uint16_t)(item_position + spacing);
 	}
-	if ((int16_t)r3 < (int16_t)r1)
-		r1 = r3;
+	if ((int16_t)view_end < (int16_t)item_count)
+		item_count = view_end;
 	first_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
-	OBJECT(current_object)->road_row.first_position = r0;
-	r1 = (uint16_t)(r1 - r0);
-	r1 = (uint16_t)(r1 + spacing);
-	r1 = (uint16_t)(r1 - 1u);
-	t1 = divide_u16(r1, spacing);
-	r1 = t1;
-	if ((int16_t)t1 <= 0)
+	OBJECT(current_object)->road_row.first_position = item_position;
+	item_count = (uint16_t)(item_count - item_position);
+	item_count = (uint16_t)(item_count + spacing);
+	item_count = (uint16_t)(item_count - 1u);
+	items_in_view = divide_u16(item_count, spacing);
+	item_count = items_in_view;
+	if ((int16_t)items_in_view <= 0)
 		return;
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->next_sprite_place;
-	r21 = 0xEFFFu;
+	places_mask = 0xEFFFu;
 	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
 	flags_long = flags | 0x20u;
 	OBJECT(current_object)->flags = (uint8_t)flags_long;
@@ -2446,173 +2446,173 @@ void road_row_draw(uint32_t r7, uint32_t r15)
 	if ((flags & 0x20u) != 0u)
 	{
 		r28 = OBJECT(current_object)->road_row.previous_sprites;
-		t2 = first_position;
-		r3_2 = t2 - r0;
-		if (t2 != r0)
+		previous_first_position = first_position;
+		positions_moved = previous_first_position - item_position;
+		if (previous_first_position != item_position)
 		{
-			r28 = r28 - (divide_s32(r3_2, spacing) << 3);
-			r28 = (r28 & ~0xFFFFu) | (r28 & r21);
+			r28 = r28 - (divide_s32(positions_moved, spacing) << 3);
+			r28 = (r28 & ~0xFFFFu) | (r28 & places_mask);
 		}
 	}
 	OBJECT(current_object)->road_row.previous_sprites = r27;
-	r18 = screen + 0x2000u + ((r0 << 5) & 0xFFFu);
-	r19 = screen + 0x3000u + ((r0 - r2) << 4);
-	r9 = spacing << 4;
-	r8 = spacing << 5;
-	r17 = r1;
+	ring_segment = screen + 0x2000u + ((item_position << 5) & 0xFFFu);
+	projected_segment = screen + 0x3000u + ((item_position - window_then_width_bits) << 4);
+	projected_step = spacing << 4;
+	ring_step = spacing << 5;
+	items_left = item_count;
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
-	r16 = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
-	r0 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
-	r0 = r0 & 0xC0u;
-	r0 = r0 ^ SPRITE_PIECE(r12)->attributes;
+	palette_word = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
+	attributes_and_size = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
+	attributes_and_size = attributes_and_size & 0xC0u;
+	attributes_and_size = attributes_and_size ^ SPRITE_PIECE(r12)->attributes;
 	r12 = r12 + 2u;
-	r1 = SPRITE_PIECE(r12 - 0x2u)->sprite;
-	size_steps = 0x122B74u + r1 * 4u;
-	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
+	sprite_then_height_bits = SPRITE_PIECE(r12 - 0x2u)->sprite;
+	size_steps = sprite_size_steps_ADDRESS + sprite_then_height_bits * 4u;
+	sprite_entry = SCREEN(screen)->sprite_list_last + 0x10u;
 	OBJECT(current_object)->size_step = 0xFFu;
 	r12 = r12 + 2u;
 	for (;;)
 	{
-		r3_2 = mem_read16(r19);
-		if (r3_2 != 0u && r3_2 <= 0x1200u)
+		size = mem_read16(projected_segment);
+		if (size != 0u && size <= 0x1200u)
 		{
-			r6 = (uint16_t)((int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * r3_2) >> 12);
-			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
+			x = (uint16_t)((int32_t)(((uint32_t)mem_read16(ring_segment + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12);
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + mem_read16(projected_segment + 6u));
 			if (OBJECT(current_object)->road_row.screen_centered == 0u)
-				r6 += mem_read16(r19 + 4u);
-			if ((int16_t)r6 > 0x1E0 || (int16_t)r6 < -0x1E0 || (int16_t)r5 > 0x80 || (int16_t)r5 < -0x160)
+				x += mem_read16(projected_segment + 4u);
+			if ((int16_t)x > 0x1E0 || (int16_t)x < -0x1E0 || (int16_t)y > 0x80 || (int16_t)y < -0x160)
 			{
 				mem_write32(r27 + 4u, 0xF800F800u);
-				r18 += r8;
-				r19 += r9;
-				r18 = (r18 & ~0xFFFFu) | (r18 & 0xAFFFu);
+				ring_segment += ring_step;
+				projected_segment += projected_step;
+				ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
 				r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 + 0x10u);
 				r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + 0x10u);
-				r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-				r28 = (r28 & ~0xFFFFu) | (r28 & r21);
-				r17--;
-				if (r17 != 0u)
+				r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+				r28 = (r28 & ~0xFFFFu) | (r28 & places_mask);
+				items_left--;
+				if (items_left != 0u)
 					continue;
-				SCREEN(screen)->sprite_list_last = r10;
+				SCREEN(screen)->sprite_list_last = sprite_entry;
 				break;
 			}
-			r3_2 = shift_by(r3_2, OBJECT(current_object)->scale_shift, 32);
-			r4 = r3_2;
-			if (r4 >= 0x1000u)
-				r4 = 0xFFFu;
-			r4 = r4 >> 5;
+			size = shift_by(size, OBJECT(current_object)->scale_shift, 32);
+			size_index = size;
+			if (size_index >= 0x1000u)
+				size_index = 0xFFFu;
+			size_index = size_index >> 5;
 			size_table = OBJECT(current_object)->road_row.size_table;
-			r3_2 = shift_by(r3_2, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[r4], 32);
-			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[r4];
+			size = shift_by(size, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[size_index], 32);
+			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[size_index];
 			if (sprite_size_step != OBJECT(current_object)->size_step)
 			{
 				OBJECT(current_object)->size_step = sprite_size_step;
 				sprite_size_step = size_steps + sprite_size_step * 3u * 4u;
-				r0 = (r0 & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
+				attributes_and_size = (attributes_and_size & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
 				sprite_size_step += 2u;
-				r7 = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
+				rom_offset_and_palette = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
 				sprite_size_step += 2u;
 				r14 = SPRITE_SIZE_STEP(sprite_size_step - 0x4u)->height;
 				sprite_size_step += 2u;
-				r1 = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
+				sprite_then_height_bits = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
 				sprite_size_step += 2u;
-				r15 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
-				r2 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
-				r7 |= r16;
+				piece_width = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
+				window_then_width_bits = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
+				rom_offset_and_palette |= palette_word;
 			}
-			r4_2 = (uint16_t)((r3_2 * r15) >> 8);
-			r3_2 = ((r3_2 * r14) >> 8) & 0x3FFu;
-			r4_2 &= 0x3FFu;
-			if (SCREEN(screen)->sprite_list_limit <= r10)
+			sprite_width = (uint16_t)((size * piece_width) >> 8);
+			size = ((size * r14) >> 8) & 0x3FFu;
+			sprite_width &= 0x3FFu;
+			if (SCREEN(screen)->sprite_list_limit <= sprite_entry)
 				break;
-			mem_write32(r10 + 0x3000u, r0);
-			mem_write32(r10, r0);
-			mem_write16(r27 + 8u, r7);
-			r10 += 4u;
-			if (mem_read16(r28 + 8u) == (uint16_t)r7)
+			mem_write32(sprite_entry + 0x3000u, attributes_and_size);
+			mem_write32(sprite_entry, attributes_and_size);
+			mem_write16(r27 + 8u, rom_offset_and_palette);
+			sprite_entry += 4u;
+			if (mem_read16(r28 + 8u) == (uint16_t)rom_offset_and_palette)
 			{
-				r26 = mem_read16(r28);
-				mem_write16(r27, r3_2);
-				mem_write16(r10 + 0x3000u, ((uint16_t)(r26 + r3_2) >> 1) | r1);
-				mem_write16(r10, r3_2 | r1);
-				r26 = mem_read16(r28 + 2u);
-				mem_write16(r27 + 2u, r4_2);
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, ((uint16_t)(r26 + r4_2) >> 1) | r2);
-				mem_write16(r10, r4_2 | r2);
-				r26 = mem_read16(r28 + 4u);
-				mem_write16(r27 + 4u, r5);
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r5) >> 1);
-				mem_write16(r10, r5);
-				r26 = mem_read16(r28 + 6u);
-				mem_write16(r27 + 6u, r6);
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r6) >> 1);
-				mem_write16(r10, r6);
-				r10 += 2u;
+				previous_word = mem_read16(r28);
+				mem_write16(r27, size);
+				mem_write16(sprite_entry + 0x3000u, ((uint16_t)(previous_word + size) >> 1) | sprite_then_height_bits);
+				mem_write16(sprite_entry, size | sprite_then_height_bits);
+				previous_word = mem_read16(r28 + 2u);
+				mem_write16(r27 + 2u, sprite_width);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, ((uint16_t)(previous_word + sprite_width) >> 1) | window_then_width_bits);
+				mem_write16(sprite_entry, sprite_width | window_then_width_bits);
+				previous_word = mem_read16(r28 + 4u);
+				mem_write16(r27 + 4u, y);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, (int16_t)(previous_word + y) >> 1);
+				mem_write16(sprite_entry, y);
+				previous_word = mem_read16(r28 + 6u);
+				mem_write16(r27 + 6u, x);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, (int16_t)(previous_word + x) >> 1);
+				mem_write16(sprite_entry, x);
+				sprite_entry += 2u;
 			}
 			else
 			{
-				mem_write16(r27, r3_2);
-				r3_2 = r3_2 | r1;
-				mem_write16(r10 + 0x3000u, r3_2);
-				mem_write16(r10, r3_2);
-				mem_write16(r27 + 2u, r4_2);
-				r4_2 |= r2;
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r4_2);
-				mem_write16(r10, r4_2);
-				mem_write16(r27 + 4u, r5);
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r5);
-				mem_write16(r10, r5);
-				mem_write16(r27 + 6u, r6);
-				r10 += 2u;
-				mem_write16(r10 + 0x3000u, r6);
-				mem_write16(r10, r6);
-				r10 += 2u;
+				mem_write16(r27, size);
+				size = size | sprite_then_height_bits;
+				mem_write16(sprite_entry + 0x3000u, size);
+				mem_write16(sprite_entry, size);
+				mem_write16(r27 + 2u, sprite_width);
+				sprite_width |= window_then_width_bits;
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, sprite_width);
+				mem_write16(sprite_entry, sprite_width);
+				mem_write16(r27 + 4u, y);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, y);
+				mem_write16(sprite_entry, y);
+				mem_write16(r27 + 6u, x);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3000u, x);
+				mem_write16(sprite_entry, x);
+				sprite_entry += 2u;
 			}
-			mem_write32(r10 + 0x3000u, r7);
-			mem_write32(r10, r7);
-			r4 = screen + 0x5000u + mem_read16(r19 + 8u) * 4u;
-			r10 += 4u;
-			if (mem_read16(r4) == 0u)
-				mem_write16(r4 + 2u, r10);
-			r6_2 = mem_read16(r4);
-			mem_write32(r10, r6_2);
-			mem_write32(r10 + 0x3000u, (uint16_t)(r6_2 + 0x300u));
-			mem_write16(r4, ((r10 - 0x10u) >> 4) | 0x8000u);
+			mem_write32(sprite_entry + 0x3000u, rom_offset_and_palette);
+			mem_write32(sprite_entry, rom_offset_and_palette);
+			depth_list = screen + 0x5000u + mem_read16(projected_segment + 8u) * 4u;
+			sprite_entry += 4u;
+			if (mem_read16(depth_list) == 0u)
+				mem_write16(depth_list + 2u, sprite_entry);
+			layer_head = mem_read16(depth_list);
+			mem_write32(sprite_entry, layer_head);
+			mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
+			mem_write16(depth_list, ((sprite_entry - 0x10u) >> 4) | 0x8000u);
 			SCREEN(screen)->sprite_groups++;
-			r10 += 0x10u;
+			sprite_entry += 0x10u;
 		}
-		r18 += r8;
-		r19 += r9;
-		r18 = (r18 & ~0xFFFFu) | (r18 & 0xAFFFu);
+		ring_segment += ring_step;
+		projected_segment += projected_step;
+		ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 + 0x10u);
 		r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + 0x10u);
-		r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-		r28 = (r28 & ~0xFFFFu) | (r28 & r21);
-		r17--;
-		if (r17 == 0u)
+		r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+		r28 = (r28 & ~0xFFFFu) | (r28 & places_mask);
+		items_left--;
+		if (items_left == 0u)
 		{
-			SCREEN(screen)->sprite_list_last = r10;
+			SCREEN(screen)->sprite_list_last = sprite_entry;
 			break;
 		}
 	}
-	r26_2 = blank_sprite_places;
-	mem_write32(r27, r26_2);
+	blank_place = blank_sprite_places;
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
 	SCREEN(screen)->next_sprite_place = r27;
 }
 
@@ -2620,45 +2620,45 @@ void road_row_draw(uint32_t r7, uint32_t r15)
    of the road's centre, the second with sprite attribute bits 43 toggled (bit 6 flips it, bits 0-1 swap
    its X alignment); there is no off-screen test and no screen_centered. Used by scenery_pair and
    animated_scenery_pair. */
-void road_row_pair_draw(uint32_t r7, uint32_t r15)
+void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 {
-	uint16_t r3 = 0, r4_2 = 0, r5 = 0, r21 = 0, r26 = 0, r30 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3_2 = 0, r4 = 0, r6 = 0, r8 = 0, r9 = 0, r10 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26_2 = 0, first_position = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_size_step = 0;
-	uint16_t t1 = 0;
-	uint32_t flags = 0, flags_long = 0, t2 = 0;
+	uint16_t halfway_word = 0, mirror_bits = 0, offset_x = 0, places_mask = 0, sprite_width = 0, view_end = 0, y = 0;
+	uint32_t attributes_and_size = 0, blank_place = 0, depth_list = 0, first_position = 0, item_count = 0, item_position = 0, items_left = 0, layer_head = 0, pair_x = 0, palette_word = 0, positions_moved = 0, projected_segment = 0, projected_step = 0, ring_segment = 0, ring_step = 0, size = 0, size_index = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_entry = 0, sprite_size_step = 0, sprite_then_height_bits = 0, window_then_width_bits = 0;
+	uint16_t items_in_view = 0;
+	uint32_t flags = 0, flags_long = 0, previous_first_position = 0;
 
-	r30 = 0x43u;
-	r0 = (uint16_t)OBJECT(current_object)->road_row.first_position;
-	r1 = (uint16_t)OBJECT(current_object)->road_row.end_position;
-	r2 = RACE(SCREEN(screen)->race_copy)->window_segment;
-	r3 = (uint16_t)(r2 + (SCREEN(screen)->draw_distance >> 7));
+	mirror_bits = 0x43u;
+	item_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
+	item_count = (uint16_t)OBJECT(current_object)->road_row.end_position;
+	window_then_width_bits = RACE(SCREEN(screen)->race_copy)->window_segment;
+	view_end = (uint16_t)(window_then_width_bits + (SCREEN(screen)->draw_distance >> 7));
 	spacing = OBJECT(current_object)->road_row.spacing;
-	if ((int16_t)r1 <= (int16_t)r2)
+	if ((int16_t)item_count <= (int16_t)window_then_width_bits)
 	{
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
 	}
-	if ((int16_t)r3 <= (int16_t)r0)
+	if ((int16_t)view_end <= (int16_t)item_position)
 		return;
-	while ((int16_t)r0 < (int16_t)r2)
+	while ((int16_t)item_position < (int16_t)window_then_width_bits)
 	{
-		r0 = (uint16_t)(r0 + spacing);
+		item_position = (uint16_t)(item_position + spacing);
 	}
-	if ((int16_t)r3 < (int16_t)r1)
-		r1 = r3;
+	if ((int16_t)view_end < (int16_t)item_count)
+		item_count = view_end;
 	first_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
-	OBJECT(current_object)->road_row.first_position = r0;
-	r1 = (uint16_t)(r1 - r0);
-	r1 = (uint16_t)(r1 + spacing);
-	r1 = (uint16_t)(r1 - 1u);
-	t1 = divide_u16(r1, spacing);
-	r1 = t1;
-	if ((int16_t)t1 <= 0)
+	OBJECT(current_object)->road_row.first_position = item_position;
+	item_count = (uint16_t)(item_count - item_position);
+	item_count = (uint16_t)(item_count + spacing);
+	item_count = (uint16_t)(item_count - 1u);
+	items_in_view = divide_u16(item_count, spacing);
+	item_count = items_in_view;
+	if ((int16_t)items_in_view <= 0)
 		return;
 	r28 = 0x100000u;
 	r27 = SCREEN(screen)->next_sprite_place;
-	r21 = 0xEFFFu;
+	places_mask = 0xEFFFu;
 	flags = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u) | ((uint32_t)OBJECT(current_object)->unk_02 << 16u));
 	flags_long = flags | 0x20u;
 	OBJECT(current_object)->flags = (uint8_t)flags_long;
@@ -2667,191 +2667,191 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
 	if ((flags & 0x20u) != 0u)
 	{
 		r28 = OBJECT(current_object)->road_row.previous_sprites;
-		t2 = first_position;
-		r3_2 = t2 - r0;
-		if (t2 != r0)
+		previous_first_position = first_position;
+		positions_moved = previous_first_position - item_position;
+		if (previous_first_position != item_position)
 		{
-			r28 = r28 - (divide_s32(r3_2, spacing) << 3);
-			r28 = (r28 & ~0xFFFFu) | (r28 & r21);
+			r28 = r28 - (divide_s32(positions_moved, spacing) << 3);
+			r28 = (r28 & ~0xFFFFu) | (r28 & places_mask);
 		}
 	}
 	OBJECT(current_object)->road_row.previous_sprites = r27;
-	r18 = screen + 0x2000u + ((r0 << 5) & 0xFFFu);
-	r19 = screen + 0x3000u + ((r0 - r2) << 4);
-	r9 = spacing << 4;
-	r8 = spacing << 5;
-	r17 = r1;
+	ring_segment = screen + 0x2000u + ((item_position << 5) & 0xFFFu);
+	projected_segment = screen + 0x3000u + ((item_position - window_then_width_bits) << 4);
+	projected_step = spacing << 4;
+	ring_step = spacing << 5;
+	items_left = item_count;
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame] + 2u;
-	r16 = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
-	r0 = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
-	r0 = r0 & 0xC0u;
-	r0 = r0 ^ SPRITE_PIECE(r12)->attributes;
+	palette_word = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[OBJECT(current_object)->palette])[0] << 16;
+	attributes_and_size = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
+	attributes_and_size = attributes_and_size & 0xC0u;
+	attributes_and_size = attributes_and_size ^ SPRITE_PIECE(r12)->attributes;
 	r12 = r12 + 2u;
-	r1 = SPRITE_PIECE(r12 - 0x2u)->sprite;
-	size_steps = 0x122B74u + r1 * 4u;
-	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
+	sprite_then_height_bits = SPRITE_PIECE(r12 - 0x2u)->sprite;
+	size_steps = sprite_size_steps_ADDRESS + sprite_then_height_bits * 4u;
+	sprite_entry = SCREEN(screen)->sprite_list_last + 0x10u;
 	OBJECT(current_object)->size_step = 0xFFu;
 	r12 = r12 + 2u;
 	for (;;)
 	{
-		r3_2 = mem_read16(r19);
-		if (r3_2 != 0u && r3_2 <= 0x1200u)
+		size = mem_read16(projected_segment);
+		if (size != 0u && size <= 0x1200u)
 		{
-			r6 = (int32_t)(((uint32_t)mem_read16(r18 + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * r3_2) >> 12;
-			r5 = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * r3_2) >> 12) + mem_read16(r19 + 6u));
-			r26 = (uint16_t)r6;
-			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
-			r6 = (((r6 << 16) | (r6 >> 16)) & ~0xFFFFu) | (uint16_t)(0u - r26);
-			r6 = (r6 & ~0xFFFFu) | (uint16_t)(r6 + mem_read16(r19 + 4u));
-			r3_2 = shift_by(r3_2, OBJECT(current_object)->scale_shift, 32);
-			r4 = r3_2;
-			if (r4 >= 0x1000u)
-				r4 = 0xFFFu;
-			r4 = r4 >> 5;
+			pair_x = (int32_t)(((uint32_t)mem_read16(ring_segment + 0x12u) * OBJECT(current_object)->side + OBJECT(current_object)->x_offset) * size) >> 12;
+			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + mem_read16(projected_segment + 6u));
+			offset_x = (uint16_t)pair_x;
+			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + mem_read16(projected_segment + 4u));
+			pair_x = (((pair_x << 16) | (pair_x >> 16)) & ~0xFFFFu) | (uint16_t)(0u - offset_x);
+			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + mem_read16(projected_segment + 4u));
+			size = shift_by(size, OBJECT(current_object)->scale_shift, 32);
+			size_index = size;
+			if (size_index >= 0x1000u)
+				size_index = 0xFFFu;
+			size_index = size_index >> 5;
 			size_table = OBJECT(current_object)->road_row.size_table;
-			r3_2 = shift_by(r3_2, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[r4], 32);
-			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[r4];
+			size = shift_by(size, (uint8_t)ROAD_ROW_SIZE_SHIFTS(road_row_size_shift_lists[size_table])[size_index], 32);
+			sprite_size_step = ROAD_ROW_SIZE_STEPS(road_row_size_step_lists[size_table])[size_index];
 			if (sprite_size_step != OBJECT(current_object)->size_step)
 			{
 				OBJECT(current_object)->size_step = sprite_size_step;
 				sprite_size_step = size_steps + sprite_size_step * 3u * 4u;
-				r0 = (r0 & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
+				attributes_and_size = (attributes_and_size & 0xFFFFu) | ((uint32_t)SPRITE_SIZE_STEP(sprite_size_step)->source_size << 16);
 				sprite_size_step += 2u;
-				r7 = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
+				rom_offset_and_palette = SPRITE_SIZE_STEP(sprite_size_step - 0x2u)->rom_offset;
 				sprite_size_step += 2u;
 				r14 = SPRITE_SIZE_STEP(sprite_size_step - 0x4u)->height;
 				sprite_size_step += 2u;
-				r1 = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
+				sprite_then_height_bits = SPRITE_SIZE_STEP(sprite_size_step - 0x6u)->height_bits;
 				sprite_size_step += 2u;
-				r15 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
-				r2 = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
-				r7 |= r16;
+				piece_width = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width;
+				window_then_width_bits = SPRITE_SIZE_STEP(sprite_size_step - 0x8u)->width_bits | SCREEN(screen)->sprite_screen_bit;
+				rom_offset_and_palette |= palette_word;
 			}
-			r4_2 = (uint16_t)((r3_2 * r15) >> 8);
-			r3_2 = ((r3_2 * r14) >> 8) & 0x3FFu;
-			r4_2 &= 0x3FFu;
-			if (SCREEN(screen)->sprite_list_limit <= r10)
+			sprite_width = (uint16_t)((size * piece_width) >> 8);
+			size = ((size * r14) >> 8) & 0x3FFu;
+			sprite_width &= 0x3FFu;
+			if (SCREEN(screen)->sprite_list_limit <= sprite_entry)
 				break;
-			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 ^ r30);
-			mem_write32(r10 + 0x3010u, r0);
-			mem_write32(r10 + 0x10u, r0);
-			r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 ^ r30);
-			mem_write32(r10 + 0x3000u, r0);
-			mem_write32(r10, r0);
-			mem_write16(r27 + 8u, r7);
-			r10 += 4u;
-			if (mem_read16(r28 + 8u) == (uint16_t)r7)
+			attributes_and_size = (attributes_and_size & ~0xFFFFu) | (uint16_t)(attributes_and_size ^ mirror_bits);
+			mem_write32(sprite_entry + 0x3010u, attributes_and_size);
+			mem_write32(sprite_entry + 0x10u, attributes_and_size);
+			attributes_and_size = (attributes_and_size & ~0xFFFFu) | (uint16_t)(attributes_and_size ^ mirror_bits);
+			mem_write32(sprite_entry + 0x3000u, attributes_and_size);
+			mem_write32(sprite_entry, attributes_and_size);
+			mem_write16(r27 + 8u, rom_offset_and_palette);
+			sprite_entry += 4u;
+			if (mem_read16(r28 + 8u) == (uint16_t)rom_offset_and_palette)
 			{
-				r26 = mem_read16(r28);
-				mem_write16(r27, r3_2);
-				r26 = ((uint16_t)(r26 + r3_2) >> 1) | r1;
-				r3_2 = r3_2 | r1;
-				mem_write16(r10 + 0x3010u, r26);
-				mem_write16(r10 + 0x10u, r3_2);
-				mem_write16(r10 + 0x3000u, r26);
-				mem_write16(r10, r3_2);
-				r26 = mem_read16(r28 + 2u);
-				mem_write16(r27 + 2u, r4_2);
-				r26 = ((uint16_t)(r26 + r4_2) >> 1) | r2;
-				r4_2 |= r2;
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r26);
-				mem_write16(r10 + 0x10u, r4_2);
-				mem_write16(r10 + 0x3000u, r26);
-				mem_write16(r10, r4_2);
-				r26 = mem_read16(r28 + 4u);
-				mem_write16(r27 + 4u, r5);
-				r26 = (uint16_t)((int16_t)(r26 + r5) >> 1);
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r26);
-				mem_write16(r10 + 0x10u, r5);
-				mem_write16(r10 + 0x3000u, r26);
-				mem_write16(r10, r5);
-				r26 = mem_read16(r28 + 0xAu);
-				mem_write16(r27 + 0xAu, r6);
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, (int16_t)(r26 + r6) >> 1);
-				mem_write16(r10 + 0x10u, r6);
-				r6 = (r6 << 16) | (r6 >> 16);
-				r26 = mem_read16(r28 + 6u);
-				mem_write16(r27 + 6u, r6);
-				mem_write16(r10 + 0x3000u, (int16_t)(r26 + r6) >> 1);
-				mem_write16(r10, r6);
-				r10 += 2u;
+				halfway_word = mem_read16(r28);
+				mem_write16(r27, size);
+				halfway_word = ((uint16_t)(halfway_word + size) >> 1) | sprite_then_height_bits;
+				size = size | sprite_then_height_bits;
+				mem_write16(sprite_entry + 0x3010u, halfway_word);
+				mem_write16(sprite_entry + 0x10u, size);
+				mem_write16(sprite_entry + 0x3000u, halfway_word);
+				mem_write16(sprite_entry, size);
+				halfway_word = mem_read16(r28 + 2u);
+				mem_write16(r27 + 2u, sprite_width);
+				halfway_word = ((uint16_t)(halfway_word + sprite_width) >> 1) | window_then_width_bits;
+				sprite_width |= window_then_width_bits;
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, halfway_word);
+				mem_write16(sprite_entry + 0x10u, sprite_width);
+				mem_write16(sprite_entry + 0x3000u, halfway_word);
+				mem_write16(sprite_entry, sprite_width);
+				halfway_word = mem_read16(r28 + 4u);
+				mem_write16(r27 + 4u, y);
+				halfway_word = (uint16_t)((int16_t)(halfway_word + y) >> 1);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, halfway_word);
+				mem_write16(sprite_entry + 0x10u, y);
+				mem_write16(sprite_entry + 0x3000u, halfway_word);
+				mem_write16(sprite_entry, y);
+				halfway_word = mem_read16(r28 + 0xAu);
+				mem_write16(r27 + 0xAu, pair_x);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, (int16_t)(halfway_word + pair_x) >> 1);
+				mem_write16(sprite_entry + 0x10u, pair_x);
+				pair_x = (pair_x << 16) | (pair_x >> 16);
+				halfway_word = mem_read16(r28 + 6u);
+				mem_write16(r27 + 6u, pair_x);
+				mem_write16(sprite_entry + 0x3000u, (int16_t)(halfway_word + pair_x) >> 1);
+				mem_write16(sprite_entry, pair_x);
+				sprite_entry += 2u;
 			}
 			else
 			{
-				mem_write16(r27, r3_2);
-				r3_2 = r3_2 | r1;
-				mem_write16(r10 + 0x3010u, r3_2);
-				mem_write16(r10 + 0x10u, r3_2);
-				mem_write16(r10 + 0x3000u, r3_2);
-				mem_write16(r10, r3_2);
-				mem_write16(r27 + 2u, r4_2);
-				r4_2 |= r2;
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r4_2);
-				mem_write16(r10 + 0x10u, r4_2);
-				mem_write16(r10 + 0x3000u, r4_2);
-				mem_write16(r10, r4_2);
-				mem_write16(r27 + 4u, r5);
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r5);
-				mem_write16(r10 + 0x10u, r5);
-				mem_write16(r10 + 0x3000u, r5);
-				mem_write16(r10, r5);
-				mem_write16(r27 + 0xAu, r6);
-				r10 += 2u;
-				mem_write16(r10 + 0x3010u, r6);
-				mem_write16(r10 + 0x10u, r6);
-				r6 = (r6 << 16) | (r6 >> 16);
-				mem_write16(r27 + 6u, r6);
-				mem_write16(r10 + 0x3000u, r6);
-				mem_write16(r10, r6);
-				r10 += 2u;
+				mem_write16(r27, size);
+				size = size | sprite_then_height_bits;
+				mem_write16(sprite_entry + 0x3010u, size);
+				mem_write16(sprite_entry + 0x10u, size);
+				mem_write16(sprite_entry + 0x3000u, size);
+				mem_write16(sprite_entry, size);
+				mem_write16(r27 + 2u, sprite_width);
+				sprite_width |= window_then_width_bits;
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, sprite_width);
+				mem_write16(sprite_entry + 0x10u, sprite_width);
+				mem_write16(sprite_entry + 0x3000u, sprite_width);
+				mem_write16(sprite_entry, sprite_width);
+				mem_write16(r27 + 4u, y);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, y);
+				mem_write16(sprite_entry + 0x10u, y);
+				mem_write16(sprite_entry + 0x3000u, y);
+				mem_write16(sprite_entry, y);
+				mem_write16(r27 + 0xAu, pair_x);
+				sprite_entry += 2u;
+				mem_write16(sprite_entry + 0x3010u, pair_x);
+				mem_write16(sprite_entry + 0x10u, pair_x);
+				pair_x = (pair_x << 16) | (pair_x >> 16);
+				mem_write16(r27 + 6u, pair_x);
+				mem_write16(sprite_entry + 0x3000u, pair_x);
+				mem_write16(sprite_entry, pair_x);
+				sprite_entry += 2u;
 			}
-			mem_write32(r10 + 0x3010u, r7);
-			mem_write32(r10 + 0x10u, r7);
-			mem_write32(r10 + 0x3000u, r7);
-			mem_write32(r10, r7);
-			r10 += 0x14u;
-			r4 = screen + 0x5000u + mem_read16(r19 + 8u) * 4u;
-			if (mem_read16(r4) == 0u)
-				mem_write16(r4 + 2u, r10);
-			r6 = mem_read16(r4);
-			mem_write32(r10, r6);
-			mem_write32(r10 + 0x3000u, (uint16_t)(r6 + 0x300u));
-			mem_write16(r4, ((r10 - 0x20u) >> 4) | 0x8000u);
+			mem_write32(sprite_entry + 0x3010u, rom_offset_and_palette);
+			mem_write32(sprite_entry + 0x10u, rom_offset_and_palette);
+			mem_write32(sprite_entry + 0x3000u, rom_offset_and_palette);
+			mem_write32(sprite_entry, rom_offset_and_palette);
+			sprite_entry += 0x14u;
+			depth_list = screen + 0x5000u + mem_read16(projected_segment + 8u) * 4u;
+			if (mem_read16(depth_list) == 0u)
+				mem_write16(depth_list + 2u, sprite_entry);
+			layer_head = mem_read16(depth_list);
+			mem_write32(sprite_entry, layer_head);
+			mem_write32(sprite_entry + 0x3000u, (uint16_t)(layer_head + 0x300u));
+			mem_write16(depth_list, ((sprite_entry - 0x20u) >> 4) | 0x8000u);
 			SCREEN(screen)->sprite_groups += 2u;
-			r10 += 0x10u;
+			sprite_entry += 0x10u;
 		}
-		r18 += r8;
-		r19 += r9;
-		r18 = (r18 & ~0xFFFFu) | (r18 & 0xAFFFu);
+		ring_segment += ring_step;
+		projected_segment += projected_step;
+		ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 + 0x10u);
 		r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + 0x10u);
-		r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-		r28 = (r28 & ~0xFFFFu) | (r28 & r21);
-		r17--;
-		if (r17 == 0u)
+		r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+		r28 = (r28 & ~0xFFFFu) | (r28 & places_mask);
+		items_left--;
+		if (items_left == 0u)
 		{
-			SCREEN(screen)->sprite_list_last = r10;
+			SCREEN(screen)->sprite_list_last = sprite_entry;
 			break;
 		}
 	}
-	r26_2 = blank_sprite_places;
-	mem_write32(r27, r26_2);
+	blank_place = blank_sprite_places;
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
-	mem_write32(r27, r26_2);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
+	mem_write32(r27, blank_place);
 	r27 = r27 + 4u;
-	r27 = (r27 & ~0xFFFFu) | (r27 & r21);
+	r27 = (r27 & ~0xFFFFu) | (r27 & places_mask);
 	SCREEN(screen)->next_sprite_place = r27;
 }
 
@@ -2860,20 +2860,20 @@ void road_row_pair_draw(uint32_t r7, uint32_t r15)
    draw_distance >> 7, prebuilt_segments); the first stage into the stage history. */
 void player_car_start_course(void)
 {
-	uint16_t r0 = 0, r5 = 0;
+	uint16_t ring_mask = 0, width_code = 0;
 	uint32_t course = 0;
 
-	move_string(0x100800u, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(zero_block_ADDRESS, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 	course = stage_courses[SCREEN(screen)->first_stage];
 	CAR(player_car)->course = course;
-	r0 = mem_read8(course + 8u);
-	CAR(player_car)->width_code = (uint8_t)r0;
-	CAR(player_car)->road_width = r0 * 0xB0u;
+	width_code = mem_read8(course + 8u);
+	CAR(player_car)->width_code = (uint8_t)width_code;
+	CAR(player_car)->road_width = width_code * 0xB0u;
 	CAR(player_car)->prebuilt_segments = SCREEN(screen)->draw_distance >> 7;
-	r5 = 0xFFFu;
+	ring_mask = 0xFFFu;
 	do
 	{
-		player_car_build_segment(r5);
+		player_car_build_segment(ring_mask);
 	} while ((int16_t)CAR(player_car)->built_segments < (int16_t)CAR(player_car)->prebuilt_segments);
 	SCREEN(screen)->current_stage_level = SCREEN(screen)->built_stage_level;
 	CAR(player_car)->stage_history = SCREEN(screen)->route_stage;
@@ -2887,10 +2887,10 @@ void player_car_start_course(void)
 void player_car_extend_course(void)
 {
 	uint8_t branch_stages = 0;
-	uint16_t r1 = 0, r5 = 0, window_offset = 0;
-	uint32_t r0 = 0, r2 = 0, r11 = 0, course = 0, forks_reached = 0, object = 0, race = 0;
+	uint16_t ring_mask = 0, run_width = 0, window_offset = 0;
+	uint32_t branch = 0, course = 0, course_place = 0, forks_reached = 0, forks_taken = 0, object = 0, race = 0, run_length = 0;
 
-	r5 = 0xFFFu;
+	ring_mask = 0xFFFu;
 	if (CAR(player_car)->at_fork == 0u)
 	{
 		window_offset = CAR(player_car)->window_offset;
@@ -2902,7 +2902,7 @@ void player_car_extend_course(void)
 			{
 				if (CAR(player_car)->at_fork != 0u)
 					break;
-				player_car_build_segment(r5);
+				player_car_build_segment(ring_mask);
 			} while (CAR(player_car)->build_offset != CAR(player_car)->build_end_offset);
 		}
 		return;
@@ -2911,18 +2911,18 @@ void player_car_extend_course(void)
 	if (SCREEN(screen)->forks_decided < forks_reached)
 		return;
 	course = CAR(player_car)->course;
-	r0 = mem_read8(screen + 0x349u + forks_reached);
-	CAR(player_car)->branch = r0;
-	branch_stages = COURSE_FORK(course)->branch_stages[r0];
-	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[r0];
+	branch = mem_read8(screen + 0x349u + forks_reached);
+	CAR(player_car)->branch = branch;
+	branch_stages = COURSE_FORK(course)->branch_stages[branch];
+	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[branch];
 	SCREEN(screen)->route_stage = branch_stages;
 	CAR(player_car)->new_branch = 0xFFu;
 	SCREEN(screen)->route_stage_level++;
-	r2 = CAR(player_car)->forks_taken;
-	mem_write8(player_car + 0xD7u + r2, r0);
-	r2 = (uint8_t)(r2 + 1u);
-	mem_write8(player_car + 0xD1u + r2, branch_stages);
-	CAR(player_car)->forks_taken = r2;
+	forks_taken = CAR(player_car)->forks_taken;
+	mem_write8(player_car + 0xD7u + forks_taken, branch);
+	forks_taken = (uint8_t)(forks_taken + 1u);
+	mem_write8(player_car + 0xD1u + forks_taken, branch_stages);
+	CAR(player_car)->forks_taken = forks_taken;
 	CAR(player_car)->at_fork = 0u;
 	queue_stage_load();
 	object = start_object();
@@ -2930,12 +2930,12 @@ void player_car_extend_course(void)
 	for (;;)
 	{
 		CAR(player_car)->course_records_read++;
-		r11 = CAR(player_car)->course;
-		r0 = (int16_t)ROM16(r11);
-		r11 += 2u;
-		if ((int16_t)r0 > 0)
+		course_place = CAR(player_car)->course;
+		run_length = (int16_t)ROM16(course_place);
+		course_place += 2u;
+		if ((int16_t)run_length > 0)
 			break;
-		switch (0u - r0)
+		switch (0u - run_length)
 		{
 		case 0:
 			OBJECT(current_object)->state = 3u;
@@ -2946,52 +2946,52 @@ void player_car_extend_course(void)
 			object = start_object();
 			OBJECT(object)->handler = goal_update_ADDRESS;
 			OBJECT(object)->position = CAR(player_car)->built_segments;
-			CAR(player_car)->course = r11;
+			CAR(player_car)->course = course_place;
 			continue;
 		case 1:
-			CAR(player_car)->course = ROM32(r11);
+			CAR(player_car)->course = ROM32(course_place);
 			continue;
 		case 2:
 			race = SCREEN(screen)->race;
 			CAR(player_car)->forks_reached++;
 			RACE(race)->stage_count++;
-			CAR(player_car)->course = r11;
+			CAR(player_car)->course = course_place;
 			CAR(player_car)->at_fork = 0xFFu;
 			return;
 		case 3:
 			CAR(player_car)->pitch_angle = 0u;
-			CAR(player_car)->course = r11 + 4u;
+			CAR(player_car)->course = course_place + 4u;
 			continue;
 		case 4:
-			SCREEN(screen)->built_stage_level = ROM8(r11);
-			r11++;
-			SCREEN(screen)->built_stage = ROM8(r11);
+			SCREEN(screen)->built_stage_level = ROM8(course_place);
+			course_place++;
+			SCREEN(screen)->built_stage = ROM8(course_place);
 			CAR(player_car)->stage_segments = 0xFFFFu;
-			CAR(player_car)->course = r11 + 1u;
+			CAR(player_car)->course = course_place + 1u;
 			CAR(player_car)->stage_start = CAR(player_car)->built_segments;
 			continue;
 		case 5:
 			CAR(player_car)->heading_angle = 0u;
-			CAR(player_car)->course = r11 + 4u;
+			CAR(player_car)->course = course_place + 4u;
 			continue;
 		default:
-			invalid_jump(course_command_jumps[0u - r0]);
+			invalid_jump(course_command_jumps[0u - run_length]);
 		}
 	}
-	CAR(player_car)->run_left = r0;
-	CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(r11) << 8;
-	r11++;
-	CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(r11) << 8;
-	r11++;
-	r1 = ROM8(r11);
-	r11++;
-	CAR(player_car)->road_event = ROM8(r11);
-	CAR(player_car)->course = r11 + 1u;
-	CAR(player_car)->width_code = (uint8_t)r1;
-	r1 = (uint16_t)(r1 * 0xB0u);
-	CAR(player_car)->road_width_target = r1;
-	CAR(player_car)->road_width_step = (int16_t)(r1 - CAR(player_car)->road_width) >> 6;
-	player_car_build_segment(r5);
+	CAR(player_car)->run_left = run_length;
+	CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+	course_place++;
+	CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+	course_place++;
+	run_width = ROM8(course_place);
+	course_place++;
+	CAR(player_car)->road_event = ROM8(course_place);
+	CAR(player_car)->course = course_place + 1u;
+	CAR(player_car)->width_code = (uint8_t)run_width;
+	run_width = (uint16_t)(run_width * 0xB0u);
+	CAR(player_car)->road_width_target = run_width;
+	CAR(player_car)->road_width_step = (int16_t)(run_width - CAR(player_car)->road_width) >> 6;
+	player_car_build_segment(ring_mask);
 }
 
 /* Builds the next segment of the road from the course (car course): at the end of a run reads the next
@@ -3001,10 +3001,10 @@ void player_car_extend_course(void)
    else a run (its length, pitch and heading steps, road width, a byte for the segments). The segment:
    heading and pitch turned by the run's steps, the position moved along them (next_x/y/z), the width
    eased toward the run's; written at build_offset, then built_segments and stage_segments count up. */
-void player_car_build_segment(uint16_t r5)
+void player_car_build_segment(uint16_t ring_mask)
 {
-	uint16_t r1_2 = 0, road_width = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r11 = 0, object = 0, race = 0;
+	uint16_t road_width = 0, run_width = 0;
+	uint32_t course_place = 0, heading_cosine = 0, heading_sine = 0, object = 0, pitch_cosine = 0, pitch_sine = 0, race = 0, ring_segment = 0, run_length = 0;
 	uint16_t run_left = 0;
 
 	for (;;)
@@ -3016,12 +3016,12 @@ void player_car_build_segment(uint16_t r5)
 		for (;;)
 		{
 			CAR(player_car)->course_records_read++;
-			r11 = CAR(player_car)->course;
-			r0 = (int16_t)ROM16(r11);
-			r11 += 2u;
-			if ((int16_t)r0 > 0)
+			course_place = CAR(player_car)->course;
+			run_length = (int16_t)ROM16(course_place);
+			course_place += 2u;
+			if ((int16_t)run_length > 0)
 				break;
-			switch (0u - r0)
+			switch (0u - run_length)
 			{
 			case 0:
 				OBJECT(current_object)->state = 3u;
@@ -3032,51 +3032,51 @@ void player_car_build_segment(uint16_t r5)
 				object = start_object();
 				OBJECT(object)->handler = goal_update_ADDRESS;
 				OBJECT(object)->position = CAR(player_car)->built_segments;
-				CAR(player_car)->course = r11;
+				CAR(player_car)->course = course_place;
 				continue;
 			case 1:
-				CAR(player_car)->course = ROM32(r11);
+				CAR(player_car)->course = ROM32(course_place);
 				continue;
 			case 2:
 				race = SCREEN(screen)->race;
 				CAR(player_car)->forks_reached++;
 				RACE(race)->stage_count++;
-				CAR(player_car)->course = r11;
+				CAR(player_car)->course = course_place;
 				CAR(player_car)->at_fork = 0xFFu;
 				return;
 			case 3:
 				CAR(player_car)->pitch_angle = 0u;
-				CAR(player_car)->course = r11 + 4u;
+				CAR(player_car)->course = course_place + 4u;
 				continue;
 			case 4:
-				SCREEN(screen)->built_stage_level = ROM8(r11);
-				r11++;
-				SCREEN(screen)->built_stage = ROM8(r11);
+				SCREEN(screen)->built_stage_level = ROM8(course_place);
+				course_place++;
+				SCREEN(screen)->built_stage = ROM8(course_place);
 				CAR(player_car)->stage_segments = 0xFFFFu;
-				CAR(player_car)->course = r11 + 1u;
+				CAR(player_car)->course = course_place + 1u;
 				CAR(player_car)->stage_start = CAR(player_car)->built_segments;
 				continue;
 			case 5:
 				CAR(player_car)->heading_angle = 0u;
-				CAR(player_car)->course = r11 + 4u;
+				CAR(player_car)->course = course_place + 4u;
 				continue;
 			default:
-				invalid_jump(course_command_jumps[0u - r0]);
+				invalid_jump(course_command_jumps[0u - run_length]);
 			}
 		}
-		CAR(player_car)->run_left = r0;
-		CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(r11) << 8;
-		r11++;
-		CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(r11) << 8;
-		r11++;
-		r1_2 = ROM8(r11);
-		r11++;
-		CAR(player_car)->road_event = ROM8(r11);
-		CAR(player_car)->course = r11 + 1u;
-		CAR(player_car)->width_code = (uint8_t)r1_2;
-		r1_2 = (uint16_t)(r1_2 * 0xB0u);
-		CAR(player_car)->road_width_target = r1_2;
-		CAR(player_car)->road_width_step = (int16_t)(r1_2 - CAR(player_car)->road_width) >> 6;
+		CAR(player_car)->run_left = run_length;
+		CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+		course_place++;
+		CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+		course_place++;
+		run_width = ROM8(course_place);
+		course_place++;
+		CAR(player_car)->road_event = ROM8(course_place);
+		CAR(player_car)->course = course_place + 1u;
+		CAR(player_car)->width_code = (uint8_t)run_width;
+		run_width = (uint16_t)(run_width * 0xB0u);
+		CAR(player_car)->road_width_target = run_width;
+		CAR(player_car)->road_width_step = (int16_t)(run_width - CAR(player_car)->road_width) >> 6;
 	}
 	CAR(player_car)->width_changing = 0xFFu;
 	if ((uint16_t)CAR(player_car)->road_width_step == 0u)
@@ -3103,36 +3103,36 @@ void player_car_build_segment(uint16_t r5)
 	}
 	CAR(player_car)->heading_angle = (((uint32_t)(int16_t)CAR(player_car)->heading_step << 8) + CAR(player_car)->heading_angle) & 0xFFFFFFFu;
 	CAR(player_car)->pitch_angle = (((uint32_t)(int16_t)CAR(player_car)->pitch_step << 8) + CAR(player_car)->pitch_angle) & 0xFFFFFFFu;
-	r2 = (uint16_t)(CAR(player_car)->pitch_angle >> 16u);
-	r4 = (uint16_t)(CAR(player_car)->heading_angle >> 16u);
-	r1 = sine_table[r2];
-	r2 = cosine_table[r2];
-	r3 = sine_table[r4];
-	r4 = cosine_table[r4];
-	CAR(player_car)->next_x_fine += (int32_t)(r3 * r2) >> 13;
-	CAR(player_car)->next_y_fine -= r1 << 1;
-	CAR(player_car)->next_z_fine += (int32_t)(r2 * r4) >> 13;
+	pitch_cosine = (uint16_t)(CAR(player_car)->pitch_angle >> 16u);
+	heading_cosine = (uint16_t)(CAR(player_car)->heading_angle >> 16u);
+	pitch_sine = sine_table[pitch_cosine];
+	pitch_cosine = cosine_table[pitch_cosine];
+	heading_sine = sine_table[heading_cosine];
+	heading_cosine = cosine_table[heading_cosine];
+	CAR(player_car)->next_x_fine += (int32_t)(heading_sine * pitch_cosine) >> 13;
+	CAR(player_car)->next_y_fine -= pitch_sine << 1;
+	CAR(player_car)->next_z_fine += (int32_t)(pitch_cosine * heading_cosine) >> 13;
 	CAR(player_car)->next_x = CAR(player_car)->next_x_fine;
 	CAR(player_car)->next_x = (int32_t)CAR(player_car)->next_x >> 8;
 	CAR(player_car)->next_y = CAR(player_car)->next_y_fine;
 	CAR(player_car)->next_y = (int32_t)CAR(player_car)->next_y >> 8;
 	CAR(player_car)->next_z = CAR(player_car)->next_z_fine;
 	CAR(player_car)->next_z = (int32_t)CAR(player_car)->next_z >> 8;
-	r11 = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + CAR(player_car)->build_offset);
-	mem_write16(r11, (uint16_t)(CAR(player_car)->heading_angle >> 16u));
-	mem_write16(r11 + 2u, (uint16_t)(CAR(player_car)->pitch_angle >> 16u));
-	mem_write32(r11 + 4u, CAR(player_car)->next_x);
-	mem_write32(r11 + 8u, CAR(player_car)->next_z);
-	mem_write32(r11 + 0xCu, CAR(player_car)->next_y);
-	mem_write8(r11 + 0x15u, CAR(player_car)->road_event);
+	ring_segment = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + CAR(player_car)->build_offset);
+	mem_write16(ring_segment, (uint16_t)(CAR(player_car)->heading_angle >> 16u));
+	mem_write16(ring_segment + 2u, (uint16_t)(CAR(player_car)->pitch_angle >> 16u));
+	mem_write32(ring_segment + 4u, CAR(player_car)->next_x);
+	mem_write32(ring_segment + 8u, CAR(player_car)->next_z);
+	mem_write32(ring_segment + 0xCu, CAR(player_car)->next_y);
+	mem_write8(ring_segment + 0x15u, CAR(player_car)->road_event);
 	road_width = CAR(player_car)->road_width;
-	mem_write16(r11 + 0x10u, road_width);
-	mem_write16(r11 + 0x12u, road_width >> 1);
+	mem_write16(ring_segment + 0x10u, road_width);
+	mem_write16(ring_segment + 0x12u, road_width >> 1);
 	if (CAR(player_car)->width_changing == 0u)
-		mem_write8(r11 + 0x14u, CAR(player_car)->width_code);
+		mem_write8(ring_segment + 0x14u, CAR(player_car)->width_code);
 	else
-		mem_write8(r11 + 0x14u, 0u);
-	CAR(player_car)->build_offset = (r11 + 0x20u) & r5;
+		mem_write8(ring_segment + 0x14u, 0u);
+	CAR(player_car)->build_offset = (ring_segment + 0x20u) & ring_mask;
 	CAR(player_car)->built_segments++;
 	CAR(player_car)->stage_segments++;
 }
@@ -3144,158 +3144,158 @@ void player_car_build_segment(uint16_t r5)
 void player_car_project_road(void)
 {
 	uint32_t carry = 0;
-	uint16_t r5 = 0, r21 = 0;
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r5_2 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r13 = 0, r15 = 0, r16 = 0, r17 = 0, r18 = 0, r19 = 0, r26 = 0, car = 0, draw_distance = 0, projection_pattern = 0;
+	uint16_t previous_y = 0, screen_top_y = 0;
+	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
 	uint8_t projected = 0;
-	uint16_t t3 = 0;
-	uint32_t t1 = 0, t2 = 0;
+	uint16_t last_y = 0;
+	uint32_t copied_x_y = 0, copied_road_bytes = 0;
 
-	r1 = mem_read16(SCREEN(screen)->shown_view + 0xCu);
-	r2 = mem_read16(SCREEN(screen)->shown_view + 0xEu);
-	r16 = sine_table[r1];
-	r15 = sine_table[r2];
-	r13 = cosine_table[r1];
-	r10 = cosine_table[r2];
-	r8 = 0xFFFFFFF2u;
-	r11 = 0u - r15;
-	r12 = r16 * r15;
+	view_pitch = mem_read16(SCREEN(screen)->shown_view + 0xCu);
+	view_yaw = mem_read16(SCREEN(screen)->shown_view + 0xEu);
+	matrix_zy = sine_table[view_pitch];
+	matrix_zx = sine_table[view_yaw];
+	matrix_yy = cosine_table[view_pitch];
+	matrix_xx = cosine_table[view_yaw];
+	fixed_point_shift = 0xFFFFFFF2u;
+	matrix_xz = 0u - matrix_zx;
+	r12 = matrix_zy * matrix_zx;
 	carry = (r12 >> 13) & 1u;
 	r12 = ((int32_t)r12 >> 14) + carry;
-	r14 = r16 * r10;
+	r14 = matrix_zy * matrix_xx;
 	carry = (r14 >> 13) & 1u;
 	r14 = ((int32_t)r14 >> 14) + carry;
-	r15 = r15 * r13;
-	carry = (r15 >> 13) & 1u;
-	r15 = ((int32_t)r15 >> 14) + carry;
-	r16 = 0u - r16;
-	r17 = r13 * r10;
-	carry = (r17 >> 13) & 1u;
-	r17 = ((int32_t)r17 >> 14) + carry;
+	matrix_zx = matrix_zx * matrix_yy;
+	carry = (matrix_zx >> 13) & 1u;
+	matrix_zx = ((int32_t)matrix_zx >> 14) + carry;
+	matrix_zy = 0u - matrix_zy;
+	matrix_zz = matrix_yy * matrix_xx;
+	carry = (matrix_zz >> 13) & 1u;
+	matrix_zz = ((int32_t)matrix_zz >> 14) + carry;
 	car = player_car + 0xDCu;
-	CAR(car - 0xDCu)->view_matrix_xx = r10;
+	CAR(car - 0xDCu)->view_matrix_xx = matrix_xx;
 	car += 4u;
 	CAR(car - 0xE0u)->view_matrix_xy = 0;
 	car += 4u;
-	CAR(car - 0xE4u)->view_matrix_xz = r11;
+	CAR(car - 0xE4u)->view_matrix_xz = matrix_xz;
 	car += 4u;
 	CAR(car - 0xE8u)->view_matrix_yx = r12;
 	car += 4u;
-	CAR(car - 0xECu)->view_matrix_yy = r13;
+	CAR(car - 0xECu)->view_matrix_yy = matrix_yy;
 	car += 4u;
 	CAR(car - 0xF0u)->view_matrix_yz = r14;
 	car += 4u;
-	CAR(car - 0xF4u)->view_matrix_zx = r15;
+	CAR(car - 0xF4u)->view_matrix_zx = matrix_zx;
 	car += 4u;
-	CAR(car - 0xF8u)->view_matrix_zy = r16;
-	CAR(car - 0xF8u)->view_matrix_zz = r17;
-	r0 = 0u - mem_read32(SCREEN(screen)->shown_view);
-	r1 = 0u - mem_read32(SCREEN(screen)->shown_view + 4u);
-	r2 = 0u - mem_read32(SCREEN(screen)->shown_view + 8u);
-	r3 = SCREEN(screen)->eye_distance;
-	r3 = r3 >> 1;
+	CAR(car - 0xF8u)->view_matrix_zy = matrix_zy;
+	CAR(car - 0xF8u)->view_matrix_zz = matrix_zz;
+	to_view_x = 0u - mem_read32(SCREEN(screen)->shown_view);
+	to_view_y = 0u - mem_read32(SCREEN(screen)->shown_view + 4u);
+	to_view_z = 0u - mem_read32(SCREEN(screen)->shown_view + 8u);
+	near_limit = SCREEN(screen)->eye_distance;
+	near_limit = near_limit >> 1;
 	draw_distance = SCREEN(screen)->draw_distance;
-	r5 = (uint16_t)(0u - SCREEN(screen)->sprite_origin_y);
-	r18 = screen + 0x1FE0u + mem_read16(SCREEN(screen)->shown_view + 0x10u);
-	r19 = screen + 0x2FF0u;
-	r9 = draw_distance >> 7;
+	screen_top_y = (uint16_t)(0u - SCREEN(screen)->sprite_origin_y);
+	ring_segment = screen + 0x1FE0u + mem_read16(SCREEN(screen)->shown_view + 0x10u);
+	projected_segment = screen + 0x2FF0u;
+	segments_left = draw_distance >> 7;
 	SCREEN(screen)->crest_count = 0u;
-	r21 = 0x7FFFu;
-	SCREEN(screen)->crest_heights = r5 + 0xE0u;
-	projection_pattern = 0x10509u;
+	previous_y = 0x7FFFu;
+	SCREEN(screen)->crest_heights = screen_top_y + 0xE0u;
+	projection_pattern = segment_projection_pattern_ADDRESS;
 	for (;;)
 	{
-		r18 = ((r18 + 0x20u) & ~0xFFFFu) | ((r18 + 0x20u) & 0xAFFFu);
+		ring_segment = ((ring_segment + 0x20u) & ~0xFFFFu) | ((ring_segment + 0x20u) & 0xAFFFu);
 		projected = ROAD_PROJECTION_PATTERN(projection_pattern)[0];
 		projection_pattern++;
-		r19 += 0x10u;
+		projected_segment += 0x10u;
 		if (projected == 0u)
 		{
-			r26 = r19 - 0x10u;
-			t1 = mem_read32(r26 + 4u);
-			mem_write32(r19, mem_read32(r26));
-			mem_write32(r19 + 4u, t1);
-			r26 += 8u;
-			t2 = mem_read32(r26 + 4u);
-			mem_write32(r19 + 8u, mem_read32(r26));
-			mem_write32(r19 + 0xCu, t2);
-			mem_write16(r19 + 0xCu, mem_read16(r18 + 0x14u));
-			r9--;
-			if (r9 == 0u)
+			previous_projected = projected_segment - 0x10u;
+			copied_x_y = mem_read32(previous_projected + 4u);
+			mem_write32(projected_segment, mem_read32(previous_projected));
+			mem_write32(projected_segment + 4u, copied_x_y);
+			previous_projected += 8u;
+			copied_road_bytes = mem_read32(previous_projected + 4u);
+			mem_write32(projected_segment + 8u, mem_read32(previous_projected));
+			mem_write32(projected_segment + 0xCu, copied_road_bytes);
+			mem_write16(projected_segment + 0xCu, mem_read16(ring_segment + 0x14u));
+			segments_left--;
+			if (segments_left == 0u)
 			{
-				mem_write16(r19 + 0x10u, 0u);
+				mem_write16(projected_segment + 0x10u, 0u);
 				note_road_crest();
 				return;
 			}
 			continue;
 		}
-		r26 = r0 + mem_read32(r18 + 4u);
-		r27 = r1;
-		r27 = r27 + mem_read32(r18 + 0xCu);
-		r28 = r2;
-		r28 = r28 + mem_read32(r18 + 8u);
-		r7 = r28;
-		r28 = r28 * r17;
-		r28 = r28 + r26 * r15;
-		r28 = r28 + r27 * r16;
-		r28 = r28 + r8;
+		x = to_view_x + mem_read32(ring_segment + 4u);
+		r27 = to_view_y;
+		r27 = r27 + mem_read32(ring_segment + 0xCu);
+		r28 = to_view_z;
+		r28 = r28 + mem_read32(ring_segment + 8u);
+		unrotated_z = r28;
+		r28 = r28 * matrix_zz;
+		r28 = r28 + x * matrix_zx;
+		r28 = r28 + r27 * matrix_zy;
+		r28 = r28 + fixed_point_shift;
 		r28 = (int32_t)r28 >> 14;
-		r27 = r27 * r13;
-		r27 = r27 + r26 * r12;
-		r27 = r27 + r7 * r14;
-		r27 = r27 + r8;
+		r27 = r27 * matrix_yy;
+		r27 = r27 + x * r12;
+		r27 = r27 + unrotated_z * r14;
+		r27 = r27 + fixed_point_shift;
 		r27 = (int32_t)r27 >> 14;
-		r26 = (int32_t)(r26 * r10 + r7 * r11 + r8) >> 14;
-		if ((int32_t)draw_distance <= (int32_t)r28 || (int32_t)r28 <= (int32_t)r3)
+		x = (int32_t)(x * matrix_xx + unrotated_z * matrix_xz + fixed_point_shift) >> 14;
+		if ((int32_t)draw_distance <= (int32_t)r28 || (int32_t)r28 <= (int32_t)near_limit)
 		{
-			mem_write16(r19, 0u);
-			r9--;
-			if (r9 == 0u)
+			mem_write16(projected_segment, 0u);
+			segments_left--;
+			if (segments_left == 0u)
 			{
-				mem_write16(r19 + 0x10u, 0u);
-				r27 = (r27 & ~0xFFFFu) | r21;
+				mem_write16(projected_segment + 0x10u, 0u);
+				r27 = (r27 & ~0xFFFFu) | previous_y;
 				r28 = (r28 & ~0xFFFFu) | 3u;
 				note_road_crest();
 				return;
 			}
 			continue;
 		}
-		r5_2 = perspective_scales[r28];
-		mem_write16(r19, r5_2);
-		r26 = r26 * r5_2;
-		r27 = r27 * r5_2;
-		carry = (r26 >> 11) & 1u;
-		r26 = ((int32_t)r26 >> 12) + carry;
+		scale = perspective_scales[r28];
+		mem_write16(projected_segment, scale);
+		x = x * scale;
+		r27 = r27 * scale;
+		carry = (x >> 11) & 1u;
+		x = ((int32_t)x >> 12) + carry;
 		carry = (r27 >> 11) & 1u;
 		r27 = (int32_t)r27 >> 12;
 		r27 = r27 + carry;
-		r5_2 = r5_2 * mem_read16(r18 + 0x10u);
-		carry = (r5_2 >> 11) & 1u;
-		mem_write16(r19 + 2u, ((int32_t)r5_2 >> 12) + carry);
-		mem_write16(r19 + 0xCu, mem_read16(r18 + 0x14u));
-		mem_write16(r19 + 4u, r26);
+		scale = scale * mem_read16(ring_segment + 0x10u);
+		carry = (scale >> 11) & 1u;
+		mem_write16(projected_segment + 2u, ((int32_t)scale >> 12) + carry);
+		mem_write16(projected_segment + 0xCu, mem_read16(ring_segment + 0x14u));
+		mem_write16(projected_segment + 4u, x);
 		r27 = (r27 & ~0xFFFFu) | (uint16_t)(0u - r27);
-		mem_write16(r19 + 6u, r27);
+		mem_write16(projected_segment + 6u, r27);
 		r28 = depth_layers_by_depth[r28];
-		mem_write16(r19 + 8u, r28);
-		t3 = r21;
-		r21 = (uint16_t)r27;
-		if ((int16_t)t3 < (int16_t)r27)
+		mem_write16(projected_segment + 8u, r28);
+		last_y = previous_y;
+		previous_y = (uint16_t)r27;
+		if ((int16_t)last_y < (int16_t)r27)
 		{
 			note_road_crest();
-			r9--;
-			if (r9 == 0u)
+			segments_left--;
+			if (segments_left == 0u)
 			{
-				mem_write16(r19 + 0x10u, 0u);
+				mem_write16(projected_segment + 0x10u, 0u);
 				note_road_crest();
 				return;
 			}
 			continue;
 		}
-		r9--;
-		if (r9 == 0u)
+		segments_left--;
+		if (segments_left == 0u)
 			break;
 	}
-	mem_write16(r19 + 0x10u, 0u);
+	mem_write16(projected_segment + 0x10u, 0u);
 	note_road_crest();
 }
 
@@ -3319,22 +3319,22 @@ void note_road_crest(void)
 
 /* Turns an offset (R1 across, R2 along, R0 up) by a heading (R3) and a pitch (R4) into the world's axes.
    Used by player_car_world_position and player_car_place_view. */
-void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32_t *p_r2)
+void rotate_offset(uint32_t y, uint32_t road_heading, uint32_t road_pitch, uint32_t *p_x, uint32_t *p_z)
 {
-	uint32_t r1 = *p_r1;
-	uint32_t r2 = *p_r2;
-	uint32_t r3_2 = 0, r4_2 = 0, r5 = 0, r6 = 0, r7 = 0, r9 = 0;
+	uint32_t x = *p_x;
+	uint32_t z = *p_z;
+	uint32_t heading_cosine = 0, heading_sine = 0, minus_x = 0, pitch_cosine = 0, pitch_sine = 0, y_copy = 0;
 
-	r5 = sine_table[r4];
-	r6 = cosine_table[r4];
-	r4_2 = cosine_table[r3];
-	r3_2 = sine_table[r3];
-	r7 = r0;
-	r9 = 0u - r1;
-	r1 = (int32_t)(r1 * r4_2 + ((int32_t)(r7 * r3_2) >> 14) * r5 + ((int32_t)(r2 * r3_2) >> 14) * r6) >> 14;
-	r2 = (int32_t)(((int32_t)(r2 * r4_2) >> 14) * r6 + (r9 * r3_2 + ((int32_t)(r7 * r4_2) >> 14) * r5)) >> 14;
-	*p_r1 = r1;
-	*p_r2 = r2;
+	pitch_sine = sine_table[road_pitch];
+	pitch_cosine = cosine_table[road_pitch];
+	heading_cosine = cosine_table[road_heading];
+	heading_sine = sine_table[road_heading];
+	y_copy = y;
+	minus_x = 0u - x;
+	x = (int32_t)(x * heading_cosine + ((int32_t)(y_copy * heading_sine) >> 14) * pitch_sine + ((int32_t)(z * heading_sine) >> 14) * pitch_cosine) >> 14;
+	z = (int32_t)(((int32_t)(z * heading_cosine) >> 14) * pitch_cosine + (minus_x * heading_sine + ((int32_t)(y_copy * heading_cosine) >> 14) * pitch_sine)) >> 14;
+	*p_x = x;
+	*p_z = z;
 }
 
 /* Sets up the constants of the screen's block at boot: index (0 for the block at 208000, 1 at 218000)
@@ -3348,14 +3348,14 @@ void rotate_offset(uint32_t r0, uint32_t r3, uint32_t r4, uint32_t *p_r1, uint32
 uint32_t init_screen(void)
 {
 	bool L_013DB6 = false;
-	uint16_t r8 = 0;
-	uint32_t r0 = 0, r1 = 0, r9 = 0, r10 = 0, r11 = 0, screen_hardware = 0;
-	uint32_t t1 = 0;
+	uint16_t course_length = 0;
+	uint32_t command_routine = 0, courses_left = 0, index = 0, length_place = 0, screen_hardware = 0, section_length = 0, stage_course = 0;
+	uint32_t command = 0;
 
-	r1 = screen >> 16;
-	r1 = r1 & 1u;
-	SCREEN(screen)->index = r1;
-	screen_hardware = screen_hardware_records[r1];
+	index = screen >> 16;
+	index = index & 1u;
+	SCREEN(screen)->index = index;
+	screen_hardware = screen_hardware_records[index];
 	SCREEN(screen)->sprite_screen_bit = SCREEN_HARDWARE(screen_hardware)->sprite_screen_bit;
 	screen_hardware += 2u;
 	SCREEN(screen)->palette_ram = SCREEN_HARDWARE(screen_hardware - 0x2u)->palette_ram;
@@ -3367,27 +3367,27 @@ uint32_t init_screen(void)
 	SCREEN(screen)->sprite_origin_x = screen_view_defaults[0].sprite_origin_x;
 	SCREEN(screen)->sprite_origin_y = screen_view_defaults[0].sprite_origin_y;
 	SCREEN(screen)->view_pitch_base = screen_view_defaults[0].view_pitch_bases[0];
-	r10 = stage_courses_ADDRESS;
-	r11 = screen + 0x700u;
-	r9 = 0x1Fu;
+	stage_course = stage_courses_ADDRESS;
+	length_place = screen + 0x700u;
+	courses_left = 0x1Fu;
 	do
 	{
-		r12 = COURSE_POINTER(r10)[0];
-		r0 = 0u;
-		r8 = 0u;
-		r10 += 4u;
+		r12 = COURSE_POINTER(stage_course)[0];
+		section_length = 0u;
+		course_length = 0u;
+		stage_course += 4u;
 		for (;;)
 		{
-			r8 += r0;
+			course_length += section_length;
 			for (;;)
 			{
-				r0 = mem_read16(r12);
+				section_length = mem_read16(r12);
 				r12 = r12 + 6u;
-				if ((int16_t)r0 >= 0)
+				if ((int16_t)section_length >= 0)
 					break;
-				t1 = (uint16_t)~r0;
-				r0 = course_length_command_jumps[t1];
-				switch (t1)
+				command = (uint16_t)~section_length;
+				command_routine = course_length_command_jumps[command];
+				switch (command)
 				{
 				case 2:
 				case 4:
@@ -3403,7 +3403,7 @@ uint32_t init_screen(void)
 					L_013DB6 = true;
 					break;
 				default:
-					invalid_jump(course_length_command_jumps[t1]);
+					invalid_jump(course_length_command_jumps[command]);
 				}
 				if (L_013DB6)
 					break;
@@ -3412,29 +3412,29 @@ uint32_t init_screen(void)
 				break;
 		}
 		L_013DB6 = false;
-		mem_write16(r11, r8);
-		r9--;
-		r11 += 2u;
-	} while (r9 != 0u);
-	mem_write16(r11, 0x14Au);
-	return r0;
+		mem_write16(length_place, course_length);
+		courses_left--;
+		length_place += 2u;
+	} while (courses_left != 0u);
+	mem_write16(length_place, 0x14Au);
+	return command_routine;
 }
 
 /* Clears the screen's work RAM at boot: E000 bytes from 8000 below its block (the objects and their
    lists) to 6000 into it. */
 void clear_screen_ram(void)
 {
-	uint32_t r0 = 0, r1 = 0, r10 = 0;
+	uint32_t block = 0, block_halfwords = 0, blocks_left = 0;
 
-	r10 = screen - 0x8000u;
-	r0 = 0x38u;
-	r1 = 0x200u;
+	block = screen - 0x8000u;
+	blocks_left = 0x38u;
+	block_halfwords = 0x200u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
-		r10 += 0x400u;
-		r0--;
-	} while (r0 != 0u);
+		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		block += 0x400u;
+		blocks_left--;
+	} while (blocks_left != 0u);
 }
 
 /* Sets up video RAM: cleared (clear_video_ram), the text font (load_text_font), the video control
@@ -3452,9 +3452,9 @@ uint32_t init_video(void)
 		mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) | 0x200u);
 		video_registers[0] |= 0x200u;
 	}
-	move_halfwords(scroll_targets_ADDRESS, 0x100800u, 0x10u);
-	move_halfwords(VIDEO_RAM + 0x1FF02u, 0x10B12u, 0x47u);
-	move_string(0x10B12u, 0x47u, video_registers_ADDRESS + 0x2u, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(scroll_targets_ADDRESS, zero_block_ADDRESS, 0x10u);
+	move_halfwords(VIDEO_RAM + 0x1FF02u, video_register_defaults_ADDRESS, 0x47u);
+	move_string(video_register_defaults_ADDRESS, 0x47u, video_registers_ADDRESS + 0x2u, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
 	return reset_tile_layers();
 }
 
@@ -3465,19 +3465,19 @@ uint32_t init_video(void)
 uint32_t reset_tile_layers(void)
 {
 	uint32_t index = 0;
-	uint32_t t1 = 0, t2 = 0;
+	uint32_t first_scroll_target = 0, second_scroll_target = 0;
 
 	mem_write16(VIDEO_31FF00, mem_read16(VIDEO_31FF00) & 0xFFFu);
 	video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
 	RAM32(video_registers_ADDRESS + 0x40u + index * 4u) = 0u;
 	RAM32(video_registers_ADDRESS + 0x48u + index * 4u) = 0u;
-	t1 = scroll_targets_ADDRESS + index * 8u;
-	mem_write32(t1, 0u);
-	mem_write32(t1 + 4u, 0u);
-	t2 = scroll_targets_ADDRESS + 0x10u + index * 8u;
-	mem_write32(t2, 0u);
-	mem_write32(t2 + 4u, 0u);
+	first_scroll_target = scroll_targets_ADDRESS + index * 8u;
+	mem_write32(first_scroll_target, 0u);
+	mem_write32(first_scroll_target + 4u, 0u);
+	second_scroll_target = scroll_targets_ADDRESS + 0x10u + index * 8u;
+	mem_write32(second_scroll_target, 0u);
+	mem_write32(second_scroll_target + 4u, 0u);
 	return index;
 }
 
@@ -3485,57 +3485,57 @@ uint32_t reset_tile_layers(void)
    the bitmap and the line tables. */
 void clear_video_ram(void)
 {
-	uint32_t r0 = 0, r1 = 0, r10 = 0;
+	uint32_t block = 0, block_halfwords = 0, blocks_left = 0;
 
-	r10 = 0x300000u;
-	r0 = 0x1FFu;
-	r1 = 0x80u;
+	block = 0x300000u;
+	blocks_left = 0x1FFu;
+	block_halfwords = 0x80u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
-		r10 += 0x100u;
-		r0--;
-	} while (r0 != 0u);
+		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		block += 0x100u;
+		blocks_left--;
+	} while (blocks_left != 0u);
 }
 
 /* Clears the text layer's first 30 rows (64 cells each, 31F000-31FEFF). */
 void clear_text_layer(void)
 {
-	uint32_t r0 = 0, r1 = 0, r10 = 0;
+	uint32_t block = 0, block_halfwords = 0, blocks_left = 0;
 
-	r10 = TEXT_CELL(0, 0);
-	r0 = 0xFu;
-	r1 = 0x80u;
+	block = TEXT_CELL(0, 0);
+	blocks_left = 0xFu;
+	block_halfwords = 0x80u;
 	do
 	{
-		move_string(0x100800u, r1, r10, r1, 2u, 0u, 0u, 0u, &r27, &r28);
-		r10 += 0x100u;
-		r0--;
-	} while (r0 != 0u);
+		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		block += 0x100u;
+		blocks_left--;
+	} while (blocks_left != 0u);
 }
 
 /* Unused: clears the tilemap pages from the one at R9 (its offset in video RAM) down to the first, 400
    bytes apart (clear_tile_page each). */
-void clear_tile_pages(uint16_t r9)
+void clear_tile_pages(uint16_t last_page)
 {
-	uint16_t r7 = 0, r9_2 = 0;
-	uint16_t t1 = 0;
+	uint16_t next_page = 0, page = 0;
+	uint16_t cleared_page = 0;
 
-	r7 = (uint16_t)r9;
+	next_page = (uint16_t)last_page;
 	do
 	{
-		r9_2 = (uint16_t)r7;
-		clear_tile_page(r9_2);
-		t1 = r7;
-		r7 = (uint16_t)(t1 - 0x400u);
-	} while ((int16_t)t1 >= 0x400);
+		page = (uint16_t)next_page;
+		clear_tile_page(page);
+		cleared_page = next_page;
+		next_page = (uint16_t)(cleared_page - 0x400u);
+	} while ((int16_t)cleared_page >= 0x400);
 }
 
 /* Only unused code reaches it (clear_tile_pages): clears the tilemap page at R9 (300000 + R9: 200
    halfwords copied from the zeros at 100800). */
-void clear_tile_page(uint16_t r9)
+void clear_tile_page(uint16_t page)
 {
-	move_string(0x100800u, 0x200u, 0x300000u | (uint16_t)r9, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(zero_block_ADDRESS, 0x200u, 0x300000u | (uint16_t)page, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 /* Sets up the sprite chip at boot: its control registers 500000-50000C from 010B0A-010B0F (rendering
@@ -3543,25 +3543,25 @@ void clear_tile_page(uint16_t r9)
    init_sprite_lists. */
 void init_sprite_chip(void)
 {
-	uint16_t r0 = 0;
-	uint32_t r18 = 0, control_values = 0;
+	uint16_t control_flip = 0;
+	uint32_t control_register = 0, control_values = 0;
 
 	mem_write16(SPRITE_CONTROL_500000, sprite_control_mode);
-	r18 = SPRITE_CONTROL + 0x4u;
-	r0 = sprite_control_flip;
-	control_values = 0x10B0Cu;
+	control_register = SPRITE_CONTROL + 0x4u;
+	control_flip = sprite_control_flip;
+	control_values = sprite_control_rest_ADDRESS;
 	if (flip_screen != 0u)
-		r0 = r0 ^ 3u;
-	mem_write16(r18, r0);
-	r18 += 2u;
-	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
+		control_flip = control_flip ^ 3u;
+	mem_write16(control_register, control_flip);
+	control_register += 2u;
+	mem_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
 	control_values++;
-	r18 += 2u;
-	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
+	control_register += 2u;
+	mem_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
 	control_values++;
-	r18 += 2u;
-	mem_write16(r18, SPRITE_CONTROL_VALUES(control_values)[0]);
-	mem_write16(r18 + 2u, SPRITE_CONTROL_VALUES(control_values)[1]);
+	control_register += 2u;
+	mem_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
+	mem_write16(control_register + 2u, SPRITE_CONTROL_VALUES(control_values)[1]);
 	init_sprite_lists();
 }
 
@@ -3573,7 +3573,7 @@ void init_sprite_chip(void)
    21C000 (next_sprite_place), sprite_groups 0, and sprite_lists_set_up = 1 (nothing reads it). */
 void init_sprite_lists(void)
 {
-	move_string(0x10BF4u, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(sprite_ram_start_entries_ADDRESS, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_RAM_404000;
 	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_RAM_414000;
 	SCREEN(SCREEN_1)->next_sprite_place = 0x20C000u;
@@ -3609,9 +3609,9 @@ void init_mixer(void)
 	uint32_t first_layer = 0, hidden_layer_pair = 0, mixer = 0, second_layer = 0;
 
 	mixer = SCREEN(screen)->mixer;
-	move_halfwords_backward(mixer, 0x10AB6u, 0x28u);
-	move_halfwords(screen + 0x160u, 0x10AB6u, 0x28u);
-	move_string(0x10AB6u, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords_backward(mixer, mixer_register_defaults_ADDRESS, 0x28u);
+	move_halfwords(screen + 0x160u, mixer_register_defaults_ADDRESS, 0x28u);
+	move_string(mixer_register_defaults_ADDRESS, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
 	hidden_layer_pair = hidden_layer_pairs_ADDRESS + SCREEN(screen)->index * 2u;
 	first_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->first_layer;
 	second_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->second_layer;
@@ -3646,407 +3646,407 @@ void init_io_chips(void)
    indirect colour tables sprites can take from sprite RAM). */
 void load_sprite_ram_tables(void)
 {
-	move_halfwords(SPRITE_RAM + 0x10000u, 0x12297Cu, 0xF0u);
-	move_halfwords(SPRITE_RAM + 0x1000u, 0x107020u, 0x1200u);
-	move_string(0x10C44u, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(SPRITE_RAM + 0x10000u, solid_colour_blocks_ADDRESS, 0xF0u);
+	move_halfwords(SPRITE_RAM + 0x1000u, indirect_colour_tables_ADDRESS, 0x1200u);
+	move_string(last_colour_tables_ADDRESS, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 /* Unused: meant to copy R0 & 3F8 bytes from R10 to R11 by jumping into a run of 8-byte moves at 0109B4,
    but the jump (200 less half the count from the run's start) is worked out for 128 moves and the run
    has 64: it copies the count less 200 bytes, nothing for 200, and for less it jumps past the run into
    the data at 010AB5. */
-void unrolled_copy(uint16_t r0, uint32_t r10, uint32_t r11)
+void unrolled_copy(uint16_t byte_count, uint32_t source, uint32_t destination)
 {
-	uint32_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0, t64 = 0, t65 = 0, t66 = 0, t67 = 0, t68 = 0, t69 = 0, t70 = 0, t71 = 0, t72 = 0, t73 = 0, t74 = 0, t75 = 0, t76 = 0, t77 = 0, t78 = 0, t79 = 0, t80 = 0, t81 = 0, t82 = 0, t83 = 0, t84 = 0, t85 = 0, t86 = 0, t87 = 0, t88 = 0, t89 = 0, t90 = 0, t91 = 0, t92 = 0, t93 = 0, t94 = 0, t95 = 0, t96 = 0, t97 = 0, t98 = 0, t99 = 0, t100 = 0, t101 = 0, t102 = 0, t103 = 0, t104 = 0, t105 = 0, t106 = 0, t107 = 0, t108 = 0, t109 = 0, t110 = 0, t111 = 0, t112 = 0, t113 = 0, t114 = 0, t115 = 0, t116 = 0, t117 = 0, t118 = 0, t119 = 0, t120 = 0, t121 = 0, t122 = 0, t123 = 0, t124 = 0, t125 = 0, t126 = 0, t127 = 0;
+	uint32_t move_destination = 0, second_word = 0, move_destination_2 = 0, second_word_2 = 0, move_destination_3 = 0, second_word_3 = 0, move_destination_4 = 0, second_word_4 = 0, move_destination_5 = 0, second_word_5 = 0, move_destination_6 = 0, second_word_6 = 0, move_destination_7 = 0, second_word_7 = 0, move_destination_8 = 0, second_word_8 = 0, move_destination_9 = 0, second_word_9 = 0, move_destination_10 = 0, second_word_10 = 0, move_destination_11 = 0, second_word_11 = 0, move_destination_12 = 0, second_word_12 = 0, move_destination_13 = 0, second_word_13 = 0, move_destination_14 = 0, second_word_14 = 0, move_destination_15 = 0, second_word_15 = 0, move_destination_16 = 0, second_word_16 = 0, move_destination_17 = 0, second_word_17 = 0, move_destination_18 = 0, second_word_18 = 0, move_destination_19 = 0, second_word_19 = 0, move_destination_20 = 0, second_word_20 = 0, move_destination_21 = 0, second_word_21 = 0, move_destination_22 = 0, second_word_22 = 0, move_destination_23 = 0, second_word_23 = 0, move_destination_24 = 0, second_word_24 = 0, move_destination_25 = 0, second_word_25 = 0, move_destination_26 = 0, second_word_26 = 0, move_destination_27 = 0, second_word_27 = 0, move_destination_28 = 0, second_word_28 = 0, move_destination_29 = 0, second_word_29 = 0, move_destination_30 = 0, second_word_30 = 0, move_destination_31 = 0, second_word_31 = 0, move_destination_32 = 0, second_word_32 = 0, move_destination_33 = 0, second_word_33 = 0, move_destination_34 = 0, second_word_34 = 0, move_destination_35 = 0, second_word_35 = 0, move_destination_36 = 0, second_word_36 = 0, move_destination_37 = 0, second_word_37 = 0, move_destination_38 = 0, second_word_38 = 0, move_destination_39 = 0, second_word_39 = 0, move_destination_40 = 0, second_word_40 = 0, move_destination_41 = 0, second_word_41 = 0, move_destination_42 = 0, second_word_42 = 0, move_destination_43 = 0, second_word_43 = 0, move_destination_44 = 0, second_word_44 = 0, move_destination_45 = 0, second_word_45 = 0, move_destination_46 = 0, second_word_46 = 0, move_destination_47 = 0, second_word_47 = 0, move_destination_48 = 0, second_word_48 = 0, move_destination_49 = 0, second_word_49 = 0, move_destination_50 = 0, second_word_50 = 0, move_destination_51 = 0, second_word_51 = 0, move_destination_52 = 0, second_word_52 = 0, move_destination_53 = 0, second_word_53 = 0, move_destination_54 = 0, second_word_54 = 0, move_destination_55 = 0, second_word_55 = 0, move_destination_56 = 0, second_word_56 = 0, move_destination_57 = 0, second_word_57 = 0, move_destination_58 = 0, second_word_58 = 0, move_destination_59 = 0, second_word_59 = 0, move_destination_60 = 0, second_word_60 = 0, move_destination_61 = 0, second_word_61 = 0, move_destination_62 = 0, second_word_62 = 0, move_destination_63 = 0, second_word_63 = 0, second_word_64 = 0;
 
-	switch (0u - (((r0 & 0x3F8u) >> 1) - 0x200u))
+	switch (0u - (((byte_count & 0x3F8u) >> 1) - 0x200u))
 	{
 	case 0x0u:
 		break;
 	default:
-		invalid_jump(0x109B4u + (0u - (((r0 & 0x3F8u) >> 1) - 0x200u)));
+		invalid_jump(0x109B4u + (0u - (((byte_count & 0x3F8u) >> 1) - 0x200u)));
 	}
-	t1 = r11;
-	r11 += 8u;
-	t2 = mem_read32(r10 + 4u);
-	mem_write32(t1, mem_read32(r10));
-	mem_write32(t1 + 4u, t2);
-	r10 += 8u;
-	t3 = r11;
-	r11 += 8u;
-	t4 = mem_read32(r10 + 4u);
-	mem_write32(t3, mem_read32(r10));
-	mem_write32(t3 + 4u, t4);
-	r10 += 8u;
-	t5 = r11;
-	r11 += 8u;
-	t6 = mem_read32(r10 + 4u);
-	mem_write32(t5, mem_read32(r10));
-	mem_write32(t5 + 4u, t6);
-	r10 += 8u;
-	t7 = r11;
-	r11 += 8u;
-	t8 = mem_read32(r10 + 4u);
-	mem_write32(t7, mem_read32(r10));
-	mem_write32(t7 + 4u, t8);
-	r10 += 8u;
-	t9 = r11;
-	r11 += 8u;
-	t10 = mem_read32(r10 + 4u);
-	mem_write32(t9, mem_read32(r10));
-	mem_write32(t9 + 4u, t10);
-	r10 += 8u;
-	t11 = r11;
-	r11 += 8u;
-	t12 = mem_read32(r10 + 4u);
-	mem_write32(t11, mem_read32(r10));
-	mem_write32(t11 + 4u, t12);
-	r10 += 8u;
-	t13 = r11;
-	r11 += 8u;
-	t14 = mem_read32(r10 + 4u);
-	mem_write32(t13, mem_read32(r10));
-	mem_write32(t13 + 4u, t14);
-	r10 += 8u;
-	t15 = r11;
-	r11 += 8u;
-	t16 = mem_read32(r10 + 4u);
-	mem_write32(t15, mem_read32(r10));
-	mem_write32(t15 + 4u, t16);
-	r10 += 8u;
-	t17 = r11;
-	r11 += 8u;
-	t18 = mem_read32(r10 + 4u);
-	mem_write32(t17, mem_read32(r10));
-	mem_write32(t17 + 4u, t18);
-	r10 += 8u;
-	t19 = r11;
-	r11 += 8u;
-	t20 = mem_read32(r10 + 4u);
-	mem_write32(t19, mem_read32(r10));
-	mem_write32(t19 + 4u, t20);
-	r10 += 8u;
-	t21 = r11;
-	r11 += 8u;
-	t22 = mem_read32(r10 + 4u);
-	mem_write32(t21, mem_read32(r10));
-	mem_write32(t21 + 4u, t22);
-	r10 += 8u;
-	t23 = r11;
-	r11 += 8u;
-	t24 = mem_read32(r10 + 4u);
-	mem_write32(t23, mem_read32(r10));
-	mem_write32(t23 + 4u, t24);
-	r10 += 8u;
-	t25 = r11;
-	r11 += 8u;
-	t26 = mem_read32(r10 + 4u);
-	mem_write32(t25, mem_read32(r10));
-	mem_write32(t25 + 4u, t26);
-	r10 += 8u;
-	t27 = r11;
-	r11 += 8u;
-	t28 = mem_read32(r10 + 4u);
-	mem_write32(t27, mem_read32(r10));
-	mem_write32(t27 + 4u, t28);
-	r10 += 8u;
-	t29 = r11;
-	r11 += 8u;
-	t30 = mem_read32(r10 + 4u);
-	mem_write32(t29, mem_read32(r10));
-	mem_write32(t29 + 4u, t30);
-	r10 += 8u;
-	t31 = r11;
-	r11 += 8u;
-	t32 = mem_read32(r10 + 4u);
-	mem_write32(t31, mem_read32(r10));
-	mem_write32(t31 + 4u, t32);
-	r10 += 8u;
-	t33 = r11;
-	r11 += 8u;
-	t34 = mem_read32(r10 + 4u);
-	mem_write32(t33, mem_read32(r10));
-	mem_write32(t33 + 4u, t34);
-	r10 += 8u;
-	t35 = r11;
-	r11 += 8u;
-	t36 = mem_read32(r10 + 4u);
-	mem_write32(t35, mem_read32(r10));
-	mem_write32(t35 + 4u, t36);
-	r10 += 8u;
-	t37 = r11;
-	r11 += 8u;
-	t38 = mem_read32(r10 + 4u);
-	mem_write32(t37, mem_read32(r10));
-	mem_write32(t37 + 4u, t38);
-	r10 += 8u;
-	t39 = r11;
-	r11 += 8u;
-	t40 = mem_read32(r10 + 4u);
-	mem_write32(t39, mem_read32(r10));
-	mem_write32(t39 + 4u, t40);
-	r10 += 8u;
-	t41 = r11;
-	r11 += 8u;
-	t42 = mem_read32(r10 + 4u);
-	mem_write32(t41, mem_read32(r10));
-	mem_write32(t41 + 4u, t42);
-	r10 += 8u;
-	t43 = r11;
-	r11 += 8u;
-	t44 = mem_read32(r10 + 4u);
-	mem_write32(t43, mem_read32(r10));
-	mem_write32(t43 + 4u, t44);
-	r10 += 8u;
-	t45 = r11;
-	r11 += 8u;
-	t46 = mem_read32(r10 + 4u);
-	mem_write32(t45, mem_read32(r10));
-	mem_write32(t45 + 4u, t46);
-	r10 += 8u;
-	t47 = r11;
-	r11 += 8u;
-	t48 = mem_read32(r10 + 4u);
-	mem_write32(t47, mem_read32(r10));
-	mem_write32(t47 + 4u, t48);
-	r10 += 8u;
-	t49 = r11;
-	r11 += 8u;
-	t50 = mem_read32(r10 + 4u);
-	mem_write32(t49, mem_read32(r10));
-	mem_write32(t49 + 4u, t50);
-	r10 += 8u;
-	t51 = r11;
-	r11 += 8u;
-	t52 = mem_read32(r10 + 4u);
-	mem_write32(t51, mem_read32(r10));
-	mem_write32(t51 + 4u, t52);
-	r10 += 8u;
-	t53 = r11;
-	r11 += 8u;
-	t54 = mem_read32(r10 + 4u);
-	mem_write32(t53, mem_read32(r10));
-	mem_write32(t53 + 4u, t54);
-	r10 += 8u;
-	t55 = r11;
-	r11 += 8u;
-	t56 = mem_read32(r10 + 4u);
-	mem_write32(t55, mem_read32(r10));
-	mem_write32(t55 + 4u, t56);
-	r10 += 8u;
-	t57 = r11;
-	r11 += 8u;
-	t58 = mem_read32(r10 + 4u);
-	mem_write32(t57, mem_read32(r10));
-	mem_write32(t57 + 4u, t58);
-	r10 += 8u;
-	t59 = r11;
-	r11 += 8u;
-	t60 = mem_read32(r10 + 4u);
-	mem_write32(t59, mem_read32(r10));
-	mem_write32(t59 + 4u, t60);
-	r10 += 8u;
-	t61 = r11;
-	r11 += 8u;
-	t62 = mem_read32(r10 + 4u);
-	mem_write32(t61, mem_read32(r10));
-	mem_write32(t61 + 4u, t62);
-	r10 += 8u;
-	t63 = r11;
-	r11 += 8u;
-	t64 = mem_read32(r10 + 4u);
-	mem_write32(t63, mem_read32(r10));
-	mem_write32(t63 + 4u, t64);
-	r10 += 8u;
-	t65 = r11;
-	r11 += 8u;
-	t66 = mem_read32(r10 + 4u);
-	mem_write32(t65, mem_read32(r10));
-	mem_write32(t65 + 4u, t66);
-	r10 += 8u;
-	t67 = r11;
-	r11 += 8u;
-	t68 = mem_read32(r10 + 4u);
-	mem_write32(t67, mem_read32(r10));
-	mem_write32(t67 + 4u, t68);
-	r10 += 8u;
-	t69 = r11;
-	r11 += 8u;
-	t70 = mem_read32(r10 + 4u);
-	mem_write32(t69, mem_read32(r10));
-	mem_write32(t69 + 4u, t70);
-	r10 += 8u;
-	t71 = r11;
-	r11 += 8u;
-	t72 = mem_read32(r10 + 4u);
-	mem_write32(t71, mem_read32(r10));
-	mem_write32(t71 + 4u, t72);
-	r10 += 8u;
-	t73 = r11;
-	r11 += 8u;
-	t74 = mem_read32(r10 + 4u);
-	mem_write32(t73, mem_read32(r10));
-	mem_write32(t73 + 4u, t74);
-	r10 += 8u;
-	t75 = r11;
-	r11 += 8u;
-	t76 = mem_read32(r10 + 4u);
-	mem_write32(t75, mem_read32(r10));
-	mem_write32(t75 + 4u, t76);
-	r10 += 8u;
-	t77 = r11;
-	r11 += 8u;
-	t78 = mem_read32(r10 + 4u);
-	mem_write32(t77, mem_read32(r10));
-	mem_write32(t77 + 4u, t78);
-	r10 += 8u;
-	t79 = r11;
-	r11 += 8u;
-	t80 = mem_read32(r10 + 4u);
-	mem_write32(t79, mem_read32(r10));
-	mem_write32(t79 + 4u, t80);
-	r10 += 8u;
-	t81 = r11;
-	r11 += 8u;
-	t82 = mem_read32(r10 + 4u);
-	mem_write32(t81, mem_read32(r10));
-	mem_write32(t81 + 4u, t82);
-	r10 += 8u;
-	t83 = r11;
-	r11 += 8u;
-	t84 = mem_read32(r10 + 4u);
-	mem_write32(t83, mem_read32(r10));
-	mem_write32(t83 + 4u, t84);
-	r10 += 8u;
-	t85 = r11;
-	r11 += 8u;
-	t86 = mem_read32(r10 + 4u);
-	mem_write32(t85, mem_read32(r10));
-	mem_write32(t85 + 4u, t86);
-	r10 += 8u;
-	t87 = r11;
-	r11 += 8u;
-	t88 = mem_read32(r10 + 4u);
-	mem_write32(t87, mem_read32(r10));
-	mem_write32(t87 + 4u, t88);
-	r10 += 8u;
-	t89 = r11;
-	r11 += 8u;
-	t90 = mem_read32(r10 + 4u);
-	mem_write32(t89, mem_read32(r10));
-	mem_write32(t89 + 4u, t90);
-	r10 += 8u;
-	t91 = r11;
-	r11 += 8u;
-	t92 = mem_read32(r10 + 4u);
-	mem_write32(t91, mem_read32(r10));
-	mem_write32(t91 + 4u, t92);
-	r10 += 8u;
-	t93 = r11;
-	r11 += 8u;
-	t94 = mem_read32(r10 + 4u);
-	mem_write32(t93, mem_read32(r10));
-	mem_write32(t93 + 4u, t94);
-	r10 += 8u;
-	t95 = r11;
-	r11 += 8u;
-	t96 = mem_read32(r10 + 4u);
-	mem_write32(t95, mem_read32(r10));
-	mem_write32(t95 + 4u, t96);
-	r10 += 8u;
-	t97 = r11;
-	r11 += 8u;
-	t98 = mem_read32(r10 + 4u);
-	mem_write32(t97, mem_read32(r10));
-	mem_write32(t97 + 4u, t98);
-	r10 += 8u;
-	t99 = r11;
-	r11 += 8u;
-	t100 = mem_read32(r10 + 4u);
-	mem_write32(t99, mem_read32(r10));
-	mem_write32(t99 + 4u, t100);
-	r10 += 8u;
-	t101 = r11;
-	r11 += 8u;
-	t102 = mem_read32(r10 + 4u);
-	mem_write32(t101, mem_read32(r10));
-	mem_write32(t101 + 4u, t102);
-	r10 += 8u;
-	t103 = r11;
-	r11 += 8u;
-	t104 = mem_read32(r10 + 4u);
-	mem_write32(t103, mem_read32(r10));
-	mem_write32(t103 + 4u, t104);
-	r10 += 8u;
-	t105 = r11;
-	r11 += 8u;
-	t106 = mem_read32(r10 + 4u);
-	mem_write32(t105, mem_read32(r10));
-	mem_write32(t105 + 4u, t106);
-	r10 += 8u;
-	t107 = r11;
-	r11 += 8u;
-	t108 = mem_read32(r10 + 4u);
-	mem_write32(t107, mem_read32(r10));
-	mem_write32(t107 + 4u, t108);
-	r10 += 8u;
-	t109 = r11;
-	r11 += 8u;
-	t110 = mem_read32(r10 + 4u);
-	mem_write32(t109, mem_read32(r10));
-	mem_write32(t109 + 4u, t110);
-	r10 += 8u;
-	t111 = r11;
-	r11 += 8u;
-	t112 = mem_read32(r10 + 4u);
-	mem_write32(t111, mem_read32(r10));
-	mem_write32(t111 + 4u, t112);
-	r10 += 8u;
-	t113 = r11;
-	r11 += 8u;
-	t114 = mem_read32(r10 + 4u);
-	mem_write32(t113, mem_read32(r10));
-	mem_write32(t113 + 4u, t114);
-	r10 += 8u;
-	t115 = r11;
-	r11 += 8u;
-	t116 = mem_read32(r10 + 4u);
-	mem_write32(t115, mem_read32(r10));
-	mem_write32(t115 + 4u, t116);
-	r10 += 8u;
-	t117 = r11;
-	r11 += 8u;
-	t118 = mem_read32(r10 + 4u);
-	mem_write32(t117, mem_read32(r10));
-	mem_write32(t117 + 4u, t118);
-	r10 += 8u;
-	t119 = r11;
-	r11 += 8u;
-	t120 = mem_read32(r10 + 4u);
-	mem_write32(t119, mem_read32(r10));
-	mem_write32(t119 + 4u, t120);
-	r10 += 8u;
-	t121 = r11;
-	r11 += 8u;
-	t122 = mem_read32(r10 + 4u);
-	mem_write32(t121, mem_read32(r10));
-	mem_write32(t121 + 4u, t122);
-	r10 += 8u;
-	t123 = r11;
-	r11 += 8u;
-	t124 = mem_read32(r10 + 4u);
-	mem_write32(t123, mem_read32(r10));
-	mem_write32(t123 + 4u, t124);
-	r10 += 8u;
-	t125 = r11;
-	r11 += 8u;
-	t126 = mem_read32(r10 + 4u);
-	mem_write32(t125, mem_read32(r10));
-	mem_write32(t125 + 4u, t126);
-	r10 += 8u;
-	t127 = mem_read32(r10 + 4u);
-	mem_write32(r11, mem_read32(r10));
-	mem_write32(r11 + 4u, t127);
+	move_destination = destination;
+	destination += 8u;
+	second_word = mem_read32(source + 4u);
+	mem_write32(move_destination, mem_read32(source));
+	mem_write32(move_destination + 4u, second_word);
+	source += 8u;
+	move_destination_2 = destination;
+	destination += 8u;
+	second_word_2 = mem_read32(source + 4u);
+	mem_write32(move_destination_2, mem_read32(source));
+	mem_write32(move_destination_2 + 4u, second_word_2);
+	source += 8u;
+	move_destination_3 = destination;
+	destination += 8u;
+	second_word_3 = mem_read32(source + 4u);
+	mem_write32(move_destination_3, mem_read32(source));
+	mem_write32(move_destination_3 + 4u, second_word_3);
+	source += 8u;
+	move_destination_4 = destination;
+	destination += 8u;
+	second_word_4 = mem_read32(source + 4u);
+	mem_write32(move_destination_4, mem_read32(source));
+	mem_write32(move_destination_4 + 4u, second_word_4);
+	source += 8u;
+	move_destination_5 = destination;
+	destination += 8u;
+	second_word_5 = mem_read32(source + 4u);
+	mem_write32(move_destination_5, mem_read32(source));
+	mem_write32(move_destination_5 + 4u, second_word_5);
+	source += 8u;
+	move_destination_6 = destination;
+	destination += 8u;
+	second_word_6 = mem_read32(source + 4u);
+	mem_write32(move_destination_6, mem_read32(source));
+	mem_write32(move_destination_6 + 4u, second_word_6);
+	source += 8u;
+	move_destination_7 = destination;
+	destination += 8u;
+	second_word_7 = mem_read32(source + 4u);
+	mem_write32(move_destination_7, mem_read32(source));
+	mem_write32(move_destination_7 + 4u, second_word_7);
+	source += 8u;
+	move_destination_8 = destination;
+	destination += 8u;
+	second_word_8 = mem_read32(source + 4u);
+	mem_write32(move_destination_8, mem_read32(source));
+	mem_write32(move_destination_8 + 4u, second_word_8);
+	source += 8u;
+	move_destination_9 = destination;
+	destination += 8u;
+	second_word_9 = mem_read32(source + 4u);
+	mem_write32(move_destination_9, mem_read32(source));
+	mem_write32(move_destination_9 + 4u, second_word_9);
+	source += 8u;
+	move_destination_10 = destination;
+	destination += 8u;
+	second_word_10 = mem_read32(source + 4u);
+	mem_write32(move_destination_10, mem_read32(source));
+	mem_write32(move_destination_10 + 4u, second_word_10);
+	source += 8u;
+	move_destination_11 = destination;
+	destination += 8u;
+	second_word_11 = mem_read32(source + 4u);
+	mem_write32(move_destination_11, mem_read32(source));
+	mem_write32(move_destination_11 + 4u, second_word_11);
+	source += 8u;
+	move_destination_12 = destination;
+	destination += 8u;
+	second_word_12 = mem_read32(source + 4u);
+	mem_write32(move_destination_12, mem_read32(source));
+	mem_write32(move_destination_12 + 4u, second_word_12);
+	source += 8u;
+	move_destination_13 = destination;
+	destination += 8u;
+	second_word_13 = mem_read32(source + 4u);
+	mem_write32(move_destination_13, mem_read32(source));
+	mem_write32(move_destination_13 + 4u, second_word_13);
+	source += 8u;
+	move_destination_14 = destination;
+	destination += 8u;
+	second_word_14 = mem_read32(source + 4u);
+	mem_write32(move_destination_14, mem_read32(source));
+	mem_write32(move_destination_14 + 4u, second_word_14);
+	source += 8u;
+	move_destination_15 = destination;
+	destination += 8u;
+	second_word_15 = mem_read32(source + 4u);
+	mem_write32(move_destination_15, mem_read32(source));
+	mem_write32(move_destination_15 + 4u, second_word_15);
+	source += 8u;
+	move_destination_16 = destination;
+	destination += 8u;
+	second_word_16 = mem_read32(source + 4u);
+	mem_write32(move_destination_16, mem_read32(source));
+	mem_write32(move_destination_16 + 4u, second_word_16);
+	source += 8u;
+	move_destination_17 = destination;
+	destination += 8u;
+	second_word_17 = mem_read32(source + 4u);
+	mem_write32(move_destination_17, mem_read32(source));
+	mem_write32(move_destination_17 + 4u, second_word_17);
+	source += 8u;
+	move_destination_18 = destination;
+	destination += 8u;
+	second_word_18 = mem_read32(source + 4u);
+	mem_write32(move_destination_18, mem_read32(source));
+	mem_write32(move_destination_18 + 4u, second_word_18);
+	source += 8u;
+	move_destination_19 = destination;
+	destination += 8u;
+	second_word_19 = mem_read32(source + 4u);
+	mem_write32(move_destination_19, mem_read32(source));
+	mem_write32(move_destination_19 + 4u, second_word_19);
+	source += 8u;
+	move_destination_20 = destination;
+	destination += 8u;
+	second_word_20 = mem_read32(source + 4u);
+	mem_write32(move_destination_20, mem_read32(source));
+	mem_write32(move_destination_20 + 4u, second_word_20);
+	source += 8u;
+	move_destination_21 = destination;
+	destination += 8u;
+	second_word_21 = mem_read32(source + 4u);
+	mem_write32(move_destination_21, mem_read32(source));
+	mem_write32(move_destination_21 + 4u, second_word_21);
+	source += 8u;
+	move_destination_22 = destination;
+	destination += 8u;
+	second_word_22 = mem_read32(source + 4u);
+	mem_write32(move_destination_22, mem_read32(source));
+	mem_write32(move_destination_22 + 4u, second_word_22);
+	source += 8u;
+	move_destination_23 = destination;
+	destination += 8u;
+	second_word_23 = mem_read32(source + 4u);
+	mem_write32(move_destination_23, mem_read32(source));
+	mem_write32(move_destination_23 + 4u, second_word_23);
+	source += 8u;
+	move_destination_24 = destination;
+	destination += 8u;
+	second_word_24 = mem_read32(source + 4u);
+	mem_write32(move_destination_24, mem_read32(source));
+	mem_write32(move_destination_24 + 4u, second_word_24);
+	source += 8u;
+	move_destination_25 = destination;
+	destination += 8u;
+	second_word_25 = mem_read32(source + 4u);
+	mem_write32(move_destination_25, mem_read32(source));
+	mem_write32(move_destination_25 + 4u, second_word_25);
+	source += 8u;
+	move_destination_26 = destination;
+	destination += 8u;
+	second_word_26 = mem_read32(source + 4u);
+	mem_write32(move_destination_26, mem_read32(source));
+	mem_write32(move_destination_26 + 4u, second_word_26);
+	source += 8u;
+	move_destination_27 = destination;
+	destination += 8u;
+	second_word_27 = mem_read32(source + 4u);
+	mem_write32(move_destination_27, mem_read32(source));
+	mem_write32(move_destination_27 + 4u, second_word_27);
+	source += 8u;
+	move_destination_28 = destination;
+	destination += 8u;
+	second_word_28 = mem_read32(source + 4u);
+	mem_write32(move_destination_28, mem_read32(source));
+	mem_write32(move_destination_28 + 4u, second_word_28);
+	source += 8u;
+	move_destination_29 = destination;
+	destination += 8u;
+	second_word_29 = mem_read32(source + 4u);
+	mem_write32(move_destination_29, mem_read32(source));
+	mem_write32(move_destination_29 + 4u, second_word_29);
+	source += 8u;
+	move_destination_30 = destination;
+	destination += 8u;
+	second_word_30 = mem_read32(source + 4u);
+	mem_write32(move_destination_30, mem_read32(source));
+	mem_write32(move_destination_30 + 4u, second_word_30);
+	source += 8u;
+	move_destination_31 = destination;
+	destination += 8u;
+	second_word_31 = mem_read32(source + 4u);
+	mem_write32(move_destination_31, mem_read32(source));
+	mem_write32(move_destination_31 + 4u, second_word_31);
+	source += 8u;
+	move_destination_32 = destination;
+	destination += 8u;
+	second_word_32 = mem_read32(source + 4u);
+	mem_write32(move_destination_32, mem_read32(source));
+	mem_write32(move_destination_32 + 4u, second_word_32);
+	source += 8u;
+	move_destination_33 = destination;
+	destination += 8u;
+	second_word_33 = mem_read32(source + 4u);
+	mem_write32(move_destination_33, mem_read32(source));
+	mem_write32(move_destination_33 + 4u, second_word_33);
+	source += 8u;
+	move_destination_34 = destination;
+	destination += 8u;
+	second_word_34 = mem_read32(source + 4u);
+	mem_write32(move_destination_34, mem_read32(source));
+	mem_write32(move_destination_34 + 4u, second_word_34);
+	source += 8u;
+	move_destination_35 = destination;
+	destination += 8u;
+	second_word_35 = mem_read32(source + 4u);
+	mem_write32(move_destination_35, mem_read32(source));
+	mem_write32(move_destination_35 + 4u, second_word_35);
+	source += 8u;
+	move_destination_36 = destination;
+	destination += 8u;
+	second_word_36 = mem_read32(source + 4u);
+	mem_write32(move_destination_36, mem_read32(source));
+	mem_write32(move_destination_36 + 4u, second_word_36);
+	source += 8u;
+	move_destination_37 = destination;
+	destination += 8u;
+	second_word_37 = mem_read32(source + 4u);
+	mem_write32(move_destination_37, mem_read32(source));
+	mem_write32(move_destination_37 + 4u, second_word_37);
+	source += 8u;
+	move_destination_38 = destination;
+	destination += 8u;
+	second_word_38 = mem_read32(source + 4u);
+	mem_write32(move_destination_38, mem_read32(source));
+	mem_write32(move_destination_38 + 4u, second_word_38);
+	source += 8u;
+	move_destination_39 = destination;
+	destination += 8u;
+	second_word_39 = mem_read32(source + 4u);
+	mem_write32(move_destination_39, mem_read32(source));
+	mem_write32(move_destination_39 + 4u, second_word_39);
+	source += 8u;
+	move_destination_40 = destination;
+	destination += 8u;
+	second_word_40 = mem_read32(source + 4u);
+	mem_write32(move_destination_40, mem_read32(source));
+	mem_write32(move_destination_40 + 4u, second_word_40);
+	source += 8u;
+	move_destination_41 = destination;
+	destination += 8u;
+	second_word_41 = mem_read32(source + 4u);
+	mem_write32(move_destination_41, mem_read32(source));
+	mem_write32(move_destination_41 + 4u, second_word_41);
+	source += 8u;
+	move_destination_42 = destination;
+	destination += 8u;
+	second_word_42 = mem_read32(source + 4u);
+	mem_write32(move_destination_42, mem_read32(source));
+	mem_write32(move_destination_42 + 4u, second_word_42);
+	source += 8u;
+	move_destination_43 = destination;
+	destination += 8u;
+	second_word_43 = mem_read32(source + 4u);
+	mem_write32(move_destination_43, mem_read32(source));
+	mem_write32(move_destination_43 + 4u, second_word_43);
+	source += 8u;
+	move_destination_44 = destination;
+	destination += 8u;
+	second_word_44 = mem_read32(source + 4u);
+	mem_write32(move_destination_44, mem_read32(source));
+	mem_write32(move_destination_44 + 4u, second_word_44);
+	source += 8u;
+	move_destination_45 = destination;
+	destination += 8u;
+	second_word_45 = mem_read32(source + 4u);
+	mem_write32(move_destination_45, mem_read32(source));
+	mem_write32(move_destination_45 + 4u, second_word_45);
+	source += 8u;
+	move_destination_46 = destination;
+	destination += 8u;
+	second_word_46 = mem_read32(source + 4u);
+	mem_write32(move_destination_46, mem_read32(source));
+	mem_write32(move_destination_46 + 4u, second_word_46);
+	source += 8u;
+	move_destination_47 = destination;
+	destination += 8u;
+	second_word_47 = mem_read32(source + 4u);
+	mem_write32(move_destination_47, mem_read32(source));
+	mem_write32(move_destination_47 + 4u, second_word_47);
+	source += 8u;
+	move_destination_48 = destination;
+	destination += 8u;
+	second_word_48 = mem_read32(source + 4u);
+	mem_write32(move_destination_48, mem_read32(source));
+	mem_write32(move_destination_48 + 4u, second_word_48);
+	source += 8u;
+	move_destination_49 = destination;
+	destination += 8u;
+	second_word_49 = mem_read32(source + 4u);
+	mem_write32(move_destination_49, mem_read32(source));
+	mem_write32(move_destination_49 + 4u, second_word_49);
+	source += 8u;
+	move_destination_50 = destination;
+	destination += 8u;
+	second_word_50 = mem_read32(source + 4u);
+	mem_write32(move_destination_50, mem_read32(source));
+	mem_write32(move_destination_50 + 4u, second_word_50);
+	source += 8u;
+	move_destination_51 = destination;
+	destination += 8u;
+	second_word_51 = mem_read32(source + 4u);
+	mem_write32(move_destination_51, mem_read32(source));
+	mem_write32(move_destination_51 + 4u, second_word_51);
+	source += 8u;
+	move_destination_52 = destination;
+	destination += 8u;
+	second_word_52 = mem_read32(source + 4u);
+	mem_write32(move_destination_52, mem_read32(source));
+	mem_write32(move_destination_52 + 4u, second_word_52);
+	source += 8u;
+	move_destination_53 = destination;
+	destination += 8u;
+	second_word_53 = mem_read32(source + 4u);
+	mem_write32(move_destination_53, mem_read32(source));
+	mem_write32(move_destination_53 + 4u, second_word_53);
+	source += 8u;
+	move_destination_54 = destination;
+	destination += 8u;
+	second_word_54 = mem_read32(source + 4u);
+	mem_write32(move_destination_54, mem_read32(source));
+	mem_write32(move_destination_54 + 4u, second_word_54);
+	source += 8u;
+	move_destination_55 = destination;
+	destination += 8u;
+	second_word_55 = mem_read32(source + 4u);
+	mem_write32(move_destination_55, mem_read32(source));
+	mem_write32(move_destination_55 + 4u, second_word_55);
+	source += 8u;
+	move_destination_56 = destination;
+	destination += 8u;
+	second_word_56 = mem_read32(source + 4u);
+	mem_write32(move_destination_56, mem_read32(source));
+	mem_write32(move_destination_56 + 4u, second_word_56);
+	source += 8u;
+	move_destination_57 = destination;
+	destination += 8u;
+	second_word_57 = mem_read32(source + 4u);
+	mem_write32(move_destination_57, mem_read32(source));
+	mem_write32(move_destination_57 + 4u, second_word_57);
+	source += 8u;
+	move_destination_58 = destination;
+	destination += 8u;
+	second_word_58 = mem_read32(source + 4u);
+	mem_write32(move_destination_58, mem_read32(source));
+	mem_write32(move_destination_58 + 4u, second_word_58);
+	source += 8u;
+	move_destination_59 = destination;
+	destination += 8u;
+	second_word_59 = mem_read32(source + 4u);
+	mem_write32(move_destination_59, mem_read32(source));
+	mem_write32(move_destination_59 + 4u, second_word_59);
+	source += 8u;
+	move_destination_60 = destination;
+	destination += 8u;
+	second_word_60 = mem_read32(source + 4u);
+	mem_write32(move_destination_60, mem_read32(source));
+	mem_write32(move_destination_60 + 4u, second_word_60);
+	source += 8u;
+	move_destination_61 = destination;
+	destination += 8u;
+	second_word_61 = mem_read32(source + 4u);
+	mem_write32(move_destination_61, mem_read32(source));
+	mem_write32(move_destination_61 + 4u, second_word_61);
+	source += 8u;
+	move_destination_62 = destination;
+	destination += 8u;
+	second_word_62 = mem_read32(source + 4u);
+	mem_write32(move_destination_62, mem_read32(source));
+	mem_write32(move_destination_62 + 4u, second_word_62);
+	source += 8u;
+	move_destination_63 = destination;
+	destination += 8u;
+	second_word_63 = mem_read32(source + 4u);
+	mem_write32(move_destination_63, mem_read32(source));
+	mem_write32(move_destination_63 + 4u, second_word_63);
+	source += 8u;
+	second_word_64 = mem_read32(source + 4u);
+	mem_write32(destination, mem_read32(source));
+	mem_write32(destination + 4u, second_word_64);
 }
 
 /* Unpacks the packed data at R10 into R11: flag bits read the highest first, 8 to a byte as needed; 1
@@ -4054,98 +4054,98 @@ void unrolled_copy(uint16_t r0, uint32_t r10, uint32_t r11)
    low three bits + 2, or when they are 0 the next byte + 1; a 0 byte ends the data); 00 takes two bits
    more (a length of 2-5) and a byte (an offset back of -1 to -256); a length copies that many bytes from
    that far back in what has been unpacked. */
-void unpack(uint32_t r10, uint32_t r11)
+void unpack(uint32_t source, uint32_t destination)
 {
 	uint32_t carry = 0;
-	uint8_t r0 = 0, r3_2 = 0;
-	uint32_t r1 = 0, r2 = 0, r3 = 0;
-	uint32_t t1 = 0;
+	uint8_t flags = 0, length_byte = 0;
+	uint32_t back_offset = 0, copy_count = 0, copy_source = 0, flags_left = 0;
+	uint32_t length_bits = 0;
 
-	r0 = mem_read8(r10);
-	r1 = 9u;
-	r10++;
+	flags = mem_read8(source);
+	flags_left = 9u;
+	source++;
 	for (;;)
 	{
-		r1--;
-		if (r1 == 0u)
+		flags_left--;
+		if (flags_left == 0u)
 		{
-			r0 = mem_read8(r10);
-			r1 = 8u;
-			r10++;
+			flags = mem_read8(source);
+			flags_left = 8u;
+			source++;
 		}
-		carry = (uint8_t)(r0 * 2u) < r0;
-		r0 = (uint8_t)(r0 * 2u);
+		carry = (uint8_t)(flags * 2u) < flags;
+		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(r11, mem_read8(r10));
-			r11++;
-			r10++;
+			mem_write8(destination, mem_read8(source));
+			destination++;
+			source++;
 			continue;
 		}
-		r2 = 0xFFFFFFFFu;
-		r1--;
-		if (r1 == 0u)
+		back_offset = 0xFFFFFFFFu;
+		flags_left--;
+		if (flags_left == 0u)
 		{
-			r0 = mem_read8(r10);
-			r1 = 8u;
-			r10++;
+			flags = mem_read8(source);
+			flags_left = 8u;
+			source++;
 		}
-		carry = (uint8_t)(r0 * 2u) < r0;
-		r0 = (uint8_t)(r0 * 2u);
+		carry = (uint8_t)(flags * 2u) < flags;
+		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			r2 = (r2 & ~0xFFFFu) | mem_read16(r10);
-			r3_2 = (uint8_t)r2;
-			r2 = (int32_t)r2 >> 3;
-			t1 = r3_2 & 7u;
-			r3 = t1;
-			r10 += 2u;
-			if (t1 != 0u)
-				r3 += 2u;
+			copy_source = (back_offset & ~0xFFFFu) | mem_read16(source);
+			length_byte = (uint8_t)copy_source;
+			copy_source = (int32_t)copy_source >> 3;
+			length_bits = length_byte & 7u;
+			copy_count = length_bits;
+			source += 2u;
+			if (length_bits != 0u)
+				copy_count += 2u;
 			else
 			{
-				r3 = mem_read8(r10);
-				r10++;
-				if (r3 == 0u)
+				copy_count = mem_read8(source);
+				source++;
+				if (copy_count == 0u)
 					break;
-				r3++;
+				copy_count++;
 			}
 		}
 		else
 		{
-			r3 = 0u;
-			r1--;
-			if (r1 == 0u)
+			copy_count = 0u;
+			flags_left--;
+			if (flags_left == 0u)
 			{
-				r0 = mem_read8(r10);
-				r1 = 8u;
-				r10++;
+				flags = mem_read8(source);
+				flags_left = 8u;
+				source++;
 			}
-			carry = (uint8_t)(r0 * 2u) < r0;
-			r0 = (uint8_t)(r0 * 2u);
-			r3 = r3 * 2u + carry;
-			r1--;
-			if (r1 == 0u)
+			carry = (uint8_t)(flags * 2u) < flags;
+			flags = (uint8_t)(flags * 2u);
+			copy_count = copy_count * 2u + carry;
+			flags_left--;
+			if (flags_left == 0u)
 			{
-				r0 = mem_read8(r10);
-				r1 = 8u;
-				r10++;
+				flags = mem_read8(source);
+				flags_left = 8u;
+				source++;
 			}
-			carry = (uint8_t)(r0 * 2u) < r0;
-			r0 = (uint8_t)(r0 * 2u);
-			r3 = r3 * 2u + carry;
-			r2 = (r2 & ~0xFFu) | mem_read8(r10);
-			r10++;
-			r3 += 2u;
+			carry = (uint8_t)(flags * 2u) < flags;
+			flags = (uint8_t)(flags * 2u);
+			copy_count = copy_count * 2u + carry;
+			copy_source = (back_offset & ~0xFFu) | mem_read8(source);
+			source++;
+			copy_count += 2u;
 		}
-		r2 += r11;
+		copy_source += destination;
 		do
 		{
-			mem_write8(r11, mem_read8(r2));
-			r11++;
-			r3--;
-			r2++;
-		} while (r3 != 0u);
+			mem_write8(destination, mem_read8(copy_source));
+			destination++;
+			copy_count--;
+			copy_source++;
+		} while (copy_count != 0u);
 	}
 }
 
@@ -4155,13 +4155,13 @@ void unpack(uint32_t r10, uint32_t r11)
    unpack_state's second byte: FF one byte of a match (unpack_copy_source, unpack_copy_count), 1 one step
    of unpack's format (unpack_flags, unpack_flags_left, unpack_source, unpack_destination): a byte, or a
    match's first byte. */
-uint32_t unpack_queued_step(uint32_t r2)
+uint32_t unpack_queued_step(uint32_t copy_source)
 {
 	uint32_t carry = 0;
-	uint8_t r0 = 0, r3 = 0;
-	uint32_t r1 = 0, r2_2 = 0, r10 = 0, r11 = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
+	uint8_t copy_count = 0, flags = 0, length_byte = 0;
+	uint32_t back_offset = 0, destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
 	uint8_t unpack_copy_count = 0;
-	uint32_t t1 = 0;
+	uint32_t length_bits = 0;
 
 	if ((int8_t)(uint8_t)(SCREEN(screen)->unpack_state >> 8u) <= 0)
 	{
@@ -4177,193 +4177,193 @@ uint32_t unpack_queued_step(uint32_t r2)
 			if (unpack_copy_count == 1u)
 			{
 				SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
-				return r2;
+				return copy_source;
 			}
-			return r2;
+			return copy_source;
 		}
 		unpack_read_place = SCREEN(screen)->unpack_read_place;
 		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
 		{
 			SCREEN(screen)->unpack_state = 0u;
-			return r2;
+			return copy_source;
 		}
-		r11 = screen + 0xC00u + unpack_read_place * 2u * 4u;
+		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		r10 = mem_read32(r11);
-		r11 = mem_read32(r11 + 4u);
-		r0 = mem_read8(r10);
-		r1 = 9u;
+		source = mem_read32(request);
+		destination = mem_read32(request + 4u);
+		flags = mem_read8(source);
+		flags_left = 9u;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
-		r10++;
+		source++;
 	}
 	else
 	{
-		r0 = SCREEN(screen)->unpack_flags;
-		r1 = SCREEN(screen)->unpack_flags_left;
-		r10 = SCREEN(screen)->unpack_source;
-		r11 = SCREEN(screen)->unpack_destination;
+		flags = SCREEN(screen)->unpack_flags;
+		flags_left = SCREEN(screen)->unpack_flags_left;
+		source = SCREEN(screen)->unpack_source;
+		destination = SCREEN(screen)->unpack_destination;
 	}
 	for (;;)
 	{
-		r1--;
-		if (r1 == 0u)
+		flags_left--;
+		if (flags_left == 0u)
 		{
-			r0 = mem_read8(r10);
-			r1 = 8u;
-			r10++;
+			flags = mem_read8(source);
+			flags_left = 8u;
+			source++;
 		}
-		carry = (uint8_t)(r0 * 2u) < r0;
-		r0 = (uint8_t)(r0 * 2u);
+		carry = (uint8_t)(flags * 2u) < flags;
+		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(r11, mem_read8(r10));
-			SCREEN(screen)->unpack_flags = r0;
-			SCREEN(screen)->unpack_flags_left = r1;
-			SCREEN(screen)->unpack_source = r10 + 1u;
-			SCREEN(screen)->unpack_destination = r11 + 1u;
-			return r2;
+			mem_write8(destination, mem_read8(source));
+			SCREEN(screen)->unpack_flags = flags;
+			SCREEN(screen)->unpack_flags_left = flags_left;
+			SCREEN(screen)->unpack_source = source + 1u;
+			SCREEN(screen)->unpack_destination = destination + 1u;
+			return copy_source;
 		}
-		r2_2 = 0xFFFFFFFFu;
-		r1--;
-		if (r1 == 0u)
+		back_offset = 0xFFFFFFFFu;
+		flags_left--;
+		if (flags_left == 0u)
 		{
-			r0 = mem_read8(r10);
-			r1 = 8u;
-			r10++;
+			flags = mem_read8(source);
+			flags_left = 8u;
+			source++;
 		}
-		carry = (uint8_t)(r0 * 2u) < r0;
-		r0 = (uint8_t)(r0 * 2u);
+		carry = (uint8_t)(flags * 2u) < flags;
+		flags = (uint8_t)(flags * 2u);
 		if (carry == 0u)
 			break;
-		r2 = (r2_2 & ~0xFFFFu) | mem_read16(r10);
-		r3 = (uint8_t)r2;
-		r2 = (int32_t)r2 >> 3;
-		t1 = r3 & 7u;
-		r3 = (uint8_t)t1;
-		r10 += 2u;
-		if (t1 != 0u)
+		copy_source = (back_offset & ~0xFFFFu) | mem_read16(source);
+		length_byte = (uint8_t)copy_source;
+		copy_source = (int32_t)copy_source >> 3;
+		length_bits = length_byte & 7u;
+		copy_count = (uint8_t)length_bits;
+		source += 2u;
+		if (length_bits != 0u)
 		{
-			r3++;
-			r2 += r11;
-			mem_write8(r11, mem_read8(r2));
-			SCREEN(screen)->unpack_flags = r0;
-			SCREEN(screen)->unpack_flags_left = r1;
-			r2++;
-			SCREEN(screen)->unpack_copy_source = r2;
-			SCREEN(screen)->unpack_copy_count = r3;
-			SCREEN(screen)->unpack_source = r10;
-			SCREEN(screen)->unpack_destination = r11 + 1u;
+			copy_count++;
+			copy_source += destination;
+			mem_write8(destination, mem_read8(copy_source));
+			SCREEN(screen)->unpack_flags = flags;
+			SCREEN(screen)->unpack_flags_left = flags_left;
+			copy_source++;
+			SCREEN(screen)->unpack_copy_source = copy_source;
+			SCREEN(screen)->unpack_copy_count = copy_count;
+			SCREEN(screen)->unpack_source = source;
+			SCREEN(screen)->unpack_destination = destination + 1u;
 			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-			return r2;
+			return copy_source;
 		}
-		r3 = mem_read8(r10);
-		r10++;
-		if (r3 != 0u)
+		copy_count = mem_read8(source);
+		source++;
+		if (copy_count != 0u)
 		{
-			r2 += r11;
-			mem_write8(r11, mem_read8(r2));
-			SCREEN(screen)->unpack_flags = r0;
-			SCREEN(screen)->unpack_flags_left = r1;
-			r2++;
-			SCREEN(screen)->unpack_copy_source = r2;
-			SCREEN(screen)->unpack_copy_count = r3;
-			SCREEN(screen)->unpack_source = r10;
-			SCREEN(screen)->unpack_destination = r11 + 1u;
+			copy_source += destination;
+			mem_write8(destination, mem_read8(copy_source));
+			SCREEN(screen)->unpack_flags = flags;
+			SCREEN(screen)->unpack_flags_left = flags_left;
+			copy_source++;
+			SCREEN(screen)->unpack_copy_source = copy_source;
+			SCREEN(screen)->unpack_copy_count = copy_count;
+			SCREEN(screen)->unpack_source = source;
+			SCREEN(screen)->unpack_destination = destination + 1u;
 			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-			return r2;
+			return copy_source;
 		}
 		unpack_read_place = SCREEN(screen)->unpack_read_place;
 		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
 		{
 			SCREEN(screen)->unpack_state = 0u;
-			return r2;
+			return copy_source;
 		}
-		r11 = screen + 0xC00u + unpack_read_place * 2u * 4u;
+		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		r10 = mem_read32(r11);
-		r11 = mem_read32(r11 + 4u);
-		r0 = mem_read8(r10);
-		r1 = 9u;
+		source = mem_read32(request);
+		destination = mem_read32(request + 4u);
+		flags = mem_read8(source);
+		flags_left = 9u;
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
-		r10++;
+		source++;
 	}
-	r3 = 0u;
-	r1--;
-	if (r1 == 0u)
+	copy_count = 0u;
+	flags_left--;
+	if (flags_left == 0u)
 	{
-		r0 = mem_read8(r10);
-		r1 = 8u;
-		r10++;
+		flags = mem_read8(source);
+		flags_left = 8u;
+		source++;
 	}
-	carry = (uint8_t)(r0 * 2u) < r0;
-	r0 = (uint8_t)(r0 * 2u);
-	r3 = (uint8_t)(r3 * 2u + carry);
-	r1--;
-	if (r1 == 0u)
+	carry = (uint8_t)(flags * 2u) < flags;
+	flags = (uint8_t)(flags * 2u);
+	copy_count = (uint8_t)(copy_count * 2u + carry);
+	flags_left--;
+	if (flags_left == 0u)
 	{
-		r0 = mem_read8(r10);
-		r1 = 8u;
-		r10++;
+		flags = mem_read8(source);
+		flags_left = 8u;
+		source++;
 	}
-	carry = (uint8_t)(r0 * 2u) < r0;
-	r0 = (uint8_t)(r0 * 2u);
-	r3 = (uint8_t)(r3 * 2u + carry);
-	r2 = (r2_2 & ~0xFFu) | mem_read8(r10);
-	r10++;
-	r3++;
-	r2 += r11;
-	mem_write8(r11, mem_read8(r2));
-	SCREEN(screen)->unpack_flags = r0;
-	SCREEN(screen)->unpack_flags_left = r1;
-	r2++;
-	SCREEN(screen)->unpack_copy_source = r2;
-	SCREEN(screen)->unpack_copy_count = r3;
-	SCREEN(screen)->unpack_source = r10;
-	SCREEN(screen)->unpack_destination = r11 + 1u;
+	carry = (uint8_t)(flags * 2u) < flags;
+	flags = (uint8_t)(flags * 2u);
+	copy_count = (uint8_t)(copy_count * 2u + carry);
+	copy_source = (back_offset & ~0xFFu) | mem_read8(source);
+	source++;
+	copy_count++;
+	copy_source += destination;
+	mem_write8(destination, mem_read8(copy_source));
+	SCREEN(screen)->unpack_flags = flags;
+	SCREEN(screen)->unpack_flags_left = flags_left;
+	copy_source++;
+	SCREEN(screen)->unpack_copy_source = copy_source;
+	SCREEN(screen)->unpack_copy_count = copy_count;
+	SCREEN(screen)->unpack_source = source;
+	SCREEN(screen)->unpack_destination = destination + 1u;
 	SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-	return r2;
+	return copy_source;
 }
 
 /* Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address
    and where to unpack it, closed by a negative entry (the first is taken without the check).
    unpack_tile_pages does the same for a list of tile pages. */
-void unpack_list(uint32_t r10)
+void unpack_list(uint32_t block_list)
 {
-	uint32_t r10_2 = 0, r11 = 0;
-	uint32_t t1 = 0;
+	uint32_t destination = 0, source = 0;
+	uint32_t next_entry = 0;
 
 	do
 	{
-		r12 = mem_read32(r10);
-		r10 += 4u;
-		r11 = mem_read32(r10);
-		t1 = r10 + 4u;
-		r10_2 = r12;
-		r12 = t1;
-		unpack(r10_2, r11);
-		r10 = r12;
-	} while ((int32_t)mem_read32(r10) >= 0);
+		r12 = mem_read32(block_list);
+		block_list += 4u;
+		destination = mem_read32(block_list);
+		next_entry = block_list + 4u;
+		source = r12;
+		r12 = next_entry;
+		unpack(source, destination);
+		block_list = r12;
+	} while ((int32_t)mem_read32(block_list) >= 0);
 }
 
 /* Unpacks a list of tilemap pages into video RAM at once (unpack): each 32-bit entry a page number in
    its top byte (the page at 300000 + 400 * page) and the address of its packed data below, closed by a
    negative entry; the list format of queue_tile_pages. */
-void unpack_tile_pages(uint32_t r10)
+void unpack_tile_pages(uint32_t page_list)
 {
-	uint32_t r0 = 0, r10_2 = 0, r11 = 0;
-	uint32_t t1 = 0;
+	uint32_t destination = 0, page_bits = 0, source = 0;
+	uint32_t next_entry = 0;
 
-	while ((int32_t)mem_read32(r10) >= 0)
+	while ((int32_t)mem_read32(page_list) >= 0)
 	{
-		r0 = mem_read32(r10);
-		r12 = r0;
-		r0 &= ~0xFFFFFFu;
-		r11 = 0x300000u + (byte_swap32(r0) << 8) * 4u;
-		t1 = r10 + 4u;
-		r10_2 = r12 ^ r0;
-		r12 = t1;
-		unpack(r10_2, r11);
-		r10 = r12;
+		page_bits = mem_read32(page_list);
+		r12 = page_bits;
+		page_bits &= ~0xFFFFFFu;
+		destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
+		next_entry = page_list + 4u;
+		source = r12 ^ page_bits;
+		r12 = next_entry;
+		unpack(source, destination);
+		page_list = r12;
 	}
 }
 
@@ -4371,45 +4371,45 @@ void unpack_tile_pages(uint32_t r10)
    closed by a negative entry, the first taken unchecked) as they are in the screen's ring unpack_queue
    (unpack_write_place), with unpack_state set to say there is work, for unpack_queued_step.
    queue_tile_pages does the same for a list of tile pages. */
-void queue_unpack_list(uint32_t r10)
+void queue_unpack_list(uint32_t block_list)
 {
-	uint32_t r11 = 0, unpack_write_place = 0;
-	uint32_t t1 = 0;
+	uint32_t request = 0, unpack_write_place = 0;
+	uint32_t destination = 0;
 
 	do
 	{
 		unpack_write_place = SCREEN(screen)->unpack_write_place;
-		r11 = screen + 0xC00u + unpack_write_place * 2u * 4u;
+		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
 		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
-		t1 = mem_read32(r10 + 4u);
-		mem_write32(r11, mem_read32(r10));
-		mem_write32(r11 + 4u, t1);
+		destination = mem_read32(block_list + 4u);
+		mem_write32(request, mem_read32(block_list));
+		mem_write32(request + 4u, destination);
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
-		r10 += 8u;
-	} while ((int32_t)mem_read32(r10) >= 0);
+		block_list += 8u;
+	} while ((int32_t)mem_read32(block_list) >= 0);
 }
 
 /* Queues the tilemap pages of the list R10 to be unpacked into video RAM: each 32-bit entry a page
    number in its top byte (the page at 300000 + 400 * page) and the address of its packed data below,
-   closed by a negative entry; the requests go into the screen's ring of 64 at C00 (unk_B03 the place)
-   and unk_B00 says there is work. Used by set_up_background, ranking_background_load and
+   closed by a negative entry; the requests go into the screen's ring of 64 at C00 (unpack_write_place
+   the place) and unpack_state says there is work. Used by set_up_background, ranking_background_load and
    race_background_update. */
-void queue_tile_pages(uint32_t r10)
+void queue_tile_pages(uint32_t page_list)
 {
-	uint32_t r0 = 0, r1 = 0, r11 = 0, unpack_write_place = 0;
+	uint32_t page_bits = 0, page_entry = 0, request = 0, unpack_write_place = 0;
 
-	while ((int32_t)mem_read32(r10) >= 0)
+	while ((int32_t)mem_read32(page_list) >= 0)
 	{
 		unpack_write_place = SCREEN(screen)->unpack_write_place;
-		r11 = screen + 0xC00u + unpack_write_place * 2u * 4u;
+		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
 		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
-		r0 = mem_read32(r10);
-		r1 = r0;
-		r0 &= ~0xFFFFFFu;
-		mem_write32(r11, r1 ^ r0);
-		mem_write32(r11 + 4u, 0x300000u + (byte_swap32(r0) << 8) * 4u);
+		page_bits = mem_read32(page_list);
+		page_entry = page_bits;
+		page_bits &= ~0xFFFFFFu;
+		mem_write32(request, page_entry ^ page_bits);
+		mem_write32(request + 4u, 0x300000u + (byte_swap32(page_bits) << 8) * 4u);
 		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
-		r10 += 4u;
+		page_list += 4u;
 	}
 }
 
@@ -4420,10 +4420,10 @@ void queue_tile_pages(uint32_t r10)
    second_io_chip_port_f (nothing reads it). */
 void init_coins(void)
 {
-	uint8_t t1 = 0;
+	uint8_t chip_2_port_f = 0;
 
-	t1 = mem_read8(0xC8000Au);
-	second_io_chip_port_f = ~t1 & 0xFu;
+	chip_2_port_f = mem_read8(0xC8000Au);
+	second_io_chip_port_f = ~chip_2_port_f & 0xFu;
 	chute_entry_offset = 0u;
 	if (free_play == 0u && second_chute_multiplier == first_chute_multiplier)
 		chute_entry_offset = 0x14u;
@@ -4441,161 +4441,161 @@ void init_coins(void)
    chutes, 4-5 seat 2's) counts its coin (insert_coin, entries at 0114D4) and the credits it gives in the
    bookkeeping (701F02); then drives the coin meters (pulse_coin_meter: each seat's first, and its second
    unless the chutes are shared, chute_entry_offset). */
-void update_coins(uint32_t r6)
+void update_coins(uint32_t calibration)
 {
-	uint8_t r0 = 0, r1 = 0;
-	uint32_t r6_2 = 0, r7 = 0, r9 = 0, r10 = 0, r11 = 0, r19 = 0;
+	uint8_t meter_bit = 0, sound = 0;
+	uint32_t chute_entry = 0, coin_meter = 0, counter = 0, credits_given = 0, pressed_switches = 0, released_switches = 0, seat_credits = 0, service_sounds = 0;
 	uint32_t saved_screen = 0;
-	uint8_t t1 = 0;
+	uint8_t released_chutes = 0;
 
 	if (free_play != 0u)
 		return;
 	saved_screen = screen;
 	if (seat1_coin_sounds != 0u)
 	{
-		r0 = 0x4Eu;
+		sound = 0x4Eu;
 		screen = SCREEN_1;
-		queue_sound(r0);
+		queue_sound(sound);
 		seat1_coin_sounds--;
 	}
 	if (seat2_coin_sounds != 0u)
 	{
-		r0 = 0x4Eu;
+		sound = 0x4Eu;
 		screen = SCREEN_2;
-		queue_sound(r0);
+		queue_sound(sound);
 		seat2_coin_sounds--;
 	}
 	if (seat1_service_sounds != 0u)
 	{
-		r0 = 0x50u;
+		sound = 0x50u;
 		screen = SCREEN_1;
-		queue_sound(r0);
+		queue_sound(sound);
 		seat1_service_sounds--;
 	}
 	if (seat2_service_sounds != 0u)
 	{
-		r0 = 0x50u;
+		sound = 0x50u;
 		screen = SCREEN_2;
-		queue_sound(r0);
+		queue_sound(sound);
 		seat2_service_sounds--;
 	}
 	screen = saved_screen;
-	r6_2 = (r6 & ~0xFFu) | switches_pressed;
-	r9 = 0u;
-	if ((r6_2 & 1u) != 0u)
+	pressed_switches = (calibration & ~0xFFu) | switches_pressed;
+	credits_given = 0u;
+	if ((pressed_switches & 1u) != 0u)
 	{
-		r10 = seat1_credits_ADDRESS;
-		r11 = seat1_service_sounds_ADDRESS;
+		seat_credits = seat1_credits_ADDRESS;
+		service_sounds = seat1_service_sounds_ADDRESS;
 		r12 = SCREEN_1;
-		r9 = add_service_credit(r9, r10, r11);
-		r7 = SOUND_RAM + 0x1F04u;
-		bookkeeping_add16(r7, (uint16_t)r9);
+		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
+		counter = SOUND_RAM + 0x1F04u;
+		bookkeeping_add16(counter, (uint16_t)credits_given);
 	}
-	r9 = 0u;
-	if ((r6_2 & 2u) != 0u)
+	credits_given = 0u;
+	if ((pressed_switches & 2u) != 0u)
 	{
-		r10 = seat2_credits_ADDRESS;
-		r11 = seat2_service_sounds_ADDRESS;
+		seat_credits = seat2_credits_ADDRESS;
+		service_sounds = seat2_service_sounds_ADDRESS;
 		r12 = SCREEN_2;
-		r9 = add_service_credit(r9, r10, r11);
-		r7 = SOUND_RAM + 0x1F04u;
-		bookkeeping_add16(r7, (uint16_t)r9);
+		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
+		counter = SOUND_RAM + 0x1F04u;
+		bookkeeping_add16(counter, (uint16_t)credits_given);
 	}
-	r6_2 = (r6_2 & ~0xFFu) | switches_released;
-	t1 = r6_2 & 0x3Cu;
-	r6_2 = (r6_2 & ~0xFFu) | t1;
-	if (t1 != 0u)
+	released_switches = (pressed_switches & ~0xFFu) | switches_released;
+	released_chutes = released_switches & 0x3Cu;
+	released_switches = (released_switches & ~0xFFu) | released_chutes;
+	if (released_chutes != 0u)
 	{
-		r9 = 0u;
+		credits_given = 0u;
 		r12 = SCREEN_1;
-		r19 = 0x114D4u;
-		r9 = insert_coin(r6_2, r9, r19);
-		r19 = 0x11504u;
-		r9 = insert_coin(r6_2, r9, r19);
+		chute_entry = seat1_first_chute_entry_ADDRESS;
+		credits_given = insert_coin(released_switches, credits_given, chute_entry);
+		chute_entry = seat1_second_chute_entry_ADDRESS;
+		credits_given = insert_coin(released_switches, credits_given, chute_entry);
 		r12 = SCREEN_2;
-		r19 = 0x11534u;
-		r9 = insert_coin(r6_2, r9, r19);
-		r19 = 0x11564u;
-		r9 = insert_coin(r6_2, r9, r19);
-		r7 = SOUND_RAM + 0x1F02u;
-		bookkeeping_add16(r7, (uint16_t)r9);
+		chute_entry = seat2_first_chute_entry_ADDRESS;
+		credits_given = insert_coin(released_switches, credits_given, chute_entry);
+		chute_entry = seat2_second_chute_entry_ADDRESS;
+		credits_given = insert_coin(released_switches, credits_given, chute_entry);
+		counter = SOUND_RAM + 0x1F02u;
+		bookkeeping_add16(counter, (uint16_t)credits_given);
 	}
 	if (chute_entry_offset == 0u)
 	{
-		r7 = 0x20E083u;
-		r1 = 1u;
+		coin_meter = 0x20E083u;
+		meter_bit = 1u;
 		r12 = port_d_outputs_ADDRESS;
-		pulse_coin_meter(r1, r7);
+		pulse_coin_meter(meter_bit, coin_meter);
 	}
-	r7 = coin_meters_ADDRESS;
-	r1 = 0u;
+	coin_meter = coin_meters_ADDRESS;
+	meter_bit = 0u;
 	r12 = port_d_outputs_ADDRESS;
-	pulse_coin_meter(r1, r7);
+	pulse_coin_meter(meter_bit, coin_meter);
 	if (chute_entry_offset == 0u)
 	{
-		r7 = 0x20E089u;
-		r1 = 1u;
+		coin_meter = 0x20E089u;
+		meter_bit = 1u;
 		r12 = port_d_outputs_ADDRESS + 0x1u;
-		pulse_coin_meter(r1, r7);
+		pulse_coin_meter(meter_bit, coin_meter);
 	}
-	r7 = 0x20E086u;
-	r1 = 0u;
+	coin_meter = 0x20E086u;
+	meter_bit = 0u;
 	r12 = port_d_outputs_ADDRESS + 0x1u;
-	pulse_coin_meter(r1, r7);
+	pulse_coin_meter(meter_bit, coin_meter);
 }
 
 /* Drives coin meter R1 (its bit in the port D outputs at R12, port_d_outputs: bit 0 a seat's first
    chute's meter, bit 1 its second's) from its record R7 in coin_meters (frames on, frames off, pulses
    owed): when idle with a pulse owed, the bit goes on for 6 vertical blanks and off for 6. Then writes
    the credits into the bookkeeping and its backup (write_bookkeeping_credits) with the checksum. */
-void pulse_coin_meter(uint8_t r1, uint32_t r7)
+void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 {
-	uint32_t r0 = 0;
-	uint8_t t1 = 0;
+	uint32_t meter_frames = 0;
+	uint8_t frames_on = 0;
 
-	r0 = mem_read16(r7);
-	r7 += 2u;
-	if (r0 == 0u)
+	meter_frames = mem_read16(coin_meter);
+	coin_meter += 2u;
+	if (meter_frames == 0u)
 	{
-		if (mem_read8(r7) != 0u)
+		if (mem_read8(coin_meter) != 0u)
 		{
-			mem_write8(r7, mem_read8(r7) - 1u);
-			mem_write8(r12, mem_read8(r12) | shift_by(1u, (uint8_t)r1, 8));
-			mem_write16(r7 - 2u, 0x606u);
+			mem_write8(coin_meter, mem_read8(coin_meter) - 1u);
+			mem_write8(r12, mem_read8(r12) | shift_by(1u, (uint8_t)meter_bit, 8));
+			mem_write16(coin_meter - 2u, 0x606u);
 		}
 		r12 = SOUND_701F74;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(r0);
+		bookkeeping_update_checksum(meter_frames);
 		r12 = SOUND_701FF0;
 		write_bookkeeping_credits();
 		return;
 	}
-	if ((uint8_t)r0 == 0u)
+	if ((uint8_t)meter_frames == 0u)
 	{
-		r7--;
-		mem_write8(r7, mem_read8(r7) - 1u);
+		coin_meter--;
+		mem_write8(coin_meter, mem_read8(coin_meter) - 1u);
 		r12 = SOUND_701F74;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(r0);
+		bookkeeping_update_checksum(meter_frames);
 		r12 = SOUND_701FF0;
 		write_bookkeeping_credits();
 		return;
 	}
-	t1 = mem_read8(r7 - 2u);
-	mem_write8(r7 - 2u, t1 - 1u);
-	if (t1 != 1u)
+	frames_on = mem_read8(coin_meter - 2u);
+	mem_write8(coin_meter - 2u, frames_on - 1u);
+	if (frames_on != 1u)
 	{
 		r12 = SOUND_701F74;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(r0);
+		bookkeeping_update_checksum(meter_frames);
 		r12 = SOUND_701FF0;
 		write_bookkeeping_credits();
 		return;
 	}
-	mem_write8(r12, mem_read8(r12) & rotate_by(0xFEu, (uint8_t)r1, 8));
+	mem_write8(r12, mem_read8(r12) & rotate_by(0xFEu, (uint8_t)meter_bit, 8));
 	r12 = SOUND_701F74;
 	write_bookkeeping_credits();
-	bookkeeping_update_checksum(r0);
+	bookkeeping_update_checksum(meter_frames);
 	r12 = SOUND_701FF0;
 	write_bookkeeping_credits();
 }
@@ -4618,28 +4618,28 @@ void write_bookkeeping_credits(void)
    more, up to 9 (at 9 its coin units are cleared; beyond, nothing); a credit given brings the screen R12
    to the title from the attract mode (show_title_on_credit), asks for the seat's service sound (R11) and
    counts one in R9, which it returns. Not run in the scenarios. */
-uint32_t add_service_credit(uint32_t r9, uint32_t r10, uint32_t r11)
+uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint32_t service_sounds)
 {
 	uint32_t zero = 0;
-	uint8_t t1 = 0;
+	uint8_t credits = 0;
 
-	mem_write8(r10, mem_read8(r10) + 1u);
-	t1 = mem_read8(r10);
-	zero = (uint8_t)(t1 - 9u) == 0u;
-	if (t1 >= 9u)
+	mem_write8(seat_credits, mem_read8(seat_credits) + 1u);
+	credits = mem_read8(seat_credits);
+	zero = (uint8_t)(credits - 9u) == 0u;
+	if (credits >= 9u)
 	{
-		mem_write8(r10 + 2u, 0u);
-		mem_write8(r10 + 1u, 0u);
+		mem_write8(seat_credits + 2u, 0u);
+		mem_write8(seat_credits + 1u, 0u);
 		if (zero == 0u)
 		{
-			mem_write8(r10, 9u);
-			return r9;
+			mem_write8(seat_credits, 9u);
+			return credits_given;
 		}
 	}
 	show_title_on_credit();
-	mem_write8(r11, 1u);
-	r9 = (r9 & ~0xFFu) | (uint8_t)(r9 + 1u);
-	return r9;
+	mem_write8(service_sounds, 1u);
+	credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
+	return credits_given;
 }
 
 /* A coin from the chute of entry R19 (when its bit is in R6): takes the entry's variant
@@ -4650,57 +4650,57 @@ uint32_t add_service_credit(uint32_t r9, uint32_t r10, uint32_t r11)
    credit record's third byte; one more unit each bonus_adder, when set) and toward a credit (its second
    byte, seat1_coin_units: a credit each coins_per_credit, up to 9, show_title_on_credit). Returns R9
    plus the credits given. */
-uint32_t insert_coin(uint32_t r6, uint32_t r9, uint32_t r19)
+uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_t chute_entry)
 {
-	uint8_t r1 = 0, r2_2 = 0, r3 = 0;
-	uint32_t r2 = 0, r7 = 0, r10 = 0, r11 = 0;
-	uint32_t t1 = 0, t2 = 0;
+	uint8_t bonus_units = 0, chute_units = 0, credit_units = 0, units_per_credit = 0;
+	uint32_t coin_sounds = 0, counter = 0, seat_credits = 0, units_per_bonus = 0;
+	uint32_t switch_bit = 0, owed_pulses = 0;
 
-	t1 = mem_read32(r19);
-	r19 += 4u;
-	if ((r6 & shl32(1u, (int)(t1))) == 0u)
-		return r9;
-	r11 = mem_read32(r19);
-	r19 = r19 + 4u + chute_entry_offset;
-	r10 = mem_read32(r19);
-	mem_write8(IO_C00074, mem_read8(r19 + 0x10u));
-	t2 = mem_read32(r19 + 4u);
-	mem_write8(t2, mem_read8(t2) + 1u);
-	r7 = mem_read32(r19 + 8u);
-	bookkeeping_increment16(r7);
-	if (mem_read8(r10) >= 9u)
-		return r9;
-	mem_write8(r11, mem_read8(r11) + 1u);
-	r1 = mem_read8(mem_read32(r19 + 0xCu));
-	r2 = bonus_adder;
-	if (r2 != 0u)
+	switch_bit = mem_read32(chute_entry);
+	chute_entry += 4u;
+	if ((released_switches & shl32(1u, (int)(switch_bit))) == 0u)
+		return credits_given;
+	coin_sounds = mem_read32(chute_entry);
+	chute_entry = chute_entry + 4u + chute_entry_offset;
+	seat_credits = mem_read32(chute_entry);
+	mem_write8(IO_C00074, mem_read8(chute_entry + 0x10u));
+	owed_pulses = mem_read32(chute_entry + 4u);
+	mem_write8(owed_pulses, mem_read8(owed_pulses) + 1u);
+	counter = mem_read32(chute_entry + 8u);
+	bookkeeping_increment16(counter);
+	if (mem_read8(seat_credits) >= 9u)
+		return credits_given;
+	mem_write8(coin_sounds, mem_read8(coin_sounds) + 1u);
+	chute_units = mem_read8(mem_read32(chute_entry + 0xCu));
+	units_per_bonus = bonus_adder;
+	if (units_per_bonus != 0u)
 	{
-		r3 = (uint8_t)(mem_read8(r10 + 2u) + r1);
-		while (r2 <= r3)
+		bonus_units = (uint8_t)(mem_read8(seat_credits + 2u) + chute_units);
+		while (units_per_bonus <= bonus_units)
 		{
-			mem_write8(r10 + 1u, mem_read8(r10 + 1u) + 1u);
-			r3 -= r2;
+			mem_write8(seat_credits + 1u, mem_read8(seat_credits + 1u) + 1u);
+			bonus_units -= units_per_bonus;
 		}
-		mem_write8(r10 + 2u, r3);
+		mem_write8(seat_credits + 2u, bonus_units);
 	}
-	r2_2 = coins_per_credit;
-	r3 = (uint8_t)(mem_read8(r10 + 1u) + r1);
+	units_per_credit = coins_per_credit;
+	credit_units = (uint8_t)(mem_read8(seat_credits + 1u) + chute_units);
 	do
 	{
-		if (r3 < r2_2)
+		if (credit_units < units_per_credit)
 		{
-			mem_write8(r10 + 1u, r3);
-			return r9;
+			mem_write8(seat_credits + 1u, credit_units);
+			return credits_given;
 		}
-		mem_write8(r10, mem_read8(r10) + 1u);
+		mem_write8(seat_credits, mem_read8(seat_credits) + 1u);
 		show_title_on_credit();
-		r9 = (r9 & ~0xFFu) | (uint8_t)(r9 + 1u);
-		r3 -= r2_2;
-	} while (mem_read8(r10) < 9u);
-	r3 = 0u;
-	mem_write8(r10 + 2u, 0u);
-	mem_write8(r10 + 1u, r3);
-	return r9;
+		credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
+		credit_units -= units_per_credit;
+	} while (mem_read8(seat_credits) < 9u);
+	credit_units = 0u;
+	mem_write8(seat_credits + 2u, 0u);
+	mem_write8(seat_credits + 1u, credit_units);
+	return credits_given;
 }
 
 /* A credit on the screen R12 during the attract mode (game modes 1-5, the low byte of its unk_80) brings
@@ -4714,116 +4714,116 @@ void show_title_on_credit(void)
 /* Adds one to the 16-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FFFF, with
    the checksum: the coins by chute (insert_coin), the games by seat and the races' results
    (game_mode_play). */
-void bookkeeping_increment16(uint32_t r7)
+void bookkeeping_increment16(uint32_t counter)
 {
-	if (mem_read16(r7) != 0xFFFFu)
+	if (mem_read16(counter) != 0xFFFFu)
 	{
-		mem_write16(r7, mem_read16(r7) + 1u);
+		mem_write16(counter, mem_read16(counter) + 1u);
 		bookkeeping_update_checksum(0u);
-		mem_write16(r7 + 0x7Cu, mem_read16(r7 + 0x7Cu) + 1u);
+		mem_write16(counter + 0x7Cu, mem_read16(counter + 0x7Cu) + 1u);
 	}
 }
 
 /* Unused: adds one to the 8-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FF,
    with the checksum (bookkeeping_update_checksum). */
-void bookkeeping_increment8(uint32_t r7)
+void bookkeeping_increment8(uint32_t counter_address)
 {
-	if (mem_read8(r7) != 0xFFu)
+	if (mem_read8(counter_address) != 0xFFu)
 	{
-		mem_write8(r7, mem_read8(r7) + 1u);
+		mem_write8(counter_address, mem_read8(counter_address) + 1u);
 		bookkeeping_update_checksum(0u);
-		mem_write8(r7 + 0x7Cu, mem_read8(r7 + 0x7Cu) + 1u);
+		mem_write8(counter_address + 0x7Cu, mem_read8(counter_address + 0x7Cu) + 1u);
 	}
 }
 
 /* Adds R9 to the 16-bit bookkeeping counter at R7 (the credits from coins, 701F02, and the service
    credits, 701F04: update_coins) and to its backup's (7C on), with the checksum; past FFFF it stays at
    FFFF (and the backup's is left as it was: the code writes R7 twice). */
-void bookkeeping_add16(uint32_t r7, uint16_t r9)
+void bookkeeping_add16(uint32_t counter, uint16_t amount)
 {
 	uint32_t carry = 0;
-	uint16_t t1 = 0;
+	uint16_t count = 0;
 
-	t1 = mem_read16(r7);
-	carry = (uint16_t)(t1 + r9) < t1;
-	mem_write16(r7, t1 + r9);
+	count = mem_read16(counter);
+	carry = (uint16_t)(count + amount) < count;
+	mem_write16(counter, count + amount);
 	if (carry)
 	{
-		mem_write16(r7, 0xFFFFu);
+		mem_write16(counter, 0xFFFFu);
 		bookkeeping_update_checksum(0u);
-		mem_write16(r7, 0xFFFFu);
+		mem_write16(counter, 0xFFFFu);
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write16(r7 + 0x7Cu, mem_read16(r7 + 0x7Cu) + r9);
+	mem_write16(counter + 0x7Cu, mem_read16(counter + 0x7Cu) + amount);
 }
 
 /* Adds R9 to the 32-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum; past
    FFFFFFFF it stays there (the backup's left as it was): the play time by seat (game_mode_play). */
-void bookkeeping_add32(uint32_t r7, uint32_t r9)
+void bookkeeping_add32(uint32_t counter, uint32_t amount)
 {
 	uint32_t carry = 0;
-	uint32_t t1 = 0;
+	uint32_t count = 0;
 
-	t1 = mem_read32(r7);
-	carry = t1 + r9 < t1;
-	mem_write32(r7, t1 + r9);
+	count = mem_read32(counter);
+	carry = count + amount < count;
+	mem_write32(counter, count + amount);
 	if (carry)
 	{
-		mem_write32(r7, 0xFFFFFFFFu);
+		mem_write32(counter, 0xFFFFFFFFu);
 		bookkeeping_update_checksum(0u);
-		mem_write32(r7, 0xFFFFFFFFu);
+		mem_write32(counter, 0xFFFFFFFFu);
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write32(r7 + 0x7Cu, mem_read32(r7 + 0x7Cu) + r9);
+	mem_write32(counter + 0x7Cu, mem_read32(counter + 0x7Cu) + amount);
 }
 
 /* Unused: adds R9 to the 8-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum;
    past FF it stays at FF (and the backup's is left as it was: the code writes R7 twice), as
    bookkeeping_add16 does. */
-void bookkeeping_add8(uint32_t r7, uint8_t r9)
+void bookkeeping_add8(uint32_t counter, uint8_t amount)
 {
 	uint32_t carry = 0;
-	uint8_t t1 = 0;
+	uint8_t count = 0;
 
-	t1 = mem_read8(r7);
-	carry = (uint8_t)(t1 + r9) < t1;
-	mem_write8(r7, t1 + r9);
+	count = mem_read8(counter);
+	carry = (uint8_t)(count + amount) < count;
+	mem_write8(counter, count + amount);
 	if (carry)
 	{
-		mem_write8(r7, 0xFFu);
+		mem_write8(counter, 0xFFu);
 		bookkeeping_update_checksum(0u);
-		mem_write8(r7, 0xFFu);
+		mem_write8(counter, 0xFFu);
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write8(r7 + 0x7Cu, mem_read8(r7 + 0x7Cu) + r9);
+	mem_write8(counter + 0x7Cu, mem_read8(counter + 0x7Cu) + amount);
 }
 
 /* Sets the 16-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum: the longest
    and shortest play (701F20, 701F22; game_mode_play). */
-void bookkeeping_set16(uint32_t r7, uint16_t r9)
+void bookkeeping_set16(uint32_t counter, uint16_t amount)
 {
-	mem_write16(r7, r9);
+	mem_write16(counter, amount);
 	bookkeeping_update_checksum(0u);
-	mem_write16(r7 + 0x7Cu, r9);
+	mem_write16(counter + 0x7Cu, amount);
 }
 
 /* Unused: sets the 32-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
-void bookkeeping_set32(uint32_t r7, uint32_t r9)
+void bookkeeping_set32(uint32_t counter, uint32_t amount)
 {
-	mem_write32(r7, r9);
+	mem_write32(counter, amount);
 	bookkeeping_update_checksum(0u);
-	mem_write32(r7 + 0x7Cu, r9);
+	mem_write32(counter + 0x7Cu, amount);
 }
 
 /* Unused: sets the 8-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
-void bookkeeping_set8(uint32_t r7, uint8_t r9)
+void bookkeeping_set8(uint32_t counter, uint8_t amount)
 {
-	mem_write8(r7, r9);
+	mem_write8(counter, amount);
 	bookkeeping_update_checksum(0u);
-	mem_write8(r7 + 0x7Cu, r9);
+	mem_write8(counter + 0x7Cu, amount);
 }
 
 /* Clears the credits kept in the bookkeeping (701F74-701F7B) and in its backup (701FF0-701FF7), with the
@@ -4843,114 +4843,114 @@ void bookkeeping_clear_credits(void)
    (bookkeeping_reset). */
 void bookkeeping_check(void)
 {
-	uint16_t r3 = 0;
-	uint32_t r0 = 0, r2 = 0, r3_2 = 0;
+	uint16_t stored_checksum = 0;
+	uint32_t block = 0, checksum = 0, destination = 0, source = 0;
 
-	r3 = mem_read16(SOUND_701F00);
-	r2 = SOUND_RAM + 0x1F02u;
-	r0 = bookkeeping_checksum(0u, r2);
-	if ((uint16_t)r0 == r3)
+	stored_checksum = mem_read16(SOUND_701F00);
+	block = SOUND_RAM + 0x1F02u;
+	checksum = bookkeeping_checksum(0u, block);
+	if ((uint16_t)checksum == stored_checksum)
 	{
-		r2 = SOUND_RAM + 0x1F02u;
-		r3_2 = SOUND_RAM + 0x1F7Eu;
-		r0 = bookkeeping_copy(r0, r2, r3_2);
+		source = SOUND_RAM + 0x1F02u;
+		destination = SOUND_RAM + 0x1F7Eu;
+		checksum = bookkeeping_copy(checksum, source, destination);
 		return;
 	}
-	r2 = SOUND_RAM + 0x1F7Eu;
-	r0 = bookkeeping_checksum(r0, r2);
-	if ((uint16_t)r0 == r3)
+	block = SOUND_RAM + 0x1F7Eu;
+	checksum = bookkeeping_checksum(checksum, block);
+	if ((uint16_t)checksum == stored_checksum)
 	{
-		r3_2 = SOUND_RAM + 0x1F02u;
-		r2 = SOUND_RAM + 0x1F7Eu;
-		r0 = bookkeeping_copy(r0, r2, r3_2);
+		destination = SOUND_RAM + 0x1F02u;
+		source = SOUND_RAM + 0x1F7Eu;
+		checksum = bookkeeping_copy(checksum, source, destination);
 		return;
 	}
-	r0 = bookkeeping_reset(r0);
+	checksum = bookkeeping_reset(checksum);
 }
 
 /* Resets the bookkeeping: the defaults at 011458 into the block (701F02), then the block into its backup
    (701F7E), with the checksum. */
-uint32_t bookkeeping_reset(uint32_t r0)
+uint32_t bookkeeping_reset(uint32_t checksum)
 {
-	uint32_t r2 = 0, r3 = 0;
+	uint32_t destination = 0, source = 0;
 
-	r2 = 0x11458u;
-	r3 = SOUND_RAM + 0x1F02u;
-	r0 = bookkeeping_copy(r0, r2, r3);
-	r2 = SOUND_RAM + 0x1F02u;
-	r3 = SOUND_RAM + 0x1F7Eu;
-	return bookkeeping_copy(r0, r2, r3);
+	source = bookkeeping_defaults_ADDRESS;
+	destination = SOUND_RAM + 0x1F02u;
+	checksum = bookkeeping_copy(checksum, source, destination);
+	source = SOUND_RAM + 0x1F02u;
+	destination = SOUND_RAM + 0x1F7Eu;
+	return bookkeeping_copy(checksum, source, destination);
 }
 
 /* Copies 3E halfwords from R2 over R3 (the bookkeeping and its backup at 701F7E, either way, or the
    defaults), then bookkeeping_update_checksum. */
-uint32_t bookkeeping_copy(uint32_t r0, uint32_t r2, uint32_t r3)
+uint32_t bookkeeping_copy(uint32_t checksum, uint32_t source, uint32_t destination)
 {
-	move_string(r2, 0x3Eu, r3, 0x3Eu, 2u, 0u, 0u, 0u, &r27, &r28);
-	return bookkeeping_update_checksum(r0);
+	move_string(source, 0x3Eu, destination, 0x3Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	return bookkeeping_update_checksum(checksum);
 }
 
 /* Writes the checksum of the bookkeeping (701F02-701F7D in the shared sound RAM) into 701F00, after a
    change to it; returns it. */
-uint32_t bookkeeping_update_checksum(uint32_t r0)
+uint32_t bookkeeping_update_checksum(uint32_t checksum)
 {
-	uint32_t r2 = 0;
+	uint32_t block = 0;
 
-	r2 = SOUND_RAM + 0x1F02u;
-	r0 = bookkeeping_checksum(r0, r2);
-	mem_write16(SOUND_701F00, r0);
-	return r0;
+	block = SOUND_RAM + 0x1F02u;
+	checksum = bookkeeping_checksum(checksum, block);
+	mem_write16(SOUND_701F00, checksum);
+	return checksum;
 }
 
 /* Unused: checks the bookkeeping block (701F02) against its checksum (701F00) and resets both it and its
    backup (bookkeeping_reset) when they differ; unlike bookkeeping_check it does not try the backup. */
 void bookkeeping_check_block(void)
 {
-	uint32_t r0 = 0, r2 = 0;
+	uint32_t block = 0, checksum = 0;
 
-	r2 = SOUND_RAM + 0x1F02u;
-	r0 = bookkeeping_checksum(0u, r2);
-	if (mem_read16(SOUND_701F00) != (uint16_t)r0)
+	block = SOUND_RAM + 0x1F02u;
+	checksum = bookkeeping_checksum(0u, block);
+	if (mem_read16(SOUND_701F00) != (uint16_t)checksum)
 	{
-		r0 = bookkeeping_reset(r0);
+		checksum = bookkeeping_reset(checksum);
 		return;
 	}
 }
 
 /* Returns the checksum of the 3E halfwords at R2 (the bookkeeping or its backup): from 1, each halfword
    XORed in, then a shift right by one, with 8810 XORed in when the bit shifted out was 1. */
-uint32_t bookkeeping_checksum(uint32_t r0, uint32_t r2)
+uint32_t bookkeeping_checksum(uint32_t checksum, uint32_t block)
 {
 	uint32_t carry = 0;
-	uint32_t r0_2 = 0, r1 = 0;
+	uint32_t halfwords_left = 0, sum = 0;
 
-	r0_2 = (r0 & ~0xFFFFu) | 1u;
-	r1 = 0x3Eu;
+	sum = (checksum & ~0xFFFFu) | 1u;
+	halfwords_left = 0x3Eu;
 	do
 	{
-		r0_2 = (r0_2 & ~0xFFFFu) | (uint16_t)(r0_2 ^ mem_read16(r2));
-		carry = r0_2 & 1u;
-		r0_2 = (r0_2 & ~0xFFFFu) | ((uint16_t)r0_2 >> 1);
-		r2 += 2u;
+		sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ mem_read16(block));
+		carry = sum & 1u;
+		sum = (sum & ~0xFFFFu) | ((uint16_t)sum >> 1);
+		block += 2u;
 		if (carry)
-			r0_2 = (r0_2 & ~0xFFFFu) | (uint16_t)(r0_2 ^ 0x8810u);
-		r1--;
-	} while (r1 != 0u);
-	return r0_2;
+			sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ 0x8810u);
+		halfwords_left--;
+	} while (halfwords_left != 0u);
+	return sum;
 }
 
 /* Uploads three blocks of colours straight into the screen's palette RAM at boot (upload_palette): 256
    colours at 9E00 (03153C), 16 at 9C00 (031740) and 2560 at 8000 (153904). */
 void upload_boot_palettes(void)
 {
-	uint32_t r19 = 0;
+	uint32_t colour_block = 0;
 
-	r19 = 0x3153Cu;
-	upload_palette(r19);
-	r19 = 0x31740u;
-	upload_palette(r19);
-	r19 = 0x153904u;
-	upload_palette(r19);
+	colour_block = boot_palette_9e00_ADDRESS;
+	upload_palette(colour_block);
+	colour_block = black_background_palette_ADDRESS;
+	upload_palette(colour_block);
+	colour_block = boot_palette_8000_ADDRESS;
+	upload_palette(colour_block);
 }
 
 /* Queues the palette of the stage the screen goes to (scene_palettes by screen route_stage) through
@@ -4958,45 +4958,45 @@ void upload_boot_palettes(void)
    code (002E74). */
 void queue_stage_load(void)
 {
-	uint32_t r19 = 0;
+	uint32_t colour_block = 0;
 
-	r19 = scene_palettes[SCREEN(screen)->route_stage];
-	queue_palette(r19);
+	colour_block = scene_palettes[SCREEN(screen)->route_stage];
+	queue_palette(colour_block);
 }
 
 /* Queues a block of colours (record R19: its place in the palette, its length in bytes, the colours) for
    the screen's palette RAM, copied in the vertical blank (upload_queued_palettes). */
-void queue_palette(uint32_t r19)
+void queue_palette(uint32_t colour_block)
 {
-	uint32_t r8 = 0;
+	uint32_t list_flag = 0;
 
-	r8 = 0u;
-	queue_palette_upload(r8, r19);
+	list_flag = 0u;
+	queue_palette_upload(list_flag, colour_block);
 }
 
 /* Queues a list of colour blocks (record R19: its length in bytes, then 8-byte entries: the colours'
    address, their place in the palette, how many blocks of 16) for the screen's palette RAM, copied in
    the vertical blank (upload_queued_palettes). */
-void queue_palette_list(uint32_t r19)
+void queue_palette_list(uint32_t colour_list)
 {
-	uint32_t r8 = 0;
+	uint32_t list_flag = 0;
 
-	r8 = 0x80000000u;
-	queue_palette_upload(r8, r19);
+	list_flag = 0x80000000u;
+	queue_palette_upload(list_flag, colour_list);
 }
 
 /* Adds R19 (bit 31 from R8: a list, not a block) to the screen's queue of palette uploads (the count at
-   unk_900, the entries after it, up to 128). */
-void queue_palette_upload(uint32_t r8, uint32_t r19)
+   palette_upload_count, the entries after it, up to 128). */
+void queue_palette_upload(uint32_t list_flag, uint32_t colour_record)
 {
-	uint32_t r9 = 0, r18 = 0;
+	uint32_t upload_count = 0, upload_queue = 0;
 
-	r18 = screen + 0x900u;
-	if ((int32_t)SCREEN(r18 - 0x900u)->palette_upload_count < 0x80)
+	upload_queue = screen + 0x900u;
+	if ((int32_t)SCREEN(upload_queue - 0x900u)->palette_upload_count < 0x80)
 	{
-		r9 = SCREEN(r18 - 0x900u)->palette_upload_count + 1u;
-		mem_write32(r18 + r9 * 4u, r19 | r8);
-		SCREEN(r18 - 0x900u)->palette_upload_count = r9;
+		upload_count = SCREEN(upload_queue - 0x900u)->palette_upload_count + 1u;
+		mem_write32(upload_queue + upload_count * 4u, colour_record | list_flag);
+		SCREEN(upload_queue - 0x900u)->palette_upload_count = upload_count;
 	}
 }
 
@@ -5004,132 +5004,132 @@ void queue_palette_upload(uint32_t r8, uint32_t r19)
    the vertical blank and empties the queue. */
 void upload_queued_palettes(void)
 {
-	uint32_t r0 = 0, r10 = 0, r19 = 0;
-	uint32_t t1 = 0;
+	uint32_t colour_record = 0, upload_queue = 0, uploads_left = 0;
+	uint32_t queued_upload = 0;
 
-	r10 = screen + 0x900u;
-	r0 = SCREEN(r10 - 0x900u)->palette_upload_count;
-	r10 += 4u;
+	upload_queue = screen + 0x900u;
+	uploads_left = SCREEN(upload_queue - 0x900u)->palette_upload_count;
+	upload_queue += 4u;
 	for (;;)
 	{
-		t1 = mem_read32(r10);
-		r19 = t1 & 0x7FFFFFFFu;
-		r10 += 4u;
-		if ((t1 & 0x80000000u) == 0u)
+		queued_upload = mem_read32(upload_queue);
+		colour_record = queued_upload & 0x7FFFFFFFu;
+		upload_queue += 4u;
+		if ((queued_upload & 0x80000000u) == 0u)
 		{
-			upload_palette(r19);
-			r0--;
-			if (r0 == 0u)
+			upload_palette(colour_record);
+			uploads_left--;
+			if (uploads_left == 0u)
 				break;
 			continue;
 		}
-		upload_palette_list(r19);
-		r0--;
-		if (r0 == 0u)
+		upload_palette_list(colour_record);
+		uploads_left--;
+		if (uploads_left == 0u)
 			break;
 	}
-	SCREEN(screen)->palette_upload_count = r0;
+	SCREEN(screen)->palette_upload_count = uploads_left;
 }
 
 /* Copies a block of colours (place, length in bytes, colours) into the screen's palette RAM (600000 for
    screen 1, 680000 for screen 2). */
-void upload_palette(uint32_t r19)
+void upload_palette(uint32_t colour_block)
 {
-	uint32_t r9 = 0, r18 = 0;
-	uint32_t t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
+	uint32_t blocks_left = 0, palette_address = 0;
+	uint32_t colours_0_place = 0, colours_2_3 = 0, colours_4_place = 0, colours_6_7 = 0, colours_8_place = 0, colours_10_11 = 0, colours_12_place = 0, colours_14_15 = 0;
 
-	r18 = SCREEN(screen)->index;
-	r18 = (r18 << 19) | (r18 >> 13) | 0x600000u | mem_read16(r19);
-	r19 += 2u;
-	r9 = mem_read16(r19);
-	r9 = r9 >> 5;
-	r19 += 2u;
+	palette_address = SCREEN(screen)->index;
+	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u | mem_read16(colour_block);
+	colour_block += 2u;
+	blocks_left = mem_read16(colour_block);
+	blocks_left = blocks_left >> 5;
+	colour_block += 2u;
 	do
 	{
-		t1 = r18;
-		r18 += 8u;
-		t2 = mem_read32(r19 + 4u);
-		mem_write32(t1, mem_read32(r19));
-		mem_write32(t1 + 4u, t2);
-		r19 += 8u;
-		t3 = r18;
-		r18 += 8u;
-		t4 = mem_read32(r19 + 4u);
-		mem_write32(t3, mem_read32(r19));
-		mem_write32(t3 + 4u, t4);
-		r19 += 8u;
-		t5 = r18;
-		r18 += 8u;
-		t6 = mem_read32(r19 + 4u);
-		mem_write32(t5, mem_read32(r19));
-		mem_write32(t5 + 4u, t6);
-		r19 += 8u;
-		t7 = r18;
-		r18 += 8u;
-		t8 = mem_read32(r19 + 4u);
-		mem_write32(t7, mem_read32(r19));
-		mem_write32(t7 + 4u, t8);
-		r9--;
-		r19 += 8u;
-	} while (r9 != 0u);
+		colours_0_place = palette_address;
+		palette_address += 8u;
+		colours_2_3 = mem_read32(colour_block + 4u);
+		mem_write32(colours_0_place, mem_read32(colour_block));
+		mem_write32(colours_0_place + 4u, colours_2_3);
+		colour_block += 8u;
+		colours_4_place = palette_address;
+		palette_address += 8u;
+		colours_6_7 = mem_read32(colour_block + 4u);
+		mem_write32(colours_4_place, mem_read32(colour_block));
+		mem_write32(colours_4_place + 4u, colours_6_7);
+		colour_block += 8u;
+		colours_8_place = palette_address;
+		palette_address += 8u;
+		colours_10_11 = mem_read32(colour_block + 4u);
+		mem_write32(colours_8_place, mem_read32(colour_block));
+		mem_write32(colours_8_place + 4u, colours_10_11);
+		colour_block += 8u;
+		colours_12_place = palette_address;
+		palette_address += 8u;
+		colours_14_15 = mem_read32(colour_block + 4u);
+		mem_write32(colours_12_place, mem_read32(colour_block));
+		mem_write32(colours_12_place + 4u, colours_14_15);
+		blocks_left--;
+		colour_block += 8u;
+	} while (blocks_left != 0u);
 }
 
 /* Copies a list of colour blocks (the list's length in bytes, then the address, place and number of
    32-byte blocks of each) into the screen's palette RAM. */
-void upload_palette_list(uint32_t r19)
+void upload_palette_list(uint32_t colour_list)
 {
-	uint32_t r8 = 0, r9 = 0, r17 = 0, r18 = 0;
-	uint32_t t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+	uint32_t blocks_left = 0, colour_source = 0, entries_left = 0, palette_address = 0;
+	uint32_t colours_2_3 = 0, colours_6_7 = 0, colours_10_11 = 0, colours_14_15 = 0;
 
-	r18 = SCREEN(screen)->index;
-	r18 = (r18 << 19) | (r18 >> 13) | 0x600000u;
-	r9 = mem_read32(r19) >> 3;
-	r19 += 4u;
+	palette_address = SCREEN(screen)->index;
+	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u;
+	entries_left = mem_read32(colour_list) >> 3;
+	colour_list += 4u;
 	do
 	{
-		r17 = mem_read32(r19);
-		r19 += 4u;
-		r18 = (r18 & ~0xFFFFu) | mem_read16(r19);
-		r19 += 2u;
-		r8 = mem_read16(r19);
-		r19 += 2u;
+		colour_source = mem_read32(colour_list);
+		colour_list += 4u;
+		palette_address = (palette_address & ~0xFFFFu) | mem_read16(colour_list);
+		colour_list += 2u;
+		blocks_left = mem_read16(colour_list);
+		colour_list += 2u;
 		do
 		{
-			t1 = mem_read32(r17 + 4u);
-			mem_write32(r18, mem_read32(r17));
-			mem_write32(r18 + 4u, t1);
-			r18 += 8u;
-			t2 = mem_read32(r17 + 0xCu);
-			mem_write32(r18, mem_read32(r17 + 8u));
-			mem_write32(r18 + 4u, t2);
-			r18 += 8u;
-			t3 = mem_read32(r17 + 0x14u);
-			mem_write32(r18, mem_read32(r17 + 0x10u));
-			mem_write32(r18 + 4u, t3);
-			r18 += 8u;
-			t4 = mem_read32(r17 + 0x1Cu);
-			mem_write32(r18, mem_read32(r17 + 0x18u));
-			mem_write32(r18 + 4u, t4);
-			r8--;
-			r18 += 8u;
-		} while (r8 != 0u);
-		r9--;
-	} while (r9 != 0u);
+			colours_2_3 = mem_read32(colour_source + 4u);
+			mem_write32(palette_address, mem_read32(colour_source));
+			mem_write32(palette_address + 4u, colours_2_3);
+			palette_address += 8u;
+			colours_6_7 = mem_read32(colour_source + 0xCu);
+			mem_write32(palette_address, mem_read32(colour_source + 8u));
+			mem_write32(palette_address + 4u, colours_6_7);
+			palette_address += 8u;
+			colours_10_11 = mem_read32(colour_source + 0x14u);
+			mem_write32(palette_address, mem_read32(colour_source + 0x10u));
+			mem_write32(palette_address + 4u, colours_10_11);
+			palette_address += 8u;
+			colours_14_15 = mem_read32(colour_source + 0x1Cu);
+			mem_write32(palette_address, mem_read32(colour_source + 0x18u));
+			mem_write32(palette_address + 4u, colours_14_15);
+			blocks_left--;
+			palette_address += 8u;
+		} while (blocks_left != 0u);
+		entries_left--;
+	} while (entries_left != 0u);
 }
 
-/* Steps the screen's fade while unk_94 bit 0 is set (vblank_update_mixer, every other vertical blank): a
-   fade asked for by fade_kind (0 to black, 1 from black, 2 to white, 3 from white, 4 to a red tint, 5
-   back from it; records at 01173A) sets fade_level, fade_step, fade_end and fade_channels and fade_kind
-   6 (under way); then each time the level moves a step (6 bits: 20 is -32, black; 1F is +31, white) and
-   goes into the mixer's colour offset 0 in mixer_values (registers 40-44: red, green, blue, those
-   fade_channels has; register 3E's high byte C0), which vblank_update_mixer copies to the mixer; unk_94
-   bit 0 is cleared when the level reaches fade_end. */
+/* Steps the screen's fade while the screen's flags bit 0 is set (vblank_update_mixer, every other
+   vertical blank): a fade asked for by fade_kind (0 to black, 1 from black, 2 to white, 3 from white, 4
+   to a red tint, 5 back from it; records at 01173A) sets fade_level, fade_step, fade_end and
+   fade_channels and fade_kind 6 (under way); then each time the level moves a step (6 bits: 20 is -32,
+   black; 1F is +31, white) and goes into the mixer's colour offset 0 in mixer_values (registers 40-44:
+   red, green, blue, those fade_channels has; register 3E's high byte C0), which vblank_update_mixer
+   copies to the mixer; flags bit 0 is cleared when the level reaches fade_end. */
 void step_screen_fade(void)
 {
 	uint32_t carry = 0;
-	uint8_t r0 = 0;
-	uint16_t r9 = 0;
-	uint32_t r1 = 0, r19 = 0, fade_start = 0;
+	uint8_t channels = 0;
+	uint16_t level = 0;
+	uint32_t channels_left = 0, fade_start = 0, mixer_register = 0;
 
 	switch (SCREEN(screen)->fade_kind)
 	{
@@ -5144,7 +5144,7 @@ void step_screen_fade(void)
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 1:
-		fade_start = 0x1173Eu;
+		fade_start = screen_fade_from_black_ADDRESS;
 		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
 		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
@@ -5154,7 +5154,7 @@ void step_screen_fade(void)
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 2:
-		fade_start = 0x11742u;
+		fade_start = screen_fade_to_white_ADDRESS;
 		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
 		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
@@ -5164,7 +5164,7 @@ void step_screen_fade(void)
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 3:
-		fade_start = 0x11746u;
+		fade_start = screen_fade_from_white_ADDRESS;
 		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
 		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
@@ -5174,7 +5174,7 @@ void step_screen_fade(void)
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 4:
-		fade_start = 0x1174Au;
+		fade_start = screen_fade_to_red_tint_ADDRESS;
 		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
 		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
@@ -5184,7 +5184,7 @@ void step_screen_fade(void)
 		SCREEN(screen)->fade_kind = 6u;
 		break;
 	case 5:
-		fade_start = 0x1174Eu;
+		fade_start = screen_fade_from_red_tint_ADDRESS;
 		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
 		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
@@ -5198,25 +5198,25 @@ void step_screen_fade(void)
 	default:
 		invalid_jump(screen_fade_kind_jumps[SCREEN(screen)->fade_kind]);
 	}
-	r9 = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
-	SCREEN(screen)->fade_level = (uint8_t)r9;
-	r19 = screen + 0x19Fu;
-	SCREEN(r19 - 0x19Fu)->colour_offset_mode = 0xC0u;
-	r0 = SCREEN(screen)->fade_channels;
-	r1 = 3u;
-	r19++;
+	level = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
+	SCREEN(screen)->fade_level = (uint8_t)level;
+	mixer_register = screen + 0x19Fu;
+	SCREEN(mixer_register - 0x19Fu)->colour_offset_mode = 0xC0u;
+	channels = SCREEN(screen)->fade_channels;
+	channels_left = 3u;
+	mixer_register++;
 	do
 	{
-		carry = (uint8_t)(r0 * 2u) < r0;
-		r0 = (uint8_t)(r0 * 2u);
+		carry = (uint8_t)(channels * 2u) < channels;
+		channels = (uint8_t)(channels * 2u);
 		if (carry)
 		{
-			mem_write16(r19, r9);
-			r19 += 2u;
+			mem_write16(mixer_register, level);
+			mixer_register += 2u;
 		}
-		r1--;
-	} while (r1 != 0u);
-	if (r9 == SCREEN(screen)->fade_end)
+		channels_left--;
+	} while (channels_left != 0u);
+	if (level == SCREEN(screen)->fade_end)
 		SCREEN(screen)->flags &= ~1u;
 }
 
@@ -5224,7 +5224,7 @@ void step_screen_fade(void)
    RAM at 318000. */
 void load_text_font(void)
 {
-	move_string(0x104020u, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_string(text_font_ADDRESS, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, 0u, &r27, &r28);
 }
 
 /* Unused: builds the text layer's first 128 characters (318000, where load_text_font puts its 384) from
@@ -5233,182 +5233,182 @@ void load_text_font(void)
 void load_shadowed_text_font(void)
 {
 	uint32_t carry = 0;
-	uint8_t r0 = 0;
-	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r18 = 0, font_rows = 0;
+	uint8_t row_bits = 0;
+	uint32_t characters_left = 0, destination = 0, font_rows = 0, pen = 0, pixel_mask = 0, pixel_pairs_left = 0, row_pixels = 0, rows_left = 0, shadow = 0, shadow_pixels = 0;
 
-	font_rows = 0x103C20u;
-	r18 = VIDEO_RAM + 0x18000u;
-	r5 = 1u;
-	r1 = 0x80u;
+	font_rows = one_bit_font_ADDRESS;
+	destination = VIDEO_RAM + 0x18000u;
+	pen = 1u;
+	characters_left = 0x80u;
 	do
 	{
-		r3 = 8u;
-		r6 = 0u;
+		rows_left = 8u;
+		shadow = 0u;
 		do
 		{
-			r0 = TEXT_FONT_ROWS(font_rows)[0];
-			r2 = 4u;
-			r4 = 0u;
+			row_bits = TEXT_FONT_ROWS(font_rows)[0];
+			pixel_pairs_left = 4u;
+			row_pixels = 0u;
 			font_rows++;
 			do
 			{
-				carry = (uint8_t)(r0 * 2u) < r0;
-				r0 = (uint8_t)(r0 * 2u);
-				r4 = rotate_with_carry_by(r4, 4u, carry, 32);
-				carry = (uint8_t)(r0 * 2u) < r0;
-				r0 = (uint8_t)(r0 * 2u);
-				r4 = rotate_with_carry_by(r4, 4u, carry, 32);
-				r2--;
-			} while (r2 != 0u);
-			r4 = (r4 << 29) | (r4 >> 3);
-			r7 = r4;
-			r0_2 = r4 * 0xFu;
-			r4 = r4 * r5;
-			mem_write32(r18, byte_swap32((r6 & ~r0_2) | r4));
-			r6 = (r4 + r7) >> 4;
-			r18 += 4u;
-			r3--;
-		} while (r3 != 0u);
-		r1--;
-	} while (r1 != 0u);
+				carry = (uint8_t)(row_bits * 2u) < row_bits;
+				row_bits = (uint8_t)(row_bits * 2u);
+				row_pixels = rotate_with_carry_by(row_pixels, 4u, carry, 32);
+				carry = (uint8_t)(row_bits * 2u) < row_bits;
+				row_bits = (uint8_t)(row_bits * 2u);
+				row_pixels = rotate_with_carry_by(row_pixels, 4u, carry, 32);
+				pixel_pairs_left--;
+			} while (pixel_pairs_left != 0u);
+			row_pixels = (row_pixels << 29) | (row_pixels >> 3);
+			shadow_pixels = row_pixels;
+			pixel_mask = row_pixels * 0xFu;
+			row_pixels = row_pixels * pen;
+			mem_write32(destination, byte_swap32((shadow & ~pixel_mask) | row_pixels));
+			shadow = (row_pixels + shadow_pixels) >> 4;
+			destination += 4u;
+			rows_left--;
+		} while (rows_left != 0u);
+		characters_left--;
+	} while (characters_left != 0u);
 }
 
 /* Writes the strings of the list R19 on the text layer (print_text_layer each) until an FFFF halfword.
    Not run in the scenarios. */
-void print_text_layer_list(uint32_t r19)
+void print_text_layer_list(uint32_t text_record)
 {
 	do
 	{
-		r19 = print_text_layer(r19);
-	} while (mem_read16(r19) != 0xFFFFu);
+		text_record = print_text_layer(text_record);
+	} while (mem_read16(text_record) != 0xFFFFu);
 }
 
 /* Writes a string on the text layer: from the record R19, the cell's address (310000 + its first
    halfword), an attribute byte (the cells' high byte: palette) and the characters, closed by 0; returns
    the address after it. */
-uint32_t print_text_layer(uint32_t r19)
+uint32_t print_text_layer(uint32_t text_record)
 {
-	uint16_t r9 = 0;
-	uint32_t r18 = 0;
+	uint16_t cell = 0;
+	uint32_t cell_place = 0;
 
-	r18 = 0x310000u | mem_read16(r19);
-	r19 += 2u;
-	r9 = (uint16_t)((uint32_t)mem_read8(r19) << 8);
-	r19++;
-	r9 |= mem_read8(r19);
-	r19++;
-	if ((uint8_t)r9 != 0u)
+	cell_place = 0x310000u | mem_read16(text_record);
+	text_record += 2u;
+	cell = (uint16_t)((uint32_t)mem_read8(text_record) << 8);
+	text_record++;
+	cell |= mem_read8(text_record);
+	text_record++;
+	if ((uint8_t)cell != 0u)
 	{
 		do
 		{
-			mem_write16(r18, r9);
-			r9 = (uint16_t)((r9 & ~0xFFu) | mem_read8(r19));
-			r18 += 2u;
-			r19++;
-		} while ((uint8_t)r9 != 0u);
+			mem_write16(cell_place, cell);
+			cell = (uint16_t)((cell & ~0xFFu) | mem_read8(text_record));
+			cell_place += 2u;
+			text_record++;
+		} while ((uint8_t)cell != 0u);
 	}
-	return r19;
+	return text_record;
 }
 
 /* Unused: erases a string from the text layer: from the cell of the print_text_layer record R19, writes
    0 cells until the next cell's character is 0. */
-void erase_text_layer_to_blank_character(uint32_t r19)
+void erase_text_layer_to_blank_character(uint32_t text_record)
 {
-	uint16_t r9 = 0;
-	uint32_t r18 = 0;
+	uint16_t blank_cell = 0;
+	uint32_t cell_place = 0;
 
-	r18 = 0x310000u | mem_read16(r19);
-	r9 = 0u;
+	cell_place = 0x310000u | mem_read16(text_record);
+	blank_cell = 0u;
 	do
 	{
-		mem_write16(r18, r9);
-		r18 += 2u;
-	} while (mem_read8(r18) != 0u);
+		mem_write16(cell_place, blank_cell);
+		cell_place += 2u;
+	} while (mem_read8(cell_place) != 0u);
 }
 
 /* Unused: print_text_layer with the characters as halfwords: from the record R19, the cell's address
    (310000 + its first halfword), the attribute byte, then the characters, 16 bits each (ORed with the
    attribute << 8, so they can reach past 255: the font has 384), closed by a 0 halfword. */
-void print_text_layer_halfwords(uint32_t r19)
+void print_text_layer_halfwords(uint32_t text_record)
 {
-	uint16_t r8 = 0, r9 = 0;
-	uint32_t r18 = 0;
+	uint16_t attribute = 0, character = 0;
+	uint32_t cell_place = 0;
 
-	r18 = 0x310000u | mem_read16(r19);
-	r19 += 2u;
-	r9 = (uint16_t)((uint32_t)mem_read8(r19) << 8);
-	r19++;
-	r8 = mem_read16(r19);
-	r19 += 2u;
-	if (r8 != 0u)
+	cell_place = 0x310000u | mem_read16(text_record);
+	text_record += 2u;
+	attribute = (uint16_t)((uint32_t)mem_read8(text_record) << 8);
+	text_record++;
+	character = mem_read16(text_record);
+	text_record += 2u;
+	if (character != 0u)
 	{
 		do
 		{
-			mem_write16(r18, r8 | r9);
-			r8 = mem_read16(r19);
-			r18 += 2u;
-			r19 += 2u;
-		} while (r8 != 0u);
+			mem_write16(cell_place, character | attribute);
+			character = mem_read16(text_record);
+			cell_place += 2u;
+			text_record += 2u;
+		} while (character != 0u);
 	}
 }
 
 /* Unused: erases a string from the text layer as erase_text_layer_to_blank_character does, but until the
    next cell is all 0 (character and attribute). */
-void erase_text_layer_to_blank_cell(uint32_t r19)
+void erase_text_layer_to_blank_cell(uint32_t text_record)
 {
-	uint16_t r9 = 0;
-	uint32_t r18 = 0;
+	uint16_t blank_cell = 0;
+	uint32_t cell_place = 0;
 
-	r18 = 0x310000u | mem_read16(r19);
-	r9 = 0u;
+	cell_place = 0x310000u | mem_read16(text_record);
+	blank_cell = 0u;
 	do
 	{
-		mem_write16(r18, r9);
-		r18 += 2u;
-	} while (mem_read16(r18) != 0u);
+		mem_write16(cell_place, blank_cell);
+		cell_place += 2u;
+	} while (mem_read16(cell_place) != 0u);
 }
 
 /* Never runs in the scenarios (ISDN only): writes a number's low byte as two hex digits on the text
    layer, ending before the cell it is given, with the attribute byte it is given (print_hex_digits). */
-void print_hex_byte(uint32_t r0, uint16_t r1, uint32_t r11)
+void print_hex_byte(uint32_t number, uint16_t cell, uint32_t cell_place)
 {
-	uint32_t r2 = 0;
+	uint32_t digit_count = 0;
 
-	r0 = (uint8_t)r0;
-	r2 = 2u;
-	print_hex_digits(r0, r1, r2, r11);
+	number = (uint8_t)number;
+	digit_count = 2u;
+	print_hex_digits(number, cell, digit_count, cell_place);
 }
 
 /* Unused: writes a number's low halfword as four hex digits on the text layer, ending before the cell it
    is given, with the attribute byte it is given (print_hex_digits). */
-void print_hex_halfword(uint32_t r0, uint16_t r1, uint32_t r11)
+void print_hex_halfword(uint32_t number, uint16_t cell, uint32_t cell_place)
 {
-	uint32_t r2 = 0;
+	uint32_t digit_count = 0;
 
-	r0 = (uint16_t)r0;
-	r2 = 4u;
-	print_hex_digits(r0, r1, r2, r11);
+	number = (uint16_t)number;
+	digit_count = 4u;
+	print_hex_digits(number, cell, digit_count, cell_place);
 }
 
 /* Unused: writes a number's low 24 bits as six hex digits on the text layer, as print_hex_halfword does
    (print_hex_digits). */
-void print_hex_24_bits(uint32_t r0, uint16_t r1, uint32_t r11)
+void print_hex_24_bits(uint32_t number, uint16_t cell, uint32_t cell_place)
 {
-	uint32_t r2 = 0;
+	uint32_t digit_count = 0;
 
-	r0 &= 0xFFFFFFu;
-	r2 = 6u;
-	print_hex_digits(r0, r1, r2, r11);
+	number &= 0xFFFFFFu;
+	digit_count = 6u;
+	print_hex_digits(number, cell, digit_count, cell_place);
 }
 
 /* Unused: writes a 32-bit number as eight hex digits on the text layer, as print_hex_halfword does
    (print_hex_digits, which it runs on into). */
-void print_hex_word(uint32_t r0, uint16_t r1, uint32_t r11)
+void print_hex_word(uint32_t number, uint16_t cell, uint32_t cell_place)
 {
-	uint32_t r2 = 0;
+	uint32_t digit_count = 0;
 
-	r2 = 8u;
-	print_hex_digits(r0, r1, r2, r11);
+	digit_count = 8u;
+	print_hex_digits(number, cell, digit_count, cell_place);
 }
 
 /* Writes a number in hex on the text layer, in as many cells as it is told, ending before the cell it is
@@ -5416,32 +5416,32 @@ void print_hex_word(uint32_t r0, uint16_t r1, uint32_t r11)
    given; when the number runs out, the cells left before it are cleared (0). Only print_hex_byte runs
    it; the entries for four, six and eight digits before it (print_hex_halfword, print_hex_24_bits,
    print_hex_word) are unused. */
-void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11)
+void print_hex_digits(uint32_t number, uint16_t cell, uint32_t digit_count, uint32_t cell_place)
 {
-	uint32_t t1 = 0;
+	uint32_t higher_digits = 0;
 
-	r11 += r2 * 2u;
+	cell_place += digit_count * 2u;
 	do
 	{
-		r1 = (uint16_t)((r1 & ~0xFFu) | (uint8_t)r0);
-		r1 = (uint16_t)((r1 & ~0xFFu) | (r1 & 0xFu));
-		if ((uint8_t)r1 >= 0xAu)
-			r1 = (uint16_t)((r1 & ~0xFFu) | (uint8_t)(r1 + 7u));
-		r1 = (uint16_t)((r1 & ~0xFFu) | (uint8_t)(r1 + 0x30u));
-		r11 -= 2u;
-		mem_write16(r11, r1);
-		t1 = r0 >> 4;
-		r0 = t1;
-		r2--;
-	} while ((r2 != 0u) & (t1 != 0u));
-	if (r2 != 0u)
+		cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)number);
+		cell = (uint16_t)((cell & ~0xFFu) | (cell & 0xFu));
+		if ((uint8_t)cell >= 0xAu)
+			cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 7u));
+		cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 0x30u));
+		cell_place -= 2u;
+		mem_write16(cell_place, cell);
+		higher_digits = number >> 4;
+		number = higher_digits;
+		digit_count--;
+	} while ((digit_count != 0u) & (higher_digits != 0u));
+	if (digit_count != 0u)
 	{
 		do
 		{
-			r11 -= 2u;
-			mem_write16(r11, r0);
-			r2--;
-		} while (r2 != 0u);
+			cell_place -= 2u;
+			mem_write16(cell_place, number);
+			digit_count--;
+		} while (digit_count != 0u);
 	}
 }
 
@@ -5449,86 +5449,86 @@ void print_hex_digits(uint32_t r0, uint16_t r1, uint32_t r2, uint32_t r11)
    in R0: eight times, the result so far times 10 plus the next digit. The inverse of binary_to_bcd. */
 uint32_t bcd_to_binary(uint32_t value)
 {
-	uint32_t r0 = 0, r2 = 0, r3 = 0;
+	uint32_t digits_left = 0, number = 0, total = 0;
 
-	r2 = 8u;
-	r3 = 0u;
+	digits_left = 8u;
+	total = 0u;
 	do
 	{
 		value = (value << 4) | (value >> 28);
-		r3 = r3 * 0xAu + (0xFu & value);
-		r2--;
-	} while (r2 != 0u);
-	r0 = r3;
-	return r0;
+		total = total * 0xAu + (0xFu & value);
+		digits_left--;
+	} while (digits_left != 0u);
+	number = total;
+	return number;
 }
 
 /* Converts R0 into eight decimal digits, one per four bits, the units in the lowest. */
-uint32_t binary_to_bcd(uint32_t r0)
+uint32_t binary_to_bcd(uint32_t number)
 {
-	uint32_t r0_2 = 0, r1 = 0, r2 = 0, r3 = 0;
+	uint32_t bcd = 0, digit = 0, digits = 0, digits_left = 0;
 
-	r3 = 8u;
-	r2 = 0u;
+	digits_left = 8u;
+	digits = 0u;
 	do
 	{
-		r1 = 0u;
-		divux_pair(0xAu, &r0, &r1);
-		r2 += r1;
-		r2 = (r2 << 28) | (r2 >> 4);
-		r3--;
-	} while ((r3 != 0u) & (r0 != 0u));
-	if (r0 == 0u && r3 != 0u)
+		digit = 0u;
+		divux_pair(0xAu, &number, &digit);
+		digits += digit;
+		digits = (digits << 28) | (digits >> 4);
+		digits_left--;
+	} while ((digits_left != 0u) & (number != 0u));
+	if (number == 0u && digits_left != 0u)
 	{
 		do
 		{
-			r2 = (r2 << 28) | (r2 >> 4);
-			r3--;
-		} while (r3 != 0u);
+			digits = (digits << 28) | (digits >> 4);
+			digits_left--;
+		} while (digits_left != 0u);
 	}
-	r0_2 = r2;
-	return r0_2;
+	bcd = digits;
+	return bcd;
 }
 
 /* Draws the string at R18 as draw_text does (a sprite per character into the screen's sprite list), at
    the place R3 holds (x in its low half, y in its high half, as a text record's first 32 bits) with the
    attribute R5. Used by stage_result_line, stage_indicator_draw and song_title_show (the song title). */
-void draw_text_at(uint32_t r3, uint16_t r5, uint32_t r18)
+void draw_text_at(uint32_t place, uint16_t attribute, uint32_t text)
 {
-	uint16_t r4 = 0;
-	uint32_t r1 = 0, r2 = 0, r10 = 0, r11 = 0;
+	uint16_t font = 0;
+	uint32_t sprite = 0, sprite_copy = 0, sprite_size = 0, sprite_words_0_1 = 0;
 
-	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
-	if (SCREEN(screen)->sprite_list_limit <= r10)
+	sprite = SCREEN(screen)->sprite_list_last + 0x10u;
+	if (SCREEN(screen)->sprite_list_limit <= sprite)
 		return;
-	r11 = r10 + 0x3000u;
-	r1 = text_sprite_words_0_1;
-	r3 = (r3 << 16) | (r3 >> 16);
-	r2 = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
-	r4 = text_sprite_font;
-	r5 |= text_sprite_palette;
-	r18 = draw_text_sprites(r1, r2, r3, r4, r5, r10, r11, r18);
+	sprite_copy = sprite + 0x3000u;
+	sprite_words_0_1 = text_sprite_words_0_1;
+	place = (place << 16) | (place >> 16);
+	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	font = text_sprite_font;
+	attribute |= text_sprite_palette;
+	text = draw_text_sprites(sprite_words_0_1, sprite_size, place, font, attribute, sprite, sprite_copy, text);
 }
 
 /* Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character
    and returns the address of the record after it. */
-uint32_t draw_text(uint32_t r19)
+uint32_t draw_text(uint32_t text_record)
 {
-	uint16_t r4 = 0, r5 = 0;
-	uint32_t r1 = 0, r2 = 0, r3 = 0, r10 = 0, r11 = 0, r18 = 0;
+	uint16_t attribute = 0, font = 0;
+	uint32_t place = 0, sprite = 0, sprite_copy = 0, sprite_size = 0, sprite_words_0_1 = 0, text = 0;
 
-	r18 = r19 + 6u;
-	r10 = SCREEN(screen)->sprite_list_last + 0x10u;
-	if (SCREEN(screen)->sprite_list_limit <= r10)
-		return r18;
-	r11 = r10 + 0x3000u;
-	r1 = text_sprite_words_0_1;
-	r2 = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
-	r3 = mem_read32(r19);
-	r3 = (r3 << 16) | (r3 >> 16);
-	r4 = text_sprite_font;
-	r5 = text_sprite_palette | mem_read16(r19 + 4u);
-	return draw_text_sprites(r1, r2, r3, r4, r5, r10, r11, r18);
+	text = text_record + 6u;
+	sprite = SCREEN(screen)->sprite_list_last + 0x10u;
+	if (SCREEN(screen)->sprite_list_limit <= sprite)
+		return text;
+	sprite_copy = sprite + 0x3000u;
+	sprite_words_0_1 = text_sprite_words_0_1;
+	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	place = mem_read32(text_record);
+	place = (place << 16) | (place >> 16);
+	font = text_sprite_font;
+	attribute = text_sprite_palette | mem_read16(text_record + 4u);
+	return draw_text_sprites(sprite_words_0_1, sprite_size, place, font, attribute, sprite, sprite_copy, text);
 }
 
 /* Writes a sprite per character of the string at R18 (closed by 0) into the sprite list and its halfway
@@ -5536,75 +5536,75 @@ uint32_t draw_text(uint32_t r19)
    more each character), the graphics R4 + 8 * the character, the attribute R5; then links them into
    depth layer 19E (screen 5678, drawn after nearly all the others) and counts them (sprite_groups).
    Returns the address after the string. The end of draw_text and draw_text_at. */
-uint32_t draw_text_sprites(uint32_t r1, uint32_t r2, uint32_t r3, uint16_t r4, uint16_t r5, uint32_t r10, uint32_t r11, uint32_t r18)
+uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint32_t place, uint16_t font, uint16_t attribute, uint32_t sprite, uint32_t sprite_copy, uint32_t text)
 {
-	uint16_t r0 = 0;
-	uint32_t r1_2 = 0, r2_2 = 0, r6 = 0, text_depth_list_head = 0;
-	uint8_t t1 = 0;
+	uint16_t character = 0;
+	uint32_t depth_layer = 0, first_sprite = 0, text_depth_list_head = 0, x_step = 0;
+	uint8_t next_character = 0;
 
-	r0 = mem_read8(r18);
-	r6 = 0x80000u;
-	r18++;
+	character = mem_read8(text);
+	x_step = 0x80000u;
+	text++;
 	do
 	{
-		r0 = (uint16_t)(((uint32_t)r0 << 3) + r4);
-		mem_write32(r10, r1);
-		mem_write32(r11, r1);
-		r11 += 4u;
-		r10 += 4u;
-		mem_write32(r10, r2);
-		mem_write32(r11, r2);
-		r11 += 4u;
-		r10 += 4u;
-		mem_write32(r10, r3);
-		mem_write32(r11, r3);
-		r11 += 4u;
-		r10 += 4u;
-		mem_write16(r10, r0);
-		mem_write16(r11, r0);
-		r11 += 2u;
-		r10 += 2u;
-		mem_write16(r10, r5);
-		mem_write16(r11, r5);
-		r11 += 2u;
-		r3 += r6;
-		t1 = mem_read8(r18);
-		r18++;
-		r0 = t1;
-		r10 += 2u;
-	} while (r0 != 0u);
-	r1_2 = screen + 0x5678u;
-	text_depth_list_head = SCREEN(r1_2 - 0x5678u)->text_depth_list_head;
+		character = (uint16_t)(((uint32_t)character << 3) + font);
+		mem_write32(sprite, sprite_words_0_1);
+		mem_write32(sprite_copy, sprite_words_0_1);
+		sprite_copy += 4u;
+		sprite += 4u;
+		mem_write32(sprite, sprite_size);
+		mem_write32(sprite_copy, sprite_size);
+		sprite_copy += 4u;
+		sprite += 4u;
+		mem_write32(sprite, place);
+		mem_write32(sprite_copy, place);
+		sprite_copy += 4u;
+		sprite += 4u;
+		mem_write16(sprite, character);
+		mem_write16(sprite_copy, character);
+		sprite_copy += 2u;
+		sprite += 2u;
+		mem_write16(sprite, attribute);
+		mem_write16(sprite_copy, attribute);
+		sprite_copy += 2u;
+		place += x_step;
+		next_character = mem_read8(text);
+		text++;
+		character = next_character;
+		sprite += 2u;
+	} while (character != 0u);
+	depth_layer = screen + 0x5678u;
+	text_depth_list_head = SCREEN(depth_layer - 0x5678u)->text_depth_list_head;
 	if (text_depth_list_head == 0u)
-		SCREEN(r1_2 - 0x5678u)->text_depth_list_tail = r10;
-	r2_2 = SCREEN(screen)->sprite_list_last + 0x10u;
-	mem_write32(r10, text_depth_list_head);
-	mem_write32(r11, (uint16_t)(text_depth_list_head + 0x300u));
-	SCREEN(screen)->sprite_list_last = r10;
-	SCREEN(r1_2 - 0x5678u)->text_depth_list_head = (r2_2 >> 4) | 0x8000u;
+		SCREEN(depth_layer - 0x5678u)->text_depth_list_tail = sprite;
+	first_sprite = SCREEN(screen)->sprite_list_last + 0x10u;
+	mem_write32(sprite, text_depth_list_head);
+	mem_write32(sprite_copy, (uint16_t)(text_depth_list_head + 0x300u));
+	SCREEN(screen)->sprite_list_last = sprite;
+	SCREEN(depth_layer - 0x5678u)->text_depth_list_head = (first_sprite >> 4) | 0x8000u;
 	SCREEN(screen)->sprite_groups++;
-	return r18;
+	return text;
 }
 
 /* Ends all of the screen's objects at once: every slot free (screen - 7FF0), both object lists empty
    (this frame's at - 7E00, the next one's at - 7D00, with run_objects' pointers to them at - 8000, -
-   7FFC, - 7FF4 and - 7FF8), and the queue of palette uploads (unk_900) emptied. At boot and as each game
-   mode starts. */
+   7FFC, - 7FF4 and - 7FF8), and the queue of palette uploads (palette_upload_count) emptied. At boot and
+   as each game mode starts. */
 void clear_objects(void)
 {
-	uint32_t r0 = 0;
+	uint32_t halfword_count = 0;
 
-	move_halfwords(screen - 0x7FF0u, 0x100800u, 0x7Cu);
+	move_halfwords(screen - 0x7FF0u, zero_block_ADDRESS, 0x7Cu);
 	OBJECT_AREA(screen - 0x8000u)->list = screen - 0x7E00u;
 	OBJECT_AREA(screen - 0x8000u)->list_first = screen - 0x7DFEu;
 	OBJECT_AREA(screen - 0x8000u)->list_end = screen - 0x7DFEu;
 	OBJECT_AREA(screen - 0x8000u)->next_list = screen - 0x7D00u;
-	r0 = (uint8_t)OBJECT_LIST(screen - 0x7E00u)->count;
-	r0 = (uint16_t)(r0 + 1u);
-	move_halfwords(screen - 0x7E00u, 0x100800u, r0);
-	r0 = (uint8_t)OBJECT_LIST(screen - 0x7D00u)->count;
-	r0 = (uint16_t)(r0 + 1u);
-	move_string(0x100800u, r0, screen - 0x7D00u, r0, 2u, 0u, 0u, 0u, &r27, &r28);
+	halfword_count = (uint8_t)OBJECT_LIST(screen - 0x7E00u)->count;
+	halfword_count = (uint16_t)(halfword_count + 1u);
+	move_halfwords(screen - 0x7E00u, zero_block_ADDRESS, halfword_count);
+	halfword_count = (uint8_t)OBJECT_LIST(screen - 0x7D00u)->count;
+	halfword_count = (uint16_t)(halfword_count + 1u);
+	move_string(zero_block_ADDRESS, halfword_count, screen - 0x7D00u, halfword_count, 2u, 0u, 0u, 0u, &r27, &r28);
 	SCREEN(screen)->palette_upload_count &= 0xFFFF0000u;
 }
 
@@ -5614,16 +5614,16 @@ void clear_objects(void)
    and the two lists swap. */
 void run_objects(void)
 {
-	uint32_t r0 = 0, r2 = 0, r3 = 0, r22 = 0, count = 0, object_list = 0;
+	uint32_t blocks_left = 0, count = 0, list_entry = 0, object_list = 0, zero_high = 0, zero_low = 0;
 	uint32_t next_list = 0;
 
 	current_object = screen;
-	r22 = OBJECT_AREA(screen - 0x8000u)->list + 2u;
+	list_entry = OBJECT_AREA(screen - 0x8000u)->list + 2u;
 	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
-		current_object = (current_object & ~0xFFFFu) | mem_read16(r22);
-		r22 += 2u;
+		current_object = (current_object & ~0xFFFFu) | mem_read16(list_entry);
+		list_entry += 2u;
 		if ((uint16_t)current_object == 0u)
 			break;
 		if ((OBJECT(current_object)->flags & 1u) != 0u)
@@ -5637,18 +5637,18 @@ void run_objects(void)
 		mem_write8(screen - 0x7FF0u + OBJECT(current_object)->slot, 0u);
 	}
 	object_list = OBJECT_AREA(screen - 0x8000u)->list;
-	r0 = OBJECT_LIST(object_list)->count;
-	r0 = (uint16_t)(r0 + 4u);
-	r0 = r0 >> 2;
-	r2 = 0u;
-	r3 = 0u;
+	blocks_left = OBJECT_LIST(object_list)->count;
+	blocks_left = (uint16_t)(blocks_left + 4u);
+	blocks_left = blocks_left >> 2;
+	zero_low = 0u;
+	zero_high = 0u;
 	do
 	{
-		mem_write32(object_list, r2);
-		mem_write32(object_list + 4u, r3);
-		r0--;
+		mem_write32(object_list, zero_low);
+		mem_write32(object_list + 4u, zero_high);
+		blocks_left--;
 		object_list += 8u;
-	} while (r0 != 0u);
+	} while (blocks_left != 0u);
 	OBJECT_AREA(screen - 0x8000u)->list ^= 0x100u;
 	OBJECT_AREA(screen - 0x8000u)->next_list ^= 0x100u;
 	count = OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count;
@@ -5662,125 +5662,125 @@ void run_objects(void)
 uint32_t start_object(void)
 {
 	uint32_t zero = 0;
-	uint8_t r9 = 0;
-	uint32_t r21 = 0, r26 = 0;
+	uint8_t slot = 0;
+	uint32_t object = 0, object_bytes = 0;
 	uint32_t list = 0;
 
 	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
 	zero = r27 == 0x7Cu;
 	if (zero)
 	{
-		r21 = screen - 0x7F00u;
-		return r21;
+		object = screen - 0x7F00u;
+		return object;
 	}
 	mem_write8(r28, 0xFFu);
-	r9 = (uint8_t)r27;
+	slot = (uint8_t)r27;
 	r27 = r27 << 8;
-	r21 = screen - 0x7C00u + r27;
+	object = screen - 0x7C00u + r27;
 	r27 = 0u;
 	r28 = 0u;
-	r26 = r21;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	r26 += 8u;
-	mem_write32(r26, 0u);
-	mem_write32(r26 + 4u, 0u);
-	mem_write8(r21, mem_read8(r21) | 1u);
-	mem_write8(r21 + 8u, r9);
+	object_bytes = object;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	object_bytes += 8u;
+	mem_write32(object_bytes, 0u);
+	mem_write32(object_bytes + 4u, 0u);
+	mem_write8(object, mem_read8(object) | 1u);
+	mem_write8(object + 8u, slot);
 	list = OBJECT_AREA(screen - 0x8000u)->list;
 	mem_write16(list, mem_read16(list) + 1u);
-	mem_write16(OBJECT_AREA(screen - 0x8000u)->list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count * 2u, r21);
-	return r21;
+	mem_write16(OBJECT_AREA(screen - 0x8000u)->list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count * 2u, object);
+	return object;
 }
 
 /* Unused: takes the first free object slot as start_object does (FF into its byte of the 7C at screen -
@@ -5791,69 +5791,69 @@ uint32_t start_object(void)
 uint32_t reserve_object_slot(void)
 {
 	uint32_t zero = 0;
-	uint32_t r21 = 0;
+	uint32_t object = 0;
 
 	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
 	zero = r27 == 0x7Cu;
 	if (zero)
 	{
-		r21 = screen - 0x7F00u;
-		return r21;
+		object = screen - 0x7F00u;
+		return object;
 	}
 	mem_write8(r28, 0xFFu);
-	r21 = (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8);
-	move_string(0x100800u, 0x80u, r21, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
-	return r21;
+	object = (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8);
+	move_string(zero_block_ADDRESS, 0x80u, object, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
+	return object;
 }
 
 /* Unused: frees the slot of the object R21: clears the slot byte (screen - 7FF0) numbered by bits 8-15
    of the object's address, which is not the object's own slot: for start_object's slot n it clears slot
    n + 4, for reserve_object_slot's slot n slot n + 10. */
-void free_object_slot(uint16_t r21)
+void free_object_slot(uint16_t object)
 {
-	mem_write8(screen - 0x7FF0u + ((uint16_t)r21 >> 8), 0u);
+	mem_write8(screen - 0x7FF0u + ((uint16_t)object >> 8), 0u);
 }
 
 /* Starts an object for each handler of the list R10 (a 32-bit count, then the handlers: the
    object_handlers_* tables), each with its place in the list at 9, and returns the last one. Used by the
    game modes (game_mode_car_presentation, game_mode_ranking, game_mode_play, initialise_board...),
    name_entry and ranking. */
-uint32_t start_object_list(uint32_t r10)
+uint32_t start_object_list(uint32_t handler_list)
 {
-	uint8_t r7 = 0;
-	uint32_t r8 = 0, object = 0;
+	uint8_t list_index = 0;
+	uint32_t object = 0, objects_left = 0;
 
-	r8 = mem_read32(r10);
-	r7 = 0u;
-	r10 += 4u;
+	objects_left = mem_read32(handler_list);
+	list_index = 0u;
+	handler_list += 4u;
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = mem_read32(r10);
-		OBJECT(object)->unk_09 = r7;
-		r7++;
-		r8--;
-		r10 += 4u;
-	} while (r8 != 0u);
+		OBJECT(object)->handler = mem_read32(handler_list);
+		OBJECT(object)->unk_09 = list_index;
+		list_index++;
+		objects_left--;
+		handler_list += 4u;
+	} while (objects_left != 0u);
 	return object;
 }
 
-/* Returns the next pseudo-random number of the screen's sequence (kept in unk_F00). */
+/* Returns the next pseudo-random number of the screen's sequence (kept in random_state). */
 uint32_t random_number(void)
 {
-	uint32_t r0 = 0, r1 = 0;
+	uint32_t next_state = 0, number = 0, old_state = 0, state = 0;
 
-	r1 = SCREEN(screen)->random_state;
-	if ((uint16_t)r1 == 0u)
-		r1 ^= 0x2A6D365Bu;
-	r0 = r1;
-	r1 = (r1 * 2u * 2u + r0) * 2u * 2u * 2u + r0;
-	r0 = (r0 & ~0xFFFFu) | (uint16_t)r1;
-	r1 = (r1 << 16) | (r1 >> 16);
-	r0 = (r0 & ~0xFFFFu) | (uint16_t)(r0 + r1);
-	r1 = (r1 & ~0xFFFFu) | (uint16_t)r0;
-	SCREEN(screen)->random_state = (r1 << 16) | (r1 >> 16);
-	return r0;
+	state = SCREEN(screen)->random_state;
+	if ((uint16_t)state == 0u)
+		state ^= 0x2A6D365Bu;
+	old_state = state;
+	state = (state * 2u * 2u + old_state) * 2u * 2u * 2u + old_state;
+	number = (old_state & ~0xFFFFu) | (uint16_t)state;
+	state = (state << 16) | (state >> 16);
+	number = (number & ~0xFFFFu) | (uint16_t)(number + state);
+	next_state = (state & ~0xFFFFu) | (uint16_t)number;
+	SCREEN(screen)->random_state = (next_state << 16) | (next_state >> 16);
+	return number;
 }
 
 /* Starts the sound at boot: the screen's ring of sound requests with one request of sound 0 waiting (800
@@ -5868,23 +5868,23 @@ void start_sound_program(void)
 	mem_write8(SOUND_701FFF, 0u);
 }
 
-/* Requests sound R0 for the screen (queue_sound), except while the screen's unk_90 bit 8 is set, when
-   only the sounds the table at 01202E (demo_sounds) allows play, and only with advertise_sound set. */
-void request_sound(uint8_t r0)
+/* Requests sound R0 for the screen (queue_sound), except while the screen's demo_flags bit 8 is set,
+   when only the sounds the table at 01202E (demo_sounds) allows play, and only with advertise_sound set. */
+void request_sound(uint8_t sound)
 {
-	uint32_t r2 = 0;
+	uint32_t sound_number = 0;
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u)
 	{
-		queue_sound(r0);
+		queue_sound(sound);
 		return;
 	}
 	if (advertise_sound != 0u)
 	{
-		r2 = (uint8_t)r0;
-		if ((demo_sounds[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
+		sound_number = (uint8_t)sound;
+		if ((demo_sounds[sound_number >> 5] & shl32(1u, (int)(sound_number & 0x1Fu))) != 0u)
 		{
-			queue_sound(r0);
+			queue_sound(sound);
 			return;
 		}
 	}
@@ -5892,43 +5892,43 @@ void request_sound(uint8_t r0)
 
 /* Puts sound R0 in the screen's ring of 32 sound requests (801 of the screen: the place, then the
    requests). */
-void queue_sound(uint8_t r0)
+void queue_sound(uint8_t sound)
 {
-	uint32_t r2 = 0, sound_queue_write = 0;
+	uint32_t request_ring = 0, sound_queue_write = 0;
 
-	r2 = screen + 0x801u;
-	sound_queue_write = SCREEN(r2 - 0x801u)->sound_queue_write;
-	r2++;
-	mem_write8(r2 + sound_queue_write, r0);
-	SCREEN(r2 - 0x802u)->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
+	request_ring = screen + 0x801u;
+	sound_queue_write = SCREEN(request_ring - 0x801u)->sound_queue_write;
+	request_ring++;
+	mem_write8(request_ring + sound_queue_write, sound);
+	SCREEN(request_ring - 0x802u)->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
 }
 
 /* Unused: puts sound R0 in the screen's second ring of 32 sound requests (second_sound_queue_write, the
    requests from 842; send_sound_requests sends them to the command byte 8 after the first ring's), as
    request_sound does for the first: while demo_flags bit 8 is set only the sounds the table at 01204E
    (demo_second_sounds) allows, and only with advertise_sound set. */
-void request_second_sound(uint8_t r0)
+void request_second_sound(uint8_t sound)
 {
-	uint32_t r2 = 0, second_sound_queue_write = 0;
+	uint32_t request_ring = 0, second_sound_queue_write = 0, sound_number = 0;
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u)
 	{
-		r2 = screen + 0x841u;
-		second_sound_queue_write = SCREEN(r2 - 0x841u)->second_sound_queue_write;
-		r2++;
-		mem_write8(r2 + second_sound_queue_write, r0);
-		SCREEN(r2 - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
+		request_ring = screen + 0x841u;
+		second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
+		request_ring++;
+		mem_write8(request_ring + second_sound_queue_write, sound);
+		SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 	}
 	else if (advertise_sound != 0u)
 	{
-		r2 = (uint8_t)r0;
-		if ((demo_second_sounds[r2 >> 5] & shl32(1u, (int)(r2 & 0x1Fu))) != 0u)
+		sound_number = (uint8_t)sound;
+		if ((demo_second_sounds[sound_number >> 5] & shl32(1u, (int)(sound_number & 0x1Fu))) != 0u)
 		{
-			r2 = screen + 0x841u;
-			second_sound_queue_write = SCREEN(r2 - 0x841u)->second_sound_queue_write;
-			r2++;
-			mem_write8(r2 + second_sound_queue_write, r0);
-			SCREEN(r2 - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
+			request_ring = screen + 0x841u;
+			second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
+			request_ring++;
+			mem_write8(request_ring + second_sound_queue_write, sound);
+			SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 			return;
 		}
 	}
@@ -5940,22 +5940,22 @@ void request_second_sound(uint8_t r0)
    (A0); silent in the demo without sound. */
 void player_car_start_engine_sound(void)
 {
-	uint8_t r0 = 0;
-	uint32_t r10 = 0;
+	uint8_t loudness = 0;
+	uint32_t sound_page = 0;
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) != 0u && advertise_sound == 0u)
 	{
-		r10 = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(r10 + SOUND_ENGINE_REVS_1, 0u);
-		mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, mem_read8(r10 + SOUND_ENGINE_REQUESTS_1) | 0x20u);
+		sound_page = (uint32_t)SCREEN(screen)->index << 8;
+		mem_write8(sound_page + SOUND_ENGINE_REVS_1, 0u);
+		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1) | 0x20u);
 		return;
 	}
-	r10 = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(r10 + SOUND_ENGINE_SAMPLE_1, car_model_engine_samples[CAR(player_car)->model]);
-	r0 = 0x10u;
+	sound_page = (uint32_t)SCREEN(screen)->index << 8;
+	mem_write8(sound_page + SOUND_ENGINE_SAMPLE_1, car_model_engine_samples[CAR(player_car)->model]);
+	loudness = 0x10u;
 	if (CAR(player_car)->transmission != 0u)
-		r0 = 0x30u;
-	mem_write8(r10 + SOUND_ENGINE_LOUDNESS_1, r0);
-	mem_write8(r10 + SOUND_ENGINE_REVS_1, 1u);
-	mem_write8(r10 + SOUND_ENGINE_REQUESTS_1, 0xA0u);
+		loudness = 0x30u;
+	mem_write8(sound_page + SOUND_ENGINE_LOUDNESS_1, loudness);
+	mem_write8(sound_page + SOUND_ENGINE_REVS_1, 1u);
+	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, 0xA0u);
 }
