@@ -9,7 +9,7 @@
  *
  *    license:BSD-3-Clause
  *    Behavior follows MAME's sega/segas32.cpp (Aaron Giles): the Multi 32's sound maps and handlers.
- *    MAME's terms are in tools/reference/mame/LICENSE.
+ *    MAME's terms are in tools/core/system32/reference/mame/LICENSE.
  *
  *    Memory: 0x0000-0x9FFF the start of the sound ROM; 0xA000-0xBFFF an 8 KB page of it, picked by the
  *    bank port; 0xC000-0xDFFF the MultiPCM; 0xE000-0xFFFF the RAM it shares with the V70 (0x700000

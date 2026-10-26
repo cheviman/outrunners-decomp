@@ -11,7 +11,7 @@
  *    Behavior follows MAME: sega/segas32.cpp, segas32_v.cpp, segas32_m.cpp (Aaron Giles),
  *    sega/315_5296.cpp (hap), sega/s32comm.cpp (Ariane Fugmann), machine/eepromser.cpp and
  *    machine/eeprom.cpp (Aaron Giles), machine/msm6253.cpp (AJR). MAME's terms are in
- *    tools/reference/mame/LICENSE.
+ *    tools/core/system32/reference/mame/LICENSE.
  *
  *    The Multi 32 is the System 32 for two screens: the same memory map, with a V70 on a 32-bit bus,
  *    twice the work RAM, a palette and a mixer for each screen, two I/O chips and, on OutRunners' board,
@@ -22,7 +22,7 @@
  *    halves, as on the System 32: a 32-bit access is the two halves in order.
  *
  *    Time runs one of two ways. With cycle timing the caller advances s32_board.cycles as the CPU runs
- *    and calls the frame events itself (tools/reference/s32ref, to follow the real CPU's pace). With
+ *    and calls the frame events itself (tools/core/system32/reference/s32ref, to follow the real CPU's pace). With
  *    frame timing the program takes no time at all: when it waits for the next frame it calls
  *    s32_wait(), which moves the board to its next event (a timer, the start or end of VBLANK, the
  *    sprite list) and runs it. That is the CPU of a decompiled program, and it never lags.

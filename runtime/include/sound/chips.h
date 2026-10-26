@@ -42,11 +42,11 @@ void sound_chips_end_frame(uint64_t time);
 /* The frame's samples of chip 0 (the YM3438) or 1 (the MultiPCM), its two outputs interleaved */
 const int32_t *sound_chips_frame_samples(int chip, size_t *count);
 
-/* The frame's sound, mixed as tools/reference/sound mixes it: stereo at the YM3438's rate */
+/* The frame's sound, mixed as tools/core/system32/reference/sound mixes it: stereo at the YM3438's rate */
 const int16_t *sound_chips_frame_mix(size_t *frames);
 uint32_t sound_chips_mix_rate(void);
 
-/* FNV-1a hashes, as tools/reference/s32ref writes them: the frame's samples of the two chips, and the
+/* FNV-1a hashes, as tools/core/system32/reference/s32ref writes them: the frame's samples of the two chips, and the
    sound board's memory (the shared RAM but the Z80's stack, FD00-FDFF) */
 uint64_t sound_chips_frame_hash(void);
 uint64_t sound_board_state_hash(void);

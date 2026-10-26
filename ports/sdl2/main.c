@@ -24,7 +24,7 @@
  *
  *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end;
  *    --fast runs it without waiting for the frames' time. --hashes, --video-hashes and --sound-hashes
- *    write for each frame the hashes ports/headless and tools/reference/s32ref write, so a script run in
+ *    write for each frame the hashes ports/headless and tools/core/system32/reference/s32ref write, so a script run in
  *    the window compares with the reference frame by frame.
  *
  *    Controls (the cabinet's player 1; player 2 on the second game controller):

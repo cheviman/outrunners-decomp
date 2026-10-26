@@ -44,7 +44,7 @@ void s32_video_draw_frame(void);
 const uint32_t *s32_video_frame(int screen, int *width);
 
 /* FNV-1a hash of the last frames' visible pixels (red, green, blue bytes), the left screen's then the
-   right one's, as tools/reference/s32ref writes it */
+   right one's, as tools/core/system32/reference/s32ref writes it */
 uint64_t s32_video_frame_hash(void);
 
 /* For tools that look at what the sprites are drawn with (the asset extractor's census): called for every

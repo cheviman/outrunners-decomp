@@ -9,8 +9,8 @@
  *    license:BSD-3-Clause
  *    Behavior follows MAME's sound/multipcm.cpp and sound/gew.cpp (Miguel Angel Horna) sample for sample:
  *    the tables are worked out with the same float arithmetic, and every sample the same way.
- *    tools/reference/sound/chipcheck.cpp compares the two. MAME's terms are in
- *    tools/reference/mame/LICENSE.
+ *    tools/core/system32/reference/sound/chipcheck.cpp compares the two. MAME's terms are in
+ *    tools/core/system32/reference/mame/LICENSE.
  *
  *    Voice registers: 0 pan (high nibble) and effect send (low); 1 the sample (bit 0 of register 2 is its
  *    ninth bit); 2-3 the pitch (ooooppppppppppxx: a 4-bit signed octave and 10 bits); 4 key on (bit 7); 5

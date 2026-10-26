@@ -10,7 +10,7 @@
  *    28 voices that play 8- or 12-bit samples from a ROM of up to 4 MB (the board banks it), each with an
  *    envelope, a pitch and an amplitude LFO, a level that may glide, and a pan, into two outputs.
  *    Behavior follows MAME's sound/multipcm.cpp and sound/gew.cpp (Miguel Angel Horna) sample for sample,
- *    the float tables included; MAME's terms are in tools/reference/mame/LICENSE.
+ *    the float tables included; MAME's terms are in tools/core/system32/reference/mame/LICENSE.
  *
  *    The host makes the samples: multipcm_generate() with the next ones, as the clock divided by 224
  *    gives them. A register write changes what the samples after it are, so the host makes the ones due

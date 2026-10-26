@@ -8,7 +8,7 @@
  *
  *    license:BSD-3-Clause
  *    The sound program is C (src/sound/, tools/decompile_sound.py) and keeps the Z80's time itself: every
- *    basic block of the original starts with z80_block(cycles). The rules, the same tools/reference/sound
+ *    basic block of the original starts with z80_block(cycles). The rules, the same tools/core/system32/reference/sound
  *    keeps for MAME's Z80 so that the two compare sample for sample:
  *      - the Z80's time counts in its own cycles and moves on by each block's cycles (tools/z80/timing.py),
  *        the extra cycles of a condition's longer way, and 21 for every round of a block move but its

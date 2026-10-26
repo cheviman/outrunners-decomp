@@ -13,7 +13,7 @@
  *    Z80's block makes its accesses (s32_board.sound_cycles, sound_cpu.c), and the timers they ask for run
  *    out where sound_cpu.c says (sound_chips_timers_due). Sample n of the YM3438 starts at n x 360 board
  *    cycles (144 of its clocks, at 8 MHz), the MultiPCM's at n x 448 (224 of its clocks, at 10 MHz).
- *    tools/reference/sound/s32sound.cpp does the same with ymfm's YM3438 and MAME's MultiPCM: the frame's
+ *    tools/core/system32/reference/sound/s32sound.cpp does the same with ymfm's YM3438 and MAME's MultiPCM: the frame's
  *    hashes compare. OutRunners uses the YM3438 for its timers only: it plays no note.
  */
 #include "sound/chips.h"

@@ -9,7 +9,7 @@
  *
  *    license:BSD-3-Clause
  *    A run that applies the same script at the same frame boundaries sees the same inputs, so the
- *    translated game and tools/reference/s32ref stay comparable frame by frame.
+ *    translated game and tools/core/system32/reference/s32ref stay comparable frame by frame.
  *
  *    Script format, one event per line, '#' starts a comment:
  *      FRAME ACTION [ARGUMENTS]        FRAME is a frame number, or +N for N frames after the previous event

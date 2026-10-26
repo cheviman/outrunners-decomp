@@ -8,8 +8,8 @@
  *
  *    license:BSD-3-Clause
  *    Behavior follows MAME's sound/rf5c68.cpp (Olivier Galibert, Aaron Giles) sample for sample: the
- *    values its sound_stream_update() puts in the stream, as integers. tools/reference/sound/chipcheck
- *    compares the two. MAME's terms are in tools/reference/mame/LICENSE.
+ *    values its sound_stream_update() puts in the stream, as integers. tools/core/system32/reference/sound/chipcheck
+ *    compares the two. MAME's terms are in tools/core/system32/reference/mame/LICENSE.
  *
  *    A channel that loops to a 0xFF stops where it is, silent, until its registers or the wave memory
  *    change: MAME leaves the channel for the rest of the samples it was asked for, and on the next ones

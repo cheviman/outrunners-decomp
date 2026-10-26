@@ -9,8 +9,8 @@
  *    license:BSD-3-Clause
  *    Behavior follows ymfm (Aaron Giles) sample for sample: its ym3438, which is the ym2612's interface
  *    and generate() of its own over fm_engine_base<opna_registers>. The tables of the chip's ROMs are
- *    ymfm's, which took them from the die. tools/reference/sound/chipcheck compares the two. ymfm's
- *    terms are in tools/reference/ymfm/LICENSE.
+ *    ymfm's, which took them from the die. tools/core/system32/reference/sound/chipcheck compares the two. ymfm's
+ *    terms are in tools/core/system32/reference/ymfm/LICENSE.
  *
  *    How a sample is made: first the channels whose registers changed are refreshed (each operator works
  *    out its phase step, rates and levels from the registers, and takes its key), then every operator

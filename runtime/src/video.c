@@ -10,9 +10,9 @@
  *
  *    license:BSD-3-Clause
  *    Behavior follows MAME's sega/segas32_v.cpp (Aaron Giles) pixel for pixel, as it draws the Multi 32
- *    (screen_update_multi32_left and _right): tools/reference/video builds that file, and
+ *    (screen_update_multi32_left and _right): tools/core/system32/reference/video builds that file, and
  *    tools/check_scenarios.py --video compares its frames with these. MAME's terms are in
- *    tools/reference/mame/LICENSE.
+ *    tools/core/system32/reference/mame/LICENSE.
  *
  *    How a frame is made: every layer draws a palette offset per pixel (0 is transparent) into a buffer
  *    of its own, through its clip windows. The sprites were drawn before, into the hidden one of two
@@ -897,7 +897,7 @@ static int draw_sprite(uint32_t entry, int x_offset, int y_offset, const area *i
 	/* rows end at the sprite's width, or at the clip. (MAME tests a flipped sprite's end against the clip's
 	   right edge instead of its left one, so the sprite runs on to the left edge reading whatever follows
 	   it in the ROM: an opaque one, which ignores end codes, leaves copies of the next frames there. The
-	   reference, tools/reference/mame/sega/segas32_v.cpp, has the same line fixed.) */
+	   reference, tools/core/system32/reference/mame/sega/segas32_v.cpp, has the same line fixed.) */
 	if (x_delta > 0 && x_end > inside->right)
 	{
 		x_end = inside->right + 1;

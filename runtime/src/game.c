@@ -10,7 +10,7 @@
  *
  *    license:BSD-3-Clause
  *    Behavior follows MAME's V60 core (src/devices/cpu/v60/v60.cpp, op12.hxx, op7a.hxx;
- *    Farfetch'd, R. Belmont) and the frame timing of tools/reference/s32ref.cpp.
+ *    Farfetch'd, R. Belmont) and the frame timing of tools/core/system32/reference/s32ref.cpp.
  */
 #include "game/support.h"
 #include "host/tasks.h"

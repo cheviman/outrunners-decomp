@@ -11,7 +11,7 @@
  *    Behavior follows MAME's V60 core (src/devices/cpu/v60, Farfetch'd, R. Belmont): the generated code
  *    touches memory in the same order and leaves the same registers and flags as that core. Time follows
  *    the board's frame timing (s32/machine.h): instructions take none, and the board runs its events,
- *    and the CPU its interrupts, only in the game's frame loop. tools/reference/s32ref runs the original
+ *    and the CPU its interrupts, only in the game's frame loop. tools/core/system32/reference/s32ref runs the original
  *    program the same way, so the two compare frame by frame.
  */
 #ifndef V60_CPU_H

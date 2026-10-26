@@ -2,7 +2,7 @@
  *    Name:        main.c
  *    Description: runs the game with no screen or sound, with the controls a script drives, and writes a
  *                 hash of the board state (and of the frames the video draws) after every frame, in the
- *                 format tools/reference/s32ref uses
+ *                 format tools/core/system32/reference/s32ref uses
  *    Version:     0.1.0
  *    Created:     11-10-2026
  *    Modified:    25-10-2026

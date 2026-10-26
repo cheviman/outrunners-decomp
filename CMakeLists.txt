@@ -159,67 +159,8 @@ endif()
 # Development tools built on MAME's code; never linked into the game
 option(ORUNNERS_REFERENCE_TOOLS "Build the MAME-based reference tools" ON)
 if(ORUNNERS_REFERENCE_TOOLS)
-	# MAME's V60 disassembler (the V70's instructions are the V60's), the reference
-	# tools/v60/disassembler.py is compared with
-	add_executable(oracle
-		tools/reference/oracle.cpp
-		tools/reference/mame/v60d.cpp
-	)
-	target_include_directories(oracle PRIVATE tools/reference/stub tools/reference/mame)
-
-	# MAME's Z80 disassembler, the reference tools/z80/disassembler.py is compared with
-	add_executable(oracle_z80
-		tools/reference/oracle_z80.cpp
-		tools/reference/mame/z80/z80dasm.cpp
-	)
-	target_include_directories(oracle_z80 PRIVATE tools/reference/stub tools/reference/mame/z80)
-
-	# MAME's Multi 32 video drawing the board model's two screens: the frames the game's video has to match
-	add_library(s32video_reference STATIC tools/reference/video/s32video.cpp)
-	target_include_directories(s32video_reference PUBLIC tools/reference/video PRIVATE runtime/include)
-	if(MSVC)
-		target_compile_options(s32video_reference PRIVATE /wd4244 /wd4267 /wd4100 /wd4146)
-	endif()
-
-	# MAME's Z80 and MultiPCM and ymfm's YM3438 on the board model: the sound the game's has to match. The
-	# Z80 core's steps are written from z80.lst at build time, as MAME does
-	set(ORUNNERS_Z80_STEPS ${CMAKE_BINARY_DIR}/generated/cpu/z80/z80.hxx)
-	add_custom_command(OUTPUT ${ORUNNERS_Z80_STEPS}
-		COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/cpu/z80
-		COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/tools/reference/mame/z80/z80make.py z80
-			${CMAKE_SOURCE_DIR}/tools/reference/mame/z80/z80.lst ${ORUNNERS_Z80_STEPS}
-		DEPENDS tools/reference/mame/z80/z80make.py tools/reference/mame/z80/z80.lst
-		VERBATIM)
-	add_library(s32sound_reference STATIC
-		tools/reference/sound/s32sound.cpp
-		tools/reference/ymfm/ymfm_opn.cpp
-		tools/reference/ymfm/ymfm_adpcm.cpp
-		tools/reference/ymfm/ymfm_ssg.cpp
-		${ORUNNERS_Z80_STEPS}
-	)
-	target_include_directories(s32sound_reference PUBLIC tools/reference/sound
-		PRIVATE tools/reference/ymfm runtime/include ${CMAKE_BINARY_DIR}/generated)
-	if(MSVC)
-		target_compile_options(s32sound_reference PRIVATE /bigobj /wd4244 /wd4267 /wd4100 /wd4146 /wd4127)
-	endif()
-
-	# the game's MultiPCM against MAME's, sample for sample, over what s32ref --sound-log records
-	add_executable(pcmcheck tools/reference/sound/pcmcheck.cpp)
-	target_include_directories(pcmcheck PRIVATE tools/reference/sound runtime/include)
-	target_link_libraries(pcmcheck PRIVATE s32runtime orunners_data)
-	if(MSVC)
-		target_compile_options(pcmcheck PRIVATE /wd4244 /wd4267 /wd4100 /wd4146)
-	endif()
-
-	add_executable(s32ref
-		tools/reference/s32ref.cpp
-		tools/reference/mame/v60.cpp
-		tools/reference/mame/v60d.cpp
-	)
-	target_include_directories(s32ref PRIVATE tools/reference/stub tools/reference/mame)
-	target_link_libraries(s32ref PRIVATE s32runtime orunners_data s32video_reference s32sound_reference)
-	if(MSVC)
-		# MAME's core marks error handlers [[noreturn]] even though they return uint32_t
-		target_compile_options(s32ref PRIVATE /wd4646 /wd4244)
-	endif()
+	# the reference on MAME's cores (arcade-decomp's system32/reference: s32ref, the disassemblers' oracles,
+	# pcmcheck), with OutRunners' data library
+	set(S32_GAME_DATA orunners_data)
+	include(${CMAKE_SOURCE_DIR}/tools/core/system32/reference/reference.cmake)
 endif()

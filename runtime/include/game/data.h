@@ -10,7 +10,7 @@
  *    No executable carries the ROM or anything from it. game_data_load fills the regions from the assets
  *    pack (tools/make_pack.py writes it from the assets extract_assets.py takes out of the player's ROM
  *    set): every asset where the board's memory has it, then the board's mirrors of its chips. The original
- *    code is in no region: the C replaces it. The reference (tools/reference) and the translation scaffold
+ *    code is in no region: the C replaces it. The reference (tools/core/system32/reference) and the translation scaffold
  *    run the original code, so they fill the regions from the ROM set when they start (game/extract.h).
  */
 #ifndef GAME_DATA_H

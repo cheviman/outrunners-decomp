@@ -265,12 +265,17 @@ OutRunners (its ROM set, `orunners_rom.py`; its structures, the registers the pr
 and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, `recompile.py`,
 `disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`, `check_scenarios.py`,
 `verify_rom.py`, `render_state.py`, `memory_census.py`) run the core's. A change to the decompiler or those
-tools goes to arcade-decomp, checked on both games, and comes here as a newer commit of the submodule
-(`git submodule update --remote tools/core`). The rest of `tools/` is OutRunners' own: the ROM set
-(`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets' census and sheets, the pack, and
-the reference tools built on MAME's cores (`tools/reference/`).
+tools goes to arcade-decomp, checked on OutRunners, and comes here as a newer commit of the submodule
+(`git submodule update --remote tools/core`). The reference the scenarios compare the game with is the core's
+too (`tools/core/system32/reference/`: `s32ref` on MAME's cores, the disassemblers' oracles, `pcmcheck`),
+which CMake builds through its `reference.cmake` with OutRunners' data library. The rest of `tools/` is
+OutRunners' own: the ROM set (`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets'
+census and sheets, and the pack.
 
 ## Legal
 
 - This project is licensed under the BSD 3-Clause License; see `LICENSE`.
+- The board's runtime (`runtime/`) follows the behavior of MAME's System 32 and Multi 32 driver, its sound
+  chips and ymfm's YM3438, BSD 3-Clause, whose terms are in `tools/core/system32/reference/mame/LICENSE`
+  and `ymfm/LICENSE` beside it.
 - OutRunners is a trademark of SEGA. This project is not affiliated with or endorsed by SEGA.
