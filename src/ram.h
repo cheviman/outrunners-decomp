@@ -1384,14 +1384,33 @@
 #define RANDOM_D80000 0xD80000u
 
 /* data in the program ROM symbols.txt labels */
+#define signature_text_ADDRESS 0x00010Cu
+#define default_settings_ADDRESS 0x0004C0u
+#define second_task_start_frame_ADDRESS 0x000C98u
+#define isdn_connection_objects_ADDRESS 0x000F70u
 #define object_handlers_F70_ADDRESS 0x000F74u
 #define unk_00183B_ADDRESS 0x00183Bu
+#define car_presentation_objects_ADDRESS 0x001A78u
 #define object_handlers_1A78_ADDRESS 0x001A7Cu
+#define staff_credits_texts_ADDRESS 0x001AE8u
+#define car_name_letter_palette_steps_ADDRESS 0x001D70u
+#define ranking_objects_ADDRESS 0x002CB8u
+#define name_entry_objects_ADDRESS 0x002D58u
 #define object_handlers_2D58_ADDRESS 0x002D5Cu
+#define player_car_objects_ADDRESS 0x00346Cu
 #define object_handlers_346C_ADDRESS 0x003470u
+#define race_objects_ADDRESS 0x003474u
 #define object_handlers_3474_ADDRESS 0x003478u
+#define demo_race_objects_ADDRESS 0x0034C4u
 #define object_handlers_34C4_ADDRESS 0x0034C8u
+#define route_map_objects_ADDRESS 0x0034ECu
 #define object_handlers_34EC_ADDRESS 0x0034F0u
+#define meaning_of_the_light_title_ADDRESS 0x003504u
+#define thank_you_lcd_text_ADDRESS 0x005014u
+#define welcome_letter_palette_steps_ADDRESS 0x006DCCu
+#define transmission_panel_palette_steps_ADDRESS 0x006E18u
+#define entry_lcd_text_ADDRESS 0x006EB0u
+#define mega_driver_title_ADDRESS 0x006EB6u
 #define rival_warning_text_ADDRESS 0x007CDBu
 #define steer_frames_by_steering_ADDRESS 0x0092BCu
 #define unk_009EFC_ADDRESS 0x009EFCu

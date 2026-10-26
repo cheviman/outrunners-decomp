@@ -119,6 +119,16 @@ the tools verify it, extract the assets and build your own executable.
       that go on through the original's own jump target in `car_radio_update` and `song_title_show`,
       where the code's address stands for "go on here", as the cases do. The data's text files are
       grouped by 64 KB of the ROM until they are cut where the tables start
+- [x] The C by subject, as the original's modules lay it out (`symbols.txt`'s file lines, a file a subject,
+      some taking several stretches of the program): `src/system/` (the main program, the settings, the
+      inputs, coins and bookkeeping, sound requests, the LCD, the interrupts, the test mode), `src/video/`
+      (the chips, unpacking, palettes, text), `src/engine/` (the objects and their sprites), `src/race/`
+      (the player's car, its physics, the course, the other cars, the hits, the race's display, the link
+      between cabinets), `src/objects/` (the scenery, the traffic, the race's people, the road's surface,
+      the backgrounds, the car radio), `src/scenes/` (the game modes, the attract mode, the title, the coin
+      prompts, the car select, the ranking, the name entry, the route map) and `src/sound/` (the sound
+      program: its main loop, the MIDI messages, the FM voices, the engine noise, the sequences), each
+      file with its header and what it holds
 - [ ] Other ports
 
 ## Getting started

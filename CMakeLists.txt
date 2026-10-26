@@ -79,7 +79,8 @@ endif()
 # another folder). Its own video and sound come back into it when their libraries draw the two screens and
 # play the MultiPCM
 set(ORUNNERS_DECOMPILED_DIR ${CMAKE_SOURCE_DIR}/src CACHE PATH "The game's C (tools/decompile.py)")
-file(GLOB ORUNNERS_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/*.c)
+file(GLOB_RECURSE ORUNNERS_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/*.c)
+list(FILTER ORUNNERS_DECOMPILED EXCLUDE REGEX "/sound/[^/]*\\.c$")    # (the sound program's: a library of its own)
 
 # The sound program: the Z80's C (src/sound/, tools/decompile_sound.py) on the board's time
 # (runtime/src/sound_cpu.c). The decompiled game and the scaffold both play it

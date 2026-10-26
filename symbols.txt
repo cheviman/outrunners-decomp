@@ -7618,3 +7618,81 @@ local test_mode_menu_run 01F0B9 t3 cursor_character
 param road_row_hit_check R15 next_hit_box
 param road_row_pair_crash_check R15 next_hit_box
 param road_surface_fill_lines R11 line_scroll_place
+
+# ======== data below 0x10000 the code uses by its address ========
+# (each a value the C used as a number: an instruction names it, absolute or PC-relative)
+00010C  data  signature_text                # the program's 48-byte signature, "Miyu Tsukamoto O..." (signature_checksum 0000FC: its crc16)
+0004C0  data  default_settings              # "S32A" and the defaults load_settings copies over the settings (40 halfwords to settings_magic) when they are bad
+000C98  data  second_task_start_frame       # the interrupt frame the second task starts from: boot and second_task copy 3E halfwords of it to 21FF84 (PC 0006B0, PSW 00040000)
+000F70  data  isdn_connection_objects       # game mode 8's list for start_object_list: the count (1), then object_handlers_F70
+001A78  data  car_presentation_objects      # game mode 3's list: the count (3), then object_handlers_1A78
+001AE8  data  staff_credits_texts           # staff_credits_code_show's texts, "OutRunners" MAIN STAFF and on (place, then the characters)
+001D70  data  car_name_letter_palette_steps # car_name_letter_update's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
+002CB8  data  ranking_objects               # game_mode_ranking and ranking_update's list: the count (2), then the handlers
+002D58  data  name_entry_objects            # name_entry_update's list: the count (4), then object_handlers_2D58
+00346C  data  player_car_objects            # game_mode_play's list at the race's start (steps 5, 27...): the count (1), then object_handlers_346C (the screen's car, player_car_update)
+003474  data  race_objects                  # game_mode_play's list when the race starts (step 23): the count (19), then object_handlers_3474
+0034C4  data  demo_race_objects             # the same for the demo's race (demo_flags bit 8): the count (9), then object_handlers_34C4
+0034EC  data  route_map_objects             # game_mode_play's list for the route map (game step 12): the count (1), then object_handlers_34EC
+003504  data  meaning_of_the_light_title    # a song title (song_title_record: x 48, then "Meaning of the Light"), which game_mode_play starts
+005014  data  thank_you_lcd_text            # "Thank you for your playing.", which route_map_update keeps scrolling on the LCD (screen lcd_scroll_request)
+006DCC  data  welcome_letter_palette_steps  # welcome_letter_show's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
+006E18  data  transmission_panel_palette_steps  # the automatic and manual panels' palette list (object_palette_steps: 2A8 2A9 2AA 2AB 2AC 2AD 2AC 2AB 2AA 2A9, then -16 back)
+006EB0  data  entry_lcd_text                # "Entry:", which car_select_entries_run copies to the LCD's text (screen F12)
+006EB6  data  mega_driver_title             # a song title (song_title_record: x 6C, then "Mega Driver"), which car_select_run starts
+
+# ======== stack slots ========
+local traffic_car_draw 0139B6 s4 saved_position      # kept across draw_object
+local traffic_car_draw 0139B8 s8 saved_seen_from
+
+# ======== source files: the files of src/ and the stretches of the program each takes (decompile.source_files) ========
+# The files by subject: system/, video/, engine/, race/, objects/, scenes/. A stretch is a run of functions the
+# original's linker laid out together; a file may take several, and the comment of its first line is its
+# description.
+000000  file  system/main               # the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
+00013C  file  system/settings           # the settings in the EEPROM: loading, checking and saving them, and the EEPROM's serial lines
+0006B0  file  system/main               # the second task, the frame wait and the start of a game, a screen and the board
+0009F9  file  system/inputs             # the controls: the switches and the analog inputs (wheel, pedals), each seat's inputs and the screens' new presses
+000D7D  file  race/link                 # the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
+001000  file  scenes/game_modes         # the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
+0010CD  file  scenes/attract            # the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
+001440  file  scenes/game_modes         # the power on, the restart, the car presentation and the demo race's steps
+0015D8  file  scenes/attract            # the cabinet lamps, the car presentation, the staff credits code and the car's name
+001D84  file  scenes/ranking            # the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
+001DCC  file  scenes/game_modes         # the ranking's game mode
+001E89  file  scenes/name_entry         # the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
+00247A  file  scenes/ranking            # the ranking's objects and its background
+002E74  file  scenes/game_modes         # the game: its steps from the car select to the goal and the route map, and clearing the screen and the race
+003520  file  scenes/route_map          # the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
+005030  file  scenes/car_select         # the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
+006EF0  file  race/player_car           # the screen's car each frame: its place, the view, the rivals' warning, the crash physics
+009590  file  race/race_cars            # the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
+00A00C  file  race/physics              # the car's physics: the gears and torque curves, the controls, driving along the road, the engine, the road's drag and its edges, the wheels' effects
+00BFC1  file  race/hud                  # the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
+00D0C8  file  race/link                 # the network check at boot, the race's entries and progress, the course records, the records sent and received
+00EAE4  file  engine/sprites            # drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
+00FCBC  file  race/course               # the course: its segments built ahead of the car, the road projected for the view
+010634  file  video/video               # the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips
+010DC4  file  video/unpack              # unpacking the tile pages and the lists of packed blocks, a step each frame
+011018  file  system/coins              # the coins and credits, and the bookkeeping
+011594  file  video/palettes            # the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
+0117E4  file  video/text                # the text: the fonts, the text layer's strings, numbers in hexadecimal and BCD, text in sprites
+011C60  file  engine/objects            # the objects: the object loop, starting and freeing objects and their lists, the random numbers
+011E88  file  system/sound              # the sound requests to the sound program: sounds, the engine and tyre noise, the music's fade
+0120AC  file  race/hits                 # the angles of a vector, the hit boxes and the checks of the car against the road's objects and the traffic
+0126FC  file  objects/scenery           # the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
+01376C  file  objects/traffic           # the traffic: its cars, convoys, people and their hits
+013DC4  file  objects/scenery           # the branch of the road the car did not take after a fork
+014108  file  objects/race_people       # the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
+016B00  file  objects/road_surface      # the road's surface drawn line by line, and its tiles' changes
+017524  file  objects/backgrounds       # the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
+0184D0  file  video/palettes            # the palette fades
+0186FC  file  system/lcd                # the cabinets' LCD: its driver and the race's information on it
+018F74  file  objects/car_radio         # the car radio: the songs, the DJ and his messages, the songs' titles
+019CAC  file  scenes/title              # the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
+01A6CF  file  scenes/coin_prompts       # the prompts for coins and the ignition key, and the credits shown
+01ADE8  file  scenes/attract            # the demo race's captions
+01AFDC  file  scenes/kanji_text_viewer  # a viewer of kanji texts nothing starts (unused)
+01C241  file  system/test_mode          # the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
+03F500  file  system/interrupts         # the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
+03FFF0  file  system/main               # the reset

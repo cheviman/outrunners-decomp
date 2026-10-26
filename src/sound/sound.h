@@ -361,7 +361,18 @@ _Static_assert(sizeof(struct register_value_pair) == 0x2, "struct register_value
 #define SEQUENCE_PLAYER_ADDRESS(n) (0xE900u + (n) * 0x100u)    /* the 16 of them, from 0 */
 #define SCREEN_PAGE_ADDRESS(n) (0xE700u + (n) * 0x100u)    /* the 2 of them, from 0 */
 
-/* sound_00.c: the sound program's functions, part 00 (in the order of their Z80 addresses) */
+/* engine.c: the engine and tyre noise of each screen's car */
+void update_engine_screen_1(void);
+void update_engine_screen_2(void);
+void key_on_with_pan(uint8_t pan);
+void set_engine_pitch(uint16_t revs_and_loudness);
+void set_engine_sample(uint8_t sample);
+void engine_sweep_tick(void);
+void update_tyre_noise_screen_1(void);
+void update_tyre_noise_screen_2(void);
+void start_tyre_noise(uint8_t pan, uint16_t page, uint16_t noise);
+
+/* main.c: the sound program's frame: the reset, the timer interrupt, sound_init and the chips set up and written */
 void sound_reset(void);
 void sound_irq(void);
 void sound_main_loop(void);
@@ -376,6 +387,8 @@ void write_pcm_register(uint8_t pcm_register, uint8_t value);
 void init_voice_channels(uint32_t unused_c);
 void init_parts(void);
 uint16_t read_table_word(uint16_t table, uint8_t entry);
+
+/* midi.c: the MIDI messages of each screen's queue for its parts: note on and off, pitch bend, controllers, programs; the voices they take */
 void handle_midi_message_screen_1(void);
 void skip_midi_data_screen_1(uint8_t first_byte);
 void play_midi_message_screen_1(uint8_t message_byte, uint16_t part);
@@ -391,22 +404,8 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part);
 void retune_voice_screen_2(uint16_t voice);
 void set_voice_modulation_screen_2(uint16_t part, uint16_t *p_voices_left, uint16_t *p_voice);
 void read_midi_byte_screen_2(uint16_t *p_midi_byte_copy, uint8_t *p_midi_byte);
-void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends);
-void retune_fm_voice(uint16_t voice, uint8_t chip_channel);
-void stop_fm_voice(uint16_t voice);
-void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part);
-void apply_fm_channel_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part);
-void load_fm_patch(uint8_t channel_code, uint16_t *p_channel_in_part, uint16_t *p_register_list, uint16_t *p_patch_data);
-void load_fm_patch_part2(uint8_t channel_code, uint16_t *p_channel_in_part, uint16_t *p_register_list, uint16_t *p_patch_data);
-void update_engine_screen_1(void);
-void update_engine_screen_2(void);
-void key_on_with_pan(uint8_t pan);
-void set_engine_pitch(uint16_t revs_and_loudness);
-void set_engine_sample(uint8_t sample);
-void engine_sweep_tick(void);
-void update_tyre_noise_screen_1(void);
-void update_tyre_noise_screen_2(void);
-void start_tyre_noise(uint8_t pan, uint16_t page, uint16_t noise);
+
+/* sequences.c: the sequence players and the playlist: their tick, their events into the MIDI queues, the sound commands, the music's fade */
 void sequence_tick(void);
 void playlist_command(uint16_t queue_pointer, uint16_t player, uint16_t page, uint16_t *p_playlist, uint8_t *p_playlist_byte);
 uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t page);
@@ -422,5 +421,14 @@ uint16_t clear_player(uint16_t player);
 uint16_t fade_music_volume(uint16_t queue_pointer, uint16_t player, uint16_t page);
 uint16_t fade_player_volume(uint16_t queue_pointer, uint16_t player, uint16_t page);
 uint16_t next_sequence_byte(uint16_t position, uint16_t player);
+
+/* voices.c: the YM3438's FM voices: starting a note, retuning, stopping, their volume and patches */
+void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends);
+void retune_fm_voice(uint16_t voice, uint8_t chip_channel);
+void stop_fm_voice(uint16_t voice);
+void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part);
+void apply_fm_channel_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part);
+void load_fm_patch(uint8_t channel_code, uint16_t *p_channel_in_part, uint16_t *p_register_list, uint16_t *p_patch_data);
+void load_fm_patch_part2(uint8_t channel_code, uint16_t *p_channel_in_part, uint16_t *p_register_list, uint16_t *p_patch_data);
 
 #endif

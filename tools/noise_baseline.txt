@@ -7,6 +7,7 @@ rom_names 0
 unk_fields 79
 register_names 0
 temp_names 0
+stack_names 0
 context_registers 1495
 var_fields 0
 mem_access 2890
@@ -20,6 +21,6 @@ rom_reads 26
 rom_table_reads 847
 board_replaced 1
 functions 746
-lines 39986
+lines 40394
 casts 2868
 partial_writes 523
