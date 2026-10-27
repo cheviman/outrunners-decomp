@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -26,7 +26,7 @@ uint32_t course_record_beaten(void)
 		course_number = (uint8_t)(course_number - 0x15u);
 		SCREEN(screen)->record_course = course_number;
 		player = SCREEN(screen)->player;
-		if (mem_read8(screen + 0x320u + player) == 0u && mem_read16(screen + 0x410u + player * 2u) < course_record_times[course_number * 3u])
+		if (SCREEN(screen)->places[(int32_t)player] == 0u && SCREEN(screen)->checkpoint_times_by_player[(int32_t)(player + 0x28u)] < course_record_times[course_number * 3u])
 		{
 			zero = 1u == 0u;
 			return zero;
@@ -99,7 +99,7 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.spin_frames = 0x28u;
 		OBJECT(current_object)->name_entry.wheel_angle = 0xA80u;
 		OBJECT(current_object)->name_entry.letter = 0xFFu;
-		player_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+		player_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 		text_field = current_object + 0x9Au;
 		OBJECT(text_field - 0x9Au)->name_entry.name_x = 0xF8u;
 		text_field += 2u;
@@ -386,7 +386,7 @@ void name_entry_update(void)
 			SCREEN(screen)->game_step = 0x15u;
 			race = SCREEN(screen)->race;
 			RACE(race)->record_serial++;
-			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 			RACE(race)->record_model = CAR(player_car)->model;
 			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
 			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
@@ -403,7 +403,7 @@ void name_entry_update(void)
 			SCREEN(screen)->game_step = 0x15u;
 			race = SCREEN(screen)->race;
 			RACE(race)->record_serial++;
-			RACE(race)->finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 			RACE(race)->record_model = CAR(player_car)->model;
 			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
 			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
@@ -548,7 +548,7 @@ void name_entry_lcd_update(void)
 	case 0:
 		clear_lcd();
 		SCREEN(screen)->dj_face = 0xFFu;
-		move_string(OBJECT(current_object)->name_entry_lcd.name_entry + 0xAAu, 7u, screen + 0xF13u, 7u, 1u, 0u, 0u, 0u, &r27, &r28);
+		move_bytes(screen + 0xF13u, OBJECT(current_object)->name_entry_lcd.name_entry + 0xAAu, 7u);
 		OBJECT(current_object)->state++;
 		break;
 	case 1:
@@ -562,13 +562,13 @@ void name_entry_lcd_update(void)
 	characters_left = 3u;
 	do
 	{
-		lcd_character = mem_read8(name_place);
+		lcd_character = NAME_LETTERS(name_place)[0];
 		name_place++;
 		if (name_place == 0u)
 		{
 			do
 			{
-				mem_write8(lcd_place, 0x20u);
+				LCD_CHARACTERS(lcd_place)[0] = 0x20u;
 				characters_left--;
 				lcd_place++;
 			} while (characters_left != 0u);
@@ -580,7 +580,7 @@ void name_entry_lcd_update(void)
 			lcd_character = 0x7Fu;
 		if (lcd_character == 0x5Cu)
 			lcd_character = 0x65u;
-		mem_write8(lcd_place, lcd_character);
+		LCD_CHARACTERS(lcd_place)[0] = lcd_character;
 		characters_left--;
 		lcd_place++;
 	} while (characters_left != 0u);

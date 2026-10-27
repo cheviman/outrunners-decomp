@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -188,7 +188,7 @@ void network_check_again(void)
 		network_check();
 		return;
 	}
-	mem_write16(LINK_BOARD_ON, 0u);
+	io_write16(LINK_BOARD_ON, 0u);
 	r12 = 0x800000u;
 	delay = BOARD_OFF_LOOPS;
 	do
@@ -199,7 +199,7 @@ void network_check_again(void)
 	move_halfwords(r12 + 4u, zero_block_ADDRESS, 0x10u);
 	move_halfwords(r12 + 0x600u, zero_block_ADDRESS, 0x400u);
 	move_halfwords(RACE_1, zero_block_ADDRESS, 0x80u);
-	move_string(zero_block_ADDRESS, 0x200u, RACE_COPY_1, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(RACE_COPY_1, zero_block_ADDRESS, 0x200u);
 	network_check_isdn();
 }
 
@@ -216,11 +216,11 @@ void network_check_again(void)
    test button (test_mode_on) gives it up at any wait (link_failed FF). */
 void network_check(void)
 {
-	uint32_t board_reply = 0, ignored = 0, left_caller = 0, text = 0;
+	uint32_t board_reply = 0, ignored_3 = 0, left_caller = 0, text = 0;
 	uint8_t board_status = 0;
 	uint32_t board_flags_greeted = 0, board_flags_role = 0, board_flags_status = 0;
 
-	mem_write16(LINK_BOARD_ON, 0u);
+	io_write16(LINK_BOARD_ON, 0u);
 	r12 = 0x800000u;
 	move_halfwords(machine_count_ADDRESS, zero_block_ADDRESS, 0x20u);
 	move_halfwords(r12, zero_block_ADDRESS, 8u);
@@ -232,7 +232,7 @@ void network_check(void)
 		network_check_stand_alone();
 		return;
 	}
-	mem_write8(LINK_BOARD_ON, 0u);
+	io_write8(LINK_BOARD_ON, 0u);
 	text = network_check_master_text_ADDRESS;
 	if (link_master == 0u)
 		text = network_check_slave_text_ADDRESS;
@@ -249,18 +249,18 @@ void network_check(void)
 	mem_write16(r12 + 2u, 0x37u);
 	mem_write16(r12 + 4u, 0x30u);
 	mem_write8(r12 + 0x14u, 0u);
-	mem_write16(LINK_BOARD_FLAGS, 0u);
-	mem_write16(LINK_BOARD_ON, 1u);
+	io_write16(LINK_BOARD_FLAGS, 0u);
+	io_write16(LINK_BOARD_ON, 1u);
 	left_caller = 0u;
-	network_check_wait_board(&ignored, &left_caller);
+	network_check_wait_board(&ignored_3, &left_caller);
 	if (left_caller != 0u)
 		return;
 	left_caller = 0u;
 	network_check_greeting(&board_reply, &left_caller);
 	if (left_caller != 0u)
 		return;
-	board_flags_greeted = mem_read32(LINK_BOARD_FLAGS);
-	mem_write32(LINK_BOARD_FLAGS, board_flags_greeted | 1u);
+	board_flags_greeted = io_read32(LINK_BOARD_FLAGS);
+	io_write32(LINK_BOARD_FLAGS, board_flags_greeted | 1u);
 	board_reply = wait_for_frame(board_reply);
 	left_caller = 0u;
 	network_check_wait_board(&board_reply, &left_caller);
@@ -277,8 +277,8 @@ void network_check(void)
 		return;
 	}
 	mem_write8(r12 + 4u, link_master);
-	board_flags_role = mem_read32(LINK_BOARD_FLAGS);
-	mem_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
+	board_flags_role = io_read32(LINK_BOARD_FLAGS);
+	io_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
 	board_reply = wait_for_frame(board_reply);
 	left_caller = 0u;
 	network_check_wait_board(&board_reply, &left_caller);
@@ -288,8 +288,8 @@ void network_check(void)
 	left_caller = network_check_five_ics(board_reply, left_caller);
 	if (left_caller != 0u)
 		return;
-	board_flags_status = mem_read32(LINK_BOARD_FLAGS);
-	mem_write32(LINK_BOARD_FLAGS, board_flags_status | 1u);
+	board_flags_status = io_read32(LINK_BOARD_FLAGS);
+	io_write32(LINK_BOARD_FLAGS, board_flags_status | 1u);
 	do
 	{
 		board_reply = wait_for_frame(board_reply);
@@ -300,7 +300,7 @@ void network_check(void)
 		}
 		current_object = check_network_status_text_ADDRESS;
 		network_check_blink_text();
-		board_status = mem_read8(LINK_BOARD_FLAGS);
+		board_status = io_read8(LINK_BOARD_FLAGS);
 	} while ((int8_t)board_status >= 0);
 	network_check_clear_status_line();
 	mem_write8(r12 + 0xE20u, mem_read8(r12 + 2u));
@@ -361,15 +361,15 @@ void network_check_isdn(void)
 {
 	uint32_t delay = 0, left_caller = 0;
 
-	mem_write16(LINK_BOARD_ON, 0u);
+	io_write16(LINK_BOARD_ON, 0u);
 	delay = BOARD_OFF_LOOPS;
 	do
 	{
 		delay--;
 	} while (delay != 0u);
 	mem_write8(r12 + 0x14u, 1u);
-	mem_write8(LINK_BOARD_FLAGS, 0u);
-	mem_write8(LINK_BOARD_ON, 1u);
+	io_write8(LINK_BOARD_FLAGS, 0u);
+	io_write8(LINK_BOARD_ON, 1u);
 	left_caller = 0u;
 	left_caller = network_check_wait_isdn(left_caller);
 	if (left_caller != 0u)
@@ -415,7 +415,7 @@ void network_check_stand_alone(void)
    SUCCESS. and THIS MACHINE ID IS n (the board's 800002); the text cleared. */
 void network_check_result(uint32_t machine)
 {
-	uint32_t frames_left = 0, ignored = 0, race = 0, second_player = 0, text = 0;
+	uint32_t frames_left = 0, ignored_3 = 0, race = 0, second_player = 0, text = 0;
 	uint32_t saved_frames_left = 0;
 	uint8_t isdn_machine_id = 0, board_master = 0, slave_machine_id = 0, master_machine_id = 0;
 
@@ -446,7 +446,7 @@ void network_check_result(uint32_t machine)
 		RACE(race)->master_time_difficulty_0 = time_difficulty[0];
 		RACE(race)->master_time_difficulty_1 = time_difficulty[1];
 		RACE(race)->master_time_difficulty_2_5 = ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u));
-		move_halfwords(race + 0x30u, SOUND_RAM + 0x1F32u, 0x1Eu);
+		move_halfwords(race + 0x30u, BOOKKEEPING_COURSE_RECORDS_ADDRESS, 0x1Eu);
 	}
 	clear_text_layer();
 	text = network_check_text_ADDRESS;
@@ -459,7 +459,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			ignored_3 = wait_for_frame(ignored_3);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -473,13 +473,13 @@ void network_check_result(uint32_t machine)
 		print_text_layer(text);
 		text = machine_id_text_ADDRESS;
 		print_text_layer(text);
-		isdn_machine_id = mem_read8(LINK_MACHINE_NUMBER);
-		mem_write16(MACHINE_ID_TEXT_CELL, (isdn_machine_id + 0x30u) | 0x6000u);
+		isdn_machine_id = io_read8(LINK_MACHINE_NUMBER);
+		MACHINE_ID_TEXT_CELL = (isdn_machine_id + 0x30u) | 0x6000u;
 		frames_left = 0x80u;
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			ignored_3 = wait_for_frame(ignored_3);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -493,13 +493,13 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			ignored_3 = wait_for_frame(ignored_3);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
 		return;
 	}
-	board_master = mem_read8(LINK_MASTER);
+	board_master = io_read8(LINK_MASTER);
 	if (board_master == 0u)
 	{
 		text = slave_machine_text_ADDRESS;
@@ -508,13 +508,13 @@ void network_check_result(uint32_t machine)
 		print_text_layer(text);
 		text = machine_id_text_ADDRESS;
 		print_text_layer(text);
-		slave_machine_id = mem_read8(LINK_MACHINE_NUMBER);
-		mem_write16(MACHINE_ID_TEXT_CELL, (slave_machine_id + 0x30u) | 0x6000u);
+		slave_machine_id = io_read8(LINK_MACHINE_NUMBER);
+		MACHINE_ID_TEXT_CELL = (slave_machine_id + 0x30u) | 0x6000u;
 		frames_left = 0x80u;
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			ignored_3 = wait_for_frame(ignored_3);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -526,13 +526,13 @@ void network_check_result(uint32_t machine)
 	print_text_layer(text);
 	text = machine_id_text_ADDRESS;
 	print_text_layer(text);
-	master_machine_id = mem_read8(LINK_MACHINE_NUMBER);
-	mem_write16(MACHINE_ID_TEXT_CELL, (master_machine_id + 0x30u) | 0x6000u);
+	master_machine_id = io_read8(LINK_MACHINE_NUMBER);
+	MACHINE_ID_TEXT_CELL = (master_machine_id + 0x30u) | 0x6000u;
 	frames_left = 0x80u;
 	do
 	{
 		saved_frames_left = frames_left;
-		ignored = wait_for_frame(ignored);
+		ignored_3 = wait_for_frame(ignored_3);
 		frames_left = saved_frames_left - 1u;
 	} while (frames_left != 0u);
 	clear_text_layer();
@@ -553,8 +553,8 @@ uint32_t network_check_board_memory(uint32_t left_caller)
 		outcome = 3u;
 	if (outcome == 3u)
 	{
-		mem_write8(IO_1_CNT, 4u);
-		mem_write8(IO_2_CNT, 0x80u);
+		io_write8(IO_1_CNT, 4u);
+		io_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
 		network_check_error(error_texts, &ignored, &left_caller_2);
 		return left_caller_2;
@@ -692,13 +692,13 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
 		link_wait_frames = frames_left - 1u;
 		if (frames_left == 1u)
 		{
-			mem_write8(IO_1_CNT, 4u);
-			mem_write8(IO_2_CNT, 0x80u);
+			io_write8(IO_1_CNT, 4u);
+			io_write8(IO_2_CNT, 0x80u);
 			error_texts = communication_time_out_texts_ADDRESS;
 			network_check_error(error_texts, p_board_reply, p_left_caller);
 			return;
 		}
-		board_flags = mem_read32(LINK_BOARD_FLAGS);
+		board_flags = io_read32(LINK_BOARD_FLAGS);
 	} while ((board_flags & 0x80u) == 0u);
 	network_check_clear_status_line();
 }
@@ -723,7 +723,7 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
-		board_machines = mem_read8(LINK_MACHINE_COUNT);
+		board_machines = io_read8(LINK_MACHINE_COUNT);
 	} while (board_machines == 0u);
 	link_wait_frames = 0x3Cu;
 	do
@@ -767,8 +767,8 @@ void network_check_greeting(uint32_t *p_board_reply, uint32_t *p_left_caller)
 	*p_board_reply = ((((uint32_t)(uint8_t)mem_read16(board_answer) << 8) | (uint8_t)mem_read16(board_answer + 2u)) << 8) | (uint8_t)mem_read16(board_answer + 4u);
 	if ((((((uint32_t)(uint8_t)mem_read16(r12) << 8) | (uint8_t)mem_read16(r12 + 2u)) << 8) | (uint8_t)mem_read16(r12 + 4u)) != 0x563730u || *p_board_reply != 0x5A3830u)
 	{
-		mem_write8(IO_1_CNT, 4u);
-		mem_write8(IO_2_CNT, 0x80u);
+		io_write8(IO_1_CNT, 4u);
+		io_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
 		network_check_error(error_texts, p_board_reply, p_left_caller);
 		return;
@@ -790,8 +790,8 @@ uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
 		network_check_show_ics(ic_count, self_test);
 		return left_caller;
 	}
-	mem_write8(IO_1_CNT, 4u);
-	mem_write8(IO_2_CNT, 0x80u);
+	io_write8(IO_1_CNT, 4u);
+	io_write8(IO_2_CNT, 0x80u);
 	clear_text_layer();
 	error_texts = communication_board_error_texts_ADDRESS;
 	print_text_layer_list(error_texts);
@@ -802,8 +802,8 @@ uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
 	ic_count = 5u;
 	self_test = (self_test & ~0xFFu) | mem_read8(r12 + 0xCu);
 	network_check_show_ics(ic_count, self_test);
-	mem_write8(IO_1_CNT, 6u);
-	mem_write8(IO_2_CNT, 0x86u);
+	io_write8(IO_1_CNT, 6u);
+	io_write8(IO_2_CNT, 0x86u);
 	network_check_halt(&ignored, &left_caller_2);
 	return left_caller_2;
 }
@@ -819,16 +819,16 @@ void network_check_four_ics(uint32_t *p_board_reply, uint32_t *p_left_caller)
 	self_test = (board_reply & ~0xFFu) | mem_read8(r12 + 0xCu);
 	if ((uint8_t)self_test != 0u)
 	{
-		mem_write8(IO_1_CNT, 4u);
-		mem_write8(IO_2_CNT, 0x80u);
+		io_write8(IO_1_CNT, 4u);
+		io_write8(IO_2_CNT, 0x80u);
 		clear_text_layer();
 		error_texts = communication_board_error_texts_ADDRESS;
 		print_text_layer_list(error_texts);
 		self_test = (self_test & ~0xFFu) | mem_read8(r12 + 0xCu);
 		ic_count = 4u;
 		network_check_show_ics(ic_count, self_test);
-		mem_write8(IO_1_CNT, 6u);
-		mem_write8(IO_2_CNT, 0x86u);
+		io_write8(IO_1_CNT, 6u);
+		io_write8(IO_2_CNT, 0x86u);
 		network_check_halt(&self_test, p_left_caller);
 	}
 	else
@@ -878,7 +878,7 @@ void network_check_blink_text(void)
 		current_object = current_object + 1u;
 		if ((uint8_t)character == 0u)
 			break;
-		mem_write16(cell, mem_read16(cell) ^ character);
+		TEXT_LAYER_CELLS(cell)[0] ^= character;
 		cell += 2u;
 	}
 }
@@ -892,7 +892,7 @@ void network_check_clear_status_line(void)
 	cells_left = 0x28u;
 	do
 	{
-		mem_write16(cell, 0u);
+		TEXT_LAYER_CELLS(cell)[0] = 0u;
 		cells_left--;
 		cell += 2u;
 	} while (cells_left != 0u);
@@ -903,19 +903,20 @@ void network_check_clear_status_line(void)
 void network_check_toggle_memory_text(void)
 {
 	uint16_t character = 0;
+	uint32_t memory_text = 0, next_cell = 0;
 	uint32_t cell = 0;
 
 	character = 0x6000u;
-	r27 = TEXT_CELL(8, 24);
-	r28 = check_dualport_ram_characters_ADDRESS;
+	next_cell = TEXT_CELL(8, 24);
+	memory_text = check_dualport_ram_characters_ADDRESS;
 	do
 	{
-		character = (uint16_t)((character & ~0xFFu) | TEXT_CHARACTERS(r28)[0]);
-		cell = r27;
-		r27 = r27 + 2u;
+		character = (uint16_t)((character & ~0xFFu) | TEXT_CHARACTERS(memory_text)[0]);
+		cell = next_cell;
+		next_cell += 2u;
 		mem_write16(cell, mem_read16(cell) ^ character);
-		r28 = r28 + 1u;
-	} while (TEXT_CHARACTERS(r28)[0] != 0u);
+		memory_text++;
+	} while (TEXT_CHARACTERS(memory_text)[0] != 0u);
 }
 
 /* Shows the error R19 (a text list: CONNECTION ERROR, COMMUNICATION TIME OUT...) on a cleared text layer
@@ -924,8 +925,8 @@ void network_check_error(uint32_t error_texts, uint32_t *p_board_reply, uint32_t
 {
 	clear_text_layer();
 	print_text_layer_list(error_texts);
-	mem_write8(IO_1_CNT, 6u);
-	mem_write8(IO_2_CNT, 0x86u);
+	io_write8(IO_1_CNT, 6u);
+	io_write8(IO_2_CNT, 0x86u);
 	for (;;)
 	{
 		*p_board_reply = wait_for_frame(*p_board_reply);
@@ -982,7 +983,7 @@ void link_take_master_settings(void)
 		ignored = wait_for_frame(ignored);
 		if (isdn_mode == 0u)
 			break;
-		isdn_records_ready = mem_read8(LINK_ISDN_RECORDS_READY);
+		isdn_records_ready = io_read8(LINK_ISDN_RECORDS_READY);
 		if (isdn_records_ready != 0u)
 		{
 			link_isdn_receive_records();
@@ -996,14 +997,14 @@ void link_take_master_settings(void)
 	record_size = 0x80u;
 	do
 	{
-		mem_write8(car_number_slot, RACE(record_car_number - 0x2u)->car_number);
+		PLAYER_CAR_NUMBERS(car_number_slot)[0] = RACE(record_car_number - 0x2u)->car_number;
 		record_car_number = (record_car_number & ~0xFFFFu) | (uint16_t)(record_car_number + record_size);
 		car_number_slot++;
 		players_left--;
 	} while (players_left != 0u);
-	move_halfwords(SOUND_RAM + 0x1F32u, WORK_RAM + 0xFC30u, 0x1Eu);
+	move_halfwords(BOOKKEEPING_COURSE_RECORDS_ADDRESS, WORK_RAM + 0xFC30u, 0x1Eu);
 	bookkeeping_update_checksum(players_left);
-	move_string(0x20FC30u, 0x1Eu, SOUND_RAM + 0x1FAEu, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(SOUND_RAM + 0x1FAEu, WORK_RAM + 0xFC30u, 0x1Eu);
 	load_course_records();
 	race = RACE_COPY_1;
 	coins_changed = 0u;
@@ -1082,7 +1083,7 @@ void race_entries_update(void)
 				player = 0u;
 				for (;;)
 				{
-					if (mem_read8(r14 + player) != 0u || RACE(request - 0x19u)->entry_request == 0u)
+					if (SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] != 0u || RACE(request - 0x19u)->entry_request == 0u)
 					{
 						player = (uint8_t)(player + 1u);
 						request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
@@ -1091,7 +1092,7 @@ void race_entries_update(void)
 							break;
 						continue;
 					}
-					mem_write8(r14 + player, 0xFFu);
+					SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] = 0xFFu;
 					RACE(race)->entrant = player;
 					RACE(race)->entry_serial++;
 					entry_frames = next_entry_frames;
@@ -1113,7 +1114,7 @@ void race_entries_update(void)
 					player = 0u;
 					for (;;)
 					{
-						if (mem_read8(r14 + player) != 0u || RACE(request - 0x19u)->entry_request == 0u)
+						if (SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] != 0u || RACE(request - 0x19u)->entry_request == 0u)
 						{
 							player = (uint8_t)(player + 1u);
 							request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
@@ -1122,7 +1123,7 @@ void race_entries_update(void)
 								break;
 							continue;
 						}
-						mem_write8(r14 + player, 0xFFu);
+						SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] = 0xFFu;
 						RACE(race)->entrant = player;
 						RACE(race)->entry_serial++;
 						entry_frames = next_entry_frames;
@@ -1136,10 +1137,10 @@ void race_entries_update(void)
 				{
 					RACE(race)->entry_serial++;
 					RACE(race)->entrant = 0xFFu;
-					AS32(SCREEN(r14 - 0x300u)->accepted_players) = 0u;
+					AS32(SCREEN(r14 - 0x300u)->accepted_players[0]) = 0u;
 					r14 = r14 + 4u;
-					SCREEN(r14 - 0x304u)->last_four_accepted_players = 0u;
-					mem_write8(LINK_ENTRIES_CLOSED, 1u);
+					AS32(SCREEN(r14 - 0x304u)->accepted_players[4]) = 0u;
+					io_write8(LINK_ENTRIES_CLOSED, 1u);
 					r14 = r14 + 4u;
 				}
 			}
@@ -1245,7 +1246,7 @@ void race_progress_update(void)
 		racers_left = host_racer_count;
 		do
 		{
-			checked_race = race_copy_offsets[mem_read8(order_entry)] + GAME_VARIABLES;
+			checked_race = race_copy_offsets[RACE_ORDER_PLAYERS(order_entry)[0]] + GAME_VARIABLES;
 			racers_left--;
 			order_entry++;
 		} while ((racers_left != 0u) & (RACE(checked_race)->pass_seen == host_pass_count));
@@ -1256,19 +1257,19 @@ void race_progress_update(void)
 			racers_left = host_racer_count;
 			do
 			{
-				racer = mem_read8(order_entry);
+				racer = RACE_ORDER_PLAYERS(order_entry)[0];
 				passing_race = race_copy_offsets[racer] + GAME_VARIABLES;
 				racers_left--;
 				order_entry++;
-			} while ((racers_left != 0u) & (mem_read8(r14 + racer) == RACE(passing_race)->stage_count));
-			if (mem_read8(r14 + racer) != RACE(passing_race)->stage_count)
+			} while ((racers_left != 0u) & (SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] == RACE(passing_race)->stage_count));
+			if (SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] != RACE(passing_race)->stage_count)
 			{
 				checkpoint = RACE(passing_race)->stage_count;
-				mem_write8(r14 + racer, checkpoint);
+				SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] = checkpoint;
 				RACE(race)->pass_player = racer;
 				checkpoint = (uint8_t)(checkpoint - 1u);
 				RACE(race)->pass_checkpoint = checkpoint;
-				order = mem_read8(screen + 0x338u + checkpoint);
+				order = SCREEN(screen)->counted_passes[(int32_t)checkpoint];
 				pass_counter = screen + 0x338u + checkpoint;
 				mem_write8(pass_counter, mem_read8(pass_counter) + 1u);
 				RACE(race)->pass_order = (uint8_t)order;
@@ -1305,7 +1306,7 @@ void race_progress_update(void)
 			{
 				do
 				{
-					next_player = mem_read8(sort_place);
+					next_player = RACE_ORDER_PLAYERS(sort_place)[0];
 					r14 = race_copy_offsets[next_player] + GAME_VARIABLES;
 					sort_place++;
 					if (RACE(ahead_race)->finished != 0u)
@@ -1325,10 +1326,10 @@ void race_progress_update(void)
 						ahead_player = swapped_player;
 						ahead_race = r14;
 					}
-					mem_write8(sort_place - 2u, next_player);
+					RACE_ORDER_PLAYERS(sort_place)[-2] = next_player;
 					comparisons_left--;
 				} while (comparisons_left != 0u);
-				mem_write8(sort_place - 1u, ahead_player);
+				RACE_ORDER_PLAYERS(sort_place)[-1] = ahead_player;
 			}
 		}
 	}
@@ -1344,10 +1345,10 @@ void race_progress_update(void)
 	order_place++;
 	do
 	{
-		mem_write8(screen + 0x320u + racer, place);
+		SCREEN(screen)->places[(int32_t)racer] = place;
 		if (racer == player)
 			SCREEN(screen)->place = place;
-		racer = mem_read8(order_place);
+		racer = RACE_ORDER_PLAYERS(order_place)[0];
 		place++;
 		racers_left--;
 		order_place++;
@@ -1375,22 +1376,22 @@ void race_progress_update(void)
 		if (pass_order == 0u && pass_checkpoint != 5u)
 		{
 			SCREEN(screen)->forks_decided++;
-			mem_write8(screen + 0x34Au + pass_checkpoint, pass_branch);
+			SCREEN(screen)->route_branches[(int32_t)pass_checkpoint] = pass_branch;
 			fork_index = RACE(GAME_VARIABLES + race_copy_offsets[pass_player])->stage;
 			fork_index = (uint8_t)(fork_index * 2u);
-			mem_write8(screen + 0x344u + pass_checkpoint, fork_next_stages[(uint8_t)(fork_index + pass_branch)]);
+			SCREEN(screen)->route_stages[(int32_t)pass_checkpoint] = fork_next_stages[(uint8_t)(fork_index + pass_branch)];
 		}
 	}
 }
 
 /* Game step 7, an idle seat while another one's game takes entries (race_entries_update sends it here),
-   by screen game_mode's byte 2: 0 screen fade_kind = 0 and unk_94 bit 0; 1 once that bit has cleared:
-   the seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count
-   (010889) and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear),
-   not the demo (unk_90 bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking
-   (bytes C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts entry_invitation_object_handlers
+   by screen game_mode's byte 2: 0 screen fade_kind = 0 and flags bit 0; 1 once that bit has cleared: the
+   seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count (010889)
+   and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear), not the
+   demo (unk_90 bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking (bytes C0-C3
+   and C8-CB of its entry at checkpoint_lamp); 2 starts entry_invitation_object_handlers
    (entry_countdown_start, credit_display_update, coin_prompt_update): the invitation to join with the
-   entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), fade_kind = 1, unk_94 bit 0; 4
+   entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), fade_kind = 1, flags bit 0; 4
    once player 0's entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD
    cleared (clear_lcd). */
 void entry_invitation_step(void)
@@ -1413,9 +1414,9 @@ void entry_invitation_step(void)
 		return;
 	case 3:
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x86u);
+			io_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_1_CNT, 6u);
+			io_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->fade_kind = 1u;
 		SCREEN(screen)->flags |= 1u;
 		SCREEN(screen)->game_step++;
@@ -1461,7 +1462,7 @@ void entry_invitation_step(void)
    checkpoint passes, the times), from the zeros at 100800. */
 void race_record_clear(void)
 {
-	move_string(zero_block_ADDRESS, 0x28u, SCREEN(screen)->race + 0x30u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(SCREEN(screen)->race + 0x30u, zero_block_ADDRESS, 0x28u);
 }
 
 /* Marks the screen's player ready in its race record (unk_5C), after its selections. */
@@ -1483,7 +1484,7 @@ uint32_t players_not_ready(void)
 	race++;
 	do
 	{
-		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[mem_read8(race)])->ready;
+		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[RACE_ORDER_PLAYERS(race)[0]])->ready;
 		zero = ready == 0u;
 		racers_left--;
 		race++;
@@ -1508,11 +1509,11 @@ void course_records_update(void)
 	do
 	{
 		race += 0x80u;
-		seen_serial = mem_read8(seen_serials);
+		seen_serial = SEEN_RECORD_SERIALS(seen_serials)[0];
 		seen_serials++;
 		if (RACE(race)->record_serial != seen_serial)
 		{
-			mem_write8(seen_serials - 1u, RACE(race)->record_serial);
+			SEEN_RECORD_SERIALS(seen_serials)[-1] = RACE(race)->record_serial;
 			finish_time = RACE(race)->finish_time;
 			record_offset = RACE(race)->record_course;
 			record_offset = (uint8_t)(record_offset * 6u);
@@ -1523,13 +1524,13 @@ void course_records_update(void)
 				mem_write8(r12, RACE(race)->record_model);
 				mem_write8(r12 + 1u, RACE(race)->record_name);
 				mem_write16(r12 + 2u, RACE(race)->record_name_rest);
-				backup_record = SOUND_RAM + 0x1F32u + record_offset;
-				mem_write32(backup_record, mem_read32(r12));
-				mem_write16(backup_record + 4u, mem_read16(r12 + 4u));
+				backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS + record_offset;
+				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = mem_read32(r12);
+				BACKUP_COURSE_RECORD(backup_record)->time = mem_read16(r12 + 4u);
 				bookkeeping_update_checksum(ignored);
 				backup_record = SOUND_RAM + 0x1FAEu + record_offset;
-				mem_write32(backup_record, mem_read32(r12));
-				mem_write16(backup_record + 4u, mem_read16(r12 + 4u));
+				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = mem_read32(r12);
+				BACKUP_COURSE_RECORD(backup_record)->time = mem_read16(r12 + 4u);
 			}
 		}
 		players_left--;
@@ -1550,7 +1551,7 @@ void link_receive_records(void)
 	{
 		if (link_failed == 0u && link_off == 0u)
 		{
-			board_error = mem_read8(LINK_BOARD_ERROR);
+			board_error = io_read8(LINK_BOARD_ERROR);
 			if (board_error != 0u)
 			{
 				link_lost();
@@ -1559,7 +1560,7 @@ void link_receive_records(void)
 			source = 0x800020u;
 			destination = RACE_COPY_1;
 			record_count = 8u;
-			second_buffer = mem_read8(LINK_SECOND_BUFFER);
+			second_buffer = io_read8(LINK_SECOND_BUFFER);
 			if (second_buffer == 0u)
 			{
 				link_copy_records_in(record_count, source, destination);
@@ -1583,194 +1584,194 @@ void link_receive_records(void)
 	{
 		block_00 = destination;
 		destination += 8u;
-		bytes_04 = mem_read32(source + 4u);
-		mem_write32(block_00, mem_read32(source));
+		bytes_04 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_00, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_00 + 4u, bytes_04);
 		source += 8u;
 		block_08 = destination;
 		destination += 8u;
-		bytes_0C = mem_read32(source + 4u);
-		mem_write32(block_08, mem_read32(source));
+		bytes_0C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_08, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_08 + 4u, bytes_0C);
 		source += 8u;
 		block_10 = destination;
 		destination += 8u;
-		bytes_14 = mem_read32(source + 4u);
-		mem_write32(block_10, mem_read32(source));
+		bytes_14 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_10, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_10 + 4u, bytes_14);
 		source += 8u;
 		block_18 = destination;
 		destination += 8u;
-		bytes_1C = mem_read32(source + 4u);
-		mem_write32(block_18, mem_read32(source));
+		bytes_1C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_18, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_18 + 4u, bytes_1C);
 		source += 8u;
 		block_20 = destination;
 		destination += 8u;
-		bytes_24 = mem_read32(source + 4u);
-		mem_write32(block_20, mem_read32(source));
+		bytes_24 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_20, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_20 + 4u, bytes_24);
 		source += 8u;
 		block_28 = destination;
 		destination += 8u;
-		bytes_2C = mem_read32(source + 4u);
-		mem_write32(block_28, mem_read32(source));
+		bytes_2C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_28, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_28 + 4u, bytes_2C);
 		source += 8u;
 		block_30 = destination;
 		destination += 8u;
-		bytes_34 = mem_read32(source + 4u);
-		mem_write32(block_30, mem_read32(source));
+		bytes_34 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_30, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_30 + 4u, bytes_34);
 		source += 8u;
 		block_38 = destination;
 		destination += 8u;
-		bytes_3C = mem_read32(source + 4u);
-		mem_write32(block_38, mem_read32(source));
+		bytes_3C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_38, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_38 + 4u, bytes_3C);
 		source += 8u;
 		block_40 = destination;
 		destination += 8u;
-		bytes_44 = mem_read32(source + 4u);
-		mem_write32(block_40, mem_read32(source));
+		bytes_44 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_40, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_40 + 4u, bytes_44);
 		source += 8u;
 		block_48 = destination;
 		destination += 8u;
-		bytes_4C = mem_read32(source + 4u);
-		mem_write32(block_48, mem_read32(source));
+		bytes_4C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_48, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_48 + 4u, bytes_4C);
 		source += 8u;
 		block_50 = destination;
 		destination += 8u;
-		bytes_54 = mem_read32(source + 4u);
-		mem_write32(block_50, mem_read32(source));
+		bytes_54 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_50, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_50 + 4u, bytes_54);
 		source += 8u;
 		block_58 = destination;
 		destination += 8u;
-		bytes_5C = mem_read32(source + 4u);
-		mem_write32(block_58, mem_read32(source));
+		bytes_5C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_58, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_58 + 4u, bytes_5C);
 		source += 8u;
 		block_60 = destination;
 		destination += 8u;
-		bytes_64 = mem_read32(source + 4u);
-		mem_write32(block_60, mem_read32(source));
+		bytes_64 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_60, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_60 + 4u, bytes_64);
 		source += 8u;
 		block_68 = destination;
 		destination += 8u;
-		bytes_6C = mem_read32(source + 4u);
-		mem_write32(block_68, mem_read32(source));
+		bytes_6C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_68, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_68 + 4u, bytes_6C);
 		source += 8u;
 		block_70 = destination;
 		destination += 8u;
-		bytes_74 = mem_read32(source + 4u);
-		mem_write32(block_70, mem_read32(source));
+		bytes_74 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_70, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_70 + 4u, bytes_74);
 		source += 8u;
 		block_78 = destination;
 		destination += 8u;
-		bytes_7C = mem_read32(source + 4u);
-		mem_write32(block_78, mem_read32(source));
+		bytes_7C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_78, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_78 + 4u, bytes_7C);
 		source += 8u;
 		block_80 = destination;
 		destination += 8u;
-		bytes_84 = mem_read32(source + 4u);
-		mem_write32(block_80, mem_read32(source));
+		bytes_84 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_80, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_80 + 4u, bytes_84);
 		source += 8u;
 		block_88 = destination;
 		destination += 8u;
-		bytes_8C = mem_read32(source + 4u);
-		mem_write32(block_88, mem_read32(source));
+		bytes_8C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_88, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_88 + 4u, bytes_8C);
 		source += 8u;
 		block_90 = destination;
 		destination += 8u;
-		bytes_94 = mem_read32(source + 4u);
-		mem_write32(block_90, mem_read32(source));
+		bytes_94 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_90, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_90 + 4u, bytes_94);
 		source += 8u;
 		block_98 = destination;
 		destination += 8u;
-		bytes_9C = mem_read32(source + 4u);
-		mem_write32(block_98, mem_read32(source));
+		bytes_9C = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_98, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_98 + 4u, bytes_9C);
 		source += 8u;
 		block_A0 = destination;
 		destination += 8u;
-		bytes_A4 = mem_read32(source + 4u);
-		mem_write32(block_A0, mem_read32(source));
+		bytes_A4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_A0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_A0 + 4u, bytes_A4);
 		source += 8u;
 		block_A8 = destination;
 		destination += 8u;
-		bytes_AC = mem_read32(source + 4u);
-		mem_write32(block_A8, mem_read32(source));
+		bytes_AC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_A8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_A8 + 4u, bytes_AC);
 		source += 8u;
 		block_B0 = destination;
 		destination += 8u;
-		bytes_B4 = mem_read32(source + 4u);
-		mem_write32(block_B0, mem_read32(source));
+		bytes_B4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_B0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_B0 + 4u, bytes_B4);
 		source += 8u;
 		block_B8 = destination;
 		destination += 8u;
-		bytes_BC = mem_read32(source + 4u);
-		mem_write32(block_B8, mem_read32(source));
+		bytes_BC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_B8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_B8 + 4u, bytes_BC);
 		source += 8u;
 		block_C0 = destination;
 		destination += 8u;
-		bytes_C4 = mem_read32(source + 4u);
-		mem_write32(block_C0, mem_read32(source));
+		bytes_C4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_C0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_C0 + 4u, bytes_C4);
 		source += 8u;
 		block_C8 = destination;
 		destination += 8u;
-		bytes_CC = mem_read32(source + 4u);
-		mem_write32(block_C8, mem_read32(source));
+		bytes_CC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_C8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_C8 + 4u, bytes_CC);
 		source += 8u;
 		block_D0 = destination;
 		destination += 8u;
-		bytes_D4 = mem_read32(source + 4u);
-		mem_write32(block_D0, mem_read32(source));
+		bytes_D4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_D0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_D0 + 4u, bytes_D4);
 		source += 8u;
 		block_D8 = destination;
 		destination += 8u;
-		bytes_DC = mem_read32(source + 4u);
-		mem_write32(block_D8, mem_read32(source));
+		bytes_DC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_D8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_D8 + 4u, bytes_DC);
 		source += 8u;
 		block_E0 = destination;
 		destination += 8u;
-		bytes_E4 = mem_read32(source + 4u);
-		mem_write32(block_E0, mem_read32(source));
+		bytes_E4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_E0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_E0 + 4u, bytes_E4);
 		source += 8u;
 		block_E8 = destination;
 		destination += 8u;
-		bytes_EC = mem_read32(source + 4u);
-		mem_write32(block_E8, mem_read32(source));
+		bytes_EC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_E8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_E8 + 4u, bytes_EC);
 		source += 8u;
 		block_F0 = destination;
 		destination += 8u;
-		bytes_F4 = mem_read32(source + 4u);
-		mem_write32(block_F0, mem_read32(source));
+		bytes_F4 = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_F0, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_F0 + 4u, bytes_F4);
 		source += 8u;
 		block_F8 = destination;
 		destination += 8u;
-		bytes_FC = mem_read32(source + 4u);
-		mem_write32(block_F8, mem_read32(source));
+		bytes_FC = RACE_RECORD_WORDS(source)[1];
+		mem_write32(block_F8, RACE_RECORD_WORDS(source)[0]);
 		mem_write32(block_F8 + 4u, bytes_FC);
 		pairs_left--;
 		source += 8u;
@@ -1795,340 +1796,340 @@ void link_copy_records_in(uint32_t record_count, uint32_t board_records, uint32_
 {
 	do
 	{
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records++;
 		board_records += 2u;
-		mem_write8(race_records, (uint8_t)mem_read16(board_records));
+		RACE_RECORD_BYTES(race_records)[0] = (uint8_t)mem_read16(board_records);
 		race_records += 0x11u;
 		record_count--;
 		board_records += 2u;
@@ -2149,7 +2150,7 @@ void link_send_records(void)
 		link_wait_frames = link_wait_frames_start;
 		if (link_failed != 0u || link_off != 0u)
 			return;
-		board_error = mem_read8(LINK_BOARD_ERROR);
+		board_error = io_read8(LINK_BOARD_ERROR);
 		if (board_error != 0u)
 		{
 			link_lost();
@@ -2498,6 +2499,6 @@ void link_send_records(void)
 			mem_write16(board_records, RACE(race)->machine);
 			record_count--;
 		} while (record_count != 0u);
-		mem_write8(LINK_RECORDS_SENT, 0xFFu);
+		io_write8(LINK_RECORDS_SENT, 0xFFu);
 	}
 }

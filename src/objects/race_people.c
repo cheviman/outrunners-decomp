@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -208,7 +208,7 @@ uint32_t rider_gesture_check_place(uint8_t visible_mask, uint32_t car)
 	uint8_t last_place = 0, place = 0;
 	uint8_t gesture_shown = 0;
 
-	place = mem_read8(screen + 0x320u + OBJECT(current_object)->rider_gesture.player);
+	place = SCREEN(screen)->places[OBJECT(current_object)->rider_gesture.player];
 	last_place = OBJECT(car)->race_car.last_place;
 	OBJECT(car)->race_car.last_place = place;
 	if (place < last_place)
@@ -484,10 +484,10 @@ void race_car_start_ending(void)
 		}
 		else
 		{
-			if (mem_read8(screen + 0x320u + player) != 0u)
+			if (SCREEN(screen)->places[(int32_t)player] != 0u)
 				ending = (uint8_t)(ending + 1u);
 			actor_list = ending_actor_lists[ending];
-			actor_count = mem_read32(actor_list);
+			actor_count = OBJECT_START_LIST(actor_list)->count;
 			actor_list += 4u;
 		}
 		do
@@ -821,7 +821,7 @@ void goal_actor_run(void)
 			invalid_jump(goal_actor_command_jumps[command]);
 		}
 		OBJECT(current_object)->goal_actor.counter++;
-		step_value = (uint16_t)(GOAL_ACTOR_SCRIPT_WORDS(script_word)[0] + ((uint32_t)goal_actor_place_waits[mem_read8(screen + 0x320u + SCREEN(screen)->player)] << 3));
+		step_value = (uint16_t)(GOAL_ACTOR_SCRIPT_WORDS(script_word)[0] + ((uint32_t)goal_actor_place_waits[SCREEN(screen)->places[SCREEN(screen)->player]] << 3));
 		script_word += 2u;
 		if (OBJECT(current_object)->goal_actor.counter <= step_value)
 		{

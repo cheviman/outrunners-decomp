@@ -3,7 +3,7 @@
  *    Description: the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -84,7 +84,7 @@ void upload_queued_palettes(void)
 	upload_queue += 4u;
 	for (;;)
 	{
-		queued_upload = mem_read32(upload_queue);
+		queued_upload = PALETTE_UPLOAD_QUEUE(upload_queue)[0];
 		colour_record = queued_upload & 0x7FFFFFFFu;
 		upload_queue += 4u;
 		if ((queued_upload & 0x80000000u) == 0u)
@@ -283,7 +283,7 @@ void step_screen_fade(void)
 		channels = (uint8_t)(channels * 2u);
 		if (carry)
 		{
-			mem_write16(mixer_register, level);
+			MIXER_COLOUR_OFFSETS(mixer_register)[0] = level;
 			mixer_register += 2u;
 		}
 		channels_left--;
@@ -387,7 +387,7 @@ void race_background_fade_palettes(uint32_t fade_list)
 		period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 		fade_list++;
 		fade_object = start_palette_fade(blocks, period, from, to);
-		mem_write32(fade_slot, fade_object);
+		BACKGROUND_FADES(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;
 	} while (fades_left != 0u);
@@ -405,14 +405,14 @@ void race_background_fade_watch_update(void)
 	fades_left = OBJECT(current_object)->race_background_fade_watch.count;
 	do
 	{
-		fade = mem_read32(fade_slot);
+		fade = BACKGROUND_FADES(fade_slot)[0];
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
 			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
-				mem_write32(fade_slot - 4u, 0u);
+				BACKGROUND_FADES(fade_slot)[-1] = 0u;
 		}
 		fades_left--;
 	} while (fades_left != 0u);
@@ -465,18 +465,18 @@ void palette_fade_prepare(void)
 	difference_place = OBJECT(current_object)->palette_fade.difference_place;
 	from_colour = PALETTE_COLOURS(from)[0];
 	to_colour = PALETTE_COLOURS(to)[0];
-	mem_write16(r12, from_colour);
+	PALETTE_FADE_COLOURS(r12)[0] = from_colour;
 	r12 = r12 + 2u;
-	mem_write8(difference_place, (from_colour & 0x1Fu) - (to_colour & 0x1Fu));
+	PALETTE_FADE_DIFFERENCES(difference_place)[0] = (from_colour & 0x1Fu) - (to_colour & 0x1Fu);
 	difference_place++;
 	from_colour = from_colour >> 5;
 	to_colour = to_colour >> 5;
-	mem_write8(difference_place, (from_colour & 0x1Fu) - (to_colour & 0x1Fu));
+	PALETTE_FADE_DIFFERENCES(difference_place)[0] = (from_colour & 0x1Fu) - (to_colour & 0x1Fu);
 	difference_place++;
 	from_colour = from_colour >> 5;
 	from_colour = from_colour & 0x1Fu;
 	from_colour = (uint8_t)(from_colour - ((to_colour >> 5) & 0x1Fu));
-	mem_write8(difference_place, from_colour);
+	PALETTE_FADE_DIFFERENCES(difference_place)[0] = from_colour;
 	difference_place++;
 	colours_left = OBJECT(current_object)->palette_fade.colours_left;
 	OBJECT(current_object)->palette_fade.colours_left = colours_left - 1u;
@@ -536,7 +536,7 @@ void palette_fade_step(uint32_t from_colour)
 					{
 						do
 						{
-							if (L_0186D1 || L_0186D7 || L_0186E0 || L_0186E9 || L_0186F2 || (int8_t)mem_read8(difference_place) < 0)
+							if (L_0186D1 || L_0186D7 || L_0186E0 || L_0186E9 || L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
 							{
 								for (;;)
 								{
@@ -567,7 +567,7 @@ void palette_fade_step(uint32_t from_colour)
 																					if (L_0186CB || !L_0186AA)
 																					{
 																						L_0186CB = false;
-																						mem_write8(difference_place, mem_read8(difference_place) + 1u);
+																						PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
 																						colour_step++;
 																						difference_place++;
 																					}
@@ -579,7 +579,7 @@ void palette_fade_step(uint32_t from_colour)
 																}
 															}
 														}
-														if (L_0186B2 || L_0186B2 || L_0186D1 || L_0186D7 || L_0186E9 || L_0186F2 || (int8_t)mem_read8(difference_place) < 0)
+														if (L_0186B2 || L_0186B2 || L_0186D1 || L_0186D7 || L_0186E9 || L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
 														{
 															for (;;)
 															{
@@ -600,7 +600,7 @@ void palette_fade_step(uint32_t from_colour)
 																							if (!L_0186B2)
 																							{
 																								L_0186D7 = false;
-																								mem_write8(difference_place, mem_read8(difference_place) + 1u);
+																								PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
 																								colour_step += 0x20u;
 																								difference_place++;
 																							}
@@ -610,7 +610,7 @@ void palette_fade_step(uint32_t from_colour)
 																				}
 																			}
 																		}
-																		if (L_0186BA || L_0186BA || L_0186D1 || L_0186E9 || (int8_t)mem_read8(difference_place) < 0)
+																		if (L_0186BA || L_0186BA || L_0186D1 || L_0186E9 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
 																		{
 																			if (L_0186BA || L_0186BA || !L_0186D1)
 																			{
@@ -619,13 +619,13 @@ void palette_fade_step(uint32_t from_colour)
 																					if (!L_0186BA)
 																					{
 																						L_0186E9 = false;
-																						mem_write8(difference_place, mem_read8(difference_place) + 1u);
+																						PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
 																						colour_step += 0x400u;
 																						difference_place++;
 																					}
 																				}
 																				L_0186BA = false;
-																				mem_write16(colour_place, mem_read16(colour_place) + colour_step);
+																				PALETTE_FADE_COLOURS(colour_place)[0] += colour_step;
 																				colours_left--;
 																				colour_place += 2u;
 																				if (colours_left == 0u)
@@ -635,14 +635,14 @@ void palette_fade_step(uint32_t from_colour)
 																					return;
 																				}
 																				colour_step = 0u;
-																				L_0186CB = (int8_t)mem_read8(difference_place) < 0;
+																				L_0186CB = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
 																			}
 																			if (!L_0186CB)
 																			{
-																				if (L_0186D1 || (int8_t)mem_read8(difference_place) > 0)
+																				if (L_0186D1 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
 																				{
 																					L_0186D1 = false;
-																					mem_write8(difference_place, mem_read8(difference_place) - 1u);
+																					PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
 																					colour_step--;
 																					difference_place++;
 																					L_0186AA = true;
@@ -659,10 +659,10 @@ void palette_fade_step(uint32_t from_colour)
 																		break;
 																	if (L_0186AA)
 																		break;
-																	if (L_0186F2 || (int8_t)mem_read8(difference_place) > 0)
+																	if (L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
 																	{
 																		L_0186F2 = false;
-																		mem_write8(difference_place, mem_read8(difference_place) - 1u);
+																		PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
 																		colour_step -= 0x400u;
 																		difference_place++;
 																		L_0186BA = true;
@@ -680,10 +680,10 @@ void palette_fade_step(uint32_t from_colour)
 												} while (L_0186AA);
 											} while (L_0186AA);
 										}
-										if (L_0186E0 || (int8_t)mem_read8(difference_place) > 0)
+										if (L_0186E0 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
 										{
 											L_0186E0 = false;
-											mem_write8(difference_place, mem_read8(difference_place) - 1u);
+											PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
 											colour_step -= 0x20u;
 											difference_place++;
 											L_0186B2 = true;
@@ -693,17 +693,17 @@ void palette_fade_step(uint32_t from_colour)
 									L_0186B2 = true;
 								}
 							}
-							L_0186D1 = (int8_t)mem_read8(difference_place) > 0;
+							L_0186D1 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
 						} while (L_0186D1);
 						difference_place++;
-						L_0186D7 = (int8_t)mem_read8(difference_place) < 0;
+						L_0186D7 = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
 					} while (L_0186D7);
-					L_0186E0 = (int8_t)mem_read8(difference_place) > 0;
+					L_0186E0 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
 				} while (L_0186E0);
 				difference_place++;
-				L_0186E9 = (int8_t)mem_read8(difference_place) < 0;
+				L_0186E9 = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
 			} while (L_0186E9);
-			L_0186F2 = (int8_t)mem_read8(difference_place) > 0;
+			L_0186F2 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
 		} while (L_0186F2);
 		difference_place++;
 		colour_place += 2u;

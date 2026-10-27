@@ -3,7 +3,7 @@
  *    Description: the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -21,28 +21,28 @@ void load_course_records(void)
 	uint32_t model_place = 0;
 
 	courses_left = 0xAu;
-	backup_record = SOUND_RAM + 0x1F32u;
+	backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS;
 	course_record = default_course_records_ADDRESS;
 	r12 = course_records_ADDRESS;
 	for (;;)
 	{
-		if ((int8_t)mem_read8(backup_record) >= 0)
+		if ((int8_t)BACKUP_COURSE_RECORD(backup_record)->model >= 0)
 		{
-			mem_write8(r12, mem_read8(backup_record));
+			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record)->model);
 			model_place = r12;
 			r12 = r12 + 1u;
 			mem_write8(model_place, mem_read8(model_place) & 7u);
 			backup_record++;
-			mem_write8(r12, mem_read8(backup_record));
+			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0]);
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write8(r12, mem_read8(backup_record));
+			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1]);
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write8(r12, mem_read8(backup_record));
+			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2]);
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write16(r12, mem_read16(backup_record));
+			mem_write16(r12, BACKUP_COURSE_RECORD(backup_record - 0x4u)->time);
 			r12 = r12 + 2u;
 			course_record += 6u;
 			courses_left--;
@@ -134,7 +134,7 @@ void ranking_update(void)
 
 /* The picture of the course behind the ranking, while the game mode is the ranking (screen game_mode 5).
    By state: 0 courses_shown from the ranking; for the first course I/O C0001C = 6 (C8001C = 86 for
-   screen 2) and a fade in (screen fade_kind 1, unk_94 bit 0); ranking_background_load; 1 waits while the
+   screen 2) and a fade in (screen fade_kind 1, flags bit 0); ranking_background_load; 1 waits while the
    pages are unpacked (screen unpack_state), then for the later courses a fade in (fade_kind 3); 2 when
    the ranking says course_over: after the third course a fade out (fade_kind 0) and state 4, else a fade
    out (fade_kind 2); 3 when the fade is over, back to 0 for the next course's picture; 4 nothing more.
@@ -152,9 +152,9 @@ void ranking_background_update(void)
 			if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
 			{
 				if (SCREEN(screen)->index != 0u)
-					mem_write8(IO_2_CNT, 0x86u);
+					io_write8(IO_2_CNT, 0x86u);
 				else
-					mem_write8(IO_1_CNT, 6u);
+					io_write8(IO_1_CNT, 6u);
 				SCREEN(screen)->fade_kind = 1u;
 				SCREEN(screen)->flags |= 1u;
 			}
@@ -351,19 +351,19 @@ void ranking_record_start(void)
 	record_offset = OBJECT(current_object)->ranking_record.course;
 	record_offset = (uint8_t)(record_offset * 6u);
 	initial_place = 0x20E301u + record_offset;
-	initial = mem_read8(initial_place);
+	initial = COURSE_RECORD_BYTES(initial_place)[0];
 	initial_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
 	OBJECT(text_place - 0x80u)->ranking_record.text = initial;
-	second_initial = mem_read8(initial_place);
+	second_initial = COURSE_RECORD_BYTES(initial_place)[0];
 	initial_place++;
 	initial = second_initial;
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
 	OBJECT(text_place - 0x81u)->list_data = (OBJECT(text_place - 0x81u)->list_data & 0xFFFF00FFu) | ((initial & 0xFFu) << 8u);
-	initial = mem_read8(initial_place);
+	initial = COURSE_RECORD_BYTES(initial_place)[0];
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
@@ -777,8 +777,8 @@ void passing_car_update(void)
    ranking_background_page_numbers, in page_list; queue_tile_pages), start_palette_fades with
    background_palette_fades, zoom 1:1, zoom centre and the second tilemap's scroll 0, the pages, the
    scroll's start (ranking_background_scroll_xs: x 360 for screen 1, 4A0 for screen 2; y 60), its
-   priority 1 and the second tilemap off in the mixer (ranking_mixer_addresses: screen 182 and 186;
-   unk_94 bit 2); send_video_registers = FF to send the registers. */
+   priority 1 and the second tilemap off in the mixer (ranking_mixer_addresses: screen 182 and 186; flags
+   bit 2); send_video_registers = FF to send the registers. */
 void ranking_background_load(void)
 {
 	uint32_t background_number = 0, background_pages = 0, colour_list = 0, index = 0, mixer_place = 0, mixer_priority = 0, page_numbers = 0, page_place = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0, ranking_background_registers = 0;
@@ -809,7 +809,7 @@ void ranking_background_load(void)
 	OBJECT(current_object)->ranking_background.second_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_y_address;
 	send_video_registers = 0xFFu;
 	background_number = course_backgrounds[SCREEN(screen)->record_course];
-	mem_write8(OBJECT(current_object)->ranking_background.tile_bank_address, ranking_background_tile_banks[background_number]);
+	TILE_BANK_VALUES(OBJECT(current_object)->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
 	saved_fades = background_palette_fades[background_number];
 	colour_list = background_palettes[background_number];
 	background_pages = background_tile_page_lists[background_number] + 0x10u;
@@ -818,36 +818,36 @@ void ranking_background_load(void)
 	pages_to_copy = 4u;
 	do
 	{
-		mem_write32(page_place, TILE_PAGE_ENTRIES(background_pages)[0] | (page_numbers & ~0xFFFFFFu));
+		OBJECT_TILE_PAGES(page_place)[0] = TILE_PAGE_ENTRIES(background_pages)[0] | (page_numbers & ~0xFFFFFFu);
 		page_place += 4u;
 		page_numbers = page_numbers << 8;
 		pages_to_copy--;
 		background_pages += 4u;
 	} while (pages_to_copy != 0u);
-	mem_write32(page_place, 0xFFFFFFFFu);
+	OBJECT_TILE_PAGES(page_place)[0] = 0xFFFFFFFFu;
 	queued_pages = current_object + 0xB0u;
 	queue_tile_pages(queued_pages);
 	queue_palette_list(colour_list);
 	palette_fades = saved_fades;
 	start_palette_fades(palette_fades);
-	mem_write16(OBJECT(current_object)->ranking_background.zoom_x_address, 0x200u);
-	mem_write16(OBJECT(current_object)->ranking_background.zoom_y_address, 0x200u);
-	mem_write16(OBJECT(current_object)->ranking_background.zoom_center_x_address, 0u);
-	mem_write16(OBJECT(current_object)->ranking_background.zoom_center_y_address, 0u);
-	mem_write16(OBJECT(current_object)->ranking_background.cleared_scroll_x_address, 0u);
-	mem_write16(OBJECT(current_object)->ranking_background.cleared_scroll_y_address, 0u);
-	mem_write16(OBJECT(current_object)->ranking_background.second_scroll_x_address, 0u);
-	mem_write16(OBJECT(current_object)->ranking_background.second_scroll_y_address, 0u);
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_x_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_y_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_center_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_center_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.cleared_scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.cleared_scroll_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.second_scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.second_scroll_y_address)[0] = 0u;
 	index = SCREEN(screen)->index;
-	mem_write32(OBJECT(current_object)->ranking_background.pages_address, byte_swap32(ranking_background_page_numbers[index]));
-	mem_write16(OBJECT(current_object)->ranking_background.scroll_x_address, ranking_background_scroll_xs[index]);
-	mem_write16(OBJECT(current_object)->ranking_background.scroll_y_address, 0x60u);
+	PAGE_SELECT(OBJECT(current_object)->ranking_background.pages_address)[0] = byte_swap32(ranking_background_page_numbers[index]);
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.scroll_x_address)[0] = ranking_background_scroll_xs[index];
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.scroll_y_address)[0] = 0x60u;
 	mixer_place = ranking_mixer_addresses[index];
-	mixer_priority = mem_read32(mixer_place);
+	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
 	mixer_priority = (mixer_priority & ~0xFFFFu) | (mixer_priority & 0xFFF0u);
-	mem_write32(mixer_place, (mixer_priority & ~0xFFu) | (uint8_t)(mixer_priority | 1u));
+	MIXER_VALUE_PAIRS(mixer_place)[0] = (mixer_priority & ~0xFFu) | (uint8_t)(mixer_priority | 1u);
 	mixer_place += 4u;
-	mixer_priority = mem_read32(mixer_place);
-	mem_write32(mixer_place, (mixer_priority & ~0xFFFFu) | (mixer_priority & 0xFFF0u));
+	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
+	MIXER_VALUE_PAIRS(mixer_place)[0] = (mixer_priority & ~0xFFFFu) | (mixer_priority & 0xFFF0u);
 	SCREEN(screen)->flags |= 4u;
 }

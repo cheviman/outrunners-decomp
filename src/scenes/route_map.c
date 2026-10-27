@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -103,7 +103,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.second_register_scroll_y_address = ROUTE_MAP_REGISTERS(route_map_registers - 0x38u)->second_register_scroll_y_address;
 										OBJECT(current_object)->route_map.second_tile_bank_address = ROUTE_MAP_REGISTERS(route_map_registers - 0x38u)->second_tile_bank_address;
 										setup_base = SCREEN(screen)->index * 5u * 2u;
-										route_branches = SCREEN(screen)->route_branches;
+										route_branches = SCREEN(screen)->route_branches[0];
 										OBJECT(current_object)->route_map.first_branch = route_branches;
 										background_setup = 0x4868u + (setup_base + route_branches * 5u) * 4u;
 										set_up_background(background_setup);
@@ -114,18 +114,18 @@ void route_map_update(void)
 									case 0x003644u:
 										OBJECT(current_object)->route_map.sea_colour_address = route_map_sea_colour_addresses[SCREEN(screen)->index];
 										mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x200u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x200u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_center_x_address, 0xA0u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_center_y_address, 0x70u);
-										mem_write16(OBJECT(current_object)->route_map.scroll_x_address, 0x180u);
-										mem_write16(OBJECT(current_object)->route_map.scroll_y_address, 0x70u);
-										mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, 0x8C00u);
-										mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, 0x70u);
-										mem_write16(OBJECT(current_object)->route_map.second_scroll_x_address, 0xF8u);
-										mem_write16(OBJECT(current_object)->route_map.second_scroll_y_address, 0u);
-										mem_write16(OBJECT(current_object)->route_map.second_register_scroll_x_address, 0xF8u);
-										mem_write16(OBJECT(current_object)->route_map.second_register_scroll_y_address, 0u);
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x200u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x200u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_x_address)[0] = 0xA0u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_y_address)[0] = 0x70u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0] = 0x180u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0] = 0x70u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = 0x8C00u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = 0x70u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0] = 0xF8u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0] = 0u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_x_address)[0] = 0xF8u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_y_address)[0] = 0u;
 										send_video_registers = 0xFFu;
 										OBJECT(current_object)->route_map.timer = 0x1Eu;
 										OBJECT(current_object)->state++;
@@ -135,7 +135,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer - 1u;
 										if (timer == 1u)
 										{
-											mem_write32(OBJECT(current_object)->route_map.second_pages_address, 0u);
+											PAGE_SELECT(OBJECT(current_object)->route_map.second_pages_address)[0] = 0u;
 											mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0x7EE0u);
 											OBJECT(current_object)->route_map.timer = 9u;
 											OBJECT(current_object)->state++;
@@ -151,15 +151,15 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer_2 - 1u;
 										if (timer_2 != 1u)
 											return;
-										mem_write32(OBJECT(current_object)->route_map.pages_address, route_map_close_up_pages[SCREEN(screen)->index]);
-										mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x200u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x200u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_center_x_address, 0u);
-										mem_write16(OBJECT(current_object)->route_map.zoom_center_y_address, 0u);
-										mem_write16(OBJECT(current_object)->route_map.scroll_x_address, route_map_start_scroll_xs[OBJECT(current_object)->route_map.first_branch]);
-										mem_write16(OBJECT(current_object)->route_map.scroll_y_address, 0x8Cu);
-										mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
-										mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
+										PAGE_SELECT(OBJECT(current_object)->route_map.pages_address)[0] = route_map_close_up_pages[SCREEN(screen)->index];
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x200u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x200u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_x_address)[0] = 0u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_y_address)[0] = 0u;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0] = route_map_start_scroll_xs[OBJECT(current_object)->route_map.first_branch];
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0] = 0x8Cu;
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
+										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 										send_video_registers = 0xFFu;
 										SCREEN(screen)->skip_scroll_update = 0xFFu;
 										object = start_object();
@@ -202,7 +202,7 @@ void route_map_update(void)
 										{
 											OBJECT(object)->stage_result_line.last = 1u;
 											leg_distance = mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7));
-											stage_lengths = SCREEN(screen)->stage_lengths;
+											stage_lengths = SCREEN(screen)->stage_lengths[0];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_lengths);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(((leg_distance * 5u) << 2) + leg_distance * 2u, stage_lengths);
 											SCREEN(screen)->route_map_signals |= 0x40u;
@@ -259,9 +259,9 @@ void route_map_update(void)
 											OBJECT(current_object)->route_map.timer = timer_3 - 1u;
 											if (timer_3 == 1u)
 											{
-												mem_write32(OBJECT(current_object)->route_map.pages_address, route_map_routes_pages[SCREEN(screen)->index]);
-												mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x400u);
-												mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x400u);
+												PAGE_SELECT(OBJECT(current_object)->route_map.pages_address)[0] = route_map_routes_pages[SCREEN(screen)->index];
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x400u;
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x400u;
 												scroll_x_address = OBJECT(current_object)->route_map.scroll_x_address;
 												mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 0x180u);
 												scroll_x_address_2 = OBJECT(current_object)->route_map.scroll_x_address;
@@ -272,18 +272,18 @@ void route_map_update(void)
 												mem_write16(scroll_x_address_3, (int16_t)mem_read16(scroll_x_address_3) >> 1);
 												scroll_y_address_2 = OBJECT(current_object)->route_map.scroll_y_address;
 												mem_write16(scroll_y_address_2, (int16_t)mem_read16(scroll_y_address_2) >> 1);
-												mem_write16(OBJECT(current_object)->route_map.zoom_center_x_address, 0xA0u);
-												mem_write16(OBJECT(current_object)->route_map.zoom_center_y_address, 0x70u);
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_x_address)[0] = 0xA0u;
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_y_address)[0] = 0x70u;
 												scroll_x_address_4 = OBJECT(current_object)->route_map.scroll_x_address;
 												mem_write16(scroll_x_address_4, mem_read16(scroll_x_address_4) + 0x1D0u);
 												scroll_y_address_3 = OBJECT(current_object)->route_map.scroll_y_address;
 												mem_write16(scroll_y_address_3, mem_read16(scroll_y_address_3) + 0xA3u);
-												mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
-												mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
+												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 												OBJECT(current_object)->x = route_map_whole_scroll_xs[OBJECT(current_object)->route_map.first_branch];
 												OBJECT(current_object)->y = 0x70u;
-												OBJECT(current_object)->x -= mem_read16(OBJECT(current_object)->route_map.scroll_x_address);
-												OBJECT(current_object)->y -= mem_read16(OBJECT(current_object)->route_map.scroll_y_address);
+												OBJECT(current_object)->x -= VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
+												OBJECT(current_object)->y -= VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 												OBJECT(current_object)->x = (int16_t)OBJECT(current_object)->x >> 3;
 												OBJECT(current_object)->y = (int16_t)OBJECT(current_object)->y >> 3;
 												send_video_registers = 0xFFu;
@@ -320,7 +320,7 @@ void route_map_update(void)
 										else
 										{
 											lengths_place = screen + 0x700u;
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - mem_read16(lengths_place + SCREEN(screen)->current_stage * 2u);
+											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 											branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 3u * 2u, branch_road_length);
@@ -361,7 +361,7 @@ void route_map_update(void)
 										else
 										{
 											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
-											stage_length = mem_read16(screen + 0x700u + SCREEN(screen)->current_stage * 2u);
+											stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, stage_length);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 5u * 2u + leg_distance, stage_length);
@@ -416,7 +416,7 @@ void route_map_update(void)
 										else
 										{
 											lengths_place = screen + 0x700u;
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - mem_read16(lengths_place + SCREEN(screen)->current_stage * 2u);
+											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 											branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 5u * 2u, branch_road_length);
@@ -485,7 +485,7 @@ void route_map_update(void)
 										else
 										{
 											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
-											stage_length = mem_read16(screen + 0x700u + SCREEN(screen)->current_stage * 2u);
+											stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_length);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 3u * 5u, stage_length);
@@ -500,7 +500,7 @@ void route_map_update(void)
 											if (OBJECT(current_object)->route_map.first_branch != 0u)
 											{
 												SCREEN(screen)->route_map_signals |= 8u;
-												if ((int16_t)mem_read16(OBJECT(current_object)->route_map.scroll_x_address) <= 0x10)
+												if ((int16_t)VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0] <= 0x10)
 												{
 													SCREEN(screen)->route_map_signals |= 0x20u;
 													return;
@@ -511,7 +511,7 @@ void route_map_update(void)
 												return;
 											}
 											SCREEN(screen)->route_map_signals |= 4u;
-											if ((int16_t)mem_read16(OBJECT(current_object)->route_map.scroll_x_address) >= 0x2A0)
+											if ((int16_t)VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0] >= 0x2A0)
 											{
 												SCREEN(screen)->route_map_signals |= 0x20u;
 												return;
@@ -555,21 +555,21 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.timer = timer_4 - 1u;
 										if (timer_4 == 1u)
 										{
-											mem_write16(OBJECT(current_object)->route_map.zoom_x_address, 0x200u);
-											mem_write16(OBJECT(current_object)->route_map.zoom_y_address, 0x200u);
-											mem_write16(OBJECT(current_object)->route_map.scroll_x_address, route_map_whole_scroll_xs[OBJECT(current_object)->route_map.first_branch]);
-											mem_write16(OBJECT(current_object)->route_map.scroll_y_address, 0x70u);
-											mem_write16(OBJECT(current_object)->route_map.register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
-											mem_write16(OBJECT(current_object)->route_map.register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
-											mem_write32(OBJECT(current_object)->route_map.second_pages_address, route_map_world_pages[SCREEN(screen)->index]);
-											mem_write16(OBJECT(current_object)->route_map.second_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.scroll_x_address));
-											mem_write16(OBJECT(current_object)->route_map.second_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.scroll_y_address));
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x200u;
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x200u;
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0] = route_map_whole_scroll_xs[OBJECT(current_object)->route_map.first_branch];
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0] = 0x70u;
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
+											PAGE_SELECT(OBJECT(current_object)->route_map.second_pages_address)[0] = route_map_world_pages[SCREEN(screen)->index];
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 											second_scroll_x_address = OBJECT(current_object)->route_map.second_scroll_x_address;
 											mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) - 0x88u);
 											second_scroll_y_address = OBJECT(current_object)->route_map.second_scroll_y_address;
 											mem_write16(second_scroll_y_address, mem_read16(second_scroll_y_address) - 0x70u);
-											mem_write16(OBJECT(current_object)->route_map.second_register_scroll_x_address, mem_read16(OBJECT(current_object)->route_map.second_scroll_x_address));
-											mem_write16(OBJECT(current_object)->route_map.second_register_scroll_y_address, mem_read16(OBJECT(current_object)->route_map.second_scroll_y_address));
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0];
+											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0];
 											send_video_registers = 0xFFu;
 											OBJECT(current_object)->state++;
 										}
@@ -852,7 +852,7 @@ void route_map_landmark_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		record_offset = ((uint32_t)OBJECT(current_object)->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)SCREEN(screen)->route_branches << 9);
+		record_offset = ((uint32_t)OBJECT(current_object)->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)SCREEN(screen)->route_branches[0] << 9);
 		landmark = route_map_landmarks_ADDRESS + record_offset;
 		animation = ROUTE_MAP_LANDMARK_RECORD(landmark)->animation;
 		landmark += 2u;
@@ -975,7 +975,7 @@ void stage_result_line_draw(void)
 	OBJECT(current_object)->height_scale = 0x160u;
 	animation = 4u;
 	animation_start(animation);
-	final_place = ~~mem_read8(OBJECT(current_object)->stage_result_line.place_address);
+	final_place = ~~PLAYER_PLACE(OBJECT(current_object)->stage_result_line.place_address)[0];
 	OBJECT(current_object)->frame = final_place;
 	place_palette = 0x41u;
 	if (final_place != 0u)
@@ -1072,7 +1072,7 @@ void route_map_leg_show(void)
 	case 4:
 	case 5:
 		fork_index = OBJECT(current_object)->route_map_leg.leg - 1u;
-		animation = route_map_fork_leg_animations[OBJECT(OBJECT(current_object)->route_map_leg.map)->route_map.first_branch * 2u + mem_read8(screen + 0x34Au + fork_index)];
+		animation = route_map_fork_leg_animations[OBJECT(OBJECT(current_object)->route_map_leg.map)->route_map.first_branch * 2u + SCREEN(screen)->route_branches[(int32_t)fork_index]];
 		animation_start(animation);
 		leg_stage = mem_read8(screen + 0x343u + fork_index);
 		OBJECT(current_object)->x = route_map_stage_xs[leg_stage];
@@ -1178,17 +1178,17 @@ void route_map_leg_car_show(void)
 		OBJECT(current_object)->x = ROUTE_MAP_LEG_CAR_PLACE(place)->x;
 		place += 2u;
 		OBJECT(current_object)->y = ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
-		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches];
+		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches[0]];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
 		OBJECT(current_object)->state++;
 		return;
 	case 1:
-		place = route_map_first_fork_leg_car_places_ADDRESS + (((uint32_t)SCREEN(screen)->route_branches << 6) + ((uint32_t)OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.progress << 3));
+		place = route_map_first_fork_leg_car_places_ADDRESS + (((uint32_t)SCREEN(screen)->route_branches[0] << 6) + ((uint32_t)OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.progress << 3));
 		OBJECT(current_object)->x = ROUTE_MAP_LEG_CAR_PLACE(place)->x;
 		place += 2u;
 		OBJECT(current_object)->y = ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
-		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches];
+		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches[0]];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
 		OBJECT(current_object)->state++;
@@ -1198,14 +1198,14 @@ void route_map_leg_car_show(void)
 	case 4:
 	case 5:
 		fork_index = OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.leg - 1u;
-		place = route_map_fork_leg_car_places_ADDRESS + (((SCREEN(screen)->route_branches * 3u) << 6) + ((mem_read8(screen + 0x34Au + fork_index) * 3u) << 5) + ((uint32_t)OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.progress << 3));
+		place = route_map_fork_leg_car_places_ADDRESS + (((SCREEN(screen)->route_branches[0] * 3u) << 6) + ((SCREEN(screen)->route_branches[(int32_t)fork_index] * 3u) << 5) + ((uint32_t)OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.progress << 3));
 		leg_stage = mem_read8(screen + 0x343u + fork_index);
 		OBJECT(current_object)->x = route_map_stage_xs[leg_stage];
 		OBJECT(current_object)->y = route_map_stage_ys[leg_stage];
 		OBJECT(current_object)->x += ROUTE_MAP_LEG_CAR_PLACE(place)->x;
 		place += 2u;
 		OBJECT(current_object)->y += ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
-		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches];
+		OBJECT(current_object)->x += route_map_direction_x_shifts[SCREEN(screen)->route_branches[0]];
 		OBJECT(current_object)->y += 0x6Bu;
 		OBJECT(current_object)->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
 		OBJECT(current_object)->state++;
@@ -1250,7 +1250,7 @@ void route_map_checkpoint_show(void)
 		OBJECT(current_object)->depth_layer = 0x194u;
 		if (OBJECT(current_object)->route_map_checkpoint.kind == 1u)
 		{
-			finish_index = SCREEN(screen)->route_branches * 2u + mem_read8(screen + 0x34Au + (OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->route_map_leg.leg - 1u));
+			finish_index = SCREEN(screen)->route_branches[0] * 2u + mem_read8(screen + 0x34Au + (OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->route_map_leg.leg - 1u));
 			OBJECT(current_object)->x += route_map_finish_x_offsets[finish_index];
 			OBJECT(current_object)->y += route_map_finish_y_offsets[finish_index];
 			OBJECT(current_object)->state++;
@@ -1286,7 +1286,7 @@ void route_map_direction_sign_show(void)
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->depth_layer = 0x19Du;
-		OBJECT(current_object)->x = route_map_direction_x_shifts[SCREEN(screen)->route_branches];
+		OBJECT(current_object)->x = route_map_direction_x_shifts[SCREEN(screen)->route_branches[0]];
 		OBJECT(current_object)->y = 0x118u;
 		animation = 0x39u;
 		OBJECT(current_object)->route_map_direction_sign.palette_base = 0x67u;

@@ -3,7 +3,7 @@
  *    Description: the traffic: its cars, convoys, people and their hits
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -91,27 +91,27 @@ void traffic_spawner_update(void)
 		traffic_draw_distance = SCREEN(screen)->traffic_draw_distance;
 		stretch_count = 0u;
 		stretch_top = 0xFFFFu;
-		racers_left = mem_read8(racer_list);
+		racers_left = RACER_NUMBERS(racer_list)[0];
 		racer_list++;
 		do
 		{
-			view_bottom = race_copy_window_segments[(uint32_t)mem_read8(racer_list) << 6];
+			view_bottom = race_copy_window_segments[(uint32_t)RACER_NUMBERS(racer_list)[0] << 6];
 			view_top = (uint16_t)((uint32_t)view_bottom + traffic_draw_distance);
 			view_bottom -= traffic_draw_distance;
 			view_top++;
 			racer_list++;
 			if (view_top < stretch_top)
 			{
-				mem_write16(stretches, stretch_top);
+				STRETCH_ENDS(stretches)[0] = stretch_top;
 				stretches += 2u;
-				mem_write16(stretches, view_top - 1u);
+				STRETCH_ENDS(stretches)[0] = view_top - 1u;
 				stretch_count++;
 				stretches += 2u;
 			}
 			stretch_top = (uint16_t)view_bottom;
 			racers_left--;
 		} while (racers_left != 0u);
-		mem_write16(stretches, stretch_top);
+		STRETCH_ENDS(stretches)[0] = stretch_top;
 		SCREEN(screen)->visible_stretch_count = stretch_count;
 		return;
 	default:
@@ -669,11 +669,11 @@ uint32_t traffic_out_of_view(uint16_t position)
 	stretch += 2u;
 	do
 	{
-		stretch_top = mem_read16(stretch);
+		stretch_top = STRETCH_ENDS(stretch)[0];
 		stretch += 2u;
 		if (stretch_top < (uint16_t)position)
 			break;
-		stretch_bottom = mem_read16(stretch);
+		stretch_bottom = STRETCH_ENDS(stretch)[0];
 		stretch += 2u;
 		if (stretch_bottom < (uint16_t)position)
 		{

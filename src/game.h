@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -16,7 +16,7 @@
 #include "ram.h"
 
 /* registers the whole program shares */
-extern uint32_t r12, r14, current_object, player_car, screen, r27, r28, stack_pointer;
+extern uint32_t r12, r14, current_object, player_car, screen, stack_pointer;
 
 /* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
    addresses: what it stores and compares, and what call_code() runs */
@@ -430,7 +430,7 @@ void player_car_start_course(void);
 void player_car_extend_course(void);
 void player_car_build_segment(uint16_t ring_mask);
 void player_car_project_road(void);
-void note_road_crest(void);
+void note_road_crest(uint16_t crest_y, uint16_t crest_layer);
 void rotate_offset(uint32_t y, uint32_t road_heading, uint32_t road_pitch, uint32_t *p_x, uint32_t *p_z);
 
 /* race/hits.c: the angles of a vector, the hit boxes and the checks of the car against the road's objects and the traffic */
@@ -440,7 +440,7 @@ void player_car_build_hit_boxes(void);
 uint32_t player_car_write_hit_box(uint16_t segment, uint32_t model, uint32_t hit_box, uint16_t segment_fraction, uint16_t road_x);
 void fork_sign_hit_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box);
 void road_row_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box);
-void road_row_hit_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box);
+void road_row_hit_check(uint8_t hit_kind, uint32_t *p_along_distance, uint32_t *p_next_hit_box);
 void road_row_pair_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box);
 void road_row_pair_crash_check_unflipped(void);
 void player_car_check_car_hits(void);
@@ -566,7 +566,7 @@ void player_car_load_crash_physics(void);
 /* race/race_cars.c: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces */
 void race_cars_start(void);
 void race_car_draw(void);
-uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y);
+uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y, uint32_t spray);
 uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, uint32_t places, uint32_t palette, uint16_t screen_x, uint16_t screen_y);
 void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_palette);
 void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_palette);

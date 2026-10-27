@@ -3,7 +3,7 @@
  *    Description: unpacking the tile pages and the lists of packed blocks, a step each frame
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -39,7 +39,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(destination, PACKED_BYTES(source)[0]);
+			UNPACKED_BYTES(destination)[0] = PACKED_BYTES(source)[0];
 			destination++;
 			source++;
 			continue;
@@ -103,7 +103,7 @@ void unpack(uint32_t source, uint32_t destination)
 		copy_source += destination;
 		do
 		{
-			mem_write8(destination, mem_read8(copy_source));
+			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 			destination++;
 			copy_count--;
 			copy_source++;
@@ -131,7 +131,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		{
 			unpack_copy_source = SCREEN(screen)->unpack_copy_source;
 			unpack_destination = SCREEN(screen)->unpack_destination;
-			mem_write8(unpack_destination, mem_read8(unpack_copy_source));
+			UNPACKED_BYTES(unpack_destination)[0] = UNPACKED_BYTES(unpack_copy_source)[0];
 			SCREEN(screen)->unpack_copy_source = unpack_copy_source + 1u;
 			SCREEN(screen)->unpack_destination = unpack_destination + 1u;
 			unpack_copy_count = SCREEN(screen)->unpack_copy_count;
@@ -178,7 +178,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			mem_write8(destination, PACKED_BYTES(source)[0]);
+			UNPACKED_BYTES(destination)[0] = PACKED_BYTES(source)[0];
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
 			SCREEN(screen)->unpack_source = source + 1u;
@@ -207,7 +207,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		{
 			copy_count++;
 			copy_source += destination;
-			mem_write8(destination, mem_read8(copy_source));
+			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
 			copy_source++;
@@ -223,7 +223,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		if (copy_count != 0u)
 		{
 			copy_source += destination;
-			mem_write8(destination, mem_read8(copy_source));
+			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
 			copy_source++;
@@ -274,7 +274,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 	source++;
 	copy_count++;
 	copy_source += destination;
-	mem_write8(destination, mem_read8(copy_source));
+	UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 	SCREEN(screen)->unpack_flags = flags;
 	SCREEN(screen)->unpack_flags_left = flags_left;
 	copy_source++;

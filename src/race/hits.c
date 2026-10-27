@@ -3,7 +3,7 @@
  *    Description: the angles of a vector, the hit boxes and the checks of the car against the road's objects and the traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -133,14 +133,14 @@ void player_car_build_hit_boxes(void)
 	hit_box += 4u;
 	do
 	{
-		racer_player = mem_read8(racer_list);
+		racer_player = RACE_ORDER_PLAYERS(racer_list)[0];
 		racer_list++;
 		if ((SCREEN(screen)->demo_flags & 0x100u) != 0u || player == racer_player)
 		{
 			racer_player = player;
 			SCREEN(screen)->own_hit_box = hit_box;
 		}
-		mem_write16(hit_box, racer_player);
+		CAR_HIT_BOX(hit_box)->player = racer_player;
 		r12 = RACE_COPY_1 + (uint16_t)(racer_player << 7);
 		segment_fraction = mem_read16(r12 + 0x40u);
 		road_x = mem_read16(r12 + 0x44u);
@@ -165,25 +165,25 @@ uint32_t player_car_write_hit_box(uint16_t segment, uint32_t model, uint32_t hit
 	uint32_t box_size = 0;
 	uint16_t along_start = 0, along_end = 0, across_start = 0;
 
-	mem_write32(hit_box, r12);
+	CAR_HIT_BOX(hit_box - 0x2u)->record = r12;
 	hit_box += 4u;
-	mem_write16(hit_box, segment);
+	CAR_HIT_BOX(hit_box - 0x6u)->first_segment = segment;
 	hit_box += 2u;
-	mem_write16(hit_box, segment + 4u);
+	CAR_HIT_BOX(hit_box - 0x8u)->last_segment = segment + 4u;
 	box_size = car_hit_box_sizes_ADDRESS + ((model & ~0xFFu) | (uint8_t)(model * 2u)) * 4u;
-	along_start = mem_read16(box_size);
+	along_start = ITEM_HIT_BOX(box_size)->along_start;
 	box_size += 2u;
 	hit_box += 2u;
-	mem_write16(hit_box, segment_fraction + along_start);
-	along_end = mem_read16(box_size);
+	CAR_HIT_BOX(hit_box - 0xAu)->along_start = segment_fraction + along_start;
+	along_end = ITEM_HIT_BOX(box_size - 0x2u)->along_end;
 	box_size += 2u;
 	hit_box += 2u;
-	mem_write16(hit_box, segment_fraction + along_end);
-	across_start = mem_read16(box_size);
+	CAR_HIT_BOX(hit_box - 0xCu)->along_end = segment_fraction + along_end;
+	across_start = ITEM_HIT_BOX(box_size - 0x4u)->across_start;
 	hit_box += 2u;
-	mem_write16(hit_box, road_x + across_start);
+	CAR_HIT_BOX(hit_box - 0xEu)->across_start = road_x + across_start;
 	hit_box += 2u;
-	mem_write16(hit_box, road_x + mem_read16(box_size + 2u));
+	CAR_HIT_BOX(hit_box - 0x10u)->across_end = road_x + ITEM_HIT_BOX(box_size - 0x4u)->across_end;
 	hit_box += 2u;
 	return hit_box;
 }
@@ -192,16 +192,20 @@ uint32_t player_car_write_hit_box(uint16_t segment, uint32_t model, uint32_t hit
    road (car slowed_frames), instead of crashing. */
 void fork_sign_hit_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box)
 {
-	r27 = 3u;
-	road_row_hit_check(p_along_distance, p_next_hit_box);
+	uint8_t hit_kind = 0;
+
+	hit_kind = 3u;
+	road_row_hit_check(hit_kind, p_along_distance, p_next_hit_box);
 }
 
 /* road_row_hit_check with kind 0 (R27): hitting an item crashes the car. Used by scenery,
    animated_scenery and flashing_scenery (and 012FBC). */
 void road_row_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box)
 {
-	r27 = 0u;
-	road_row_hit_check(p_along_distance, p_next_hit_box);
+	uint8_t hit_kind = 0;
+
+	hit_kind = 0u;
+	road_row_hit_check(hit_kind, p_along_distance, p_next_hit_box);
 }
 
 /* Whether the screen's car hits an item of the row, unless the car's object has flags bit 3 set: the
@@ -212,7 +216,7 @@ void road_row_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box)
    that overlaps: the car's object gets flags bit 2 and byte 6E = R27, the kind of hit (0 a crash, 3
    slowed), and the car's hit_along and hit_across half the distances from the car's box to the item's
    (along, across). */
-void road_row_hit_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box)
+void road_row_hit_check(uint8_t hit_kind, uint32_t *p_along_distance, uint32_t *p_next_hit_box)
 {
 	uint32_t along_distance = *p_along_distance;
 	uint32_t next_hit_box = *p_next_hit_box;
@@ -267,7 +271,7 @@ void road_row_hit_check(uint32_t *p_along_distance, uint32_t *p_next_hit_box)
 				{
 					object = CAR(player_car)->object;
 					mem_write16(object, mem_read16(object) | 4u);
-					OBJECT(CAR(player_car)->object)->player_car.hit_kind = r27;
+					OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 					along_distance = (uint16_t)((int16_t)along_distance >> 1);
 					CAR(player_car)->hit_along = along_distance;
 					CAR(player_car)->hit_across = (int16_t)across_distance >> 1;
@@ -286,12 +290,12 @@ void road_row_pair_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_
 {
 	uint32_t along_distance = *p_along_distance;
 	uint32_t next_hit_box = *p_next_hit_box;
-	uint16_t across_distance = 0, car_across_end = 0, car_across_start = 0, car_along_end = 0, car_along_start = 0, car_last_segment = 0, item_across = 0, item_along = 0, spacing = 0;
+	uint8_t hit_kind = 0;
+	uint16_t across_distance = 0, car_across_end = 0, car_across_start = 0, car_along_end = 0, car_along_start = 0, car_last_segment = 0, item_across = 0, item_along = 0, mirrored_across_start = 0, spacing = 0;
 	uint32_t item_hit_box = 0, item_position = 0, segment_offset = 0;
-	uint16_t overlap_signs = 0;
 	uint32_t object = 0;
 
-	r27 = 0u;
+	hit_kind = 0u;
 	if ((OBJECT(CAR(player_car)->object)->flags & 8u) == 0u)
 	{
 		item_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
@@ -336,20 +340,15 @@ void road_row_pair_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_
 				item_hit_box += 2u;
 				item_across += ITEM_HIT_BOX(item_hit_box - 0x4u)->across_start;
 				across_distance += ITEM_HIT_BOX(item_hit_box - 0x4u)->across_end;
-				r28 = (r28 & ~0xFFFFu) | (uint16_t)(0u - across_distance);
+				mirrored_across_start = (uint16_t)(0u - across_distance);
 				along_distance = (uint16_t)(along_distance - car_along_start);
 				across_distance -= car_across_start;
 				item_along = (uint16_t)((item_along - car_along_end) ^ along_distance);
-				r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 - car_across_end);
-				r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 ^ (0u - item_across - car_across_start));
-				r28 = (r28 & ~0xFFFFu) | (r28 & item_along);
-				overlap_signs = r28 | (((item_across - car_across_end) ^ across_distance) & item_along);
-				r28 = (r28 & ~0xFFFFu) | overlap_signs;
-				if ((int16_t)overlap_signs < 0)
+				if ((int16_t)((((mirrored_across_start - car_across_end) ^ (0u - item_across - car_across_start)) & item_along) | (((item_across - car_across_end) ^ across_distance) & item_along)) < 0)
 				{
 					object = CAR(player_car)->object;
 					mem_write16(object, mem_read16(object) | 4u);
-					OBJECT(CAR(player_car)->object)->player_car.hit_kind = r27;
+					OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 					along_distance = (uint16_t)((int16_t)along_distance >> 1);
 					CAR(player_car)->hit_along = along_distance;
 					CAR(player_car)->hit_across = (int16_t)across_distance >> 1;
@@ -368,12 +367,12 @@ void road_row_pair_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_
    even about its middle the two are the same. */
 void road_row_pair_crash_check_unflipped(void)
 {
-	uint16_t across_distance = 0, along_distance = 0, car_across_end = 0, car_across_start = 0, car_along_end = 0, car_along_start = 0, car_last_segment = 0, item_across = 0, item_along = 0, mirrored_across = 0, spacing = 0;
+	uint8_t hit_kind = 0;
+	uint16_t across_distance = 0, along_distance = 0, car_across_end = 0, car_across_start = 0, car_along_end = 0, car_along_start = 0, car_last_segment = 0, item_across = 0, item_along = 0, mirrored_across = 0, mirrored_across_end = 0, spacing = 0;
 	uint32_t car_hit_box = 0, item_hit_box = 0, item_position = 0, segment_offset = 0;
-	uint16_t overlap_signs = 0;
 	uint32_t object = 0;
 
-	r27 = 0u;
+	hit_kind = 0u;
 	if ((OBJECT(CAR(player_car)->object)->flags & 8u) == 0u)
 	{
 		item_position = (uint16_t)OBJECT(current_object)->road_row.first_position;
@@ -412,7 +411,6 @@ void road_row_pair_crash_check_unflipped(void)
 			along_distance = (uint16_t)item_along;
 			across_distance = (uint16_t)item_across;
 			mirrored_across = (uint16_t)(0u - item_across);
-			r28 = (r28 & ~0xFFFFu) | (uint16_t)(0u - across_distance);
 			item_along += ITEM_HIT_BOX(item_hit_box)->along_start;
 			item_hit_box += 2u;
 			along_distance += ITEM_HIT_BOX(item_hit_box - 0x2u)->along_end;
@@ -420,19 +418,14 @@ void road_row_pair_crash_check_unflipped(void)
 			item_across += ITEM_HIT_BOX(item_hit_box - 0x4u)->across_start;
 			mirrored_across += ITEM_HIT_BOX(item_hit_box - 0x4u)->across_start;
 			item_hit_box += 2u;
-			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 + ITEM_HIT_BOX(item_hit_box - 0x6u)->across_end);
+			mirrored_across_end = (uint16_t)(0u - across_distance + ITEM_HIT_BOX(item_hit_box - 0x6u)->across_end);
 			along_distance -= car_along_start;
 			across_distance = (uint16_t)(across_distance + ITEM_HIT_BOX(item_hit_box - 0x6u)->across_end - car_across_start);
 			item_along = (uint16_t)((item_along - car_along_end) ^ along_distance);
-			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 - car_across_start);
-			r28 = (r28 & ~0xFFFFu) | (uint16_t)(r28 ^ (mirrored_across - car_across_end));
-			r28 = (r28 & ~0xFFFFu) | (r28 & item_along);
-			overlap_signs = r28 | (((item_across - car_across_end) ^ across_distance) & item_along);
-			r28 = (r28 & ~0xFFFFu) | overlap_signs;
-		} while ((int16_t)overlap_signs >= 0);
+		} while ((int16_t)((((mirrored_across_end - car_across_start) ^ (mirrored_across - car_across_end)) & item_along) | (((item_across - car_across_end) ^ across_distance) & item_along)) >= 0);
 		object = CAR(player_car)->object;
 		mem_write16(object, mem_read16(object) | 4u);
-		OBJECT(CAR(player_car)->object)->player_car.hit_kind = r27;
+		OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 		CAR(player_car)->hit_along = (int16_t)along_distance >> 1;
 		CAR(player_car)->hit_across = (int16_t)across_distance >> 1;
 	}

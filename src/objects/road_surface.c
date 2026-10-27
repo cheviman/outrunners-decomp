@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -72,7 +72,7 @@ void road_surface_update(void)
 	}
 	near_scroll = OBJECT(current_object)->road_surface.near_scroll;
 	near_scroll = (uint16_t)(near_scroll + 0x4FFu);
-	mem_write32(OBJECT(current_object)->road_surface.page_register, mem_read32(current_object - 0x24u + ((near_scroll >> 9) + OBJECT(current_object)->road_surface.page_set * 5u) * 4u));
+	PAGE_SELECT(OBJECT(current_object)->road_surface.page_register)[0] = mem_read32(current_object - 0x24u + ((near_scroll >> 9) + OBJECT(current_object)->road_surface.page_set * 5u) * 4u);
 	if (OBJECT(current_object)->road_surface.segment <= OBJECT(current_object)->road_surface.last_segment)
 		return;
 	OBJECT(current_object)->road_surface.last_segment = OBJECT(current_object)->road_surface.segment;
@@ -154,19 +154,19 @@ void road_surface_start(void)
 	road_surface_layer_setup += 2u;
 	video_registers[2] = video_bits | ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x2u)->video_bits;
 	road_surface_layer_setup += 2u;
-	mem_write16(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x4u)->scroll_x_address, 0x160u);
+	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x4u)->scroll_x_address)[0] = 0x160u;
 	road_surface_layer_setup += 4u;
-	mem_write16(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x8u)->scroll_y_address, 0u);
+	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x8u)->scroll_y_address)[0] = 0u;
 	send_video_registers = 0xFFu;
 	road_surface_layer_setup += 4u;
-	mem_write8(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0xCu)->tile_bank_address, 0u);
+	TILE_BANK_VALUES(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0xCu)->tile_bank_address)[0] = 0u;
 	road_surface_layer_setup += 4u;
 	OBJECT(current_object)->road_surface.page_register = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x10u)->page_register;
 	road_surface_layer_setup += 4u;
 	mixer_address = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x14u)->mixer_address;
-	mixer_bits = mem_read32(mixer_address);
+	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
-	mem_write32(mixer_address, (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | 8u));
+	MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | 8u);
 	SCREEN(screen)->flags |= 4u;
 	road_surface_layer_setup += 4u;
 	OBJECT(current_object)->road_surface.line_scroll_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_scroll_table;
@@ -182,9 +182,9 @@ void road_surface_start(void)
 	OBJECT(current_object)->road_surface.last_segment = 0u;
 	OBJECT(current_object)->road_surface.first_tiles_flag = 0u;
 	OBJECT(current_object)->road_surface.second_tiles_flag = 0u;
-	move_string(road_surface_page_words_ADDRESS, 0x1Eu, current_object + 0x18u, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(current_object + 0x18u, road_surface_page_words_ADDRESS, 0x1Eu);
 	palettes = stage_road_palettes[SCREEN(screen)->first_stage];
-	SCREEN(screen)->road_palette_fades = mem_read32(palettes);
+	SCREEN(screen)->road_palette_fades = ROAD_PALETTE_LISTS(palettes)[0];
 	palettes += 4u;
 	queue_palette_list(palettes);
 }
@@ -223,15 +223,15 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	skip_state = 1u;
 	point_entry = screen + 0x3800u + OBJECT(current_object)->road_surface.points_buffer * 2u * 4u;
 	line = 0xE0u;
-	while (mem_read16(view_segment) == 0u)
+	while (PROJECTED_SEGMENT(view_segment)->scale == 0u)
 	{
 		view_segment += 0x10u;
 		segment++;
 	}
-	OBJECT(current_object)->road_surface.segment_page_set = mem_read8(view_segment + 0xCu);
-	OBJECT(current_object)->road_surface.event = mem_read8(view_segment + 0xDu);
+	OBJECT(current_object)->road_surface.segment_page_set = PROJECTED_SEGMENT(view_segment)->width_code;
+	OBJECT(current_object)->road_surface.event = PROJECTED_SEGMENT(view_segment)->road_event;
 	OBJECT(current_object)->road_surface.segment = segment;
-	mem_write16(point_entry, segment);
+	ROAD_POINTS(point_entry)[0] = segment;
 	segment = 0u - ((segment & ~0xFFFFu) | (segment & 3u));
 	overflow = v60_overflow_add32(segment, 2u, 0u);
 	zero = segment + 2u == 0u;
@@ -245,20 +245,20 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	}
 	for (;;)
 	{
-		segment_scale = mem_read16(view_segment);
+		segment_scale = PROJECTED_SEGMENT(view_segment)->scale;
 		view_segment += 2u;
 		if (segment_scale == 0u)
 			break;
-		point_depth = mem_read16(view_segment) >> 2;
-		mem_write16(point_entry, point_depth);
+		point_depth = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
+		ROAD_POINTS(point_entry)[0] = point_depth;
 		point_entry += 2u;
 		view_segment += 2u;
-		point_x = 0u - (int16_t)mem_read16(view_segment);
-		mem_write16(point_entry, point_x);
+		point_x = 0u - (int16_t)PROJECTED_SEGMENT(view_segment - 0x4u)->x;
+		ROAD_POINTS(point_entry)[0] = point_x;
 		point_entry += 2u;
 		view_segment += 2u;
-		point_line = (int16_t)mem_read16(view_segment) + sprite_origin_y;
-		mem_write16(point_entry, point_line);
+		point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+		ROAD_POINTS(point_entry)[0] = point_line;
 		point_entry += 2u;
 		view_segment += 0xAu;
 		next_round = false;
@@ -325,7 +325,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 											{
 												L_016E09 = false;
 												scroll_place -= 2u;
-												mem_write16(scroll_place, point_x);
+												LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
 												line_select = (uint16_t)point_depth;
 												if ((int16_t)max_depth < (int16_t)line_select)
 													line_select = (uint16_t)max_depth;
@@ -338,23 +338,23 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 										{
 											for (;;)
 											{
-												remaining_scale = mem_read16(view_segment);
+												remaining_scale = PROJECTED_SEGMENT(view_segment)->scale;
 												view_segment += 2u;
 												if (remaining_scale == 0u)
 													break;
-												mem_write16(point_entry, mem_read16(view_segment) >> 2);
+												ROAD_POINTS(point_entry)[0] = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
 												point_entry += 2u;
 												view_segment += 2u;
-												mem_write16(point_entry, 0u - mem_read16(view_segment));
+												ROAD_POINTS(point_entry)[0] = 0u - PROJECTED_SEGMENT(view_segment - 0x4u)->x;
 												point_entry += 2u;
 												view_segment += 2u;
-												point_line = (int16_t)mem_read16(view_segment) + sprite_origin_y;
-												mem_write16(point_entry, point_line);
+												point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+												ROAD_POINTS(point_entry)[0] = point_line;
 												point_entry += 2u;
 												view_segment += 0xAu;
 											}
 											SCREEN(screen)->road_top_line = point_line;
-											mem_write16(point_entry, 0xFFFFu);
+											ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 											road_surface_fill_skipped_lines((uint8_t)*p_fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
 											OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
 											*p_stripe_count = segment;
@@ -475,7 +475,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 			mem_write32(r12, 0u);
 		}
 		SCREEN(screen)->road_top_line = point_line;
-		mem_write16(point_entry, 0xFFFFu);
+		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 		road_surface_fill_skipped_lines((uint8_t)*p_fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
 		OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
 		*p_stripe_count = segment;
@@ -487,7 +487,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	if (zero)
 	{
 		SCREEN(screen)->road_top_line = point_line;
-		mem_write16(point_entry, 0xFFFFu);
+		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 		road_surface_fill_skipped_lines((uint8_t)*p_fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
 		OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
 		*p_stripe_count = segment;
@@ -504,7 +504,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		mem_write32(r12, 0u);
 	}
 	SCREEN(screen)->road_top_line = point_line;
-	mem_write16(point_entry, 0xFFFFu);
+	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 	road_surface_fill_skipped_lines((uint8_t)*p_fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
 	OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
 	*p_stripe_count = segment;
@@ -518,7 +518,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 {
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint16_t line_select = 0, segment = 0;
-	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, last_segment = 0, line = 0, line_count = 0, point_depth = 0, point_line = 0, point_x = 0, scroll_place = 0, skip_state = 0, table_offset = 0, x_step = 0;
+	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, last_frame_points = 0, last_segment = 0, line = 0, line_count = 0, point_depth = 0, point_line = 0, point_x = 0, points = 0, scroll_place = 0, skip_state = 0, table_offset = 0, x_step = 0;
 	uint16_t last_frame_segment = 0, last_depth = 0, last_x = 0, last_line = 0;
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
 
@@ -530,26 +530,23 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	r14 = r14 & ~0xFFFFu;
 	skip_state = 1u;
 	line = 0xE0u;
-	r27 = OBJECT(current_object)->road_surface.points_buffer;
-	r28 = r27;
-	r28 = r28 ^ 0x60u;
-	OBJECT(current_object)->road_surface.points_buffer = r28;
-	r27 = r27 * 2u;
-	r28 = r28 * 2u;
-	r27 = screen + 0x3800u + r27 * 4u;
-	r28 = screen + 0x3800u + r28 * 4u;
-	segment = mem_read16(r27);
-	last_frame_segment = mem_read16(r28);
-	r28 = r28 + 2u;
+	points = OBJECT(current_object)->road_surface.points_buffer;
+	last_frame_points = points ^ 0x60u;
+	OBJECT(current_object)->road_surface.points_buffer = last_frame_points;
+	points = screen + 0x3800u + points * 2u * 4u;
+	last_frame_points = screen + 0x3800u + last_frame_points * 2u * 4u;
+	segment = ROAD_POINTS(points)[0];
+	last_frame_segment = ROAD_POINTS(last_frame_points)[0];
+	last_frame_points += 2u;
 	last_segment = (stripe_count & ~0xFFFFu) | last_frame_segment;
-	r27 = r27 + 2u;
+	points += 2u;
 	if ((uint16_t)last_segment != segment)
 	{
 		if ((uint16_t)last_segment < segment)
 		{
 			do
 			{
-				r28 = r28 + 6u;
+				last_frame_points += 6u;
 				last_segment = (last_segment & ~0xFFFFu) | (uint16_t)(last_segment + 1u);
 			} while ((uint16_t)last_segment < segment);
 		}
@@ -557,7 +554,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 		{
 			do
 			{
-				r27 = r27 + 6u;
+				points += 6u;
 				segment++;
 			} while (segment < (uint16_t)last_segment);
 		}
@@ -572,20 +569,20 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 		last_segment += 2u;
 		r14 = r14 | 0x100u;
 	}
-	while ((int16_t)(mem_read16(r27) | mem_read16(r28)) >= 0)
+	while ((int16_t)(ROAD_POINTS(points)[0] | ROAD_POINTS(last_frame_points)[0]) >= 0)
 	{
-		last_depth = mem_read16(r28);
-		r28 = r28 + 2u;
-		point_depth = shift_by((uint32_t)mem_read16(r27) + last_depth, (uint8_t)max_depth, 32);
-		r27 = r27 + 2u;
-		last_x = mem_read16(r28);
-		r28 = r28 + 2u;
-		point_x = shift_signed_by((uint32_t)(int16_t)mem_read16(r27) + (int16_t)last_x, (uint8_t)max_depth, 32);
-		r27 = r27 + 2u;
-		last_line = mem_read16(r28);
-		r28 = r28 + 2u;
-		point_line = shift_signed_by((uint32_t)(int16_t)mem_read16(r27) + (int16_t)last_line, (uint8_t)max_depth, 32);
-		r27 = r27 + 2u;
+		last_depth = ROAD_POINTS(last_frame_points)[0];
+		last_frame_points += 2u;
+		point_depth = shift_by((uint32_t)ROAD_POINTS(points)[0] + last_depth, (uint8_t)max_depth, 32);
+		points += 2u;
+		last_x = ROAD_POINTS(last_frame_points)[0];
+		last_frame_points += 2u;
+		point_x = shift_signed_by((uint32_t)(int16_t)ROAD_POINTS(points)[0] + (int16_t)last_x, (uint8_t)max_depth, 32);
+		points += 2u;
+		last_line = ROAD_POINTS(last_frame_points)[0];
+		last_frame_points += 2u;
+		point_line = shift_signed_by((uint32_t)(int16_t)ROAD_POINTS(points)[0] + (int16_t)last_line, (uint8_t)max_depth, 32);
+		points += 2u;
 		if (skip_state == 0u)
 		{
 			line_reached = line;
@@ -602,7 +599,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					}
 				}
 				scroll_place -= 2u;
-				mem_write16(scroll_place, point_x);
+				LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
 				line_select = (uint16_t)point_depth;
 				if ((int16_t)max_depth < (int16_t)line_select)
 					line_select = (uint16_t)max_depth;
@@ -627,7 +624,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					if (line_count == 1u)
 					{
 						scroll_place -= 2u;
-						mem_write16(scroll_place, point_x);
+						LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
 						line_select = (uint16_t)point_depth;
 						if ((int16_t)max_depth < (int16_t)line_select)
 							line_select = (uint16_t)max_depth;
@@ -654,7 +651,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 							return;
 						}
 						scroll_place -= 2u;
-						mem_write16(scroll_place, point_x);
+						LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
 						line_select = (uint16_t)point_depth;
 						if ((int16_t)max_depth < (int16_t)line_select)
 							line_select = (uint16_t)max_depth;
@@ -679,7 +676,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					OBJECT(current_object)->road_surface.skipped_stripe = r14;
 					skip_state = 0xFFFFFFFFu;
 					scroll_place -= 2u;
-					mem_write16(scroll_place, point_x);
+					LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
 					line_select = (uint16_t)point_depth;
 					if ((int16_t)max_depth < (int16_t)line_select)
 						line_select = (uint16_t)max_depth;
@@ -780,7 +777,7 @@ void road_surface_fill_lines(uint32_t line, uint32_t point_line, uint32_t point_
 			previous_x -= x_step;
 			previous_depth -= depth_step;
 			line_scroll_place -= 2u;
-			mem_write16(line_scroll_place, shift_signed_by(previous_x, (uint8_t)fraction_shift, 32));
+			LINE_SCROLL_VALUES(line_scroll_place)[0] = shift_signed_by(previous_x, (uint8_t)fraction_shift, 32);
 			line_select = (uint16_t)shift_signed_by(previous_depth, (uint8_t)fraction_shift, 32);
 			if ((int16_t)max_depth < (int16_t)line_select)
 				line_select = (uint16_t)max_depth;
@@ -806,7 +803,7 @@ void road_surface_fill_lines(uint32_t line, uint32_t point_line, uint32_t point_
 			previous_x -= x_step;
 			previous_depth -= depth_step;
 			line_scroll_place -= 2u;
-			mem_write16(line_scroll_place, shift_signed_by(previous_x, (uint8_t)fraction_shift, 32));
+			LINE_SCROLL_VALUES(line_scroll_place)[0] = shift_signed_by(previous_x, (uint8_t)fraction_shift, 32);
 			line_select = (uint16_t)shift_signed_by(previous_depth, (uint8_t)fraction_shift, 32);
 			if ((int16_t)max_depth < (int16_t)line_select)
 				line_select = (uint16_t)max_depth;
@@ -852,7 +849,7 @@ void road_surface_fill_skipped_lines(uint8_t fraction_shift, uint32_t rounding, 
 	{
 		*p_previous_x += x_step;
 		*p_previous_depth += skipped_depth_step;
-		mem_write16(scroll_place, shift_signed_by(*p_previous_x, (uint8_t)fraction_shift, 32));
+		LINE_SCROLL_VALUES(scroll_place)[0] = shift_signed_by(*p_previous_x, (uint8_t)fraction_shift, 32);
 		line_select = (uint16_t)shift_signed_by(*p_previous_depth, (uint8_t)fraction_shift, 32);
 		scroll_place += 2u;
 		if ((int16_t)max_depth < (int16_t)line_select)
@@ -890,7 +887,7 @@ void road_surface_start_tiles_change(void)
    the table. */
 void road_tiles_change_update(void)
 {
-	uint32_t byte_count = 0, data = 0, halfword_count = 0, page_count = 0, page_numbers = 0, page_set = 0, row_bytes = 0, row_count = 0, source_slot = 0, step = 0, table_place = 0, table_source = 0, target_page_numbers = 0, target_slot = 0;
+	uint32_t byte_count = 0, data = 0, halfword_count = 0, page_count = 0, page_numbers = 0, page_set = 0, row_bytes = 0, row_count = 0, source_end = 0, source_slot = 0, step = 0, table_place = 0, table_source = 0, target_end = 0, target_page_numbers = 0, target_slot = 0;
 	uint8_t target_page = 0, pages_left = 0, step_2 = 0, target_page_back = 0, pages_left_2 = 0, step_3 = 0;
 
 	data = OBJECT(current_object)->road_tiles_change.data;
@@ -906,10 +903,10 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(source_slot, 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u);
+			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
 			target_page = ROAD_TILES_CHANGE_BYTES(target_page_numbers)[0];
 			target_page_numbers++;
-			mem_write32(target_slot, 0x300000u + ((uint32_t)target_page << 8) * 4u);
+			TILE_PAGE_PLACES(target_slot)[0] = 0x300000u + ((uint32_t)target_page << 8) * 4u;
 			target_slot += 4u;
 			page_count--;
 			r12 = r12 + 1u;
@@ -920,7 +917,7 @@ void road_tiles_change_update(void)
 		OBJECT(current_object)->state++;
 	case 1:
 		step = OBJECT(current_object)->road_tiles_change.step;
-		move_string(mem_read32(current_object + 0x18u + step * 4u), 0x200u, mem_read32(current_object + 0x28u + step * 4u), 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(mem_read32(current_object + 0x28u + step * 4u), mem_read32(current_object + 0x18u + step * 4u), 0x200u);
 		OBJECT(current_object)->road_tiles_change.step++;
 		pages_left = OBJECT(current_object)->road_tiles_change.pages_left;
 		OBJECT(current_object)->road_tiles_change.pages_left = pages_left - 1u;
@@ -935,7 +932,7 @@ void road_tiles_change_update(void)
 			row_bytes = 0xAu;
 			do
 			{
-				mem_write8(table_place, ROAD_TILES_CHANGE_BYTES(r12)[0]);
+				ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
 				row_bytes--;
 				r12 = r12 + 1u;
 				table_place += 2u;
@@ -947,7 +944,7 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(source_slot, 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u);
+			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u;
 			page_count--;
 			page_numbers++;
 			source_slot += 4u;
@@ -962,10 +959,10 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			r12 = mem_read32(source_slot);
-			move_string(r12, halfword_count, mem_read32(target_slot), halfword_count, 2u, 0u, 0u, 0u, &r27, &r28);
-			mem_write32(source_slot, r28);
-			mem_write32(target_slot, r27);
+			r12 = TILE_PAGE_PLACES(source_slot)[0];
+			move_string(r12, halfword_count, TILE_PAGE_PLACES(target_slot)[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
+			TILE_PAGE_PLACES(source_slot)[0] = source_end;
+			TILE_PAGE_PLACES(target_slot)[0] = target_end;
 			page_count--;
 			source_slot += 4u;
 			target_slot += 4u;
@@ -979,14 +976,14 @@ void road_tiles_change_update(void)
 		byte_count = 0x1Eu;
 		do
 		{
-			mem_write8(table_place, ROAD_TILES_CHANGE_BYTES(table_source)[0]);
+			ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(table_source)[0];
 			byte_count--;
 			table_source++;
 			table_place += 2u;
 		} while (byte_count != 0u);
 		OBJECT(current_object)->state++;
 	case 3:
-		if (mem_read8(OBJECT(current_object)->road_tiles_change.flag) != 0u)
+		if (TILES_CHANGE_FLAGS(OBJECT(current_object)->road_tiles_change.flag)[0] != 0u)
 			return;
 		source_slot = current_object + 0x18u;
 		target_slot = current_object + 0x28u;
@@ -997,10 +994,10 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(source_slot, 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u);
+			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
 			target_page_back = ROAD_TILES_CHANGE_BYTES(target_page_numbers)[0];
 			target_page_numbers++;
-			mem_write32(target_slot, 0x300000u + ((uint32_t)target_page_back << 8) * 4u);
+			TILE_PAGE_PLACES(target_slot)[0] = 0x300000u + ((uint32_t)target_page_back << 8) * 4u;
 			target_slot += 4u;
 			page_count--;
 			r12 = r12 + 1u;
@@ -1011,7 +1008,7 @@ void road_tiles_change_update(void)
 		OBJECT(current_object)->state++;
 	case 4:
 		step = OBJECT(current_object)->road_tiles_change.step;
-		move_string(mem_read32(current_object + 0x18u + step * 4u), 0x200u, mem_read32(current_object + 0x28u + step * 4u), 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(mem_read32(current_object + 0x28u + step * 4u), mem_read32(current_object + 0x18u + step * 4u), 0x200u);
 		OBJECT(current_object)->road_tiles_change.step++;
 		pages_left_2 = OBJECT(current_object)->road_tiles_change.pages_left;
 		OBJECT(current_object)->road_tiles_change.pages_left = pages_left_2 - 1u;
@@ -1026,7 +1023,7 @@ void road_tiles_change_update(void)
 			row_bytes = 0xAu;
 			do
 			{
-				mem_write8(table_place, ROAD_TILES_CHANGE_BYTES(r12)[0]);
+				ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
 				row_bytes--;
 				r12 = r12 + 1u;
 				table_place += 2u;
@@ -1038,7 +1035,7 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(source_slot, 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u);
+			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u;
 			page_count--;
 			page_numbers++;
 			source_slot += 4u;
@@ -1053,10 +1050,10 @@ void road_tiles_change_update(void)
 		page_count = 4u;
 		do
 		{
-			r12 = mem_read32(source_slot);
-			move_string(r12, halfword_count, mem_read32(target_slot), halfword_count, 2u, 0u, 0u, 0u, &r27, &r28);
-			mem_write32(source_slot, r28);
-			mem_write32(target_slot, r27);
+			r12 = TILE_PAGE_PLACES(source_slot)[0];
+			move_string(r12, halfword_count, TILE_PAGE_PLACES(target_slot)[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
+			TILE_PAGE_PLACES(source_slot)[0] = source_end;
+			TILE_PAGE_PLACES(target_slot)[0] = target_end;
 			page_count--;
 			source_slot += 4u;
 			target_slot += 4u;
@@ -1070,7 +1067,7 @@ void road_tiles_change_update(void)
 		byte_count = 0x1Eu;
 		do
 		{
-			mem_write8(table_place, ROAD_TILES_CHANGE_BYTES(table_source)[0]);
+			ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(table_source)[0];
 			byte_count--;
 			table_source++;
 			table_place += 2u;

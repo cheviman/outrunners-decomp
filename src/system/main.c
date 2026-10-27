@@ -3,7 +3,7 @@
  *    Description: the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -31,10 +31,10 @@ void boot(void)
 	pair_count = 8u;
 	do
 	{
-		mem_write8(destination, mem_read8(source));
+		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
 		source++;
 		destination++;
-		mem_write8(destination, mem_read8(source));
+		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
 		pair_count--;
 		source++;
 		destination++;
@@ -48,10 +48,10 @@ void boot(void)
 	source = 0xB8u;
 	do
 	{
-		mem_write8(destination, mem_read8(source));
+		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
 		source++;
 		destination++;
-		mem_write8(destination, mem_read8(source));
+		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
 		pair_count--;
 		source++;
 		destination++;
@@ -73,21 +73,21 @@ void boot(void)
 	clear_address = 0x21E000u;
 	do
 	{
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
 		block_count--;
 	} while (block_count != 0u);
-	mem_write32(LINK_BOARD_ON, 0u);
+	io_write32(LINK_BOARD_ON, 0u);
 	link_off_delay = BOARD_OFF_LOOPS;
 	do
 	{
@@ -99,17 +99,17 @@ void boot(void)
 	block_count = 0x80u;
 	do
 	{
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
 		block_count--;
 	} while (block_count != 0u);
@@ -120,17 +120,17 @@ void boot(void)
 	clear_address = GAME_VARIABLES;
 	do
 	{
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
-		mem_write32(clear_address, fill);
-		mem_write32(clear_address + 4u, fill_high);
+		CLEARED_RAM_WORDS(clear_address)[0] = fill;
+		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 		clear_address += 8u;
 		block_count--;
 	} while (block_count != 0u);
@@ -140,8 +140,8 @@ void boot(void)
 	waiting_task_stack = 0x21F800u;
 	initialise_game();
 	lcd_start();
-	mem_write8(IRQ_ACKNOWLEDGE, 0u);
-	mem_write8(IRQ_D00005, 0u);
+	io_write8(IRQ_ACKNOWLEDGE, 0u);
+	io_write8(IRQ_D00005, 0u);
 	interrupts_on();
 	network_check();
 	second_task(1u);
@@ -236,8 +236,8 @@ void second_task(uint32_t entry_point)
 				{
 					L_000637 = false;
 					link_take_master_settings();
-					mem_write16(IRQ_TIMER_0, 0x39u);
-					mem_write16(IRQ_TIMER_1, 1u);
+					io_write16(IRQ_TIMER_0, 0x39u);
+					io_write16(IRQ_TIMER_1, 1u);
 					screen_2_vblanks_high = 0u;
 					screen_2_vblanks = 0u;
 					screen_1_vblanks_high = 0u;
@@ -247,9 +247,9 @@ void second_task(uint32_t entry_point)
 					attract_car_list = first_attract_car_lists[machine_count];
 					input_changes = SCREEN(SCREEN_2)->car_number;
 					SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
-					SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[input_changes];
-					mem_write8(IO_1_CNT, 6u);
-					mem_write8(IO_2_CNT, 0x86u);
+					SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
+					io_write8(IO_1_CNT, 6u);
+					io_write8(IO_2_CNT, 0x86u);
 				}
 				do
 				{
@@ -381,25 +381,25 @@ void second_task(uint32_t entry_point)
 			test_mode_frame();
 		} while (test_mode_on != 0u);
 		interrupts_off();
-		mem_write8(IO_1_CNT, 4u);
-		mem_write8(IO_2_CNT, 0x80u);
+		io_write8(IO_1_CNT, 4u);
+		io_write8(IO_2_CNT, 0x80u);
 		fill = 0u;
 		fill_high = 0u;
 		block_count = 0x100u;
 		clear_address = GAME_VARIABLES;
 		do
 		{
-			mem_write32(clear_address, fill);
-			mem_write32(clear_address + 4u, fill_high);
+			CLEARED_RAM_WORDS(clear_address)[0] = fill;
+			CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 			clear_address += 8u;
-			mem_write32(clear_address, fill);
-			mem_write32(clear_address + 4u, fill_high);
+			CLEARED_RAM_WORDS(clear_address)[0] = fill;
+			CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 			clear_address += 8u;
-			mem_write32(clear_address, fill);
-			mem_write32(clear_address + 4u, fill_high);
+			CLEARED_RAM_WORDS(clear_address)[0] = fill;
+			CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 			clear_address += 8u;
-			mem_write32(clear_address, fill);
-			mem_write32(clear_address + 4u, fill_high);
+			CLEARED_RAM_WORDS(clear_address)[0] = fill;
+			CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
 			clear_address += 8u;
 			block_count--;
 		} while (block_count != 0u);
@@ -520,10 +520,10 @@ void initialise_game(void)
 {
 	uint32_t checksum = 0;
 
-	mem_write8(EVENT_CODE, 0x13u);
-	mem_write8(EVENT_CODE, 0u);
-	mem_write8(EVENT_CODE, 0u);
-	mem_write8(EVENT_CODE, 0x1Fu);
+	io_write8(EVENT_CODE, 0x13u);
+	io_write8(EVENT_CODE, 0u);
+	io_write8(EVENT_CODE, 0u);
+	io_write8(EVENT_CODE, 0x1Fu);
 	screen = SCREEN_2;
 	clear_screen_ram();
 	init_screen();

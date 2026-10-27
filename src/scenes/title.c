@@ -3,7 +3,7 @@
  *    Description: the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -51,11 +51,11 @@ void title_screen_update(void)
 		OBJECT(current_object)->title_screen.second_scroll_y_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x18u)->second_scroll_y_address;
 		background_setup = title_background_setups_ADDRESS + SCREEN(screen)->index * 5u * 4u;
 		set_up_background(background_setup);
-		mem_write16(OBJECT(current_object)->title_screen.second_scroll_y_address, 0xFFF0u);
-		mem_write16(OBJECT(current_object)->title_screen.scroll_x_address, 0x360u);
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.second_scroll_y_address)[0] = 0xFFF0u;
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.scroll_x_address)[0] = 0x360u;
 		scroll_x_address = OBJECT(current_object)->title_screen.scroll_x_address;
 		mem_write16(scroll_x_address, mem_read16(scroll_x_address) + ((SCREEN(screen)->car_number * 5u) << 6));
-		mem_write16(OBJECT(current_object)->title_screen.scroll_y_address, 0x72u);
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.scroll_y_address)[0] = 0x72u;
 		next_attract_car = SCREEN(screen)->next_attract_car;
 		SCREEN(screen)->attract_car = next_attract_car;
 		SCREEN(screen)->next_attract_car = (next_attract_car + 1u) & 7u;

@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -58,11 +58,11 @@ void race_background_update(void)
 		race_background_layer_setup += 4u;
 		page_word_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->page_word_address;
 		OBJECT(current_object)->race_background.page_word_address = page_word_address;
-		mem_write32(page_word_address, background_page_words[(uint32_t)OBJECT(current_object)->race_background.page_half << 3]);
+		TILEMAP_PAGES(page_word_address)->pages = background_page_words[(uint32_t)OBJECT(current_object)->race_background.page_half << 3];
 		mixer_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->mixer_address;
-		mixer_bits = mem_read32(mixer_address);
+		mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 		mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
-		mem_write32(mixer_address, (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | 4u));
+		MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | 4u);
 		SCREEN(screen)->flags |= 4u;
 		background_inverted = SCREEN(screen)->first_stage;
 		if (background_inverted != 0u)
@@ -86,7 +86,7 @@ void race_background_update(void)
 		} while (page_count != 0u);
 		mem_write32(r12, 0xFFFFFFFFu);
 		unpack_tile_pages(tile_page_list);
-		mem_write8(OBJECT(current_object)->race_background.tile_bank_address, stage_tile_banks[SCREEN(screen)->first_stage]);
+		TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = stage_tile_banks[SCREEN(screen)->first_stage];
 		SCREEN(screen)->background_changing = 0u;
 		SCREEN(screen)->stage_background_change = 0u;
 		SCREEN(screen)->backdrops_leaving = 0u;
@@ -187,9 +187,9 @@ void race_background_update(void)
 				background = OBJECT(current_object)->race_background.background;
 				palettes = background_palettes[background];
 				queue_palette_list(palettes);
-				mem_write8(OBJECT(current_object)->race_background.tile_bank_address, background_tile_banks[background]);
+				TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
 				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 				OBJECT(current_object)->race_background.change_step++;
 			}
@@ -204,17 +204,17 @@ void race_background_update(void)
 				if (fades == 0u)
 				{
 					next_page_words = OBJECT(current_object)->race_background.next_page_words;
-					mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+					TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 					OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 					OBJECT(current_object)->race_background.change_step++;
 				}
 				else
 				{
-					SCREEN(screen)->road_palette_fades = mem_read32(fades);
+					SCREEN(screen)->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
 					fades += 4u;
 					start_palette_fades(fades);
 					next_page_words = OBJECT(current_object)->race_background.next_page_words;
-					mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+					TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 					OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 					OBJECT(current_object)->race_background.change_step++;
 				}
@@ -233,7 +233,7 @@ void race_background_update(void)
 				fades = background_palette_fades[OBJECT(current_object)->race_background.background];
 				race_background_fade_palettes(fades);
 				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 				OBJECT(current_object)->race_background.change_step++;
 			}
@@ -244,7 +244,7 @@ void race_background_update(void)
 				fades = background_palette_fades[OBJECT(current_object)->race_background.background];
 				race_background_fade_palettes(fades);
 				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 				OBJECT(current_object)->race_background.change_step++;
 			}
@@ -253,7 +253,7 @@ void race_background_update(void)
 			if ((int16_t)view_turn <= 0x60)
 			{
 				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				mem_write32(OBJECT(current_object)->race_background.page_word_address, BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0]);
+				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 				OBJECT(current_object)->race_background.change_step++;
 			}
@@ -281,7 +281,7 @@ void race_background_update(void)
 							scroll_x = CAR(player_car)->view_yaw;
 							if (SCREEN(screen)->background_changing == 0u)
 								scroll_x = scroll_x >> 2;
-							mem_write16(OBJECT(current_object)->race_background.scroll_x_address, scroll_x - 0xA0u);
+							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
 							slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
 							scroll_y = slope_scroll_y;
 							if ((int16_t)slope_scroll_y >= 0)
@@ -293,7 +293,7 @@ void race_background_update(void)
 							else
 								scroll_y = 0u;
 							SCREEN(screen)->background_scroll_y = scroll_y;
-							mem_write16(OBJECT(current_object)->race_background.scroll_y_address, scroll_y);
+							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
 							return;
 						}
 						animation = 1u;
@@ -303,7 +303,7 @@ void race_background_update(void)
 							scroll_x = CAR(player_car)->view_yaw;
 							if (SCREEN(screen)->background_changing == 0u)
 								scroll_x = scroll_x >> 2;
-							mem_write16(OBJECT(current_object)->race_background.scroll_x_address, scroll_x - 0xA0u);
+							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
 							slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
 							scroll_y = slope_scroll_y;
 							if ((int16_t)slope_scroll_y >= 0)
@@ -315,7 +315,7 @@ void race_background_update(void)
 							else
 								scroll_y = 0u;
 							SCREEN(screen)->background_scroll_y = scroll_y;
-							mem_write16(OBJECT(current_object)->race_background.scroll_y_address, scroll_y);
+							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
 							return;
 						}
 					}
@@ -332,7 +332,7 @@ void race_background_update(void)
 	scroll_x = CAR(player_car)->view_yaw;
 	if (SCREEN(screen)->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	mem_write16(OBJECT(current_object)->race_background.scroll_x_address, scroll_x - 0xA0u);
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
 	slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
 	scroll_y = slope_scroll_y;
 	if ((int16_t)slope_scroll_y >= 0)
@@ -344,7 +344,7 @@ void race_background_update(void)
 	else
 		scroll_y = 0u;
 	SCREEN(screen)->background_scroll_y = scroll_y;
-	mem_write16(OBJECT(current_object)->race_background.scroll_y_address, scroll_y);
+	VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
 }
 
 /* Loads the tiles of the background's lower animation (queue_tile_pages with
@@ -394,7 +394,7 @@ void race_background_lower_animation_cycle(void)
 		step = (uint8_t)(step + 2u);
 		step = step & 7u;
 		OBJECT(current_object)->race_background_lower_animation.step = step;
-		mem_write16(OBJECT(current_object)->race_background_lower_animation.page_word_address + 2u, background_lower_animation_page_pairs[step]);
+		TILEMAP_PAGES(OBJECT(current_object)->race_background_lower_animation.page_word_address)->lower_pages = background_lower_animation_page_pairs[step];
 	}
 }
 
@@ -447,7 +447,7 @@ void race_background_upper_animation_cycle(void)
 	if ((int8_t)step >= 6)
 		step = (uint8_t)(step - 6u);
 	OBJECT(current_object)->race_background_upper_animation.step = step;
-	mem_write16(OBJECT(current_object)->race_background_upper_animation.page_word_address, background_upper_animation_page_pairs[step]);
+	TILEMAP_PAGES(OBJECT(current_object)->race_background_upper_animation.page_word_address)->upper_pages = background_upper_animation_page_pairs[step];
 }
 
 /* Sets up the screen's two tilemaps (0 and 2 for screen 1, 1 and 3 for screen 2; their register copies
@@ -469,46 +469,46 @@ void set_up_background(uint32_t background_setup)
 	pages_address = BACKGROUND_REGISTERS(background_registers)->pages_address;
 	pages = BACKGROUND_SETUP(background_setup)->pages;
 	background_setup += 4u;
-	mem_write32(pages_address, pages);
+	TILEMAP_PAGES(pages_address)->pages = pages;
 	second_pages = BACKGROUND_SETUP(background_setup - 0x4u)->second_pages;
 	background_setup += 4u;
-	mem_write32(pages_address + 8u, second_pages);
+	TILEMAP_PAGES(pages_address)->second_pages = second_pages;
 	background_registers += 4u;
 	tile_banks_address = BACKGROUND_REGISTERS(background_registers - 0x4u)->tile_banks_address;
 	tile_bank = BACKGROUND_SETUP(background_setup - 0x8u)->tile_bank;
 	background_setup++;
-	mem_write8(tile_banks_address, tile_bank);
+	TILEMAP_BANKS(tile_banks_address)->tile_bank = tile_bank;
 	second_tile_bank = BACKGROUND_SETUP(background_setup - 0x9u)->second_tile_bank;
 	background_setup++;
-	mem_write8(tile_banks_address + 2u, second_tile_bank);
+	TILEMAP_BANKS(tile_banks_address)->second_tile_bank = second_tile_bank;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x8u)->zoom_x_address, 0x200u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x8u)->zoom_x_address)[0] = 0x200u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0xCu)->zoom_y_address, 0x200u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0xCu)->zoom_y_address)[0] = 0x200u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x10u)->zoom_centre_x_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x10u)->zoom_centre_x_address)[0] = 0u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x14u)->zoom_centre_y_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x14u)->zoom_centre_y_address)[0] = 0u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x18u)->scroll_x_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x18u)->scroll_x_address)[0] = 0u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x1Cu)->scroll_y_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x1Cu)->scroll_y_address)[0] = 0u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x20u)->second_scroll_x_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x20u)->second_scroll_x_address)[0] = 0u;
 	background_registers += 4u;
-	mem_write16(BACKGROUND_REGISTERS(background_registers - 0x24u)->second_scroll_y_address, 0u);
+	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x24u)->second_scroll_y_address)[0] = 0u;
 	background_registers += 4u;
 	video_registers[2] &= BACKGROUND_REGISTERS(background_registers - 0x28u)->video_mask;
 	send_video_registers = 0xFFu;
 	mixer_address = BACKGROUND_REGISTERS(background_registers - 0x28u)->mixer_address;
-	mixer_bits = mem_read32(mixer_address);
+	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
-	mem_write32(mixer_address, (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority));
+	MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority);
 	mixer_address += 4u;
-	mixer_bits = mem_read32(mixer_address);
+	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
 	background_setup++;
-	mem_write32(mixer_address, (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority));
+	MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority);
 	SCREEN(screen)->flags |= 4u;
 	background_setup++;
 	tile_pages = BACKGROUND_SETUP(background_setup - 0xCu)->tile_pages;
@@ -527,7 +527,7 @@ void race_background_start_objects(uint32_t stage)
 	if (SCREEN(screen)->stage_background_change != 0u)
 		stage = (stage & ~0xFFu) | (uint8_t)(stage + 0x1Fu);
 	object_list = stage_background_object_lists[stage];
-	entry_count = mem_read32(object_list) >> 3;
+	entry_count = OBJECT_START_LIST(object_list)->count >> 3;
 	objects_left = entry_count;
 	object_list += 4u;
 	if (entry_count != 0u)
@@ -723,7 +723,7 @@ void sunset_fade_start(void)
 		period = PALETTE_FADE_ENTRY(fade - 0xBu)->period;
 		fade++;
 		fade_object = start_palette_fade(blocks, period, from, to);
-		mem_write32(fade_slot, fade_object);
+		FADE_OBJECTS(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;
 	} while (fades_left != 0u);
@@ -741,14 +741,14 @@ void sunset_fade_wait(void)
 	fades_left = OBJECT(current_object)->sunset_fade.count;
 	do
 	{
-		fade = mem_read32(fade_slot);
+		fade = FADE_OBJECTS(fade_slot)[0];
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
 			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
-				mem_write32(fade_slot - 4u, 0u);
+				FADE_OBJECTS(fade_slot)[-1] = 0u;
 		}
 		fades_left--;
 	} while (fades_left != 0u);
@@ -760,7 +760,7 @@ void sunset_fade_wait(void)
 	fades_left = OBJECT(current_object)->sunset_fade.count;
 	do
 	{
-		fade = mem_read32(fade_slot);
+		fade = FADE_OBJECTS(fade_slot)[0];
 		fade_slot += 4u;
 		if (fade != 0u)
 			OBJECT(fade)->flags = 0u;

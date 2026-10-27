@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -80,6 +80,43 @@ static inline const uint8_t *rom(uint32_t address)
 		rom_outside(address);
 	return ram(address);
 }
+
+/* The board's memories the code uses as plain memory (symbols.txt "struct NAME SIZE board", "elements NAME TYPE
+   board"), as the bus has them: the video RAM (0x300000), the sprite RAM (0x400000) and the RAM the sound
+   program shares (0x700000). A structure of the board's anywhere else stops the program */
+GAME_NORETURN void board_outside(uint32_t address);
+
+static inline uint8_t *board(uint32_t address)
+{
+	switch ((address >> 20) & 0xf)
+	{
+	case 0x3:
+		return &s32_board.video_ram[address & (S32_VIDEO_RAM_SIZE - 1)];
+	case 0x4:
+		return &s32_board.sprite_ram[address & (S32_SPRITE_RAM_SIZE - 1)];
+	case 0x7:
+		return &s32_board.shared_ram[address & (S32_SHARED_RAM_SIZE - 1)];
+	default:
+		board_outside(address);
+	}
+}
+
+/* the board's variables in those memories (the "io" lines of symbols.txt there): lvalues, as the work RAM's */
+#define BOARD8(address)   (*(uint8_t *)board(address))
+#define BOARD16(address)  (*(uint16_t *)board(address))
+#define BOARD32(address)  (*(uint32_t *)board(address))
+#define BOARD8S(address)  (*(int8_t *)board(address))
+#define BOARD16S(address) (*(int16_t *)board(address))
+#define BOARD32S(address) (*(int32_t *)board(address))
+
+/* A register of a device of the board (the I/O chips, the interrupt controller, the link board, the
+   palettes and mixers...), by its name: the bus hands it the read or the write */
+#define io_read8(address)          mem_read8(address)
+#define io_read16(address)         mem_read16(address)
+#define io_read32(address)         mem_read32(address)
+#define io_write8(address, data)   mem_write8(address, data)
+#define io_write16(address, data)  mem_write16(address, data)
+#define io_write32(address, data)  mem_write32(address, data)
 
 #define ROM8(address)  (*(const uint8_t *)rom(address))
 #define ROM16(address) (*(const uint16_t *)rom(address))

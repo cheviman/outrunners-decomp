@@ -3,7 +3,7 @@
  *    Description: the objects: the object loop, starting and freeing objects and their lists, the random numbers
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -29,7 +29,7 @@ void clear_objects(void)
 	move_halfwords(screen - 0x7E00u, zero_block_ADDRESS, halfword_count);
 	halfword_count = (uint8_t)OBJECT_LIST(screen - 0x7D00u)->count;
 	halfword_count = (uint16_t)(halfword_count + 1u);
-	move_string(zero_block_ADDRESS, halfword_count, screen - 0x7D00u, halfword_count, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen - 0x7D00u, zero_block_ADDRESS, halfword_count);
 	SCREEN(screen)->palette_upload_count &= 0xFFFF0000u;
 }
 
@@ -47,7 +47,7 @@ void run_objects(void)
 	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
-		current_object = (current_object & ~0xFFFFu) | mem_read16(list_entry);
+		current_object = (current_object & ~0xFFFFu) | OBJECT_LINKS(list_entry)[0];
 		list_entry += 2u;
 		if ((uint16_t)current_object == 0u)
 			break;
@@ -87,121 +87,116 @@ void run_objects(void)
 uint32_t start_object(void)
 {
 	uint32_t zero = 0;
-	uint8_t slot = 0;
-	uint32_t object = 0, object_bytes = 0;
+	uint32_t free_flag = 0, free_index = 0, object = 0, object_bytes = 0;
 	uint32_t list = 0;
 
-	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
-	zero = r27 == 0x7Cu;
+	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
+	zero = free_index == 0x7Cu;
 	if (zero)
 	{
 		object = screen - 0x7F00u;
 		return object;
 	}
-	mem_write8(r28, 0xFFu);
-	slot = (uint8_t)r27;
-	r27 = r27 << 8;
-	object = screen - 0x7C00u + r27;
-	r27 = 0u;
-	r28 = 0u;
+	mem_write8(free_flag, 0xFFu);
+	object = screen - 0x7C00u + (free_index << 8);
 	object_bytes = object;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
 	object_bytes += 8u;
-	mem_write32(object_bytes, 0u);
-	mem_write32(object_bytes + 4u, 0u);
-	mem_write8(object, mem_read8(object) | 1u);
-	mem_write8(object + 8u, slot);
+	OBJECT_WORDS(object_bytes)[0] = 0u;
+	OBJECT_WORDS(object_bytes)[1] = 0u;
+	OBJECT(object)->flags |= 1u;
+	OBJECT(object)->slot = free_index;
 	list = OBJECT_AREA(screen - 0x8000u)->list;
 	mem_write16(list, mem_read16(list) + 1u);
 	mem_write16(OBJECT_AREA(screen - 0x8000u)->list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count * 2u, object);
@@ -216,18 +211,18 @@ uint32_t start_object(void)
 uint32_t reserve_object_slot(void)
 {
 	uint32_t zero = 0;
-	uint32_t object = 0;
+	uint32_t free_flag = 0, free_index = 0, object = 0;
 
-	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &r27, &r28);
-	zero = r27 == 0x7Cu;
+	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
+	zero = free_index == 0x7Cu;
 	if (zero)
 	{
 		object = screen - 0x7F00u;
 		return object;
 	}
-	mem_write8(r28, 0xFFu);
-	object = (r28 & ~0xFFFFu) | (uint16_t)(r28 << 8);
-	move_string(zero_block_ADDRESS, 0x80u, object, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
+	mem_write8(free_flag, 0xFFu);
+	object = (free_flag & ~0xFFFFu) | (uint16_t)(free_flag << 8);
+	move_halfwords(object, zero_block_ADDRESS, 0x80u);
 	return object;
 }
 
@@ -248,7 +243,7 @@ uint32_t start_object_list(uint32_t handler_list)
 	uint8_t list_index = 0;
 	uint32_t object = 0, objects_left = 0;
 
-	objects_left = mem_read32(handler_list);
+	objects_left = OBJECT_START_LIST(handler_list)->count;
 	list_index = 0u;
 	handler_list += 4u;
 	do

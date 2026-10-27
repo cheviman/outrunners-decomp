@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -385,6 +385,10 @@
 #define unk_218F1C RAM32(unk_218F1C_ADDRESS)
 #define unk_218F20_ADDRESS 0x218F20u
 #define unk_218F20 RAM16(unk_218F20_ADDRESS)
+
+/* work RAM as one family of functions uses it (their scratch variables) */
+#define test_mode_prompt_text_ADDRESS 0x20E708u
+#define test_mode_prompt_text RAM32(test_mode_prompt_text_ADDRESS)
 
 /* data in the program ROM the code reads */
 #define rom_000001_ADDRESS 0x000001u
@@ -1326,20 +1330,7 @@
 #define kanji_font_ADDRESS 0x1CF000u
 #define kanji_font ROM8(kanji_font_ADDRESS)
 
-/* the board's registers (read and written through the bus) */
-#define MACHINE_ID_TEXT_CELL 0x31F736u
-#define VIDEO_CONTROL 0x31FF00u
-#define VIDEO_LINE_CONTROL_HIGH 0x31FF05u
-#define SPRITE_SCREEN_1_LIST_JUMP 0x400020u
-#define SPRITE_SCREEN_2_LIST_JUMP 0x400030u
-#define SPRITE_LIST_1_A 0x404000u
-#define SPRITE_LIST_1_A_HALFWAY 0x407000u
-#define SPRITE_LIST_1_B 0x40A000u
-#define SPRITE_LIST_1_B_HALFWAY 0x40D000u
-#define SPRITE_LIST_2_A 0x414000u
-#define SPRITE_LIST_2_A_HALFWAY 0x417000u
-#define SPRITE_LIST_2_B 0x41A000u
-#define SPRITE_LIST_2_B_HALFWAY 0x41D000u
+/* the board's registers (read and written through the bus: io_read8, io_write8...) */
 #define SPRITE_RENDER_REQUEST 0x500000u
 #define BACKGROUND_COLOUR_1 0x609C00u
 #define MIXER_1_OFFSET_0_RED 0x610040u
@@ -1349,28 +1340,6 @@
 #define MIXER_2_OFFSET_0_RED 0x690040u
 #define MIXER_2_OFFSET_0_BLUE 0x690044u
 #define MIXER_2_OFFSET_1_GREEN 0x690048u
-#define SOUND_COMMAND_1 0x700700u
-#define SOUND_SECOND_COMMAND_1 0x700708u
-#define SOUND_ENGINE_REVS_1 0x700710u
-#define SOUND_ENGINE_REQUESTS_1 0x700712u
-#define SOUND_ENGINE_SAMPLE_1 0x700713u
-#define SOUND_ENGINE_LOUDNESS_1 0x700714u
-#define SOUND_TYRE_NOISE_1 0x700718u
-#define SOUND_COMMAND_2 0x700800u
-#define SOUND_ENGINE_REVS_2 0x700810u
-#define SOUND_ENGINE_REQUESTS_2 0x700812u
-#define BOOKKEEPING_CHECKSUM 0x701F00u
-#define BOOKKEEPING_CHUTE_A_COINS 0x701F06u
-#define BOOKKEEPING_TOTAL_TIME 0x701F10u
-#define BOOKKEEPING_LONGEST_PLAY 0x701F20u
-#define BOOKKEEPING_SHORTEST_PLAY 0x701F22u
-#define BOOKKEEPING_SEAT_1_CREDITS 0x701F74u
-#define BOOKKEEPING_SEAT_1_BYTE 0x701F76u
-#define BOOKKEEPING_SEAT_2_CREDITS 0x701F78u
-#define BOOKKEEPING_SEAT_2_BYTE 0x701F7Au
-#define BOOKKEEPING_BACKUP_SEAT_1_CREDITS 0x701FF0u
-#define BOOKKEEPING_BACKUP_SEAT_2_CREDITS 0x701FF4u
-#define SOUND_PROGRAM_HOLD 0x701FFFu
 #define LINK_MACHINE_COUNT 0x800000u
 #define LINK_MACHINE_NUMBER 0x800002u
 #define LINK_MASTER 0x800004u
@@ -1390,6 +1359,7 @@
 #define IO_1_PORT_H 0xC0000Eu
 #define IO_1_CNT 0xC0001Cu
 #define IO_1_DIRECTION 0xC0001Eu
+#define ANALOG_INPUTS 0xC00050u
 #define ANALOG_BANK 0xC00060u
 #define EVENT_CODE 0xC00074u
 #define IO_2_PORT_A 0xC80000u
@@ -1405,6 +1375,93 @@
 #define IRQ_TIMER_0 0xD00008u
 #define IRQ_TIMER_1 0xD0000Au
 #define RANDOM_NUMBER 0xD80000u
+
+/* the board's memories the code uses as plain memory (the video RAM, the sprite RAM, the RAM the
+   sound program shares), by name: lvalues through board() */
+#define MACHINE_ID_TEXT_CELL_ADDRESS 0x31F736u
+#define MACHINE_ID_TEXT_CELL BOARD16(MACHINE_ID_TEXT_CELL_ADDRESS)
+#define VIDEO_CONTROL_ADDRESS 0x31FF00u
+#define VIDEO_CONTROL BOARD16(VIDEO_CONTROL_ADDRESS)
+#define VIDEO_LINE_CONTROL_HIGH_ADDRESS 0x31FF05u
+#define VIDEO_LINE_CONTROL_HIGH BOARD8(VIDEO_LINE_CONTROL_HIGH_ADDRESS)
+#define NBG0_SCROLL_X_ADDRESS 0x31FF10u
+#define NBG0_SCROLL_X BOARD32(NBG0_SCROLL_X_ADDRESS)
+#define NBG0_SCROLL_Y_ADDRESS 0x31FF14u
+#define NBG0_SCROLL_Y BOARD32(NBG0_SCROLL_Y_ADDRESS)
+#define NBG2_SCROLL_X_ADDRESS 0x31FF20u
+#define NBG2_SCROLL_X BOARD32(NBG2_SCROLL_X_ADDRESS)
+#define NBG2_SCROLL_Y_ADDRESS 0x31FF24u
+#define NBG2_SCROLL_Y BOARD32(NBG2_SCROLL_Y_ADDRESS)
+#define SPRITE_SCREEN_1_LIST_JUMP_ADDRESS 0x400020u
+#define SPRITE_SCREEN_1_LIST_JUMP BOARD16(SPRITE_SCREEN_1_LIST_JUMP_ADDRESS)
+#define SPRITE_SCREEN_2_LIST_JUMP_ADDRESS 0x400030u
+#define SPRITE_SCREEN_2_LIST_JUMP BOARD16(SPRITE_SCREEN_2_LIST_JUMP_ADDRESS)
+#define SPRITE_LIST_1_A_ADDRESS 0x404000u
+#define SPRITE_LIST_1_A BOARD16(SPRITE_LIST_1_A_ADDRESS)
+#define SPRITE_LIST_1_A_HALFWAY_ADDRESS 0x407000u
+#define SPRITE_LIST_1_A_HALFWAY BOARD16(SPRITE_LIST_1_A_HALFWAY_ADDRESS)
+#define SPRITE_LIST_1_B_ADDRESS 0x40A000u
+#define SPRITE_LIST_1_B BOARD16(SPRITE_LIST_1_B_ADDRESS)
+#define SPRITE_LIST_1_B_HALFWAY_ADDRESS 0x40D000u
+#define SPRITE_LIST_1_B_HALFWAY BOARD16(SPRITE_LIST_1_B_HALFWAY_ADDRESS)
+#define SPRITE_LIST_2_A_ADDRESS 0x414000u
+#define SPRITE_LIST_2_A BOARD16(SPRITE_LIST_2_A_ADDRESS)
+#define SPRITE_LIST_2_A_HALFWAY_ADDRESS 0x417000u
+#define SPRITE_LIST_2_A_HALFWAY BOARD16(SPRITE_LIST_2_A_HALFWAY_ADDRESS)
+#define SPRITE_LIST_2_B_ADDRESS 0x41A000u
+#define SPRITE_LIST_2_B BOARD16(SPRITE_LIST_2_B_ADDRESS)
+#define SPRITE_LIST_2_B_HALFWAY_ADDRESS 0x41D000u
+#define SPRITE_LIST_2_B_HALFWAY BOARD16(SPRITE_LIST_2_B_HALFWAY_ADDRESS)
+#define SOUND_COMMAND_1_ADDRESS 0x700700u
+#define SOUND_COMMAND_1 BOARD8(SOUND_COMMAND_1_ADDRESS)
+#define SOUND_SECOND_COMMAND_1_ADDRESS 0x700708u
+#define SOUND_SECOND_COMMAND_1 BOARD8(SOUND_SECOND_COMMAND_1_ADDRESS)
+#define SOUND_ENGINE_REVS_1_ADDRESS 0x700710u
+#define SOUND_ENGINE_REVS_1 BOARD8(SOUND_ENGINE_REVS_1_ADDRESS)
+#define SOUND_ENGINE_REQUESTS_1_ADDRESS 0x700712u
+#define SOUND_ENGINE_REQUESTS_1 BOARD8(SOUND_ENGINE_REQUESTS_1_ADDRESS)
+#define SOUND_ENGINE_SAMPLE_1_ADDRESS 0x700713u
+#define SOUND_ENGINE_SAMPLE_1 BOARD8(SOUND_ENGINE_SAMPLE_1_ADDRESS)
+#define SOUND_ENGINE_LOUDNESS_1_ADDRESS 0x700714u
+#define SOUND_ENGINE_LOUDNESS_1 BOARD8(SOUND_ENGINE_LOUDNESS_1_ADDRESS)
+#define SOUND_TYRE_NOISE_1_ADDRESS 0x700718u
+#define SOUND_TYRE_NOISE_1 BOARD8(SOUND_TYRE_NOISE_1_ADDRESS)
+#define SOUND_COMMAND_2_ADDRESS 0x700800u
+#define SOUND_COMMAND_2 BOARD8(SOUND_COMMAND_2_ADDRESS)
+#define SOUND_ENGINE_REVS_2_ADDRESS 0x700810u
+#define SOUND_ENGINE_REVS_2 BOARD8(SOUND_ENGINE_REVS_2_ADDRESS)
+#define SOUND_ENGINE_REQUESTS_2_ADDRESS 0x700812u
+#define SOUND_ENGINE_REQUESTS_2 BOARD8(SOUND_ENGINE_REQUESTS_2_ADDRESS)
+#define BOOKKEEPING_CHECKSUM_ADDRESS 0x701F00u
+#define BOOKKEEPING_CHECKSUM BOARD16(BOOKKEEPING_CHECKSUM_ADDRESS)
+#define BOOKKEEPING_CHUTE_A_COINS_ADDRESS 0x701F06u
+#define BOOKKEEPING_CHUTE_A_COINS BOARD16(BOOKKEEPING_CHUTE_A_COINS_ADDRESS)
+#define BOOKKEEPING_TOTAL_TIME_ADDRESS 0x701F10u
+#define BOOKKEEPING_TOTAL_TIME BOARD32(BOOKKEEPING_TOTAL_TIME_ADDRESS)
+#define BOOKKEEPING_GAMES_A_ADDRESS 0x701F14u
+#define BOOKKEEPING_GAMES_A BOARD16(BOOKKEEPING_GAMES_A_ADDRESS)
+#define BOOKKEEPING_LONGEST_PLAY_ADDRESS 0x701F20u
+#define BOOKKEEPING_LONGEST_PLAY BOARD16(BOOKKEEPING_LONGEST_PLAY_ADDRESS)
+#define BOOKKEEPING_SHORTEST_PLAY_ADDRESS 0x701F22u
+#define BOOKKEEPING_SHORTEST_PLAY BOARD16(BOOKKEEPING_SHORTEST_PLAY_ADDRESS)
+#define BOOKKEEPING_HISTOGRAM_ADDRESS 0x701F24u
+#define BOOKKEEPING_HISTOGRAM BOARD16(BOOKKEEPING_HISTOGRAM_ADDRESS)
+#define BOOKKEEPING_COURSE_RECORDS_ADDRESS 0x701F32u
+#define BOOKKEEPING_COURSE_RECORDS BOARD8(BOOKKEEPING_COURSE_RECORDS_ADDRESS)
+#define BOOKKEEPING_SEAT_1_CREDITS_ADDRESS 0x701F74u
+#define BOOKKEEPING_SEAT_1_CREDITS BOARD16(BOOKKEEPING_SEAT_1_CREDITS_ADDRESS)
+#define BOOKKEEPING_SEAT_1_BYTE_ADDRESS 0x701F76u
+#define BOOKKEEPING_SEAT_1_BYTE BOARD16(BOOKKEEPING_SEAT_1_BYTE_ADDRESS)
+#define BOOKKEEPING_SEAT_2_CREDITS_ADDRESS 0x701F78u
+#define BOOKKEEPING_SEAT_2_CREDITS BOARD16(BOOKKEEPING_SEAT_2_CREDITS_ADDRESS)
+#define BOOKKEEPING_SEAT_2_BYTE_ADDRESS 0x701F7Au
+#define BOOKKEEPING_SEAT_2_BYTE BOARD16(BOOKKEEPING_SEAT_2_BYTE_ADDRESS)
+#define BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS 0x701FF0u
+#define BOOKKEEPING_BACKUP_SEAT_1_CREDITS BOARD32(BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS)
+#define BOOKKEEPING_BACKUP_SEAT_2_CREDITS_ADDRESS 0x701FF4u
+#define BOOKKEEPING_BACKUP_SEAT_2_CREDITS BOARD32(BOOKKEEPING_BACKUP_SEAT_2_CREDITS_ADDRESS)
+#define SOUND_PROGRAM_HOLD_ADDRESS 0x701FFFu
+#define SOUND_PROGRAM_HOLD BOARD8(SOUND_PROGRAM_HOLD_ADDRESS)
 
 /* data in the program ROM symbols.txt labels */
 #define signature_text_ADDRESS 0x00010Cu
@@ -3427,10 +3484,8 @@ struct car
 	uint8_t road_event;
 	uint8_t pad_CF[0x1];
 	uint8_t forks_taken;
-	uint8_t stage_history;
-	uint8_t pad_D2[0x5];
-	uint8_t branch_history;
-	uint8_t pad_D8[0x4];
+	uint8_t stage_history[0x6];
+	uint8_t branch_history[0x5];
 	int32_t view_matrix_xx;
 	int32_t view_matrix_xy;
 	int32_t view_matrix_xz;
@@ -3567,19 +3622,20 @@ struct screen
 	uint32_t previous_buttons;
 	uint32_t buttons_pressed;
 	uint32_t buttons_released;
-	uint8_t pad_120[0x30];
+	uint8_t pad_120[0x10];
+	uint32_t input_ring[0x8];
 	uint8_t fade_level;
 	int8_t fade_step;
 	uint8_t fade_end;
 	uint8_t fade_kind;
 	uint8_t fade_channels;
 	uint8_t pad_155[0xB];
-	uint16_t mixer_values;
-	uint8_t pad_162[0x3D];
+	uint16_t mixer_values[0x1F];
+	uint8_t pad_19E[0x1];
 	uint8_t colour_offset_mode;
 	uint8_t pad_1A0[0x10];
-	uint16_t mixer_defaults;
-	uint8_t pad_1B2[0x4E];
+	uint16_t mixer_defaults[0x1F];
+	uint8_t pad_1EE[0x12];
 	uint16_t road_top_line;
 	uint8_t background_changing;
 	uint8_t stage_background_change;
@@ -3590,9 +3646,7 @@ struct screen
 	uint32_t road_palette_fades;
 	uint16_t background_scroll_y;
 	uint8_t pad_20E[0xF2];
-	uint8_t accepted_players;
-	uint8_t pad_301[0x3];
-	uint32_t last_four_accepted_players;
+	uint8_t accepted_players[0x8];
 	uint32_t host_record;
 	uint8_t host_player;
 	uint8_t pad_30D[0x2];
@@ -3607,36 +3661,28 @@ struct screen
 	uint8_t race_started;
 	uint8_t pad_31D[0x2];
 	uint8_t place;
-	uint8_t places;
-	uint8_t pad_321[0x7];
+	uint8_t places[0x8];
 	uint8_t name_entries_seen;
 	uint8_t pad_329[0x7];
-	uint8_t counted_stages;
-	uint8_t pad_331[0x7];
-	uint8_t counted_passes;
-	uint8_t pad_339[0x9];
+	uint8_t counted_stages[0x8];
+	uint8_t counted_passes[0x6];
+	uint8_t pad_33E[0x4];
 	uint8_t pass_seen;
 	uint8_t pad_343[0x1];
-	uint8_t route_stages;
-	uint8_t pad_345[0x4];
+	uint8_t route_stages[0x5];
 	uint8_t forks_decided;
-	uint8_t route_branches;
-	uint8_t pad_34B[0x5];
+	uint8_t route_branches[0x6];
 	uint16_t leader_window_segment;
 	uint8_t leader_stage;
 	uint8_t pad_353[0x7];
-	uint8_t checkpoint_passes;
-	uint8_t pad_35B[0x5];
-	uint8_t checkpoint_orders;
-	uint8_t pad_361[0x2F];
+	uint8_t checkpoint_passes[0x6];
+	uint8_t checkpoint_orders[0x30];
 	uint8_t checkpoint_order;
 	uint8_t pad_391[0x2F];
-	uint16_t checkpoint_times_by_player;
-	uint8_t pad_3C2[0x5E];
-	uint16_t checkpoint_times;
-	uint8_t pad_422[0x5E];
-	uint8_t checkpoints_passed;
-	uint8_t pad_481[0x2E];
+	uint16_t checkpoint_times_by_player[0x30];
+	uint16_t checkpoint_times[0x30];
+	uint8_t checkpoints_passed[0x8];
+	uint8_t pad_488[0x27];
 	uint8_t demo_player_count;
 	uint8_t demo_players;
 	uint8_t pad_4B1[0x41];
@@ -3646,18 +3692,18 @@ struct screen
 	uint8_t pad_504[0xC];
 	uint32_t hit_box_count;
 	uint8_t pad_514[0x1EC];
-	uint16_t stage_lengths;
-	uint8_t pad_702[0x3C];
+	uint16_t stage_lengths[0x1F];
 	uint16_t branch_road_length;
 	uint8_t pad_740[0xC0];
 	uint8_t sound_queue_read;
 	uint8_t sound_queue_write;
-	uint8_t pad_802[0x20];
+	uint8_t sound_queue[0x20];
 	uint8_t sound_start_cleared;
 	uint8_t pad_823[0x1D];
 	uint8_t second_sound_queue_read;
 	uint8_t second_sound_queue_write;
-	uint8_t pad_842[0xBE];
+	uint8_t second_sound_queue[0x20];
+	uint8_t pad_862[0x9E];
 	uint32_t palette_upload_count;
 	uint8_t pad_904[0x1FC];
 	uint16_t unpack_state;
@@ -3711,10 +3757,9 @@ struct screen
 	uint8_t pad_FA9[0xF57];
 	uint8_t crest_count;
 	uint8_t pad_1F01[0xF];
-	uint16_t crest_layers;
-	uint8_t pad_1F12[0x1E];
-	uint16_t crest_heights;
-	uint8_t pad_1F32[0x30CE];
+	uint16_t crest_layers[0x10];
+	uint16_t crest_heights[0x10];
+	uint8_t pad_1F50[0x30B0];
 	uint16_t depth_lists;
 	uint8_t pad_5002[0x676];
 	uint16_t text_depth_list_head;
@@ -4192,6 +4237,7 @@ struct sprite_animation
 struct sprite_frame
 {
 	uint16_t piece_count;
+	uint16_t piece_words[];
 };
 
 struct sprite_piece
@@ -4531,8 +4577,16 @@ struct road_segment
 	uint32_t y;
 	uint16_t width;
 	uint16_t half_width;
-	uint8_t width_code;
-	uint8_t road_event;
+	union
+	{
+		uint16_t width_code_and_event;
+		uint8_t width_code;
+		struct
+		{
+			uint8_t pad_14[0x1];
+			uint8_t road_event;
+		};
+	};
 	uint8_t pad_16[0xA];
 };
 
@@ -4774,6 +4828,130 @@ struct checkpoint_pass
 	uint8_t player;
 };
 
+struct sprite_place
+{
+	union
+	{
+		uint32_t size;
+		uint16_t height;
+		struct
+		{
+			uint8_t pad_00[0x2];
+			uint16_t width;
+		};
+	};
+	union
+	{
+		uint32_t place;
+		uint16_t y;
+		struct
+		{
+			uint8_t pad_04[0x2];
+			uint16_t x;
+		};
+	};
+	uint16_t rom_offset;
+	uint16_t mirror_x;
+	uint8_t pad_0C[0x4];
+};
+
+struct object_start_list
+{
+	uint32_t count;
+};
+
+struct tilemap_pages
+{
+	union
+	{
+		uint32_t pages;
+		uint16_t upper_pages;
+		struct
+		{
+			uint8_t pad_00[0x2];
+			uint16_t lower_pages;
+		};
+	};
+	uint8_t pad_04[0x4];
+	uint32_t second_pages;
+};
+
+struct tilemap_banks
+{
+	uint8_t tile_bank;
+	uint8_t pad_01[0x1];
+	uint8_t second_tile_bank;
+};
+
+struct road_palette_record
+{
+	uint32_t road_fades;
+};
+
+struct text_cell_entry
+{
+	uint16_t contents;
+};
+
+struct backup_course_record
+{
+	uint8_t model;
+	uint8_t name[0x3];
+	uint16_t time;
+};
+
+struct race_car_rider
+{
+	uint32_t places;
+	uint16_t animation;
+	uint16_t palette;
+	uint8_t gesture_mask;
+	uint8_t pad_09[0x1];
+	uint8_t frame;
+	uint8_t frames;
+	uint8_t pad_0C[0x4];
+};
+
+struct race_car_spray
+{
+	uint32_t animations;
+	uint32_t places;
+	uint32_t effect;
+	uint8_t frame;
+	uint8_t side;
+	uint8_t kind;
+	uint8_t pad_0F[0x1];
+};
+
+struct bookkeeping_count16
+{
+	uint16_t value;
+	uint8_t pad_02[0x7A];
+	uint16_t backup;
+};
+
+struct bookkeeping_count32
+{
+	uint32_t value;
+	uint8_t pad_04[0x78];
+	uint32_t backup;
+};
+
+struct bookkeeping_count8
+{
+	uint8_t value;
+	uint8_t pad_01[0x7B];
+	uint8_t backup;
+};
+
+struct time_digit
+{
+	int8_t flip;
+	uint8_t digit;
+	uint16_t width;
+	uint32_t remaining;
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
@@ -4883,6 +5061,19 @@ _Static_assert(sizeof(struct course_start) == 0xA, "struct course_start has the 
 _Static_assert(sizeof(struct car_part_place) == 0x4, "struct car_part_place has the size of the program ROM's records");
 _Static_assert(sizeof(struct board_car_sprite) == 0x4, "struct board_car_sprite has the size of the game's blocks");
 _Static_assert(sizeof(struct checkpoint_pass) == 0x1, "struct checkpoint_pass has the size of the game's blocks");
+_Static_assert(sizeof(struct sprite_place) == 0x10, "struct sprite_place has the size of the game's blocks");
+_Static_assert(sizeof(struct object_start_list) == 0x4, "struct object_start_list has the size of the program ROM's records");
+_Static_assert(sizeof(struct tilemap_pages) == 0xC, "struct tilemap_pages has the size of the game's blocks");
+_Static_assert(sizeof(struct tilemap_banks) == 0x3, "struct tilemap_banks has the size of the game's blocks");
+_Static_assert(sizeof(struct road_palette_record) == 0x4, "struct road_palette_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct text_cell_entry) == 0x2, "struct text_cell_entry has the size of the board's memory");
+_Static_assert(sizeof(struct backup_course_record) == 0x6, "struct backup_course_record has the size of the board's memory");
+_Static_assert(sizeof(struct race_car_rider) == 0x10, "struct race_car_rider has the size of the game's blocks");
+_Static_assert(sizeof(struct race_car_spray) == 0x10, "struct race_car_spray has the size of the game's blocks");
+_Static_assert(sizeof(struct bookkeeping_count16) == 0x7E, "struct bookkeeping_count16 has the size of the board's memory");
+_Static_assert(sizeof(struct bookkeeping_count32) == 0x80, "struct bookkeeping_count32 has the size of the board's memory");
+_Static_assert(sizeof(struct bookkeeping_count8) == 0x7D, "struct bookkeeping_count8 has the size of the board's memory");
+_Static_assert(sizeof(struct time_digit) == 0x8, "struct time_digit has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
@@ -5038,6 +5229,80 @@ _Static_assert(sizeof(struct checkpoint_pass) == 0x1, "struct checkpoint_pass ha
 #define CAR_PART_PLACE(address) ((const struct car_part_place *)rom(address))
 #define BOARD_CAR_SPRITE(address) ((struct board_car_sprite *)ram(address))
 #define CHECKPOINT_PASS(address) ((struct checkpoint_pass *)ram(address))
+#define OBJECT_WORDS(address) ((uint32_t *)ram(address))
+#define PLAYER_CAR_NUMBERS(address) ((uint8_t *)ram(address))
+#define SEEN_RECORD_SERIALS(address) ((uint8_t *)ram(address))
+#define RACE_RECORD_WORDS(address) ((uint32_t *)ram(address))
+#define RACE_RECORD_BYTES(address) ((uint8_t *)ram(address))
+#define STAGE_LENGTH_LIST(address) ((uint16_t *)ram(address))
+#define PALETTE_UPLOAD_QUEUE(address) ((uint32_t *)ram(address))
+#define MIXER_COLOUR_OFFSETS(address) ((uint16_t *)ram(address))
+#define PALETTE_FADE_COLOURS(address) ((uint16_t *)ram(address))
+#define PALETTE_FADE_DIFFERENCES(address) ((int8_t *)ram(address))
+#define BACKGROUND_FADES(address) ((uint32_t *)ram(address))
+#define UNPACKED_BYTES(address) ((uint8_t *)board(address))
+#define TEXT_LAYER_CELLS(address) ((uint16_t *)board(address))
+#define TEXT_LAYER_FONT_ROWS(address) ((uint32_t *)board(address))
+#define BOOT_REGISTER_VALUES(address) ((const uint8_t *)rom(address))
+#define CLEARED_RAM_WORDS(address) ((uint32_t *)ram(address))
+#define PORT_OUTPUT_BITS(address) ((uint8_t *)ram(address))
+#define VBLANK_COUNT(address) ((uint8_t *)ram(address))
+#define SPRITE_PLACE(address) ((struct sprite_place *)ram(address))
+#define SPRITE_PLACE_WORDS(address) ((uint32_t *)ram(address))
+#define OBJECT_LINKS(address) ((uint16_t *)ram(address))
+#define OBJECT_START_LIST(address) ((const struct object_start_list *)rom(address))
+#define TILEMAP_PAGES(address) ((struct tilemap_pages *)ram(address))
+#define TILEMAP_BANKS(address) ((struct tilemap_banks *)ram(address))
+#define ROAD_PALETTE_RECORD(address) ((const struct road_palette_record *)rom(address))
+#define FADE_OBJECTS(address) ((uint32_t *)ram(address))
+#define STRETCH_ENDS(address) ((uint16_t *)ram(address))
+#define LINE_SELECTS(address) ((uint16_t *)board(address))
+#define TEXT_CELL_ENTRY(address) ((struct text_cell_entry *)board(address))
+#define CHIP_TEST_RESULTS(address) ((uint8_t *)ram(address))
+#define PROGRAM_HALFWORDS(address) ((const uint16_t *)rom(address))
+#define ANALOG_POSITIONS(address) ((uint8_t *)ram(address))
+#define OUTPUT_BITS(address) ((uint32_t *)ram(address))
+#define STAGE_GAME_COUNTS(address) ((uint16_t *)board(address))
+#define BACKUP_COURSE_RECORD(address) ((struct backup_course_record *)board(address))
+#define TILE_PIXEL_ROWS(address) ((uint32_t *)board(address))
+#define PLAYER_PLACE(address) ((uint8_t *)ram(address))
+#define RACER_NUMBERS(address) ((uint8_t *)ram(address))
+#define OBJECT_TILE_PAGES(address) ((uint32_t *)ram(address))
+#define COURSE_RECORD_BYTES(address) ((uint8_t *)ram(address))
+#define FLOOR_LINE_OFFSETS(address) ((uint16_t *)ram(address))
+#define NAME_LETTERS(address) ((uint8_t *)ram(address))
+#define ITEM_PLACE_WORDS(address) ((uint16_t *)ram(address))
+#define ROAD_POINTS(address) ((uint16_t *)ram(address))
+#define LINE_SCROLL_VALUES(address) ((uint16_t *)board(address))
+#define TILE_PAGE_PLACES(address) ((uint32_t *)ram(address))
+#define ROAD_PAGE_TABLE_BYTES(address) ((uint8_t *)ram(address))
+#define TILES_CHANGE_FLAGS(address) ((uint8_t *)ram(address))
+#define PAGE_SELECT(address) ((uint32_t *)ram(address))
+#define VIDEO_REGISTER_WORDS(address) ((uint16_t *)ram(address))
+#define TILE_BANK_VALUES(address) ((uint8_t *)ram(address))
+#define MIXER_VALUE_PAIRS(address) ((uint32_t *)ram(address))
+#define ROAD_PALETTE_LISTS(address) ((const uint32_t *)rom(address))
+#define RACE_CAR_RIDER(address) ((struct race_car_rider *)ram(address))
+#define RACE_CAR_SPRAY(address) ((struct race_car_spray *)ram(address))
+#define SPRAY_ANIMATION_NUMBERS(address) ((const uint16_t *)rom(address))
+#define WHEEL_EFFECT_VALUES(address) ((uint8_t *)ram(address))
+#define SPRITE_WORDS(address) ((uint16_t *)board(address))
+#define RACE_ORDER_PLAYERS(address) ((uint8_t *)ram(address))
+#define OBJECT_TEXT_CHARACTERS(address) ((uint8_t *)ram(address))
+#define CHECKPOINT_COUNTS(address) ((uint8_t *)ram(address))
+#define TORQUE_CURVE_FORCES(address) ((uint16_t *)ram(address))
+#define BOOKKEEPING_COUNT16(address) ((struct bookkeeping_count16 *)board(address))
+#define BOOKKEEPING_COUNT32(address) ((struct bookkeeping_count32 *)board(address))
+#define BOOKKEEPING_COUNT8(address) ((struct bookkeeping_count8 *)board(address))
+#define BOOKKEEPING_HALFWORDS(address) ((uint16_t *)board(address))
+#define SEAT_SOUND_COUNTS(address) ((uint8_t *)ram(address))
+#define CHUTE_UNIT_SETTINGS(address) ((uint8_t *)ram(address))
+#define ANALOG_VALUES(address) ((uint8_t *)ram(address))
+#define ANALOG_CALIBRATION_BYTES(address) ((uint8_t *)ram(address))
+#define MUSIC_FADE_DELAYS(address) ((uint8_t *)board(address))
+#define LCD_CHARACTERS(address) ((uint8_t *)ram(address))
+#define SETTINGS_WORDS(address) ((uint16_t *)ram(address))
+#define TIME_DIGIT(address) ((struct time_digit *)ram(address))
 
 /* the program ROM's tables of records, by name: name[i].field */
 #define bar_picture_bars_ADDRESS 0x0011B1u

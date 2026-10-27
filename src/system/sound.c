@@ -3,7 +3,7 @@
  *    Description: the sound requests to the sound program: sounds, the engine and tyre noise, the music's fade
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -18,9 +18,9 @@
 void start_sound_program(void)
 {
 	AS32(SCREEN(screen)->sound_queue_read) = 0x100u;
-	mem_write8(IO_1_CNT, 6u);
+	io_write8(IO_1_CNT, 6u);
 	SCREEN(screen)->sound_start_cleared = 0u;
-	mem_write8(SOUND_PROGRAM_HOLD, 0u);
+	SOUND_PROGRAM_HOLD = 0u;
 }
 
 /* Requests sound R0 for the screen (queue_sound), except while the screen's demo_flags bit 8 is set,
@@ -54,7 +54,7 @@ void queue_sound(uint8_t sound)
 	request_ring = screen + 0x801u;
 	sound_queue_write = SCREEN(request_ring - 0x801u)->sound_queue_write;
 	request_ring++;
-	mem_write8(request_ring + sound_queue_write, sound);
+	SCREEN(request_ring - 0x802u)->sound_queue[(int32_t)sound_queue_write] = sound;
 	SCREEN(request_ring - 0x802u)->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
 }
 
@@ -71,7 +71,7 @@ void request_second_sound(uint8_t sound)
 		request_ring = screen + 0x841u;
 		second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
 		request_ring++;
-		mem_write8(request_ring + second_sound_queue_write, sound);
+		SCREEN(request_ring - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
 		SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 	}
 	else if (advertise_sound != 0u)
@@ -82,7 +82,7 @@ void request_second_sound(uint8_t sound)
 			request_ring = screen + 0x841u;
 			second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
 			request_ring++;
-			mem_write8(request_ring + second_sound_queue_write, sound);
+			SCREEN(request_ring - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
 			SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 			return;
 		}
@@ -101,18 +101,18 @@ void player_car_start_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) != 0u && advertise_sound == 0u)
 	{
 		sound_page = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(sound_page + SOUND_ENGINE_REVS_1, 0u);
-		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1) | 0x20u);
+		mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
+		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_SAMPLE_1, car_model_engine_samples[CAR(player_car)->model]);
+	mem_write8(sound_page + SOUND_ENGINE_SAMPLE_1_ADDRESS, car_model_engine_samples[CAR(player_car)->model]);
 	loudness = 0x10u;
 	if (CAR(player_car)->transmission != 0u)
 		loudness = 0x30u;
-	mem_write8(sound_page + SOUND_ENGINE_LOUDNESS_1, loudness);
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1, 1u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, 0xA0u);
+	mem_write8(sound_page + SOUND_ENGINE_LOUDNESS_1_ADDRESS, loudness);
+	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 1u);
+	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, 0xA0u);
 }
 
 /* Sets the engine's pitch from the revs (car revs) each frame, or silences it in the demo without sound. */
@@ -123,13 +123,13 @@ void player_car_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
 		sound_page = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(sound_page + SOUND_ENGINE_REVS_1, CAR(player_car)->revs >> 8);
-		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, 0x20u);
+		mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, CAR(player_car)->revs >> 8);
+		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, 0x20u);
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1) | 0x20u);
+	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
+	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
 }
 
 /* set_tyre_noise, unless the car is off the road (car off_road), where the off-road noise plays. Used by
@@ -153,12 +153,12 @@ void set_tyre_noise(uint8_t tyre_noise)
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
-		mem_write8(((uint32_t)SCREEN(screen)->index << 8) + SOUND_TYRE_NOISE_1, tyre_noise);
+		mem_write8(((uint32_t)SCREEN(screen)->index << 8) + SOUND_TYRE_NOISE_1_ADDRESS, tyre_noise);
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1) | 0x20u);
+	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
+	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
 }
 
 /* Fades out the screen's music with 20 (fade_out_music_at): a step every 4 x (20 + 1) of the sound
@@ -178,7 +178,7 @@ void fade_out_music(void)
    car_radio_update, 7F from goal_update. */
 void fade_out_music_at(uint8_t fade_delay)
 {
-	mem_write8(music_fade_addresses[SCREEN(screen)->index], fade_delay);
+	MUSIC_FADE_DELAYS(music_fade_addresses[SCREEN(screen)->index])[0] = fade_delay;
 }
 
 /* Sends sound command 1F straight to the screen's request byte in the shared sound RAM (700700 + 100 *
@@ -191,7 +191,7 @@ void reset_screen_sound(void)
 	uint32_t sound_page = 0;
 
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_COMMAND_1, 0x1Fu);
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1) | 0x20u);
+	mem_write8(sound_page + SOUND_COMMAND_1_ADDRESS, 0x1Fu);
+	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
+	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
 }

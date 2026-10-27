@@ -3,7 +3,7 @@
  *    Description: a viewer of kanji texts nothing starts (unused)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -215,8 +215,8 @@ void kanji_text_viewer_draw_number(uint32_t cell, uint16_t number)
 		number -= 0xAu;
 		tens++;
 	}
-	mem_write16(cell, hundreds + 0x6030u);
+	TEXT_LAYER_CELLS(cell)[0] = hundreds + 0x6030u;
 	cell += 2u;
-	mem_write16(cell, tens + 0x6030u);
-	mem_write16(cell + 2u, number + 0x6030u);
+	TEXT_LAYER_CELLS(cell)[0] = tens + 0x6030u;
+	TEXT_LAYER_CELLS(cell)[1] = number + 0x6030u;
 }

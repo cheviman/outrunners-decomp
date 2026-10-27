@@ -3,7 +3,7 @@
  *    Description: the controls: the switches and the analog inputs (wheel, pedals), each seat's inputs and the screens' new presses
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -27,12 +27,12 @@ uint32_t read_switches_and_analog(void)
 	uint8_t chip_1_port_e = 0, chip_1_port_f = 0, chip_2_port_e = 0, chip_2_port_f = 0;
 	uint16_t capped_reading = 0;
 
-	chip_1_port_e = mem_read8(IO_1_PORT_E);
-	chip_1_port_f = mem_read8(IO_1_PORT_F);
+	chip_1_port_e = io_read8(IO_1_PORT_E);
+	chip_1_port_f = io_read8(IO_1_PORT_F);
 	chip_1_port_f_on = (uint8_t)~chip_1_port_f;
 	new_switches = (uint8_t)(~chip_1_port_e | ((((uint32_t)chip_1_port_f_on << 4) | (chip_1_port_f_on >> 4)) & 3u));
-	chip_2_port_e = mem_read8(IO_2_PORT_E);
-	chip_2_port_f = mem_read8(IO_2_PORT_F);
+	chip_2_port_e = io_read8(IO_2_PORT_E);
+	chip_2_port_f = io_read8(IO_2_PORT_F);
 	chip_2_port_f_on = (uint8_t)~chip_2_port_f;
 	chip_2_switches = (uint8_t)(~chip_2_port_e | ((((uint32_t)chip_2_port_f_on << 4) | (chip_2_port_f_on >> 4)) & 3u));
 	test_switch = (new_switches | chip_2_switches) & 2u;
@@ -44,7 +44,7 @@ uint32_t read_switches_and_analog(void)
 	switches_released = old_switches & ~new_switches;
 	screen_turn = SCREEN(screen)->index;
 	screen_turn = screen_turn & 1u;
-	converter = IO_PORTS + 0x50u + screen_turn * 4u;
+	converter = ANALOG_INPUTS + screen_turn * 4u;
 	raw_place = analog_raw_ADDRESS + screen_turn * 4u;
 	scaled_place = analog_inputs_ADDRESS + screen_turn * 4u;
 	inputs_left = analog_input_counts[screen_turn];
@@ -53,10 +53,10 @@ uint32_t read_switches_and_analog(void)
 	{
 		mem_write8(converter, 0xFFu);
 		reading = (((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)(mem_read8(converter) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) >> 7;
-		mem_write8(raw_place, (uint8_t)reading);
-		calibration_low = mem_read8(calibration);
+		ANALOG_VALUES(raw_place)[0] = (uint8_t)reading;
+		calibration_low = ANALOG_CALIBRATION_BYTES(calibration)[0];
 		calibration++;
-		calibration_high = mem_read8(calibration);
+		calibration_high = ANALOG_CALIBRATION_BYTES(calibration)[0];
 		raw_place++;
 		calibration++;
 		if (calibration_high < reading)
@@ -65,12 +65,12 @@ uint32_t read_switches_and_analog(void)
 		reading = (uint16_t)(capped_reading - calibration_low);
 		if ((int16_t)capped_reading < (int16_t)calibration_low)
 			reading = 0u;
-		mem_write8(scaled_place, divide_u16((uint16_t)(reading * 0xFFu), (uint16_t)(calibration_high - calibration_low)));
+		ANALOG_VALUES(scaled_place)[0] = divide_u16((uint16_t)(reading * 0xFFu), (uint16_t)(calibration_high - calibration_low));
 		inputs_left--;
 		scaled_place++;
 		converter += 2u;
 	} while (inputs_left != 0u);
-	mem_write8(ANALOG_BANK, screen_turn ^ 1u);
+	io_write8(ANALOG_BANK, screen_turn ^ 1u);
 	return calibration;
 }
 
@@ -85,12 +85,12 @@ void pack_seat_inputs(void)
 	uint32_t analog_place = 0, link_event_place = 0, link_place = 0;
 	uint8_t chip_1_port_e = 0, chip_1_port_a = 0, chip_2_port_e = 0, chip_2_port_a = 0;
 
-	chip_1_port_e = mem_read8(IO_1_PORT_E);
-	chip_1_port_a = mem_read8(IO_1_PORT_A);
+	chip_1_port_e = io_read8(IO_1_PORT_E);
+	chip_1_port_a = io_read8(IO_1_PORT_A);
 	port_a_on = (uint8_t)~chip_1_port_a;
 	seat_buttons = ((~chip_1_port_e * 2u * 2u) & 0x40u) | ((((uint32_t)port_a_on << 4) | (port_a_on >> 4)) & 0x3Fu);
-	chip_2_port_e = mem_read8(IO_2_PORT_E);
-	chip_2_port_a = mem_read8(IO_2_PORT_A);
+	chip_2_port_e = io_read8(IO_2_PORT_E);
+	chip_2_port_a = io_read8(IO_2_PORT_A);
 	port_a_on = (uint8_t)~chip_2_port_a;
 	other_seat_buttons = ((~chip_2_port_e * 2u * 2u) & 0x40u) | ((((uint32_t)port_a_on << 4) | (port_a_on >> 4)) & 0x3Fu);
 	analog_place = analog_inputs_ADDRESS;
@@ -158,15 +158,15 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
 		mem_write16(link_place, 0u);
 		link_place += 2u;
 		mem_write16(link_place, (uint8_t)seat_buttons);
-		wheel_input = mem_read8(analog_place);
+		wheel_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
 		mem_write16(link_place, (uint8_t)~wheel_input);
-		gas_input = mem_read8(analog_place);
+		gas_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
 		mem_write16(link_place, gas_input);
-		brake_input = mem_read8(analog_place);
+		brake_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
 		mem_write16(link_place, brake_input);
@@ -206,7 +206,7 @@ uint32_t queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record)
 	seat_inputs = (SEAT_INPUTS(seat_record)->buttons | ((uint32_t)SEAT_INPUTS(seat_record)->wheel << 8u) | ((uint32_t)SEAT_INPUTS(seat_record)->gas << 16u) | ((uint32_t)SEAT_INPUTS(seat_record)->brake << 24u));
 	inputs = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
 	input_write_place = SCREEN(seat_screen)->input_write_place;
-	mem_write32(seat_screen + 0x130u + input_write_place * 4u, inputs);
+	SCREEN(seat_screen)->input_ring[(int32_t)input_write_place] = inputs;
 	SCREEN(seat_screen)->input_write_place = (input_write_place + 1u) & 7u;
 	AS32(SCREEN(seat_screen)->wheel) = seat_inputs >> 8;
 	return inputs;
@@ -225,7 +225,7 @@ uint32_t take_screen_inputs(void)
 	uint8_t new_status = 0;
 
 	input_read_place = SCREEN(screen)->input_read_place;
-	inputs = mem_read32(screen + 0x130u + input_read_place * 4u);
+	inputs = SCREEN(screen)->input_ring[(int32_t)input_read_place];
 	SCREEN(screen)->input_read_place = (input_read_place + 1u) & 7u;
 	buttons_place = screen + 0x110u;
 	buttons = SCREEN(buttons_place - 0x110u)->buttons;

@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -62,7 +62,7 @@ void player_car_update(void)
 				screen_view_default = screen_view_defaults_ADDRESS + 0x4u;
 				if (isdn_mode != 0u)
 					distance_index = 0u;
-				SCREEN(screen)->draw_distance = DRAW_DISTANCE_LIST(draw_distances)[distance_index];
+				SCREEN(screen)->draw_distance = DRAW_DISTANCE_LIST(draw_distances)[(int32_t)distance_index];
 				SCREEN(screen)->eye_distance = SCREEN_VIEW_DEFAULT(screen_view_default - 0x4u)->eye_distance;
 				screen_view_default += 2u;
 				SCREEN(screen)->sprite_origin_x = SCREEN_VIEW_DEFAULT(screen_view_default - 0x6u)->sprite_origin_x;
@@ -77,19 +77,19 @@ void player_car_update(void)
 				CAR(player_car)->window_record = start_record;
 				grid_segment = 0x10u;
 				CAR(player_car)->window_segment = 0u;
-				grid_place = mem_read8(screen + 0x320u + SCREEN(screen)->player);
+				grid_place = SCREEN(screen)->places[SCREEN(screen)->player];
 				grid_list = 0u;
 				if ((SCREEN(screen)->demo_flags & 0x100u) == 0u)
 				{
 					grid_list = RACE(SCREEN(screen)->host_record)->racer_count;
 					grid_list = (uint8_t)(grid_list - 1u);
 				}
-				grid_segment += GRID_SEGMENTS(grid_segment_lists[grid_list])[grid_place];
+				grid_segment += GRID_SEGMENTS(grid_segment_lists[grid_list])[(int32_t)grid_place];
 				CAR(player_car)->segment = grid_segment;
 				grid_segment = (uint16_t)(grid_segment * 0x20u);
 				CAR(player_car)->segment_offset = grid_segment;
 				start_record = (start_record & ~0xFFFFu) | (uint16_t)(start_record + grid_segment);
-				grid_road_place = GRID_ROAD_PLACES(grid_road_place_lists[grid_list])[grid_place];
+				grid_road_place = GRID_ROAD_PLACES(grid_road_place_lists[grid_list])[(int32_t)grid_place];
 				CAR(player_car)->road_x = (uint16_t)grid_road_place;
 				CAR(player_car)->segment_remaining = (uint16_t)(grid_road_place >> 16u);
 				OBJECT(current_object)->player_car.heading = ROAD_SEGMENT(start_record)->heading;
@@ -177,14 +177,14 @@ void player_car_update(void)
 								if (impact >= 0xFFFFu)
 									impact = 0xFFFFu;
 								speed_loss = 0u - impact;
-								impact = (impact >> 7) + crash_place_offsets[mem_read8(screen + 0x320u + SCREEN(screen)->player)];
+								impact = (impact >> 7) + crash_place_offsets[SCREEN(screen)->places[SCREEN(screen)->player]];
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
 								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
 								OBJECT(current_object)->player_car.speed_change = (int32_t)(speed_loss * CRASH_ENTRY(crash_entry)->speed_factor) >> 8;
 								hit_side = (uint16_t)CAR(player_car)->road_x;
 								hit_side = hit_side >> 15;
-								OBJECT(current_object)->player_car.sideways_push = CRASH_ENTRY(crash_entry)->push[hit_side];
+								OBJECT(current_object)->player_car.sideways_push = CRASH_ENTRY(crash_entry)->push[(int32_t)hit_side];
 								OBJECT(current_object)->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
 								break;
 							case 1:
@@ -224,7 +224,7 @@ void player_car_update(void)
 								speed_difference = impact;
 								if ((int32_t)impact < 0)
 									impact = (0u - impact) * 2u;
-								impact = divide_s32((impact >> 8) * other_weight, own_weight) + crash_place_offsets[mem_read8(screen + 0x320u + SCREEN(screen)->player)];
+								impact = divide_s32((impact >> 8) * other_weight, own_weight) + crash_place_offsets[SCREEN(screen)->places[SCREEN(screen)->player]];
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
 								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
@@ -244,7 +244,7 @@ void player_car_update(void)
 							CAR(player_car)->crash_sound_delay = 0xAu;
 							crash_hit_sound = (uint8_t)(CRASH_ENTRY(crash_entry)->hit_sound | ((uint32_t)CRASH_ENTRY(crash_entry)->crash_sound << 8u));
 							request_sound(crash_hit_sound);
-							crash_animation = CRASH_ENTRY(crash_entry)->animation[hit_side];
+							crash_animation = CRASH_ENTRY(crash_entry)->animation[(int32_t)hit_side];
 							view_height_offset = player_car_view_height();
 							crash_animation = (uint16_t)(crash_animation + view_height_offset);
 							OBJECT(current_object)->animation = crash_animation;
@@ -437,7 +437,7 @@ void player_car_update(void)
 					player_car_move();
 					return;
 				case 1:
-					player_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+					player_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 					if (player_time == 0u)
 					{
 						player_car_move();
@@ -447,7 +447,7 @@ void player_car_update(void)
 					CAR(player_car)->race_time = player_time * 0xAu;
 					RACE(SCREEN(screen)->race)->finished = 0xFFu;
 					OBJECT(current_object)->player_car.step++;
-					goal_stop = goal_stops[mem_read8(screen + 0x320u + SCREEN(screen)->player)];
+					goal_stop = goal_stops[SCREEN(screen)->places[SCREEN(screen)->player]];
 					OBJECT(current_object)->player_car.stop_position += GOAL_STOP(goal_stop)->position;
 					goal_stop += 2u;
 					OBJECT(current_object)->player_car.stop_x = GOAL_STOP(goal_stop - 0x2u)->x;
@@ -687,9 +687,9 @@ void player_car_check_place(void)
 	last_place = RACE(race - 0x1Fu)->racer_count;
 	last_place = (uint8_t)(last_place - 1u);
 	race++;
-	last_player = mem_read8(race + last_place);
-	leader_player = RACE(race - 0x20u)->race_order;
-	place = mem_read8(screen + 0x320u + SCREEN(screen)->player);
+	last_player = RACE_ORDER_PLAYERS(race)[(int32_t)last_place];
+	leader_player = RACE_ORDER_PLAYERS(race)[0];
+	place = SCREEN(screen)->places[SCREEN(screen)->player];
 	if (place == 0u)
 	{
 		lamp = GAME_VARIABLES + SCREEN(screen)->index * 4u;
@@ -721,8 +721,8 @@ void player_car_check_place(void)
 		place = (uint8_t)(place - 1u);
 	if (behind_place != last_place)
 		behind_place = (uint8_t)(behind_place + 1u);
-	ahead_player = mem_read8(race + place);
-	behind_player = mem_read8(race + behind_place);
+	ahead_player = RACE_ORDER_PLAYERS(race)[(int32_t)place];
+	behind_player = RACE_ORDER_PLAYERS(race)[(int32_t)behind_place];
 	SCREEN(screen)->leader_player = leader_player;
 	SCREEN(screen)->last_player = last_player;
 	SCREEN(screen)->ahead_player = ahead_player;

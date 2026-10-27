@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -25,7 +25,7 @@ void race_cars_start(void)
 	do
 	{
 		object = start_object();
-		player = mem_read8(race);
+		player = RACE_ORDER_PLAYERS(race)[0];
 		OBJECT(object)->handler = race_car_draw_ADDRESS;
 		OBJECT(object)->race_car.player = player;
 		record = race_copy_offsets[player] + GAME_VARIABLES;
@@ -105,8 +105,8 @@ void race_car_draw(void)
 {
 	bool L_00978F = false, L_009874 = false, L_009AAD = false, L_009B31 = false;
 	uint8_t hard_acceleration_frame = 0, wheel_effect_sides = 0;
-	uint16_t crash_text_y = 0, element = 0, far_segment = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
-	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider_frame = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
+	uint16_t crash_text_y = 0, element = 0, far_segment = 0, other_spray = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
+	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, first_rider = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
 	uint16_t past_limit = 0, swapped_rider = 0, swapped_spray = 0;
 
 	OBJECT(current_object)->race_car.blink_counter++;
@@ -230,13 +230,13 @@ void race_car_draw(void)
 			if (race_car_body_wheel_kinds[body_animation] != 0u)
 			{
 				CAR(player_car)->crash_body_shown = 0u;
-				r27 = current_object + 0x90u;
-				r28 = current_object + 0xA0u;
+				first_rider = current_object + 0x90u;
+				second_rider = current_object + 0xA0u;
 				if ((OBJECT(current_object)->race_car.model != 6u || race_car_body_wheel_kinds[body_animation] == 2u) && (body_attributes & 0x40u) == 0u)
 				{
-					swapped_rider = r28;
-					r28 = (r28 & ~0xFFFFu) | (uint16_t)r27;
-					r27 = (r27 & ~0xFFFFu) | swapped_rider;
+					swapped_rider = second_rider;
+					second_rider = (second_rider & ~0xFFFFu) | (uint16_t)first_rider;
+					first_rider = (first_rider & ~0xFFFFu) | swapped_rider;
 				}
 				if (RACE(race)->speed == 0u)
 				{
@@ -245,19 +245,19 @@ void race_car_draw(void)
 				}
 				else
 				{
-					r14 = mem_read8(r27 + 0xAu);
-					second_rider_frame = mem_read8(r28 + 0xAu);
-					if (mem_read8(r27 + 0xBu) <= r14)
+					r14 = RACE_CAR_RIDER(first_rider)->frame;
+					second_rider_frame = RACE_CAR_RIDER(second_rider)->frame;
+					if (RACE_CAR_RIDER(first_rider)->frames <= r14)
 						r14 = 1u;
 					else
 						r14 = (uint8_t)(r14 + 1u);
-					if (mem_read8(r28 + 0xBu) <= second_rider_frame)
+					if (RACE_CAR_RIDER(second_rider)->frames <= second_rider_frame)
 						second_rider_frame = 1u;
 					else
 						second_rider_frame = (uint8_t)(second_rider_frame + 1u);
 				}
-				mem_write8(r27 + 0xAu, r14);
-				mem_write8(r28 + 0xAu, second_rider_frame);
+				RACE_CAR_RIDER(first_rider)->frame = r14;
+				RACE_CAR_RIDER(second_rider)->frame = second_rider_frame;
 				piece = SPRITE_ANIMATION(sprite_animations[animation])->frames[RACE(race)->frame] + 2u;
 				view = SPRITE_PIECE(piece)->attributes;
 				piece += 2u;
@@ -271,34 +271,34 @@ void race_car_draw(void)
 				y_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->y_offset;
 				x_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->x_offset;
 				r12 = (r12 & ~0xFFu) | OBJECT(current_object)->race_car.gesture_shown;
-				if ((r12 & mem_read8(r27 + 8u)) == 0u)
+				if ((r12 & RACE_CAR_RIDER(first_rider)->gesture_mask) == 0u)
 				{
-					rider_places = mem_read32(r27);
-					palette = mem_read16(r27 + 6u);
-					r12 = mem_read16(r27 + 4u) + view;
+					rider_places = RACE_CAR_RIDER(first_rider)->places;
+					palette = RACE_CAR_RIDER(first_rider)->palette;
+					r12 = RACE_CAR_RIDER(first_rider)->animation + view;
 					sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
 				}
 				r12 = (r12 & ~0xFFu) | OBJECT(current_object)->race_car.gesture_shown;
-				if ((r12 & mem_read8(r28 + 8u)) == 0u)
+				if ((r12 & RACE_CAR_RIDER(second_rider)->gesture_mask) == 0u)
 				{
 					r14 = second_rider_frame;
-					rider_places = mem_read32(r28);
-					palette = mem_read16(r28 + 6u);
-					r12 = mem_read16(r28 + 4u) + view;
+					rider_places = RACE_CAR_RIDER(second_rider)->places;
+					palette = RACE_CAR_RIDER(second_rider)->palette;
+					r12 = RACE_CAR_RIDER(second_rider)->animation + view;
 					sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
 				}
-				r27 = current_object + 0xC0u;
-				r28 = current_object + 0xD0u;
+				spray = current_object + 0xC0u;
+				other_spray = (uint16_t)(current_object + 0xD0u);
 				if ((OBJECT(current_object)->race_car.body_attributes & 0x40u) == 0u)
 				{
-					swapped_spray = r28;
-					r28 = (r28 & ~0xFFFFu) | (uint16_t)r27;
-					r27 = (r27 & ~0xFFFFu) | swapped_spray;
+					swapped_spray = other_spray;
+					other_spray = (uint16_t)spray;
+					spray = (spray & ~0xFFFFu) | swapped_spray;
 				}
 				wheel_effect_sides = RACE(race)->wheel_effect_sides;
-				sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y);
-				r27 = (r27 & ~0xFFFFu) | (uint16_t)r28;
-				sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y);
+				sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y, spray);
+				spray = (spray & ~0xFFFFu) | (uint16_t)other_spray;
+				sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y, spray);
 				hard_acceleration_frame = OBJECT(current_object)->race_car.hard_acceleration_frame;
 				if (hard_acceleration_frame != 0u || RACE(race)->hard_acceleration != 0u)
 				{
@@ -338,8 +338,8 @@ void race_car_draw(void)
 								DEPTH_LIST(depth_list)->tail = sprite_entry;
 							group = SCREEN(screen)->sprite_list_last + 0x10u;
 							older_group = DEPTH_LIST(depth_list)->head;
-							mem_write32(sprite_entry, older_group);
-							mem_write32(sprite_entry + 0x3000u, (uint16_t)(older_group + 0x300u));
+							AS32(SPRITE_WORDS(sprite_entry)[0]) = older_group;
+							AS32(SPRITE_WORDS(sprite_entry)[6144]) = (uint16_t)(older_group + 0x300u);
 							DEPTH_LIST(depth_list)->head = (group >> 4) | 0x8000u;
 							SCREEN(screen)->sprite_list_last = sprite_entry;
 							return;
@@ -408,40 +408,40 @@ void race_car_draw(void)
 		DEPTH_LIST(depth_list)->tail = sprite_entry;
 	group = SCREEN(screen)->sprite_list_last + 0x10u;
 	older_group = DEPTH_LIST(depth_list)->head;
-	mem_write32(sprite_entry, older_group);
-	mem_write32(sprite_entry + 0x3000u, (uint16_t)(older_group + 0x300u));
+	AS32(SPRITE_WORDS(sprite_entry)[0]) = older_group;
+	AS32(SPRITE_WORDS(sprite_entry)[6144]) = (uint16_t)(older_group + 0x300u);
 	DEPTH_LIST(depth_list)->head = (group >> 4) | 0x8000u;
 	SCREEN(screen)->sprite_list_last = sprite_entry;
 }
 
 /* Draws the spray at one side's wheels (dust, smoke, water...: the record's kind, from the race record's
    wheel effects), cycling its frames. */
-uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y)
+uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y, uint32_t spray)
 {
 	uint32_t effect = 0, frame = 0, kind = 0, palette = 0, places = 0;
 
-	frame = mem_read8(r27 + 0xCu);
-	if (frame == 0u && (wheel_effect_sides & mem_read8(r27 + 0xDu)) == 0u)
+	frame = RACE_CAR_SPRAY(spray)->frame;
+	if (frame == 0u && (wheel_effect_sides & RACE_CAR_SPRAY(spray)->side) == 0u)
 	{
-		mem_write8(r27 + 0xCu, 0u);
-		mem_write8(r27 + 0xEu, 0u);
+		RACE_CAR_SPRAY(spray)->frame = 0u;
+		RACE_CAR_SPRAY(spray)->kind = 0u;
 		return sprite_entry;
 	}
-	kind = mem_read8(r27 + 0xEu);
-	effect = mem_read8(mem_read32(r27 + 8u));
+	kind = RACE_CAR_SPRAY(spray)->kind;
+	effect = WHEEL_EFFECT_VALUES(RACE_CAR_SPRAY(spray)->effect)[0];
 	if (effect != 0u && effect != kind)
 	{
 		kind = effect;
-		mem_write8(r27 + 0xEu, effect);
+		RACE_CAR_SPRAY(spray)->kind = effect;
 		frame = 0u;
 	}
 	r14 = frame;
 	frame = (uint8_t)(frame + 1u);
 	if (race_car_spray_frame_counts[kind] <= frame)
 		frame = 0u;
-	mem_write8(r27 + 0xCu, frame);
-	places = mem_read32(r27 + 4u);
-	r12 = mem_read16(mem_read32(r27) + kind * 2u);
+	RACE_CAR_SPRAY(spray)->frame = frame;
+	places = RACE_CAR_SPRAY(spray)->places;
+	r12 = SPRAY_ANIMATION_NUMBERS(RACE_CAR_SPRAY(spray)->animations)[(int32_t)kind];
 	palette = race_car_spray_palettes[kind];
 	return race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, places, palette, screen_x, screen_y);
 }
@@ -475,8 +475,8 @@ void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, ui
 {
 	uint32_t piece_attributes = 0;
 
-	r12 = SPRITE_ANIMATION(sprite_animations[r12])->frames[r14] + 2u;
-	*p_palette = sprite_palettes[*p_palette];
+	r12 = SPRITE_ANIMATION(sprite_animations[(int32_t)r12])->frames[(int32_t)r14] + 2u;
+	*p_palette = sprite_palettes[(int32_t)*p_palette];
 	race_car_put_sprite(scale, sprite_x, sprite_y, &piece_attributes, p_sprite_entry, p_palette);
 	*p_attributes = (*p_attributes & 0xFFFF0000u) | (piece_attributes & 0xFFFFu);
 }
@@ -490,16 +490,16 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, element = 0;
 
 	piece_attributes = SPRITE_PIECE(r12)->attributes;
-	mem_write16(sprite_entry + 0x3000u, piece_attributes);
-	mem_write16(sprite_entry, piece_attributes);
+	SPRITE_WORDS(sprite_entry)[6144] = piece_attributes;
+	SPRITE_WORDS(sprite_entry)[0] = piece_attributes;
 	sprite_entry += 2u;
 	r12 = r12 + 2u;
 	r14 = sprite_size_steps_ADDRESS + SPRITE_PIECE(r12 - 0x2u)->sprite * 4u;
 	source_size = SPRITE_SIZE_STEP(r14)->source_size;
 	r14 = r14 + 2u;
 	sprite_source_size = source_size;
-	mem_write16(sprite_entry + 0x3000u, sprite_source_size);
-	mem_write16(sprite_entry, sprite_source_size);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
 	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 	r14 = r14 + 2u;
@@ -509,35 +509,35 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 	r14 = r14 + 2u;
 	height_and_bits = (((height * scale) >> 8) & 0x3FFu) | height_bits;
-	mem_write16(sprite_entry + 0x3000u, height_and_bits);
-	mem_write16(sprite_entry, height_and_bits);
+	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
+	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
 	width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 	r14 = r14 + 2u;
 	width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 	r14 = r14 + 2u;
 	width_and_bits = (((width * scale) >> 8) & 0x3FFu) | width_bits | SCREEN(screen)->sprite_screen_bit;
-	mem_write16(sprite_entry + 0x3000u, width_and_bits);
-	mem_write16(sprite_entry, width_and_bits);
+	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
+	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
 	sprite_entry += 2u;
 	r12 = r12 + 2u;
 	piece_y = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset * scale) >> 8) + sprite_y);
-	mem_write16(sprite_entry + 0x3000u, piece_y);
-	mem_write16(sprite_entry, piece_y);
+	SPRITE_WORDS(sprite_entry)[6144] = piece_y;
+	SPRITE_WORDS(sprite_entry)[0] = piece_y;
 	sprite_entry += 2u;
 	r12 = r12 + 2u;
 	piece_x = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset * scale) >> 8) + sprite_x);
-	mem_write16(sprite_entry + 0x3000u, piece_x);
-	mem_write16(sprite_entry, piece_x);
+	SPRITE_WORDS(sprite_entry)[6144] = piece_x;
+	SPRITE_WORDS(sprite_entry)[0] = piece_x;
 	sprite_entry += 2u;
-	mem_write16(sprite_entry + 0x3000u, sprite_rom_offset);
-	mem_write16(sprite_entry, sprite_rom_offset);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_rom_offset;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_rom_offset;
 	sprite_entry += 2u;
 	element = SPRITE_PALETTE_WORDS(*p_palette)[0];
 	*p_palette += 2u;
 	palette_word = element;
-	mem_write16(sprite_entry + 0x3000u, palette_word);
-	mem_write16(sprite_entry, palette_word);
+	SPRITE_WORDS(sprite_entry)[6144] = palette_word;
+	SPRITE_WORDS(sprite_entry)[0] = palette_word;
 	sprite_entry += 2u;
 	SCREEN(screen)->sprite_groups++;
 	r12 = r12 + 2u;
@@ -552,18 +552,18 @@ uint32_t race_car_put_flat_sprite(uint32_t sprite_entry, uint16_t palette_word, 
 	uint16_t attributes = 0, height_and_bits = 0, sprite_rom_offset = 0, sprite_source_size = 0, width_and_bits = 0;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0;
 
-	r12 = SPRITE_ANIMATION(sprite_animations[r12])->frames[0] + 2u;
+	r12 = SPRITE_ANIMATION(sprite_animations[(int32_t)r12])->frames[0] + 2u;
 	attributes = SPRITE_PIECE(r12)->attributes;
-	mem_write16(sprite_entry + 0x3000u, attributes);
-	mem_write16(sprite_entry, attributes);
+	SPRITE_WORDS(sprite_entry)[6144] = attributes;
+	SPRITE_WORDS(sprite_entry)[0] = attributes;
 	sprite_entry += 2u;
 	r12 = r12 + 2u;
 	r14 = sprite_size_steps_ADDRESS + SPRITE_PIECE(r12 - 0x2u)->sprite * 4u;
 	source_size = SPRITE_SIZE_STEP(r14)->source_size;
 	r14 = r14 + 2u;
 	sprite_source_size = source_size;
-	mem_write16(sprite_entry + 0x3000u, sprite_source_size);
-	mem_write16(sprite_entry, sprite_source_size);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
 	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
 	r14 = r14 + 2u;
@@ -573,28 +573,28 @@ uint32_t race_car_put_flat_sprite(uint32_t sprite_entry, uint16_t palette_word, 
 	height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
 	r14 = r14 + 2u;
 	height_and_bits = height | height_bits;
-	mem_write16(sprite_entry + 0x3000u, height_and_bits);
-	mem_write16(sprite_entry, height_and_bits);
+	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
+	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
 	width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
 	r14 = r14 + 2u;
 	width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
 	r14 = r14 + 2u;
 	width_and_bits = width | width_bits | SCREEN(screen)->sprite_screen_bit;
-	mem_write16(sprite_entry + 0x3000u, width_and_bits);
-	mem_write16(sprite_entry, width_and_bits);
+	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
+	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
 	sprite_entry += 2u;
-	mem_write16(sprite_entry + 0x3000u, sprite_y);
-	mem_write16(sprite_entry, sprite_y);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_y;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_y;
 	sprite_entry += 2u;
-	mem_write16(sprite_entry + 0x3000u, sprite_x);
-	mem_write16(sprite_entry, sprite_x);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_x;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_x;
 	sprite_entry += 2u;
-	mem_write16(sprite_entry + 0x3000u, sprite_rom_offset);
-	mem_write16(sprite_entry, sprite_rom_offset);
+	SPRITE_WORDS(sprite_entry)[6144] = sprite_rom_offset;
+	SPRITE_WORDS(sprite_entry)[0] = sprite_rom_offset;
 	sprite_entry += 2u;
-	mem_write16(sprite_entry + 0x3000u, palette_word);
-	mem_write16(sprite_entry, palette_word);
+	SPRITE_WORDS(sprite_entry)[6144] = palette_word;
+	SPRITE_WORDS(sprite_entry)[0] = palette_word;
 	sprite_entry += 2u;
 	SCREEN(screen)->sprite_groups++;
 	r12 = r12 + 2u;

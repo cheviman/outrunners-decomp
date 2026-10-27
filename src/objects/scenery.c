@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -170,11 +170,11 @@ void crest_clip_update(void)
 	do
 	{
 		crest = OBJECT(current_object)->crest_clip.crest;
-		depth_layer = mem_read16(screen + 0x1F10u + crest * 2u);
+		depth_layer = SCREEN(screen)->crest_layers[(int32_t)crest];
 		if (depth_layer < OBJECT(current_object)->depth_layer)
 		{
 			OBJECT(current_object)->depth_layer = depth_layer;
-			clip_bottom = (uint16_t)(mem_read16(screen + 0x1F30u + crest * 2u) + SCREEN(screen)->sprite_origin_y - 1u);
+			clip_bottom = (uint16_t)(SCREEN(screen)->crest_heights[(int32_t)crest] + SCREEN(screen)->sprite_origin_y - 1u);
 			OBJECT(current_object)->crest_clip.clip_bottom = clip_bottom;
 			draw_object(clip_bottom);
 		}
@@ -2062,8 +2062,8 @@ void fork_branch_start_left(void)
    window_segment) passes end_position. */
 void fork_branch_draw(void)
 {
-	uint16_t end_position = 0, position = 0, row_y = 0, start_position = 0, window_segment = 0;
-	uint32_t branch_distance = 0, depth_layer = 0, first_sprite = 0, height_word = 0, last_scale = 0, last_x = 0, last_y = 0, offset_palette = 0, piece_scale = 0, piece_x = 0, piece_y = 0, row_span = 0, rows_done = 0, rows_left = 0, rows_to_fill = 0, segment = 0, sprite = 0, view_record = 0;
+	uint16_t end_position = 0, position = 0, row_y = 0, segment_position = 0, start_position = 0, window_segment = 0;
+	uint32_t branch_distance = 0, depth_layer = 0, depth_list = 0, first_sprite = 0, height_word = 0, last_scale = 0, last_x = 0, last_y = 0, layer_head = 0, offset_palette = 0, piece_scale = 0, piece_x = 0, piece_y = 0, row_span = 0, rows_done = 0, rows_left = 0, rows_to_fill = 0, segment = 0, sprite = 0, view_record = 0;
 	uint16_t distance_from_start = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -2095,10 +2095,7 @@ void fork_branch_draw(void)
 	} while (PROJECTED_SEGMENT(view_record)->scale == 0u);
 	if (PROJECTED_SEGMENT(view_record)->scale == 0u)
 		return;
-	r27 = view_record;
-	r27 = r27 & 0xFFFu;
-	r27 = r27 >> 4;
-	r27 = (uint16_t)(r27 + window_segment);
+	segment_position = (uint16_t)(((view_record & 0xFFFu) >> 4) + window_segment);
 	view_record -= 0x10u;
 	do
 	{
@@ -2113,7 +2110,7 @@ void fork_branch_draw(void)
 	} while ((int16_t)distance_from_start < 0 || (int16_t)mem_read16(view_record + 0x16u) >= 2);
 	last_y = (int16_t)PROJECTED_SEGMENT(view_record)->y;
 	rows_to_fill = 0u;
-	if (start_position <= r27)
+	if (start_position <= segment_position)
 		rows_to_fill = 2u - last_y;
 	last_x = (int16_t)PROJECTED_SEGMENT(view_record)->x;
 	last_scale = PROJECTED_SEGMENT(view_record)->scale;
@@ -2155,18 +2152,18 @@ void fork_branch_draw(void)
 			if (SCREEN(screen)->sprite_list_limit <= sprite)
 				break;
 			rows_to_fill = 0u;
-			mem_write32(sprite + 0x3000u, 0u);
-			mem_write32(sprite, r12);
+			AS32(SPRITE_WORDS(sprite)[6144]) = 0u;
+			AS32(SPRITE_WORDS(sprite)[0]) = r12;
 			sprite += 4u;
-			mem_write16(sprite, height_word);
+			SPRITE_WORDS(sprite)[0] = height_word;
 			sprite += 2u;
-			mem_write16(sprite, ((last_scale * 0x370u) >> 12) | r14);
+			SPRITE_WORDS(sprite)[0] = ((last_scale * 0x370u) >> 12) | r14;
 			sprite += 2u;
-			mem_write16(sprite, piece_y);
+			SPRITE_WORDS(sprite)[0] = piece_y;
 			sprite += 2u;
-			mem_write16(sprite, piece_x);
+			SPRITE_WORDS(sprite)[0] = piece_x;
 			sprite += 2u;
-			mem_write32(sprite, offset_palette);
+			AS32(SPRITE_WORDS(sprite)[0]) = offset_palette;
 			sprite += 4u;
 		}
 		else
@@ -2180,30 +2177,19 @@ void fork_branch_draw(void)
 				{
 					if (SCREEN(screen)->sprite_list_limit <= sprite)
 						return;
-					mem_write32(sprite + 0x3000u, 0u);
-					mem_write32(sprite, r12);
+					AS32(SPRITE_WORDS(sprite)[6144]) = 0u;
+					AS32(SPRITE_WORDS(sprite)[0]) = r12;
 					sprite += 4u;
-					mem_write16(sprite, height_word);
-					r27 = piece_scale;
-					r27 = r27 * rows_left;
-					r27 = r27 + last_scale * rows_done;
-					r27 = divide_s32(r27, row_span);
-					r27 = r27 * 0x370u;
-					r27 = r27 >> 12;
-					r27 = (r27 & ~0xFFFFu) | (uint16_t)(r27 | r14);
+					SPRITE_WORDS(sprite)[0] = height_word;
 					sprite += 2u;
-					mem_write16(sprite, r27);
+					SPRITE_WORDS(sprite)[0] = ((divide_s32(piece_scale * rows_left + last_scale * rows_done, row_span) * 0x370u) >> 12) | r14;
 					sprite += 2u;
-					mem_write16(sprite, row_y);
+					SPRITE_WORDS(sprite)[0] = row_y;
 					row_y++;
-					r27 = piece_x;
-					r27 = r27 * rows_left;
-					r27 = r27 + last_x * rows_done;
-					r27 = divide_s32(r27, row_span);
 					sprite += 2u;
-					mem_write16(sprite, r27);
+					SPRITE_WORDS(sprite)[0] = divide_s32(piece_x * rows_left + last_x * rows_done, row_span);
 					sprite += 2u;
-					mem_write32(sprite, offset_palette);
+					AS32(SPRITE_WORDS(sprite)[0]) = offset_palette;
 					sprite += 4u;
 				}
 				rows_left--;
@@ -2214,16 +2200,15 @@ void fork_branch_draw(void)
 		last_y = piece_y;
 		last_x = piece_x;
 		last_scale = piece_scale;
-		r27 = screen + 0x5000u + depth_layer * 4u;
-		if (mem_read16(r27) == 0u)
-			mem_write16(r27 + 2u, sprite);
+		depth_list = screen + 0x5000u + depth_layer * 4u;
+		if (DEPTH_LIST(depth_list)->head == 0u)
+			DEPTH_LIST(depth_list)->tail = sprite;
 		first_sprite = SCREEN(screen)->sprite_list_last + 0x10u;
-		r28 = mem_read16(r27);
-		mem_write32(sprite, r28);
-		r28 = (uint16_t)(r28 + 0x300u);
-		mem_write32(sprite + 0x3000u, r28);
+		layer_head = DEPTH_LIST(depth_list)->head;
+		AS32(SPRITE_WORDS(sprite)[0]) = layer_head;
+		AS32(SPRITE_WORDS(sprite)[6144]) = (uint16_t)(layer_head + 0x300u);
 		SCREEN(screen)->sprite_list_last = sprite;
-		mem_write16(r27, (first_sprite >> 4) | 0x8000u);
+		DEPTH_LIST(depth_list)->head = (first_sprite >> 4) | 0x8000u;
 		SCREEN(screen)->sprite_groups++;
 	}
 }
@@ -2233,19 +2218,19 @@ void fork_branch_draw(void)
    being built (fork_branch_stage_palettes by screen built_stage, into sprite_palettes). */
 void fork_branch_sprite(uint32_t *p_height_word, uint32_t *p_offset_palette)
 {
-	uint16_t height_word = 0;
+	uint16_t height_word = 0, piece_attributes = 0, rom_offset = 0;
 	uint32_t frames = 0, size_step = 0;
 
 	frames = SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0];
-	r27 = (r27 & ~0xFFFFu) | mem_read16(frames + 2u);
-	size_step = sprite_size_steps_ADDRESS + mem_read16(frames + 4u) * 4u;
-	r12 = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | (uint16_t)r27;
+	piece_attributes = SPRITE_FRAME(frames)->piece_words[0];
+	size_step = sprite_size_steps_ADDRESS + SPRITE_FRAME(frames)->piece_words[1] * 4u;
+	r12 = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | piece_attributes;
 	size_step += 2u;
-	r27 = (r27 & ~0xFFFFu) | SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
+	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
 	size_step += 4u;
 	height_word = 1u | SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
 	r14 = SPRITE_SIZE_STEP(size_step - 0x6u)->width_bits;
 	r14 = r14 | SCREEN(screen)->sprite_screen_bit;
-	*p_offset_palette = ((uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[fork_branch_stage_palettes[SCREEN(screen)->built_stage]])[0] << 16) | (uint16_t)r27;
+	*p_offset_palette = ((uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[fork_branch_stage_palettes[SCREEN(screen)->built_stage]])[0] << 16) | rom_offset;
 	*p_height_word = (*p_height_word & 0xFFFF0000u) | height_word;
 }

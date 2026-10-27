@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -39,9 +39,9 @@ void game_mode_title(void)
 		SCREEN(screen)->input_write_place = 0u;
 		SCREEN(screen)->input_read_place = 0u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x86u);
+			io_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_1_CNT, 6u);
+			io_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->mode_step++;
 		return;
 	case 1:
@@ -383,7 +383,7 @@ void game_mode_play(void)
 			if (zero)
 			{
 				if (SCREEN(screen)->player == SCREEN(screen)->host_player && isdn_mode == 0u)
-					mem_write8(LINK_ENTRIES_CLOSED, 1u);
+					io_write8(LINK_ENTRIES_CLOSED, 1u);
 				SCREEN(screen)->game_step++;
 			}
 		}
@@ -391,10 +391,10 @@ void game_mode_play(void)
 	case 2:
 		SCREEN(screen)->demo_flags &= ~0x100u;
 		wheel_motor[SCREEN(screen)->index] = 0u;
-		SCREEN(screen)->game_start_time = mem_read32(BOOKKEEPING_TOTAL_TIME);
-		bookkeeping_entry = SOUND_RAM + 0x1F14u + SCREEN(screen)->index * 2u;
+		SCREEN(screen)->game_start_time = BOOKKEEPING_TOTAL_TIME;
+		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + SCREEN(screen)->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
-		mem_write8(EVENT_CODE, game_start_c00074_bytes[SCREEN(screen)->index]);
+		io_write8(EVENT_CODE, game_start_c00074_bytes[SCREEN(screen)->index]);
 		if (SCREEN(screen)->entry_countdown_shown == 0u)
 			reset_screen_sound();
 		clear_screen();
@@ -418,9 +418,9 @@ void game_mode_play(void)
 		SCREEN(screen)->fade_kind = 1u;
 		SCREEN(screen)->flags |= 1u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x86u);
+			io_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_1_CNT, 6u);
+			io_write8(IO_1_CNT, 6u);
 		SCREEN(screen)->game_step++;
 		return;
 	case 3:
@@ -459,26 +459,26 @@ void game_mode_play(void)
 		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x84u);
+			io_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_1_CNT, 4u);
+			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = mem_read8(screen + 0x320u + SCREEN(screen)->player);
+		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
 		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 27:
 		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
 			return;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x84u);
+			io_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_1_CNT, 4u);
+			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = mem_read8(screen + 0x320u + SCREEN(screen)->player);
+		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
 		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 5:
@@ -487,13 +487,13 @@ void game_mode_play(void)
 		RACE(SCREEN(screen)->race)->ready = 0u;
 		silence_and_clear_screen();
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x84u);
+			io_write8(IO_2_CNT, 0x84u);
 		else
-			mem_write8(IO_1_CNT, 4u);
+			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = mem_read8(screen + 0x320u + SCREEN(screen)->player);
+		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
 		SCREEN(screen)->game_step = 0x17u;
 		return;
 	case 23:
@@ -515,9 +515,9 @@ void game_mode_play(void)
 		SCREEN(screen)->input_write_place = 0u;
 		SCREEN(screen)->input_read_place = 0u;
 		if (SCREEN(screen)->index != 0u)
-			mem_write8(IO_2_CNT, 0x86u);
+			io_write8(IO_2_CNT, 0x86u);
 		else
-			mem_write8(IO_1_CNT, 6u);
+			io_write8(IO_1_CNT, 6u);
 		return;
 	case 11:
 		SCREEN(screen)->fade_kind = 1u;
@@ -637,27 +637,27 @@ void game_mode_play(void)
 	case 17:
 		if ((SCREEN(screen)->flags & 1u) != 0u)
 			return;
-		time_played = mem_read32(BOOKKEEPING_TOTAL_TIME) - SCREEN(screen)->game_start_time;
+		time_played = BOOKKEEPING_TOTAL_TIME - SCREEN(screen)->game_start_time;
 		bookkeeping_entry = SOUND_RAM + 0x1F18u + SCREEN(screen)->index * 4u;
 		bookkeeping_add32(bookkeeping_entry, time_played);
-		if (mem_read16(BOOKKEEPING_LONGEST_PLAY) < (uint16_t)time_played)
+		if (BOOKKEEPING_LONGEST_PLAY < (uint16_t)time_played)
 		{
-			bookkeeping_entry = BOOKKEEPING_LONGEST_PLAY;
+			bookkeeping_entry = BOOKKEEPING_LONGEST_PLAY_ADDRESS;
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
-		if ((uint16_t)time_played < mem_read16(BOOKKEEPING_SHORTEST_PLAY))
+		if ((uint16_t)time_played < BOOKKEEPING_SHORTEST_PLAY)
 		{
-			bookkeeping_entry = BOOKKEEPING_SHORTEST_PLAY;
+			bookkeeping_entry = BOOKKEEPING_SHORTEST_PLAY_ADDRESS;
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
 		stage_level = SCREEN(screen)->current_stage_level;
 		if (RACE(SCREEN(screen)->race_copy)->finished != 0u)
 			stage_level = 6u;
-		bookkeeping_entry = SOUND_RAM + 0x1F24u + stage_level * 2u;
+		bookkeeping_entry = BOOKKEEPING_HISTOGRAM_ADDRESS + stage_level * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
 		index = SCREEN(screen)->index;
-		mem_write8(EVENT_CODE, game_end_c00074_bytes[index]);
-		mem_write8(EVENT_CODE, game_end_c00074_next_bytes[index]);
+		io_write8(EVENT_CODE, game_end_c00074_bytes[index]);
+		io_write8(EVENT_CODE, game_end_c00074_next_bytes[index]);
 		sound_code = 0x1Eu;
 		request_sound(sound_code);
 		reset_screen_sound();
@@ -708,5 +708,5 @@ void clear_race_state(void)
 	race_record_clear();
 	move_halfwords(player_car, zero_block_ADDRESS, 0x180u);
 	move_halfwords(screen + 0x330u, zero_block_ADDRESS, 0xB0u);
-	move_string(zero_block_ADDRESS, 0x80u, screen + 0x600u, 0x80u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0x600u, zero_block_ADDRESS, 0x80u);
 }

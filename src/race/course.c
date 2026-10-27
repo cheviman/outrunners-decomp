@@ -3,7 +3,7 @@
  *    Description: the course: its segments built ahead of the car, the road projected for the view
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -19,7 +19,7 @@ void player_car_start_course(void)
 	uint16_t ring_mask = 0, width_code = 0;
 	uint32_t course = 0;
 
-	move_string(zero_block_ADDRESS, 0x200u, screen + 0x2000u, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0x2000u, zero_block_ADDRESS, 0x200u);
 	course = stage_courses[SCREEN(screen)->first_stage];
 	CAR(player_car)->course = course;
 	width_code = COURSE_START(course)->width_code;
@@ -32,7 +32,7 @@ void player_car_start_course(void)
 		player_car_build_segment(ring_mask);
 	} while ((int16_t)CAR(player_car)->built_segments < (int16_t)CAR(player_car)->prebuilt_segments);
 	SCREEN(screen)->current_stage_level = SCREEN(screen)->built_stage_level;
-	CAR(player_car)->stage_history = SCREEN(screen)->route_stage;
+	CAR(player_car)->stage_history[0] = SCREEN(screen)->route_stage;
 }
 
 /* Keeps the course built 104 segments past the window's start (window_record, build_end_offset). At a
@@ -69,15 +69,15 @@ void player_car_extend_course(void)
 	course = CAR(player_car)->course;
 	branch = mem_read8(screen + 0x349u + forks_reached);
 	CAR(player_car)->branch = branch;
-	branch_stages = COURSE_FORK(course)->branch_stages[branch];
-	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[branch];
+	branch_stages = COURSE_FORK(course)->branch_stages[(int32_t)branch];
+	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[(int32_t)branch];
 	SCREEN(screen)->route_stage = branch_stages;
 	CAR(player_car)->new_branch = 0xFFu;
 	SCREEN(screen)->route_stage_level++;
 	forks_taken = CAR(player_car)->forks_taken;
-	mem_write8(player_car + 0xD7u + forks_taken, branch);
+	CAR(player_car)->branch_history[(int32_t)forks_taken] = branch;
 	forks_taken = (uint8_t)(forks_taken + 1u);
-	mem_write8(player_car + 0xD1u + forks_taken, branch_stages);
+	CAR(player_car)->stage_history[(int32_t)forks_taken] = branch_stages;
 	CAR(player_car)->forks_taken = forks_taken;
 	CAR(player_car)->at_fork = 0u;
 	queue_stage_load();
@@ -301,8 +301,8 @@ void player_car_build_segment(uint16_t ring_mask)
 void player_car_project_road(void)
 {
 	uint32_t carry = 0;
-	uint16_t previous_y = 0, screen_top_y = 0;
-	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
+	uint16_t crest_layer = 0, crest_y = 0, previous_y = 0, screen_top_y = 0;
+	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segment_depth = 0, segment_y = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
 	uint8_t projected = 0;
 	uint16_t last_y = 0;
 	uint32_t copied_x_y = 0, copied_road_bytes = 0, width_code_halfword = 0, width_code_halfword_2 = 0;
@@ -357,7 +357,7 @@ void player_car_project_road(void)
 	segments_left = draw_distance >> 7;
 	SCREEN(screen)->crest_count = 0u;
 	previous_y = 0x7FFFu;
-	SCREEN(screen)->crest_heights = screen_top_y + 0xE0u;
+	SCREEN(screen)->crest_heights[0] = screen_top_y + 0xE0u;
 	projection_pattern = segment_projection_pattern_ADDRESS;
 	for (;;)
 	{
@@ -377,79 +377,68 @@ void player_car_project_road(void)
 			copied_road_bytes = AS32(PROJECTED_SEGMENT(previous_projected - 0x8u)->width_code);
 			AS32(PROJECTED_SEGMENT(projected_segment)->depth_layer) = AS32(PROJECTED_SEGMENT(previous_projected - 0x8u)->depth_layer);
 			AS32(PROJECTED_SEGMENT(projected_segment)->width_code) = copied_road_bytes;
-			width_code_halfword = mem_read16(ring_segment + 0x14u);
+			width_code_halfword = ROAD_SEGMENT(ring_segment)->width_code_and_event;
 			PROJECTED_SEGMENT(projected_segment)->width_code = (uint8_t)width_code_halfword;
 			PROJECTED_SEGMENT(projected_segment)->road_event = (uint8_t)(width_code_halfword >> 8u);
 			segments_left--;
 			if (segments_left == 0u)
 			{
 				mem_write16(projected_segment + 0x10u, 0u);
-				note_road_crest();
+				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 				return;
 			}
 			continue;
 		}
-		x = to_view_x + mem_read32(ring_segment + 4u);
-		r27 = to_view_y;
-		r27 = r27 + mem_read32(ring_segment + 0xCu);
-		r28 = to_view_z;
-		r28 = r28 + mem_read32(ring_segment + 8u);
-		unrotated_z = r28;
-		r28 = r28 * matrix_zz;
-		r28 = r28 + x * matrix_zx;
-		r28 = r28 + r27 * matrix_zy;
-		r28 = r28 + fixed_point_shift;
-		r28 = (int32_t)r28 >> 14;
-		r27 = r27 * matrix_yy;
-		r27 = r27 + x * r12;
-		r27 = r27 + unrotated_z * r14;
-		r27 = r27 + fixed_point_shift;
-		r27 = (int32_t)r27 >> 14;
+		x = to_view_x + ROAD_SEGMENT(ring_segment)->x;
+		segment_y = to_view_y + ROAD_SEGMENT(ring_segment)->y;
+		segment_depth = to_view_z + ROAD_SEGMENT(ring_segment)->z;
+		unrotated_z = segment_depth;
+		segment_depth = (int32_t)(segment_depth * matrix_zz + x * matrix_zx + segment_y * matrix_zy + fixed_point_shift) >> 14;
+		segment_y = (int32_t)(segment_y * matrix_yy + x * r12 + unrotated_z * r14 + fixed_point_shift) >> 14;
 		x = (int32_t)(x * matrix_xx + unrotated_z * matrix_xz + fixed_point_shift) >> 14;
-		if ((int32_t)draw_distance <= (int32_t)r28 || (int32_t)r28 <= (int32_t)near_limit)
+		if ((int32_t)draw_distance <= (int32_t)segment_depth || (int32_t)segment_depth <= (int32_t)near_limit)
 		{
 			PROJECTED_SEGMENT(projected_segment)->scale = 0u;
 			segments_left--;
 			if (segments_left == 0u)
 			{
 				mem_write16(projected_segment + 0x10u, 0u);
-				r27 = (r27 & ~0xFFFFu) | previous_y;
-				r28 = (r28 & ~0xFFFFu) | 3u;
-				note_road_crest();
+				crest_y = (uint16_t)previous_y;
+				crest_layer = 3u;
+				note_road_crest(crest_y, crest_layer);
 				return;
 			}
 			continue;
 		}
-		scale = perspective_scales[r28];
+		scale = perspective_scales[segment_depth];
 		PROJECTED_SEGMENT(projected_segment)->scale = scale;
 		x = x * scale;
-		r27 = r27 * scale;
+		segment_y = segment_y * scale;
 		carry = (x >> 11) & 1u;
 		x = ((int32_t)x >> 12) + carry;
-		carry = (r27 >> 11) & 1u;
-		r27 = (int32_t)r27 >> 12;
-		r27 = r27 + carry;
-		scale = scale * mem_read16(ring_segment + 0x10u);
+		carry = (segment_y >> 11) & 1u;
+		segment_y = ((int32_t)segment_y >> 12) + carry;
+		scale = scale * ROAD_SEGMENT(ring_segment)->width;
 		carry = (scale >> 11) & 1u;
 		PROJECTED_SEGMENT(projected_segment)->width = ((int32_t)scale >> 12) + carry;
-		width_code_halfword_2 = mem_read16(ring_segment + 0x14u);
+		width_code_halfword_2 = ROAD_SEGMENT(ring_segment)->width_code_and_event;
 		PROJECTED_SEGMENT(projected_segment)->width_code = (uint8_t)width_code_halfword_2;
 		PROJECTED_SEGMENT(projected_segment)->road_event = (uint8_t)(width_code_halfword_2 >> 8u);
 		PROJECTED_SEGMENT(projected_segment)->x = x;
-		r27 = (r27 & ~0xFFFFu) | (uint16_t)(0u - r27);
-		PROJECTED_SEGMENT(projected_segment)->y = r27;
-		r28 = depth_layers_by_depth[r28];
-		PROJECTED_SEGMENT(projected_segment)->depth_layer = r28;
+		segment_y = (uint16_t)(0u - segment_y);
+		PROJECTED_SEGMENT(projected_segment)->y = segment_y;
+		segment_depth = depth_layers_by_depth[segment_depth];
+		PROJECTED_SEGMENT(projected_segment)->depth_layer = segment_depth;
 		last_y = previous_y;
-		previous_y = (uint16_t)r27;
-		if ((int16_t)last_y < (int16_t)r27)
+		previous_y = (uint16_t)segment_y;
+		if ((int16_t)last_y < (int16_t)segment_y)
 		{
-			note_road_crest();
+			note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 			segments_left--;
 			if (segments_left == 0u)
 			{
 				mem_write16(projected_segment + 0x10u, 0u);
-				note_road_crest();
+				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 				return;
 			}
 			continue;
@@ -459,24 +448,24 @@ void player_car_project_road(void)
 			break;
 	}
 	mem_write16(projected_segment + 0x10u, 0u);
-	note_road_crest();
+	note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 }
 
 /* Notes a crest of the road while player_car_project_road projects it, for crest_clip_update: when it is
    the first, or higher on the screen (R27) than the last one noted, crest_count goes up, its depth layer
    R28 goes into crest_layers (at the old count, with 3 in the next place) and its height into
    crest_heights (at the new count; entry 0 is the bottom of the screen). */
-void note_road_crest(void)
+void note_road_crest(uint16_t crest_y, uint16_t crest_layer)
 {
 	uint32_t crest_count = 0;
 
 	crest_count = SCREEN(screen)->crest_count;
-	if (crest_count == 0u || (int16_t)r27 < (int16_t)mem_read16(screen + 0x1F30u + crest_count * 2u))
+	if (crest_count == 0u || (int16_t)crest_y < (int16_t)SCREEN(screen)->crest_heights[(int32_t)crest_count])
 	{
 		SCREEN(screen)->crest_count++;
-		mem_write16(screen + 0x1F10u + crest_count * 2u, r28);
-		mem_write16(screen + 0x1F12u + crest_count * 2u, 3u);
-		mem_write16(screen + 0x1F32u + crest_count * 2u, r27);
+		SCREEN(screen)->crest_layers[(int32_t)crest_count] = crest_layer;
+		SCREEN(screen)->crest_layers[(int32_t)(crest_count + 1u)] = 3u;
+		SCREEN(screen)->crest_heights[(int32_t)(crest_count + 1u)] = crest_y;
 	}
 }
 

@@ -5,7 +5,7 @@
  *                 moves and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -226,6 +226,13 @@ uint8_t *ram_outside(uint32_t address)
 GAME_NORETURN void rom_outside(uint32_t address)
 {
 	fprintf(stderr, "Program ROM read at %06X (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);
+	print_recent_calls();
+	exit(3);
+}
+
+GAME_NORETURN void board_outside(uint32_t address)
+{
+	fprintf(stderr, "Board memory access at %06X (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);
 	print_recent_calls();
 	exit(3);
 }

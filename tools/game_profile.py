@@ -4,7 +4,7 @@ Description: what the shared decompiler core (tools/core) needs to know of OutRu
              its ROM set, and its settings
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    25-10-2026
+Modified:    27-10-2026
 Author:      Sebastian Toyos
 
 The core (arcade-decomp: the decompiler, the V60 and Z80 frontends, the analysis, the checks) is the same
@@ -70,9 +70,14 @@ memory.NOTES = {
                   "   which the code reaches through screen (R25 of the task that runs each) */"],
     "scoped": ["/* work RAM as one family of functions uses it (their scratch variables) */"],
     "tables": ["/* data in the program ROM the code reads */"],
-    "hardware": ["/* the board's registers (read and written through the bus) */"],
+    "hardware": ["/* the board's registers (read and written through the bus: io_read8, io_write8...) */"],
+    "board": ["/* the board's memories the code uses as plain memory (the video RAM, the sprite RAM, the RAM the",
+              "   sound program shares), by name: lvalues through board() */"],
 }
-signatures.CONTEXT = (12, 14, 20, 23, 25, 27, 28, 32)
+memory.PLAIN_HARDWARE = ("VIDEO", "SPRITE_RAM", "SOUND")
+# (R27 and R28 are not: no function reads what another left in them; player_car_project_road could, were
+# its projection pattern to skip every segment, but segment_projection_pattern starts with a 1)
+signatures.CONTEXT = (12, 14, 20, 23, 25, 32)
 signatures.INITIAL = {32: 0x21F400}
 signatures.SCRATCH_CONTEXT = {12: 0xFFFF0000, 14: 0xFFFFFFFF}
 signatures.CONSTANT = {24: 0x20E000}

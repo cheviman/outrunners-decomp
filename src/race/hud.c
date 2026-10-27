@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -171,13 +171,13 @@ void gear_indicator_update(void)
 		}
 		if ((buttons_pressed & 0x20u) != 0u && gear != 0u)
 		{
-			old_ratio = CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[gear];
+			old_ratio = CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[(int32_t)gear];
 			gear = (uint8_t)(gear - 1u);
-			if (divide_u32(CAR(player_car)->revs * old_ratio, CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[gear]) >= 0xFFFFu)
+			if (divide_u32(CAR(player_car)->revs * old_ratio, CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[(int32_t)gear]) >= 0xFFFFu)
 				CAR(player_car)->shift_spin = 0x1Eu;
 		}
 		CAR(player_car)->gear = gear;
-		CAR(player_car)->gear_ratio = CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[gear];
+		CAR(player_car)->gear_ratio = CAR_GEAR_RATIOS(CAR(player_car)->gear_ratios)[(int32_t)gear];
 		OBJECT(current_object)->frame = gear;
 		if (gear == top_gear_then_frames)
 		{
@@ -462,14 +462,14 @@ void lap_timer_update(void)
 				text = current_object + 0x80u;
 				time_text = text + 6u;
 				player = SCREEN(screen)->player;
-				checkpoints = mem_read8(screen + 0x480u + player);
+				checkpoints = SCREEN(screen)->checkpoints_passed[(int32_t)player];
 				if (OBJECT(current_object)->lap_timer.checkpoints == checkpoints)
 					break;
 				OBJECT(current_object)->lap_timer.checkpoints = checkpoints;
 				checkpoints = (uint8_t)(checkpoints - 1u);
 				OBJECT(current_object)->state = lap_timer_checkpoint_states[checkpoints];
 				checkpoints = (uint8_t)(checkpoints << 3);
-				lap_time = mem_read16(screen + 0x3C0u + (uint8_t)(checkpoints + player) * 2u);
+				lap_time = SCREEN(screen)->checkpoint_times_by_player[(uint8_t)(checkpoints + player)];
 				checkpoint_time = CAR(player_car)->checkpoint_time;
 				CAR(player_car)->checkpoint_time = lap_time;
 				lap_time -= checkpoint_time;
@@ -480,7 +480,7 @@ void lap_timer_update(void)
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal * 2u);
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + (~SCREEN(screen)->current_stage_level & 1u));
 				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + 8u);
-				mem_write8(EVENT_CODE, checkpoint_signal);
+				io_write8(EVENT_CODE, checkpoint_signal);
 				split_frames = OBJECT(current_object)->lap_timer.split_frames;
 				OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
 				if (split_frames != 1u)
@@ -774,19 +774,19 @@ void time_digits_draw(uint32_t digits)
 		flip = mem_read8(digit_record);
 		negative = flip >> 7;
 		digit_record++;
-		shown_digit = mem_read8(digit_record);
+		shown_digit = TIME_DIGIT(digit_record - 0x1u)->digit;
 		digit_record++;
-		flip_width = mem_read16(digit_record);
+		flip_width = TIME_DIGIT(digit_record - 0x2u)->width;
 		digit_record += 6u;
 		remaining_digits = digits;
 		if (flip != 0u)
 		{
 			if (negative == 0u)
 			{
-				remaining_digits = mem_read32(digit_record - 4u);
+				remaining_digits = TIME_DIGIT(digit_record - 0x8u)->remaining;
 				closing_width = flip_width;
 				flip_width = (uint16_t)(closing_width - 0x40u);
-				mem_write16(digit_record - 6u, flip_width);
+				TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
 				if (closing_width != 0x40u)
 				{
 					if (digits_left == 3u || remaining_digits != 0u)
@@ -804,15 +804,15 @@ void time_digits_draw(uint32_t digits)
 				}
 				else
 				{
-					mem_write8(digit_record - 8u, 0xFFu);
-					mem_write8(digit_record - 7u, digit);
-					mem_write32(digit_record - 4u, digits);
+					TIME_DIGIT(digit_record - 0x8u)->flip = -1;
+					TIME_DIGIT(digit_record - 0x8u)->digit = digit;
+					TIME_DIGIT(digit_record - 0x8u)->remaining = digits;
 				}
 			}
 			else
 			{
 				flip_width += 0x40u;
-				mem_write16(digit_record - 6u, flip_width);
+				TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
 				if ((uint8_t)flip_width != 0u)
 				{
 					if (digits_left == 3u || remaining_digits != 0u)
@@ -830,7 +830,7 @@ void time_digits_draw(uint32_t digits)
 				}
 				else
 				{
-					mem_write8(digit_record - 8u, 0u);
+					TIME_DIGIT(digit_record - 0x8u)->flip = 0;
 					if (digits_left == 3u || remaining_digits != 0u)
 					{
 						OBJECT(current_object)->frame = shown_digit;
@@ -863,11 +863,11 @@ void time_digits_draw(uint32_t digits)
 		}
 		else
 		{
-			mem_write8(digit_record - 8u, 1u);
-			remaining_digits = mem_read32(digit_record - 4u);
+			TIME_DIGIT(digit_record - 0x8u)->flip = 1;
+			remaining_digits = TIME_DIGIT(digit_record - 0x8u)->remaining;
 			closing_width = flip_width;
 			flip_width = (uint16_t)(closing_width - 0x40u);
-			mem_write16(digit_record - 6u, flip_width);
+			TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
 			if (closing_width != 0x40u)
 			{
 				if (digits_left == 3u || remaining_digits != 0u)
@@ -885,9 +885,9 @@ void time_digits_draw(uint32_t digits)
 			}
 			else
 			{
-				mem_write8(digit_record - 8u, 0xFFu);
-				mem_write8(digit_record - 7u, digit);
-				mem_write32(digit_record - 4u, digits);
+				TIME_DIGIT(digit_record - 0x8u)->flip = -1;
+				TIME_DIGIT(digit_record - 0x8u)->digit = digit;
+				TIME_DIGIT(digit_record - 0x8u)->remaining = digits;
 			}
 		}
 		digits = digits >> 4;
@@ -1031,7 +1031,7 @@ void goal_update(void)
 		OBJECT(object - 0x82u)->goal.text_y = 0x30u;
 		object += 2u;
 		OBJECT(object - 0x84u)->goal.text_attribute = 0x90u;
-		finish_time = mem_read16(screen + 0x410u + SCREEN(screen)->player * 2u);
+		finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 		object += 2u;
 		time_to_text(finish_time, object);
 		dj_message = 0x34u;
@@ -1332,17 +1332,17 @@ void checkpoint_board_update(void)
 		race++;
 		do
 		{
-			racer = mem_read8(race);
+			racer = RACE_ORDER_PLAYERS(race)[0];
 			mem_write32(current_object + 0x80u + racer * 4u, checkpoint_board_car_sprites[mem_read8(0x20FC49u + (racer << 5) * 4u)]);
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);
 		checkpoint_count = screen + 0x480u + SCREEN(screen)->player;
-		OBJECT(current_object)->checkpoint_board.checkpoints_seen = mem_read8(checkpoint_count);
+		OBJECT(current_object)->checkpoint_board.checkpoints_seen = CHECKPOINT_COUNTS(checkpoint_count)[0];
 		OBJECT(current_object)->checkpoint_board.checkpoint_count = checkpoint_count;
 		OBJECT(current_object)->checkpoint_board.rows_shown = 0u;
 		OBJECT(current_object)->state++;
-		checkpoints_passed = mem_read8(OBJECT(current_object)->checkpoint_board.checkpoint_count);
+		checkpoints_passed = CHECKPOINT_COUNTS(OBJECT(current_object)->checkpoint_board.checkpoint_count)[0];
 		if (OBJECT(current_object)->checkpoint_board.checkpoints_seen == checkpoints_passed)
 			return;
 		OBJECT(current_object)->checkpoint_board.checkpoints_seen = checkpoints_passed;
@@ -1351,7 +1351,7 @@ void checkpoint_board_update(void)
 		OBJECT(current_object)->state++;
 		break;
 	case 1:
-		checkpoints_passed = mem_read8(OBJECT(current_object)->checkpoint_board.checkpoint_count);
+		checkpoints_passed = CHECKPOINT_COUNTS(OBJECT(current_object)->checkpoint_board.checkpoint_count)[0];
 		if (OBJECT(current_object)->checkpoint_board.checkpoints_seen == checkpoints_passed)
 			return;
 		OBJECT(current_object)->checkpoint_board.checkpoints_seen = checkpoints_passed;
@@ -1366,7 +1366,7 @@ void checkpoint_board_update(void)
 	}
 	checkpoint = OBJECT(current_object)->checkpoint_board.checkpoint;
 	OBJECT(current_object)->checkpoint_board.row = 0u;
-	OBJECT(current_object)->checkpoint_board.rows_left = mem_read8(screen + 0x35Au + checkpoint);
+	OBJECT(current_object)->checkpoint_board.rows_left = SCREEN(screen)->checkpoint_passes[(int32_t)checkpoint];
 	OBJECT(current_object)->checkpoint_board.passing_order = screen + 0x390u + checkpoint * 2u * 4u;
 	do
 	{
@@ -1380,7 +1380,7 @@ void checkpoint_board_update(void)
 				{
 				case 0x00CC84u:
 					OBJECT(current_object)->checkpoint_board.rows_shown++;
-					row_time = mem_read16(screen + 0x3C0u + (((uint32_t)OBJECT(current_object)->checkpoint_board.checkpoint << 3) + row_player) * 2u);
+					row_time = SCREEN(screen)->checkpoint_times_by_player[(int32_t)(((uint32_t)OBJECT(current_object)->checkpoint_board.checkpoint << 3) + row_player)];
 					player = row_player;
 					if (OBJECT(current_object)->checkpoint_board.row != 0u)
 					{
@@ -1514,8 +1514,8 @@ void checkpoint_board_update(void)
 	}
 }
 
-/* Draws row unk_12 of the board for player R21, slid by its offset: the car number, the car's small
-   image, the time text (draw_text_at; another colour after the first row) and, after the first, BEHIND. */
+/* Draws row of the board for player R21, slid by its offset: the car number, the car's small image, the
+   time text (draw_text_at; another colour after the first row) and, after the first, BEHIND. */
 void checkpoint_board_draw_row(uint32_t player)
 {
 	uint16_t text_attribute = 0;
@@ -1592,28 +1592,28 @@ void time_to_text(uint32_t time, uint32_t text)
 	uint32_t digit = 0;
 
 	text += 7u;
-	mem_write8(text, 0u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	text--;
-	mem_write8(text, 0x22u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0x22u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(6u, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	text--;
-	mem_write8(text, 0x27u);
-	mem_write8(text - 1u, time + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0x27u;
+	OBJECT_TEXT_CHARACTERS(text)[-1] = time + 0x30u;
 }
 
 /* Writes how far behind the first player R1 passed (R0, hundredths) into its row text, as time_to_text
@@ -1626,44 +1626,44 @@ void checkpoint_board_gap_time(uint32_t time, uint32_t player)
 
 	text = current_object + 0xB7u + player * 2u * 4u;
 	zero_char = 0x30u;
-	mem_write8(text, 0u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	mem_write8(text, digit + 0x30u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
 	text--;
-	mem_write8(text, 0x22u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0x22u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	zero = (uint32_t)(time == 0u);
 	if (zero == 0u)
 	{
 		text--;
-		mem_write8(text, digit + zero_char);
+		OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
 		digit = 0u;
 		divx_pair(6u, &time, &digit);
 		zero = (uint32_t)(time == 0u);
 		if (zero)
 		{
 			text--;
-			mem_write8(text, digit + zero_char);
-			mem_write16(text - 2u, 0x2020u);
+			OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
+			AS16(OBJECT_TEXT_CHARACTERS(text)[-2]) = 0x2020u;
 			return;
 		}
 		text--;
-		mem_write8(text, digit + zero_char);
+		OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
 		text--;
-		mem_write8(text, 0x27u);
-		mem_write8(text - 1u, time + zero_char);
+		OBJECT_TEXT_CHARACTERS(text)[0] = 0x27u;
+		OBJECT_TEXT_CHARACTERS(text)[-1] = time + zero_char;
 		return;
 	}
 	text--;
-	mem_write8(text, digit + zero_char);
+	OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
 	text--;
-	mem_write8(text, 0x20u);
-	mem_write16(text - 2u, 0x2020u);
+	OBJECT_TEXT_CHARACTERS(text)[0] = 0x20u;
+	AS16(OBJECT_TEXT_CHARACTERS(text)[-2]) = 0x2020u;
 }

@@ -3,7 +3,7 @@
  *    Description: the settings in the EEPROM: loading, checking and saving them, and the EEPROM's serial lines
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -205,7 +205,7 @@ void eeprom_read_settings(uint32_t eeprom_word)
 	{
 		eeprom_read_word(command, lines_port, &eeprom_word, &lines);
 		command++;
-		mem_write16(settings, eeprom_word);
+		SETTINGS_WORDS(settings)[0] = eeprom_word;
 		word_count--;
 		settings += 2u;
 	} while (word_count != 0u);
@@ -252,7 +252,7 @@ void eeprom_write_settings(void)
 	settings_length = 0x3Au;
 	checksum = crc16(settings, settings_length);
 	settings_checksum = checksum;
-	move_string(settings_checksum_ADDRESS, 0x1Eu, backup_settings_checksum_ADDRESS, 0x1Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 	command = 0x30u;
 	eeprom_begin(&lines, &lines_port);
 	eeprom_send_command(lines, command, lines_port);
@@ -262,7 +262,7 @@ void eeprom_write_settings(void)
 	eeprom_begin(&lines, &lines_port);
 	do
 	{
-		eeprom_word = mem_read16(settings);
+		eeprom_word = SETTINGS_WORDS(settings)[0];
 		settings += 2u;
 		lines = eeprom_write_word(eeprom_word, lines, command, lines_port);
 		command++;
@@ -389,7 +389,7 @@ void eeprom_begin(uint32_t *p_lines, uint32_t *p_lines_port)
 
 	*p_lines_port = IO_2_PORT_H;
 	r12 = IO_2_PORT_F;
-	lines_now = mem_read8(IO_2_PORT_H);
+	lines_now = io_read8(IO_2_PORT_H);
 	interrupts_off();
 	*p_lines = (*p_lines & 0xFFFFFF00u) | lines_now;
 }

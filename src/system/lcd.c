@@ -3,7 +3,7 @@
  *    Description: the cabinets' LCD: its driver and the race's information on it
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -107,16 +107,16 @@ void lcd_write_data_nibble(uint8_t nibble)
 	uint32_t wait_count = 0;
 
 	nibble |= 0xFu;
-	mem_write8(IO_1_PORT_G, ~nibble);
-	mem_write8(IO_2_PORT_G, ~nibble);
+	io_write8(IO_1_PORT_G, ~nibble);
+	io_write8(IO_2_PORT_G, ~nibble);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
 	nibble &= ~8u;
-	mem_write8(IO_1_PORT_G, ~nibble);
-	mem_write8(IO_2_PORT_G, ~nibble);
+	io_write8(IO_1_PORT_G, ~nibble);
+	io_write8(IO_2_PORT_G, ~nibble);
 }
 
 /* A pause, then lcd_write_command_nibble. */
@@ -139,16 +139,16 @@ void lcd_write_command_nibble(uint8_t nibble)
 	uint32_t wait_count = 0;
 
 	nibble |= 0xBu;
-	mem_write8(IO_1_PORT_G, ~nibble);
-	mem_write8(IO_2_PORT_G, ~nibble);
+	io_write8(IO_1_PORT_G, ~nibble);
+	io_write8(IO_2_PORT_G, ~nibble);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
 	nibble &= ~8u;
-	mem_write8(IO_1_PORT_G, ~nibble);
-	mem_write8(IO_2_PORT_G, ~nibble);
+	io_write8(IO_1_PORT_G, ~nibble);
+	io_write8(IO_2_PORT_G, ~nibble);
 }
 
 /* After the test mode: both screens' LCD text back to SEGA Enterprises (lcd_text), their lamps off
@@ -311,8 +311,8 @@ void lcd_send_next_nibble(void)
 		lcd_busy = 0xFFu;
 		screen_1_port = (uint8_t)~lcd_restart_nibbles[lcd_init_step];
 		screen_2_port = screen_1_port | port_g_outputs[1];
-		mem_write8(IO_1_PORT_G, screen_1_port | port_g_outputs[0]);
-		mem_write8(IO_2_PORT_G, screen_2_port);
+		io_write8(IO_1_PORT_G, screen_1_port | port_g_outputs[0]);
+		io_write8(IO_2_PORT_G, screen_2_port);
 		init_step = lcd_init_step;
 		lcd_init_step = init_step - 1u;
 		if (init_step == 1u)
@@ -336,15 +336,15 @@ void lcd_send_next_nibble(void)
 		screen_2_port = (uint8_t)send_step;
 		send_step = send_step | port_g_outputs[0];
 		screen_2_port |= port_g_outputs[1];
-		mem_write8(IO_1_PORT_G, send_step);
-		mem_write8(IO_2_PORT_G, screen_2_port);
+		io_write8(IO_1_PORT_G, send_step);
+		io_write8(IO_2_PORT_G, screen_2_port);
 		wait_count = 0x14u;
 		do
 		{
 			wait_count--;
 		} while (wait_count != 0u);
-		mem_write8(IO_1_PORT_G, send_step | 8u);
-		mem_write8(IO_2_PORT_G, screen_2_port | 8u);
+		io_write8(IO_1_PORT_G, send_step | 8u);
+		io_write8(IO_2_PORT_G, screen_2_port | 8u);
 		lcd_busy = 0u;
 		return;
 	}
@@ -364,15 +364,15 @@ void lcd_send_next_nibble(void)
 	}
 	screen_1_port = (uint8_t)(~(screen_1_port | 0xFu) | port_g_outputs[0]);
 	screen_2_port = (uint8_t)(~(screen_2_port | 0xFu) | port_g_outputs[1]);
-	mem_write8(IO_1_PORT_G, screen_1_port);
-	mem_write8(IO_2_PORT_G, screen_2_port);
+	io_write8(IO_1_PORT_G, screen_1_port);
+	io_write8(IO_2_PORT_G, screen_2_port);
 	wait_count = 0x14u;
 	do
 	{
 		wait_count--;
 	} while (wait_count != 0u);
-	mem_write8(IO_1_PORT_G, screen_1_port | 8u);
-	mem_write8(IO_2_PORT_G, screen_2_port | 8u);
+	io_write8(IO_1_PORT_G, screen_1_port | 8u);
+	io_write8(IO_2_PORT_G, screen_2_port | 8u);
 	lcd_busy = 0u;
 }
 
@@ -385,7 +385,7 @@ void lcd_send_next_nibble(void)
 void lcd_update(void)
 {
 	uint8_t character = 0, space_character = 0;
-	uint32_t lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_place = 0;
+	uint32_t ignored_2 = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_end = 0, text_place = 0;
 	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
 	text_place = screen + 0xF10u;
@@ -440,7 +440,7 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll_request = 0u;
 		SCREEN(screen)->lcd_scroll_step = 0u;
 		space_character = 0x20u;
-		move_string(text_place, 0u, text_place, scroll_width + 1u, 1u, 1u, 0u, space_character, &r27, &r28);
+		set_bytes(text_place, scroll_width + 1u, space_character);
 	}
 	lcd_scroll = SCREEN(screen)->lcd_scroll;
 	if (lcd_scroll == 0u)
@@ -452,8 +452,8 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll = lcd_scroll + 1u;
 		if (character == 0x60u)
 			character = 7u;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &r27, &r28);
-		mem_write8(r27, character);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		mem_write8(text_end, character);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
@@ -467,8 +467,8 @@ void lcd_update(void)
 		}
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &r27, &r28);
-		mem_write8(r27, 0x20u);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		break;
@@ -484,14 +484,14 @@ void lcd_update(void)
 		}
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &r27, &r28);
-		mem_write8(r27, 0x20u);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		break;
 	case 2:
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &r27, &r28);
-		mem_write8(r27, 0x20u);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
@@ -587,7 +587,7 @@ void lcd_race_info_update(void)
 		{
 			countdown_frames = 0u;
 			divux_pair(0x1Eu, &countdown, &countdown_frames);
-			move_string(lcd_countdown_bars[(countdown_frames + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_halfwords(screen + 0xF12u, lcd_countdown_bars[(countdown_frames + 2u) / 5u], 7u);
 			SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((countdown + 0x31u & 0xFFu) << 8u);
 			return;
 		}
@@ -639,7 +639,7 @@ void lcd_race_info_update(void)
 		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			move_string(lcd_speed_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_halfwords(screen + 0xF12u, lcd_speed_label_ADDRESS, 7u);
 			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
@@ -655,7 +655,7 @@ void lcd_race_info_update(void)
 		switch (OBJECT(current_object)->lcd_race_info.page_step)
 		{
 		case 0:
-			move_string(lcd_maximum_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+			move_halfwords(screen + 0xF12u, lcd_maximum_label_ADDRESS, 7u);
 			OBJECT(current_object)->lcd_race_info.page_step++;
 			break;
 		case 1:
@@ -692,7 +692,7 @@ void lcd_race_info_update(void)
 			switch (OBJECT(current_object)->lcd_race_info.page_step)
 			{
 			case 0:
-				move_string(lcd_speed_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+				move_halfwords(screen + 0xF12u, lcd_speed_label_ADDRESS, 7u);
 				OBJECT(current_object)->lcd_race_info.page_step++;
 				break;
 			case 1:
@@ -705,7 +705,7 @@ void lcd_race_info_update(void)
 			lcd_race_info_write_number(shown_speed, text_place);
 			return;
 		}
-		move_string(lcd_order_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(screen + 0xF12u, lcd_order_label_ADDRESS, 7u);
 		OBJECT(current_object)->lcd_race_info.frames = 0u;
 		OBJECT(current_object)->lcd_race_info.page_step++;
 		break;
@@ -719,13 +719,13 @@ void lcd_race_info_update(void)
 	racers_left = OBJECT(current_object)->lcd_race_info.racer_count;
 	do
 	{
-		racer = mem_read8(order_list);
+		racer = RACE_ORDER_PLAYERS(order_list)[0];
 		order_list++;
 		if (SCREEN(screen)->player != racer || (OBJECT(current_object)->lcd_race_info.frames & 8u) == 0u)
 			character = (uint8_t)(car_numbers[racer] + 0x31u);
 		else
 			character = 0x20u;
-		mem_write8(text_place, character);
+		LCD_CHARACTERS(text_place)[0] = character;
 		racers_left--;
 		text_place++;
 	} while (racers_left != 0u);
@@ -735,7 +735,7 @@ void lcd_race_info_update(void)
 /* Writes the Time page's label on the LCD, then the time (lcd_race_info_time). */
 void lcd_race_info_time_page(void)
 {
-	move_string(lcd_time_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0xF12u, lcd_time_label_ADDRESS, 7u);
 	OBJECT(current_object)->lcd_race_info.page_step++;
 	lcd_race_info_time();
 }
@@ -769,7 +769,7 @@ void lcd_race_info_time(void)
 /* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */
 void lcd_race_info_average_page(void)
 {
-	move_string(lcd_average_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0xF12u, lcd_average_label_ADDRESS, 7u);
 	OBJECT(current_object)->lcd_race_info.page_step++;
 	lcd_race_info_average();
 }
@@ -843,7 +843,7 @@ void lcd_race_info_finish(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		move_string(lcd_finish_label_ADDRESS, 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(screen + 0xF12u, lcd_finish_label_ADDRESS, 7u);
 		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->lcd_scroll == 0u)
 			return;

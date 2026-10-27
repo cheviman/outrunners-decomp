@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -52,9 +52,9 @@ void bar_picture_bar_start(void)
 	OBJECT(current_object)->depth_layer = 3u;
 	OBJECT(current_object)->x = 0xA0u;
 	OBJECT(current_object)->y = 0x70u;
-	random_x = mem_read8(RANDOM_NUMBER);
+	random_x = io_read8(RANDOM_NUMBER);
 	OBJECT(current_object)->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
-	random_y = mem_read8(RANDOM_NUMBER);
+	random_y = io_read8(RANDOM_NUMBER);
 	OBJECT(current_object)->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
 	OBJECT(current_object)->handler = bar_picture_bar_fly_ADDRESS;
 }

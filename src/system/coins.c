@@ -3,7 +3,7 @@
  *    Description: the coins and credits, and the bookkeeping
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,15 +20,15 @@ void init_coins(void)
 {
 	uint8_t chip_2_port_f = 0;
 
-	chip_2_port_f = mem_read8(IO_2_PORT_F);
+	chip_2_port_f = io_read8(IO_2_PORT_F);
 	second_io_chip_port_f = ~chip_2_port_f & 0xFu;
 	chute_entry_offset = 0u;
 	if (free_play == 0u && second_chute_multiplier == first_chute_multiplier)
 		chute_entry_offset = 0x14u;
-	seat1_credits = mem_read8(BOOKKEEPING_SEAT_1_CREDITS);
-	seat1_bookkeeping_byte = mem_read8(BOOKKEEPING_SEAT_1_BYTE);
-	seat2_credits = mem_read8(BOOKKEEPING_SEAT_2_CREDITS);
-	seat2_bookkeeping_byte = mem_read8(BOOKKEEPING_SEAT_2_BYTE);
+	seat1_credits = (uint8_t)BOOKKEEPING_SEAT_1_CREDITS;
+	seat1_bookkeeping_byte = (uint8_t)BOOKKEEPING_SEAT_1_BYTE;
+	seat2_credits = (uint8_t)BOOKKEEPING_SEAT_2_CREDITS;
+	seat2_bookkeeping_byte = (uint8_t)BOOKKEEPING_SEAT_2_BYTE;
 }
 
 /* The coins and service credits, in the vertical blank unless on free play (free_play): queues each
@@ -161,10 +161,10 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 			mem_write8(r12, mem_read8(r12) | shift_by(1u, (uint8_t)meter_bit, 8));
 			COIN_METER(coin_meter - 0x2u)->frames = 0x606u;
 		}
-		r12 = BOOKKEEPING_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
 	}
@@ -172,10 +172,10 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 	{
 		coin_meter--;
 		COIN_METER(coin_meter - 0x1u)->frames_off--;
-		r12 = BOOKKEEPING_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
 	}
@@ -183,18 +183,18 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 	COIN_METER(coin_meter - 0x2u)->frames_on = frames_on - 1u;
 	if (frames_on != 1u)
 	{
-		r12 = BOOKKEEPING_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		bookkeeping_update_checksum(meter_frames);
-		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
+		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
 	}
 	mem_write8(r12, mem_read8(r12) & rotate_by(0xFEu, (uint8_t)meter_bit, 8));
-	r12 = BOOKKEEPING_SEAT_1_CREDITS;
+	r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
 	bookkeeping_update_checksum(meter_frames);
-	r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS;
+	r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
 }
 
@@ -235,7 +235,7 @@ uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint3
 		}
 	}
 	show_title_on_credit();
-	mem_write8(service_sounds, 1u);
+	SEAT_SOUND_COUNTS(service_sounds)[0] = 1u;
 	credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
 	return credits_given;
 }
@@ -261,15 +261,15 @@ uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_
 	coin_sounds = COIN_CHUTE(chute_entry - 0x4u)->coin_sounds;
 	chute_entry = chute_entry + 4u + chute_entry_offset;
 	seat_credits = COIN_CHUTE_VARIANT(chute_entry)->credits;
-	mem_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
+	io_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
 	owed_pulses = COIN_CHUTE_VARIANT(chute_entry)->pulses_owed;
 	mem_write8(owed_pulses, mem_read8(owed_pulses) + 1u);
 	counter = COIN_CHUTE_VARIANT(chute_entry)->counter;
 	bookkeeping_increment16(counter);
 	if (SEAT_CREDITS(seat_credits)->credits >= 9u)
 		return credits_given;
-	mem_write8(coin_sounds, mem_read8(coin_sounds) + 1u);
-	chute_units = mem_read8(COIN_CHUTE_VARIANT(chute_entry)->coin_units);
+	SEAT_SOUND_COUNTS(coin_sounds)[0]++;
+	chute_units = CHUTE_UNIT_SETTINGS(COIN_CHUTE_VARIANT(chute_entry)->coin_units)[0];
 	units_per_bonus = bonus_adder;
 	if (units_per_bonus != 0u)
 	{
@@ -314,11 +314,11 @@ void show_title_on_credit(void)
    (game_mode_play). */
 void bookkeeping_increment16(uint32_t counter)
 {
-	if (mem_read16(counter) != 0xFFFFu)
+	if (BOOKKEEPING_COUNT16(counter)->value != 0xFFFFu)
 	{
-		mem_write16(counter, mem_read16(counter) + 1u);
+		BOOKKEEPING_COUNT16(counter)->value++;
 		bookkeeping_update_checksum(0u);
-		mem_write16(counter + 0x7Cu, mem_read16(counter + 0x7Cu) + 1u);
+		BOOKKEEPING_COUNT16(counter)->backup++;
 	}
 }
 
@@ -326,11 +326,11 @@ void bookkeeping_increment16(uint32_t counter)
    with the checksum (bookkeeping_update_checksum). */
 void bookkeeping_increment8(uint32_t counter_address)
 {
-	if (mem_read8(counter_address) != 0xFFu)
+	if (BOOKKEEPING_COUNT8(counter_address)->value != 0xFFu)
 	{
-		mem_write8(counter_address, mem_read8(counter_address) + 1u);
+		BOOKKEEPING_COUNT8(counter_address)->value++;
 		bookkeeping_update_checksum(0u);
-		mem_write8(counter_address + 0x7Cu, mem_read8(counter_address + 0x7Cu) + 1u);
+		BOOKKEEPING_COUNT8(counter_address)->backup++;
 	}
 }
 
@@ -342,18 +342,18 @@ void bookkeeping_add16(uint32_t counter, uint16_t amount)
 	uint32_t carry = 0;
 	uint16_t count = 0;
 
-	count = mem_read16(counter);
+	count = BOOKKEEPING_COUNT16(counter)->value;
 	carry = (uint16_t)(count + amount) < count;
-	mem_write16(counter, count + amount);
+	BOOKKEEPING_COUNT16(counter)->value = count + amount;
 	if (carry)
 	{
-		mem_write16(counter, 0xFFFFu);
+		BOOKKEEPING_COUNT16(counter)->value = 0xFFFFu;
 		bookkeeping_update_checksum(0u);
-		mem_write16(counter, 0xFFFFu);
+		BOOKKEEPING_COUNT16(counter)->value = 0xFFFFu;
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write16(counter + 0x7Cu, mem_read16(counter + 0x7Cu) + amount);
+	BOOKKEEPING_COUNT16(counter)->backup += amount;
 }
 
 /* Adds R9 to the 32-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum; past
@@ -363,18 +363,18 @@ void bookkeeping_add32(uint32_t counter, uint32_t amount)
 	uint32_t carry = 0;
 	uint32_t count = 0;
 
-	count = mem_read32(counter);
+	count = BOOKKEEPING_COUNT32(counter)->value;
 	carry = count + amount < count;
-	mem_write32(counter, count + amount);
+	BOOKKEEPING_COUNT32(counter)->value = count + amount;
 	if (carry)
 	{
-		mem_write32(counter, 0xFFFFFFFFu);
+		BOOKKEEPING_COUNT32(counter)->value = 0xFFFFFFFFu;
 		bookkeeping_update_checksum(0u);
-		mem_write32(counter, 0xFFFFFFFFu);
+		BOOKKEEPING_COUNT32(counter)->value = 0xFFFFFFFFu;
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write32(counter + 0x7Cu, mem_read32(counter + 0x7Cu) + amount);
+	BOOKKEEPING_COUNT32(counter)->backup += amount;
 }
 
 /* Unused: adds R9 to the 8-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum;
@@ -385,54 +385,54 @@ void bookkeeping_add8(uint32_t counter, uint8_t amount)
 	uint32_t carry = 0;
 	uint8_t count = 0;
 
-	count = mem_read8(counter);
+	count = BOOKKEEPING_COUNT8(counter)->value;
 	carry = (uint8_t)(count + amount) < count;
-	mem_write8(counter, count + amount);
+	BOOKKEEPING_COUNT8(counter)->value = count + amount;
 	if (carry)
 	{
-		mem_write8(counter, 0xFFu);
+		BOOKKEEPING_COUNT8(counter)->value = 0xFFu;
 		bookkeeping_update_checksum(0u);
-		mem_write8(counter, 0xFFu);
+		BOOKKEEPING_COUNT8(counter)->value = 0xFFu;
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	mem_write8(counter + 0x7Cu, mem_read8(counter + 0x7Cu) + amount);
+	BOOKKEEPING_COUNT8(counter)->backup += amount;
 }
 
 /* Sets the 16-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum: the longest
    and shortest play (701F20, 701F22; game_mode_play). */
 void bookkeeping_set16(uint32_t counter, uint16_t amount)
 {
-	mem_write16(counter, amount);
+	BOOKKEEPING_COUNT16(counter)->value = amount;
 	bookkeeping_update_checksum(0u);
-	mem_write16(counter + 0x7Cu, amount);
+	BOOKKEEPING_COUNT16(counter)->backup = amount;
 }
 
 /* Unused: sets the 32-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
 void bookkeeping_set32(uint32_t counter, uint32_t amount)
 {
-	mem_write32(counter, amount);
+	BOOKKEEPING_COUNT32(counter)->value = amount;
 	bookkeeping_update_checksum(0u);
-	mem_write32(counter + 0x7Cu, amount);
+	BOOKKEEPING_COUNT32(counter)->backup = amount;
 }
 
 /* Unused: sets the 8-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
 void bookkeeping_set8(uint32_t counter, uint8_t amount)
 {
-	mem_write8(counter, amount);
+	BOOKKEEPING_COUNT8(counter)->value = amount;
 	bookkeeping_update_checksum(0u);
-	mem_write8(counter + 0x7Cu, amount);
+	BOOKKEEPING_COUNT8(counter)->backup = amount;
 }
 
 /* Clears the credits kept in the bookkeeping (701F74-701F7B) and in its backup (701FF0-701FF7), with the
    checksum. Not run in the scenarios. */
 void bookkeeping_clear_credits(void)
 {
-	mem_write32(BOOKKEEPING_SEAT_1_CREDITS, 0u);
-	mem_write32(BOOKKEEPING_SEAT_2_CREDITS, 0u);
+	AS32(BOOKKEEPING_SEAT_1_CREDITS) = 0u;
+	AS32(BOOKKEEPING_SEAT_2_CREDITS) = 0u;
 	bookkeeping_update_checksum(0u);
-	mem_write32(BOOKKEEPING_BACKUP_SEAT_1_CREDITS, 0u);
-	mem_write32(BOOKKEEPING_BACKUP_SEAT_2_CREDITS, 0u);
+	BOOKKEEPING_BACKUP_SEAT_1_CREDITS = 0u;
+	BOOKKEEPING_BACKUP_SEAT_2_CREDITS = 0u;
 	r12 = SOUND_RAM + 0x1FF8u;
 }
 
@@ -444,7 +444,7 @@ void bookkeeping_check(void)
 	uint16_t stored_checksum = 0;
 	uint32_t block = 0, checksum = 0, destination = 0, source = 0;
 
-	stored_checksum = mem_read16(BOOKKEEPING_CHECKSUM);
+	stored_checksum = BOOKKEEPING_CHECKSUM;
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
 	if ((uint16_t)checksum == stored_checksum)
@@ -484,7 +484,7 @@ uint32_t bookkeeping_reset(uint32_t checksum)
    defaults), then bookkeeping_update_checksum. */
 uint32_t bookkeeping_copy(uint32_t checksum, uint32_t source, uint32_t destination)
 {
-	move_string(source, 0x3Eu, destination, 0x3Eu, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(destination, source, 0x3Eu);
 	return bookkeeping_update_checksum(checksum);
 }
 
@@ -496,7 +496,7 @@ uint32_t bookkeeping_update_checksum(uint32_t checksum)
 
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(checksum, block);
-	mem_write16(BOOKKEEPING_CHECKSUM, checksum);
+	BOOKKEEPING_CHECKSUM = checksum;
 	return checksum;
 }
 
@@ -508,7 +508,7 @@ void bookkeeping_check_block(void)
 
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
-	if (mem_read16(BOOKKEEPING_CHECKSUM) != (uint16_t)checksum)
+	if (BOOKKEEPING_CHECKSUM != (uint16_t)checksum)
 	{
 		checksum = bookkeeping_reset(checksum);
 		return;
@@ -526,7 +526,7 @@ uint32_t bookkeeping_checksum(uint32_t checksum, uint32_t block)
 	halfwords_left = 0x3Eu;
 	do
 	{
-		sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ mem_read16(block));
+		sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ BOOKKEEPING_HALFWORDS(block)[0]);
 		carry = sum & 1u;
 		sum = (sum & ~0xFFFFu) | ((uint16_t)sum >> 1);
 		block += 2u;

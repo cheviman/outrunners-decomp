@@ -3,7 +3,7 @@
  *    Description: the car's physics: the gears and torque curves, the controls, driving along the road, the engine, the road's drag and its edges, the wheels' effects
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -59,7 +59,7 @@ void player_car_build_torque_curves(void)
 			torque_point += 2u;
 			do
 			{
-				mem_write16(curve_entry, curve_force >> 16);
+				TORQUE_CURVE_FORCES(curve_entry)[0] = curve_force >> 16;
 				curve_force += force_step;
 				steps_left--;
 				curve_entry += 2u;
@@ -228,7 +228,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 	gear = CAR(player_car)->gear;
 	gear_curve = screen + 0x1300u + (uint16_t)(gear << 9);
 	speed = CAR(player_car)->speed;
-	drive_force = (int32_t)((uint32_t)gas_pedal_curve[gas] * mem_read16(gear_curve + (speed >> 8) * 2u)) >> 6;
+	drive_force = (int32_t)((uint32_t)gas_pedal_curve[gas] * TORQUE_CURVE_FORCES(gear_curve)[speed >> 8]) >> 6;
 	gear_ratio = CAR(player_car)->gear_ratio;
 	player_car_engine(road_force, drive_force, brake_force, gear_ratio);
 	if (isdn_mode != 0u)
@@ -845,7 +845,7 @@ void player_car_next_surfaces(void)
 
 	stage_then_surfaces = SCREEN(screen)->built_stage;
 	CAR(player_car)->surface_stage = stage_then_surfaces;
-	stage_length = (uint16_t)(mem_read16(screen + 0x700u + stage_then_surfaces * 2u) + SCREEN(screen)->branch_road_length);
+	stage_length = (uint16_t)(SCREEN(screen)->stage_lengths[(int32_t)stage_then_surfaces] + SCREEN(screen)->branch_road_length);
 	CAR(player_car)->surface_start = CAR(player_car)->surface_next_start;
 	CAR(player_car)->surface_next_start += stage_length;
 	stage_then_surfaces = stage_roadside_surface_lists_ADDRESS + (uint8_t)(stage_then_surfaces * 2u) * 4u;

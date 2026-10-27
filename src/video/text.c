@@ -3,7 +3,7 @@
  *    Description: the text: the fonts, the text layer's strings, numbers in hexadecimal and BCD, text in sprites
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -15,7 +15,7 @@
    RAM at 318000. */
 void load_text_font(void)
 {
-	move_string(text_font_ADDRESS, 0x1800u, VIDEO_RAM + 0x18000u, 0x1800u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(VIDEO_RAM + 0x18000u, text_font_ADDRESS, 0x1800u);
 }
 
 /* Unused: builds the text layer's first 128 characters (318000, where load_text_font puts its 384) from
@@ -55,7 +55,7 @@ void load_shadowed_text_font(void)
 			shadow_pixels = row_pixels;
 			pixel_mask = row_pixels * 0xFu;
 			row_pixels = row_pixels * pen;
-			mem_write32(destination, byte_swap32((shadow & ~pixel_mask) | row_pixels));
+			TEXT_LAYER_FONT_ROWS(destination)[0] = byte_swap32((shadow & ~pixel_mask) | row_pixels);
 			shadow = (row_pixels + shadow_pixels) >> 4;
 			destination += 4u;
 			rows_left--;
@@ -92,7 +92,7 @@ uint32_t print_text_layer(uint32_t text_record)
 	{
 		do
 		{
-			mem_write16(cell_place, cell);
+			TEXT_LAYER_CELLS(cell_place)[0] = cell;
 			cell = (uint16_t)((cell & ~0xFFu) | TEXT_CHARACTERS(text_record)[0]);
 			cell_place += 2u;
 			text_record++;
@@ -112,9 +112,9 @@ void erase_text_layer_to_blank_character(uint32_t text_record)
 	blank_cell = 0u;
 	do
 	{
-		mem_write16(cell_place, blank_cell);
+		TEXT_LAYER_CELLS(cell_place)[0] = blank_cell;
 		cell_place += 2u;
-	} while (mem_read8(cell_place) != 0u);
+	} while ((uint8_t)TEXT_LAYER_CELLS(cell_place)[0] != 0u);
 }
 
 /* Unused: print_text_layer with the characters as halfwords: from the record R19, the cell's address
@@ -135,7 +135,7 @@ void print_text_layer_halfwords(uint32_t text_record)
 	{
 		do
 		{
-			mem_write16(cell_place, character | attribute);
+			TEXT_LAYER_CELLS(cell_place)[0] = character | attribute;
 			character = TEXT_HALFWORD_CHARACTERS(text_record)[0];
 			cell_place += 2u;
 			text_record += 2u;
@@ -154,9 +154,9 @@ void erase_text_layer_to_blank_cell(uint32_t text_record)
 	blank_cell = 0u;
 	do
 	{
-		mem_write16(cell_place, blank_cell);
+		TEXT_LAYER_CELLS(cell_place)[0] = blank_cell;
 		cell_place += 2u;
-	} while (mem_read16(cell_place) != 0u);
+	} while (TEXT_LAYER_CELLS(cell_place)[0] != 0u);
 }
 
 /* Never runs in the scenarios (ISDN only): writes a number's low byte as two hex digits on the text
@@ -220,7 +220,7 @@ void print_hex_digits(uint32_t number, uint16_t cell, uint32_t digit_count, uint
 			cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 7u));
 		cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 0x30u));
 		cell_place -= 2u;
-		mem_write16(cell_place, cell);
+		TEXT_LAYER_CELLS(cell_place)[0] = cell;
 		higher_digits = number >> 4;
 		number = higher_digits;
 		digit_count--;
@@ -230,7 +230,7 @@ void print_hex_digits(uint32_t number, uint16_t cell, uint32_t digit_count, uint
 		do
 		{
 			cell_place -= 2u;
-			mem_write16(cell_place, number);
+			TEXT_LAYER_CELLS(cell_place)[0] = number;
 			digit_count--;
 		} while (digit_count != 0u);
 	}
@@ -339,24 +339,24 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 	do
 	{
 		character = (uint16_t)(((uint32_t)character << 3) + font);
-		mem_write32(sprite, sprite_words_0_1);
-		mem_write32(sprite_copy, sprite_words_0_1);
+		AS32(SPRITE_WORDS(sprite)[0]) = sprite_words_0_1;
+		AS32(SPRITE_WORDS(sprite_copy)[0]) = sprite_words_0_1;
 		sprite_copy += 4u;
 		sprite += 4u;
-		mem_write32(sprite, sprite_size);
-		mem_write32(sprite_copy, sprite_size);
+		AS32(SPRITE_WORDS(sprite)[0]) = sprite_size;
+		AS32(SPRITE_WORDS(sprite_copy)[0]) = sprite_size;
 		sprite_copy += 4u;
 		sprite += 4u;
-		mem_write32(sprite, place);
-		mem_write32(sprite_copy, place);
+		AS32(SPRITE_WORDS(sprite)[0]) = place;
+		AS32(SPRITE_WORDS(sprite_copy)[0]) = place;
 		sprite_copy += 4u;
 		sprite += 4u;
-		mem_write16(sprite, character);
-		mem_write16(sprite_copy, character);
+		SPRITE_WORDS(sprite)[0] = character;
+		SPRITE_WORDS(sprite_copy)[0] = character;
 		sprite_copy += 2u;
 		sprite += 2u;
-		mem_write16(sprite, attribute);
-		mem_write16(sprite_copy, attribute);
+		SPRITE_WORDS(sprite)[0] = attribute;
+		SPRITE_WORDS(sprite_copy)[0] = attribute;
 		sprite_copy += 2u;
 		place += x_step;
 		next_character = TEXT_CHARACTERS(text)[0];
@@ -369,8 +369,8 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 	if (text_depth_list_head == 0u)
 		SCREEN(depth_layer - 0x5678u)->text_depth_list_tail = sprite;
 	first_sprite = SCREEN(screen)->sprite_list_last + 0x10u;
-	mem_write32(sprite, text_depth_list_head);
-	mem_write32(sprite_copy, (uint16_t)(text_depth_list_head + 0x300u));
+	AS32(SPRITE_WORDS(sprite)[0]) = text_depth_list_head;
+	AS32(SPRITE_WORDS(sprite_copy)[0]) = (uint16_t)(text_depth_list_head + 0x300u);
 	SCREEN(screen)->sprite_list_last = sprite;
 	SCREEN(depth_layer - 0x5678u)->text_depth_list_head = (first_sprite >> 4) | 0x8000u;
 	SCREEN(screen)->sprite_groups++;

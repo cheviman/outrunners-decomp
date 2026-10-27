@@ -3,7 +3,7 @@
  *    Description: the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -86,11 +86,11 @@ uint32_t init_screen(void)
 				break;
 		}
 		L_013DB6 = false;
-		mem_write16(length_place, course_length);
+		STAGE_LENGTH_LIST(length_place)[0] = course_length;
 		courses_left--;
 		length_place += 2u;
 	} while (courses_left != 0u);
-	mem_write16(length_place, 0x14Au);
+	STAGE_LENGTH_LIST(length_place)[0] = 0x14Au;
 	return command_routine;
 }
 
@@ -105,7 +105,7 @@ void clear_screen_ram(void)
 	block_halfwords = 0x200u;
 	do
 	{
-		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(block, zero_block_ADDRESS, block_halfwords);
 		block += 0x400u;
 		blocks_left--;
 	} while (blocks_left != 0u);
@@ -119,16 +119,16 @@ uint32_t init_video(void)
 {
 	clear_video_ram();
 	load_text_font();
-	mem_write16(VIDEO_CONTROL, video_control_default);
+	VIDEO_CONTROL = video_control_default;
 	video_registers[0] = video_control_default;
 	if (flip_screen != 0u)
 	{
-		mem_write16(VIDEO_CONTROL, mem_read16(VIDEO_CONTROL) | 0x200u);
+		VIDEO_CONTROL |= 0x200u;
 		video_registers[0] |= 0x200u;
 	}
 	move_halfwords(scroll_targets_ADDRESS, zero_block_ADDRESS, 0x10u);
 	move_halfwords(VIDEO_RAM + 0x1FF02u, video_register_defaults_ADDRESS, 0x47u);
-	move_string(video_register_defaults_ADDRESS, 0x47u, video_registers_ADDRESS + 0x2u, 0x47u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(video_registers_ADDRESS + 0x2u, video_register_defaults_ADDRESS, 0x47u);
 	return reset_tile_layers();
 }
 
@@ -141,7 +141,7 @@ uint32_t reset_tile_layers(void)
 	uint32_t index = 0;
 	uint32_t first_scroll_target = 0, second_scroll_target = 0;
 
-	mem_write16(VIDEO_CONTROL, mem_read16(VIDEO_CONTROL) & 0xFFFu);
+	VIDEO_CONTROL &= 0xFFFu;
 	video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
 	RAM32(video_registers_ADDRESS + 0x40u + index * 4u) = 0u;
@@ -166,7 +166,7 @@ void clear_video_ram(void)
 	block_halfwords = 0x80u;
 	do
 	{
-		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(block, zero_block_ADDRESS, block_halfwords);
 		block += 0x100u;
 		blocks_left--;
 	} while (blocks_left != 0u);
@@ -182,7 +182,7 @@ void clear_text_layer(void)
 	block_halfwords = 0x80u;
 	do
 	{
-		move_string(zero_block_ADDRESS, block_halfwords, block, block_halfwords, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(block, zero_block_ADDRESS, block_halfwords);
 		block += 0x100u;
 		blocks_left--;
 	} while (blocks_left != 0u);
@@ -209,7 +209,7 @@ void clear_tile_pages(uint16_t last_page)
    halfwords copied from the zeros at 100800). */
 void clear_tile_page(uint16_t page)
 {
-	move_string(zero_block_ADDRESS, 0x200u, 0x300000u | (uint16_t)page, 0x200u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(0x300000u | (uint16_t)page, zero_block_ADDRESS, 0x200u);
 }
 
 /* Sets up the sprite chip at boot: its control registers 500000-50000C from 010B0A-010B0F (rendering
@@ -220,7 +220,7 @@ void init_sprite_chip(void)
 	uint16_t control_flip = 0;
 	uint32_t control_register = 0, control_values = 0;
 
-	mem_write16(SPRITE_RENDER_REQUEST, sprite_control_mode);
+	io_write16(SPRITE_RENDER_REQUEST, sprite_control_mode);
 	control_register = SPRITE_CONTROL + 0x4u;
 	control_flip = sprite_control_flip;
 	control_values = sprite_control_rest_ADDRESS;
@@ -247,19 +247,19 @@ void init_sprite_chip(void)
    21C000 (next_sprite_place), sprite_groups 0, and sprite_lists_set_up = 1 (nothing reads it). */
 void init_sprite_lists(void)
 {
-	move_string(sprite_ram_start_entries_ADDRESS, 0x28u, 0x400000u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
-	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_LIST_1_A;
-	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_LIST_2_A;
+	move_halfwords(SPRITE_RAM, sprite_ram_start_entries_ADDRESS, 0x28u);
+	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_LIST_1_A_ADDRESS;
+	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_LIST_2_A_ADDRESS;
 	SCREEN(SCREEN_1)->next_sprite_place = 0x20C000u;
 	SCREEN(SCREEN_2)->next_sprite_place = 0x21C000u;
-	mem_write16(SPRITE_LIST_1_A, 0xFFFFu);
-	mem_write16(SPRITE_LIST_1_A_HALFWAY, 0xFFFFu);
-	mem_write16(SPRITE_LIST_1_B, 0xFFFFu);
-	mem_write16(SPRITE_LIST_1_B_HALFWAY, 0xFFFFu);
-	mem_write16(SPRITE_LIST_2_A, 0xFFFFu);
-	mem_write16(SPRITE_LIST_2_A_HALFWAY, 0xFFFFu);
-	mem_write16(SPRITE_LIST_2_B, 0xFFFFu);
-	mem_write16(SPRITE_LIST_2_B_HALFWAY, 0xFFFFu);
+	SPRITE_LIST_1_A = 0xFFFFu;
+	SPRITE_LIST_1_A_HALFWAY = 0xFFFFu;
+	SPRITE_LIST_1_B = 0xFFFFu;
+	SPRITE_LIST_1_B_HALFWAY = 0xFFFFu;
+	SPRITE_LIST_2_A = 0xFFFFu;
+	SPRITE_LIST_2_A_HALFWAY = 0xFFFFu;
+	SPRITE_LIST_2_B = 0xFFFFu;
+	SPRITE_LIST_2_B_HALFWAY = 0xFFFFu;
 	sprite_lists_set_up = 1u;
 	sprite_list_buffers = 0u;
 	SCREEN(SCREEN_1)->sprite_groups &= 0xFF00u;
@@ -285,16 +285,16 @@ void init_mixer(void)
 	mixer = SCREEN(screen)->mixer;
 	move_halfwords_backward(mixer, mixer_register_defaults_ADDRESS, 0x28u);
 	move_halfwords(screen + 0x160u, mixer_register_defaults_ADDRESS, 0x28u);
-	move_string(mixer_register_defaults_ADDRESS, 0x28u, screen + 0x1B0u, 0x28u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0x1B0u, mixer_register_defaults_ADDRESS, 0x28u);
 	hidden_layer_pair = hidden_layer_pairs_ADDRESS + SCREEN(screen)->index * 2u;
 	first_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->first_layer;
 	second_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->second_layer;
 	mem_write16(mixer + first_layer * 2u, 0u);
 	mem_write16(mixer + second_layer * 2u, 0u);
-	mem_write16(screen + 0x160u + first_layer * 2u, 0u);
-	mem_write16(screen + 0x160u + second_layer * 2u, 0u);
-	mem_write16(screen + 0x1B0u + first_layer * 2u, 0u);
-	mem_write16(screen + 0x1B0u + second_layer * 2u, 0u);
+	SCREEN(screen)->mixer_values[(int32_t)first_layer] = 0u;
+	SCREEN(screen)->mixer_values[(int32_t)second_layer] = 0u;
+	SCREEN(screen)->mixer_defaults[(int32_t)first_layer] = 0u;
+	SCREEN(screen)->mixer_defaults[(int32_t)second_layer] = 0u;
 }
 
 /* Sets up the two I/O chips at boot: ports D, G and H outputs and cleared (the coin meters, lamps, LCD,
@@ -302,17 +302,17 @@ void init_mixer(void)
    86), and the first bank of the wheels' and pedals' A/D inputs (C00060). */
 void init_io_chips(void)
 {
-	mem_write8(IO_1_CNT, 6u);
-	mem_write8(IO_1_DIRECTION, 0xC8u);
-	mem_write8(IO_1_PORT_D, 0u);
-	mem_write8(IO_1_PORT_G, 0u);
-	mem_write8(IO_1_PORT_H, 0u);
-	mem_write8(IO_2_CNT, 0x86u);
-	mem_write8(IO_2_DIRECTION, 0xC8u);
-	mem_write8(IO_2_PORT_D, 0u);
-	mem_write8(IO_2_PORT_G, 0u);
-	mem_write8(IO_2_PORT_H, 0u);
-	mem_write8(ANALOG_BANK, 0u);
+	io_write8(IO_1_CNT, 6u);
+	io_write8(IO_1_DIRECTION, 0xC8u);
+	io_write8(IO_1_PORT_D, 0u);
+	io_write8(IO_1_PORT_G, 0u);
+	io_write8(IO_1_PORT_H, 0u);
+	io_write8(IO_2_CNT, 0x86u);
+	io_write8(IO_2_DIRECTION, 0xC8u);
+	io_write8(IO_2_PORT_D, 0u);
+	io_write8(IO_2_PORT_G, 0u);
+	io_write8(IO_2_PORT_H, 0u);
+	io_write8(ANALOG_BANK, 0u);
 }
 
 /* Copies data into sprite RAM outside the lists at boot: 1E0 bytes from 12297C to 410000, 2400 bytes
@@ -322,7 +322,7 @@ void load_sprite_ram_tables(void)
 {
 	move_halfwords(SPRITE_RAM + 0x10000u, solid_colour_blocks_ADDRESS, 0xF0u);
 	move_halfwords(SPRITE_RAM + 0x1000u, indirect_colour_tables_ADDRESS, 0x1200u);
-	move_string(last_colour_tables_ADDRESS, 0xC0u, SPRITE_RAM + 0x3400u, 0xC0u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(SPRITE_RAM + 0x3400u, last_colour_tables_ADDRESS, 0xC0u);
 }
 
 /* Unused: meant to copy R0 & 3F8 bytes from R10 to R11 by jumping into a run of 8-byte moves at 0109B4,

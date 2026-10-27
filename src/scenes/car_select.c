@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -79,7 +79,7 @@ void car_select_run(void)
 		setup_bits = setup + 4u;
 		set_up_background(background);
 		video_registers[2] |= mem_read16(setup_bits);
-		mem_write16(OBJECT(current_object)->car_select.second_scroll_y_address, 0xE0u);
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.second_scroll_y_address)[0] = 0xE0u;
 		object = start_object();
 		OBJECT(object)->handler = welcome_letter_start_ADDRESS;
 		OBJECT(current_object)->state++;
@@ -91,11 +91,11 @@ void car_select_run(void)
 		rows_to_fill = 0xE0u;
 		do
 		{
-			mem_write16(first_rowselect, row_number);
-			mem_write16(second_rowselect, row_number);
-			mem_write16(r12, row_number);
+			LINE_SELECTS(first_rowselect)[0] = row_number;
+			LINE_SELECTS(second_rowselect)[0] = row_number;
+			LINE_SELECTS(r12)[0] = row_number;
 			r12 = r12 + 2u;
-			mem_write16(fourth_rowselect, row_number);
+			LINE_SELECTS(fourth_rowselect)[0] = row_number;
 			fourth_rowselect += 2u;
 			row_number++;
 			rows_to_fill--;
@@ -107,7 +107,7 @@ void car_select_run(void)
 		move_halfwords(rowscroll_address + 0x800u, zero_block_ADDRESS, 0xE0u);
 		move_halfwords(rowscroll_address + 0x1000u, zero_block_ADDRESS, 0xE0u);
 		move_halfwords(rowscroll_address + 0x1800u, zero_block_ADDRESS, 0xE0u);
-		move_string(zero_block_ADDRESS, 0xE0u, screen + 0x3800u, 0xE0u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(screen + 0x3800u, zero_block_ADDRESS, 0xE0u);
 		return;
 	case 1:
 		if (SCREEN(screen)->unpack_state != 0u)
@@ -138,14 +138,14 @@ void car_select_run(void)
 			group_index = (uint8_t)(groups_left - 1u);
 			OBJECT(object)->turntable_scenery.group = group_index;
 		} while (groups_left != 1u);
-		default_car = car_select_default_cars[mem_read8(screen + 0x320u + SCREEN(screen)->player)];
+		default_car = car_select_default_cars[SCREEN(screen)->places[SCREEN(screen)->player]];
 		CAR(player_car)->model = (uint8_t)default_car;
 		CAR(player_car)->transmission = 0u;
 		OBJECT(current_object)->car_select.car_chosen = 0u;
 		OBJECT(current_object)->car_select.transmission_chosen = 0u;
 		default_car = (uint16_t)((uint32_t)default_car << 7);
-		mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - default_car);
-		mem_write16(OBJECT(current_object)->car_select.scroll_y_address, 0u);
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - default_car;
+		VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_y_address)[0] = 0u;
 		OBJECT(current_object)->car_select.angle = (uint32_t)default_car << 2;
 		OBJECT(current_object)->car_select.top_scroll = 0u;
 		OBJECT(current_object)->car_select.turn = 0;
@@ -257,7 +257,7 @@ void car_select_run(void)
 					new_angle = (uint16_t)(OBJECT(current_object)->car_select.angle - 0x20u);
 				}
 				OBJECT(current_object)->car_select.angle = new_angle;
-				mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (new_angle >> 2));
+				VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - (new_angle >> 2);
 				if ((uint8_t)OBJECT(current_object)->car_select.turn == 0u)
 				{
 					wheel_position = SCREEN(screen)->wheel;
@@ -459,13 +459,13 @@ void car_select_turn_to_choice(void)
 			{
 				turntable_angle -= 0x20u;
 				OBJECT(current_object)->car_select.angle = turntable_angle;
-				mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (turntable_angle >> 2));
+				VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - (turntable_angle >> 2);
 				car_select_skew_floor_previous();
 				return;
 			}
 			turntable_angle += 0x20u;
 			OBJECT(current_object)->car_select.angle = turntable_angle;
-			mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (turntable_angle >> 2));
+			VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - (turntable_angle >> 2);
 			car_select_skew_floor_next();
 			return;
 		}
@@ -481,13 +481,13 @@ void car_select_turn_to_choice(void)
 			{
 				turntable_angle -= 0x20u;
 				OBJECT(current_object)->car_select.angle = turntable_angle;
-				mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (turntable_angle >> 2));
+				VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - (turntable_angle >> 2);
 				car_select_skew_floor_previous();
 				return;
 			}
 			turntable_angle += 0x20u;
 			OBJECT(current_object)->car_select.angle = turntable_angle;
-			mem_write16(OBJECT(current_object)->car_select.scroll_x_address, 0u - (turntable_angle >> 2));
+			VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.scroll_x_address)[0] = 0u - (turntable_angle >> 2);
 			car_select_skew_floor_next();
 			return;
 		}
@@ -520,8 +520,8 @@ void car_select_update_rowscroll(void)
 	lines_left = 0x68u;
 	do
 	{
-		mem_write16(near_scroll_place, line_scroll);
-		mem_write16(r12, line_scroll);
+		LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
+		LINE_SCROLL_VALUES(r12)[0] = line_scroll;
 		r12 = r12 + 2u;
 		lines_left--;
 		near_scroll_place += 2u;
@@ -535,10 +535,10 @@ void car_select_update_rowscroll(void)
 		lines_left = 0x78u;
 		do
 		{
-			line_scroll = shift_by(mem_read16(line_offsets), (uint8_t)fraction_shift, 16);
-			mem_write16(near_scroll_place, line_scroll);
+			line_scroll = shift_by(FLOOR_LINE_OFFSETS(line_offsets)[0], (uint8_t)fraction_shift, 16);
+			LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
 			near_scroll_place += 2u;
-			mem_write16(r12, line_scroll);
+			LINE_SCROLL_VALUES(r12)[0] = line_scroll;
 			r12 = r12 + 2u;
 			lines_left--;
 			line_offsets += 2u;
@@ -596,12 +596,12 @@ void car_select_skew_floor(uint16_t skew_step)
 	do
 	{
 		skew += skew_step;
-		near_offset = (uint16_t)(mem_read16(line_offsets) + skew);
+		near_offset = (uint16_t)(FLOOR_LINE_OFFSETS(line_offsets)[0] + skew);
 		far_offset = (uint16_t)(near_offset + skew);
-		mem_write16(line_offsets, far_offset);
-		mem_write16(near_scroll_place, shift_by(near_offset, (uint8_t)fraction_shift, 16));
+		FLOOR_LINE_OFFSETS(line_offsets)[0] = far_offset;
+		LINE_SCROLL_VALUES(near_scroll_place)[0] = shift_by(near_offset, (uint8_t)fraction_shift, 16);
 		near_scroll_place += 2u;
-		mem_write16(r12, shift_by(far_offset, (uint8_t)fraction_shift, 16));
+		LINE_SCROLL_VALUES(r12)[0] = shift_by(far_offset, (uint8_t)fraction_shift, 16);
 		r12 = r12 + 2u;
 		lines_left--;
 		line_offsets += 2u;
@@ -939,7 +939,7 @@ void turntable_scenery_show(void)
 		{
 			item_place += 2u;
 			saved_place += 2u;
-			mem_write16(saved_place, 0u);
+			ITEM_PLACE_WORDS(saved_place)[0] = 0u;
 			saved_place += 2u;
 			continue;
 		}
@@ -949,16 +949,16 @@ void turntable_scenery_show(void)
 		down = TURNTABLE_SCENERY_ITEM(item_place - 0x4u)->height;
 		point_depth += 0x140u;
 		kept_saved_place = saved_place;
-		OBJECT(current_object)->previous_place = (screen & ~0xFFFFu) | mem_read16(saved_place);
-		OBJECT(current_object)->flags = (OBJECT(current_object)->flags & 0xDFu) | mem_read16(saved_place + 2u);
+		OBJECT(current_object)->previous_place = (screen & ~0xFFFFu) | ITEM_PLACE_WORDS(saved_place)[0];
+		OBJECT(current_object)->flags = (OBJECT(current_object)->flags & 0xDFu) | ITEM_PLACE_WORDS(saved_place)[1];
 		kept_item_place = item_place + 2u;
 		leftover = turntable_draw(across, down, point_depth);
 		item_place = kept_item_place;
 		saved_place = kept_saved_place;
-		mem_write16(saved_place, (uint16_t)OBJECT(current_object)->turntable_scenery.previous_place);
+		ITEM_PLACE_WORDS(saved_place)[0] = (uint16_t)OBJECT(current_object)->turntable_scenery.previous_place;
 		item_flags = (uint16_t)((leftover & ~0xFFu) | OBJECT(current_object)->flags);
 		saved_place += 2u;
-		mem_write16(saved_place, (item_flags & ~0xFFu) | (item_flags & 0x20u));
+		ITEM_PLACE_WORDS(saved_place)[0] = (item_flags & ~0xFFu) | (item_flags & 0x20u);
 		saved_place += 2u;
 	}
 	ignored = animation_advance(0u);
@@ -1829,7 +1829,7 @@ void waiting_banner_show(void)
 void car_select_entries_run(void)
 {
 	uint8_t own_car_number = 0;
-	uint32_t car_flag = 0, chosen_car = 0, flag_blink_frames = 0, object = 0, players_left = 0, racer = 0, racer_car_number = 0, racer_place = 0, racers_left = 0;
+	uint32_t car_flag = 0, chosen_car = 0, flag_blink_frames = 0, ignored = 0, lcd_text_end = 0, object = 0, players_left = 0, racer = 0, racer_car_number = 0, racer_place = 0, racers_left = 0;
 	uint8_t blink_timer = 0;
 	uint32_t own_digit_place = 0, car_choice = 0;
 
@@ -1842,11 +1842,11 @@ void car_select_entries_run(void)
 		OBJECT(current_object)->state++;
 		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
-		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
 		players_left = player_count;
 		do
 		{
-			mem_write8(r27 + mem_read8(0x20E02Fu + players_left), 0x5Fu);
+			mem_write8(lcd_text_end + mem_read8(0x20E02Fu + players_left), 0x5Fu);
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];
@@ -1858,11 +1858,11 @@ void car_select_entries_run(void)
 	case 1:
 		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
-		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
 		players_left = player_count;
 		do
 		{
-			mem_write8(r27 + mem_read8(0x20E02Fu + players_left), 0x5Fu);
+			mem_write8(lcd_text_end + mem_read8(0x20E02Fu + players_left), 0x5Fu);
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];
@@ -1885,11 +1885,11 @@ void car_select_entries_run(void)
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
 	}
 	racer_place = OBJECT(current_object)->car_select_entries.race_order;
-	racers_left = mem_read8(racer_place);
+	racers_left = RACER_NUMBERS(racer_place)[0];
 	racer_place++;
 	do
 	{
-		racer = mem_read8(racer_place);
+		racer = RACER_NUMBERS(racer_place)[0];
 		racer_place++;
 		if (SCREEN(screen)->player != racer && (OBJECT(current_object)->car_select_entries.shown_players & shl32(1u, (int)(racer))) == 0u)
 		{
@@ -2269,7 +2269,7 @@ void entry_countdown_count(void)
 	divux_pair(0x1Eu, &time_shown, &remainder);
 	OBJECT(current_object)->frame = time_shown;
 	OBJECT(OBJECT(current_object)->entry_countdown.car_ring)->entry_car_ring.copies = remainder;
-	move_string(entry_countdown_lcd_texts[(remainder + 2u) / 5u], 7u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+	move_halfwords(screen + 0xF12u, entry_countdown_lcd_texts[(remainder + 2u) / 5u], 7u);
 	remainder = 0u;
 	divux_pair(0xAu, &time_shown, &remainder);
 	zero = (uint32_t)(time_shown == 0u);

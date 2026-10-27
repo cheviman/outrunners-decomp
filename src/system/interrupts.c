@@ -3,7 +3,7 @@
  *    Description: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -27,15 +27,13 @@
 void int_vector_40(void)
 {
 	uint32_t calibration = 0, screen_vblank_counter = 0, tile_bank_bits = 0;
-	uint32_t saved_r28 = 0, saved_r27 = 0, saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
+	uint32_t saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
 
-	saved_r28 = r28;
-	saved_r27 = r27;
 	saved_screen = screen;
 	saved_r12 = r12;
 	vblank_counter++;
 	vblanks_since_start++;
-	mem_write16(IRQ_TIMER_0, vblank_timer_period);
+	io_write16(IRQ_TIMER_0, vblank_timer_period);
 	timer_interrupts_left = 0x22u;
 	debug_timer_rounds--;
 	if (SCREEN(screen)->index != 0u)
@@ -48,19 +46,19 @@ void int_vector_40(void)
 		screen = saved_screen_2;
 		if (send_video_registers == 0u)
 		{
-			move_halfwords(VIDEO_RAM + 0x1FF20u, video_registers_ADDRESS + 0x20u, 8u);
+			move_halfwords(NBG2_SCROLL_X_ADDRESS, video_registers_ADDRESS + 0x20u, 8u);
 			move_halfwords(VIDEO_RAM + 0x1FF40u, video_registers_ADDRESS + 0x40u, 8u);
 		}
 		else
 		{
 			send_video_registers = 0u;
-			move_halfwords(VIDEO_CONTROL, video_registers_ADDRESS, 0x48u);
+			move_halfwords(VIDEO_CONTROL_ADDRESS, video_registers_ADDRESS, 0x48u);
 		}
 		tile_bank_bits = tile_banks[0];
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[1]);
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[2]);
 		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[3]);
-		mem_write8(IO_1_PORT_H, (tile_bank_bits << 6) | (tile_bank_bits >> 2));
+		io_write8(IO_1_PORT_H, (tile_bank_bits << 6) | (tile_bank_bits >> 2));
 	}
 	finish_sprite_list();
 	send_sound_requests();
@@ -92,17 +90,15 @@ void int_vector_40(void)
 	if (single_task == 0u && ((test_mode_on != 0u && SCREEN(screen)->index == 0u) || task_swapping != 0u))
 		swap_tasks();
 	screen_vblank_counter = screen_vblank_counters[SCREEN(screen)->index];
-	mem_write8(screen_vblank_counter, mem_read8(screen_vblank_counter) + 1u);
+	VBLANK_COUNT(screen_vblank_counter)[0]++;
 	r12 = saved_r12;
 	screen = saved_screen;
-	r27 = saved_r27;
-	r28 = saved_r28;
-	mem_write8(IRQ_ACKNOWLEDGE, 0xFEu);
+	io_write8(IRQ_ACKNOWLEDGE, 0xFEu);
 }
 
-/* In the vertical blank, a screen's mixer and colours: while the screen's unk_94 bit 0 is set, a step of
-   its colour offsets (step_screen_fade) into the mixer's colour offset registers (3E-4B); unk_94 bit 2
-   (cleared) sends the mixer settings at 160 of the screen (registers 00-3D and 4C-4F); unk_94 bit 3
+/* In the vertical blank, a screen's mixer and colours: while the screen's flags bit 0 is set, a step of
+   its colour offsets (step_screen_fade) into the mixer's colour offset registers (3E-4B); flags bit 2
+   (cleared) sends the mixer settings at 160 of the screen (registers 00-3D and 4C-4F); flags bit 3
    (cleared) makes the set at 1B0 the current one and sends it; then the queued palettes
    (upload_queued_palettes). */
 void vblank_update_mixer(void)
@@ -113,7 +109,7 @@ void vblank_update_mixer(void)
 	if ((SCREEN(screen)->flags & 1u) != 0u)
 	{
 		step_screen_fade();
-		move_string(screen + 0x19Eu, 7u, SCREEN(screen)->mixer + 0x3Eu, 7u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(SCREEN(screen)->mixer + 0x3Eu, screen + 0x19Eu, 7u);
 	}
 	flags = SCREEN(screen)->flags;
 	SCREEN(screen)->flags = flags & ~4u;
@@ -121,7 +117,7 @@ void vblank_update_mixer(void)
 	{
 		mixer = SCREEN(screen)->mixer;
 		move_halfwords(mixer, screen + 0x160u, 0x1Fu);
-		move_string(screen + 0x1ACu, 2u, mixer + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(mixer + 0x4Cu, screen + 0x1ACu, 2u);
 	}
 	flags_2 = SCREEN(screen)->flags;
 	SCREEN(screen)->flags = flags_2 & ~8u;
@@ -131,7 +127,7 @@ void vblank_update_mixer(void)
 		move_halfwords(screen + 0x160u, screen + 0x1B0u, 0x1Fu);
 		move_halfwords(screen + 0x1ACu, screen + 0x1FCu, 2u);
 		move_halfwords(mixer, screen + 0x1B0u, 0x1Fu);
-		move_string(screen + 0x1FCu, 2u, mixer + 0x4Cu, 2u, 2u, 0u, 0u, 0u, &r27, &r28);
+		move_halfwords(mixer + 0x4Cu, screen + 0x1FCu, 2u);
 	}
 	if (SCREEN(screen)->palette_upload_count != 0u)
 		upload_queued_palettes();
@@ -149,46 +145,46 @@ void vblank_update_scrolls(void)
 	uint32_t new_scroll = 0, old_scroll = 0, other_layer = 0, running_layer = 0;
 
 	running_layer = SCREEN(screen)->index * 2u;
-	mem_write32(VIDEO_RAM + 0x1FF10u + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x10u + running_layer * 4u));
-	mem_write32(VIDEO_RAM + 0x1FF14u + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x14u + running_layer * 4u));
+	mem_write32(NBG0_SCROLL_X_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x10u + running_layer * 4u));
+	mem_write32(NBG0_SCROLL_Y_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x14u + running_layer * 4u));
 	other_layer = 0u - running_layer + 2u;
 	old_scroll = RAM32(video_registers_ADDRESS + 0x10u + other_layer * 4u);
 	new_scroll = scroll_targets[other_layer];
 	RAM32(video_registers_ADDRESS + 0x10u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 6;
-	mem_write32(VIDEO_RAM + 0x1FF10u + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
+	mem_write32(NBG0_SCROLL_X_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
 	old_scroll = RAM32(video_registers_ADDRESS + 0x14u + other_layer * 4u);
 	new_scroll = scroll_targets[1 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x14u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 7;
-	mem_write32(VIDEO_RAM + 0x1FF14u + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
-	mem_write32(VIDEO_RAM + 0x1FF20u + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x20u + running_layer * 4u));
-	mem_write32(VIDEO_RAM + 0x1FF24u + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x24u + running_layer * 4u));
+	mem_write32(NBG0_SCROLL_Y_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
+	mem_write32(NBG2_SCROLL_X_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x20u + running_layer * 4u));
+	mem_write32(NBG2_SCROLL_Y_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x24u + running_layer * 4u));
 	old_scroll = RAM32(video_registers_ADDRESS + 0x20u + other_layer * 4u);
 	new_scroll = scroll_targets[4 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x20u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 6;
-	mem_write32(VIDEO_RAM + 0x1FF20u + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
+	mem_write32(NBG2_SCROLL_X_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
 	old_scroll = RAM32(video_registers_ADDRESS + 0x24u + other_layer * 4u);
 	new_scroll = scroll_targets[5 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x24u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 7;
-	mem_write32(VIDEO_RAM + 0x1FF24u + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
+	mem_write32(NBG2_SCROLL_Y_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
 	control_byte = (uint8_t)(video_registers[2] >> 8u);
-	mem_write8(VIDEO_LINE_CONTROL_HIGH, control_byte);
+	VIDEO_LINE_CONTROL_HIGH = control_byte;
 	video_registers[2] = (video_registers[2] & 0xFFu) | (((control_byte + 4u) & 0xECu & 0xFFu) << 8u);
 }
 
 /* The end of the vertical blank (IRQ 1): only acknowledged. */
 void int_vector_41(void)
 {
-	mem_write8(IRQ_ACKNOWLEDGE, 0xFDu);
+	io_write8(IRQ_ACKNOWLEDGE, 0xFDu);
 }
 
 /* The sound CPU's interrupt (IRQ 2): only acknowledged. The sound program never raises it. */
 void int_vector_42(void)
 {
-	mem_write8(IRQ_ACKNOWLEDGE, 0xFBu);
+	io_write8(IRQ_ACKNOWLEDGE, 0xFBu);
 }
 
 /* Timer 0 (IRQ 3), which int_vector_40 starts each frame at its shortest period: sends the LCD its next
@@ -203,9 +199,9 @@ void int_vector_43(void)
 	interrupts_left = timer_interrupts_left;
 	timer_interrupts_left = interrupts_left - 1u;
 	if (interrupts_left != 1u)
-		mem_write16(IRQ_TIMER_0, lcd_timer_period);
+		io_write16(IRQ_TIMER_0, lcd_timer_period);
 	lcd_send_next_nibble();
-	mem_write8(IRQ_ACKNOWLEDGE, 0xF7u);
+	io_write8(IRQ_ACKNOWLEDGE, 0xF7u);
 }
 
 /* Timer 1 (IRQ 4), the link board's: outside the ISDN mode (isdn_mode) only acknowledged, which leaves
@@ -222,14 +218,14 @@ void int_vector_44(void)
 
 	if (isdn_mode == 0u)
 	{
-		mem_write8(IRQ_ACKNOWLEDGE, 0xEFu);
+		io_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 		return;
 	}
 	link_wait_count++;
 	timer_period = 1u;
-	received_kind = mem_read8(LINK_MESSAGE_KIND);
+	received_kind = io_read8(LINK_MESSAGE_KIND);
 	message_kind = received_kind;
-	mem_write8(LINK_MESSAGE_KIND, 0u);
+	io_write8(LINK_MESSAGE_KIND, 0u);
 	if (message_kind < 4u)
 	{
 		switch (message_kind)
@@ -247,8 +243,8 @@ void int_vector_44(void)
 			invalid_jump(link_message_kind_jumps[message_kind]);
 		}
 	}
-	mem_write16(IRQ_TIMER_1, timer_period);
-	mem_write8(IRQ_ACKNOWLEDGE, 0xEFu);
+	io_write16(IRQ_TIMER_1, timer_period);
+	io_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 }
 
 /* The vectors no interrupt uses (250 of the 256): halt instructions, on into int_vector_02's. */
@@ -310,7 +306,7 @@ void send_sound_requests(void)
 	queue++;
 	if (sound_queue_read != sound_queue_write)
 	{
-		mem_write8(command_offset + SOUND_COMMAND_1, mem_read8(queue + sound_queue_read));
+		mem_write8(command_offset + SOUND_COMMAND_1_ADDRESS, SCREEN(queue - 0x802u)->sound_queue[(int32_t)sound_queue_read]);
 		SCREEN(queue - 0x802u)->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
 	}
 	second_queue = screen + 0x840u;
@@ -320,7 +316,7 @@ void send_sound_requests(void)
 	second_queue++;
 	if (second_sound_queue_read != second_sound_queue_write)
 	{
-		mem_write8(command_offset + SOUND_SECOND_COMMAND_1, mem_read8(second_queue + second_sound_queue_read));
+		mem_write8(command_offset + SOUND_SECOND_COMMAND_1_ADDRESS, SCREEN(second_queue - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_read]);
 		SCREEN(second_queue - 0x842u)->second_sound_queue_read = (second_sound_queue_read + 1u) & 0x1Fu;
 	}
 }
@@ -340,15 +336,15 @@ void count_total_time(void)
 		total_time_count = time_count;
 		return;
 	}
-	total_time = BOOKKEEPING_TOTAL_TIME;
-	if (mem_read32(BOOKKEEPING_TOTAL_TIME) % 0x49u != 0u)
+	total_time = BOOKKEEPING_TOTAL_TIME_ADDRESS;
+	if (BOOKKEEPING_TOTAL_TIME % 0x49u != 0u)
 	{
 		total_time_count = time_count - 0x3E8u;
-		if (mem_read32(total_time) != 0xFFFFFFFFu)
+		if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
 		{
-			mem_write32(total_time, mem_read32(total_time) + 1u);
+			BOOKKEEPING_COUNT32(total_time)->value++;
 			bookkeeping_update_checksum(time_count);
-			mem_write32(total_time + 0x7Cu, mem_read32(total_time + 0x7Cu) + 1u);
+			BOOKKEEPING_COUNT32(total_time)->backup++;
 		}
 		return;
 	}
@@ -359,11 +355,11 @@ void count_total_time(void)
 	}
 	time_count = (uint16_t)(time_count - 0x3E8u);
 	total_time_count = time_count - 0x3E8u;
-	if (mem_read32(total_time) != 0xFFFFFFFFu)
+	if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
 	{
-		mem_write32(total_time, mem_read32(total_time) + 1u);
+		BOOKKEEPING_COUNT32(total_time)->value++;
 		bookkeeping_update_checksum(time_count);
-		mem_write32(total_time + 0x7Cu, mem_read32(total_time + 0x7Cu) + 1u);
+		BOOKKEEPING_COUNT32(total_time)->backup++;
 	}
 }
 
@@ -406,7 +402,7 @@ void update_lamps(void)
 	port_d = port_d_outputs[0] | checkpoint_lamp[0] | leader_lamp[0];
 	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
 		port_d |= wheel_motor[0];
-	mem_write8(IO_1_PORT_D, port_d);
+	io_write8(IO_1_PORT_D, port_d);
 	if (checkpoint_lamp_2_blinks != 0u)
 	{
 		checkpoint_2_timer = checkpoint_lamp_2_timer;
@@ -432,7 +428,7 @@ void update_lamps(void)
 	port_d = port_d_outputs[1] | checkpoint_lamp_2 | leader_lamp_2;
 	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
 		port_d |= wheel_motor[1];
-	mem_write8(IO_2_PORT_D, port_d);
+	io_write8(IO_2_PORT_D, port_d);
 	screen_block = SCREEN_1;
 	port_g = port_g_outputs_ADDRESS;
 	update_button_lamps(screen_block, port_g);
@@ -450,7 +446,7 @@ void update_button_lamps(uint32_t screen_block, uint32_t port_g)
 	uint8_t arrows_mode = 0, button_lamps = 0, lamps = 0;
 	uint8_t music_lamp_timer = 0, arrows_lamp_timer = 0;
 
-	lamps = mem_read8(port_g);
+	lamps = PORT_OUTPUT_BITS(port_g)[0];
 	button_lamps = (uint8_t)SCREEN(screen_block)->button_lamps;
 	if (button_lamps != SCREEN(screen_block)->music_lamp_mode)
 	{
@@ -488,7 +484,7 @@ void update_button_lamps(uint32_t screen_block, uint32_t port_g)
 				SCREEN(screen_block)->arrows_lamp_timer = arrows_mode;
 			}
 		}
-		mem_write8(port_g, lamps);
+		PORT_OUTPUT_BITS(port_g)[0] = lamps;
 		return;
 	}
 	SCREEN(screen_block)->arrows_lamp_mode = arrows_mode;
@@ -496,15 +492,15 @@ void update_button_lamps(uint32_t screen_block, uint32_t port_g)
 	{
 		lamps ^= 2u;
 		SCREEN(screen_block)->arrows_lamp_timer = arrows_mode;
-		mem_write8(port_g, lamps);
+		PORT_OUTPUT_BITS(port_g)[0] = lamps;
 		return;
 	}
 	if (arrows_mode == 0u)
 	{
 		lamps &= ~2u;
-		mem_write8(port_g, lamps);
+		PORT_OUTPUT_BITS(port_g)[0] = lamps;
 		return;
 	}
 	lamps |= 2u;
-	mem_write8(port_g, lamps);
+	PORT_OUTPUT_BITS(port_g)[0] = lamps;
 }
