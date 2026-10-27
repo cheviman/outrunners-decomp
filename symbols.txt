@@ -92,6 +92,7 @@ field road_row_record 0A y_offset s16           # -> object 24
 field road_row_record 0C spacing u16            # -> object 10
 field road_row_record 0E count u16              # -> object 12
 field road_row_record 10 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 0128CA, 012B42 "test.w [R10]": none when its first 32 bits are 0; its address -> object 60, where road_row_hit_check reads it (two bounds along the road, two across: 020EBF 30 -30 50 250, decimal)
+field road_row_record 14 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
 # The objects of a road's stream (road_object_streams), each a (position, command) halfword pair; command 0
 # goes on with the object's handler and its parameter (12 bytes in all; 1 and 2 are 4, 3 a fork: the table of
 # its branches' streams follows): road_object_stream_read 01273D "movz.hw [R10+], R0" (compared with car
@@ -117,6 +118,7 @@ field flashing_scenery_record 0C y_offset s16           # 012947 -> object 24
 field flashing_scenery_record 0E spacing u16            # 01294C -> object 10
 field flashing_scenery_record 10 count u16              # 012951 -> object 12
 field flashing_scenery_record 12 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 012956 "test.w [R10]": none when its first 32 bits are 0; its address -> object 60
+field flashing_scenery_record 16 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
 # The palettes a flashing_scenery cycles through, one a frame (flashing_scenery_update 012990 "movs.hw [R10+],
 # R0"): a negative entry goes back that many bytes (012997 "add.w R0, R10") to the list's start (-8 after
 # three, -18 after eight, decimal: 021041, 022FF2, 023E56, 024C16, 0287AA, 02C444)
@@ -191,6 +193,7 @@ field start_gate_record 0A y_offset s16           # 012FFF -> object 24
 field start_gate_record 0C spacing u16            # 013004 -> object 10
 field start_gate_record 0E count u16              # 013009 -> object 12
 field start_gate_record 10 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 01300E "test.w [R10]": none when its first 32 bits are 0; its address -> object 60
+field start_gate_record 14 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
 # The record of a man with a chequered flag: the one at the start (start_flagman_update 01309B-0130B7, 020D14)
 # and the ones at the forks and the goal (flagman_update 01311C-013138, 02DA44 and 02DC07): the standing and
 # the waving animations (6E, 6F), the palette (7B), the side and the offsets
@@ -371,6 +374,7 @@ comment start_object Takes the first free object slot of the screen (FF into its
 # 019266-019294: lists of routines an object runs one after another, a step each time; 019280 picks the list
 # by a number below 14 and keeps its place at 38[R20]
 01966C  data  dj_remark_lists  pointers=14 record=4 end=00000000 code=0
+0196F8  data  dj_mouth_shapes      # the DJ's mouth shapes, a string a message (dj_messages' low 24 bits point at them): shapes 0-2 (dj_face_characters), lcd_update one every third frame (0189F3), closed by a negative byte
 019294  code  routine_list_jump  calls=dj_remark_lists   # "jmp [R0]": the list's next routine
 
 # ======== code and data nothing uses ========
@@ -390,10 +394,23 @@ comment start_object Takes the first free object slot of the screen (FF into its
 001737  code  unused_001737      # unused object set-up; its handler (001820) calls into 011EB8 at 011EC0
 001783  code  unused_001783      # unused object set-up, like unused_001737
 0017CF  code  unused_0017CF      # unused object set-up, like unused_001737
-00183B  data  unk_00183B         # unused: bytes 60-67
+# Five tables by the screen's attract_car (screen 9C), read only by the unused object set-ups before them:
+# unused_0017CF's sound (into its field B, which its handler at 001820 hands to request_sound: the car's name),
+# then the animation and palette of unused_001783's sprite (at 50 A0), of unused_001737's (at A0 A0) and the
+# palette of unused_0017CF's car caption letters (animation 26E, its frame by the car)
+00183B  table unused_attract_car_name_sounds  u8           # unused (unused_0017CF "mov.b 183B[PC](R0), B[R20]"): 60-67 (62 66 61 65 60 64 63 67), then a byte of padding
+001844  table unused_attract_car_animations_2  u16         # unused (unused_001783 "movz.hw 1844[PC](R0), R9"): 0DD6-0DDD
+001854  table unused_attract_car_palettes_2  u16           # unused (unused_001783 "mov.h 1854[PC](R0), 3A[R20]"): 00B6-00BD
+001864  table unused_attract_car_animations_1  u16         # unused (unused_001737 "movz.hw 1864[PC](R0), R9"): 03AC-06D8, 74 apart
+001874  table unused_attract_car_palettes_1  u16           # unused (unused_001737 "mov.h 1874[PC](R0), 3A[R20]"): 7E 83 97 9C 88 8D A1 92
+001884  table unused_attract_car_caption_palettes  u16     # unused (unused_0017CF "mov.h 1884[PC](R0), 3A[R20]"): 029B-02A2
 004578  func  route_map_leg_car_end         # unused: after a jump that always leaves (to 00EAE4)
-009EFC  data  unk_009EFC         # unused: 16-bit words 0DC6-0DCD
-009FE4  data  unk_009FE4         # unused: 32-bit numbers
+009EFC  table unused_car_animations  u16                 # unused: 0DC6-0DCD, eight numbers like the attract mode's unused animations by car (0DD6-0DDD at 001844)
+# Ten 32-bit numbers nothing reads, the same three times, each between a table and the code after it (006EC8,
+# 009FE4, 01060C): 150 150 110 110 300 1600 80 200 100 100 (decimal)
+006EC8  table unused_numbers_006EC8  u32                  # unused: after mega_driver_title (and two bytes of padding)
+009FE4  table unused_numbers_009FE4  u32                  # unused
+01060C  table unused_numbers_01060C  u32                  # unused: after segment_projection_pattern
 00A337  code  unused_00A337      # unused: what the branch before it skips, then on into the code at 00A373
 00AB04  data  distance_offset_functions  record=4 count=8 code=0   # unused: the addresses of the code after it (00AB24, 00AB36)
 00AB66  code  unused_00AB66      # unused: the code of distance_offset_functions, on into the code at 00A71B
@@ -403,8 +420,10 @@ comment start_object Takes the first free object slot of the screen (FF into its
 00D658  func  network_check_delay         # unused
 00D797  code  unused_00D797      # unused: what the branch before it skips, then on into 00D7CB
 00D7B1  code  unused_00D7B1      # unused: what the branch before it skips, then on into 00D7CB
-010309  data  unk_010309         # unused: bytes
-010425  data  unk_010425         # unused: bytes
+# Two tables of a byte a segment out from the window, like segment_projection_pattern after them, which nothing
+# reads: 4 for 9 segments, 3 for 19, 2 for 28, 1 for 56, 0 for 153, -1 for 19; and -2 for 28, -3 for 56, -4 for 144
+010309  table unused_segment_steps  s8                    # unused: right after rotate_offset's code
+010425  table unused_segment_shifts  s8                   # unused
 01078F  func  clear_tile_pages         # unused
 010996  func  unrolled_copy         # unused: copies by jumping into an unrolled run of moves
 010F66  func  unpack_list         # unused
@@ -456,10 +475,15 @@ field backdrop_record 0C approach_distance u32
 018009  func  backdrop_flashing_start         # unused object handler
 018094  table backdrop_flashing_state_jumps  u32   # backdrop_flashing_update (018092 "jmp [R0]") jumps through it by state: 01809C 0180A4
 01AFDC  func  kanji_text_viewer_update         # unused object handler: goes by its state (C[R20]) through the table after it
-01B248  data  unk_01B248         # unused: 16-bit words
+01B248  table unused_kanji_text_viewer_words  u16      # unused: 48D8 093C 0990 0984 09B4 0000, between the kanji text viewer's code and its kanji_texts
 01EA14  func  test_mode_duration_to_seconds         # unused: what the branch before it skips
 01EA4B  func  test_mode_split_minutes_seconds         # unused
-030B60  data  unk_030B60         # unused: data before the object data of stage_road_object_lists
+# The traffic's records, which the entries of stage_road_object_lists point at (their record, field 18 of the
+# object they start): traffic_sprite_record (animation, palette, sounds, weight, hit box: traffic_car_start
+# 013907-01392B, traffic_figure_update 013BBF-013BF9, traffic_hit_check 01267C-012685), traffic_record (12 apart:
+# its last two bytes nothing reads; traffic_car_start 013904-013939) and the leaders' traffic_line_record with
+# their followers (traffic_car_start_convoy 0138A2, 0138D9; traffic_figure_start_team 013B5A, 013B91)
+030B60  data  traffic_records
 03F7D8  code  unused_03F7D8      # unused: what the branch before it skips, then on into the code at 03F801
 03F86C  code  link_unused_case   # unused: a case of int_vector_44 (R0 and R1 pushed) its table at 03F85C does not list; it runs into the shared ending at 03F895
 
@@ -482,6 +506,7 @@ field backdrop_record 0C approach_distance u32
 0127FC  table crest_clip_state_jumps  u32   # crest_clip_update (0127F7) jumps through it by state: 012804 012831
 012888  table scenery_state_jumps  u32   # scenery_update (012885) jumps through it by state: road_row_start 0128FA 012900
 0129B8  table scenery_pair_state_jumps  u32   # scenery_pair_update (0129B4) jumps through it by state: road_row_start 0129C4 0129CA
+0129DC  table unused_0129D0_state_jumps  u32  # unused_0129D0 jumps through it by state: road_row_start 0129E8 0129EE; after a byte of padding
 012A00  table overhead_scenery_state_jumps  u32   # overhead_scenery_update (0129FD) jumps through it by state: 012A0C 012A14 012A14
 012A2C  table aurora_state_jumps  u32   # aurora_update (012A29) jumps through it by state: 012A38 012A7B 012A8C
 012ADC  table fork_sign_state_jumps  u32   # fork_sign_update (012AD8) jumps through it by state: road_row_start 012AE8 012900
@@ -780,6 +805,7 @@ field traffic_path_step 04 y u16
 019044  table car_radio_state_jumps  u32   # car_radio_update (019041 "jmp [R0]") jumps through it by state: 019068 019078 0190F0 019118 019132 01914C 019154 019167 019180
 0191E0  table car_radio_talk_step_jumps  u32   # car_radio_update (0191DC "jmp [R0]") jumps through it by talk_step: 0191F8 019205 019227 019249 019256 0192E4
 019458  table route_stage_radio_sounds  u8   # car_radio_update "mov.b 19458[PC](R0), R0" (019109, 019197) by screen route_stage: the station's sound, for request_sound; census ROM 019458-019477 (0D, then E1-F4)
+019478  data  radio_song_titles   # the songs' titles radio_songs points at (song_title_record: x, then the text closed by 0), Magical Sound Shower to Jingle Bell
 019571  table stage_level_radio_messages  u8   # car_radio_update "mov.b 19571[PC](R0), B[R20]" (01918A) by screen current_stage_level: queued_message; census ROM 019571-019575 (30 30 30 30 2E)
 01929E  func  car_radio_dj_leader
 0192B1  func  car_radio_dj_own_car
@@ -1517,6 +1543,7 @@ elements car_gear_ratios u8                       # a car's gear ratios, first g
 local gear_indicator_update 00C19D R2 old_ratio                 # the ratio of the gear shifted down from
 00D018  table  gear_indicator_animations  u16     # gear_indicator_update (00C12B "movz.hw D018[PC](R0), R9") by car top_gear: 7 (AUTO) for 0, 8 9 A B C for 1-5
 00D034  table  stage_level_texts  u32             # stage_indicator_draw (00C58A "mov.w D034[PC](R0), R19", draw_text) by screen route_stage_level: text records D04C PRE-STAGE, D05C 1, D064 2, D06C 3, D074 4, D07C FINAL STAGE
+00D04C  data  stage_level_text_records   # the draw_text records stage_level_texts points at: PRE-STAGE, 1, 2, 3, 4, FINAL STAGE
 00D0C0  table  lap_timer_checkpoint_states  u8    # lap_timer_update (00C4EC "mov.b D0C0[PC](R1), C[R20]") by the checkpoint passed less 1: its next state, 2 (the split shown) for 0-4, 3 (the last lap's time kept) for 5
 # Where checkpoint_board_draw_row puts a row's pieces, by row ("movea.w TABLE[PC](R0), R10" with row = object 12, then [R10+] twice)
 struct checkpoint_board_place 4 rom
@@ -1530,6 +1557,7 @@ local checkpoint_board_draw_row 00CD8F,00CDD5,00CE5C R10 place
 00CFE8  table  checkpoint_board_number_animations  u16  # checkpoint_board_draw_row (00CDAC "movz.hw CFE8[PC](R9), R9") by car_numbers[player]: animations 1D-24 for car numbers 0-7
 00CFF8  table  checkpoint_board_time_places  u32  # checkpoint_board_draw_row (00CE28 "mov.w CFF8[PC](R0), R3", draw_text_at's place) by row: x (low half) C0, y (high half) 40 50 ... B0
 00E4D0  table  link_board_ic_texts  u32           # network_check_show_ics (00D6D7 "mov.w E4D0(R3), R19", print_text_layer) by 2 * IC + its bit: IC17 GOOD E514, BAD E524; IC23 E534, E544; IC11 E554, E564; IC10 E574, E584; IC9 E594, E5A4
+00E4F8  data  link_board_ic_text_records   # COMMUNICATION BOARD TEST (characters alone, then FFFF), then the print_text_layer records link_board_ic_texts points at (IC17 GOOD ... IC9 BAD), each closed by FFFF
 00E0C4  table  race_copy_player_offsets  u32 race@20FC00  # players_not_ready (00DEE6 "mov.w E0C4[PC](R2), R2", then 1C5C[R24](R2): byte 5C of the record at 20FC00 + it) by player: 0, 80, 100 ... 380
 00E5B3  table  stage_start_times  u8              # race_progress_update (00DC30 "mov.b E5B3[PC](R0), R0", + master_time_difficulty, * 30 into time_left) by the stage the fork leads to: seconds, 40 for stage 0, 32 for 1-2, 34 for 3-6, 31 for 7-C, 40 for D-1E (1F: 0)
 00E5D3  table  fork_next_stages  u8               # race_progress_update (00DC28, 00DD9B) by stage * 2 + branch: the stage the branch leads to (1 2 for stage 0, 3 4 for 1, ... up to 1E)
@@ -1558,6 +1586,7 @@ local road_row_pair_draw 00F9DF R12 piece sprite_piece
 local road_row_pair_draw 00FA03 R13 size_steps sprite_size_step
 00F13C  table  sprite_flip_x_signs  u32           # put_object_sprites (00EF8C "mulu.w F13C[PC](R26), R17", R26 = flags & C0 >> 5: 0 2 4 6): 1, -1 (bit 6), 1, -1; the width's sign for the x offsets
 00F140  table  sprite_flip_y_signs  u32           # put_object_sprites (00EF94 "mulu.w F140[PC](R26), R18"): 1, 1, -1 (bit 7), -1; the height's sign for the y offsets
+00F4E8  table  smoothed_flip_x_signs  u32         # draw_object_smoothed (00F20C "mov.w F4E8[PC](R26), R17", R26 = flags & C0 >> 5: 0 2 4 6): 1, -1 (bit 6), 1, -1; records of two signs, smoothed_flip_signs (the y one) after each
 00F4EC  table  smoothed_flip_signs  u32           # draw_object_smoothed (00F214 "mov.w F4EC[PC](R26), R18", the same index): 1, 1, -1 (bit 7), -1
 # What finish_sprite_list switches to, by screen and buffer (sprite_list_switches: 00F3A8 "mov.w F508[PC](R9), R19")
 struct sprite_list_switch 14 rom
@@ -2192,6 +2221,7 @@ scoped object stage_result_line 28 stage u32
 # (boot 000032 "movea.b B4[PC], R10", 000040-00004C "mov.b [R10+], [R11+]"), between the 16 bytes it copies to E00000
 # (from 0000A4) and the interrupt controller's 12 (from 0000B8); census ROM 0000B4-0000B7: 01 04 01 01. One word here:
 # a record table this low would also take the structures' fields at these offsets (pointers.indexed_access)
+0000A4  data  boot_e00000_bytes                # the 16 bytes boot copies to E00000 (which the board does not map) a byte at a time (000026, 00002A); after a byte of padding
 0000B4  table boot_e80000_bytes  u32
 # Each seat's first car of the attract mode by its car number (second_task 00068B, 000694 "mov.b [R0](R1), 20809E": screen
 # next_attract_car), a list for each number of machines on the link (000675 "mov.w D14[PC](R0), R0" by machine_count);
@@ -2219,6 +2249,7 @@ local bar_picture_start 0010E0 R19 bar
 000F88  table isdn_this_side_text  u32               # THIS SIDE (000FDC)
 000F8C  table isdn_other_side_text  u32              # OTHER SIDE (000FE9)
 000F90  table isdn_total_text  u32                   # TOTAL (000FF7)
+000F94  data  isdn_texts                        # the seven texts (print_text_layer's records, no FFFF after them) the tables before it point at
 # The colour blocks (queue_palette's records) of the scenes, by number ("mov.w 31DDC(R19), R19"): 0-1F the stages'
 # (queue_stage_load by screen route_stage), 20-27 the scenes of the attract mode's cars (game_mode_car_presentation 00149F
 # by attract_car_scene_palettes), 28-2C by a constant number ("movz.bw #N, R19" before the read), which the C reads by
@@ -2239,6 +2270,7 @@ elements staff_credits_code_controls u8
 # The characters of a car's name, closed by 0 (car_name_start 0019A2 "mov.b [R10+], 9[R21]", 0019B7 "test.b [R10]")
 elements car_name_letters u8
 001CEC  table attract_car_names  u32 car_name_letters     # car_name_start 001985 "mov.w 1CEC[PC](R0), R10" by screen attract_car; census ROM 001CEC-001D0B: 001D0C-001D64 (MAD POWER, SPEED BUSTER, EASY HANDLING, SMOOTH OPERATOR, BAD BOY, ROAD MONSTER, QUICK REACTOR, WILD CHASER)
+001D0C  data  attract_car_name_texts   # the names attract_car_names points at, strings closed by 0 (car_name_letters)
 # A course's record as course_records keeps it (6 bytes): the car's model, the name's three letters, the time in hundredths;
 # load_course_records takes a course's default from here (001D8E "movea.b 2CC4[PC], R11", 001D9C "mov.w [R11+], [R12+]" the
 # model and the name, 001DA0 "mov.h [R11+], [R12+]" the time); census ROM 002CC4-002D03: models 0-7 0 1, SGA TSU WIZ AIK SNB KND HDK NKJ MKA SMA, all 7530 (5'00"00)
@@ -3835,6 +3867,7 @@ elements title_logo_palettes u16
 01AC44  table  title_logo_car_palettes  u16     # by car model 0-7 ("mov.h 1AC44[PC](R0), 3A[R20]", 01A374): 7E 7E 97 97 7E 8D 97 92
 # The prompt under the title (coin_prompt and its pieces)
 01A9BC  table  coin_prompt_lcd_texts  u32       # by message ("mov.w 1A9BC[PC](R0), F40[R25]", 01A7BB: screen lcd_scroll_request): Insert Coin(s), Insert More Coin(s), Turn the Ignition Key (01A9C8, 01A9D7, 01A9EB)
+01A9C8  data  coin_prompt_lcd_strings   # the LCD's texts coin_prompt_lcd_texts points at, strings closed by 0
 01A986  table  coin_prompt_car_animations  u16  # by car ("movz.hw 1A986[PC](R0), R9", 01A7DC): 401 475 4E9 55D 5D1 645 6B9 72D
 01A996  table  coin_prompt_car_palettes  u16    # by car_colour ("mov.h 1A996[PC](R0), R0", 01A7EC; + 4): 7E 7E 97 97 7E 8D 97 8D
 01A9A6  table  coin_prompt_message_animations  u16   # by message ("movz.hw 1A9A6[PC](R0), R9", 01A873): 2EE 2EF 2F0
@@ -3865,6 +3898,7 @@ param kanji_text_viewer_draw_quarter r13 rows kanji_character_rows
 01C380  table  test_mode_lcd_text_8_to_11  u32
 01C384  table  test_mode_lcd_text_12_to_15  u32
 01C560  table  test_mode_menu_headings  u32       # by test_mode_flags bit 0 ("mov.w 1C560[PC](R0), R10", 01C3BE, 01C5C9): the text records INDIVIDUAL (01C568), CONTINUE (01C578)
+01C568  data  test_mode_menu_heading_texts      # INDIVIDUAL and CONTINUE, test_mode_draw_texts' lists, which test_mode_menu_headings points at
 01C588  table  test_mode_menu_cursor_cells  u16   # by test_mode_cursor (01C3D6, 01C414): F312 F412 ... F992, 13 items
 01C45C  table  test_mode_page_jumps  u32          # by test_mode_cursor ("mov.w 1C45C[PC](R0), 704[R24]", 01C42A: test_mode_routine, which test_mode_frame calls): 01C5BA test_mode_memory_test test_mode_volume_adjustment test_mode_input_test test_mode_output_test test_mode_sound_test test_mode_crt_test test_mode_game_assignments test_mode_coin_assignments test_mode_network_assignments_start test_mode_bookkeeping_start test_mode_backup_data_clear_start test_mode_exit
 # The sums of the program ROM's chips, at the top of the first chips' space (test_mode_memory_test sums
@@ -3961,6 +3995,7 @@ local test_mode_network_assignments_exit 01E5FC r10 setting_places
 01E206  table  coin_manual_cursor_cells  u16        # by test_mode_page_cursor (01DEEC, 01DF2B): COIN TO CREDIT F402, BONUS ADDER F502, MULTIPLIER F602, EXIT F902
 01E20C  table  coin_manual_exit_cell  u16           # coin_manual_cursor_cells[3], where test_mode_coin_assignments_manual_start starts the cursor
 01E220  table  coin_setting_descriptions  u32   # by coin_setting ("mov.w 1E220[PC](R0), R11", 01DDCC): pairs of coins and credits ("movz.bw [R11+], R0", up to five), closed by 0 or by a negative byte and a text (FREE PLAY, MANUAL SETTING) closed by 0
+01E28C  data  coin_setting_description_records   # the descriptions coin_setting_descriptions points at: (coins, credits) pairs, closed by 0, or by FF and a text closed by 0
 # A coin/credit setting (01E3E8, by coin_setting * 4: test_mode_coin_assignments_next_setting 01DE69
 # "movea.w 1E3E8[PC](R0), R10", then "mov.b [R10+], ..." to 10, 13, 11 and 12[R20]): coins_per_credit,
 # bonus_adder, first_chute_multiplier, second_chute_multiplier; a negative first byte is FREE PLAY (the 26th,
@@ -3977,6 +4012,7 @@ local test_mode_coin_assignments_next_setting 01DE8F,01DE94 r10 setting
 01E682  table  network_assignments_exit_cell  u16      # network_assignments_cursor_cells[3], where test_mode_network_assignments_start starts the cursor
 01E684  table  communication_texts  u32                # by stand_alone ("mov.w 1E684[PC](R0), R10", 01E52F): text records NETWORK 01E698, STAND-ALONE 01E6AA
 01E68C  table  privilege_mode_texts  u32               # by test_mode_privilege_mode ("mov.w 1E68C[PC](R0), R10", 01E53D): text records SLAVE 01E6BC, MASTER 01E6C8
+01E698  data  privilege_mode_text_lists   # the test_mode_draw_texts lists privilege_mode_texts points at: NETWORK, STAND-ALONE, SLAVE, MASTER, ISDN
 # A privilege mode's settings (01E6E5, by test_mode_privilege_mode * 2: test_mode_network_assignments_
 # toggle_privilege_mode 01E5D4 "movea.h 1E6E5[PC](R0), R10", "mov.b [R10+], 21[R20]" link_master,
 # "mov.b [R10+], 23[R20]" isdn_mode): SLAVE 0 0, MASTER 1 0, ISDN 0 1
@@ -4015,6 +4051,8 @@ local test_mode_bookkeeping_draw_histogram 01E94A,01E956 r13 digit_step
 01F304  data  test_mode_palettes_1
 01F504  table  test_mode_palettes_2_bytes  u16
 01F506  data  test_mode_palettes_2
+01F706  data  unused_words_01F706            # unused: 0000 00CD 0000 00CA 0000 00CA 0000, after test_mode_palettes_2's 200 bytes
+01F714  data  unused_fill_01F714             # unused: FF up to road_object_streams (020800)
 # The texts the pages draw: test_mode_draw_texts' records (a cell, then colour codes and characters closed
 # by 0, again until a cell of 0), and draw_text's for the credits line (x, y, a third word, then the text)
 01AB62  data  credit_free_play_text            # FREE PLAY (credit_display_update)
@@ -5314,6 +5352,7 @@ local player_car_drive 00A41F,00A423,00A434,00A43B,00A47B,00A4C5,00A4C9,00A4DA,0
 00E00C  data  master_machine_text             # THIS MACHINE IS MASTER CONTROLLER.
 00E034  data  slave_machine_text              # THIS MACHINE IS SLAVE.
 00E055  data  isdn_machine_text               # THIS MACHINE IS ISDN MODE.
+00E07C  data  unused_race_copy_addresses      # unused: by player, the address of its race_copy record (20FC00, 20FC80 ... 20FF80, then 210000), what race_copy_offsets holds as offsets; after three bytes of padding
 00E10C  data  network_check_master_text       # NETWORK CHECK (MASTER) (network_check)
 00E128  data  network_check_slave_text        # NETWORK CHECK (SLAVE)
 00E143  data  network_check_isdn_text         # NETWORK CHECK (ISDN)
@@ -8563,3 +8602,67 @@ local load_course_records 001DBC R12 r12 course_record_copy+4
 elements bitmap_layer_words u32 board   # the bitmap layer's pixels in the video RAM, eight 4-bit pixels a word: kanji_text_viewer_draw_quarter writes a character's row at a time ("rvbyt 1A6340(R0), [R12]" 01B1ED)
 local kanji_text_viewer_draw_quarter entry R12 r12 bitmap_layer_words   # the quarter's first row (kanji_text_viewer_draw_character: place, + 4, + 800, + 804)
 local kanji_text_viewer_draw_quarter 01B1F6 R12 r12 bitmap_layer_words   # "movea.b 100[R12], R12": the next row
+
+# ======== animation numbers by name (the sprite naming) ========
+# The animations (sprite_animations) the functions start by a number, where the number is only that animation in
+# the function (animation_start's R9, the field it goes into, or the one a handler compares with)
+constant time_digits_start 3 TIME_DIGITS
+constant stage_result_line_draw 4 PLACE_NUMBER
+constant place_count_update 5 PLACE_COUNT
+constant rev_meter_update 6 REV_METER
+constant shift_up_hint_update E SHIFT_UP_HINT
+constant speed_unit_update 10 SPEED_UNIT_KMH
+constant speedometer_update 12 SPEED_DIGITS
+constant lap_timer_update 2D LAP_TIMER
+constant stage_indicator_start 2E STAGE_INDICATOR
+constant extend_time_message_start 33 EXTEND_TIME
+constant branch_arrow_update 34 BRANCH_ARROW_LEFT
+constant branch_arrow_update 35 BRANCH_ARROW_RIGHT
+constant checkpoint_board_draw_row 36 CHECKPOINT_BOARD_ROW
+constant goal_update 2F5 CONGRATULATIONS
+constant race_result_verdict_start 2F6 WINNER
+constant race_result_verdict_start 2F7 LOSER
+constant race_result_start 2F8 RACE_PLACES
+constant race_car_draw 2F CRASH_TEXT                  # crash_text_animation
+constant race_car_draw 44 ACCELERATION_SMOKE          # in R12 for race_car_put_frame
+constant west_east_panel_update 39 WEST_EAST_PANEL
+constant route_map_direction_sign_show 39 WEST_EAST_PANEL
+constant title_palm_tree_update 59 PALM_TREE
+constant title_board_palms_update 25A TITLE_BOARD_PALMS
+constant title_seagull_fly 25B TITLE_SEAGULL
+constant title_logo_update 25D TITLE_LOGO
+constant title_logo_copy_update 25E TITLE_LOGO_COPY
+constant title_logo_stripe_update 25F TITLE_LOGO_STRIPE
+constant road_crosser_update 165 SWORDFISH                 # compared with the record's animation
+constant traffic_figure_update 165 SWORDFISH
+constant traffic_figure_update 185 CYCLIST
+constant traffic_figure_update 258 ELEPHANT
+constant santa_sleigh_update 3A0 SANTA_SLEIGH
+constant santa_sleigh_update 3A2 ORCA
+constant goal_parade_rightward_update 3A2 ORCA
+constant goal_parade_leftward_update 3A2 ORCA
+constant choice_flag_start 1B CHOICE_FLAG
+constant stacked_choice_flag_start 1B CHOICE_FLAG
+constant car_attendant_run 266 ATTENDANT_WALKING
+constant car_attendant_run 267 AUTOMATIC_POSE
+constant car_attendant_run 268 MANUAL_POSE
+constant car_attendant_run 269 STANDING
+constant car_caption_show 26E CAR_CAPTION_LETTERS
+constant entry_countdown_start 26F ENTRY_COUNTDOWN_DIGITS
+constant waiting_banner_show 28B WAITING_BANNER
+constant waiting_banner_show 28D WAIT_A_MINUTE_BANNER
+constant route_map_wait_banner_show 28D WAIT_A_MINUTE_BANNER
+constant select_car_heading_show 2B5 SELECT_CAR_HEADING
+constant automatic_panel_show 2BD AUTOMATIC_PANEL
+constant manual_panel_show 2BE MANUAL_PANEL
+constant transmission_label_start_automatic 2C1 NOVICE_LABEL
+constant transmission_label_start_manual 2C9 GEARS_LABEL
+constant car_gears_caption_show 2D1 CAR_GEARS_CAPTION
+constant ranking_title_left_update 2D2 RANKING_TITLE_LEFT
+constant ranking_title_right_update 2D3 RANKING_TITLE_RIGHT
+constant name_entry_letter_update 2DE NAME_ENTRY_FONT
+constant ranking_record_character_update 2DE NAME_ENTRY_FONT
+constant game_over_banner_show 2F4 GAME_OVER_BANNER
+constant route_map_leg_show 306 ROUTE_MAP_LEG
+constant car_name_letter_update 346 CAR_NAME_FONT
+constant welcome_letter_show 346 CAR_NAME_FONT

@@ -31,8 +31,23 @@ extern "C" {
 #define S32_VIDEO_MAX_WIDTH  416
 #define S32_VIDEO_HEIGHT     224
 
-/* The tile ROM (16x16 tiles, 128 bytes each) and the sprite ROMs (32-bit words, big endian), as
-   game/data.h holds them; the video keeps pointers to them. Hooks the video to s32_board. */
+/* The board's graphics as the video draws them: every tile's pens by its number (16 rows of 16, a byte a pen)
+   and the 32-bit word of sprite graphics at a place of the sprite chips (bank << 20 | offset, in words): the
+   game's assets give them (game/assets.h: its tilesets and sprite sheets) */
+typedef struct
+{
+	const uint8_t *const *tile_pens;
+	uint32_t tile_count;
+	uint32_t (*sprite_word)(uint32_t place);
+	uint32_t sprite_banks;                  /* of 1M words */
+} s32_graphics;
+
+/* Hooks the video to s32_board, drawing with 'graphics' (kept by the caller) */
+void s32_video_init_graphics(const s32_graphics *graphics);
+
+/* The same from the chips' images, for the tools that read the ROM set (the reference, the scaffold): the
+   tile ROM (16x16 tiles, 128 bytes each) and the sprite ROMs (32-bit words, big endian), as game/data.h
+   holds them; the video takes the tiles' pens out of the image and reads the sprites' words in it */
 void s32_video_init(const uint8_t *tiles, size_t tiles_size, const uint8_t *sprites, size_t sprites_size);
 
 /* What the board calls (s32_video_init sets them): the sprite commands, and the start of VBLANK */

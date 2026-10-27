@@ -523,9 +523,9 @@ void traffic_figure_update(void)
 		animation = TRAFFIC_SPRITE_RECORD(traffic_sprite_record)->animation;
 		record += 4u;
 		traffic_sprite_record += 2u;
-		if (animation != 0x165u)
+		if (animation != SWORDFISH)
 		{
-			if (animation == 0x258u || animation == 0x185u)
+			if (animation == ELEPHANT || animation == CYCLIST)
 				OBJECT(current_object)->scale_shift = 0u;
 			else
 				OBJECT(current_object)->scale_shift = 1u;

@@ -488,8 +488,6 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 	case 1:
 	case 2:
 		break;
-	default:
-		invalid_jump(player_car_heading_quadrant_jumps[quadrant_heading >> 14]);
 	}
 	heading = ((int32_t)divide_s32(heading_start * segment_remaining + heading_end * segment_fraction, segment_length) >> 4) & 0xFFFu;
 	previous_heading = OBJECT(current_object)->player_car.heading;
@@ -516,10 +514,10 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	view_shift = view_shift + (int16_t)CAR(player_car)->view_shift_intro + (int16_t)CAR(player_car)->view_shift_nod;
 	shift_offset = ((int32_t)view_shift >> 2) & ~0x1Fu;
 	segment_record += shift_offset;
-	segment_record = (segment_record & ~0xFFFFu) | (uint16_t)(segment_record | 0x2000u);
-	segment_record = (segment_record & ~0xFFFFu) | (segment_record & 0xAFFFu);
+	segment_record = LINKED(segment_record, (uint16_t)(segment_record | 0x2000u));
+	segment_record = LINKED(segment_record, segment_record & 0xAFFFu);
 	r12 = r12 + shift_offset;
-	r12 = (r12 & ~0xFFFFu) | (uint16_t)(r12 | 0x2000u);
+	r12 = LINKED(r12, (uint16_t)(r12 | 0x2000u));
 	segment_fraction += view_shift & 0x7Fu;
 	offset_y = 0u;
 	offset_x = (road_x + (int16_t)CAR(player_car)->view_side) << 7;
@@ -530,7 +528,7 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	OBJECT(current_object)->player_car.view_target_x = ((int32_t)(offset_x * 2u) >> 8) + ROAD_SEGMENT(segment_record)->x;
 	OBJECT(current_object)->player_car.view_target_z = ((int32_t)(offset_z * 2u) >> 8) + ROAD_SEGMENT(segment_record)->z;
 	segment_remaining = segment_length - segment_fraction;
-	OBJECT(current_object)->player_car.view_target_y = divide_s32(ROAD_SEGMENT((r12 & ~0xFFFFu) | (r12 & 0xAFFFu))->y * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
+	OBJECT(current_object)->player_car.view_target_y = divide_s32(ROAD_SEGMENT(LINKED(r12, r12 & 0xAFFFu))->y * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
 	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
 	pitch = ROAD_SEGMENT(r12)->x;
 	yaw = ROAD_SEGMENT(r12)->y;
@@ -565,8 +563,6 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	case 1:
 	case 2:
 		break;
-	default:
-		invalid_jump(player_car_view_yaw_quadrant_jumps[quadrant_yaw >> 14]);
 	}
 	yaw = ((int32_t)divide_s32(yaw * segment_fraction + yaw_here * segment_remaining, segment_length) >> 4) & 0xFFFu;
 	pitch = ((int32_t)divide_s32((int16_t)pitch * segment_fraction + (int16_t)pitch_here * segment_remaining, segment_length) >> 4) & 0xFFFu;

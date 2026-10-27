@@ -140,7 +140,9 @@ typedef struct s32_eeprom
 
 typedef struct s32_machine
 {
-	const uint8_t *program;                        /* V70 program image (2 MB), owned by the caller */
+	const uint8_t *program;                        /* V70 program image (2 MB), owned by the caller, or NULL */
+	const uint8_t *(*program_at)(uint32_t address);  /* without an image: the bytes at an address of the
+	                                                  program's chips (the game's assets: data_at) */
 	uint8_t work_ram[S32_WORK_RAM_SIZE];
 	uint8_t video_ram[S32_VIDEO_RAM_SIZE];          /* 16-bit words, little endian */
 	uint8_t sprite_ram[S32_SPRITE_RAM_SIZE];        /* 16-bit words, little endian */
@@ -180,7 +182,12 @@ typedef struct s32_machine
 	uint8_t comm_fg;
 
 	const uint8_t *sound_rom;                       /* 512 KB, owned by the caller; set after s32_init */
+	const uint8_t *(*sound_at)(uint32_t offset);    /* without sound_rom: the sound program's data at an offset
+	                                                   of its chip, NULL where it has none (the game's assets:
+	                                                   assets_sound_data) */
 	const uint8_t *pcm_rom;                         /* 4 MB, owned by the caller; set after s32_init */
+	uint8_t (*pcm_at)(uint32_t place);              /* without pcm_rom: a byte of the 4 MB at a place (the
+	                                                   game's samples: assets_pcm_byte) */
 	uint8_t sound_bank;                             /* the 8 KB page of the sound ROM at Z80 0xA000 */
 	uint8_t pcm_bank;                               /* the MultiPCM's banks: bits 0-2 its 0x100000-0x17FFFF,
 	                                                   bits 3-5 its 0x180000-0x1FFFFF, 512 KB pages */

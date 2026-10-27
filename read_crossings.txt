@@ -1,0 +1,25 @@
+# ADDRESS NAME: named places the original's reads run into from the place before (tools/read_crossings.py,
+# from the census of its data reads over the scenarios): names inside a table, which the assets
+# keep in the piece of the table
+00F140 sprite_flip_y_signs
+00F4EC smoothed_flip_signs
+017BA9 stage_tile_banks
+01C37C test_mode_lcd_text_4_to_7
+01C384 test_mode_lcd_text_12_to_15
+01CD87 memory_test_now_testing_text
+01CF9E volume_adjustment_cancel_cell
+01D30A input_test_bars_text
+01D5BE output_test_exit_cell
+01D7C4 sound_test_exit_cell
+01D9DC crt_test_second_page_text
+01DCE0 game_assignments_exit_cell
+01E682 network_assignments_exit_cell
+01EBB9 bookkeeping_second_page_text
+031E7C car_select_palette
+031E80 ranking_palette
+031E84 route_map_palette
+031E88 title_palette
+031E8C route_map_background_palette
+034308 fork_branch_piece_animation
+101400 cosine_table
+109428 boot_tile_pages_5e

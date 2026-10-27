@@ -161,7 +161,7 @@ void upload_palette_list(uint32_t colour_list)
 	{
 		colour_source = PALETTE_BLOCK_ENTRY(colour_list)->colours;
 		colour_list += 4u;
-		palette_address = (palette_address & ~0xFFFFu) | PALETTE_BLOCK_ENTRY(colour_list - 0x4u)->place;
+		palette_address = LINKED(palette_address, PALETTE_BLOCK_ENTRY(colour_list - 0x4u)->place);
 		colour_list += 2u;
 		blocks_left = PALETTE_BLOCK_ENTRY(colour_list - 0x6u)->blocks;
 		colour_list += 2u;

@@ -392,943 +392,1457 @@
 
 /* data in the program ROM the code reads */
 #define rom_000001_ADDRESS 0x000001u
-#define rom_000001 ((const uint8_t *)rom(rom_000001_ADDRESS))
+extern const void *rom_000001_data;
+#define rom_000001 ((const uint8_t *)rom_000001_data)
 #define rom_000002_ADDRESS 0x000002u
-#define rom_000002 ((const uint16_t *)rom(rom_000002_ADDRESS))
+extern const void *rom_000002_data;
+#define rom_000002 ((const uint16_t *)rom_000002_data)
 #define boot_e80000_bytes_ADDRESS 0x0000B4u
-#define boot_e80000_bytes ROM32(boot_e80000_bytes_ADDRESS)
+extern const void *boot_e80000_bytes_data;
+#define boot_e80000_bytes (*(const uint32_t *)boot_e80000_bytes_data)
 #define seat_credits_addresses_ADDRESS 0x0008C4u
-#define seat_credits_addresses ((const uint32_t *)rom(seat_credits_addresses_ADDRESS))
+extern const void *seat_credits_addresses_data;
+#define seat_credits_addresses ((const uint32_t *)seat_credits_addresses_data)
 #define game_mode_jumps_ADDRESS 0x0008CCu
-#define game_mode_jumps ((const uint32_t *)rom(game_mode_jumps_ADDRESS))
+extern const void *game_mode_jumps_data;
+#define game_mode_jumps ((const uint32_t *)game_mode_jumps_data)
 #define analog_calibration_addresses_ADDRESS 0x000B0Cu
-#define analog_calibration_addresses ((const uint32_t *)rom(analog_calibration_addresses_ADDRESS))
+extern const void *analog_calibration_addresses_data;
+#define analog_calibration_addresses ((const uint32_t *)analog_calibration_addresses_data)
 #define analog_input_counts_ADDRESS 0x000B14u
-#define analog_input_counts ((const uint8_t *)rom(analog_input_counts_ADDRESS))
+extern const void *analog_input_counts_data;
+#define analog_input_counts ((const uint8_t *)analog_input_counts_data)
 #define first_attract_car_lists_ADDRESS 0x000D14u
-#define first_attract_car_lists ((const uint32_t *)rom(first_attract_car_lists_ADDRESS))
+extern const void *first_attract_car_lists_data;
+#define first_attract_car_lists ((const uint32_t *)first_attract_car_lists_data)
 #define isdn_connection_step_jumps_ADDRESS 0x000DACu
-#define isdn_connection_step_jumps ((const uint32_t *)rom(isdn_connection_step_jumps_ADDRESS))
+extern const void *isdn_connection_step_jumps_data;
+#define isdn_connection_step_jumps ((const uint32_t *)isdn_connection_step_jumps_data)
 #define isdn_status_state_jumps_ADDRESS 0x000EB0u
-#define isdn_status_state_jumps ((const uint32_t *)rom(isdn_status_state_jumps_ADDRESS))
+extern const void *isdn_status_state_jumps_data;
+#define isdn_status_state_jumps ((const uint32_t *)isdn_status_state_jumps_data)
 #define isdn_connecting_texts_ADDRESS 0x000F78u
-#define isdn_connecting_texts ((const uint32_t *)rom(isdn_connecting_texts_ADDRESS))
+extern const void *isdn_connecting_texts_data;
+#define isdn_connecting_texts ((const uint32_t *)isdn_connecting_texts_data)
 #define isdn_failed_text_ADDRESS 0x000F80u
-#define isdn_failed_text ROM32(isdn_failed_text_ADDRESS)
+extern const void *isdn_failed_text_data;
+#define isdn_failed_text (*(const uint32_t *)isdn_failed_text_data)
 #define isdn_success_text_ADDRESS 0x000F84u
-#define isdn_success_text ROM32(isdn_success_text_ADDRESS)
+extern const void *isdn_success_text_data;
+#define isdn_success_text (*(const uint32_t *)isdn_success_text_data)
 #define isdn_this_side_text_ADDRESS 0x000F88u
-#define isdn_this_side_text ROM32(isdn_this_side_text_ADDRESS)
+extern const void *isdn_this_side_text_data;
+#define isdn_this_side_text (*(const uint32_t *)isdn_this_side_text_data)
 #define isdn_other_side_text_ADDRESS 0x000F8Cu
-#define isdn_other_side_text ROM32(isdn_other_side_text_ADDRESS)
+extern const void *isdn_other_side_text_data;
+#define isdn_other_side_text (*(const uint32_t *)isdn_other_side_text_data)
 #define isdn_total_text_ADDRESS 0x000F90u
-#define isdn_total_text ROM32(isdn_total_text_ADDRESS)
+extern const void *isdn_total_text_data;
+#define isdn_total_text (*(const uint32_t *)isdn_total_text_data)
 #define title_step_jumps_ADDRESS 0x001014u
-#define title_step_jumps ((const uint32_t *)rom(title_step_jumps_ADDRESS))
+extern const void *title_step_jumps_data;
+#define title_step_jumps ((const uint32_t *)title_step_jumps_data)
 #define car_presentation_step_jumps_ADDRESS 0x00146Cu
-#define car_presentation_step_jumps ((const uint32_t *)rom(car_presentation_step_jumps_ADDRESS))
+extern const void *car_presentation_step_jumps_data;
+#define car_presentation_step_jumps ((const uint32_t *)car_presentation_step_jumps_data)
 #define demo_race_step_jumps_ADDRESS 0x001530u
-#define demo_race_step_jumps ((const uint32_t *)rom(demo_race_step_jumps_ADDRESS))
+extern const void *demo_race_step_jumps_data;
+#define demo_race_step_jumps ((const uint32_t *)demo_race_step_jumps_data)
 #define car_presentation_state_jumps_ADDRESS 0x001694u
-#define car_presentation_state_jumps ((const uint32_t *)rom(car_presentation_state_jumps_ADDRESS))
+extern const void *car_presentation_state_jumps_data;
+#define car_presentation_state_jumps ((const uint32_t *)car_presentation_state_jumps_data)
+#define unused_attract_car_name_sounds_ADDRESS 0x00183Bu
+extern const void *unused_attract_car_name_sounds_data;
+#define unused_attract_car_name_sounds (*(const uint8_t *)unused_attract_car_name_sounds_data)
+#define unused_attract_car_animations_2_ADDRESS 0x001844u
+extern const void *unused_attract_car_animations_2_data;
+#define unused_attract_car_animations_2 (*(const uint16_t *)unused_attract_car_animations_2_data)
+#define unused_attract_car_palettes_2_ADDRESS 0x001854u
+extern const void *unused_attract_car_palettes_2_data;
+#define unused_attract_car_palettes_2 (*(const uint16_t *)unused_attract_car_palettes_2_data)
+#define unused_attract_car_animations_1_ADDRESS 0x001864u
+extern const void *unused_attract_car_animations_1_data;
+#define unused_attract_car_animations_1 (*(const uint16_t *)unused_attract_car_animations_1_data)
+#define unused_attract_car_palettes_1_ADDRESS 0x001874u
+extern const void *unused_attract_car_palettes_1_data;
+#define unused_attract_car_palettes_1 (*(const uint16_t *)unused_attract_car_palettes_1_data)
+#define unused_attract_car_caption_palettes_ADDRESS 0x001884u
+extern const void *unused_attract_car_caption_palettes_data;
+#define unused_attract_car_caption_palettes (*(const uint16_t *)unused_attract_car_caption_palettes_data)
 #define car_name_letter_state_jumps_ADDRESS 0x0019CCu
-#define car_name_letter_state_jumps ((const uint32_t *)rom(car_name_letter_state_jumps_ADDRESS))
+extern const void *car_name_letter_state_jumps_data;
+#define car_name_letter_state_jumps ((const uint32_t *)car_name_letter_state_jumps_data)
 #define attract_car_picture_animations_ADDRESS 0x001A88u
-#define attract_car_picture_animations ((const uint16_t *)rom(attract_car_picture_animations_ADDRESS))
+extern const void *attract_car_picture_animations_data;
+#define attract_car_picture_animations ((const uint16_t *)attract_car_picture_animations_data)
 #define attract_car_scene_palettes_ADDRESS 0x001A98u
-#define attract_car_scene_palettes ((const uint8_t *)rom(attract_car_scene_palettes_ADDRESS))
+extern const void *attract_car_scene_palettes_data;
+#define attract_car_scene_palettes ((const uint8_t *)attract_car_scene_palettes_data)
 #define car_presentation_palette_cycle_ADDRESS 0x001AC8u
-#define car_presentation_palette_cycle ((const uint32_t *)rom(car_presentation_palette_cycle_ADDRESS))
+extern const void *car_presentation_palette_cycle_data;
+#define car_presentation_palette_cycle ((const uint32_t *)car_presentation_palette_cycle_data)
 #define attract_car_names_ADDRESS 0x001CECu
-#define attract_car_names ((const uint32_t *)rom(attract_car_names_ADDRESS))
+extern const void *attract_car_names_data;
+#define attract_car_names ((const uint32_t *)attract_car_names_data)
 #define ranking_step_jumps_ADDRESS 0x001DE0u
-#define ranking_step_jumps ((const uint32_t *)rom(ranking_step_jumps_ADDRESS))
+extern const void *ranking_step_jumps_data;
+#define ranking_step_jumps ((const uint32_t *)ranking_step_jumps_data)
 #define name_entry_state_jumps_ADDRESS 0x001ED0u
-#define name_entry_state_jumps ((const uint32_t *)rom(name_entry_state_jumps_ADDRESS))
+extern const void *name_entry_state_jumps_data;
+#define name_entry_state_jumps ((const uint32_t *)name_entry_state_jumps_data)
 #define name_entry_gas_step_jumps_ADDRESS 0x002088u
-#define name_entry_gas_step_jumps ((const uint32_t *)rom(name_entry_gas_step_jumps_ADDRESS))
+extern const void *name_entry_gas_step_jumps_data;
+#define name_entry_gas_step_jumps ((const uint32_t *)name_entry_gas_step_jumps_data)
 #define name_entry_place_jumps_ADDRESS 0x0020C8u
-#define name_entry_place_jumps ((const uint32_t *)rom(name_entry_place_jumps_ADDRESS))
+extern const void *name_entry_place_jumps_data;
+#define name_entry_place_jumps ((const uint32_t *)name_entry_place_jumps_data)
 #define name_entry_letter_state_jumps_ADDRESS 0x00221Cu
-#define name_entry_letter_state_jumps ((const uint32_t *)rom(name_entry_letter_state_jumps_ADDRESS))
+extern const void *name_entry_letter_state_jumps_data;
+#define name_entry_letter_state_jumps ((const uint32_t *)name_entry_letter_state_jumps_data)
 #define name_entry_lcd_state_jumps_ADDRESS 0x002304u
-#define name_entry_lcd_state_jumps ((const uint32_t *)rom(name_entry_lcd_state_jumps_ADDRESS))
+extern const void *name_entry_lcd_state_jumps_data;
+#define name_entry_lcd_state_jumps ((const uint32_t *)name_entry_lcd_state_jumps_data)
 #define name_entry_car_state_jumps_ADDRESS 0x002384u
-#define name_entry_car_state_jumps ((const uint32_t *)rom(name_entry_car_state_jumps_ADDRESS))
+extern const void *name_entry_car_state_jumps_data;
+#define name_entry_car_state_jumps ((const uint32_t *)name_entry_car_state_jumps_data)
 #define name_entry_drivers_state_jumps_ADDRESS 0x0023D4u
-#define name_entry_drivers_state_jumps ((const uint32_t *)rom(name_entry_drivers_state_jumps_ADDRESS))
+extern const void *name_entry_drivers_state_jumps_data;
+#define name_entry_drivers_state_jumps ((const uint32_t *)name_entry_drivers_state_jumps_data)
 #define name_entry_course_name_state_jumps_ADDRESS 0x002424u
-#define name_entry_course_name_state_jumps ((const uint32_t *)rom(name_entry_course_name_state_jumps_ADDRESS))
+extern const void *name_entry_course_name_state_jumps_data;
+#define name_entry_course_name_state_jumps ((const uint32_t *)name_entry_course_name_state_jumps_data)
 #define ranking_state_jumps_ADDRESS 0x002488u
-#define ranking_state_jumps ((const uint32_t *)rom(ranking_state_jumps_ADDRESS))
+extern const void *ranking_state_jumps_data;
+#define ranking_state_jumps ((const uint32_t *)ranking_state_jumps_data)
 #define ranking_background_state_jumps_ADDRESS 0x002564u
-#define ranking_background_state_jumps ((const uint32_t *)rom(ranking_background_state_jumps_ADDRESS))
+extern const void *ranking_background_state_jumps_data;
+#define ranking_background_state_jumps ((const uint32_t *)ranking_background_state_jumps_data)
 #define ranking_title_left_state_jumps_ADDRESS 0x002620u
-#define ranking_title_left_state_jumps ((const uint32_t *)rom(ranking_title_left_state_jumps_ADDRESS))
+extern const void *ranking_title_left_state_jumps_data;
+#define ranking_title_left_state_jumps ((const uint32_t *)ranking_title_left_state_jumps_data)
 #define ranking_title_right_state_jumps_ADDRESS 0x00266Cu
-#define ranking_title_right_state_jumps ((const uint32_t *)rom(ranking_title_right_state_jumps_ADDRESS))
+extern const void *ranking_title_right_state_jumps_data;
+#define ranking_title_right_state_jumps ((const uint32_t *)ranking_title_right_state_jumps_data)
 #define ranking_course_banner_state_jumps_ADDRESS 0x0026B8u
-#define ranking_course_banner_state_jumps ((const uint32_t *)rom(ranking_course_banner_state_jumps_ADDRESS))
+extern const void *ranking_course_banner_state_jumps_data;
+#define ranking_course_banner_state_jumps ((const uint32_t *)ranking_course_banner_state_jumps_data)
 #define ranking_record_character_state_jumps_ADDRESS 0x00279Cu
-#define ranking_record_character_state_jumps ((const uint32_t *)rom(ranking_record_character_state_jumps_ADDRESS))
+extern const void *ranking_record_character_state_jumps_data;
+#define ranking_record_character_state_jumps ((const uint32_t *)ranking_record_character_state_jumps_data)
 #define ranking_record_car_state_jumps_ADDRESS 0x00287Cu
-#define ranking_record_car_state_jumps ((const uint32_t *)rom(ranking_record_car_state_jumps_ADDRESS))
+extern const void *ranking_record_car_state_jumps_data;
+#define ranking_record_car_state_jumps ((const uint32_t *)ranking_record_car_state_jumps_data)
 #define passing_traffic_state_jumps_ADDRESS 0x002960u
-#define passing_traffic_state_jumps ((const uint32_t *)rom(passing_traffic_state_jumps_ADDRESS))
+extern const void *passing_traffic_state_jumps_data;
+#define passing_traffic_state_jumps ((const uint32_t *)passing_traffic_state_jumps_data)
 #define passing_car_state_jumps_ADDRESS 0x0029A4u
-#define passing_car_state_jumps ((const uint32_t *)rom(passing_car_state_jumps_ADDRESS))
+extern const void *passing_car_state_jumps_data;
+#define passing_car_state_jumps ((const uint32_t *)passing_car_state_jumps_data)
 #define ranking_background_tile_banks_ADDRESS 0x002C18u
-#define ranking_background_tile_banks ((const uint8_t *)rom(ranking_background_tile_banks_ADDRESS))
+extern const void *ranking_background_tile_banks_data;
+#define ranking_background_tile_banks ((const uint8_t *)ranking_background_tile_banks_data)
 #define ranking_mixer_addresses_ADDRESS 0x002CA4u
-#define ranking_mixer_addresses ((const uint32_t *)rom(ranking_mixer_addresses_ADDRESS))
+extern const void *ranking_mixer_addresses_data;
+#define ranking_mixer_addresses ((const uint32_t *)ranking_mixer_addresses_data)
 #define ranking_background_page_numbers_ADDRESS 0x002CACu
-#define ranking_background_page_numbers ((const uint32_t *)rom(ranking_background_page_numbers_ADDRESS))
+extern const void *ranking_background_page_numbers_data;
+#define ranking_background_page_numbers ((const uint32_t *)ranking_background_page_numbers_data)
 #define ranking_background_scroll_xs_ADDRESS 0x002CB4u
-#define ranking_background_scroll_xs ((const uint16_t *)rom(ranking_background_scroll_xs_ADDRESS))
+extern const void *ranking_background_scroll_xs_data;
+#define ranking_background_scroll_xs ((const uint16_t *)ranking_background_scroll_xs_data)
 #define name_entry_letters_ADDRESS 0x002D00u
-#define name_entry_letters ((const uint8_t *)rom(name_entry_letters_ADDRESS))
+extern const void *name_entry_letters_data;
+#define name_entry_letters ((const uint8_t *)name_entry_letters_data)
 #define course_backgrounds_ADDRESS 0x002D20u
-#define course_backgrounds ((const uint8_t *)rom(course_backgrounds_ADDRESS))
+extern const void *course_backgrounds_data;
+#define course_backgrounds ((const uint8_t *)course_backgrounds_data)
 #define ranking_record_character_xs_ADDRESS 0x002D2Au
-#define ranking_record_character_xs ((const uint16_t *)rom(ranking_record_character_xs_ADDRESS))
+extern const void *ranking_record_character_xs_data;
+#define ranking_record_character_xs ((const uint16_t *)ranking_record_character_xs_data)
 #define ranking_record_character_ys_ADDRESS 0x002D40u
-#define ranking_record_character_ys ((const uint16_t *)rom(ranking_record_character_ys_ADDRESS))
+extern const void *ranking_record_character_ys_data;
+#define ranking_record_character_ys ((const uint16_t *)ranking_record_character_ys_data)
 #define name_entry_turn_rates_ADDRESS 0x002D6Cu
-#define name_entry_turn_rates ((const uint8_t *)rom(name_entry_turn_rates_ADDRESS))
+extern const void *name_entry_turn_rates_data;
+#define name_entry_turn_rates ((const uint8_t *)name_entry_turn_rates_data)
 #define name_entry_place_sounds_ADDRESS 0x002D98u
-#define name_entry_place_sounds ((const uint8_t *)rom(name_entry_place_sounds_ADDRESS))
+extern const void *name_entry_place_sounds_data;
+#define name_entry_place_sounds ((const uint8_t *)name_entry_place_sounds_data)
 #define certificate_car_animations_ADDRESS 0x002D9Cu
-#define certificate_car_animations ((const uint16_t *)rom(certificate_car_animations_ADDRESS))
+extern const void *certificate_car_animations_data;
+#define certificate_car_animations ((const uint16_t *)certificate_car_animations_data)
 #define car_model_palettes_ADDRESS 0x002DACu
-#define car_model_palettes ((const uint16_t *)rom(car_model_palettes_ADDRESS))
+extern const void *car_model_palettes_data;
+#define car_model_palettes ((const uint16_t *)car_model_palettes_data)
 #define certificate_driver_animations_ADDRESS 0x002DBCu
-#define certificate_driver_animations ((const uint16_t *)rom(certificate_driver_animations_ADDRESS))
+extern const void *certificate_driver_animations_data;
+#define certificate_driver_animations ((const uint16_t *)certificate_driver_animations_data)
 #define certificate_driver_palettes_ADDRESS 0x002DCCu
-#define certificate_driver_palettes ((const uint16_t *)rom(certificate_driver_palettes_ADDRESS))
+extern const void *certificate_driver_palettes_data;
+#define certificate_driver_palettes ((const uint16_t *)certificate_driver_palettes_data)
 #define car_model_turn_animations_ADDRESS 0x002DDCu
-#define car_model_turn_animations ((const uint16_t *)rom(car_model_turn_animations_ADDRESS))
+extern const void *car_model_turn_animations_data;
+#define car_model_turn_animations ((const uint16_t *)car_model_turn_animations_data)
 #define ranking_record_character_palettes_ADDRESS 0x002DECu
-#define ranking_record_character_palettes ((const uint16_t *)rom(ranking_record_character_palettes_ADDRESS))
+extern const void *ranking_record_character_palettes_data;
+#define ranking_record_character_palettes ((const uint16_t *)ranking_record_character_palettes_data)
 #define ranking_course_banner_animations_ADDRESS 0x002DFCu
-#define ranking_course_banner_animations ((const uint16_t *)rom(ranking_course_banner_animations_ADDRESS))
+extern const void *ranking_course_banner_animations_data;
+#define ranking_course_banner_animations ((const uint16_t *)ranking_course_banner_animations_data)
 #define ranking_course_banner_palettes_ADDRESS 0x002E10u
-#define ranking_course_banner_palettes ((const uint16_t *)rom(ranking_course_banner_palettes_ADDRESS))
+extern const void *ranking_course_banner_palettes_data;
+#define ranking_course_banner_palettes ((const uint16_t *)ranking_course_banner_palettes_data)
 #define certificate_course_animations_ADDRESS 0x002E24u
-#define certificate_course_animations ((const uint16_t *)rom(certificate_course_animations_ADDRESS))
+extern const void *certificate_course_animations_data;
+#define certificate_course_animations ((const uint16_t *)certificate_course_animations_data)
 #define certificate_course_palettes_ADDRESS 0x002E38u
-#define certificate_course_palettes ((const uint16_t *)rom(certificate_course_palettes_ADDRESS))
+extern const void *certificate_course_palettes_data;
+#define certificate_course_palettes ((const uint16_t *)certificate_course_palettes_data)
 #define game_step_jumps_ADDRESS 0x002E80u
-#define game_step_jumps ((const uint32_t *)rom(game_step_jumps_ADDRESS))
+extern const void *game_step_jumps_data;
+#define game_step_jumps ((const uint32_t *)game_step_jumps_data)
 #define game_start_c00074_bytes_ADDRESS 0x003463u
-#define game_start_c00074_bytes ((const uint8_t *)rom(game_start_c00074_bytes_ADDRESS))
+extern const void *game_start_c00074_bytes_data;
+#define game_start_c00074_bytes ((const uint8_t *)game_start_c00074_bytes_data)
 #define game_end_c00074_bytes_ADDRESS 0x003465u
-#define game_end_c00074_bytes ((const uint8_t *)rom(game_end_c00074_bytes_ADDRESS))
+extern const void *game_end_c00074_bytes_data;
+#define game_end_c00074_bytes ((const uint8_t *)game_end_c00074_bytes_data)
 #define game_end_c00074_next_bytes_ADDRESS 0x003467u
-#define game_end_c00074_next_bytes ((const uint8_t *)rom(game_end_c00074_next_bytes_ADDRESS))
+extern const void *game_end_c00074_next_bytes_data;
+#define game_end_c00074_next_bytes ((const uint8_t *)game_end_c00074_next_bytes_data)
 #define route_map_state_jumps_ADDRESS 0x003540u
-#define route_map_state_jumps ((const uint32_t *)rom(route_map_state_jumps_ADDRESS))
+extern const void *route_map_state_jumps_data;
+#define route_map_state_jumps ((const uint32_t *)route_map_state_jumps_data)
 #define route_map_car_state_jumps_ADDRESS 0x003E28u
-#define route_map_car_state_jumps ((const uint32_t *)rom(route_map_car_state_jumps_ADDRESS))
+extern const void *route_map_car_state_jumps_data;
+#define route_map_car_state_jumps ((const uint32_t *)route_map_car_state_jumps_data)
 #define route_map_sign_state_jumps_ADDRESS 0x003F34u
-#define route_map_sign_state_jumps ((const uint32_t *)rom(route_map_sign_state_jumps_ADDRESS))
+extern const void *route_map_sign_state_jumps_data;
+#define route_map_sign_state_jumps ((const uint32_t *)route_map_sign_state_jumps_data)
 #define route_map_sign_animations_ADDRESS 0x00403Au
-#define route_map_sign_animations ((const uint16_t *)rom(route_map_sign_animations_ADDRESS))
+extern const void *route_map_sign_animations_data;
+#define route_map_sign_animations ((const uint16_t *)route_map_sign_animations_data)
 #define route_map_sign_palettes_ADDRESS 0x00403Eu
-#define route_map_sign_palettes ((const uint16_t *)rom(route_map_sign_palettes_ADDRESS))
+extern const void *route_map_sign_palettes_data;
+#define route_map_sign_palettes ((const uint16_t *)route_map_sign_palettes_data)
 #define route_map_goal_xs_ADDRESS 0x004042u
-#define route_map_goal_xs ((const int16_t *)rom(route_map_goal_xs_ADDRESS))
+extern const void *route_map_goal_xs_data;
+#define route_map_goal_xs ((const int16_t *)route_map_goal_xs_data)
 #define route_map_landmark_state_jumps_ADDRESS 0x004064u
-#define route_map_landmark_state_jumps ((const uint32_t *)rom(route_map_landmark_state_jumps_ADDRESS))
+extern const void *route_map_landmark_state_jumps_data;
+#define route_map_landmark_state_jumps ((const uint32_t *)route_map_landmark_state_jumps_data)
 #define route_map_leg_state_jumps_ADDRESS 0x00424Cu
-#define route_map_leg_state_jumps ((const uint32_t *)rom(route_map_leg_state_jumps_ADDRESS))
+extern const void *route_map_leg_state_jumps_data;
+#define route_map_leg_state_jumps ((const uint32_t *)route_map_leg_state_jumps_data)
 #define route_map_leg_jumps_ADDRESS 0x004280u
-#define route_map_leg_jumps ((const uint32_t *)rom(route_map_leg_jumps_ADDRESS))
+extern const void *route_map_leg_jumps_data;
+#define route_map_leg_jumps ((const uint32_t *)route_map_leg_jumps_data)
 #define route_map_leg_car_state_jumps_ADDRESS 0x00442Cu
-#define route_map_leg_car_state_jumps ((const uint32_t *)rom(route_map_leg_car_state_jumps_ADDRESS))
+extern const void *route_map_leg_car_state_jumps_data;
+#define route_map_leg_car_state_jumps ((const uint32_t *)route_map_leg_car_state_jumps_data)
 #define route_map_leg_car_leg_jumps_ADDRESS 0x004474u
-#define route_map_leg_car_leg_jumps ((const uint32_t *)rom(route_map_leg_car_leg_jumps_ADDRESS))
+extern const void *route_map_leg_car_leg_jumps_data;
+#define route_map_leg_car_leg_jumps ((const uint32_t *)route_map_leg_car_leg_jumps_data)
 #define route_map_checkpoint_state_jumps_ADDRESS 0x004588u
-#define route_map_checkpoint_state_jumps ((const uint32_t *)rom(route_map_checkpoint_state_jumps_ADDRESS))
+extern const void *route_map_checkpoint_state_jumps_data;
+#define route_map_checkpoint_state_jumps ((const uint32_t *)route_map_checkpoint_state_jumps_data)
 #define route_map_finish_x_offsets_ADDRESS 0x00462Cu
-#define route_map_finish_x_offsets ((const uint16_t *)rom(route_map_finish_x_offsets_ADDRESS))
+extern const void *route_map_finish_x_offsets_data;
+#define route_map_finish_x_offsets ((const uint16_t *)route_map_finish_x_offsets_data)
 #define route_map_finish_y_offsets_ADDRESS 0x004634u
-#define route_map_finish_y_offsets ((const uint16_t *)rom(route_map_finish_y_offsets_ADDRESS))
+extern const void *route_map_finish_y_offsets_data;
+#define route_map_finish_y_offsets ((const uint16_t *)route_map_finish_y_offsets_data)
 #define route_map_direction_sign_state_jumps_ADDRESS 0x004648u
-#define route_map_direction_sign_state_jumps ((const uint32_t *)rom(route_map_direction_sign_state_jumps_ADDRESS))
+extern const void *route_map_direction_sign_state_jumps_data;
+#define route_map_direction_sign_state_jumps ((const uint32_t *)route_map_direction_sign_state_jumps_data)
 #define route_map_wait_banner_state_jumps_ADDRESS 0x0046C8u
-#define route_map_wait_banner_state_jumps ((const uint32_t *)rom(route_map_wait_banner_state_jumps_ADDRESS))
+extern const void *route_map_wait_banner_state_jumps_data;
+#define route_map_wait_banner_state_jumps ((const uint32_t *)route_map_wait_banner_state_jumps_data)
 #define game_over_banner_state_jumps_ADDRESS 0x00477Cu
-#define game_over_banner_state_jumps ((const uint32_t *)rom(game_over_banner_state_jumps_ADDRESS))
+extern const void *game_over_banner_state_jumps_data;
+#define game_over_banner_state_jumps ((const uint32_t *)game_over_banner_state_jumps_data)
 #define route_map_close_up_pages_ADDRESS 0x0048B8u
-#define route_map_close_up_pages ((const uint32_t *)rom(route_map_close_up_pages_ADDRESS))
+extern const void *route_map_close_up_pages_data;
+#define route_map_close_up_pages ((const uint32_t *)route_map_close_up_pages_data)
 #define route_map_routes_pages_ADDRESS 0x0048C0u
-#define route_map_routes_pages ((const uint32_t *)rom(route_map_routes_pages_ADDRESS))
+extern const void *route_map_routes_pages_data;
+#define route_map_routes_pages ((const uint32_t *)route_map_routes_pages_data)
 #define route_map_world_pages_ADDRESS 0x0048C8u
-#define route_map_world_pages ((const uint32_t *)rom(route_map_world_pages_ADDRESS))
+extern const void *route_map_world_pages_data;
+#define route_map_world_pages ((const uint32_t *)route_map_world_pages_data)
 #define route_map_start_scroll_xs_ADDRESS 0x0048D0u
-#define route_map_start_scroll_xs ((const uint16_t *)rom(route_map_start_scroll_xs_ADDRESS))
+extern const void *route_map_start_scroll_xs_data;
+#define route_map_start_scroll_xs ((const uint16_t *)route_map_start_scroll_xs_data)
 #define route_map_whole_scroll_xs_ADDRESS 0x0048D4u
-#define route_map_whole_scroll_xs ((const uint16_t *)rom(route_map_whole_scroll_xs_ADDRESS))
+extern const void *route_map_whole_scroll_xs_data;
+#define route_map_whole_scroll_xs ((const uint16_t *)route_map_whole_scroll_xs_data)
 #define route_map_sea_colour_addresses_ADDRESS 0x0048D8u
-#define route_map_sea_colour_addresses ((const uint32_t *)rom(route_map_sea_colour_addresses_ADDRESS))
+extern const void *route_map_sea_colour_addresses_data;
+#define route_map_sea_colour_addresses ((const uint32_t *)route_map_sea_colour_addresses_data)
 #define route_map_car_animations_ADDRESS 0x0048E0u
-#define route_map_car_animations ((const uint16_t *)rom(route_map_car_animations_ADDRESS))
+extern const void *route_map_car_animations_data;
+#define route_map_car_animations ((const uint16_t *)route_map_car_animations_data)
 #define route_map_car_palettes_ADDRESS 0x0048F0u
-#define route_map_car_palettes ((const uint16_t *)rom(route_map_car_palettes_ADDRESS))
+extern const void *route_map_car_palettes_data;
+#define route_map_car_palettes ((const uint16_t *)route_map_car_palettes_data)
 #define route_map_stage_xs_ADDRESS 0x004900u
-#define route_map_stage_xs ((const uint16_t *)rom(route_map_stage_xs_ADDRESS))
+extern const void *route_map_stage_xs_data;
+#define route_map_stage_xs ((const uint16_t *)route_map_stage_xs_data)
 #define route_map_stage_ys_ADDRESS 0x00492Au
-#define route_map_stage_ys ((const uint16_t *)rom(route_map_stage_ys_ADDRESS))
+extern const void *route_map_stage_ys_data;
+#define route_map_stage_ys ((const uint16_t *)route_map_stage_ys_data)
 #define route_map_direction_x_shifts_ADDRESS 0x004954u
-#define route_map_direction_x_shifts ((const uint16_t *)rom(route_map_direction_x_shifts_ADDRESS))
+extern const void *route_map_direction_x_shifts_data;
+#define route_map_direction_x_shifts ((const uint16_t *)route_map_direction_x_shifts_data)
 #define route_map_first_fork_leg_animations_ADDRESS 0x004958u
-#define route_map_first_fork_leg_animations ((const uint16_t *)rom(route_map_first_fork_leg_animations_ADDRESS))
+extern const void *route_map_first_fork_leg_animations_data;
+#define route_map_first_fork_leg_animations ((const uint16_t *)route_map_first_fork_leg_animations_data)
 #define route_map_fork_leg_animations_ADDRESS 0x00495Cu
-#define route_map_fork_leg_animations ((const uint16_t *)rom(route_map_fork_leg_animations_ADDRESS))
+extern const void *route_map_fork_leg_animations_data;
+#define route_map_fork_leg_animations ((const uint16_t *)route_map_fork_leg_animations_data)
 #define car_select_state_jumps_ADDRESS 0x005058u
-#define car_select_state_jumps ((const uint32_t *)rom(car_select_state_jumps_ADDRESS))
+extern const void *car_select_state_jumps_data;
+#define car_select_state_jumps ((const uint32_t *)car_select_state_jumps_data)
 #define car_select_choice_turn_jumps_ADDRESS 0x0053ECu
-#define car_select_choice_turn_jumps ((const uint32_t *)rom(car_select_choice_turn_jumps_ADDRESS))
+extern const void *car_select_choice_turn_jumps_data;
+#define car_select_choice_turn_jumps ((const uint32_t *)car_select_choice_turn_jumps_data)
 #define car_select_rowscroll_copies_jumps_ADDRESS 0x00548Cu
-#define car_select_rowscroll_copies_jumps ((const uint32_t *)rom(car_select_rowscroll_copies_jumps_ADDRESS))
+extern const void *car_select_rowscroll_copies_jumps_data;
+#define car_select_rowscroll_copies_jumps ((const uint32_t *)car_select_rowscroll_copies_jumps_data)
 #define car_attendant_state_jumps_ADDRESS 0x005534u
-#define car_attendant_state_jumps ((const uint32_t *)rom(car_attendant_state_jumps_ADDRESS))
+extern const void *car_attendant_state_jumps_data;
+#define car_attendant_state_jumps ((const uint32_t *)car_attendant_state_jumps_data)
 #define turntable_car_state_jumps_ADDRESS 0x0056C0u
-#define turntable_car_state_jumps ((const uint32_t *)rom(turntable_car_state_jumps_ADDRESS))
+extern const void *turntable_car_state_jumps_data;
+#define turntable_car_state_jumps ((const uint32_t *)turntable_car_state_jumps_data)
 #define turntable_scenery_state_jumps_ADDRESS 0x005770u
-#define turntable_scenery_state_jumps ((const uint32_t *)rom(turntable_scenery_state_jumps_ADDRESS))
+extern const void *turntable_scenery_state_jumps_data;
+#define turntable_scenery_state_jumps ((const uint32_t *)turntable_scenery_state_jumps_data)
 #define welcome_letter_state_jumps_ADDRESS 0x005890u
-#define welcome_letter_state_jumps ((const uint32_t *)rom(welcome_letter_state_jumps_ADDRESS))
+extern const void *welcome_letter_state_jumps_data;
+#define welcome_letter_state_jumps ((const uint32_t *)welcome_letter_state_jumps_data)
 #define select_car_heading_state_jumps_ADDRESS 0x005914u
-#define select_car_heading_state_jumps ((const uint32_t *)rom(select_car_heading_state_jumps_ADDRESS))
+extern const void *select_car_heading_state_jumps_data;
+#define select_car_heading_state_jumps ((const uint32_t *)select_car_heading_state_jumps_data)
 #define select_instruction_state_jumps_ADDRESS 0x0059C4u
-#define select_instruction_state_jumps ((const uint32_t *)rom(select_instruction_state_jumps_ADDRESS))
+extern const void *select_instruction_state_jumps_data;
+#define select_instruction_state_jumps ((const uint32_t *)select_instruction_state_jumps_data)
 #define transmission_choice_state_jumps_ADDRESS 0x005A28u
-#define transmission_choice_state_jumps ((const uint32_t *)rom(transmission_choice_state_jumps_ADDRESS))
+extern const void *transmission_choice_state_jumps_data;
+#define transmission_choice_state_jumps ((const uint32_t *)transmission_choice_state_jumps_data)
 #define automatic_panel_state_jumps_ADDRESS 0x005B50u
-#define automatic_panel_state_jumps ((const uint32_t *)rom(automatic_panel_state_jumps_ADDRESS))
+extern const void *automatic_panel_state_jumps_data;
+#define automatic_panel_state_jumps ((const uint32_t *)automatic_panel_state_jumps_data)
 #define manual_panel_state_jumps_ADDRESS 0x005BE4u
-#define manual_panel_state_jumps ((const uint32_t *)rom(manual_panel_state_jumps_ADDRESS))
+extern const void *manual_panel_state_jumps_data;
+#define manual_panel_state_jumps ((const uint32_t *)manual_panel_state_jumps_data)
 #define car_caption_state_jumps_ADDRESS 0x005D68u
-#define car_caption_state_jumps ((const uint32_t *)rom(car_caption_state_jumps_ADDRESS))
+extern const void *car_caption_state_jumps_data;
+#define car_caption_state_jumps ((const uint32_t *)car_caption_state_jumps_data)
 #define car_gears_caption_state_jumps_ADDRESS 0x005E1Cu
-#define car_gears_caption_state_jumps ((const uint32_t *)rom(car_gears_caption_state_jumps_ADDRESS))
+extern const void *car_gears_caption_state_jumps_data;
+#define car_gears_caption_state_jumps ((const uint32_t *)car_gears_caption_state_jumps_data)
 #define waiting_banner_state_jumps_ADDRESS 0x005EC0u
-#define waiting_banner_state_jumps ((const uint32_t *)rom(waiting_banner_state_jumps_ADDRESS))
+extern const void *waiting_banner_state_jumps_data;
+#define waiting_banner_state_jumps ((const uint32_t *)waiting_banner_state_jumps_data)
 #define car_select_entries_state_jumps_ADDRESS 0x005F5Cu
-#define car_select_entries_state_jumps ((const uint32_t *)rom(car_select_entries_state_jumps_ADDRESS))
+extern const void *car_select_entries_state_jumps_data;
+#define car_select_entries_state_jumps ((const uint32_t *)car_select_entries_state_jumps_data)
 #define car_select_gas_down_jumps_ADDRESS 0x0062B0u
-#define car_select_gas_down_jumps ((const uint32_t *)rom(car_select_gas_down_jumps_ADDRESS))
+extern const void *car_select_gas_down_jumps_data;
+#define car_select_gas_down_jumps ((const uint32_t *)car_select_gas_down_jumps_data)
 #define entry_countdown_lcd_texts_ADDRESS 0x006464u
-#define entry_countdown_lcd_texts ((const uint32_t *)rom(entry_countdown_lcd_texts_ADDRESS))
+extern const void *entry_countdown_lcd_texts_data;
+#define entry_countdown_lcd_texts ((const uint32_t *)entry_countdown_lcd_texts_data)
 #define entry_traffic_state_jumps_ADDRESS 0x00661Cu
-#define entry_traffic_state_jumps ((const uint32_t *)rom(entry_traffic_state_jumps_ADDRESS))
+extern const void *entry_traffic_state_jumps_data;
+#define entry_traffic_state_jumps ((const uint32_t *)entry_traffic_state_jumps_data)
 #define entry_traffic_car_state_jumps_ADDRESS 0x00665Cu
-#define entry_traffic_car_state_jumps ((const uint32_t *)rom(entry_traffic_car_state_jumps_ADDRESS))
+extern const void *entry_traffic_car_state_jumps_data;
+#define entry_traffic_car_state_jumps ((const uint32_t *)entry_traffic_car_state_jumps_data)
 #define car_pass_sounds_ADDRESS 0x0067A9u
-#define car_pass_sounds ((const uint8_t *)rom(car_pass_sounds_ADDRESS))
+extern const void *car_pass_sounds_data;
+#define car_pass_sounds ((const uint8_t *)car_pass_sounds_data)
 #define car_select_default_cars_ADDRESS 0x0069B0u
-#define car_select_default_cars ((const uint8_t *)rom(car_select_default_cars_ADDRESS))
+extern const void *car_select_default_cars_data;
+#define car_select_default_cars ((const uint8_t *)car_select_default_cars_data)
 #define turntable_car_frames_ADDRESS 0x0069D8u
-#define turntable_car_frames ((const uint8_t *)rom(turntable_car_frames_ADDRESS))
+extern const void *turntable_car_frames_data;
+#define turntable_car_frames ((const uint8_t *)turntable_car_frames_data)
 #define car_select_turn_delays_ADDRESS 0x006D9Cu
-#define car_select_turn_delays ((const uint8_t *)rom(car_select_turn_delays_ADDRESS))
+extern const void *car_select_turn_delays_data;
+#define car_select_turn_delays ((const uint8_t *)car_select_turn_delays_data)
 #define car_select_wheel_transmissions_ADDRESS 0x006DA4u
-#define car_select_wheel_transmissions ((const uint8_t *)rom(car_select_wheel_transmissions_ADDRESS))
+extern const void *car_select_wheel_transmissions_data;
+#define car_select_wheel_transmissions ((const uint8_t *)car_select_wheel_transmissions_data)
 #define car_caption_palettes_ADDRESS 0x006DDEu
-#define car_caption_palettes ((const uint16_t *)rom(car_caption_palettes_ADDRESS))
+extern const void *car_caption_palettes_data;
+#define car_caption_palettes ((const uint16_t *)car_caption_palettes_data)
 #define car_select_car_sounds_ADDRESS 0x006DEEu
-#define car_select_car_sounds ((const uint8_t *)rom(car_select_car_sounds_ADDRESS))
+extern const void *car_select_car_sounds_data;
+#define car_select_car_sounds ((const uint8_t *)car_select_car_sounds_data)
 #define automatic_panel_palette_lists_ADDRESS 0x006E30u
-#define automatic_panel_palette_lists ((const uint32_t *)rom(automatic_panel_palette_lists_ADDRESS))
+extern const void *automatic_panel_palette_lists_data;
+#define automatic_panel_palette_lists ((const uint32_t *)automatic_panel_palette_lists_data)
 #define manual_panel_palette_lists_ADDRESS 0x006E44u
-#define manual_panel_palette_lists ((const uint32_t *)rom(manual_panel_palette_lists_ADDRESS))
+extern const void *manual_panel_palette_lists_data;
+#define manual_panel_palette_lists ((const uint32_t *)manual_panel_palette_lists_data)
 #define car_gears_caption_frames_ADDRESS 0x006E78u
-#define car_gears_caption_frames ((const uint8_t *)rom(car_gears_caption_frames_ADDRESS))
+extern const void *car_gears_caption_frames_data;
+#define car_gears_caption_frames ((const uint8_t *)car_gears_caption_frames_data)
 #define choice_flag_palettes_ADDRESS 0x006E80u
-#define choice_flag_palettes ((const uint16_t *)rom(choice_flag_palettes_ADDRESS))
+extern const void *choice_flag_palettes_data;
+#define choice_flag_palettes ((const uint16_t *)choice_flag_palettes_data)
 #define choice_flag_number_animations_ADDRESS 0x006E90u
-#define choice_flag_number_animations ((const uint16_t *)rom(choice_flag_number_animations_ADDRESS))
+extern const void *choice_flag_number_animations_data;
+#define choice_flag_number_animations ((const uint16_t *)choice_flag_number_animations_data)
 #define car_select_entries_flag_blink_ADDRESS 0x006EA0u
-#define car_select_entries_flag_blink ((const uint8_t *)rom(car_select_entries_flag_blink_ADDRESS))
+extern const void *car_select_entries_flag_blink_data;
+#define car_select_entries_flag_blink ((const uint8_t *)car_select_entries_flag_blink_data)
+#define unused_numbers_006EC8_ADDRESS 0x006EC8u
+extern const void *unused_numbers_006EC8_data;
+#define unused_numbers_006EC8 (*(const uint32_t *)unused_numbers_006EC8_data)
 #define player_car_state_jumps_ADDRESS 0x006F18u
-#define player_car_state_jumps ((const uint32_t *)rom(player_car_state_jumps_ADDRESS))
+extern const void *player_car_state_jumps_data;
+#define player_car_state_jumps ((const uint32_t *)player_car_state_jumps_data)
 #define player_car_time_up_step_jumps_ADDRESS 0x007164u
-#define player_car_time_up_step_jumps ((const uint32_t *)rom(player_car_time_up_step_jumps_ADDRESS))
+extern const void *player_car_time_up_step_jumps_data;
+#define player_car_time_up_step_jumps ((const uint32_t *)player_car_time_up_step_jumps_data)
 #define player_car_goal_step_jumps_ADDRESS 0x00720Cu
-#define player_car_goal_step_jumps ((const uint32_t *)rom(player_car_goal_step_jumps_ADDRESS))
+extern const void *player_car_goal_step_jumps_data;
+#define player_car_goal_step_jumps ((const uint32_t *)player_car_goal_step_jumps_data)
 #define player_car_rival_step_jumps_ADDRESS 0x007917u
-#define player_car_rival_step_jumps ((const uint32_t *)rom(player_car_rival_step_jumps_ADDRESS))
+extern const void *player_car_rival_step_jumps_data;
+#define player_car_rival_step_jumps ((const uint32_t *)player_car_rival_step_jumps_data)
 #define rival_warning_state_jumps_ADDRESS 0x007C44u
-#define rival_warning_state_jumps ((const uint32_t *)rom(rival_warning_state_jumps_ADDRESS))
+extern const void *rival_warning_state_jumps_data;
+#define rival_warning_state_jumps ((const uint32_t *)rival_warning_state_jumps_data)
 #define rival_alarm_state_jumps_ADDRESS 0x007CACu
-#define rival_alarm_state_jumps ((const uint32_t *)rom(rival_alarm_state_jumps_ADDRESS))
+extern const void *rival_alarm_state_jumps_data;
+#define rival_alarm_state_jumps ((const uint32_t *)rival_alarm_state_jumps_data)
 #define player_car_hit_kind_jumps_ADDRESS 0x007D28u
-#define player_car_hit_kind_jumps ((const uint32_t *)rom(player_car_hit_kind_jumps_ADDRESS))
+extern const void *player_car_hit_kind_jumps_data;
+#define player_car_hit_kind_jumps ((const uint32_t *)player_car_hit_kind_jumps_data)
 #define crash_place_offsets_ADDRESS 0x008026u
-#define crash_place_offsets ((const uint16_t *)rom(crash_place_offsets_ADDRESS))
+extern const void *crash_place_offsets_data;
+#define crash_place_offsets ((const uint16_t *)crash_place_offsets_data)
 #define car_weights_ADDRESS 0x008038u
-#define car_weights ((const uint16_t *)rom(car_weights_ADDRESS))
+extern const void *car_weights_data;
+#define car_weights ((const uint16_t *)car_weights_data)
 #define car_crash_physics_ADDRESS 0x00804Au
-#define car_crash_physics ((const uint32_t *)rom(car_crash_physics_ADDRESS))
+extern const void *car_crash_physics_data;
+#define car_crash_physics ((const uint32_t *)car_crash_physics_data)
 #define grid_road_place_lists_ADDRESS 0x0090ACu
-#define grid_road_place_lists ((const uint32_t *)rom(grid_road_place_lists_ADDRESS))
+extern const void *grid_road_place_lists_data;
+#define grid_road_place_lists ((const uint32_t *)grid_road_place_lists_data)
 #define grid_segment_lists_ADDRESS 0x0091CCu
-#define grid_segment_lists ((const uint32_t *)rom(grid_segment_lists_ADDRESS))
+extern const void *grid_segment_lists_data;
+#define grid_segment_lists ((const uint32_t *)grid_segment_lists_data)
 #define player_car_steer_animations_ADDRESS 0x00926Cu
-#define player_car_steer_animations ((const uint16_t *)rom(player_car_steer_animations_ADDRESS))
+extern const void *player_car_steer_animations_data;
+#define player_car_steer_animations ((const uint16_t *)player_car_steer_animations_data)
 #define player_car_wheelspin_animations_ADDRESS 0x009300u
-#define player_car_wheelspin_animations ((const uint16_t *)rom(player_car_wheelspin_animations_ADDRESS))
+extern const void *player_car_wheelspin_animations_data;
+#define player_car_wheelspin_animations ((const uint16_t *)player_car_wheelspin_animations_data)
 #define player_car_skid_animations_wheel_high_ADDRESS 0x009310u
-#define player_car_skid_animations_wheel_high ((const uint16_t *)rom(player_car_skid_animations_wheel_high_ADDRESS))
+extern const void *player_car_skid_animations_wheel_high_data;
+#define player_car_skid_animations_wheel_high ((const uint16_t *)player_car_skid_animations_wheel_high_data)
 #define player_car_skid_animations_wheel_low_ADDRESS 0x009410u
-#define player_car_skid_animations_wheel_low ((const uint16_t *)rom(player_car_skid_animations_wheel_low_ADDRESS))
+extern const void *player_car_skid_animations_wheel_low_data;
+#define player_car_skid_animations_wheel_low ((const uint16_t *)player_car_skid_animations_wheel_low_data)
 #define player_car_palettes_ADDRESS 0x009510u
-#define player_car_palettes ((const uint16_t *)rom(player_car_palettes_ADDRESS))
+extern const void *player_car_palettes_data;
+#define player_car_palettes ((const uint16_t *)player_car_palettes_data)
 #define player_car_arrival_animations_ADDRESS 0x009520u
-#define player_car_arrival_animations ((const uint16_t *)rom(player_car_arrival_animations_ADDRESS))
+extern const void *player_car_arrival_animations_data;
+#define player_car_arrival_animations ((const uint16_t *)player_car_arrival_animations_data)
 #define player_car_time_up_brakes_ADDRESS 0x009530u
-#define player_car_time_up_brakes ((const uint8_t *)rom(player_car_time_up_brakes_ADDRESS))
+extern const void *player_car_time_up_brakes_data;
+#define player_car_time_up_brakes ((const uint8_t *)player_car_time_up_brakes_data)
 #define goal_stops_ADDRESS 0x009540u
-#define goal_stops ((const uint32_t *)rom(goal_stops_ADDRESS))
+extern const void *goal_stops_data;
+#define goal_stops ((const uint32_t *)goal_stops_data)
 #define race_car_first_body_pieces_ADDRESS 0x009DCCu
-#define race_car_first_body_pieces ((const uint16_t *)rom(race_car_first_body_pieces_ADDRESS))
+extern const void *race_car_first_body_pieces_data;
+#define race_car_first_body_pieces ((const uint16_t *)race_car_first_body_pieces_data)
 #define race_car_first_body_animations_ADDRESS 0x009DDCu
-#define race_car_first_body_animations ((const uint16_t *)rom(race_car_first_body_animations_ADDRESS))
+extern const void *race_car_first_body_animations_data;
+#define race_car_first_body_animations ((const uint16_t *)race_car_first_body_animations_data)
 #define race_car_driver_animations_ADDRESS 0x009DECu
-#define race_car_driver_animations ((const uint16_t *)rom(race_car_driver_animations_ADDRESS))
+extern const void *race_car_driver_animations_data;
+#define race_car_driver_animations ((const uint16_t *)race_car_driver_animations_data)
 #define race_car_passenger_animations_ADDRESS 0x009DFCu
-#define race_car_passenger_animations ((const uint16_t *)rom(race_car_passenger_animations_ADDRESS))
+extern const void *race_car_passenger_animations_data;
+#define race_car_passenger_animations ((const uint16_t *)race_car_passenger_animations_data)
 #define race_car_driver_gesture_masks_ADDRESS 0x009E0Cu
-#define race_car_driver_gesture_masks ((const uint8_t *)rom(race_car_driver_gesture_masks_ADDRESS))
+extern const void *race_car_driver_gesture_masks_data;
+#define race_car_driver_gesture_masks ((const uint8_t *)race_car_driver_gesture_masks_data)
 #define race_car_passenger_gesture_masks_ADDRESS 0x009E14u
-#define race_car_passenger_gesture_masks ((const uint8_t *)rom(race_car_passenger_gesture_masks_ADDRESS))
+extern const void *race_car_passenger_gesture_masks_data;
+#define race_car_passenger_gesture_masks ((const uint8_t *)race_car_passenger_gesture_masks_data)
 #define race_car_driver_palettes_ADDRESS 0x009E1Cu
-#define race_car_driver_palettes ((const uint16_t *)rom(race_car_driver_palettes_ADDRESS))
+extern const void *race_car_driver_palettes_data;
+#define race_car_driver_palettes ((const uint16_t *)race_car_driver_palettes_data)
 #define race_car_passenger_palettes_ADDRESS 0x009E2Cu
-#define race_car_passenger_palettes ((const uint16_t *)rom(race_car_passenger_palettes_ADDRESS))
+extern const void *race_car_passenger_palettes_data;
+#define race_car_passenger_palettes ((const uint16_t *)race_car_passenger_palettes_data)
 #define race_car_driver_frame_counts_ADDRESS 0x009E3Cu
-#define race_car_driver_frame_counts ((const uint8_t *)rom(race_car_driver_frame_counts_ADDRESS))
+extern const void *race_car_driver_frame_counts_data;
+#define race_car_driver_frame_counts ((const uint8_t *)race_car_driver_frame_counts_data)
 #define race_car_passenger_frame_counts_ADDRESS 0x009E44u
-#define race_car_passenger_frame_counts ((const uint8_t *)rom(race_car_passenger_frame_counts_ADDRESS))
+extern const void *race_car_passenger_frame_counts_data;
+#define race_car_passenger_frame_counts ((const uint8_t *)race_car_passenger_frame_counts_data)
 #define race_car_body_wheel_kinds_ADDRESS 0x009E4Cu
-#define race_car_body_wheel_kinds ((const uint8_t *)rom(race_car_body_wheel_kinds_ADDRESS))
+extern const void *race_car_body_wheel_kinds_data;
+#define race_car_body_wheel_kinds ((const uint8_t *)race_car_body_wheel_kinds_data)
 #define race_car_driver_handlers_ADDRESS 0x009EBCu
-#define race_car_driver_handlers ((const uint32_t *)rom(race_car_driver_handlers_ADDRESS))
+extern const void *race_car_driver_handlers_data;
+#define race_car_driver_handlers ((const uint32_t *)race_car_driver_handlers_data)
 #define race_car_passenger_handlers_ADDRESS 0x009EDCu
-#define race_car_passenger_handlers ((const uint32_t *)rom(race_car_passenger_handlers_ADDRESS))
+extern const void *race_car_passenger_handlers_data;
+#define race_car_passenger_handlers ((const uint32_t *)race_car_passenger_handlers_data)
+#define unused_car_animations_ADDRESS 0x009EFCu
+extern const void *unused_car_animations_data;
+#define unused_car_animations (*(const uint16_t *)unused_car_animations_data)
 #define race_car_spray_palettes_ADDRESS 0x009F0Cu
-#define race_car_spray_palettes ((const uint16_t *)rom(race_car_spray_palettes_ADDRESS))
+extern const void *race_car_spray_palettes_data;
+#define race_car_spray_palettes ((const uint16_t *)race_car_spray_palettes_data)
 #define race_car_spray_2_animations_ADDRESS 0x009F2Cu
-#define race_car_spray_2_animations ROM16(race_car_spray_2_animations_ADDRESS)
+extern const void *race_car_spray_2_animations_data;
+#define race_car_spray_2_animations (*(const uint16_t *)race_car_spray_2_animations_data)
 #define race_car_spray_1_animations_ADDRESS 0x009F4Cu
-#define race_car_spray_1_animations ROM16(race_car_spray_1_animations_ADDRESS)
+extern const void *race_car_spray_1_animations_data;
+#define race_car_spray_1_animations (*(const uint16_t *)race_car_spray_1_animations_data)
 #define race_car_spray_frame_counts_ADDRESS 0x009F6Cu
-#define race_car_spray_frame_counts ((const uint8_t *)rom(race_car_spray_frame_counts_ADDRESS))
+extern const void *race_car_spray_frame_counts_data;
+#define race_car_spray_frame_counts ((const uint8_t *)race_car_spray_frame_counts_data)
 #define race_car_tag_palettes_ADDRESS 0x009F7Cu
-#define race_car_tag_palettes ((const uint16_t *)rom(race_car_tag_palettes_ADDRESS))
+extern const void *race_car_tag_palettes_data;
+#define race_car_tag_palettes ((const uint16_t *)race_car_tag_palettes_data)
 #define race_car_tag_animations_ADDRESS 0x009F8Cu
-#define race_car_tag_animations ((const uint16_t *)rom(race_car_tag_animations_ADDRESS))
+extern const void *race_car_tag_animations_data;
+#define race_car_tag_animations ((const uint16_t *)race_car_tag_animations_data)
 #define race_car_blink_starts_ADDRESS 0x009F9Cu
-#define race_car_blink_starts ((const uint8_t *)rom(race_car_blink_starts_ADDRESS))
+extern const void *race_car_blink_starts_data;
+#define race_car_blink_starts ((const uint8_t *)race_car_blink_starts_data)
 #define race_car_tag_blink_ADDRESS 0x009FA4u
-#define race_car_tag_blink ((const uint8_t *)rom(race_car_tag_blink_ADDRESS))
+extern const void *race_car_tag_blink_data;
+#define race_car_tag_blink ((const uint8_t *)race_car_tag_blink_data)
 #define race_car_ending_handlers_ADDRESS 0x009FC4u
-#define race_car_ending_handlers ((const uint32_t *)rom(race_car_ending_handlers_ADDRESS))
+extern const void *race_car_ending_handlers_data;
+#define race_car_ending_handlers ((const uint32_t *)race_car_ending_handlers_data)
+#define unused_numbers_009FE4_ADDRESS 0x009FE4u
+extern const void *unused_numbers_009FE4_data;
+#define unused_numbers_009FE4 (*(const uint32_t *)unused_numbers_009FE4_data)
 #define player_car_heading_quadrant_jumps_ADDRESS 0x00A5F4u
-#define player_car_heading_quadrant_jumps ((const uint32_t *)rom(player_car_heading_quadrant_jumps_ADDRESS))
+extern const void *player_car_heading_quadrant_jumps_data;
+#define player_car_heading_quadrant_jumps ((const uint32_t *)player_car_heading_quadrant_jumps_data)
 #define player_car_view_yaw_quadrant_jumps_ADDRESS 0x00A798u
-#define player_car_view_yaw_quadrant_jumps ((const uint32_t *)rom(player_car_view_yaw_quadrant_jumps_ADDRESS))
+extern const void *player_car_view_yaw_quadrant_jumps_data;
+#define player_car_view_yaw_quadrant_jumps ((const uint32_t *)player_car_view_yaw_quadrant_jumps_data)
 #define car_skid_noises_ADDRESS 0x00ABC3u
-#define car_skid_noises ((const uint8_t *)rom(car_skid_noises_ADDRESS))
+extern const void *car_skid_noises_data;
+#define car_skid_noises ((const uint8_t *)car_skid_noises_data)
 #define gas_pedal_curve_ADDRESS 0x00ABCBu
-#define gas_pedal_curve ((const int8_t *)rom(gas_pedal_curve_ADDRESS))
+extern const void *gas_pedal_curve_data;
+#define gas_pedal_curve ((const int8_t *)gas_pedal_curve_data)
 #define brake_pedal_curve_ADDRESS 0x00ACCBu
-#define brake_pedal_curve ((const uint8_t *)rom(brake_pedal_curve_ADDRESS))
+extern const void *brake_pedal_curve_data;
+#define brake_pedal_curve ((const uint8_t *)brake_pedal_curve_data)
 #define car_handlings_ADDRESS 0x00ADCCu
-#define car_handlings ((const uint32_t *)rom(car_handlings_ADDRESS))
+extern const void *car_handlings_data;
+#define car_handlings ((const uint32_t *)car_handlings_data)
 #define car_gear_lists_ADDRESS 0x00B04Cu
-#define car_gear_lists ((const uint32_t *)rom(car_gear_lists_ADDRESS))
+extern const void *car_gear_lists_data;
+#define car_gear_lists ((const uint32_t *)car_gear_lists_data)
 #define car_torque_curves_ADDRESS 0x00B0C0u
-#define car_torque_curves ((const uint32_t *)rom(car_torque_curves_ADDRESS))
+extern const void *car_torque_curves_data;
+#define car_torque_curves ((const uint32_t *)car_torque_curves_data)
 #define car_model_off_road_noises_ADDRESS 0x00B6FCu
-#define car_model_off_road_noises ((const uint8_t *)rom(car_model_off_road_noises_ADDRESS))
+extern const void *car_model_off_road_noises_data;
+#define car_model_off_road_noises ((const uint8_t *)car_model_off_road_noises_data)
 #define car_model_off_road_shakes_ADDRESS 0x00B704u
-#define car_model_off_road_shakes ((const uint8_t *)rom(car_model_off_road_shakes_ADDRESS))
+extern const void *car_model_off_road_shakes_data;
+#define car_model_off_road_shakes ((const uint8_t *)car_model_off_road_shakes_data)
 #define wheel_effect_1_jumps_ADDRESS 0x00B70Cu
-#define wheel_effect_1_jumps ((const uint32_t *)rom(wheel_effect_1_jumps_ADDRESS))
+extern const void *wheel_effect_1_jumps_data;
+#define wheel_effect_1_jumps ((const uint32_t *)wheel_effect_1_jumps_data)
 #define wheel_effect_2_jumps_ADDRESS 0x00B74Cu
-#define wheel_effect_2_jumps ((const uint32_t *)rom(wheel_effect_2_jumps_ADDRESS))
+extern const void *wheel_effect_2_jumps_data;
+#define wheel_effect_2_jumps ((const uint32_t *)wheel_effect_2_jumps_data)
 #define rev_meter_state_jumps_ADDRESS 0x00BFCCu
-#define rev_meter_state_jumps ((const uint32_t *)rom(rev_meter_state_jumps_ADDRESS))
+extern const void *rev_meter_state_jumps_data;
+#define rev_meter_state_jumps ((const uint32_t *)rev_meter_state_jumps_data)
 #define speedometer_state_jumps_ADDRESS 0x00C024u
-#define speedometer_state_jumps ((const uint32_t *)rom(speedometer_state_jumps_ADDRESS))
+extern const void *speedometer_state_jumps_data;
+#define speedometer_state_jumps ((const uint32_t *)speedometer_state_jumps_data)
 #define speed_unit_state_jumps_ADDRESS 0x00C0D4u
-#define speed_unit_state_jumps ((const uint32_t *)rom(speed_unit_state_jumps_ADDRESS))
+extern const void *speed_unit_state_jumps_data;
+#define speed_unit_state_jumps ((const uint32_t *)speed_unit_state_jumps_data)
 #define gear_indicator_state_jumps_ADDRESS 0x00C118u
-#define gear_indicator_state_jumps ((const uint32_t *)rom(gear_indicator_state_jumps_ADDRESS))
+extern const void *gear_indicator_state_jumps_data;
+#define gear_indicator_state_jumps ((const uint32_t *)gear_indicator_state_jumps_data)
 #define shift_up_hint_state_jumps_ADDRESS 0x00C23Cu
-#define shift_up_hint_state_jumps ((const uint32_t *)rom(shift_up_hint_state_jumps_ADDRESS))
+extern const void *shift_up_hint_state_jumps_data;
+#define shift_up_hint_state_jumps ((const uint32_t *)shift_up_hint_state_jumps_data)
 #define place_count_state_jumps_ADDRESS 0x00C2B8u
-#define place_count_state_jumps ((const uint32_t *)rom(place_count_state_jumps_ADDRESS))
+extern const void *place_count_state_jumps_data;
+#define place_count_state_jumps ((const uint32_t *)place_count_state_jumps_data)
 #define place_number_state_jumps_ADDRESS 0x00C350u
-#define place_number_state_jumps ((const uint32_t *)rom(place_number_state_jumps_ADDRESS))
+extern const void *place_number_state_jumps_data;
+#define place_number_state_jumps ((const uint32_t *)place_number_state_jumps_data)
 #define lap_timer_state_jumps_ADDRESS 0x00C44Cu
-#define lap_timer_state_jumps ((const uint32_t *)rom(lap_timer_state_jumps_ADDRESS))
+extern const void *lap_timer_state_jumps_data;
+#define lap_timer_state_jumps ((const uint32_t *)lap_timer_state_jumps_data)
 #define start_message_state_jumps_ADDRESS 0x00C5A8u
-#define start_message_state_jumps ((const uint32_t *)rom(start_message_state_jumps_ADDRESS))
+extern const void *start_message_state_jumps_data;
+#define start_message_state_jumps ((const uint32_t *)start_message_state_jumps_data)
 #define time_left_display_state_jumps_ADDRESS 0x00C66Cu
-#define time_left_display_state_jumps ((const uint32_t *)rom(time_left_display_state_jumps_ADDRESS))
+extern const void *time_left_display_state_jumps_data;
+#define time_left_display_state_jumps ((const uint32_t *)time_left_display_state_jumps_data)
 #define stage_entry_state_jumps_ADDRESS 0x00C880u
-#define stage_entry_state_jumps ((const uint32_t *)rom(stage_entry_state_jumps_ADDRESS))
+extern const void *stage_entry_state_jumps_data;
+#define stage_entry_state_jumps ((const uint32_t *)stage_entry_state_jumps_data)
 #define goal_state_jumps_ADDRESS 0x00C8C4u
-#define goal_state_jumps ((const uint32_t *)rom(goal_state_jumps_ADDRESS))
+extern const void *goal_state_jumps_data;
+#define goal_state_jumps ((const uint32_t *)goal_state_jumps_data)
 #define branch_arrow_state_jumps_ADDRESS 0x00CAC8u
-#define branch_arrow_state_jumps ((const uint32_t *)rom(branch_arrow_state_jumps_ADDRESS))
+extern const void *branch_arrow_state_jumps_data;
+#define branch_arrow_state_jumps ((const uint32_t *)branch_arrow_state_jumps_data)
 #define checkpoint_board_state_jumps_ADDRESS 0x00CBCCu
-#define checkpoint_board_state_jumps ((const uint32_t *)rom(checkpoint_board_state_jumps_ADDRESS))
+extern const void *checkpoint_board_state_jumps_data;
+#define checkpoint_board_state_jumps ((const uint32_t *)checkpoint_board_state_jumps_data)
 #define checkpoint_board_row_state_jumps_ADDRESS 0x00CC70u
-#define checkpoint_board_row_state_jumps ((const uint32_t *)rom(checkpoint_board_row_state_jumps_ADDRESS))
+extern const void *checkpoint_board_row_state_jumps_data;
+#define checkpoint_board_row_state_jumps ((const uint32_t *)checkpoint_board_row_state_jumps_data)
 #define checkpoint_board_car_sprites_ADDRESS 0x00CFC8u
-#define checkpoint_board_car_sprites ((const uint32_t *)rom(checkpoint_board_car_sprites_ADDRESS))
+extern const void *checkpoint_board_car_sprites_data;
+#define checkpoint_board_car_sprites ((const uint32_t *)checkpoint_board_car_sprites_data)
 #define checkpoint_board_number_animations_ADDRESS 0x00CFE8u
-#define checkpoint_board_number_animations ((const uint16_t *)rom(checkpoint_board_number_animations_ADDRESS))
+extern const void *checkpoint_board_number_animations_data;
+#define checkpoint_board_number_animations ((const uint16_t *)checkpoint_board_number_animations_data)
 #define checkpoint_board_time_places_ADDRESS 0x00CFF8u
-#define checkpoint_board_time_places ((const uint32_t *)rom(checkpoint_board_time_places_ADDRESS))
+extern const void *checkpoint_board_time_places_data;
+#define checkpoint_board_time_places ((const uint32_t *)checkpoint_board_time_places_data)
 #define gear_indicator_animations_ADDRESS 0x00D018u
-#define gear_indicator_animations ((const uint16_t *)rom(gear_indicator_animations_ADDRESS))
+extern const void *gear_indicator_animations_data;
+#define gear_indicator_animations ((const uint16_t *)gear_indicator_animations_data)
 #define stage_level_texts_ADDRESS 0x00D034u
-#define stage_level_texts ((const uint32_t *)rom(stage_level_texts_ADDRESS))
+extern const void *stage_level_texts_data;
+#define stage_level_texts ((const uint32_t *)stage_level_texts_data)
 #define lap_timer_checkpoint_states_ADDRESS 0x00D0C0u
-#define lap_timer_checkpoint_states ((const uint8_t *)rom(lap_timer_checkpoint_states_ADDRESS))
+extern const void *lap_timer_checkpoint_states_data;
+#define lap_timer_checkpoint_states ((const uint8_t *)lap_timer_checkpoint_states_data)
 #define entry_invitation_step_jumps_ADDRESS 0x00DDB4u
-#define entry_invitation_step_jumps ((const uint32_t *)rom(entry_invitation_step_jumps_ADDRESS))
+extern const void *entry_invitation_step_jumps_data;
+#define entry_invitation_step_jumps ((const uint32_t *)entry_invitation_step_jumps_data)
 #define race_copy_offsets_ADDRESS 0x00E0A0u
-#define race_copy_offsets ((const uint32_t *)rom(race_copy_offsets_ADDRESS))
+extern const void *race_copy_offsets_data;
+#define race_copy_offsets ((const uint32_t *)race_copy_offsets_data)
 #define race_copy_player_offsets_ADDRESS 0x00E0C4u
-#define race_copy_player_offsets ((const uint32_t *)rom(race_copy_player_offsets_ADDRESS))
+extern const void *race_copy_player_offsets_data;
+#define race_copy_player_offsets ((const uint32_t *)race_copy_player_offsets_data)
 #define link_board_ic_texts_ADDRESS 0x00E4D0u
-#define link_board_ic_texts ((const uint32_t *)rom(link_board_ic_texts_ADDRESS))
+extern const void *link_board_ic_texts_data;
+#define link_board_ic_texts ((const uint32_t *)link_board_ic_texts_data)
 #define stage_start_times_ADDRESS 0x00E5B3u
-#define stage_start_times ((const uint8_t *)rom(stage_start_times_ADDRESS))
+extern const void *stage_start_times_data;
+#define stage_start_times ((const uint8_t *)stage_start_times_data)
 #define fork_next_stages_ADDRESS 0x00E5D3u
-#define fork_next_stages ((const uint8_t *)rom(fork_next_stages_ADDRESS))
+extern const void *fork_next_stages_data;
+#define fork_next_stages ((const uint8_t *)fork_next_stages_data)
 #define entry_frames_by_machines_ADDRESS 0x00E614u
-#define entry_frames_by_machines ((const uint16_t *)rom(entry_frames_by_machines_ADDRESS))
+extern const void *entry_frames_by_machines_data;
+#define entry_frames_by_machines ((const uint16_t *)entry_frames_by_machines_data)
 #define draw_object_mode_jumps_ADDRESS 0x00EB44u
-#define draw_object_mode_jumps ((const uint32_t *)rom(draw_object_mode_jumps_ADDRESS))
+extern const void *draw_object_mode_jumps_data;
+#define draw_object_mode_jumps ((const uint32_t *)draw_object_mode_jumps_data)
 #define sprite_flip_x_signs_ADDRESS 0x00F13Cu
-#define sprite_flip_x_signs ((const uint32_t *)rom(sprite_flip_x_signs_ADDRESS))
+extern const void *sprite_flip_x_signs_data;
+#define sprite_flip_x_signs ((const uint32_t *)sprite_flip_x_signs_data)
 #define sprite_flip_y_signs_ADDRESS 0x00F140u
-#define sprite_flip_y_signs ((const uint32_t *)rom(sprite_flip_y_signs_ADDRESS))
+extern const void *sprite_flip_y_signs_data;
+#define sprite_flip_y_signs ((const uint32_t *)sprite_flip_y_signs_data)
 #define animation_order_jumps_ADDRESS 0x00F34Cu
-#define animation_order_jumps ((const uint32_t *)rom(animation_order_jumps_ADDRESS))
+extern const void *animation_order_jumps_data;
+#define animation_order_jumps ((const uint32_t *)animation_order_jumps_data)
+#define smoothed_flip_x_signs_ADDRESS 0x00F4E8u
+extern const void *smoothed_flip_x_signs_data;
+#define smoothed_flip_x_signs (*(const uint32_t *)smoothed_flip_x_signs_data)
 #define smoothed_flip_signs_ADDRESS 0x00F4ECu
-#define smoothed_flip_signs ((const uint32_t *)rom(smoothed_flip_signs_ADDRESS))
+extern const void *smoothed_flip_signs_data;
+#define smoothed_flip_signs ((const uint32_t *)smoothed_flip_signs_data)
 #define course_command_jumps_ADDRESS 0x00FF40u
-#define course_command_jumps ((const uint32_t *)rom(course_command_jumps_ADDRESS))
+extern const void *course_command_jumps_data;
+#define course_command_jumps ((const uint32_t *)course_command_jumps_data)
+#define unused_segment_steps_ADDRESS 0x010309u
+extern const void *unused_segment_steps_data;
+#define unused_segment_steps (*(const int8_t *)unused_segment_steps_data)
+#define unused_segment_shifts_ADDRESS 0x010425u
+extern const void *unused_segment_shifts_data;
+#define unused_segment_shifts (*(const int8_t *)unused_segment_shifts_data)
+#define unused_numbers_01060C_ADDRESS 0x01060Cu
+extern const void *unused_numbers_01060C_data;
+#define unused_numbers_01060C (*(const uint32_t *)unused_numbers_01060C_data)
 #define sprite_control_mode_ADDRESS 0x010B0Au
-#define sprite_control_mode ROM8(sprite_control_mode_ADDRESS)
+extern const void *sprite_control_mode_data;
+#define sprite_control_mode (*(const uint8_t *)sprite_control_mode_data)
 #define sprite_control_flip_ADDRESS 0x010B0Bu
-#define sprite_control_flip ROM8(sprite_control_flip_ADDRESS)
+extern const void *sprite_control_flip_data;
+#define sprite_control_flip (*(const uint8_t *)sprite_control_flip_data)
 #define video_control_default_ADDRESS 0x010B10u
-#define video_control_default ROM16(video_control_default_ADDRESS)
+extern const void *video_control_default_data;
+#define video_control_default (*(const uint16_t *)video_control_default_data)
 #define model_view_pitch_bases_ADDRESS 0x010BD2u
-#define model_view_pitch_bases ((const uint16_t *)rom(model_view_pitch_bases_ADDRESS))
+extern const void *model_view_pitch_bases_data;
+#define model_view_pitch_bases ((const uint16_t *)model_view_pitch_bases_data)
 #define screen_fade_kind_jumps_ADDRESS 0x01168Cu
-#define screen_fade_kind_jumps ((const uint32_t *)rom(screen_fade_kind_jumps_ADDRESS))
+extern const void *screen_fade_kind_jumps_data;
+#define screen_fade_kind_jumps ((const uint32_t *)screen_fade_kind_jumps_data)
 #define music_fade_addresses_ADDRESS 0x011FFCu
-#define music_fade_addresses ((const uint32_t *)rom(music_fade_addresses_ADDRESS))
+extern const void *music_fade_addresses_data;
+#define music_fade_addresses ((const uint32_t *)music_fade_addresses_data)
 #define car_model_engine_samples_ADDRESS 0x012026u
-#define car_model_engine_samples ((const uint8_t *)rom(car_model_engine_samples_ADDRESS))
+extern const void *car_model_engine_samples_data;
+#define car_model_engine_samples ((const uint8_t *)car_model_engine_samples_data)
 #define demo_sounds_ADDRESS 0x01202Eu
-#define demo_sounds ((const uint32_t *)rom(demo_sounds_ADDRESS))
+extern const void *demo_sounds_data;
+#define demo_sounds ((const uint32_t *)demo_sounds_data)
 #define demo_second_sounds_ADDRESS 0x01204Eu
-#define demo_second_sounds ((const uint32_t *)rom(demo_second_sounds_ADDRESS))
+extern const void *demo_second_sounds_data;
+#define demo_second_sounds ((const uint32_t *)demo_second_sounds_data)
 #define octant_base_angles_ADDRESS 0x0121D8u
-#define octant_base_angles ((const uint16_t *)rom(octant_base_angles_ADDRESS))
+extern const void *octant_base_angles_data;
+#define octant_base_angles ((const uint16_t *)octant_base_angles_data)
 #define octant_angle_factors_ADDRESS 0x0121E8u
-#define octant_angle_factors ((const uint16_t *)rom(octant_angle_factors_ADDRESS))
+extern const void *octant_angle_factors_data;
+#define octant_angle_factors ((const uint16_t *)octant_angle_factors_data)
 #define road_object_stream_state_jumps_ADDRESS 0x012708u
-#define road_object_stream_state_jumps ((const uint32_t *)rom(road_object_stream_state_jumps_ADDRESS))
+extern const void *road_object_stream_state_jumps_data;
+#define road_object_stream_state_jumps ((const uint32_t *)road_object_stream_state_jumps_data)
 #define road_object_stream_command_jumps_ADDRESS 0x012748u
-#define road_object_stream_command_jumps ((const uint32_t *)rom(road_object_stream_command_jumps_ADDRESS))
+extern const void *road_object_stream_command_jumps_data;
+#define road_object_stream_command_jumps ((const uint32_t *)road_object_stream_command_jumps_data)
 #define crest_clip_state_jumps_ADDRESS 0x0127FCu
-#define crest_clip_state_jumps ((const uint32_t *)rom(crest_clip_state_jumps_ADDRESS))
+extern const void *crest_clip_state_jumps_data;
+#define crest_clip_state_jumps ((const uint32_t *)crest_clip_state_jumps_data)
 #define scenery_state_jumps_ADDRESS 0x012888u
-#define scenery_state_jumps ((const uint32_t *)rom(scenery_state_jumps_ADDRESS))
+extern const void *scenery_state_jumps_data;
+#define scenery_state_jumps ((const uint32_t *)scenery_state_jumps_data)
 #define flashing_scenery_state_jumps_ADDRESS 0x012914u
-#define flashing_scenery_state_jumps ((const uint32_t *)rom(flashing_scenery_state_jumps_ADDRESS))
+extern const void *flashing_scenery_state_jumps_data;
+#define flashing_scenery_state_jumps ((const uint32_t *)flashing_scenery_state_jumps_data)
 #define scenery_pair_state_jumps_ADDRESS 0x0129B8u
-#define scenery_pair_state_jumps ((const uint32_t *)rom(scenery_pair_state_jumps_ADDRESS))
+extern const void *scenery_pair_state_jumps_data;
+#define scenery_pair_state_jumps ((const uint32_t *)scenery_pair_state_jumps_data)
+#define unused_0129D0_state_jumps_ADDRESS 0x0129DCu
+extern const void *unused_0129D0_state_jumps_data;
+#define unused_0129D0_state_jumps (*(const uint32_t *)unused_0129D0_state_jumps_data)
 #define overhead_scenery_state_jumps_ADDRESS 0x012A00u
-#define overhead_scenery_state_jumps ((const uint32_t *)rom(overhead_scenery_state_jumps_ADDRESS))
+extern const void *overhead_scenery_state_jumps_data;
+#define overhead_scenery_state_jumps ((const uint32_t *)overhead_scenery_state_jumps_data)
 #define aurora_state_jumps_ADDRESS 0x012A2Cu
-#define aurora_state_jumps ((const uint32_t *)rom(aurora_state_jumps_ADDRESS))
+extern const void *aurora_state_jumps_data;
+#define aurora_state_jumps ((const uint32_t *)aurora_state_jumps_data)
 #define fork_sign_state_jumps_ADDRESS 0x012ADCu
-#define fork_sign_state_jumps ((const uint32_t *)rom(fork_sign_state_jumps_ADDRESS))
+extern const void *fork_sign_state_jumps_data;
+#define fork_sign_state_jumps ((const uint32_t *)fork_sign_state_jumps_data)
 #define animated_scenery_state_jumps_ADDRESS 0x012B00u
-#define animated_scenery_state_jumps ((const uint32_t *)rom(animated_scenery_state_jumps_ADDRESS))
+extern const void *animated_scenery_state_jumps_data;
+#define animated_scenery_state_jumps ((const uint32_t *)animated_scenery_state_jumps_data)
 #define animated_scenery_pair_state_jumps_ADDRESS 0x012B90u
-#define animated_scenery_pair_state_jumps ((const uint32_t *)rom(animated_scenery_pair_state_jumps_ADDRESS))
+extern const void *animated_scenery_pair_state_jumps_data;
+#define animated_scenery_pair_state_jumps ((const uint32_t *)animated_scenery_pair_state_jumps_data)
 #define road_crosser_state_jumps_ADDRESS 0x012BBCu
-#define road_crosser_state_jumps ((const uint32_t *)rom(road_crosser_state_jumps_ADDRESS))
+extern const void *road_crosser_state_jumps_data;
+#define road_crosser_state_jumps ((const uint32_t *)road_crosser_state_jumps_data)
 #define kangaroo_state_jumps_ADDRESS 0x012CB8u
-#define kangaroo_state_jumps ((const uint32_t *)rom(kangaroo_state_jumps_ADDRESS))
+extern const void *kangaroo_state_jumps_data;
+#define kangaroo_state_jumps ((const uint32_t *)kangaroo_state_jumps_data)
 #define moving_scenery_state_jumps_ADDRESS 0x012DC4u
-#define moving_scenery_state_jumps ((const uint32_t *)rom(moving_scenery_state_jumps_ADDRESS))
+extern const void *moving_scenery_state_jumps_data;
+#define moving_scenery_state_jumps ((const uint32_t *)moving_scenery_state_jumps_data)
 #define swooping_helicopter_state_jumps_ADDRESS 0x012EB0u
-#define swooping_helicopter_state_jumps ((const uint32_t *)rom(swooping_helicopter_state_jumps_ADDRESS))
+extern const void *swooping_helicopter_state_jumps_data;
+#define swooping_helicopter_state_jumps ((const uint32_t *)swooping_helicopter_state_jumps_data)
 #define start_gate_state_jumps_ADDRESS 0x012FC8u
-#define start_gate_state_jumps ((const uint32_t *)rom(start_gate_state_jumps_ADDRESS))
+extern const void *start_gate_state_jumps_data;
+#define start_gate_state_jumps ((const uint32_t *)start_gate_state_jumps_data)
 #define start_gate_light_palettes_ADDRESS 0x01306Eu
-#define start_gate_light_palettes ((const uint16_t *)rom(start_gate_light_palettes_ADDRESS))
+extern const void *start_gate_light_palettes_data;
+#define start_gate_light_palettes ((const uint16_t *)start_gate_light_palettes_data)
 #define start_flagman_state_jumps_ADDRESS 0x01308Cu
-#define start_flagman_state_jumps ((const uint32_t *)rom(start_flagman_state_jumps_ADDRESS))
+extern const void *start_flagman_state_jumps_data;
+#define start_flagman_state_jumps ((const uint32_t *)start_flagman_state_jumps_data)
 #define flagman_state_jumps_ADDRESS 0x013110u
-#define flagman_state_jumps ((const uint32_t *)rom(flagman_state_jumps_ADDRESS))
+extern const void *flagman_state_jumps_data;
+#define flagman_state_jumps ((const uint32_t *)flagman_state_jumps_data)
 #define start_balloon_state_jumps_ADDRESS 0x0131B0u
-#define start_balloon_state_jumps ((const uint32_t *)rom(start_balloon_state_jumps_ADDRESS))
+extern const void *start_balloon_state_jumps_data;
+#define start_balloon_state_jumps ((const uint32_t *)start_balloon_state_jumps_data)
 #define ambient_sound_state_jumps_ADDRESS 0x013238u
-#define ambient_sound_state_jumps ((const uint32_t *)rom(ambient_sound_state_jumps_ADDRESS))
+extern const void *ambient_sound_state_jumps_data;
+#define ambient_sound_state_jumps ((const uint32_t *)ambient_sound_state_jumps_data)
 #define west_east_panel_state_jumps_ADDRESS 0x0132A4u
-#define west_east_panel_state_jumps ((const uint32_t *)rom(west_east_panel_state_jumps_ADDRESS))
+extern const void *west_east_panel_state_jumps_data;
+#define west_east_panel_state_jumps ((const uint32_t *)west_east_panel_state_jumps_data)
 #define santa_sleigh_state_jumps_ADDRESS 0x013348u
-#define santa_sleigh_state_jumps ((const uint32_t *)rom(santa_sleigh_state_jumps_ADDRESS))
+extern const void *santa_sleigh_state_jumps_data;
+#define santa_sleigh_state_jumps ((const uint32_t *)santa_sleigh_state_jumps_data)
 #define goal_parade_rightward_state_jumps_ADDRESS 0x01345Cu
-#define goal_parade_rightward_state_jumps ((const uint32_t *)rom(goal_parade_rightward_state_jumps_ADDRESS))
+extern const void *goal_parade_rightward_state_jumps_data;
+#define goal_parade_rightward_state_jumps ((const uint32_t *)goal_parade_rightward_state_jumps_data)
 #define sounding_scenery_state_jumps_ADDRESS 0x01352Cu
-#define sounding_scenery_state_jumps ((const uint32_t *)rom(sounding_scenery_state_jumps_ADDRESS))
+extern const void *sounding_scenery_state_jumps_data;
+#define sounding_scenery_state_jumps ((const uint32_t *)sounding_scenery_state_jumps_data)
 #define goal_parade_leftward_state_jumps_ADDRESS 0x0135D8u
-#define goal_parade_leftward_state_jumps ((const uint32_t *)rom(goal_parade_leftward_state_jumps_ADDRESS))
+extern const void *goal_parade_leftward_state_jumps_data;
+#define goal_parade_leftward_state_jumps ((const uint32_t *)goal_parade_leftward_state_jumps_data)
 #define goal_parade_dragon_state_jumps_ADDRESS 0x0136A8u
-#define goal_parade_dragon_state_jumps ((const uint32_t *)rom(goal_parade_dragon_state_jumps_ADDRESS))
+extern const void *goal_parade_dragon_state_jumps_data;
+#define goal_parade_dragon_state_jumps ((const uint32_t *)goal_parade_dragon_state_jumps_data)
 #define traffic_spawner_state_jumps_ADDRESS 0x013778u
-#define traffic_spawner_state_jumps ((const uint32_t *)rom(traffic_spawner_state_jumps_ADDRESS))
+extern const void *traffic_spawner_state_jumps_data;
+#define traffic_spawner_state_jumps ((const uint32_t *)traffic_spawner_state_jumps_data)
 #define traffic_car_state_jumps_ADDRESS 0x0138F8u
-#define traffic_car_state_jumps ((const uint32_t *)rom(traffic_car_state_jumps_ADDRESS))
+extern const void *traffic_car_state_jumps_data;
+#define traffic_car_state_jumps ((const uint32_t *)traffic_car_state_jumps_data)
 #define traffic_stopping_car_state_jumps_ADDRESS 0x013B04u
-#define traffic_stopping_car_state_jumps ((const uint32_t *)rom(traffic_stopping_car_state_jumps_ADDRESS))
+extern const void *traffic_stopping_car_state_jumps_data;
+#define traffic_stopping_car_state_jumps ((const uint32_t *)traffic_stopping_car_state_jumps_data)
 #define traffic_figure_state_jumps_ADDRESS 0x013BB0u
-#define traffic_figure_state_jumps ((const uint32_t *)rom(traffic_figure_state_jumps_ADDRESS))
+extern const void *traffic_figure_state_jumps_data;
+#define traffic_figure_state_jumps ((const uint32_t *)traffic_figure_state_jumps_data)
 #define traffic_shake_frame_offsets_ADDRESS 0x013D45u
-#define traffic_shake_frame_offsets ((const uint8_t *)rom(traffic_shake_frame_offsets_ADDRESS))
+extern const void *traffic_shake_frame_offsets_data;
+#define traffic_shake_frame_offsets ((const uint8_t *)traffic_shake_frame_offsets_data)
 #define course_length_command_jumps_ADDRESS 0x013D94u
-#define course_length_command_jumps ((const uint32_t *)rom(course_length_command_jumps_ADDRESS))
+extern const void *course_length_command_jumps_data;
+#define course_length_command_jumps ((const uint32_t *)course_length_command_jumps_data)
 #define fork_branch_state_jumps_ADDRESS 0x013DF0u
-#define fork_branch_state_jumps ((const uint32_t *)rom(fork_branch_state_jumps_ADDRESS))
+extern const void *fork_branch_state_jumps_data;
+#define fork_branch_state_jumps ((const uint32_t *)fork_branch_state_jumps_data)
 #define fork_branch_stage_palettes_ADDRESS 0x0140C8u
-#define fork_branch_stage_palettes ((const uint16_t *)rom(fork_branch_stage_palettes_ADDRESS))
+extern const void *fork_branch_stage_palettes_data;
+#define fork_branch_stage_palettes ((const uint16_t *)fork_branch_stage_palettes_data)
 #define race_car_occupant_state_jumps_ADDRESS 0x014114u
-#define race_car_occupant_state_jumps ((const uint32_t *)rom(race_car_occupant_state_jumps_ADDRESS))
+extern const void *race_car_occupant_state_jumps_data;
+#define race_car_occupant_state_jumps ((const uint32_t *)race_car_occupant_state_jumps_data)
 #define rider_gesture_state_jumps_ADDRESS 0x014200u
-#define rider_gesture_state_jumps ((const uint32_t *)rom(rider_gesture_state_jumps_ADDRESS))
+extern const void *rider_gesture_state_jumps_data;
+#define rider_gesture_state_jumps ((const uint32_t *)rider_gesture_state_jumps_data)
 #define rider_gesture_x_offsets_ADDRESS 0x014360u
-#define rider_gesture_x_offsets ((const uint16_t *)rom(rider_gesture_x_offsets_ADDRESS))
+extern const void *rider_gesture_x_offsets_data;
+#define rider_gesture_x_offsets ((const uint16_t *)rider_gesture_x_offsets_data)
 #define rider_gesture_y_offsets_ADDRESS 0x014380u
-#define rider_gesture_y_offsets ((const uint16_t *)rom(rider_gesture_y_offsets_ADDRESS))
+extern const void *rider_gesture_y_offsets_data;
+#define rider_gesture_y_offsets ((const uint16_t *)rider_gesture_y_offsets_data)
 #define rider_gesture_car_states_ADDRESS 0x0143A0u
-#define rider_gesture_car_states ((const uint8_t *)rom(rider_gesture_car_states_ADDRESS))
+extern const void *rider_gesture_car_states_data;
+#define rider_gesture_car_states ((const uint8_t *)rider_gesture_car_states_data)
 #define rider_gesture_views_ADDRESS 0x0143A6u
-#define rider_gesture_views ((const uint8_t *)rom(rider_gesture_views_ADDRESS))
+extern const void *rider_gesture_views_data;
+#define rider_gesture_views ((const uint8_t *)rider_gesture_views_data)
 #define race_car_occupant_animations_ADDRESS 0x01440Eu
-#define race_car_occupant_animations ((const uint16_t *)rom(race_car_occupant_animations_ADDRESS))
+extern const void *race_car_occupant_animations_data;
+#define race_car_occupant_animations ((const uint16_t *)race_car_occupant_animations_data)
 #define race_car_rider_palettes_ADDRESS 0x01442Eu
-#define race_car_rider_palettes ((const uint16_t *)rom(race_car_rider_palettes_ADDRESS))
+extern const void *race_car_rider_palettes_data;
+#define race_car_rider_palettes ((const uint16_t *)race_car_rider_palettes_data)
 #define rider_gesture_animations_ADDRESS 0x01444Eu
-#define rider_gesture_animations ((const uint16_t *)rom(rider_gesture_animations_ADDRESS))
+extern const void *rider_gesture_animations_data;
+#define rider_gesture_animations ((const uint16_t *)rider_gesture_animations_data)
 #define race_opening_state_jumps_ADDRESS 0x01447Cu
-#define race_opening_state_jumps ((const uint32_t *)rom(race_opening_state_jumps_ADDRESS))
+extern const void *race_opening_state_jumps_data;
+#define race_opening_state_jumps ((const uint32_t *)race_opening_state_jumps_data)
 #define race_opening_sound_step_jumps_ADDRESS 0x0144A9u
-#define race_opening_sound_step_jumps ((const uint32_t *)rom(race_opening_sound_step_jumps_ADDRESS))
+extern const void *race_opening_sound_step_jumps_data;
+#define race_opening_sound_step_jumps ((const uint32_t *)race_opening_sound_step_jumps_data)
 #define race_opening_camera_step_jumps_ADDRESS 0x0144ECu
-#define race_opening_camera_step_jumps ((const uint32_t *)rom(race_opening_camera_step_jumps_ADDRESS))
+extern const void *race_opening_camera_step_jumps_data;
+#define race_opening_camera_step_jumps ((const uint32_t *)race_opening_camera_step_jumps_data)
 #define stage_end_sounds_state_jumps_ADDRESS 0x014520u
-#define stage_end_sounds_state_jumps ((const uint32_t *)rom(stage_end_sounds_state_jumps_ADDRESS))
+extern const void *stage_end_sounds_state_jumps_data;
+#define stage_end_sounds_state_jumps ((const uint32_t *)stage_end_sounds_state_jumps_data)
 #define fork_camera_state_jumps_ADDRESS 0x0145A0u
-#define fork_camera_state_jumps ((const uint32_t *)rom(fork_camera_state_jumps_ADDRESS))
+extern const void *fork_camera_state_jumps_data;
+#define fork_camera_state_jumps ((const uint32_t *)fork_camera_state_jumps_data)
 #define fork_camera_lift_steps_ADDRESS 0x014674u
-#define fork_camera_lift_steps ((const uint16_t *)rom(fork_camera_lift_steps_ADDRESS))
+extern const void *fork_camera_lift_steps_data;
+#define fork_camera_lift_steps ((const uint16_t *)fork_camera_lift_steps_data)
 #define fork_camera_tilt_steps_ADDRESS 0x014684u
-#define fork_camera_tilt_steps ((const uint16_t *)rom(fork_camera_tilt_steps_ADDRESS))
+extern const void *fork_camera_tilt_steps_data;
+#define fork_camera_tilt_steps ((const uint16_t *)fork_camera_tilt_steps_data)
 #define race_car_ending_state_jumps_ADDRESS 0x0146A0u
-#define race_car_ending_state_jumps ((const uint32_t *)rom(race_car_ending_state_jumps_ADDRESS))
+extern const void *race_car_ending_state_jumps_data;
+#define race_car_ending_state_jumps ((const uint32_t *)race_car_ending_state_jumps_data)
 #define goal_actor_command_jumps_ADDRESS 0x014994u
-#define goal_actor_command_jumps ((const uint32_t *)rom(goal_actor_command_jumps_ADDRESS))
+extern const void *goal_actor_command_jumps_data;
+#define goal_actor_command_jumps ((const uint32_t *)goal_actor_command_jumps_data)
 #define goal_actor_place_waits_ADDRESS 0x014A16u
-#define goal_actor_place_waits ((const uint8_t *)rom(goal_actor_place_waits_ADDRESS))
+extern const void *goal_actor_place_waits_data;
+#define goal_actor_place_waits ((const uint8_t *)goal_actor_place_waits_data)
 #define ending_actor_lists_ADDRESS 0x014A20u
-#define ending_actor_lists ((const uint32_t *)rom(ending_actor_lists_ADDRESS))
+extern const void *ending_actor_lists_data;
+#define ending_actor_lists ((const uint32_t *)ending_actor_lists_data)
 #define unfinished_ending_actor_count_ADDRESS 0x014A60u
-#define unfinished_ending_actor_count ROM32(unfinished_ending_actor_count_ADDRESS)
+extern const void *unfinished_ending_actor_count_data;
+#define unfinished_ending_actor_count (*(const uint32_t *)unfinished_ending_actor_count_data)
 #define unfinished_ending_actors_ADDRESS 0x014A64u
-#define unfinished_ending_actors ROM32(unfinished_ending_actors_ADDRESS)
+extern const void *unfinished_ending_actors_data;
+#define unfinished_ending_actors (*(const uint32_t *)unfinished_ending_actors_data)
 #define road_surface_state_jumps_ADDRESS 0x016B0Cu
-#define road_surface_state_jumps ((const uint32_t *)rom(road_surface_state_jumps_ADDRESS))
+extern const void *road_surface_state_jumps_data;
+#define road_surface_state_jumps ((const uint32_t *)road_surface_state_jumps_data)
 #define road_surface_event_jumps_ADDRESS 0x016BBCu
-#define road_surface_event_jumps ((const uint32_t *)rom(road_surface_event_jumps_ADDRESS))
+extern const void *road_surface_event_jumps_data;
+#define road_surface_event_jumps ((const uint32_t *)road_surface_event_jumps_data)
 #define road_surface_page_words_ADDRESS 0x01714Cu
-#define road_surface_page_words ROM32(road_surface_page_words_ADDRESS)
+extern const void *road_surface_page_words_data;
+#define road_surface_page_words (*(const uint32_t *)road_surface_page_words_data)
 #define road_tiles_change_state_jumps_ADDRESS 0x0171E0u
-#define road_tiles_change_state_jumps ((const uint32_t *)rom(road_tiles_change_state_jumps_ADDRESS))
+extern const void *road_tiles_change_state_jumps_data;
+#define road_tiles_change_state_jumps ((const uint32_t *)road_tiles_change_state_jumps_data)
 #define road_tiles_change_first_data_ADDRESS 0x017444u
-#define road_tiles_change_first_data ROM8(road_tiles_change_first_data_ADDRESS)
+extern const void *road_tiles_change_first_data_data;
+#define road_tiles_change_first_data (*(const uint8_t *)road_tiles_change_first_data_data)
 #define road_tiles_change_second_data_ADDRESS 0x0174B4u
-#define road_tiles_change_second_data ROM8(road_tiles_change_second_data_ADDRESS)
+extern const void *road_tiles_change_second_data_data;
+#define road_tiles_change_second_data (*(const uint8_t *)road_tiles_change_second_data_data)
 #define race_background_state_jumps_ADDRESS 0x017530u
-#define race_background_state_jumps ((const uint32_t *)rom(race_background_state_jumps_ADDRESS))
+extern const void *race_background_state_jumps_data;
+#define race_background_state_jumps ((const uint32_t *)race_background_state_jumps_data)
 #define race_background_change_step_jumps_ADDRESS 0x017738u
-#define race_background_change_step_jumps ((const uint32_t *)rom(race_background_change_step_jumps_ADDRESS))
+extern const void *race_background_change_step_jumps_data;
+#define race_background_change_step_jumps ((const uint32_t *)race_background_change_step_jumps_data)
 #define background_lower_animation_tile_pages_ADDRESS 0x017904u
-#define background_lower_animation_tile_pages ((const uint32_t *)rom(background_lower_animation_tile_pages_ADDRESS))
+extern const void *background_lower_animation_tile_pages_data;
+#define background_lower_animation_tile_pages ((const uint32_t *)background_lower_animation_tile_pages_data)
 #define background_lower_animation_page_pairs_ADDRESS 0x01790Cu
-#define background_lower_animation_page_pairs ((const uint16_t *)rom(background_lower_animation_page_pairs_ADDRESS))
+extern const void *background_lower_animation_page_pairs_data;
+#define background_lower_animation_page_pairs ((const uint16_t *)background_lower_animation_page_pairs_data)
 #define background_upper_animation_tile_pages_ADDRESS 0x017988u
-#define background_upper_animation_tile_pages ((const uint32_t *)rom(background_upper_animation_tile_pages_ADDRESS))
+extern const void *background_upper_animation_tile_pages_data;
+#define background_upper_animation_tile_pages ((const uint32_t *)background_upper_animation_tile_pages_data)
 #define background_upper_animation_page_pairs_ADDRESS 0x0179A0u
-#define background_upper_animation_page_pairs ((const uint16_t *)rom(background_upper_animation_page_pairs_ADDRESS))
+extern const void *background_upper_animation_page_pairs_data;
+#define background_upper_animation_page_pairs ((const uint16_t *)background_upper_animation_page_pairs_data)
 #define background_register_lists_ADDRESS 0x017A78u
-#define background_register_lists ((const uint32_t *)rom(background_register_lists_ADDRESS))
+extern const void *background_register_lists_data;
+#define background_register_lists ((const uint32_t *)background_register_lists_data)
 #define background_page_words_ADDRESS 0x017AE0u
-#define background_page_words ((const uint32_t *)rom(background_page_words_ADDRESS))
+extern const void *background_page_words_data;
+#define background_page_words ((const uint32_t *)background_page_words_data)
 #define stage_backgrounds_ADDRESS 0x017B60u
-#define stage_backgrounds ((const uint8_t *)rom(stage_backgrounds_ADDRESS))
+extern const void *stage_backgrounds_data;
+#define stage_backgrounds ((const uint8_t *)stage_backgrounds_data)
 #define background_tile_banks_ADDRESS 0x017B7Fu
-#define background_tile_banks ((const uint8_t *)rom(background_tile_banks_ADDRESS))
+extern const void *background_tile_banks_data;
+#define background_tile_banks ((const uint8_t *)background_tile_banks_data)
 #define stage_tile_banks_ADDRESS 0x017BA9u
-#define stage_tile_banks ((const uint8_t *)rom(stage_tile_banks_ADDRESS))
+extern const void *stage_tile_banks_data;
+#define stage_tile_banks ((const uint8_t *)stage_tile_banks_data)
 #define palette_cycle_state_jumps_ADDRESS 0x017C08u
-#define palette_cycle_state_jumps ((const uint32_t *)rom(palette_cycle_state_jumps_ADDRESS))
+extern const void *palette_cycle_state_jumps_data;
+#define palette_cycle_state_jumps ((const uint32_t *)palette_cycle_state_jumps_data)
 #define palette_cycle_running_jumps_ADDRESS 0x017C68u
-#define palette_cycle_running_jumps ((const uint32_t *)rom(palette_cycle_running_jumps_ADDRESS))
+extern const void *palette_cycle_running_jumps_data;
+#define palette_cycle_running_jumps ((const uint32_t *)palette_cycle_running_jumps_data)
 #define sunset_fade_state_jumps_ADDRESS 0x017CB8u
-#define sunset_fade_state_jumps ((const uint32_t *)rom(sunset_fade_state_jumps_ADDRESS))
+extern const void *sunset_fade_state_jumps_data;
+#define sunset_fade_state_jumps ((const uint32_t *)sunset_fade_state_jumps_data)
 #define backdrop_far_state_jumps_ADDRESS 0x017DE4u
-#define backdrop_far_state_jumps ((const uint32_t *)rom(backdrop_far_state_jumps_ADDRESS))
+extern const void *backdrop_far_state_jumps_data;
+#define backdrop_far_state_jumps ((const uint32_t *)backdrop_far_state_jumps_data)
 #define backdrop_near_state_jumps_ADDRESS 0x017E98u
-#define backdrop_near_state_jumps ((const uint32_t *)rom(backdrop_near_state_jumps_ADDRESS))
+extern const void *backdrop_near_state_jumps_data;
+#define backdrop_near_state_jumps ((const uint32_t *)backdrop_near_state_jumps_data)
 #define backdrop_landmark_state_jumps_ADDRESS 0x017F7Cu
-#define backdrop_landmark_state_jumps ((const uint32_t *)rom(backdrop_landmark_state_jumps_ADDRESS))
+extern const void *backdrop_landmark_state_jumps_data;
+#define backdrop_landmark_state_jumps ((const uint32_t *)backdrop_landmark_state_jumps_data)
 #define backdrop_flashing_state_jumps_ADDRESS 0x018094u
-#define backdrop_flashing_state_jumps ((const uint32_t *)rom(backdrop_flashing_state_jumps_ADDRESS))
+extern const void *backdrop_flashing_state_jumps_data;
+#define backdrop_flashing_state_jumps ((const uint32_t *)backdrop_flashing_state_jumps_data)
 #define backdrop_translucent_state_jumps_ADDRESS 0x01814Cu
-#define backdrop_translucent_state_jumps ((const uint32_t *)rom(backdrop_translucent_state_jumps_ADDRESS))
+extern const void *backdrop_translucent_state_jumps_data;
+#define backdrop_translucent_state_jumps ((const uint32_t *)backdrop_translucent_state_jumps_data)
 #define stage_background_object_lists_ADDRESS 0x0181B8u
-#define stage_background_object_lists ((const uint32_t *)rom(stage_background_object_lists_ADDRESS))
+extern const void *stage_background_object_lists_data;
+#define stage_background_object_lists ((const uint32_t *)stage_background_object_lists_data)
 #define lcd_scroll_step_jumps_ADDRESS 0x018A70u
-#define lcd_scroll_step_jumps ((const uint32_t *)rom(lcd_scroll_step_jumps_ADDRESS))
+extern const void *lcd_scroll_step_jumps_data;
+#define lcd_scroll_step_jumps ((const uint32_t *)lcd_scroll_step_jumps_data)
 #define dj_face_characters_ADDRESS 0x018AE8u
-#define dj_face_characters ((const uint16_t *)rom(dj_face_characters_ADDRESS))
+extern const void *dj_face_characters_data;
+#define dj_face_characters ((const uint16_t *)dj_face_characters_data)
 #define lcd_restart_nibbles_ADDRESS 0x018B21u
-#define lcd_restart_nibbles ((const uint8_t *)rom(lcd_restart_nibbles_ADDRESS))
+extern const void *lcd_restart_nibbles_data;
+#define lcd_restart_nibbles ((const uint8_t *)lcd_restart_nibbles_data)
 #define lcd_race_info_state_jumps_ADDRESS 0x018BD4u
-#define lcd_race_info_state_jumps ((const uint32_t *)rom(lcd_race_info_state_jumps_ADDRESS))
+extern const void *lcd_race_info_state_jumps_data;
+#define lcd_race_info_state_jumps ((const uint32_t *)lcd_race_info_state_jumps_data)
 #define lcd_race_info_page_jumps_ADDRESS 0x018C64u
-#define lcd_race_info_page_jumps ((const uint32_t *)rom(lcd_race_info_page_jumps_ADDRESS))
+extern const void *lcd_race_info_page_jumps_data;
+#define lcd_race_info_page_jumps ((const uint32_t *)lcd_race_info_page_jumps_data)
 #define lcd_race_info_time_step_jumps_ADDRESS 0x018C84u
-#define lcd_race_info_time_step_jumps ((const uint32_t *)rom(lcd_race_info_time_step_jumps_ADDRESS))
+extern const void *lcd_race_info_time_step_jumps_data;
+#define lcd_race_info_time_step_jumps ((const uint32_t *)lcd_race_info_time_step_jumps_data)
 #define lcd_race_info_order_step_jumps_ADDRESS 0x018CF0u
-#define lcd_race_info_order_step_jumps ((const uint32_t *)rom(lcd_race_info_order_step_jumps_ADDRESS))
+extern const void *lcd_race_info_order_step_jumps_data;
+#define lcd_race_info_order_step_jumps ((const uint32_t *)lcd_race_info_order_step_jumps_data)
 #define lcd_race_info_speed_step_jumps_ADDRESS 0x018D5Cu
-#define lcd_race_info_speed_step_jumps ((const uint32_t *)rom(lcd_race_info_speed_step_jumps_ADDRESS))
+extern const void *lcd_race_info_speed_step_jumps_data;
+#define lcd_race_info_speed_step_jumps ((const uint32_t *)lcd_race_info_speed_step_jumps_data)
 #define lcd_race_info_maximum_step_jumps_ADDRESS 0x018D88u
-#define lcd_race_info_maximum_step_jumps ((const uint32_t *)rom(lcd_race_info_maximum_step_jumps_ADDRESS))
+extern const void *lcd_race_info_maximum_step_jumps_data;
+#define lcd_race_info_maximum_step_jumps ((const uint32_t *)lcd_race_info_maximum_step_jumps_data)
 #define lcd_race_info_average_step_jumps_ADDRESS 0x018DB4u
-#define lcd_race_info_average_step_jumps ((const uint32_t *)rom(lcd_race_info_average_step_jumps_ADDRESS))
+extern const void *lcd_race_info_average_step_jumps_data;
+#define lcd_race_info_average_step_jumps ((const uint32_t *)lcd_race_info_average_step_jumps_data)
 #define lcd_race_info_finish_state_jumps_ADDRESS 0x018E40u
-#define lcd_race_info_finish_state_jumps ((const uint32_t *)rom(lcd_race_info_finish_state_jumps_ADDRESS))
+extern const void *lcd_race_info_finish_state_jumps_data;
+#define lcd_race_info_finish_state_jumps ((const uint32_t *)lcd_race_info_finish_state_jumps_data)
 #define lcd_countdown_bars_ADDRESS 0x018EA0u
-#define lcd_countdown_bars ((const uint32_t *)rom(lcd_countdown_bars_ADDRESS))
+extern const void *lcd_countdown_bars_data;
+#define lcd_countdown_bars ((const uint32_t *)lcd_countdown_bars_data)
 #define lcd_time_label_ADDRESS 0x018F1Eu
-#define lcd_time_label ROM8(lcd_time_label_ADDRESS)
+extern const void *lcd_time_label_data;
+#define lcd_time_label (*(const uint8_t *)lcd_time_label_data)
 #define lcd_order_label_ADDRESS 0x018F2Cu
-#define lcd_order_label ROM8(lcd_order_label_ADDRESS)
+extern const void *lcd_order_label_data;
+#define lcd_order_label (*(const uint8_t *)lcd_order_label_data)
 #define lcd_speed_label_ADDRESS 0x018F3Au
-#define lcd_speed_label ROM8(lcd_speed_label_ADDRESS)
+extern const void *lcd_speed_label_data;
+#define lcd_speed_label (*(const uint8_t *)lcd_speed_label_data)
 #define lcd_maximum_label_ADDRESS 0x018F48u
-#define lcd_maximum_label ROM8(lcd_maximum_label_ADDRESS)
+extern const void *lcd_maximum_label_data;
+#define lcd_maximum_label (*(const uint8_t *)lcd_maximum_label_data)
 #define lcd_average_label_ADDRESS 0x018F56u
-#define lcd_average_label ROM8(lcd_average_label_ADDRESS)
+extern const void *lcd_average_label_data;
+#define lcd_average_label (*(const uint8_t *)lcd_average_label_data)
 #define lcd_finish_label_ADDRESS 0x018F64u
-#define lcd_finish_label ROM8(lcd_finish_label_ADDRESS)
+extern const void *lcd_finish_label_data;
+#define lcd_finish_label (*(const uint8_t *)lcd_finish_label_data)
 #define car_radio_state_jumps_ADDRESS 0x019044u
-#define car_radio_state_jumps ((const uint32_t *)rom(car_radio_state_jumps_ADDRESS))
+extern const void *car_radio_state_jumps_data;
+#define car_radio_state_jumps ((const uint32_t *)car_radio_state_jumps_data)
 #define car_radio_talk_step_jumps_ADDRESS 0x0191E0u
-#define car_radio_talk_step_jumps ((const uint32_t *)rom(car_radio_talk_step_jumps_ADDRESS))
+extern const void *car_radio_talk_step_jumps_data;
+#define car_radio_talk_step_jumps ((const uint32_t *)car_radio_talk_step_jumps_data)
 #define song_title_state_jumps_ADDRESS 0x019330u
-#define song_title_state_jumps ((const uint32_t *)rom(song_title_state_jumps_ADDRESS))
+extern const void *song_title_state_jumps_data;
+#define song_title_state_jumps ((const uint32_t *)song_title_state_jumps_data)
 #define car_model_songs_ADDRESS 0x019421u
-#define car_model_songs ((const uint8_t *)rom(car_model_songs_ADDRESS))
+extern const void *car_model_songs_data;
+#define car_model_songs ((const uint8_t *)car_model_songs_data)
 #define radio_songs_ADDRESS 0x01942Cu
-#define radio_songs ((const uint32_t *)rom(radio_songs_ADDRESS))
+extern const void *radio_songs_data;
+#define radio_songs ((const uint32_t *)radio_songs_data)
 #define route_stage_radio_sounds_ADDRESS 0x019458u
-#define route_stage_radio_sounds ((const uint8_t *)rom(route_stage_radio_sounds_ADDRESS))
+extern const void *route_stage_radio_sounds_data;
+#define route_stage_radio_sounds ((const uint8_t *)route_stage_radio_sounds_data)
 #define song_title_colours_ADDRESS 0x019561u
-#define song_title_colours ((const uint16_t *)rom(song_title_colours_ADDRESS))
+extern const void *song_title_colours_data;
+#define song_title_colours ((const uint16_t *)song_title_colours_data)
 #define stage_level_radio_messages_ADDRESS 0x019571u
-#define stage_level_radio_messages ((const uint8_t *)rom(stage_level_radio_messages_ADDRESS))
+extern const void *stage_level_radio_messages_data;
+#define stage_level_radio_messages ((const uint8_t *)stage_level_radio_messages_data)
 #define dj_messages_ADDRESS 0x019576u
-#define dj_messages ((const uint32_t *)rom(dj_messages_ADDRESS))
+extern const void *dj_messages_data;
+#define dj_messages ((const uint32_t *)dj_messages_data)
 #define dj_remark_lists_ADDRESS 0x01966Cu
-#define dj_remark_lists ((const uint32_t *)rom(dj_remark_lists_ADDRESS))
+extern const void *dj_remark_lists_data;
+#define dj_remark_lists ((const uint32_t *)dj_remark_lists_data)
 #define title_screen_state_jumps_ADDRESS 0x019CB8u
-#define title_screen_state_jumps ((const uint32_t *)rom(title_screen_state_jumps_ADDRESS))
+extern const void *title_screen_state_jumps_data;
+#define title_screen_state_jumps ((const uint32_t *)title_screen_state_jumps_data)
 #define title_car_state_jumps_ADDRESS 0x019E78u
-#define title_car_state_jumps ((const uint32_t *)rom(title_car_state_jumps_ADDRESS))
+extern const void *title_car_state_jumps_data;
+#define title_car_state_jumps ((const uint32_t *)title_car_state_jumps_data)
 #define title_car_driver_state_jumps_ADDRESS 0x019F58u
-#define title_car_driver_state_jumps ((const uint32_t *)rom(title_car_driver_state_jumps_ADDRESS))
+extern const void *title_car_driver_state_jumps_data;
+#define title_car_driver_state_jumps ((const uint32_t *)title_car_driver_state_jumps_data)
 #define title_car_passenger_state_jumps_ADDRESS 0x019F6Cu
-#define title_car_passenger_state_jumps ((const uint32_t *)rom(title_car_passenger_state_jumps_ADDRESS))
+extern const void *title_car_passenger_state_jumps_data;
+#define title_car_passenger_state_jumps ((const uint32_t *)title_car_passenger_state_jumps_data)
 #define title_driver_animations_ADDRESS 0x01A012u
-#define title_driver_animations ((const uint16_t *)rom(title_driver_animations_ADDRESS))
+extern const void *title_driver_animations_data;
+#define title_driver_animations ((const uint16_t *)title_driver_animations_data)
 #define title_passenger_animations_ADDRESS 0x01A022u
-#define title_passenger_animations ((const uint16_t *)rom(title_passenger_animations_ADDRESS))
+extern const void *title_passenger_animations_data;
+#define title_passenger_animations ((const uint16_t *)title_passenger_animations_data)
 #define title_driver_palettes_ADDRESS 0x01A032u
-#define title_driver_palettes ((const uint16_t *)rom(title_driver_palettes_ADDRESS))
+extern const void *title_driver_palettes_data;
+#define title_driver_palettes ((const uint16_t *)title_driver_palettes_data)
 #define title_passenger_palettes_ADDRESS 0x01A042u
-#define title_passenger_palettes ((const uint16_t *)rom(title_passenger_palettes_ADDRESS))
+extern const void *title_passenger_palettes_data;
+#define title_passenger_palettes ((const uint16_t *)title_passenger_palettes_data)
 #define title_rider_scales_ADDRESS 0x01A052u
-#define title_rider_scales ((const uint16_t *)rom(title_rider_scales_ADDRESS))
+extern const void *title_rider_scales_data;
+#define title_rider_scales ((const uint16_t *)title_rider_scales_data)
 #define title_driver_x_offsets_ADDRESS 0x01A062u
-#define title_driver_x_offsets ((const uint16_t *)rom(title_driver_x_offsets_ADDRESS))
+extern const void *title_driver_x_offsets_data;
+#define title_driver_x_offsets ((const uint16_t *)title_driver_x_offsets_data)
 #define title_driver_y_offsets_ADDRESS 0x01A072u
-#define title_driver_y_offsets ((const uint16_t *)rom(title_driver_y_offsets_ADDRESS))
+extern const void *title_driver_y_offsets_data;
+#define title_driver_y_offsets ((const uint16_t *)title_driver_y_offsets_data)
 #define title_passenger_x_offsets_ADDRESS 0x01A082u
-#define title_passenger_x_offsets ((const uint16_t *)rom(title_passenger_x_offsets_ADDRESS))
+extern const void *title_passenger_x_offsets_data;
+#define title_passenger_x_offsets ((const uint16_t *)title_passenger_x_offsets_data)
 #define title_passenger_y_offsets_ADDRESS 0x01A092u
-#define title_passenger_y_offsets ((const uint16_t *)rom(title_passenger_y_offsets_ADDRESS))
+extern const void *title_passenger_y_offsets_data;
+#define title_passenger_y_offsets ((const uint16_t *)title_passenger_y_offsets_data)
 #define title_palm_tree_state_jumps_ADDRESS 0x01A0F0u
-#define title_palm_tree_state_jumps ((const uint32_t *)rom(title_palm_tree_state_jumps_ADDRESS))
+extern const void *title_palm_tree_state_jumps_data;
+#define title_palm_tree_state_jumps ((const uint32_t *)title_palm_tree_state_jumps_data)
 #define title_logo_state_jumps_ADDRESS 0x01A198u
-#define title_logo_state_jumps ((const uint32_t *)rom(title_logo_state_jumps_ADDRESS))
+extern const void *title_logo_state_jumps_data;
+#define title_logo_state_jumps ((const uint32_t *)title_logo_state_jumps_data)
 #define title_logo_copy_state_jumps_ADDRESS 0x01A2A8u
-#define title_logo_copy_state_jumps ((const uint32_t *)rom(title_logo_copy_state_jumps_ADDRESS))
+extern const void *title_logo_copy_state_jumps_data;
+#define title_logo_copy_state_jumps ((const uint32_t *)title_logo_copy_state_jumps_data)
 #define title_logo_car_state_jumps_ADDRESS 0x01A334u
-#define title_logo_car_state_jumps ((const uint32_t *)rom(title_logo_car_state_jumps_ADDRESS))
+extern const void *title_logo_car_state_jumps_data;
+#define title_logo_car_state_jumps ((const uint32_t *)title_logo_car_state_jumps_data)
 #define title_logo_stripe_state_jumps_ADDRESS 0x01A3F4u
-#define title_logo_stripe_state_jumps ((const uint32_t *)rom(title_logo_stripe_state_jumps_ADDRESS))
+extern const void *title_logo_stripe_state_jumps_data;
+#define title_logo_stripe_state_jumps ((const uint32_t *)title_logo_stripe_state_jumps_data)
 #define title_board_palms_state_jumps_ADDRESS 0x01A4A4u
-#define title_board_palms_state_jumps ((const uint32_t *)rom(title_board_palms_state_jumps_ADDRESS))
+extern const void *title_board_palms_state_jumps_data;
+#define title_board_palms_state_jumps ((const uint32_t *)title_board_palms_state_jumps_data)
 #define title_seagull_state_jumps_ADDRESS 0x01A544u
-#define title_seagull_state_jumps ((const uint32_t *)rom(title_seagull_state_jumps_ADDRESS))
+extern const void *title_seagull_state_jumps_data;
+#define title_seagull_state_jumps ((const uint32_t *)title_seagull_state_jumps_data)
 #define title_picture_state_jumps_ADDRESS 0x01A680u
-#define title_picture_state_jumps ((const uint32_t *)rom(title_picture_state_jumps_ADDRESS))
+extern const void *title_picture_state_jumps_data;
+#define title_picture_state_jumps ((const uint32_t *)title_picture_state_jumps_data)
 #define coin_prompt_state_jumps_ADDRESS 0x01A6DCu
-#define coin_prompt_state_jumps ((const uint32_t *)rom(coin_prompt_state_jumps_ADDRESS))
+extern const void *coin_prompt_state_jumps_data;
+#define coin_prompt_state_jumps ((const uint32_t *)coin_prompt_state_jumps_data)
 #define coin_prompt_screen_jumps_ADDRESS 0x01A744u
-#define coin_prompt_screen_jumps ((const uint32_t *)rom(coin_prompt_screen_jumps_ADDRESS))
+extern const void *coin_prompt_screen_jumps_data;
+#define coin_prompt_screen_jumps ((const uint32_t *)coin_prompt_screen_jumps_data)
 #define coin_prompt_car_state_jumps_ADDRESS 0x01A7D0u
-#define coin_prompt_car_state_jumps ((const uint32_t *)rom(coin_prompt_car_state_jumps_ADDRESS))
+extern const void *coin_prompt_car_state_jumps_data;
+#define coin_prompt_car_state_jumps ((const uint32_t *)coin_prompt_car_state_jumps_data)
 #define coin_prompt_message_state_jumps_ADDRESS 0x01A84Cu
-#define coin_prompt_message_state_jumps ((const uint32_t *)rom(coin_prompt_message_state_jumps_ADDRESS))
+extern const void *coin_prompt_message_state_jumps_data;
+#define coin_prompt_message_state_jumps ((const uint32_t *)coin_prompt_message_state_jumps_data)
 #define ignition_key_prompt_state_jumps_ADDRESS 0x01A8F0u
-#define ignition_key_prompt_state_jumps ((const uint32_t *)rom(ignition_key_prompt_state_jumps_ADDRESS))
+extern const void *ignition_key_prompt_state_jumps_data;
+#define ignition_key_prompt_state_jumps ((const uint32_t *)ignition_key_prompt_state_jumps_data)
 #define coin_prompt_car_animations_ADDRESS 0x01A986u
-#define coin_prompt_car_animations ((const uint16_t *)rom(coin_prompt_car_animations_ADDRESS))
+extern const void *coin_prompt_car_animations_data;
+#define coin_prompt_car_animations ((const uint16_t *)coin_prompt_car_animations_data)
 #define coin_prompt_car_palettes_ADDRESS 0x01A996u
-#define coin_prompt_car_palettes ((const uint16_t *)rom(coin_prompt_car_palettes_ADDRESS))
+extern const void *coin_prompt_car_palettes_data;
+#define coin_prompt_car_palettes ((const uint16_t *)coin_prompt_car_palettes_data)
 #define coin_prompt_message_animations_ADDRESS 0x01A9A6u
-#define coin_prompt_message_animations ((const uint16_t *)rom(coin_prompt_message_animations_ADDRESS))
+extern const void *coin_prompt_message_animations_data;
+#define coin_prompt_message_animations ((const uint16_t *)coin_prompt_message_animations_data)
 #define coin_prompt_message_palettes_ADDRESS 0x01A9ACu
-#define coin_prompt_message_palettes ((const uint16_t *)rom(coin_prompt_message_palettes_ADDRESS))
+extern const void *coin_prompt_message_palettes_data;
+#define coin_prompt_message_palettes ((const uint16_t *)coin_prompt_message_palettes_data)
 #define coin_prompt_lcd_texts_ADDRESS 0x01A9BCu
-#define coin_prompt_lcd_texts ((const uint32_t *)rom(coin_prompt_lcd_texts_ADDRESS))
+extern const void *coin_prompt_lcd_texts_data;
+#define coin_prompt_lcd_texts ((const uint32_t *)coin_prompt_lcd_texts_data)
 #define credit_display_state_jumps_ADDRESS 0x01AA0Cu
-#define credit_display_state_jumps ((const uint32_t *)rom(credit_display_state_jumps_ADDRESS))
+extern const void *credit_display_state_jumps_data;
+#define credit_display_state_jumps ((const uint32_t *)credit_display_state_jumps_data)
 #define credit_display_screen_jumps_ADDRESS 0x01AA4Cu
-#define credit_display_screen_jumps ((const uint32_t *)rom(credit_display_screen_jumps_ADDRESS))
+extern const void *credit_display_screen_jumps_data;
+#define credit_display_screen_jumps ((const uint32_t *)credit_display_screen_jumps_data)
 #define credit_digit_characters_ADDRESS 0x01AB8Eu
-#define credit_digit_characters ((const uint8_t *)rom(credit_digit_characters_ADDRESS))
+extern const void *credit_digit_characters_data;
+#define credit_digit_characters ((const uint8_t *)credit_digit_characters_data)
 #define credit_display_animations_ADDRESS 0x01AB98u
-#define credit_display_animations ((const uint16_t *)rom(credit_display_animations_ADDRESS))
+extern const void *credit_display_animations_data;
+#define credit_display_animations ((const uint16_t *)credit_display_animations_data)
 #define credit_display_palettes_ADDRESS 0x01AB9Eu
-#define credit_display_palettes ((const uint16_t *)rom(credit_display_palettes_ADDRESS))
+extern const void *credit_display_palettes_data;
+#define credit_display_palettes ((const uint16_t *)credit_display_palettes_data)
 #define title_car_screen_offsets_ADDRESS 0x01ABA4u
-#define title_car_screen_offsets ((const uint16_t *)rom(title_car_screen_offsets_ADDRESS))
+extern const void *title_car_screen_offsets_data;
+#define title_car_screen_offsets ((const uint16_t *)title_car_screen_offsets_data)
 #define title_car_animations_ADDRESS 0x01AC34u
-#define title_car_animations ((const uint16_t *)rom(title_car_animations_ADDRESS))
+extern const void *title_car_animations_data;
+#define title_car_animations ((const uint16_t *)title_car_animations_data)
 #define title_logo_car_palettes_ADDRESS 0x01AC44u
-#define title_logo_car_palettes ((const uint16_t *)rom(title_logo_car_palettes_ADDRESS))
+extern const void *title_logo_car_palettes_data;
+#define title_logo_car_palettes ((const uint16_t *)title_logo_car_palettes_data)
 #define title_logo_car_wave_frames_ADDRESS 0x01ACC0u
-#define title_logo_car_wave_frames ROM16(title_logo_car_wave_frames_ADDRESS)
+extern const void *title_logo_car_wave_frames_data;
+#define title_logo_car_wave_frames (*(const uint16_t *)title_logo_car_wave_frames_data)
 #define demo_captions_state_jumps_ADDRESS 0x01ADF4u
-#define demo_captions_state_jumps ((const uint32_t *)rom(demo_captions_state_jumps_ADDRESS))
+extern const void *demo_captions_state_jumps_data;
+#define demo_captions_state_jumps ((const uint32_t *)demo_captions_state_jumps_data)
 #define demo_caption_state_jumps_ADDRESS 0x01AE98u
-#define demo_caption_state_jumps ((const uint32_t *)rom(demo_caption_state_jumps_ADDRESS))
+extern const void *demo_caption_state_jumps_data;
+#define demo_caption_state_jumps ((const uint32_t *)demo_caption_state_jumps_data)
 #define kanji_text_viewer_state_jumps_ADDRESS 0x01AFE8u
-#define kanji_text_viewer_state_jumps ((const uint32_t *)rom(kanji_text_viewer_state_jumps_ADDRESS))
+extern const void *kanji_text_viewer_state_jumps_data;
+#define kanji_text_viewer_state_jumps ((const uint32_t *)kanji_text_viewer_state_jumps_data)
+#define unused_kanji_text_viewer_words_ADDRESS 0x01B248u
+extern const void *unused_kanji_text_viewer_words_data;
+#define unused_kanji_text_viewer_words (*(const uint16_t *)unused_kanji_text_viewer_words_data)
 #define kanji_texts_ADDRESS 0x01B254u
-#define kanji_texts ((const uint32_t *)rom(kanji_texts_ADDRESS))
+extern const void *kanji_texts_data;
+#define kanji_texts ((const uint32_t *)kanji_texts_data)
 #define test_mode_lcd_text_ADDRESS 0x01C378u
-#define test_mode_lcd_text ROM32(test_mode_lcd_text_ADDRESS)
+extern const void *test_mode_lcd_text_data;
+#define test_mode_lcd_text (*(const uint32_t *)test_mode_lcd_text_data)
 #define test_mode_lcd_text_4_to_7_ADDRESS 0x01C37Cu
-#define test_mode_lcd_text_4_to_7 ROM32(test_mode_lcd_text_4_to_7_ADDRESS)
+extern const void *test_mode_lcd_text_4_to_7_data;
+#define test_mode_lcd_text_4_to_7 (*(const uint32_t *)test_mode_lcd_text_4_to_7_data)
 #define test_mode_lcd_text_8_to_11_ADDRESS 0x01C380u
-#define test_mode_lcd_text_8_to_11 ROM32(test_mode_lcd_text_8_to_11_ADDRESS)
+extern const void *test_mode_lcd_text_8_to_11_data;
+#define test_mode_lcd_text_8_to_11 (*(const uint32_t *)test_mode_lcd_text_8_to_11_data)
 #define test_mode_lcd_text_12_to_15_ADDRESS 0x01C384u
-#define test_mode_lcd_text_12_to_15 ROM32(test_mode_lcd_text_12_to_15_ADDRESS)
+extern const void *test_mode_lcd_text_12_to_15_data;
+#define test_mode_lcd_text_12_to_15 (*(const uint32_t *)test_mode_lcd_text_12_to_15_data)
 #define test_mode_page_jumps_ADDRESS 0x01C45Cu
-#define test_mode_page_jumps ((const uint32_t *)rom(test_mode_page_jumps_ADDRESS))
+extern const void *test_mode_page_jumps_data;
+#define test_mode_page_jumps ((const uint32_t *)test_mode_page_jumps_data)
 #define test_mode_menu_headings_ADDRESS 0x01C560u
-#define test_mode_menu_headings ((const uint32_t *)rom(test_mode_menu_headings_ADDRESS))
+extern const void *test_mode_menu_headings_data;
+#define test_mode_menu_headings ((const uint32_t *)test_mode_menu_headings_data)
 #define test_mode_menu_cursor_cells_ADDRESS 0x01C588u
-#define test_mode_menu_cursor_cells ((const uint16_t *)rom(test_mode_menu_cursor_cells_ADDRESS))
+extern const void *test_mode_menu_cursor_cells_data;
+#define test_mode_menu_cursor_cells ((const uint16_t *)test_mode_menu_cursor_cells_data)
 #define volume_adjustment_cursor_cells_ADDRESS 0x01CF9Cu
-#define volume_adjustment_cursor_cells ((const uint16_t *)rom(volume_adjustment_cursor_cells_ADDRESS))
+extern const void *volume_adjustment_cursor_cells_data;
+#define volume_adjustment_cursor_cells ((const uint16_t *)volume_adjustment_cursor_cells_data)
 #define volume_adjustment_cancel_cell_ADDRESS 0x01CF9Eu
-#define volume_adjustment_cancel_cell ROM16(volume_adjustment_cancel_cell_ADDRESS)
+extern const void *volume_adjustment_cancel_cell_data;
+#define volume_adjustment_cancel_cell (*(const uint16_t *)volume_adjustment_cancel_cell_data)
 #define input_test_on_off_cells_ADDRESS 0x01D3C0u
-#define input_test_on_off_cells ((const uint32_t *)rom(input_test_on_off_cells_ADDRESS))
+extern const void *input_test_on_off_cells_data;
+#define input_test_on_off_cells ((const uint32_t *)input_test_on_off_cells_data)
 #define output_test_cursor_cells_ADDRESS 0x01D5AAu
-#define output_test_cursor_cells ((const uint16_t *)rom(output_test_cursor_cells_ADDRESS))
+extern const void *output_test_cursor_cells_data;
+#define output_test_cursor_cells ((const uint16_t *)output_test_cursor_cells_data)
 #define output_test_exit_cell_ADDRESS 0x01D5BEu
-#define output_test_exit_cell ROM16(output_test_exit_cell_ADDRESS)
+extern const void *output_test_exit_cell_data;
+#define output_test_exit_cell (*(const uint16_t *)output_test_exit_cell_data)
 #define test_mode_output_test_item_jumps_ADDRESS 0x01D5ECu
-#define test_mode_output_test_item_jumps ((const uint32_t *)rom(test_mode_output_test_item_jumps_ADDRESS))
+extern const void *test_mode_output_test_item_jumps_data;
+#define test_mode_output_test_item_jumps ((const uint32_t *)test_mode_output_test_item_jumps_data)
 #define output_test_on_off_cells_ADDRESS 0x01D618u
-#define output_test_on_off_cells ((const uint32_t *)rom(output_test_on_off_cells_ADDRESS))
+extern const void *output_test_on_off_cells_data;
+#define output_test_on_off_cells ((const uint32_t *)output_test_on_off_cells_data)
 #define test_mode_sound_test_item_jumps_ADDRESS 0x01D77Cu
-#define test_mode_sound_test_item_jumps ((const uint32_t *)rom(test_mode_sound_test_item_jumps_ADDRESS))
+extern const void *test_mode_sound_test_item_jumps_data;
+#define test_mode_sound_test_item_jumps ((const uint32_t *)test_mode_sound_test_item_jumps_data)
 #define sound_test_cursor_cells_ADDRESS 0x01D7C0u
-#define sound_test_cursor_cells ((const uint16_t *)rom(sound_test_cursor_cells_ADDRESS))
+extern const void *sound_test_cursor_cells_data;
+#define sound_test_cursor_cells ((const uint16_t *)sound_test_cursor_cells_data)
 #define sound_test_exit_cell_ADDRESS 0x01D7C4u
-#define sound_test_exit_cell ROM16(sound_test_exit_cell_ADDRESS)
+extern const void *sound_test_exit_cell_data;
+#define sound_test_exit_cell (*(const uint16_t *)sound_test_exit_cell_data)
 #define sound_test_codes_ADDRESS 0x01D7C6u
-#define sound_test_codes ROM8(sound_test_codes_ADDRESS)
+extern const void *sound_test_codes_data;
+#define sound_test_codes (*(const uint8_t *)sound_test_codes_data)
 #define test_mode_game_assignments_item_jumps_ADDRESS 0x01DBD0u
-#define test_mode_game_assignments_item_jumps ((const uint32_t *)rom(test_mode_game_assignments_item_jumps_ADDRESS))
+extern const void *test_mode_game_assignments_item_jumps_data;
+#define test_mode_game_assignments_item_jumps ((const uint32_t *)test_mode_game_assignments_item_jumps_data)
 #define game_assignments_cursor_cells_ADDRESS 0x01DCCEu
-#define game_assignments_cursor_cells ((const uint16_t *)rom(game_assignments_cursor_cells_ADDRESS))
+extern const void *game_assignments_cursor_cells_data;
+#define game_assignments_cursor_cells ((const uint16_t *)game_assignments_cursor_cells_data)
 #define game_assignments_exit_cell_ADDRESS 0x01DCE0u
-#define game_assignments_exit_cell ROM16(game_assignments_exit_cell_ADDRESS)
+extern const void *game_assignments_exit_cell_data;
+#define game_assignments_exit_cell (*(const uint16_t *)game_assignments_exit_cell_data)
 #define steering_wheel_reaction_texts_ADDRESS 0x01DCE4u
-#define steering_wheel_reaction_texts ((const uint32_t *)rom(steering_wheel_reaction_texts_ADDRESS))
+extern const void *steering_wheel_reaction_texts_data;
+#define steering_wheel_reaction_texts ((const uint32_t *)steering_wheel_reaction_texts_data)
 #define advertise_sound_texts_ADDRESS 0x01DCECu
-#define advertise_sound_texts ((const uint32_t *)rom(advertise_sound_texts_ADDRESS))
+extern const void *advertise_sound_texts_data;
+#define advertise_sound_texts ((const uint32_t *)advertise_sound_texts_data)
 #define test_mode_coin_assignments_item_jumps_ADDRESS 0x01E0D8u
-#define test_mode_coin_assignments_item_jumps ((const uint32_t *)rom(test_mode_coin_assignments_item_jumps_ADDRESS))
+extern const void *test_mode_coin_assignments_item_jumps_data;
+#define test_mode_coin_assignments_item_jumps ((const uint32_t *)test_mode_coin_assignments_item_jumps_data)
 #define test_mode_coin_assignments_manual_item_jumps_ADDRESS 0x01E0E4u
-#define test_mode_coin_assignments_manual_item_jumps ((const uint32_t *)rom(test_mode_coin_assignments_manual_item_jumps_ADDRESS))
+extern const void *test_mode_coin_assignments_manual_item_jumps_data;
+#define test_mode_coin_assignments_manual_item_jumps ((const uint32_t *)test_mode_coin_assignments_manual_item_jumps_data)
 #define coin_assignments_cursor_cells_ADDRESS 0x01E200u
-#define coin_assignments_cursor_cells ((const uint16_t *)rom(coin_assignments_cursor_cells_ADDRESS))
+extern const void *coin_assignments_cursor_cells_data;
+#define coin_assignments_cursor_cells ((const uint16_t *)coin_assignments_cursor_cells_data)
 #define coin_manual_cursor_cells_ADDRESS 0x01E206u
-#define coin_manual_cursor_cells ((const uint16_t *)rom(coin_manual_cursor_cells_ADDRESS))
+extern const void *coin_manual_cursor_cells_data;
+#define coin_manual_cursor_cells ((const uint16_t *)coin_manual_cursor_cells_data)
 #define coin_manual_exit_cell_ADDRESS 0x01E20Cu
-#define coin_manual_exit_cell ROM16(coin_manual_exit_cell_ADDRESS)
+extern const void *coin_manual_exit_cell_data;
+#define coin_manual_exit_cell (*(const uint16_t *)coin_manual_exit_cell_data)
 #define coin_setting_descriptions_ADDRESS 0x01E220u
-#define coin_setting_descriptions ((const uint32_t *)rom(coin_setting_descriptions_ADDRESS))
+extern const void *coin_setting_descriptions_data;
+#define coin_setting_descriptions ((const uint32_t *)coin_setting_descriptions_data)
 #define test_mode_network_assignments_item_jumps_ADDRESS 0x01E61Cu
-#define test_mode_network_assignments_item_jumps ((const uint32_t *)rom(test_mode_network_assignments_item_jumps_ADDRESS))
+extern const void *test_mode_network_assignments_item_jumps_data;
+#define test_mode_network_assignments_item_jumps ((const uint32_t *)test_mode_network_assignments_item_jumps_data)
 #define network_assignments_cursor_cells_ADDRESS 0x01E67Cu
-#define network_assignments_cursor_cells ((const uint16_t *)rom(network_assignments_cursor_cells_ADDRESS))
+extern const void *network_assignments_cursor_cells_data;
+#define network_assignments_cursor_cells ((const uint16_t *)network_assignments_cursor_cells_data)
 #define network_assignments_exit_cell_ADDRESS 0x01E682u
-#define network_assignments_exit_cell ROM16(network_assignments_exit_cell_ADDRESS)
+extern const void *network_assignments_exit_cell_data;
+#define network_assignments_exit_cell (*(const uint16_t *)network_assignments_exit_cell_data)
 #define communication_texts_ADDRESS 0x01E684u
-#define communication_texts ((const uint32_t *)rom(communication_texts_ADDRESS))
+extern const void *communication_texts_data;
+#define communication_texts ((const uint32_t *)communication_texts_data)
 #define privilege_mode_texts_ADDRESS 0x01E68Cu
-#define privilege_mode_texts ((const uint32_t *)rom(privilege_mode_texts_ADDRESS))
+extern const void *privilege_mode_texts_data;
+#define privilege_mode_texts ((const uint32_t *)privilege_mode_texts_data)
 #define backup_data_clear_cursor_cells_ADDRESS 0x01EEAEu
-#define backup_data_clear_cursor_cells ((const uint16_t *)rom(backup_data_clear_cursor_cells_ADDRESS))
+extern const void *backup_data_clear_cursor_cells_data;
+#define backup_data_clear_cursor_cells ((const uint16_t *)backup_data_clear_cursor_cells_data)
 #define backup_data_clear_no_cell_ADDRESS 0x01EEB0u
-#define backup_data_clear_no_cell ROM16(backup_data_clear_no_cell_ADDRESS)
+extern const void *backup_data_clear_no_cell_data;
+#define backup_data_clear_no_cell (*(const uint16_t *)backup_data_clear_no_cell_data)
 #define test_mode_instructions_text_ADDRESS 0x01F282u
-#define test_mode_instructions_text ROM16(test_mode_instructions_text_ADDRESS)
+extern const void *test_mode_instructions_text_data;
+#define test_mode_instructions_text (*(const uint16_t *)test_mode_instructions_text_data)
 #define test_mode_palettes_1_bytes_ADDRESS 0x01F302u
-#define test_mode_palettes_1_bytes ROM16(test_mode_palettes_1_bytes_ADDRESS)
+extern const void *test_mode_palettes_1_bytes_data;
+#define test_mode_palettes_1_bytes (*(const uint16_t *)test_mode_palettes_1_bytes_data)
 #define test_mode_palettes_2_bytes_ADDRESS 0x01F504u
-#define test_mode_palettes_2_bytes ROM16(test_mode_palettes_2_bytes_ADDRESS)
+extern const void *test_mode_palettes_2_bytes_data;
+#define test_mode_palettes_2_bytes (*(const uint16_t *)test_mode_palettes_2_bytes_data)
 #define road_object_streams_ADDRESS 0x020800u
-#define road_object_streams ((const uint32_t *)rom(road_object_streams_ADDRESS))
+extern const void *road_object_streams_data;
+#define road_object_streams ((const uint32_t *)road_object_streams_data)
 #define stage_road_object_lists_ADDRESS 0x02E1F0u
-#define stage_road_object_lists ((const uint32_t *)rom(stage_road_object_lists_ADDRESS))
+extern const void *stage_road_object_lists_data;
+#define stage_road_object_lists ((const uint32_t *)stage_road_object_lists_data)
 #define background_palettes_ADDRESS 0x0318CCu
-#define background_palettes ((const uint32_t *)rom(background_palettes_ADDRESS))
+extern const void *background_palettes_data;
+#define background_palettes ((const uint32_t *)background_palettes_data)
 #define background_leaving_fades_ADDRESS 0x0319F0u
-#define background_leaving_fades ((const uint32_t *)rom(background_leaving_fades_ADDRESS))
+extern const void *background_leaving_fades_data;
+#define background_leaving_fades ((const uint32_t *)background_leaving_fades_data)
 #define background_palette_fades_ADDRESS 0x031B14u
-#define background_palette_fades ((const uint32_t *)rom(background_palette_fades_ADDRESS))
+extern const void *background_palette_fades_data;
+#define background_palette_fades ((const uint32_t *)background_palette_fades_data)
 #define stage_road_palettes_ADDRESS 0x031C38u
-#define stage_road_palettes ((const uint32_t *)rom(stage_road_palettes_ADDRESS))
+extern const void *stage_road_palettes_data;
+#define stage_road_palettes ((const uint32_t *)stage_road_palettes_data)
 #define background_road_palettes_ADDRESS 0x031CB8u
-#define background_road_palettes ((const uint32_t *)rom(background_road_palettes_ADDRESS))
+extern const void *background_road_palettes_data;
+#define background_road_palettes ((const uint32_t *)background_road_palettes_data)
 #define scene_palettes_ADDRESS 0x031DDCu
-#define scene_palettes ((const uint32_t *)rom(scene_palettes_ADDRESS))
+extern const void *scene_palettes_data;
+#define scene_palettes ((const uint32_t *)scene_palettes_data)
 #define car_select_palette_ADDRESS 0x031E7Cu
-#define car_select_palette ROM32(car_select_palette_ADDRESS)
+extern const void *car_select_palette_data;
+#define car_select_palette (*(const uint32_t *)car_select_palette_data)
 #define ranking_palette_ADDRESS 0x031E80u
-#define ranking_palette ROM32(ranking_palette_ADDRESS)
+extern const void *ranking_palette_data;
+#define ranking_palette (*(const uint32_t *)ranking_palette_data)
 #define route_map_palette_ADDRESS 0x031E84u
-#define route_map_palette ROM32(route_map_palette_ADDRESS)
+extern const void *route_map_palette_data;
+#define route_map_palette (*(const uint32_t *)route_map_palette_data)
 #define title_palette_ADDRESS 0x031E88u
-#define title_palette ROM32(title_palette_ADDRESS)
+extern const void *title_palette_data;
+#define title_palette (*(const uint32_t *)title_palette_data)
 #define route_map_background_palette_ADDRESS 0x031E8Cu
-#define route_map_background_palette ROM32(route_map_background_palette_ADDRESS)
+extern const void *route_map_background_palette_data;
+#define route_map_background_palette (*(const uint32_t *)route_map_background_palette_data)
 #define stage_road_page_sets_ADDRESS 0x03CC80u
-#define stage_road_page_sets ((const uint8_t *)rom(stage_road_page_sets_ADDRESS))
+extern const void *stage_road_page_sets_data;
+#define stage_road_page_sets ((const uint8_t *)stage_road_page_sets_data)
 #define vblank_timer_period_ADDRESS 0x03F82Au
-#define vblank_timer_period ROM16(vblank_timer_period_ADDRESS)
+extern const void *vblank_timer_period_data;
+#define vblank_timer_period (*(const uint16_t *)vblank_timer_period_data)
 #define lcd_timer_period_ADDRESS 0x03F82Cu
-#define lcd_timer_period ROM16(lcd_timer_period_ADDRESS)
+extern const void *lcd_timer_period_data;
+#define lcd_timer_period (*(const uint16_t *)lcd_timer_period_data)
 #define link_message_kind_jumps_ADDRESS 0x03F85Cu
-#define link_message_kind_jumps ((const uint32_t *)rom(link_message_kind_jumps_ADDRESS))
+extern const void *link_message_kind_jumps_data;
+#define link_message_kind_jumps ((const uint32_t *)link_message_kind_jumps_data)
 #define vblank_seat_inputs_jumps_ADDRESS 0x03FAC4u
-#define vblank_seat_inputs_jumps ((const uint32_t *)rom(vblank_seat_inputs_jumps_ADDRESS))
+extern const void *vblank_seat_inputs_jumps_data;
+#define vblank_seat_inputs_jumps ((const uint32_t *)vblank_seat_inputs_jumps_data)
 #define screen_vblank_counters_ADDRESS 0x03FACCu
-#define screen_vblank_counters ((const uint32_t *)rom(screen_vblank_counters_ADDRESS))
+extern const void *screen_vblank_counters_data;
+#define screen_vblank_counters ((const uint32_t *)screen_vblank_counters_data)
 #define ic37_checksum_ADDRESS 0x03FFF8u
-#define ic37_checksum ROM16(ic37_checksum_ADDRESS)
+extern const void *ic37_checksum_data;
+#define ic37_checksum (*(const uint16_t *)ic37_checksum_data)
 #define ic40_checksum_ADDRESS 0x03FFFAu
-#define ic40_checksum ROM16(ic40_checksum_ADDRESS)
+extern const void *ic40_checksum_data;
+#define ic40_checksum (*(const uint16_t *)ic40_checksum_data)
 #define ic36_checksum_ADDRESS 0x03FFFCu
-#define ic36_checksum ROM16(ic36_checksum_ADDRESS)
+extern const void *ic36_checksum_data;
+#define ic36_checksum (*(const uint16_t *)ic36_checksum_data)
 #define ic39_checksum_ADDRESS 0x03FFFEu
-#define ic39_checksum ROM16(ic39_checksum_ADDRESS)
+extern const void *ic39_checksum_data;
+#define ic39_checksum (*(const uint16_t *)ic39_checksum_data)
 #define blank_sprite_places_ADDRESS 0x100000u
-#define blank_sprite_places ROM32(blank_sprite_places_ADDRESS)
+extern const void *blank_sprite_places_data;
+#define blank_sprite_places (*(const uint32_t *)blank_sprite_places_data)
 #define sine_table_ADDRESS 0x100C00u
-#define sine_table ((const int16_t *)rom(sine_table_ADDRESS))
+extern const void *sine_table_data;
+#define sine_table ((const int16_t *)sine_table_data)
 #define cosine_table_ADDRESS 0x101400u
-#define cosine_table ((const int16_t *)rom(cosine_table_ADDRESS))
+extern const void *cosine_table_data;
+#define cosine_table ((const int16_t *)cosine_table_data)
 #define arctangents_ADDRESS 0x103400u
-#define arctangents ((const uint16_t *)rom(arctangents_ADDRESS))
+extern const void *arctangents_data;
+#define arctangents ((const uint16_t *)arctangents_data)
 #define boot_tile_pages_5d_ADDRESS 0x109420u
-#define boot_tile_pages_5d ROM32(boot_tile_pages_5d_ADDRESS)
+extern const void *boot_tile_pages_5d_data;
+#define boot_tile_pages_5d (*(const uint32_t *)boot_tile_pages_5d_data)
 #define boot_tile_pages_5e_ADDRESS 0x109428u
-#define boot_tile_pages_5e ROM32(boot_tile_pages_5e_ADDRESS)
+extern const void *boot_tile_pages_5e_data;
+#define boot_tile_pages_5e (*(const uint32_t *)boot_tile_pages_5e_data)
 #define boot_tile_pages_29_to_4e_ADDRESS 0x109578u
-#define boot_tile_pages_29_to_4e ROM32(boot_tile_pages_29_to_4e_ADDRESS)
+extern const void *boot_tile_pages_29_to_4e_data;
+#define boot_tile_pages_29_to_4e (*(const uint32_t *)boot_tile_pages_29_to_4e_data)
 #define no_background_tile_pages_ADDRESS 0x109684u
-#define no_background_tile_pages ROM32(no_background_tile_pages_ADDRESS)
+extern const void *no_background_tile_pages_data;
+#define no_background_tile_pages (*(const uint32_t *)no_background_tile_pages_data)
 #define background_tile_page_lists_ADDRESS 0x109694u
-#define background_tile_page_lists ((const uint32_t *)rom(background_tile_page_lists_ADDRESS))
+extern const void *background_tile_page_lists_data;
+#define background_tile_page_lists ((const uint32_t *)background_tile_page_lists_data)
 #define text_sprite_words_0_1_ADDRESS 0x122B5Cu
-#define text_sprite_words_0_1 ROM32(text_sprite_words_0_1_ADDRESS)
+extern const void *text_sprite_words_0_1_data;
+#define text_sprite_words_0_1 (*(const uint32_t *)text_sprite_words_0_1_data)
 #define text_sprite_size_ADDRESS 0x122B60u
-#define text_sprite_size ROM32(text_sprite_size_ADDRESS)
+extern const void *text_sprite_size_data;
+#define text_sprite_size (*(const uint32_t *)text_sprite_size_data)
 #define text_sprite_font_ADDRESS 0x122B64u
-#define text_sprite_font ROM16(text_sprite_font_ADDRESS)
+extern const void *text_sprite_font_data;
+#define text_sprite_font (*(const uint16_t *)text_sprite_font_data)
 #define text_sprite_palette_ADDRESS 0x122B66u
-#define text_sprite_palette ROM16(text_sprite_palette_ADDRESS)
+extern const void *text_sprite_palette_data;
+#define text_sprite_palette (*(const uint16_t *)text_sprite_palette_data)
 #define entry_countdown_palette_fades_ADDRESS 0x13F66Cu
-#define entry_countdown_palette_fades ROM32(entry_countdown_palette_fades_ADDRESS)
+extern const void *entry_countdown_palette_fades_data;
+#define entry_countdown_palette_fades (*(const uint32_t *)entry_countdown_palette_fades_data)
 #define name_entry_palette_fades_ADDRESS 0x13F6C0u
-#define name_entry_palette_fades ROM32(name_entry_palette_fades_ADDRESS)
+extern const void *name_entry_palette_fades_data;
+#define name_entry_palette_fades (*(const uint32_t *)name_entry_palette_fades_data)
 #define manual_picked_palettes_ADDRESS 0x13F95Cu
-#define manual_picked_palettes ROM32(manual_picked_palettes_ADDRESS)
+extern const void *manual_picked_palettes_data;
+#define manual_picked_palettes (*(const uint32_t *)manual_picked_palettes_data)
 #define automatic_picked_palettes_ADDRESS 0x13F998u
-#define automatic_picked_palettes ROM32(automatic_picked_palettes_ADDRESS)
+extern const void *automatic_picked_palettes_data;
+#define automatic_picked_palettes (*(const uint32_t *)automatic_picked_palettes_data)
 #define no_background_palettes_ADDRESS 0x13F9D4u
-#define no_background_palettes ROM32(no_background_palettes_ADDRESS)
+extern const void *no_background_palettes_data;
+#define no_background_palettes (*(const uint32_t *)no_background_palettes_data)
 #define race_car_rider_places_ADDRESS 0x18D25Cu
-#define race_car_rider_places ((const uint32_t *)rom(race_car_rider_places_ADDRESS))
+extern const void *race_car_rider_places_data;
+#define race_car_rider_places ((const uint32_t *)race_car_rider_places_data)
 #define perspective_scales_ADDRESS 0x19A340u
-#define perspective_scales ((const uint16_t *)rom(perspective_scales_ADDRESS))
+extern const void *perspective_scales_data;
+#define perspective_scales ((const uint16_t *)perspective_scales_data)
 #define depth_layers_by_depth_ADDRESS 0x1A0340u
-#define depth_layers_by_depth ((const uint16_t *)rom(depth_layers_by_depth_ADDRESS))
+extern const void *depth_layers_by_depth_data;
+#define depth_layers_by_depth ((const uint16_t *)depth_layers_by_depth_data)
 #define kanji_row_pixels_ADDRESS 0x1A6340u
-#define kanji_row_pixels ((const uint32_t *)rom(kanji_row_pixels_ADDRESS))
+extern const void *kanji_row_pixels_data;
+#define kanji_row_pixels ((const uint32_t *)kanji_row_pixels_data)
 #define kanji_font_ADDRESS 0x1CF000u
-#define kanji_font ROM8(kanji_font_ADDRESS)
+extern const void *kanji_font_data;
+#define kanji_font (*(const uint8_t *)kanji_font_data)
 
 /* the board's registers (read and written through the bus: io_read8, io_write8...) */
 #define SPRITE_RENDER_REQUEST 0x500000u
@@ -1464,15 +1978,17 @@
 #define SOUND_PROGRAM_HOLD BOARD8(SOUND_PROGRAM_HOLD_ADDRESS)
 
 /* data in the program ROM symbols.txt labels */
+#define boot_e00000_bytes_ADDRESS 0x0000A4u
 #define signature_text_ADDRESS 0x00010Cu
 #define default_settings_ADDRESS 0x0004C0u
 #define second_task_start_frame_ADDRESS 0x000C98u
 #define isdn_connection_objects_ADDRESS 0x000F70u
 #define isdn_connection_object_handlers_ADDRESS 0x000F74u
-#define unk_00183B_ADDRESS 0x00183Bu
+#define isdn_texts_ADDRESS 0x000F94u
 #define car_presentation_objects_ADDRESS 0x001A78u
 #define car_presentation_object_handlers_ADDRESS 0x001A7Cu
 #define staff_credits_texts_ADDRESS 0x001AE8u
+#define attract_car_name_texts_ADDRESS 0x001D0Cu
 #define car_name_letter_palette_steps_ADDRESS 0x001D70u
 #define ranking_objects_ADDRESS 0x002CB8u
 #define name_entry_objects_ADDRESS 0x002D58u
@@ -1493,11 +2009,10 @@
 #define mega_driver_title_ADDRESS 0x006EB6u
 #define rival_warning_text_ADDRESS 0x007CDBu
 #define steer_frames_by_steering_ADDRESS 0x0092BCu
-#define unk_009EFC_ADDRESS 0x009EFCu
-#define unk_009FE4_ADDRESS 0x009FE4u
 #define distance_offset_functions_ADDRESS 0x00AB04u
 #define check_point_lcd_text_branch_0_ADDRESS 0x00CB98u
 #define check_point_lcd_text_branch_1_ADDRESS 0x00CBACu
+#define stage_level_text_records_ADDRESS 0x00D04Cu
 #define total_time_text_ADDRESS 0x00D08Eu
 #define branch_arrow_palette_steps_ADDRESS 0x00D0A0u
 #define dream_flying_song_title_ADDRESS 0x00D0AEu
@@ -1511,6 +2026,7 @@
 #define master_machine_text_ADDRESS 0x00E00Cu
 #define slave_machine_text_ADDRESS 0x00E034u
 #define isdn_machine_text_ADDRESS 0x00E055u
+#define unused_race_copy_addresses_ADDRESS 0x00E07Cu
 #define network_check_master_text_ADDRESS 0x00E10Cu
 #define network_check_slave_text_ADDRESS 0x00E128u
 #define network_check_isdn_text_ADDRESS 0x00E143u
@@ -1523,8 +2039,7 @@
 #define connection_error_texts_ADDRESS 0x00E422u
 #define communication_board_error_texts_ADDRESS 0x00E464u
 #define communication_time_out_texts_ADDRESS 0x00E484u
-#define unk_010309_ADDRESS 0x010309u
-#define unk_010425_ADDRESS 0x010425u
+#define link_board_ic_text_records_ADDRESS 0x00E4F8u
 #define segment_projection_pattern_ADDRESS 0x010509u
 #define mixer_register_defaults_ADDRESS 0x010AB6u
 #define sprite_control_rest_ADDRESS 0x010B0Cu
@@ -1542,14 +2057,17 @@
 #define screen_fade_to_red_tint_ADDRESS 0x01174Au
 #define screen_fade_from_red_tint_ADDRESS 0x01174Eu
 #define car_hit_box_sizes_ADDRESS 0x0126BCu
+#define radio_song_titles_ADDRESS 0x019478u
+#define dj_mouth_shapes_ADDRESS 0x0196F8u
+#define coin_prompt_lcd_strings_ADDRESS 0x01A9C8u
 #define credit_free_play_text_ADDRESS 0x01AB62u
 #define credit_singular_text_ADDRESS 0x01AB72u
 #define credit_plural_text_ADDRESS 0x01AB80u
 #define title_logo_flash_palettes_ADDRESS 0x01AC54u
 #define title_logo_copy_flash_palettes_ADDRESS 0x01AC62u
 #define timeline_1AFC0_ADDRESS 0x01AFC0u
-#define unk_01B248_ADDRESS 0x01B248u
 #define test_mode_menu_text_ADDRESS 0x01C490u
+#define test_mode_menu_heading_texts_ADDRESS 0x01C568u
 #define test_mode_write_count_text_ADDRESS 0x01C5A2u
 #define memory_test_page_text_ADDRESS 0x01CC9Cu
 #define memory_test_now_testing_text_ADDRESS 0x01CD87u
@@ -1572,11 +2090,13 @@
 #define coin_assignments_page_text_ADDRESS 0x01E0F4u
 #define coin_manual_page_text_ADDRESS 0x01E13Fu
 #define coin_assignments_line_text_ADDRESS 0x01E20Eu
+#define coin_setting_description_records_ADDRESS 0x01E28Cu
 #define no_bonus_adder_text_ADDRESS 0x01E39Eu
 #define bonus_free_play_text_ADDRESS 0x01E3BCu
 #define bonus_adder_text_ADDRESS 0x01E3CBu
 #define coin_assignments_setting_places_ADDRESS 0x01E44Du
 #define network_assignments_page_text_ADDRESS 0x01E62Cu
+#define privilege_mode_text_lists_ADDRESS 0x01E698u
 #define network_assignments_setting_places_ADDRESS 0x01E6E0u
 #define time_digit_steps_ADDRESS 0x01E970u
 #define bookkeeping_first_page_text_ADDRESS 0x01EA5Cu
@@ -1589,7 +2109,9 @@
 #define continue_prompt_text_ADDRESS 0x01F2DEu
 #define test_mode_palettes_1_ADDRESS 0x01F304u
 #define test_mode_palettes_2_ADDRESS 0x01F506u
-#define unk_030B60_ADDRESS 0x030B60u
+#define unused_words_01F706_ADDRESS 0x01F706u
+#define unused_fill_01F714_ADDRESS 0x01F714u
+#define traffic_records_ADDRESS 0x030B60u
 #define boot_palette_9e00_ADDRESS 0x03153Cu
 #define black_background_palette_ADDRESS 0x031740u
 #define vector_table_ADDRESS 0x03F000u
@@ -1601,7 +2123,59 @@
 #define boot_palette_8000_ADDRESS 0x153904u
 
 /* numbers the code uses, by name (symbols.txt constant lines) */
+#define TIME_DIGITS 0x3u
+#define PLACE_NUMBER 0x4u
+#define PLACE_COUNT 0x5u
+#define REV_METER 0x6u
+#define SHIFT_UP_HINT 0xEu
+#define SPEED_UNIT_KMH 0x10u
+#define SPEED_DIGITS 0x12u
+#define CHOICE_FLAG 0x1Bu
+#define LAP_TIMER 0x2Du
+#define STAGE_INDICATOR 0x2Eu
+#define CRASH_TEXT 0x2Fu
+#define EXTEND_TIME 0x33u
+#define BRANCH_ARROW_LEFT 0x34u
+#define BRANCH_ARROW_RIGHT 0x35u
+#define CHECKPOINT_BOARD_ROW 0x36u
+#define WEST_EAST_PANEL 0x39u
 #define SECONDS_PER_MINUTE 0x3Cu
+#define ACCELERATION_SMOKE 0x44u
+#define PALM_TREE 0x59u
+#define SWORDFISH 0x165u
+#define CYCLIST 0x185u
+#define ELEPHANT 0x258u
+#define TITLE_BOARD_PALMS 0x25Au
+#define TITLE_SEAGULL 0x25Bu
+#define TITLE_LOGO 0x25Du
+#define TITLE_LOGO_COPY 0x25Eu
+#define TITLE_LOGO_STRIPE 0x25Fu
+#define ATTENDANT_WALKING 0x266u
+#define AUTOMATIC_POSE 0x267u
+#define MANUAL_POSE 0x268u
+#define STANDING 0x269u
+#define CAR_CAPTION_LETTERS 0x26Eu
+#define ENTRY_COUNTDOWN_DIGITS 0x26Fu
+#define WAITING_BANNER 0x28Bu
+#define WAIT_A_MINUTE_BANNER 0x28Du
+#define SELECT_CAR_HEADING 0x2B5u
+#define AUTOMATIC_PANEL 0x2BDu
+#define MANUAL_PANEL 0x2BEu
+#define NOVICE_LABEL 0x2C1u
+#define GEARS_LABEL 0x2C9u
+#define CAR_GEARS_CAPTION 0x2D1u
+#define RANKING_TITLE_LEFT 0x2D2u
+#define RANKING_TITLE_RIGHT 0x2D3u
+#define NAME_ENTRY_FONT 0x2DEu
+#define GAME_OVER_BANNER 0x2F4u
+#define CONGRATULATIONS 0x2F5u
+#define WINNER 0x2F6u
+#define LOSER 0x2F7u
+#define RACE_PLACES 0x2F8u
+#define ROUTE_MAP_LEG 0x306u
+#define CAR_NAME_FONT 0x346u
+#define SANTA_SLEIGH 0x3A0u
+#define ORCA 0x3A2u
 #define SECONDS_PER_HOUR 0xE10u
 #define EEPROM_WRITE_LIMIT 0x2710u
 #define SECONDS_PER_DAY 0x15180u
@@ -3894,7 +4468,7 @@ struct road_row_record
 	uint16_t spacing;
 	uint16_t count;
 	uint32_t hit_box_along;
-	uint8_t pad_14[0x4];
+	uint32_t hit_box_across;
 };
 
 struct road_object_stream_entry
@@ -3918,7 +4492,7 @@ struct flashing_scenery_record
 	uint16_t spacing;
 	uint16_t count;
 	uint32_t hit_box_along;
-	uint8_t pad_16[0x4];
+	uint32_t hit_box_across;
 };
 
 struct aurora_record
@@ -3990,7 +4564,7 @@ struct start_gate_record
 	uint16_t spacing;
 	uint16_t count;
 	uint32_t hit_box_along;
-	uint8_t pad_14[0x4];
+	uint32_t hit_box_across;
 };
 
 struct flagman_record
@@ -5168,153 +5742,153 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define OBJECT_AREA(address) ((struct object_area *)ram(address))
 #define RACE(address) ((struct race *)ram(address))
 #define OBJECT_LIST(address) ((struct object_list *)ram(address))
-#define ROAD_ROW_RECORD(address) ((const struct road_row_record *)rom(address))
-#define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)rom(address))
-#define FLASHING_SCENERY_RECORD(address) ((const struct flashing_scenery_record *)rom(address))
-#define FLASHING_SCENERY_PALETTES(address) ((const int16_t *)rom(address))
-#define AURORA_RECORD(address) ((const struct aurora_record *)rom(address))
-#define AURORA_ANIMATIONS(address) ((const int16_t *)rom(address))
-#define ROAD_CROSSER_RECORD(address) ((const struct road_crosser_record *)rom(address))
-#define MOVING_SCENERY_RECORD(address) ((const struct moving_scenery_record *)rom(address))
-#define SWOOPING_HELICOPTER_RECORD(address) ((const struct swooping_helicopter_record *)rom(address))
-#define START_GATE_RECORD(address) ((const struct start_gate_record *)rom(address))
-#define FLAGMAN_RECORD(address) ((const struct flagman_record *)rom(address))
-#define START_BALLOON_RECORD(address) ((const struct start_balloon_record *)rom(address))
-#define SANTA_SLEIGH_RECORD(address) ((const struct santa_sleigh_record *)rom(address))
-#define GOAL_PARADE_RECORD(address) ((const struct goal_parade_record *)rom(address))
-#define SOUNDING_SCENERY_RECORD(address) ((const struct sounding_scenery_record *)rom(address))
-#define TRAFFIC_RECORD(address) ((const struct traffic_record *)rom(address))
-#define TRAFFIC_SPRITE_RECORD(address) ((const struct traffic_sprite_record *)rom(address))
-#define TRAFFIC_SPAWN_ENTRY(address) ((const struct traffic_spawn_entry *)rom(address))
-#define TRAFFIC_LINE_RECORD(address) ((const struct traffic_line_record *)rom(address))
-#define TRAFFIC_LINE_FOLLOWERS(address) ((const uint32_t *)rom(address))
-#define BACKDROP_RECORD(address) ((const struct backdrop_record *)rom(address))
-#define CAR_SELECT_TILEMAP_SETUP(address) ((const struct car_select_tilemap_setup *)rom(address))
-#define ANIMATION_PALETTE(address) ((const struct animation_palette *)rom(address))
-#define TURNTABLE_SCENERY_GROUP(address) ((const struct turntable_scenery_group *)rom(address))
-#define WELCOME_LETTER_PLACE(address) ((const struct welcome_letter_place *)rom(address))
-#define SELECT_INSTRUCTION_PIECE(address) ((const struct select_instruction_piece *)rom(address))
-#define TRAFFIC_PATH_STEP(address) ((const struct traffic_path_step *)rom(address))
-#define GOAL_ACTOR_SCRIPT_WORDS(address) ((const uint16_t *)rom(address))
-#define PALETTE_CYCLE_RECORD(address) ((const struct palette_cycle_record *)rom(address))
-#define PALETTE_CYCLE_STEPS(address) ((const uint32_t *)rom(address))
-#define SUNSET_FADE_RECORD(address) ((const struct sunset_fade_record *)rom(address))
-#define PALETTE_FADE_LIST(address) ((const struct palette_fade_list *)rom(address))
-#define PALETTE_FADE_ENTRY(address) ((const struct palette_fade_entry *)rom(address))
-#define GRID_SEGMENTS(address) ((const uint16_t *)rom(address))
-#define GRID_ROAD_PLACES(address) ((const uint32_t *)rom(address))
-#define GOAL_STOP(address) ((const struct goal_stop *)rom(address))
-#define CRASH_PHYSICS(address) ((const struct crash_physics *)rom(address))
-#define WHEEL_STEERING(address) ((const int8_t *)rom(address))
-#define CAR_HANDLING(address) ((const struct car_handling *)rom(address))
-#define GEAR_LIST(address) ((const struct gear_list *)rom(address))
-#define TORQUE_POINT(address) ((const struct torque_point *)rom(address))
-#define ROADSIDE_SURFACE(address) ((const struct roadside_surface *)rom(address))
-#define STAGE_ROADSIDE_SURFACES(address) ((const struct stage_roadside_surfaces *)rom(address))
-#define OBJECT_PALETTE_STEPS(address) ((const int16_t *)rom(address))
-#define SPRITE_ANIMATION(address) ((const struct sprite_animation *)rom(address))
-#define SPRITE_ANIMATION_POINTER(address) ((const uint32_t *)rom(address))
-#define SPRITE_FRAME(address) ((const struct sprite_frame *)rom(address))
-#define SPRITE_PIECE(address) ((const struct sprite_piece *)rom(address))
-#define SPRITE_SIZE_STEP(address) ((const struct sprite_size_step *)rom(address))
-#define SPRITE_PALETTE_WORDS(address) ((const uint16_t *)rom(address))
-#define SPRITE_PALETTE_POINTER(address) ((const uint32_t *)rom(address))
-#define CAR_GEAR_RATIOS(address) ((const uint8_t *)rom(address))
-#define CHECKPOINT_BOARD_PLACE(address) ((const struct checkpoint_board_place *)rom(address))
-#define SPRITE_LIST_SWITCH(address) ((const struct sprite_list_switch *)rom(address))
-#define SPRITE_LIST_SWITCH_POINTER(address) ((const uint32_t *)rom(address))
-#define ITEM_HIT_BOX(address) ((const struct item_hit_box *)rom(address))
-#define COURSE_POINTER(address) ((const uint32_t *)rom(address))
-#define COURSE_FORK(address) ((const struct course_fork *)rom(address))
-#define ROAD_PROJECTION_PATTERN(address) ((const uint8_t *)rom(address))
-#define ROAD_ROW_SIZE_STEPS(address) ((const uint8_t *)rom(address))
-#define ROAD_ROW_SIZE_STEPS_POINTER(address) ((const uint32_t *)rom(address))
-#define ROAD_ROW_SIZE_SHIFTS(address) ((const int8_t *)rom(address))
-#define ROAD_ROW_SIZE_SHIFTS_POINTER(address) ((const uint32_t *)rom(address))
-#define SCREEN_HARDWARE(address) ((const struct screen_hardware *)rom(address))
-#define SCREEN_HARDWARE_POINTER(address) ((const uint32_t *)rom(address))
-#define DRAW_DISTANCE_LIST(address) ((const uint16_t *)rom(address))
-#define SCREEN_VIEW_DEFAULT(address) ((const struct screen_view_default *)rom(address))
-#define SPRITE_CONTROL_VALUES(address) ((const uint8_t *)rom(address))
-#define HIDDEN_LAYER_PAIR(address) ((const struct hidden_layer_pair *)rom(address))
-#define SCREEN_FADE_START(address) ((const struct screen_fade_start *)rom(address))
-#define TEXT_FONT_ROWS(address) ((const uint8_t *)rom(address))
-#define TEXT_CHARACTERS(address) ((const uint8_t *)rom(address))
-#define BACKGROUND_REGISTERS(address) ((const struct background_registers *)rom(address))
-#define BACKGROUND_SETUP(address) ((const struct background_setup *)rom(address))
-#define FIRST_ATTRACT_CARS(address) ((const uint8_t *)rom(address))
-#define BAR_PICTURE_BAR(address) ((const struct bar_picture_bar *)rom(address))
-#define STAFF_CREDITS_CODE_CONTROLS(address) ((const uint8_t *)rom(address))
-#define CAR_NAME_LETTERS(address) ((const uint8_t *)rom(address))
-#define COURSE_RECORD(address) ((const struct course_record *)rom(address))
-#define REJECTED_NAMES(address) ((const uint32_t *)rom(address))
-#define RANKING_BACKGROUND_REGISTERS(address) ((const struct ranking_background_registers *)rom(address))
-#define DEMO_RACE_CHOICE(address) ((const struct demo_race_choice *)rom(address))
-#define ATTRACT_LAMP_STEP(address) ((const struct attract_lamp_step *)rom(address))
-#define ROUTE_MAP_REGISTERS(address) ((const struct route_map_registers *)rom(address))
-#define ROUTE_MAP_LEG_CAR_PLACE(address) ((const struct route_map_leg_car_place *)rom(address))
-#define STAGE_RESULT_TEXT(address) ((const struct stage_result_text *)rom(address))
-#define STAGE_RESULT_PLACE_TEXT(address) ((const struct stage_result_place_text *)rom(address))
-#define ROUTE_MAP_LANDMARK_RECORD(address) ((const struct route_map_landmark_record *)rom(address))
-#define SOUND_CUE(address) ((const struct sound_cue *)rom(address))
-#define ROAD_SURFACE_LAYER_SETUP(address) ((const struct road_surface_layer_setup *)rom(address))
-#define ROAD_TILES_CHANGE_BYTES(address) ((const uint8_t *)rom(address))
-#define RACE_BACKGROUND_LAYER_SETUP(address) ((const struct race_background_layer_setup *)rom(address))
-#define BACKGROUND_PAGE_WORD_STEPS(address) ((const uint32_t *)rom(address))
-#define PALETTE_COLOURS(address) ((const uint16_t *)rom(address))
-#define SONG_TITLE_RECORD(address) ((const struct song_title_record *)rom(address))
-#define TITLE_SCREEN_LAYER_SETUP(address) ((const struct title_screen_layer_setup *)rom(address))
-#define TITLE_WAVE_FRAMES(address) ((const uint16_t *)rom(address))
-#define TITLE_CAR_RECORD(address) ((const struct title_car_record *)rom(address))
-#define LCD_TEXT_LINE(address) ((const struct lcd_text_line *)rom(address))
-#define LCD_CHARACTER_ROWS(address) ((const uint8_t *)rom(address))
-#define DJ_MOUTH_SHAPE_NUMBERS(address) ((const uint8_t *)rom(address))
-#define TITLE_PLACE(address) ((const struct title_place *)rom(address))
-#define PICTURE_RECORD(address) ((const struct picture_record *)rom(address))
-#define TITLE_LOGO_PALETTES(address) ((const uint16_t *)rom(address))
-#define DEMO_CAPTION_CUE(address) ((const struct demo_caption_cue *)rom(address))
-#define KANJI_TEXT(address) ((const int16_t *)rom(address))
-#define KANJI_CHARACTER_ROWS(address) ((const uint8_t *)rom(address))
-#define TEST_MODE_CELLS(address) ((const uint16_t *)rom(address))
-#define MEMORY_TEST_RESULT_TEXT(address) ((const struct memory_test_result_text *)rom(address))
-#define TEST_MODE_CHARACTERS(address) ((const uint8_t *)rom(address))
-#define OUTPUT_TEST_OUTPUT(address) ((const struct output_test_output *)rom(address))
-#define TEST_MODE_SETTING_PLACES(address) ((const uint8_t *)rom(address))
-#define COIN_SETTING_RECORD(address) ((const struct coin_setting_record *)rom(address))
-#define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)rom(address))
-#define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)rom(address))
+#define ROAD_ROW_RECORD(address) ((const struct road_row_record *)data_at(address))
+#define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)data_at(address))
+#define FLASHING_SCENERY_RECORD(address) ((const struct flashing_scenery_record *)data_at(address))
+#define FLASHING_SCENERY_PALETTES(address) ((const int16_t *)data_at(address))
+#define AURORA_RECORD(address) ((const struct aurora_record *)data_at(address))
+#define AURORA_ANIMATIONS(address) ((const int16_t *)data_at(address))
+#define ROAD_CROSSER_RECORD(address) ((const struct road_crosser_record *)data_at(address))
+#define MOVING_SCENERY_RECORD(address) ((const struct moving_scenery_record *)data_at(address))
+#define SWOOPING_HELICOPTER_RECORD(address) ((const struct swooping_helicopter_record *)data_at(address))
+#define START_GATE_RECORD(address) ((const struct start_gate_record *)data_at(address))
+#define FLAGMAN_RECORD(address) ((const struct flagman_record *)data_at(address))
+#define START_BALLOON_RECORD(address) ((const struct start_balloon_record *)data_at(address))
+#define SANTA_SLEIGH_RECORD(address) ((const struct santa_sleigh_record *)data_at(address))
+#define GOAL_PARADE_RECORD(address) ((const struct goal_parade_record *)data_at(address))
+#define SOUNDING_SCENERY_RECORD(address) ((const struct sounding_scenery_record *)data_at(address))
+#define TRAFFIC_RECORD(address) ((const struct traffic_record *)data_at(address))
+#define TRAFFIC_SPRITE_RECORD(address) ((const struct traffic_sprite_record *)data_at(address))
+#define TRAFFIC_SPAWN_ENTRY(address) ((const struct traffic_spawn_entry *)data_at(address))
+#define TRAFFIC_LINE_RECORD(address) ((const struct traffic_line_record *)data_at(address))
+#define TRAFFIC_LINE_FOLLOWERS(address) ((const uint32_t *)data_at(address))
+#define BACKDROP_RECORD(address) ((const struct backdrop_record *)data_at(address))
+#define CAR_SELECT_TILEMAP_SETUP(address) ((const struct car_select_tilemap_setup *)data_at(address))
+#define ANIMATION_PALETTE(address) ((const struct animation_palette *)data_at(address))
+#define TURNTABLE_SCENERY_GROUP(address) ((const struct turntable_scenery_group *)data_at(address))
+#define WELCOME_LETTER_PLACE(address) ((const struct welcome_letter_place *)data_at(address))
+#define SELECT_INSTRUCTION_PIECE(address) ((const struct select_instruction_piece *)data_at(address))
+#define TRAFFIC_PATH_STEP(address) ((const struct traffic_path_step *)data_at(address))
+#define GOAL_ACTOR_SCRIPT_WORDS(address) ((const uint16_t *)data_at(address))
+#define PALETTE_CYCLE_RECORD(address) ((const struct palette_cycle_record *)data_at(address))
+#define PALETTE_CYCLE_STEPS(address) ((const uint32_t *)data_at(address))
+#define SUNSET_FADE_RECORD(address) ((const struct sunset_fade_record *)data_at(address))
+#define PALETTE_FADE_LIST(address) ((const struct palette_fade_list *)data_at(address))
+#define PALETTE_FADE_ENTRY(address) ((const struct palette_fade_entry *)data_at(address))
+#define GRID_SEGMENTS(address) ((const uint16_t *)data_at(address))
+#define GRID_ROAD_PLACES(address) ((const uint32_t *)data_at(address))
+#define GOAL_STOP(address) ((const struct goal_stop *)data_at(address))
+#define CRASH_PHYSICS(address) ((const struct crash_physics *)data_at(address))
+#define WHEEL_STEERING(address) ((const int8_t *)data_at(address))
+#define CAR_HANDLING(address) ((const struct car_handling *)data_at(address))
+#define GEAR_LIST(address) ((const struct gear_list *)data_at(address))
+#define TORQUE_POINT(address) ((const struct torque_point *)data_at(address))
+#define ROADSIDE_SURFACE(address) ((const struct roadside_surface *)data_at(address))
+#define STAGE_ROADSIDE_SURFACES(address) ((const struct stage_roadside_surfaces *)data_at(address))
+#define OBJECT_PALETTE_STEPS(address) ((const int16_t *)data_at(address))
+#define SPRITE_ANIMATION(address) ((const struct sprite_animation *)data_at(address))
+#define SPRITE_ANIMATION_POINTER(address) ((const uint32_t *)data_at(address))
+#define SPRITE_FRAME(address) ((const struct sprite_frame *)data_at(address))
+#define SPRITE_PIECE(address) ((const struct sprite_piece *)data_at(address))
+#define SPRITE_SIZE_STEP(address) ((const struct sprite_size_step *)data_at(address))
+#define SPRITE_PALETTE_WORDS(address) ((const uint16_t *)data_at(address))
+#define SPRITE_PALETTE_POINTER(address) ((const uint32_t *)data_at(address))
+#define CAR_GEAR_RATIOS(address) ((const uint8_t *)data_at(address))
+#define CHECKPOINT_BOARD_PLACE(address) ((const struct checkpoint_board_place *)data_at(address))
+#define SPRITE_LIST_SWITCH(address) ((const struct sprite_list_switch *)data_at(address))
+#define SPRITE_LIST_SWITCH_POINTER(address) ((const uint32_t *)data_at(address))
+#define ITEM_HIT_BOX(address) ((const struct item_hit_box *)data_at(address))
+#define COURSE_POINTER(address) ((const uint32_t *)data_at(address))
+#define COURSE_FORK(address) ((const struct course_fork *)data_at(address))
+#define ROAD_PROJECTION_PATTERN(address) ((const uint8_t *)data_at(address))
+#define ROAD_ROW_SIZE_STEPS(address) ((const uint8_t *)data_at(address))
+#define ROAD_ROW_SIZE_STEPS_POINTER(address) ((const uint32_t *)data_at(address))
+#define ROAD_ROW_SIZE_SHIFTS(address) ((const int8_t *)data_at(address))
+#define ROAD_ROW_SIZE_SHIFTS_POINTER(address) ((const uint32_t *)data_at(address))
+#define SCREEN_HARDWARE(address) ((const struct screen_hardware *)data_at(address))
+#define SCREEN_HARDWARE_POINTER(address) ((const uint32_t *)data_at(address))
+#define DRAW_DISTANCE_LIST(address) ((const uint16_t *)data_at(address))
+#define SCREEN_VIEW_DEFAULT(address) ((const struct screen_view_default *)data_at(address))
+#define SPRITE_CONTROL_VALUES(address) ((const uint8_t *)data_at(address))
+#define HIDDEN_LAYER_PAIR(address) ((const struct hidden_layer_pair *)data_at(address))
+#define SCREEN_FADE_START(address) ((const struct screen_fade_start *)data_at(address))
+#define TEXT_FONT_ROWS(address) ((const uint8_t *)data_at(address))
+#define TEXT_CHARACTERS(address) ((const uint8_t *)data_at(address))
+#define BACKGROUND_REGISTERS(address) ((const struct background_registers *)data_at(address))
+#define BACKGROUND_SETUP(address) ((const struct background_setup *)data_at(address))
+#define FIRST_ATTRACT_CARS(address) ((const uint8_t *)data_at(address))
+#define BAR_PICTURE_BAR(address) ((const struct bar_picture_bar *)data_at(address))
+#define STAFF_CREDITS_CODE_CONTROLS(address) ((const uint8_t *)data_at(address))
+#define CAR_NAME_LETTERS(address) ((const uint8_t *)data_at(address))
+#define COURSE_RECORD(address) ((const struct course_record *)data_at(address))
+#define REJECTED_NAMES(address) ((const uint32_t *)data_at(address))
+#define RANKING_BACKGROUND_REGISTERS(address) ((const struct ranking_background_registers *)data_at(address))
+#define DEMO_RACE_CHOICE(address) ((const struct demo_race_choice *)data_at(address))
+#define ATTRACT_LAMP_STEP(address) ((const struct attract_lamp_step *)data_at(address))
+#define ROUTE_MAP_REGISTERS(address) ((const struct route_map_registers *)data_at(address))
+#define ROUTE_MAP_LEG_CAR_PLACE(address) ((const struct route_map_leg_car_place *)data_at(address))
+#define STAGE_RESULT_TEXT(address) ((const struct stage_result_text *)data_at(address))
+#define STAGE_RESULT_PLACE_TEXT(address) ((const struct stage_result_place_text *)data_at(address))
+#define ROUTE_MAP_LANDMARK_RECORD(address) ((const struct route_map_landmark_record *)data_at(address))
+#define SOUND_CUE(address) ((const struct sound_cue *)data_at(address))
+#define ROAD_SURFACE_LAYER_SETUP(address) ((const struct road_surface_layer_setup *)data_at(address))
+#define ROAD_TILES_CHANGE_BYTES(address) ((const uint8_t *)data_at(address))
+#define RACE_BACKGROUND_LAYER_SETUP(address) ((const struct race_background_layer_setup *)data_at(address))
+#define BACKGROUND_PAGE_WORD_STEPS(address) ((const uint32_t *)data_at(address))
+#define PALETTE_COLOURS(address) ((const uint16_t *)data_at(address))
+#define SONG_TITLE_RECORD(address) ((const struct song_title_record *)data_at(address))
+#define TITLE_SCREEN_LAYER_SETUP(address) ((const struct title_screen_layer_setup *)data_at(address))
+#define TITLE_WAVE_FRAMES(address) ((const uint16_t *)data_at(address))
+#define TITLE_CAR_RECORD(address) ((const struct title_car_record *)data_at(address))
+#define LCD_TEXT_LINE(address) ((const struct lcd_text_line *)data_at(address))
+#define LCD_CHARACTER_ROWS(address) ((const uint8_t *)data_at(address))
+#define DJ_MOUTH_SHAPE_NUMBERS(address) ((const uint8_t *)data_at(address))
+#define TITLE_PLACE(address) ((const struct title_place *)data_at(address))
+#define PICTURE_RECORD(address) ((const struct picture_record *)data_at(address))
+#define TITLE_LOGO_PALETTES(address) ((const uint16_t *)data_at(address))
+#define DEMO_CAPTION_CUE(address) ((const struct demo_caption_cue *)data_at(address))
+#define KANJI_TEXT(address) ((const int16_t *)data_at(address))
+#define KANJI_CHARACTER_ROWS(address) ((const uint8_t *)data_at(address))
+#define TEST_MODE_CELLS(address) ((const uint16_t *)data_at(address))
+#define MEMORY_TEST_RESULT_TEXT(address) ((const struct memory_test_result_text *)data_at(address))
+#define TEST_MODE_CHARACTERS(address) ((const uint8_t *)data_at(address))
+#define OUTPUT_TEST_OUTPUT(address) ((const struct output_test_output *)data_at(address))
+#define TEST_MODE_SETTING_PLACES(address) ((const uint8_t *)data_at(address))
+#define COIN_SETTING_RECORD(address) ((const struct coin_setting_record *)data_at(address))
+#define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)data_at(address))
+#define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)data_at(address))
 #define SCREEN_SOUND_PAGE(address) ((struct screen_sound_page *)board(address))
 #define ROAD_SEGMENT(address) ((struct road_segment *)ram(address))
 #define VIEW(address) ((struct view *)ram(address))
 #define PROJECTED_SEGMENT(address) ((struct projected_segment *)ram(address))
 #define SEAT_CREDITS(address) ((struct seat_credits *)ram(address))
 #define COIN_METER(address) ((struct coin_meter *)ram(address))
-#define COIN_CHUTE(address) ((const struct coin_chute *)rom(address))
-#define COIN_CHUTE_VARIANT(address) ((const struct coin_chute_variant *)rom(address))
+#define COIN_CHUTE(address) ((const struct coin_chute *)data_at(address))
+#define COIN_CHUTE_VARIANT(address) ((const struct coin_chute_variant *)data_at(address))
 #define SETTINGS_COPY(address) ((struct settings_copy *)ram(address))
 #define SEAT_INPUTS(address) ((struct seat_inputs *)ram(address))
 #define UNPACK_REQUEST(address) ((struct unpack_request *)ram(address))
-#define PACKED_BLOCK_ENTRY(address) ((const struct packed_block_entry *)rom(address))
-#define PACKED_BYTES(address) ((const uint8_t *)rom(address))
-#define TILE_PAGE_ENTRIES(address) ((const uint32_t *)rom(address))
-#define TEXT_LAYER_RECORD(address) ((const struct text_layer_record *)rom(address))
-#define TEXT_HALFWORD_CHARACTERS(address) ((const uint16_t *)rom(address))
-#define SPRITE_TEXT_RECORD(address) ((const struct sprite_text_record *)rom(address))
-#define PALETTE_BLOCK(address) ((const struct palette_block *)rom(address))
-#define PALETTE_BLOCK_LIST(address) ((const struct palette_block_list *)rom(address))
-#define PALETTE_BLOCK_ENTRY(address) ((const struct palette_block_entry *)rom(address))
+#define PACKED_BLOCK_ENTRY(address) ((const struct packed_block_entry *)data_at(address))
+#define PACKED_BYTES(address) ((const uint8_t *)data_at(address))
+#define TILE_PAGE_ENTRIES(address) ((const uint32_t *)data_at(address))
+#define TEXT_LAYER_RECORD(address) ((const struct text_layer_record *)data_at(address))
+#define TEXT_HALFWORD_CHARACTERS(address) ((const uint16_t *)data_at(address))
+#define SPRITE_TEXT_RECORD(address) ((const struct sprite_text_record *)data_at(address))
+#define PALETTE_BLOCK(address) ((const struct palette_block *)data_at(address))
+#define PALETTE_BLOCK_LIST(address) ((const struct palette_block_list *)data_at(address))
+#define PALETTE_BLOCK_ENTRY(address) ((const struct palette_block_entry *)data_at(address))
 #define DEPTH_LIST(address) ((struct depth_list *)ram(address))
-#define REMARK_ROUTINES(address) ((const uint32_t *)rom(address))
-#define OBJECT_LIST_PAIR(address) ((const struct object_list_pair *)rom(address))
-#define OBJECT_HANDLERS(address) ((const uint32_t *)rom(address))
+#define REMARK_ROUTINES(address) ((const uint32_t *)data_at(address))
+#define OBJECT_LIST_PAIR(address) ((const struct object_list_pair *)data_at(address))
+#define OBJECT_HANDLERS(address) ((const uint32_t *)data_at(address))
 #define VOLUME_RANGE(address) ((struct volume_range *)ram(address))
-#define COIN_SETTING_DESCRIPTION(address) ((const uint8_t *)rom(address))
-#define TURNTABLE_SCENERY_ITEM(address) ((const struct turntable_scenery_item *)rom(address))
+#define COIN_SETTING_DESCRIPTION(address) ((const uint8_t *)data_at(address))
+#define TURNTABLE_SCENERY_ITEM(address) ((const struct turntable_scenery_item *)data_at(address))
 #define SCREEN_LAMPS(address) ((struct screen_lamps *)ram(address))
 #define CAR_HIT_BOX(address) ((struct car_hit_box *)ram(address))
-#define CRASH_ENTRY(address) ((const struct crash_entry *)rom(address))
-#define COURSE_START(address) ((const struct course_start *)rom(address))
-#define CAR_PART_PLACE(address) ((const struct car_part_place *)rom(address))
+#define CRASH_ENTRY(address) ((const struct crash_entry *)data_at(address))
+#define COURSE_START(address) ((const struct course_start *)data_at(address))
+#define CAR_PART_PLACE(address) ((const struct car_part_place *)data_at(address))
 #define BOARD_CAR_SPRITE(address) ((struct board_car_sprite *)ram(address))
 #define CHECKPOINT_PASS(address) ((struct checkpoint_pass *)ram(address))
 #define OBJECT_WORDS(address) ((uint32_t *)ram(address))
@@ -5331,23 +5905,23 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define UNPACKED_BYTES(address) ((uint8_t *)board(address))
 #define TEXT_LAYER_CELLS(address) ((uint16_t *)board(address))
 #define TEXT_LAYER_FONT_ROWS(address) ((uint32_t *)board(address))
-#define BOOT_REGISTER_VALUES(address) ((const uint8_t *)rom(address))
+#define BOOT_REGISTER_VALUES(address) ((const uint8_t *)data_at(address))
 #define CLEARED_RAM_WORDS(address) ((uint32_t *)ram(address))
 #define PORT_OUTPUT_BITS(address) ((uint8_t *)ram(address))
 #define VBLANK_COUNT(address) ((uint8_t *)ram(address))
 #define SPRITE_PLACE(address) ((struct sprite_place *)ram(address))
 #define SPRITE_PLACE_WORDS(address) ((uint32_t *)ram(address))
 #define OBJECT_LINKS(address) ((uint16_t *)ram(address))
-#define OBJECT_START_LIST(address) ((const struct object_start_list *)rom(address))
+#define OBJECT_START_LIST(address) ((const struct object_start_list *)data_at(address))
 #define TILEMAP_PAGES(address) ((struct tilemap_pages *)ram(address))
 #define TILEMAP_BANKS(address) ((struct tilemap_banks *)ram(address))
-#define ROAD_PALETTE_RECORD(address) ((const struct road_palette_record *)rom(address))
+#define ROAD_PALETTE_RECORD(address) ((const struct road_palette_record *)data_at(address))
 #define FADE_OBJECTS(address) ((uint32_t *)ram(address))
 #define STRETCH_ENDS(address) ((uint16_t *)ram(address))
 #define LINE_SELECTS(address) ((uint16_t *)board(address))
 #define TEXT_CELL_ENTRY(address) ((struct text_cell_entry *)board(address))
 #define CHIP_TEST_RESULTS(address) ((uint8_t *)ram(address))
-#define PROGRAM_HALFWORDS(address) ((const uint16_t *)rom(address))
+#define PROGRAM_HALFWORDS(address) ((const uint16_t *)data_at(address))
 #define ANALOG_POSITIONS(address) ((uint8_t *)ram(address))
 #define OUTPUT_BITS(address) ((uint32_t *)ram(address))
 #define STAGE_GAME_COUNTS(address) ((uint16_t *)board(address))
@@ -5369,10 +5943,10 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define VIDEO_REGISTER_WORDS(address) ((uint16_t *)ram(address))
 #define TILE_BANK_VALUES(address) ((uint8_t *)ram(address))
 #define MIXER_VALUE_PAIRS(address) ((uint32_t *)ram(address))
-#define ROAD_PALETTE_LISTS(address) ((const uint32_t *)rom(address))
+#define ROAD_PALETTE_LISTS(address) ((const uint32_t *)data_at(address))
 #define RACE_CAR_RIDER(address) ((struct race_car_rider *)ram(address))
 #define RACE_CAR_SPRAY(address) ((struct race_car_spray *)ram(address))
-#define SPRAY_ANIMATION_NUMBERS(address) ((const uint16_t *)rom(address))
+#define SPRAY_ANIMATION_NUMBERS(address) ((const uint16_t *)data_at(address))
 #define WHEEL_EFFECT_VALUES(address) ((uint8_t *)ram(address))
 #define SPRITE_WORDS(address) ((uint16_t *)board(address))
 #define RACE_ORDER_PLAYERS(address) ((uint8_t *)ram(address))
@@ -5395,7 +5969,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define TIME_DIFFICULTY_SECONDS(address) ((uint8_t *)ram(address))
 #define BACKED_UP_SETTING(address) ((struct backed_up_setting *)ram(address))
 #define BOOKKEEPING_BLOCK(address) ((struct bookkeeping_block *)board(address))
-#define COURSE_ENTRY(address) ((const struct course_entry *)rom(address))
+#define COURSE_ENTRY(address) ((const struct course_entry *)data_at(address))
 #define COURSE_RECORD_ENTRY(address) ((struct course_record_entry *)ram(address))
 #define LINE_SELECT_PAIRS(address) ((uint32_t *)board(address))
 #define COURSE_RECORD_COPY(address) ((struct course_record_copy *)ram(address))
@@ -5403,120 +5977,178 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 
 /* the program ROM's tables of records, by name: name[i].field */
 #define bar_picture_bars_ADDRESS 0x0011B1u
-#define bar_picture_bars ((const struct bar_picture_bar *)rom(bar_picture_bars_ADDRESS))
+extern const void *bar_picture_bars_data;
+#define bar_picture_bars ((const struct bar_picture_bar *)(bar_picture_bars_data))
 #define attract_lamp_steps_ADDRESS 0x001607u
-#define attract_lamp_steps ((const struct attract_lamp_step *)rom(attract_lamp_steps_ADDRESS))
+extern const void *attract_lamp_steps_data;
+#define attract_lamp_steps ((const struct attract_lamp_step *)(attract_lamp_steps_data))
 #define staff_credits_code_sequence_ADDRESS 0x001ADCu
-#define staff_credits_code_sequence ((const uint8_t *)rom(staff_credits_code_sequence_ADDRESS))
+extern const void *staff_credits_code_sequence_data;
+#define staff_credits_code_sequence ((const uint8_t *)(staff_credits_code_sequence_data))
 #define ranking_background_register_sets_ADDRESS 0x002C44u
-#define ranking_background_register_sets ((const struct ranking_background_registers *)rom(ranking_background_register_sets_ADDRESS))
+extern const void *ranking_background_register_sets_data;
+#define ranking_background_register_sets ((const struct ranking_background_registers *)(ranking_background_register_sets_data))
 #define default_course_records_ADDRESS 0x002CC4u
-#define default_course_records ((const struct course_record *)rom(default_course_records_ADDRESS))
+extern const void *default_course_records_data;
+#define default_course_records ((const struct course_record *)(default_course_records_data))
 #define name_entry_rejected_names_ADDRESS 0x002D7Cu
-#define name_entry_rejected_names ((const uint32_t *)rom(name_entry_rejected_names_ADDRESS))
+extern const void *name_entry_rejected_names_data;
+#define name_entry_rejected_names ((const uint32_t *)(name_entry_rejected_names_data))
 #define attract_demo_races_ADDRESS 0x0034F4u
-#define attract_demo_races ((const struct demo_race_choice *)rom(attract_demo_races_ADDRESS))
+extern const void *attract_demo_races_data;
+#define attract_demo_races ((const struct demo_race_choice *)(attract_demo_races_data))
 #define route_map_register_sets_ADDRESS 0x0047E8u
-#define route_map_register_sets ((const struct route_map_registers *)rom(route_map_register_sets_ADDRESS))
+extern const void *route_map_register_sets_data;
+#define route_map_register_sets ((const struct route_map_registers *)(route_map_register_sets_data))
 #define route_map_start_leg_car_places_ADDRESS 0x004964u
-#define route_map_start_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_start_leg_car_places_ADDRESS))
+extern const void *route_map_start_leg_car_places_data;
+#define route_map_start_leg_car_places ((const struct route_map_leg_car_place *)(route_map_start_leg_car_places_data))
 #define route_map_first_fork_leg_car_places_ADDRESS 0x0049A4u
-#define route_map_first_fork_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_first_fork_leg_car_places_ADDRESS))
+extern const void *route_map_first_fork_leg_car_places_data;
+#define route_map_first_fork_leg_car_places ((const struct route_map_leg_car_place *)(route_map_first_fork_leg_car_places_data))
 #define route_map_fork_leg_car_places_ADDRESS 0x004A24u
-#define route_map_fork_leg_car_places ((const struct route_map_leg_car_place *)rom(route_map_fork_leg_car_places_ADDRESS))
+extern const void *route_map_fork_leg_car_places_data;
+#define route_map_fork_leg_car_places ((const struct route_map_leg_car_place *)(route_map_fork_leg_car_places_data))
 #define stage_result_labels_ADDRESS 0x004BA4u
-#define stage_result_labels ((const struct stage_result_text *)rom(stage_result_labels_ADDRESS))
+extern const void *stage_result_labels_data;
+#define stage_result_labels ((const struct stage_result_text *)(stage_result_labels_data))
 #define stage_result_places_ADDRESS 0x004BDAu
-#define stage_result_places ((const struct stage_result_place_text *)rom(stage_result_places_ADDRESS))
+extern const void *stage_result_places_data;
+#define stage_result_places ((const struct stage_result_place_text *)(stage_result_places_data))
 #define stage_result_retire_ADDRESS 0x004C0Au
-#define stage_result_retire ((const struct stage_result_text *)rom(stage_result_retire_ADDRESS))
+extern const void *stage_result_retire_data;
+#define stage_result_retire ((const struct stage_result_text *)(stage_result_retire_data))
 #define route_map_landmarks_ADDRESS 0x004C14u
-#define route_map_landmarks ((const struct route_map_landmark_record *)rom(route_map_landmarks_ADDRESS))
+extern const void *route_map_landmarks_data;
+#define route_map_landmarks ((const struct route_map_landmark_record *)(route_map_landmarks_data))
 #define traffic_path_ADDRESS 0x0067B2u
-#define traffic_path ((const struct traffic_path_step *)rom(traffic_path_ADDRESS))
+extern const void *traffic_path_data;
+#define traffic_path ((const struct traffic_path_step *)(traffic_path_data))
 #define car_select_tilemap_setups_ADDRESS 0x006920u
-#define car_select_tilemap_setups ((const struct car_select_tilemap_setup *)rom(car_select_tilemap_setups_ADDRESS))
+extern const void *car_select_tilemap_setups_data;
+#define car_select_tilemap_setups ((const struct car_select_tilemap_setup *)(car_select_tilemap_setups_data))
 #define turntable_car_looks_ADDRESS 0x0069B8u
-#define turntable_car_looks ((const struct animation_palette *)rom(turntable_car_looks_ADDRESS))
+extern const void *turntable_car_looks_data;
+#define turntable_car_looks ((const struct animation_palette *)(turntable_car_looks_data))
 #define turntable_scenery_groups_ADDRESS 0x006A18u
-#define turntable_scenery_groups ((const struct turntable_scenery_group *)rom(turntable_scenery_groups_ADDRESS))
+extern const void *turntable_scenery_groups_data;
+#define turntable_scenery_groups ((const struct turntable_scenery_group *)(turntable_scenery_groups_data))
 #define welcome_letter_places_ADDRESS 0x006DACu
-#define welcome_letter_places ((const struct welcome_letter_place *)rom(welcome_letter_places_ADDRESS))
+extern const void *welcome_letter_places_data;
+#define welcome_letter_places ((const struct welcome_letter_place *)(welcome_letter_places_data))
 #define select_instruction_pieces_ADDRESS 0x006DF6u
-#define select_instruction_pieces ((const struct select_instruction_piece *)rom(select_instruction_pieces_ADDRESS))
+extern const void *select_instruction_pieces_data;
+#define select_instruction_pieces ((const struct select_instruction_piece *)(select_instruction_pieces_data))
 #define driver_couple_looks_ADDRESS 0x006E58u
-#define driver_couple_looks ((const struct animation_palette *)rom(driver_couple_looks_ADDRESS))
+extern const void *driver_couple_looks_data;
+#define driver_couple_looks ((const struct animation_palette *)(driver_couple_looks_data))
 #define stage_roadside_surface_lists_ADDRESS 0x00B78Cu
-#define stage_roadside_surface_lists ((const struct stage_roadside_surfaces *)rom(stage_roadside_surface_lists_ADDRESS))
+extern const void *stage_roadside_surface_lists_data;
+#define stage_roadside_surface_lists ((const struct stage_roadside_surfaces *)(stage_roadside_surface_lists_data))
 #define checkpoint_board_car_places_ADDRESS 0x00CF68u
-#define checkpoint_board_car_places ((const struct checkpoint_board_place *)rom(checkpoint_board_car_places_ADDRESS))
+extern const void *checkpoint_board_car_places_data;
+#define checkpoint_board_car_places ((const struct checkpoint_board_place *)(checkpoint_board_car_places_data))
 #define checkpoint_board_number_places_ADDRESS 0x00CF88u
-#define checkpoint_board_number_places ((const struct checkpoint_board_place *)rom(checkpoint_board_number_places_ADDRESS))
+extern const void *checkpoint_board_number_places_data;
+#define checkpoint_board_number_places ((const struct checkpoint_board_place *)(checkpoint_board_number_places_data))
 #define checkpoint_board_behind_places_ADDRESS 0x00CFA8u
-#define checkpoint_board_behind_places ((const struct checkpoint_board_place *)rom(checkpoint_board_behind_places_ADDRESS))
+extern const void *checkpoint_board_behind_places_data;
+#define checkpoint_board_behind_places ((const struct checkpoint_board_place *)(checkpoint_board_behind_places_data))
 #define sprite_list_switches_ADDRESS 0x00F508u
-#define sprite_list_switches ((const uint32_t *)rom(sprite_list_switches_ADDRESS))
+extern const void *sprite_list_switches_data;
+#define sprite_list_switches ((const uint32_t *)(sprite_list_switches_data))
 #define hidden_layer_pairs_ADDRESS 0x010B06u
-#define hidden_layer_pairs ((const struct hidden_layer_pair *)rom(hidden_layer_pairs_ADDRESS))
+extern const void *hidden_layer_pairs_data;
+#define hidden_layer_pairs ((const struct hidden_layer_pair *)(hidden_layer_pairs_data))
 #define screen_hardware_records_ADDRESS 0x010BA0u
-#define screen_hardware_records ((const uint32_t *)rom(screen_hardware_records_ADDRESS))
+extern const void *screen_hardware_records_data;
+#define screen_hardware_records ((const uint32_t *)(screen_hardware_records_data))
 #define screen_view_defaults_ADDRESS 0x010BC8u
-#define screen_view_defaults ((const struct screen_view_default *)rom(screen_view_defaults_ADDRESS))
+extern const void *screen_view_defaults_data;
+#define screen_view_defaults ((const struct screen_view_default *)(screen_view_defaults_data))
 #define screen_fade_starts_ADDRESS 0x01173Au
-#define screen_fade_starts ((const struct screen_fade_start *)rom(screen_fade_starts_ADDRESS))
+extern const void *screen_fade_starts_data;
+#define screen_fade_starts ((const struct screen_fade_start *)(screen_fade_starts_data))
 #define race_opening_sound_cues_ADDRESS 0x014660u
-#define race_opening_sound_cues ((const struct sound_cue *)rom(race_opening_sound_cues_ADDRESS))
+extern const void *race_opening_sound_cues_data;
+#define race_opening_sound_cues ((const struct sound_cue *)(race_opening_sound_cues_data))
 #define stage_end_sound_cues_ADDRESS 0x01466Fu
-#define stage_end_sound_cues ((const struct sound_cue *)rom(stage_end_sound_cues_ADDRESS))
+extern const void *stage_end_sound_cues_data;
+#define stage_end_sound_cues ((const struct sound_cue *)(stage_end_sound_cues_data))
 #define road_surface_layer_setups_ADDRESS 0x01710Cu
-#define road_surface_layer_setups ((const struct road_surface_layer_setup *)rom(road_surface_layer_setups_ADDRESS))
+extern const void *road_surface_layer_setups_data;
+#define road_surface_layer_setups ((const struct road_surface_layer_setup *)(road_surface_layer_setups_data))
 #define race_background_layer_setups_ADDRESS 0x017A50u
-#define race_background_layer_setups ((const struct race_background_layer_setup *)rom(race_background_layer_setups_ADDRESS))
+extern const void *race_background_layer_setups_data;
+#define race_background_layer_setups ((const struct race_background_layer_setup *)(race_background_layer_setups_data))
 #define lcd_custom_characters_ADDRESS 0x018B4Eu
-#define lcd_custom_characters ((const uint8_t *)rom(lcd_custom_characters_ADDRESS))
+extern const void *lcd_custom_characters_data;
+#define lcd_custom_characters ((const uint8_t *)(lcd_custom_characters_data))
 #define lcd_boot_text_ADDRESS 0x018B90u
-#define lcd_boot_text ((const struct lcd_text_line *)rom(lcd_boot_text_ADDRESS))
+extern const void *lcd_boot_text_data;
+#define lcd_boot_text ((const struct lcd_text_line *)(lcd_boot_text_data))
 #define radio_station_title_ADDRESS 0x01954Cu
-#define radio_station_title ((const struct song_title_record *)rom(radio_station_title_ADDRESS))
+extern const void *radio_station_title_data;
+#define radio_station_title ((const struct song_title_record *)(radio_station_title_data))
 #define ignition_key_prompt_pieces_ADDRESS 0x01A95Bu
-#define ignition_key_prompt_pieces ((const struct picture_record *)rom(ignition_key_prompt_pieces_ADDRESS))
+extern const void *ignition_key_prompt_pieces_data;
+#define ignition_key_prompt_pieces ((const struct picture_record *)(ignition_key_prompt_pieces_data))
 #define title_car_records_ADDRESS 0x01ABB4u
-#define title_car_records ((const struct title_car_record *)rom(title_car_records_ADDRESS))
+extern const void *title_car_records_data;
+#define title_car_records ((const struct title_car_record *)(title_car_records_data))
 #define title_pictures_ADDRESS 0x01AC70u
-#define title_pictures ((const struct picture_record *)rom(title_pictures_ADDRESS))
+extern const void *title_pictures_data;
+#define title_pictures ((const struct picture_record *)(title_pictures_data))
 #define title_seagull_places_ADDRESS 0x01ACA0u
-#define title_seagull_places ((const struct title_place *)rom(title_seagull_places_ADDRESS))
+extern const void *title_seagull_places_data;
+#define title_seagull_places ((const struct title_place *)(title_seagull_places_data))
 #define title_logo_stripe_places_ADDRESS 0x01ACA8u
-#define title_logo_stripe_places ((const struct title_place *)rom(title_logo_stripe_places_ADDRESS))
+extern const void *title_logo_stripe_places_data;
+#define title_logo_stripe_places ((const struct title_place *)(title_logo_stripe_places_data))
 #define title_logo_car_places_ADDRESS 0x01ACB4u
-#define title_logo_car_places ((const struct title_place *)rom(title_logo_car_places_ADDRESS))
+extern const void *title_logo_car_places_data;
+#define title_logo_car_places ((const struct title_place *)(title_logo_car_places_data))
 #define title_screen_layer_setups_ADDRESS 0x01ACCCu
-#define title_screen_layer_setups ((const struct title_screen_layer_setup *)rom(title_screen_layer_setups_ADDRESS))
+extern const void *title_screen_layer_setups_data;
+#define title_screen_layer_setups ((const struct title_screen_layer_setup *)(title_screen_layer_setups_data))
 #define title_background_setups_ADDRESS 0x01AD0Cu
-#define title_background_setups ((const struct background_setup *)rom(title_background_setups_ADDRESS))
+extern const void *title_background_setups_data;
+#define title_background_setups ((const struct background_setup *)(title_background_setups_data))
 #define demo_caption_pictures_ADDRESS 0x01AF00u
-#define demo_caption_pictures ((const struct picture_record *)rom(demo_caption_pictures_ADDRESS))
+extern const void *demo_caption_pictures_data;
+#define demo_caption_pictures ((const struct picture_record *)(demo_caption_pictures_data))
 #define memory_test_result_texts_ADDRESS 0x01CDC8u
-#define memory_test_result_texts ((const struct memory_test_result_text *)rom(memory_test_result_texts_ADDRESS))
+extern const void *memory_test_result_texts_data;
+#define memory_test_result_texts ((const struct memory_test_result_text *)(memory_test_result_texts_data))
 #define output_test_outputs_ADDRESS 0x01D5C0u
-#define output_test_outputs ((const struct output_test_output *)rom(output_test_outputs_ADDRESS))
+extern const void *output_test_outputs_data;
+#define output_test_outputs ((const struct output_test_output *)(output_test_outputs_data))
 #define coin_setting_records_ADDRESS 0x01E3E8u
-#define coin_setting_records ((const struct coin_setting_record *)rom(coin_setting_records_ADDRESS))
+extern const void *coin_setting_records_data;
+#define coin_setting_records ((const struct coin_setting_record *)(coin_setting_records_data))
 #define privilege_mode_settings_ADDRESS 0x01E6E5u
-#define privilege_mode_settings ((const struct privilege_mode_setting *)rom(privilege_mode_settings_ADDRESS))
+extern const void *privilege_mode_settings_data;
+#define privilege_mode_settings ((const struct privilege_mode_setting *)(privilege_mode_settings_data))
 #define sprite_palettes_ADDRESS 0x032BA4u
-#define sprite_palettes ((const uint32_t *)rom(sprite_palettes_ADDRESS))
+extern const void *sprite_palettes_data;
+#define sprite_palettes ((const uint32_t *)(sprite_palettes_data))
 #define sprite_animations_ADDRESS 0x034138u
-#define sprite_animations ((const uint32_t *)rom(sprite_animations_ADDRESS))
+extern const void *sprite_animations_data;
+#define sprite_animations ((const uint32_t *)(sprite_animations_data))
 #define fork_branch_piece_animation_ADDRESS 0x034308u
-#define fork_branch_piece_animation ((const uint32_t *)rom(fork_branch_piece_animation_ADDRESS))
+extern const void *fork_branch_piece_animation_data;
+#define fork_branch_piece_animation ((const uint32_t *)(fork_branch_piece_animation_data))
 #define stage_courses_ADDRESS 0x03CC00u
-#define stage_courses ((const uint32_t *)rom(stage_courses_ADDRESS))
+extern const void *stage_courses_data;
+#define stage_courses ((const uint32_t *)(stage_courses_data))
 #define sprite_size_steps_ADDRESS 0x122B74u
-#define sprite_size_steps ((const struct sprite_size_step *)rom(sprite_size_steps_ADDRESS))
+extern const void *sprite_size_steps_data;
+#define sprite_size_steps ((const struct sprite_size_step *)(sprite_size_steps_data))
 #define road_row_size_step_lists_ADDRESS 0x1598CCu
-#define road_row_size_step_lists ((const uint32_t *)rom(road_row_size_step_lists_ADDRESS))
+extern const void *road_row_size_step_lists_data;
+#define road_row_size_step_lists ((const uint32_t *)(road_row_size_step_lists_data))
 #define road_row_size_shift_lists_ADDRESS 0x159AFCu
-#define road_row_size_shift_lists ((const uint32_t *)rom(road_row_size_shift_lists_ADDRESS))
+extern const void *road_row_size_shift_lists_data;
+#define road_row_size_shift_lists ((const uint32_t *)(road_row_size_shift_lists_data))
 
 #endif

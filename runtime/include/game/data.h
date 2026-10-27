@@ -1,17 +1,15 @@
 /**
  *    Name:        data.h
- *    Description: the game's data in the board's memory, loaded from its assets pack
- *    Version:     0.2.0
+ *    Description: the ROM set's regions as the board has them, for the tools that run the original code
+ *    Version:     0.3.0
  *    Created:     13-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
- *    No executable carries the ROM or anything from it. game_data_load fills the regions from the assets
- *    pack (tools/make_pack.py writes it from the assets extract_assets.py takes out of the player's ROM
- *    set): every asset where the board's memory has it, then the board's mirrors of its chips. The original
- *    code is in no region: the C replaces it. The reference (tools/core/system32/reference) and the translation scaffold
- *    run the original code, so they fill the regions from the ROM set when they start (game/extract.h).
+ *    The reference (tools/core/system32/reference) and the translation scaffold run the original code, so
+ *    they fill these regions from the player's ROM set when they start (game/extract.h). The game does not:
+ *    it loads its assets, by name (game/assets.h), and has no image of the ROM.
  */
 #ifndef GAME_DATA_H
 #define GAME_DATA_H
@@ -33,15 +31,6 @@ extern uint8_t game_tiles[GAME_TILES_SIZE];
 extern uint8_t game_sprites[GAME_SPRITES_SIZE];
 extern uint8_t game_sound[GAME_SOUND_SIZE];
 extern uint8_t game_pcm[GAME_PCM_SIZE];
-
-typedef enum
-{
-	GAME_DATA_LOADED,
-	GAME_DATA_MISSING,    /* no pack at the path */
-	GAME_DATA_DAMAGED     /* a pack the game cannot read: another version, cut short, or out of bounds */
-} game_data_result;
-
-game_data_result game_data_load(const char *path);
 
 /* The board's mirrors of its chips: what the regions repeat where the board decodes the same chip again */
 void game_data_mirror(void);

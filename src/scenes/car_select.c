@@ -629,7 +629,7 @@ void car_attendant_run(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x269u;
+		animation = STANDING;
 		OBJECT(current_object)->palette = 0x7Cu;
 		animation_start(animation);
 		OBJECT(current_object)->car_attendant.angle = OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.angle + 0x100u;
@@ -639,7 +639,7 @@ void car_attendant_run(void)
 	case 1:
 		if (((((uint32_t)CAR(player_car)->model << 9) - OBJECT(current_object)->car_attendant.angle) & 0xFFFu) != 0u)
 		{
-			animation = 0x266u;
+			animation = ATTENDANT_WALKING;
 			animation_start(animation);
 			OBJECT(current_object)->state++;
 			attendant_angle = OBJECT(current_object)->car_attendant.angle;
@@ -647,7 +647,7 @@ void car_attendant_run(void)
 			negative = angle_to_front >> 15;
 			if (angle_to_front == 0u)
 			{
-				animation = 0x269u;
+				animation = STANDING;
 				animation_start(animation);
 				OBJECT(current_object)->flags &= 0xBFu;
 				OBJECT(current_object)->state--;
@@ -702,7 +702,7 @@ void car_attendant_run(void)
 		negative = angle_to_front >> 15;
 		if (angle_to_front == 0u)
 		{
-			animation = 0x269u;
+			animation = STANDING;
 			animation_start(animation);
 			OBJECT(current_object)->flags &= 0xBFu;
 			OBJECT(current_object)->state--;
@@ -765,8 +765,8 @@ void car_attendant_run(void)
 			attendant_angle = (uint16_t)(attendant_angle + 0x20u);
 		}
 		OBJECT(current_object)->car_attendant.side_offset = attendant_angle;
-		animation = 0x266u;
-		if (OBJECT(current_object)->animation != 0x266u)
+		animation = ATTENDANT_WALKING;
+		if (OBJECT(current_object)->animation != ATTENDANT_WALKING)
 			animation_start(animation);
 		attendant_angle = (uint16_t)(attendant_angle + OBJECT(current_object)->car_attendant.angle);
 		attendant_angle = (uint16_t)(attendant_angle - 0x40u);
@@ -785,9 +785,9 @@ void car_attendant_run(void)
 	if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.transmission_chosen != 0u)
 	{
 		OBJECT(current_object)->car_attendant.angle += OBJECT(current_object)->car_attendant.side_offset;
-		animation = 0x267u;
+		animation = AUTOMATIC_POSE;
 		if (CAR(player_car)->transmission != 0u)
-			animation = 0x268u;
+			animation = MANUAL_POSE;
 		animation_start(animation);
 		OBJECT(current_object)->state++;
 		attendant_angle = OBJECT(current_object)->car_attendant.angle;
@@ -804,8 +804,8 @@ void car_attendant_run(void)
 		ignored = animation_advance(0u);
 		return;
 	}
-	animation = 0x269u;
-	if (OBJECT(current_object)->animation == 0x269u)
+	animation = STANDING;
+	if (OBJECT(current_object)->animation == STANDING)
 	{
 		attendant_angle = (uint16_t)(attendant_angle + OBJECT(current_object)->car_attendant.angle);
 		attendant_angle = (uint16_t)(attendant_angle - 0x40u);
@@ -949,7 +949,7 @@ void turntable_scenery_show(void)
 		down = TURNTABLE_SCENERY_ITEM(item_place - 0x4u)->height;
 		point_depth += 0x140u;
 		kept_saved_place = saved_place;
-		OBJECT(current_object)->previous_place = (screen & ~0xFFFFu) | ITEM_PLACE_WORDS(saved_place)[0];
+		OBJECT(current_object)->previous_place = LINKED(screen, ITEM_PLACE_WORDS(saved_place)[0]);
 		OBJECT(current_object)->flags = (OBJECT(current_object)->flags & 0xDFu) | ITEM_PLACE_WORDS(saved_place)[1];
 		kept_item_place = item_place + 2u;
 		leftover = turntable_draw(across, down, point_depth);
@@ -997,7 +997,7 @@ void welcome_letter_show(void)
 	case 0:
 		OBJECT(current_object)->draw_mode = 8u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x346u;
+		animation = CAR_NAME_FONT;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x18u;
 		letter_index = OBJECT(current_object)->welcome_letter.index;
@@ -1075,7 +1075,7 @@ void select_car_heading_show(void)
 		}
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x2B5u;
+		animation = SELECT_CAR_HEADING;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x2A6u;
 		OBJECT(current_object)->x = 0xA0u;
@@ -1353,7 +1353,7 @@ void automatic_panel_show(void)
 		OBJECT(object)->transmission_label.panel = current_object;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->depth_layer = 0xF0u;
-		animation = 0x2BDu;
+		animation = AUTOMATIC_PANEL;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x2A8u;
 		OBJECT(current_object)->x_offset = 0x54;
@@ -1408,7 +1408,7 @@ void manual_panel_show(void)
 		OBJECT(object)->transmission_label.panel = current_object;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->depth_layer = 0xF0u;
-		animation = 0x2BEu;
+		animation = MANUAL_PANEL;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x2A8u;
 		OBJECT(current_object)->x = 0xA0u;
@@ -1455,7 +1455,7 @@ void transmission_label_start_automatic(void)
 
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 0xF0u;
-	animation = 0x2C1u;
+	animation = NOVICE_LABEL;
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x2A8u;
 	OBJECT(current_object)->x_offset = 0;
@@ -1473,7 +1473,7 @@ void transmission_label_start_manual(void)
 
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 0xF0u;
-	animation = 0x2C9u;
+	animation = GEARS_LABEL;
 	animation_start(animation);
 	OBJECT(current_object)->frame = car_gears_caption_frames[CAR(player_car)->model];
 	OBJECT(current_object)->palette = 0x2A8u;
@@ -1541,7 +1541,7 @@ void car_caption_show(void)
 		OBJECT(object)->car_gears_caption.car_select = OBJECT(current_object)->car_caption.car_select;
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x26Eu;
+		animation = CAR_CAPTION_LETTERS;
 		animation_start(animation);
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC4u;
@@ -1635,7 +1635,7 @@ void car_gears_caption_show(void)
 	case 0:
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x2D1u;
+		animation = CAR_GEARS_CAPTION;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x2AFu;
 		OBJECT(current_object)->x = 0xA0u;
@@ -1729,7 +1729,7 @@ void waiting_banner_show(void)
 	case 0:
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x28Bu;
+		animation = WAITING_BANNER;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x287u;
 		OBJECT(current_object)->x = 0xA0u;
@@ -1738,7 +1738,7 @@ void waiting_banner_show(void)
 		OBJECT(current_object)->state++;
 		if (OBJECT(OBJECT(current_object)->waiting_banner.car_select)->car_select.entry_over != 0u)
 		{
-			animation = 0x28Du;
+			animation = WAIT_A_MINUTE_BANNER;
 			animation_start(animation);
 			OBJECT(current_object)->waiting_banner.timer = 0x14u;
 			OBJECT(current_object)->state = 3u;
@@ -1755,7 +1755,7 @@ void waiting_banner_show(void)
 	case 1:
 		if (OBJECT(OBJECT(current_object)->waiting_banner.car_select)->car_select.entry_over != 0u)
 		{
-			animation = 0x28Du;
+			animation = WAIT_A_MINUTE_BANNER;
 			animation_start(animation);
 			OBJECT(current_object)->waiting_banner.timer = 0x14u;
 			OBJECT(current_object)->state = 3u;
@@ -1782,7 +1782,7 @@ void waiting_banner_show(void)
 	case 2:
 		if (OBJECT(OBJECT(current_object)->waiting_banner.car_select)->car_select.entry_over != 0u)
 		{
-			animation = 0x28Du;
+			animation = WAIT_A_MINUTE_BANNER;
 			animation_start(animation);
 			OBJECT(current_object)->waiting_banner.timer = 0x14u;
 			OBJECT(current_object)->state = 3u;
@@ -1937,7 +1937,7 @@ void choice_flag_start(void)
 
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 0xEEu;
-	animation = 0x1Bu;
+	animation = CHOICE_FLAG;
 	animation_start(animation);
 	car = OBJECT(current_object)->choice_flag.car;
 	OBJECT(current_object)->palette = choice_flag_palettes[car];
@@ -2007,7 +2007,7 @@ void stacked_choice_flag_start(void)
 
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 0xEEu;
-	animation = 0x1Bu;
+	animation = CHOICE_FLAG;
 	animation_start(animation);
 	OBJECT(current_object)->palette = choice_flag_palettes[OBJECT(current_object)->stacked_choice_flag.car];
 	object = start_object();
@@ -2233,7 +2233,7 @@ void entry_countdown_start(void)
 	OBJECT(object)->handler = entry_traffic_run_ADDRESS;
 	OBJECT(current_object)->draw_mode = 0u;
 	OBJECT(current_object)->depth_layer = 0x19Du;
-	animation = 0x26Fu;
+	animation = ENTRY_COUNTDOWN_DIGITS;
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x4Eu;
 	OBJECT(current_object)->x = 0xA0u;

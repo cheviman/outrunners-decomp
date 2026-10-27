@@ -381,13 +381,29 @@ static bool comm_mapped(uint32_t address)
 	return address < 0x801000 || address == 0x801000 || address == 0x801002;
 }
 
+/* The halfword of the program's chips at 'address' (even, below 0x200000): from the image, or through what
+   the port reads them with, byte by byte and only the bytes 'mask' wants (a halfword read at an odd address
+   takes one byte of the aligned halfword; the other one may be code, which the game's data has not) */
+static uint16_t program_read(uint32_t address, uint16_t mask)
+{
+	uint16_t value = 0;
+
+	if (s32_board.program)
+		return load16(&s32_board.program[address]);
+	if (mask & 0x00ff)
+		value |= *s32_board.program_at(address);
+	if (mask & 0xff00)
+		value |= (uint16_t)(*s32_board.program_at(address + 1) << 8);
+	return value;
+}
+
 static uint16_t bus_read(uint32_t address, uint16_t mask)
 {
 	address &= 0xfffffe;
 	switch (address >> 20)
 	{
 		case 0x0: case 0x1:
-			return load16(&s32_board.program[address]);
+			return program_read(address, mask);
 		case 0x2:
 			return load16(&s32_board.work_ram[address & 0x1ffff]);
 		case 0x3:
@@ -417,7 +433,7 @@ static uint16_t bus_read(uint32_t address, uint16_t mask)
 				return (uint16_t)(int_control_read(address & 0xf) | (int_control_read((address & 0xf) + 1) << 8));
 			return random_read();
 		case 0xf:
-			return load16(&s32_board.program[address & 0xfffff]);
+			return program_read(address & 0xfffff, mask);
 		default:
 			(void)mask;
 			return unmapped_read(address);
@@ -610,8 +626,11 @@ void s32_init(const uint8_t *program)
 	void (*sound_reset_changed)(bool) = s32_board.sound_reset_changed;
 	const s32_sound_chips chips = s32_board.chips;
 	const uint8_t *sound_rom = s32_board.sound_rom;
+	const uint8_t *(*sound_at)(uint32_t) = s32_board.sound_at;
 	const uint8_t *pcm_rom = s32_board.pcm_rom;
+	uint8_t (*pcm_at)(uint32_t) = s32_board.pcm_at;
 	const bool frame_timing = s32_board.frame_timing;
+	const uint8_t *(*program_at)(uint32_t) = s32_board.program_at;
 
 	/* callbacks, the sound chips, the sound ROMs and the timing survive; everything else starts from
 	   power-on. A saved EEPROM is loaded after this. */
@@ -626,9 +645,12 @@ void s32_init(const uint8_t *program)
 	s32_board.sound_reset_changed = sound_reset_changed;
 	s32_board.chips = chips;
 	s32_board.sound_rom = sound_rom;
+	s32_board.sound_at = sound_at;
 	s32_board.pcm_rom = pcm_rom;
+	s32_board.pcm_at = pcm_at;
 	s32_board.frame_timing = frame_timing;
 	s32_board.program = program;
+	s32_board.program_at = program_at;
 	memset(s32_board.eeprom.data, 0xff, sizeof(s32_board.eeprom.data));
 
 	/* power-on contents, as in MAME's video start */

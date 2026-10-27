@@ -27,11 +27,31 @@
 #include "s32/machine.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define SOUND_RAM8(address)  (s32_board.shared_ram[(address) & 0x1fff])
 #define SOUND_RAM16(address) (*(uint16_t *)&s32_board.shared_ram[(address) & 0x1fff])
-#define SOUND_ROM8(address)  (s32_board.sound_rom[(address)])
+/* the sound program's chip: its image, or its data from the game's assets (s32_sound_rom_at, sound.c) */
+const uint8_t *s32_sound_rom_at(uint32_t offset);
+
+/* A table of the sound program its C reads by name (the decompiler's registry, src/sound/tables.c): its
+   name, its offset in the chip, and the pointer sound_cpu_attach sets to its data */
+typedef struct
+{
+	const char *name;
+	uint32_t address;
+	const void **data;
+} sound_table;
+
+extern const sound_table sound_tables[];
+extern const size_t sound_table_count;
+
+/* A table read with another width than its elements': 'offset' bytes into it */
+#define TABLE8(table, offset)  (*(const uint8_t *)((const uint8_t *)table##_data + (offset)))
+#define TABLE16(table, offset) (*(const uint16_t *)((const uint8_t *)table##_data + (offset)))
+
+#define SOUND_ROM8(address)  (*s32_sound_rom_at(address))
 #define SOUND_ROM16(address) ((uint16_t)(SOUND_ROM8(address) | SOUND_ROM8((address) + 1) << 8))
 #define SOUND_RAM8S(address)  (*(int8_t *)&SOUND_RAM8(address))
 #define SOUND_RAM16S(address) (*(int16_t *)&SOUND_RAM8(address))
@@ -39,7 +59,7 @@
 /* Where an address of the shared RAM or the program ROM is: the program's arrays and structures
    (sound.h) are laid over these bytes, so the state compares byte for byte with the reference */
 #define sound_ram_at(address) ((void *)&s32_board.shared_ram[(address) & 0x1fff])
-#define sound_rom_at(address) ((const void *)&s32_board.sound_rom[(address)])
+#define sound_rom_at(address) ((const void *)s32_sound_rom_at(address))
 
 /* A part of a variable or field read on its own: the variable's first bytes, or bytes further in */
 #define AS8(variable)  (*(uint8_t *)&(variable))

@@ -32,7 +32,7 @@ void rev_meter_update(void)
 		invalid_jump(rev_meter_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
-	animation = 6u;
+	animation = REV_METER;
 	OBJECT(current_object)->palette = 0x44u;
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -57,7 +57,7 @@ void speedometer_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
-		animation = 0x12u;
+		animation = SPEED_DIGITS;
 		OBJECT(current_object)->palette = 0x48u;
 		OBJECT(current_object)->draw_mode = 8u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -117,7 +117,7 @@ void speed_unit_update(void)
 		invalid_jump(speed_unit_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
-	animation = 0x10u;
+	animation = SPEED_UNIT_KMH;
 	OBJECT(current_object)->palette = 0x47u;
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -227,7 +227,7 @@ void shift_up_hint_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
-		animation = 0xEu;
+		animation = SHIFT_UP_HINT;
 		OBJECT(current_object)->palette = 0x46u;
 		OBJECT(current_object)->draw_mode = 8u;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -294,7 +294,7 @@ void place_count_update(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	animation = 5u;
+	animation = PLACE_COUNT;
 	OBJECT(current_object)->palette = 0x43u;
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Du;
@@ -441,7 +441,7 @@ void lap_timer_update(void)
 		switch (jump_target)
 		{
 		case 0x00C45Cu:
-			animation = 0x2Du;
+			animation = LAP_TIMER;
 			OBJECT(current_object)->palette = 0x4Au;
 			OBJECT(current_object)->draw_mode = 8u;
 			OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -533,7 +533,7 @@ void stage_indicator_start(void)
 {
 	uint32_t animation = 0;
 
-	animation = 0x2Eu;
+	animation = STAGE_INDICATOR;
 	OBJECT(current_object)->palette = 0x4Au;
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
@@ -746,7 +746,7 @@ void time_digits_start(void)
 	OBJECT(object - 0x90u)->time_digits.hundreds_remaining = 0u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 0u;
-	animation = 3u;
+	animation = TIME_DIGITS;
 	OBJECT(current_object)->palette = 0x40u;
 	OBJECT(current_object)->time_digits.units_x = 0xA9u;
 	OBJECT(current_object)->y = 0x11u;
@@ -919,7 +919,7 @@ void extend_time_message_start(void)
 
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Fu;
-	animation = 0x33u;
+	animation = EXTEND_TIME;
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x3Fu;
 	OBJECT(current_object)->x = 0xA0u;
@@ -1020,7 +1020,7 @@ void goal_update(void)
 		CAR(player_car)->at_goal = 0xFFu;
 		OBJECT(current_object)->draw_mode = 8u;
 		OBJECT(current_object)->depth_layer = 0x19Cu;
-		animation = 0x2F5u;
+		animation = CONGRATULATIONS;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x4Cu;
 		OBJECT(current_object)->x = 0xA0u;
@@ -1139,7 +1139,7 @@ void race_result_start(void)
 	OBJECT(object)->handler = race_result_verdict_start_ADDRESS;
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Cu;
-	animation = 0x2F8u;
+	animation = RACE_PLACES;
 	animation_start(animation);
 	place = ~~SCREEN(screen)->place;
 	OBJECT(current_object)->frame = place;
@@ -1185,7 +1185,7 @@ void race_result_verdict_start(void)
 	OBJECT(current_object)->y = 0x70u;
 	if (place != 0u)
 	{
-		animation = 0x2F7u;
+		animation = LOSER;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x42u;
 		OBJECT(current_object)->race_result.frames = 0xF0u;
@@ -1193,7 +1193,7 @@ void race_result_verdict_start(void)
 		race_result_hold();
 		return;
 	}
-	animation = 0x2F6u;
+	animation = WINNER;
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x41u;
 	OBJECT(current_object)->race_result.frames = 0xF0u;
@@ -1240,11 +1240,11 @@ void branch_arrow_update(void)
 		OBJECT(current_object)->draw_mode = 8u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
 		lcd_text = check_point_lcd_text_branch_0_ADDRESS;
-		animation = 0x34u;
+		animation = BRANCH_ARROW_LEFT;
 		if (CAR(player_car)->branch != 0u)
 		{
 			lcd_text = check_point_lcd_text_branch_1_ADDRESS;
-			animation = 0x35u;
+			animation = BRANCH_ARROW_RIGHT;
 		}
 		SCREEN(screen)->lcd_scroll_request = lcd_text;
 		animation_start(animation);
@@ -1564,7 +1564,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
-	animation = 0x36u;
+	animation = CHECKPOINT_BOARD_ROW;
 	OBJECT(current_object)->palette = 0x4Au;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 8u;

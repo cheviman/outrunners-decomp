@@ -635,7 +635,7 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry)
 	sprite_place += 2u;
 	SPRITE_PLACE(sprite_place - 0x6u)->x = x;
 	sprite_place += 0xAu;
-	SCREEN(screen)->next_sprite_place = (sprite_place & ~0xFFFFu) | (sprite_place & 0xEFFFu);
+	SCREEN(screen)->next_sprite_place = LINKED(sprite_place, sprite_place & 0xEFFFu);
 	r12 = SPRITE_ANIMATION(sprite_animations[OBJECT(current_object)->animation])->frames[OBJECT(current_object)->frame];
 	palette_words = sprite_palettes[OBJECT(current_object)->palette];
 	flip_bits = (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u)) & 0xC0u;
@@ -816,10 +816,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_2 = cleared_head;
@@ -827,10 +827,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_2;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_3 = cleared_head;
@@ -838,10 +838,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_3;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_4 = cleared_head;
@@ -849,10 +849,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_4;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_5 = cleared_head;
@@ -860,10 +860,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_5;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_6 = cleared_head;
@@ -871,10 +871,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_6;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_7 = cleared_head;
@@ -882,10 +882,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_7;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			if (DEPTH_LIST(depth_list)->head != 0u)
 			{
 				new_head_8 = cleared_head;
@@ -893,10 +893,10 @@ void finish_sprite_list(void)
 				DEPTH_LIST(depth_list)->head = new_head_8;
 				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
 				AS32(SPRITE_WORDS(chain_tail)[6144]) = (uint16_t)(layer_head + copy_distance);
-				chain_tail = (chain_tail & ~0xFFFFu) | DEPTH_LIST(depth_list)->tail;
+				chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail);
 				cleared_head = empty_head;
 			}
-			depth_list = (depth_list & ~0xFFFFu) | (uint16_t)(depth_list + depth_list_size);
+			depth_list = LINKED(depth_list, (uint16_t)(depth_list + depth_list_size));
 			layer_octets--;
 		} while (layer_octets != 0u);
 	}
@@ -1011,10 +1011,10 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 				SPRITE_PLACE(sprite_place)->place = 0xF800F800u;
 				ring_segment += ring_step;
 				projected_segment += projected_step;
-				ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
-				sprite_place = (sprite_place & ~0xFFFFu) | (uint16_t)(sprite_place + 0x10u);
+				ring_segment = LINKED(ring_segment, ring_segment & 0xAFFFu);
+				sprite_place = LINKED(sprite_place, (uint16_t)(sprite_place + 0x10u));
 				previous_sprites = (previous_sprites & ~0xFFFFu) | (uint16_t)(previous_sprites + 0x10u);
-				sprite_place = (sprite_place & ~0xFFFFu) | (sprite_place & places_mask);
+				sprite_place = LINKED(sprite_place, sprite_place & places_mask);
 				previous_sprites = (previous_sprites & ~0xFFFFu) | (previous_sprites & places_mask);
 				items_left--;
 				if (items_left != 0u)
@@ -1114,10 +1114,10 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 		}
 		ring_segment += ring_step;
 		projected_segment += projected_step;
-		ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
-		sprite_place = (sprite_place & ~0xFFFFu) | (uint16_t)(sprite_place + 0x10u);
+		ring_segment = LINKED(ring_segment, ring_segment & 0xAFFFu);
+		sprite_place = LINKED(sprite_place, (uint16_t)(sprite_place + 0x10u));
 		previous_sprites = (previous_sprites & ~0xFFFFu) | (uint16_t)(previous_sprites + 0x10u);
-		sprite_place = (sprite_place & ~0xFFFFu) | (sprite_place & places_mask);
+		sprite_place = LINKED(sprite_place, sprite_place & places_mask);
 		previous_sprites = (previous_sprites & ~0xFFFFu) | (previous_sprites & places_mask);
 		items_left--;
 		if (items_left == 0u)
@@ -1348,10 +1348,10 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 		}
 		ring_segment += ring_step;
 		projected_segment += projected_step;
-		ring_segment = (ring_segment & ~0xFFFFu) | (ring_segment & 0xAFFFu);
-		sprite_place = (sprite_place & ~0xFFFFu) | (uint16_t)(sprite_place + 0x10u);
+		ring_segment = LINKED(ring_segment, ring_segment & 0xAFFFu);
+		sprite_place = LINKED(sprite_place, (uint16_t)(sprite_place + 0x10u));
 		previous_sprites = (previous_sprites & ~0xFFFFu) | (uint16_t)(previous_sprites + 0x10u);
-		sprite_place = (sprite_place & ~0xFFFFu) | (sprite_place & places_mask);
+		sprite_place = LINKED(sprite_place, sprite_place & places_mask);
 		previous_sprites = (previous_sprites & ~0xFFFFu) | (previous_sprites & places_mask);
 		items_left--;
 		if (items_left == 0u)

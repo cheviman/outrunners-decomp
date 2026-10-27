@@ -496,7 +496,7 @@ uint32_t test_mode_memory_test_draw(uint32_t cell_value)
 		cell_contents = colour;
 		cell = TEST_MODE_CELLS(result_cells)[0];
 		result_cells += 2u;
-		r12 = (r12 & ~0xFFFFu) | cell;
+		r12 = LINKED(r12, cell);
 		character = MEMORY_TEST_RESULT_TEXT(result_text - 0x1u)->character_0;
 		result_text++;
 		cell_contents = (uint16_t)(cell_contents << 8) | character;
@@ -1169,7 +1169,7 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 		range_length = (uint8_t)(range_length + 1u);
 		range_cell_a = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
-		cell = ((cell & ~0xFFFFu) | range_cell_a) + range_start * 2u;
+		cell = LINKED(cell, range_cell_a) + range_start * 2u;
 		range_character = 0x6403u;
 		r12 = r12 + 1u;
 		do
@@ -1192,7 +1192,7 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 		range_length = (uint8_t)(range_length + 1u);
 		range_cell_b = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
-		cell = ((cell & ~0xFFFFu) | range_cell_b) + range_start * 2u;
+		cell = LINKED(cell, range_cell_b) + range_start * 2u;
 		range_character = 0x6403u;
 		r12 = r12 + 1u;
 		do
@@ -1211,7 +1211,7 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 		position_step = ANALOG_POSITIONS(r12)[0] >> 3;
 		position_cell = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
-		cell = (cell & ~0xFFFFu) | position_cell;
+		cell = LINKED(cell, position_cell);
 		TEXT_LAYER_CELLS(cell)[(int32_t)position_step] = 0x6203u;
 		controls_left--;
 		r12 = r12 + 1u;
@@ -1302,11 +1302,11 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 		position = (uint16_t)(position << 8);
 		position = (uint16_t)(position - range_low);
 		position = divide_u16(position, range_high);
-		cell = (cell & ~0xFFFFu) | TEST_MODE_CELLS(r14)[0];
+		cell = LINKED(cell, TEST_MODE_CELLS(r14)[0]);
 		TEXT_LAYER_CELLS(cell)[(uint8_t)position >> 4] = 0x6403u;
 		colour = 0x64u;
 		digit_count = 2u;
-		cell = (cell & ~0xFFFFu) | ROM16(item);
+		cell = LINKED(cell, DATA16(item));
 		r14 = r14 + 2u;
 		item += 2u;
 		cell = test_mode_draw_hex_number(position, colour, digit_count, cell);
@@ -1316,20 +1316,20 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 	port_b = 0xC80000u;
 	do
 	{
-		r12 = (r12 & ~0xFFu) | ROM8(item);
+		r12 = (r12 & ~0xFFu) | DATA8(item);
 		item++;
-		bit = ROM8(item);
+		bit = DATA8(item);
 		carry = (io_read32(r12) & shl32(1u, (int)(bit))) != 0u;
 		item++;
-		cell = (cell & ~0xFFFFu) | ROM16(item);
+		cell = LINKED(cell, DATA16(item));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		port_b = (port_b & ~0xFFu) | (uint8_t)r12;
 		carry = (io_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
 		item += 2u;
-		cell = (cell & ~0xFFFFu) | ROM16(item);
+		cell = LINKED(cell, DATA16(item));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		item += 2u;
-	} while ((int16_t)ROM16(item) >= 0);
+	} while ((int16_t)DATA16(item) >= 0);
 	r12 = (r12 & ~0xFFu) | 8u;
 	port_b = (port_b & ~0xFFu) | (uint8_t)r12;
 	test_switches = io_read8(r12);
@@ -1338,15 +1338,15 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 	test_switches_b = io_read8(port_b) & (mem_read8((port_b & ~0xFFu) | (uint8_t)r12) >> 4);
 	carry = (test_switches & 1u) != 0u;
 	item += 2u;
-	cell = (cell & ~0xFFFFu) | ROM16(item);
+	cell = LINKED(cell, DATA16(item));
 	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 	carry = (test_switches_b & 1u) != 0u;
 	item += 2u;
-	cell = (cell & ~0xFFFFu) | ROM16(item);
+	cell = LINKED(cell, DATA16(item));
 	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 	test_switches = test_switches & test_switches_b;
 	carry = (test_switches & 2u) != 0u;
-	AS32(TEXT_LAYER_CELLS((cell & ~0xFFFFu) | ROM16(item + 2u))[0]) = input_test_on_off_cells[carry];
+	AS32(TEXT_LAYER_CELLS(LINKED(cell, DATA16(item + 2u)))[0]) = input_test_on_off_cells[carry];
 	return test_switches;
 }
 
@@ -1481,7 +1481,7 @@ void test_mode_output_test_draw(void)
 	output = output_test_outputs_ADDRESS;
 	do
 	{
-		cell = (cell & ~0xFFFFu) | OUTPUT_TEST_OUTPUT(output)->cell;
+		cell = LINKED(cell, OUTPUT_TEST_OUTPUT(output)->cell);
 		output += 2u;
 		r12 = OUTPUT_TEST_OUTPUT(output - 0x2u)->variable;
 		output++;
@@ -1775,7 +1775,7 @@ uint32_t test_mode_crt_test_draw_bars(uint32_t character)
 		cells_left--;
 		cell += 2u;
 	} while (cells_left != 0u);
-	cell = (cell & ~0xFFFFu) | 0xF080u;
+	cell = LINKED(cell, 0xF080u);
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
 	rows_left = 0x1Au;
 	do
@@ -1785,7 +1785,7 @@ uint32_t test_mode_crt_test_draw_bars(uint32_t character)
 		cell += 0x80u;
 		rows_left--;
 	} while (rows_left != 0u);
-	cell = (cell & ~0xFFFFu) | 0xF000u;
+	cell = LINKED(cell, 0xF000u);
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
 	TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
@@ -1794,7 +1794,7 @@ uint32_t test_mode_crt_test_draw_bars(uint32_t character)
 	TEXT_LAYER_CELLS(cell)[1728] = drawn_character;
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
 	TEXT_LAYER_CELLS(cell)[1767] = drawn_character;
-	cell = (cell & ~0xFFFFu) | 0xF208u;
+	cell = LINKED(cell, 0xF208u);
 	drawn_character = (drawn_character & ~0xFFFFu) | 0x8001u;
 	cell = test_mode_crt_test_draw_bar((uint16_t)drawn_character, cell);
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
@@ -1849,7 +1849,7 @@ uint32_t test_mode_crt_test_draw_grid(uint32_t character)
 		cell += 0x80u;
 		rows_left--;
 	} while (rows_left != 0u);
-	cell = (cell & ~0xFFFFu) | 0xF002u;
+	cell = LINKED(cell, 0xF002u);
 	far_edge_character++;
 	drawn_character = (drawn_character & ~0xFFFFu) | far_edge_character;
 	far_edge_character++;
@@ -1861,7 +1861,7 @@ uint32_t test_mode_crt_test_draw_grid(uint32_t character)
 		cells_left--;
 		cell += 2u;
 	} while (cells_left != 0u);
-	cell = (cell & ~0xFFFFu) | 0xF082u;
+	cell = LINKED(cell, 0xF082u);
 	drawn_character = (drawn_character & ~0xFFFFu) | far_edge_character;
 	drawn_character = (drawn_character & ~0xFFFFu) | (uint16_t)(drawn_character + 1u);
 	rows_left = 0x1Au;
@@ -1878,7 +1878,7 @@ uint32_t test_mode_crt_test_draw_grid(uint32_t character)
 		cell += 0x80u;
 		rows_left--;
 	} while (rows_left != 0u);
-	TEXT_LAYER_CELLS((cell & ~0xFFFFu) | 0xFCC0u)[0] = 0u;
+	TEXT_LAYER_CELLS(LINKED(cell, 0xFCC0u))[0] = 0u;
 	return drawn_character;
 }
 
@@ -1980,7 +1980,7 @@ uint32_t test_mode_game_assignments_draw(void)
 	digit_count = 2u;
 	number = game_difficulty + 1u;
 	test_mode_draw_number(digit_count, &number, &colour, &cell);
-	cell = (cell & ~0xFFFFu) | 0xF3A8u;
+	cell = LINKED(cell, 0xF3A8u);
 	bar_length = game_difficulty * 2u;
 	bar_cells_left = bar_length;
 	if (bar_length != 0u)
@@ -2423,7 +2423,7 @@ uint32_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 	shown_bonus = bonus_adder;
 	if ((int8_t)shown_bonus > 0)
 	{
-		cell = (cell & ~0xFFFFu) | 0xF51Eu;
+		cell = LINKED(cell, 0xF51Eu);
 		colours = 0x64u;
 		digit_count = 1u;
 		test_mode_draw_number(digit_count, &shown_bonus, &colours, &cell);
@@ -2446,7 +2446,7 @@ uint32_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 	digit_count = 1u;
 	plural_offset = 6u;
 	test_mode_draw_count(shown_multiplier, digit_count, plural_offset, &colours, &cell);
-	cell = (cell & ~0xFFFFu) | 0xF784u;
+	cell = LINKED(cell, 0xF784u);
 	coins_for_credit = coins_per_credit;
 	coins_for_bonus = (int8_t)bonus_adder;
 	multiplier = first_chute_multiplier;
@@ -3453,7 +3453,7 @@ uint32_t test_mode_draw_texts(uint32_t character, uint32_t text)
 	cell = TEXT_CELL(0, 0);
 	for (;;)
 	{
-		cell = (cell & ~0xFFFFu) | mem_read16(text);
+		cell = LINKED(cell, mem_read16(text));
 		text += 2u;
 		if ((uint16_t)cell == 0u)
 			break;

@@ -45,7 +45,7 @@ void road_object_stream_read(void)
 		if (SCREEN(screen)->route_stage == OBJECT(current_object)->road_object_stream.stage)
 			return;
 		OBJECT(current_object)->state -= 2u;
-		OBJECT(current_object)->road_object_stream.stream = ROM32(OBJECT(current_object)->road_object_stream.stream + CAR(player_car)->branch * 4u);
+		OBJECT(current_object)->road_object_stream.stream = DATA32(OBJECT(current_object)->road_object_stream.stream + CAR(player_car)->branch * 4u);
 		break;
 	default:
 		invalid_jump(road_object_stream_state_jumps[OBJECT(current_object)->state]);
@@ -612,7 +612,7 @@ void road_crosser_update(void)
 		road_crosser_record = OBJECT(current_object)->road_crosser.record;
 		animation = ROAD_CROSSER_RECORD(road_crosser_record)->animation;
 		road_crosser_record += 2u;
-		if (animation == 0x165u)
+		if (animation == SWORDFISH)
 			AS32(OBJECT(current_object)->road_crosser.y_offset) = (int16_t)0xFF00u;
 		OBJECT(current_object)->road_crosser.crossing_animation = ROAD_CROSSER_RECORD(road_crosser_record - 0x2u)->crossing_animation;
 		road_crosser_record += 2u;
@@ -1442,7 +1442,7 @@ void west_east_panel_update(void)
 		OBJECT(current_object)->depth_layer = 0x19Du;
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0x118u;
-		animation = 0x39u;
+		animation = WEST_EAST_PANEL;
 		OBJECT(current_object)->west_east_panel.base_palette = 0x67u;
 		animation_start(animation);
 		return;
@@ -1529,9 +1529,9 @@ void santa_sleigh_update(void)
 		santa_sleigh_record = OBJECT(current_object)->santa_sleigh.record;
 		animation = SANTA_SLEIGH_RECORD(santa_sleigh_record)->animation;
 		santa_sleigh_record += 2u;
-		if (animation == 0x3A2u)
+		if (animation == ORCA)
 			OBJECT(current_object)->y_offset = -0x180;
-		if (animation == 0x3A0u)
+		if (animation == SANTA_SLEIGH)
 			OBJECT(current_object)->y_offset = -0x100;
 		OBJECT(current_object)->palette = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x2u)->palette;
 		santa_sleigh_record += 2u;
@@ -1639,7 +1639,7 @@ void goal_parade_rightward_update(void)
 		goal_parade_record = OBJECT(current_object)->goal_parade.record;
 		animation = GOAL_PARADE_RECORD(goal_parade_record)->animation;
 		goal_parade_record += 2u;
-		if (animation == 0x3A2u)
+		if (animation == ORCA)
 			OBJECT(current_object)->y_offset = -0x180;
 		OBJECT(current_object)->palette = GOAL_PARADE_RECORD(goal_parade_record - 0x2u)->palette;
 		goal_parade_record += 2u;
@@ -1804,7 +1804,7 @@ void goal_parade_leftward_update(void)
 		goal_parade_record = OBJECT(current_object)->goal_parade.record;
 		animation = GOAL_PARADE_RECORD(goal_parade_record)->animation;
 		goal_parade_record += 2u;
-		if (animation == 0x3A2u)
+		if (animation == ORCA)
 			OBJECT(current_object)->y_offset = -0x180;
 		OBJECT(current_object)->palette = GOAL_PARADE_RECORD(goal_parade_record - 0x2u)->palette;
 		goal_parade_record += 2u;

@@ -58,7 +58,7 @@ void race_cars_start(void)
 		OBJECT(object)->race_car.tag_palette = race_car_tag_palettes[model];
 		OBJECT(object)->race_car.blink_counter = race_car_blink_starts[car_number];
 		OBJECT(object)->race_car.rival = car_number - RACE(SCREEN(screen)->race_copy)->car_number;
-		r12 = (r12 & ~0xFFFFu) | (uint16_t)object;
+		r12 = LINKED(r12, (uint16_t)object);
 		driver_occupant = model;
 		race++;
 		occupant = start_object();
@@ -103,7 +103,7 @@ void race_cars_start(void)
    race_car_start_ending. */
 void race_car_draw(void)
 {
-	bool L_00978F = false, L = false, L_009AAD = false, L_009B31 = false;
+	bool L_00978F = false, L_009874 = false, L_009AAD = false, L_009B31 = false;
 	uint8_t hard_acceleration_frame = 0, wheel_effect_sides = 0;
 	uint16_t crash_text_y = 0, element = 0, far_segment = 0, other_spray = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
 	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, first_rider = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
@@ -155,11 +155,11 @@ void race_car_draw(void)
 			if (!L_009B31)
 			{
 				scale = (uint16_t)((int16_t)scale >> 4);
-				L = true;
+				L_009874 = true;
 			}
 		}
 	}
-	if (!L && OBJECT(current_object)->race_car.rival != 0u)
+	if (!L_009874 && OBJECT(current_object)->race_car.rival != 0u)
 	{
 		OBJECT(current_object)->race_car.special_body = 0u;
 		OBJECT(current_object)->race_car.gesture_shown = 0u;
@@ -196,7 +196,7 @@ void race_car_draw(void)
 	}
 	else
 	{
-		if (!L)
+		if (!L_009874)
 		{
 			depth_layer = 0x1C0u;
 			scale = 0x100u;
@@ -235,8 +235,8 @@ void race_car_draw(void)
 				if ((OBJECT(current_object)->race_car.model != 6u || race_car_body_wheel_kinds[body_animation] == 2u) && (body_attributes & 0x40u) == 0u)
 				{
 					swapped_rider = second_rider;
-					second_rider = (second_rider & ~0xFFFFu) | (uint16_t)first_rider;
-					first_rider = (first_rider & ~0xFFFFu) | swapped_rider;
+					second_rider = LINKED(second_rider, (uint16_t)first_rider);
+					first_rider = LINKED(first_rider, swapped_rider);
 				}
 				if (RACE(race)->speed == 0u)
 				{
@@ -307,7 +307,7 @@ void race_car_draw(void)
 					if (hard_acceleration_frame >= 5u)
 						hard_acceleration_frame = 0u;
 					OBJECT(current_object)->race_car.hard_acceleration_frame = hard_acceleration_frame;
-					r12 = 0x44u;
+					r12 = ACCELERATION_SMOKE;
 					palette = 0x58u;
 					sprite_x = (uint16_t)screen_x;
 					sprite_y = (uint16_t)screen_y;
@@ -348,7 +348,7 @@ void race_car_draw(void)
 						OBJECT(current_object)->race_car.crash_text_rise = 0u;
 						OBJECT(current_object)->race_car.crash_text_frames = 0x1Eu;
 						OBJECT(current_object)->race_car.crash_text_y = screen_y;
-						OBJECT(current_object)->race_car.crash_text_animation = 0x2Fu;
+						OBJECT(current_object)->race_car.crash_text_animation = CRASH_TEXT;
 						OBJECT(current_object)->race_car.crash_text_palette = 0x4Bu;
 						if (CAR(player_car)->crash_sound == 0u)
 						{

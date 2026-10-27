@@ -1,7 +1,8 @@
 # Name:        build.yml
 # Description: builds the game on clean machines with no ROM set (Linux with GCC, macOS with Clang,
 #              Windows with MSVC), SDL2 inside the executables, and packs what a player runs: the window
-#              port, which loads the player's assets pack, with its licenses
+#              port, which loads the player's assets (the folder extract_assets.py writes), with its
+#              licenses
 # Version:     0.1.0
 # Created:     27-10-2026
 # Modified:    27-10-2026

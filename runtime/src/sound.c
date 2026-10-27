@@ -20,6 +20,9 @@
  */
 #include "internal.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 /* The Z80 interrupt line follows the highest vector with an unmasked input pending; vector N puts
    2 x N on the bus */
 static void update_sound_irq(void)
@@ -49,12 +52,27 @@ void s32_sound_clear_irq(int input)
 	update_sound_irq();
 }
 
+const uint8_t *s32_sound_rom_at(uint32_t offset)
+{
+	const uint8_t *found;
+
+	offset %= S32_SOUND_ROM_SIZE;
+	if (s32_board.sound_rom)
+		return &s32_board.sound_rom[offset];
+	if (!(found = s32_board.sound_at(offset)))
+	{
+		fprintf(stderr, "Sound program data read at %05X, where no asset has data\n", offset);
+		exit(3);
+	}
+	return found;
+}
+
 uint8_t s32_z80_read(uint16_t address)
 {
 	if (address < 0xa000)
-		return s32_board.sound_rom[address];
+		return *s32_sound_rom_at(address);
 	if (address < 0xc000)
-		return s32_board.sound_rom[((uint32_t)s32_board.sound_bank * 0x2000 + (address & 0x1fff)) % S32_SOUND_ROM_SIZE];
+		return *s32_sound_rom_at((uint32_t)s32_board.sound_bank * 0x2000 + (address & 0x1fff));
 	if (address < 0xe000)
 		return s32_board.chips.pcm_read(address & 0x1fff);
 	return s32_board.shared_ram[address & 0x1fff];
@@ -84,10 +102,12 @@ uint8_t s32_pcm_sample_read(uint32_t address)
 	uint32_t page;
 
 	address &= 0x1fffff;
-	if (address < 0x100000)
-		return s32_board.pcm_rom[address];
-	page = (address < 0x180000) ? (s32_board.pcm_bank & 7u) : ((s32_board.pcm_bank >> 3) & 7u);
-	return s32_board.pcm_rom[(page * 0x80000 + (address & 0x7ffff)) % S32_PCM_ROM_SIZE];
+	if (address >= 0x100000)
+	{
+		page = (address < 0x180000) ? (s32_board.pcm_bank & 7u) : ((s32_board.pcm_bank >> 3) & 7u);
+		address = (page * 0x80000 + (address & 0x7ffff)) % S32_PCM_ROM_SIZE;
+	}
+	return s32_board.pcm_rom ? s32_board.pcm_rom[address] : s32_board.pcm_at(address);
 }
 
 void s32_z80_out(uint8_t port, uint8_t data)

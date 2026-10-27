@@ -47,7 +47,7 @@ void run_objects(void)
 	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
-		current_object = (current_object & ~0xFFFFu) | OBJECT_LINKS(list_entry)[0];
+		current_object = LINKED(current_object, OBJECT_LINKS(list_entry)[0]);
 		list_entry += 2u;
 		if ((uint16_t)current_object == 0u)
 			break;

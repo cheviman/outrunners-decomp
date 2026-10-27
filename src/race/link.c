@@ -998,7 +998,7 @@ void link_take_master_settings(void)
 	do
 	{
 		PLAYER_CAR_NUMBERS(car_number_slot)[0] = RACE(record_car_number - 0x2u)->car_number;
-		record_car_number = (record_car_number & ~0xFFFFu) | (uint16_t)(record_car_number + record_size);
+		record_car_number = LINKED(record_car_number, (uint16_t)(record_car_number + record_size));
 		car_number_slot++;
 		players_left--;
 	} while (players_left != 0u);
@@ -1086,7 +1086,7 @@ void race_entries_update(void)
 					if (SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] != 0u || RACE(request - 0x19u)->entry_request == 0u)
 					{
 						player = (uint8_t)(player + 1u);
-						request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
+						request = LINKED(request, (uint16_t)(request + record_size));
 						players_left--;
 						if (players_left == 0u)
 							break;
@@ -1117,7 +1117,7 @@ void race_entries_update(void)
 						if (SCREEN(r14 - 0x300u)->accepted_players[(int32_t)player] != 0u || RACE(request - 0x19u)->entry_request == 0u)
 						{
 							player = (uint8_t)(player + 1u);
-							request = (request & ~0xFFFFu) | (uint16_t)(request + record_size);
+							request = LINKED(request, (uint16_t)(request + record_size));
 							players_left--;
 							if (players_left == 0u)
 								break;

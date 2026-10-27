@@ -973,7 +973,7 @@ void stage_result_line_draw(void)
 	OBJECT(current_object)->y = 0xB0u;
 	OBJECT(current_object)->width_scale = 0x160u;
 	OBJECT(current_object)->height_scale = 0x160u;
-	animation = 4u;
+	animation = PLACE_NUMBER;
 	animation_start(animation);
 	final_place = ~~PLAYER_PLACE(OBJECT(current_object)->stage_result_line.place_address)[0];
 	OBJECT(current_object)->frame = final_place;
@@ -1019,7 +1019,7 @@ void route_map_leg_show(void)
 	switch (OBJECT(current_object)->route_map_leg.leg)
 	{
 	case 0:
-		animation = 0x306u;
+		animation = ROUTE_MAP_LEG;
 		animation_start(animation);
 		OBJECT(current_object)->x = 0xFFF7u;
 		OBJECT(current_object)->y = 0x2Bu;
@@ -1288,7 +1288,7 @@ void route_map_direction_sign_show(void)
 		OBJECT(current_object)->depth_layer = 0x19Du;
 		OBJECT(current_object)->x = route_map_direction_x_shifts[SCREEN(screen)->route_branches[0]];
 		OBJECT(current_object)->y = 0x118u;
-		animation = 0x39u;
+		animation = WEST_EAST_PANEL;
 		OBJECT(current_object)->route_map_direction_sign.palette_base = 0x67u;
 		animation_start(animation);
 		return;
@@ -1336,7 +1336,7 @@ void route_map_wait_banner_show(void)
 		if (wait_count == 0u)
 		{
 			OBJECT(current_object)->draw_mode = 0xAu;
-			animation = 0x28Du;
+			animation = WAIT_A_MINUTE_BANNER;
 			animation_start(animation);
 			OBJECT(current_object)->palette = 0u;
 			OBJECT(current_object)->width_scale = 4u;
@@ -1403,7 +1403,7 @@ void game_over_banner_show(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x2F4u;
+		animation = GAME_OVER_BANNER;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x2Au;
 		OBJECT(current_object)->width_scale = 4u;

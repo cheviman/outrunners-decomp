@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "game/assets.h"
 #include "s32/bus.h"
 #include "s32/machine.h"
 #include "s32/program.h"
@@ -64,22 +65,11 @@ static inline uint8_t *ram(uint32_t address)
 #define RAM16S(address) (*(int16_t *)ram(address))
 #define RAM32S(address) (*(int32_t *)ram(address))
 
-/* The program ROM, which the game's code also reads as data (tables): the user's ROM image, as the board
-   maps it (the first 2 MB, and the first 1 MB again from 0xF00000). A pointer the code sets to the ROM
-   can hold a work RAM address instead (a list the game was poked to read from RAM): the read goes there,
-   as the bus would send it */
-GAME_NORETURN void rom_outside(uint32_t address);
-
-static inline const uint8_t *rom(uint32_t address)
-{
-	if ((address & 0xf00000) == 0xf00000)
-		return &s32_board.program[address & 0xfffff];
-	if ((address & 0xffffff) < 0x200000)
-		return &s32_board.program[address & 0x1fffff];
-	if ((address & 0xf00000) != 0x200000)
-		rom_outside(address);
-	return ram(address);
-}
+/* The game's data (game/assets.h): its tables by name, NAME[i]; through an address the game holds,
+   data_at(address), which stops the program where no piece of the data is (data_outside). A pointer the
+   code sets to its data can hold a work RAM address instead (a list the game was poked to read from RAM):
+   the read goes there, as the bus would send it */
+GAME_NORETURN void data_outside(uint32_t address);
 
 /* The board's memories the code uses as plain memory (symbols.txt "struct NAME SIZE board", "elements NAME TYPE
    board"), as the bus has them: the video RAM (0x300000), the sprite RAM (0x400000) and the RAM the sound
@@ -118,12 +108,17 @@ static inline uint8_t *board(uint32_t address)
 #define io_write16(address, data)  mem_write16(address, data)
 #define io_write32(address, data)  mem_write32(address, data)
 
-#define ROM8(address)  (*(const uint8_t *)rom(address))
-#define ROM16(address) (*(const uint16_t *)rom(address))
-#define ROM32(address) (*(const uint32_t *)rom(address))
-#define ROM8S(address)  (*(const int8_t *)rom(address))
-#define ROM16S(address) (*(const int16_t *)rom(address))
-#define ROM32S(address) (*(const int32_t *)rom(address))
+#define DATA8(address)  (*(const uint8_t *)data_at(address))
+#define DATA16(address) (*(const uint16_t *)data_at(address))
+#define DATA32(address) (*(const uint32_t *)data_at(address))
+#define DATA8S(address)  (*(const int8_t *)data_at(address))
+#define DATA16S(address) (*(const int16_t *)data_at(address))
+#define DATA32S(address) (*(const int32_t *)data_at(address))
+
+/* A table read with another width than its elements': 'offset' bytes into it */
+#define TABLE8(table, offset)  (*(const uint8_t *)((const uint8_t *)table##_data + (offset)))
+#define TABLE16(table, offset) (*(const uint16_t *)((const uint8_t *)table##_data + (offset)))
+#define TABLE32(table, offset) (*(const uint32_t *)((const uint8_t *)table##_data + (offset)))
 
 /* The game links its objects by the low halfword of their addresses: the object 'link' names, in the
    page of work RAM 'base' points into */

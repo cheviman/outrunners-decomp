@@ -218,7 +218,7 @@ uint32_t signature_checksum(void)
    network_check_again, and the boot task's part again. */
 void second_task(uint32_t entry_point)
 {
-	bool L = false, L_000719 = false, L_00077F = false;
+	bool L_000637 = false, L_000719 = false, L_00077F = false;
 	uint32_t attract_car_list = 0, block_count = 0, clear_address = 0, fill = 0, fill_high = 0, input_changes = 0, mode = 0;
 	uint32_t jump_target = 0;
 
@@ -226,7 +226,7 @@ void second_task(uint32_t entry_point)
 	{
 		for (;;)
 		{
-			jump_target = L_000719 ? 1u : L ? 1u : entry_point;
+			jump_target = L_000719 ? 1u : L_000637 ? 1u : entry_point;
 			switch (jump_target)
 			{
 			case 0x000000u:
@@ -234,7 +234,7 @@ void second_task(uint32_t entry_point)
 			case 0x000001u:
 				if (!L_000719)
 				{
-					L = false;
+					L_000637 = false;
 					link_take_master_settings();
 					io_write16(IRQ_TIMER_0, 0x39u);
 					io_write16(IRQ_TIMER_1, 1u);
@@ -419,7 +419,7 @@ void second_task(uint32_t entry_point)
 		SCREEN(SCREEN_2)->flags |= 1u;
 		interrupts_on();
 		network_check_again();
-		L = true;
+		L_000637 = true;
 	}
 }
 

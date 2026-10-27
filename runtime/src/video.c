@@ -32,6 +32,7 @@
 #include "s32/machine.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define WIDTH   S32_VIDEO_MAX_WIDTH
@@ -108,11 +109,11 @@ typedef struct sprite_drawing
 
 static struct
 {
-	const uint8_t *tiles;
-	uint32_t tile_count;
-	const uint8_t *sprite_rom;
+	s32_graphics graphics;
+	uint8_t *image_pens;                    /* s32_video_init's: the tiles' pens taken out of the image */
+	const uint8_t **image_tiles;
+	const uint8_t *sprite_rom;              /* s32_video_init's image of the sprite chips */
 	uint32_t sprite_rom_words;
-	uint32_t sprite_banks;                  /* of 4 MB */
 
 	area visible;                           /* 320 or 416 x 224 */
 	layer layers[LAYERS];                   /* the sprites' entry is unused: they have their own buffers */
@@ -187,14 +188,10 @@ static void clip_area(area *target, const area *bounds)
 
 /* ---- tiles and text cells ---- */
 
-/* The pen (0-15) of a pixel of a 16x16 tile: rows of 8 bytes, two pens a byte with the high nibble
-   first, and the byte pairs of each half of the row swapped */
+/* The pen (0-15) of a pixel of a 16x16 tile */
 static int tile_pen(uint32_t tile, int x, int y)
 {
-	static const uint8_t byte_of_column[16] = { 0, 0, 2, 2, 1, 1, 3, 3, 4, 4, 6, 6, 5, 5, 7, 7 };
-	const uint8_t value = video.tiles[(size_t)(tile % video.tile_count) * 128 + y * 8 + byte_of_column[x]];
-
-	return (x & 1) ? (value & 0x0f) : (value >> 4);
+	return video.graphics.tile_pens[tile % video.graphics.tile_count][y * 16 + x];
 }
 
 /* A pixel of a tilemap page (32 x 16 cells, 512 x 256 pixels). A cell is the tile number (13 bits, the
@@ -746,7 +743,7 @@ static uint32_t sprite_graphics(bool from_ram, uint32_t bank, uint32_t index)
 {
 	if (from_ram)
 		return big_endian_word(&s32_board.sprite_ram[(index & 0x7fff) * 4]);
-	return big_endian_word(&video.sprite_rom[(size_t)(((bank << 20) | (index & 0xfffff)) % video.sprite_rom_words) * 4]);
+	return video.graphics.sprite_word((bank << 20) | (index & 0xfffff));
 }
 
 /* One row of a sprite: words of 8 pens (4 bits) or 4 (8 bits), each pen repeated or skipped by the
@@ -807,7 +804,7 @@ static int draw_sprite(uint32_t entry, int x_offset, int y_offset, const area *i
 	const int height = height_word & 0x3ff;
 	const int width = width_word & 0x3ff;
 	/* the bank in bits 13 and 15 of the fourth word; bit 11 picks the screen */
-	const uint32_t bank = ((width_word & 0x2000) >> 13 | (width_word & 0x8000) >> 14) % (video.sprite_banks ? video.sprite_banks : 1);
+	const uint32_t bank = ((width_word & 0x2000) >> 13 | (width_word & 0x8000) >> 14) % (video.graphics.sprite_banks ? video.graphics.sprite_banks : 1);
 	const int screen = bit(width_word, 11);
 	const int taken = (bit(flags, 13) && table_inline) ? 2 : 0;
 	sprite_drawing sprite;
@@ -1265,18 +1262,65 @@ void s32_video_draw_frame(void)
 	}
 }
 
-void s32_video_init(const uint8_t *tiles, size_t tiles_size, const uint8_t *sprites, size_t sprites_size)
+void s32_video_init_graphics(const s32_graphics *graphics)
 {
+	uint8_t *image_pens = video.image_pens;
+	const uint8_t **image_tiles = video.image_tiles;
+	const uint8_t *sprite_rom = video.sprite_rom;
+	const uint32_t sprite_rom_words = video.sprite_rom_words;
+
 	memset(&video, 0, sizeof(video));
-	video.tiles = tiles;
-	video.tile_count = (uint32_t)(tiles_size / 128);
-	video.sprite_rom = sprites;
-	video.sprite_rom_words = (uint32_t)(sprites_size / 4);
-	video.sprite_banks = video.sprite_rom_words >> 20;
+	video.graphics = *graphics;
+	video.image_pens = image_pens;
+	video.image_tiles = image_tiles;
+	video.sprite_rom = sprite_rom;
+	video.sprite_rom_words = sprite_rom_words;
 	video.visible.right = 319;
 	video.visible.bottom = HEIGHT - 1;
 	s32_board.sprites_due = s32_video_sprites;
 	s32_board.frame_shown = s32_video_draw_frame;
+}
+
+/* A word of the sprite chips' image s32_video_init was given */
+static uint32_t image_sprite_word(uint32_t place)
+{
+	return big_endian_word(&video.sprite_rom[(size_t)(place % video.sprite_rom_words) * 4]);
+}
+
+void s32_video_init(const uint8_t *tiles, size_t tiles_size, const uint8_t *sprites, size_t sprites_size)
+{
+	/* a tile's rows of 8 bytes: two pens a byte with the high nibble first, and the byte pairs of each half
+	   of the row swapped */
+	static const uint8_t byte_of_column[16] = { 0, 0, 2, 2, 1, 1, 3, 3, 4, 4, 6, 6, 5, 5, 7, 7 };
+	const uint32_t count = (uint32_t)(tiles_size / 128);
+	s32_graphics graphics;
+
+	free(video.image_pens);
+	free((void *)video.image_tiles);
+	video.image_pens = malloc((size_t)count * 256);
+	video.image_tiles = malloc((size_t)count * sizeof(video.image_tiles[0]));
+	if (!video.image_pens || !video.image_tiles)
+		abort();
+	for (uint32_t tile = 0; tile < count; tile++)
+	{
+		uint8_t *pens = &video.image_pens[(size_t)tile * 256];
+
+		for (int y = 0; y < 16; y++)
+			for (int x = 0; x < 16; x++)
+			{
+				const uint8_t value = tiles[(size_t)tile * 128 + y * 8 + byte_of_column[x]];
+
+				pens[y * 16 + x] = (x & 1) ? (value & 0x0f) : (value >> 4);
+			}
+		video.image_tiles[tile] = pens;
+	}
+	video.sprite_rom = sprites;
+	video.sprite_rom_words = (uint32_t)(sprites_size / 4);
+	graphics.tile_pens = video.image_tiles;
+	graphics.tile_count = count;
+	graphics.sprite_word = image_sprite_word;
+	graphics.sprite_banks = video.sprite_rom_words >> 20;
+	s32_video_init_graphics(&graphics);
 }
 
 const uint32_t *s32_video_frame(int screen, int *width)

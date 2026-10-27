@@ -9,7 +9,7 @@
  *
  *    license:BSD-3-Clause
  *    Usage: orunners [--script FILE [--fast]] [--hashes FILE] [--video-hashes FILE] [--sound-hashes FILE]
- *                    [--assets FILE]
+ *                    [--assets FOLDER]
  *
  *    The game (src/) and the board (runtime/) run as they are: this file only wraps them. Where the board
  *    has its hooks, the port does its part: when VBLANK starts the video draws both screens and the port
@@ -19,10 +19,9 @@
  *    bookkeeping) is kept in orunners.eeprom, beside the executable on Windows and in the user's folder for
  *    the game elsewhere (saves_folder).
  *
- *    The game's data is its assets pack (game/data.h): orunners.assets beside the executable or in that
- *    folder, or --assets. The first run, with no pack there, makes it in that folder from the player's ROM
- *    set (the folder rom/ or orunners.zip; game/extract.h), beside the executable, beside the .app on macOS
- *    or in that folder.
+ *    The game's data is its assets (game/assets.h), the files extract_assets.py writes from the player's
+ *    ROM set: --assets, or the folder 'assets' beside the executable, beside the .app on macOS, in the
+ *    folder of what the game keeps, or in the current folder.
  *
  *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end,
  *    from a blank EEPROM that it does not keep; --fast runs it without waiting for the frames' time.
@@ -48,8 +47,7 @@
 #include "s32/script.h"
 #include "s32/video.h"
 #include "sound/chips.h"
-#include "game/data.h"
-#include "game/extract.h"
+#include "game/assets.h"
 
 #include <SDL.h>
 
@@ -60,7 +58,6 @@
 #include <string.h>
 
 #define TITLE               "OutRunners"
-#define ASSETS_FILE         "orunners.assets"    /* the game's assets pack (tools/make_pack.py) */
 #define PLAYERS             2
 #define WINDOW_SCALE        2
 #define QUEUE_FRAMES_MAX    6          /* sound queued beyond this many frames is dropped */
@@ -400,7 +397,7 @@ static FILE *open_hashes(const char *path)
 	return path ? fopen(path, "w") : NULL;
 }
 
-/* Where the game keeps what it writes (the EEPROM, the pack a first run makes): beside the executable on
+/* Where the game keeps what it writes (the EEPROM): beside the executable on
    Windows; elsewhere the user's own folder for the game (SDL_GetPrefPath: ~/.local/share/OutRunners,
    ~/Library/Application Support/OutRunners), as the executable's may not be written (an .app, /usr/bin).
    The caller frees it (SDL_free) */
@@ -437,42 +434,13 @@ static int app_folder(const char *base, char *folder, size_t size)
 #endif
 }
 
-/* The first run: the pack from the player's ROM set (the folder rom/ or orunners.zip) beside the executable,
-   beside the .app on macOS, or in the folder of what the game keeps; NULL once it is made, else what went
-   wrong with the last place tried */
-static const char *first_run(const char *base, const char *saves, const char *pack)
-{
-	static const char *const sources[] = { "rom", "orunners.zip" };
-	const char *folders[3];
-	const char *problem = "";
-	char beside_app[1024], source[1024];
-	size_t count = 0;
-
-	folders[count++] = base ? base : "";
-	if (app_folder(base, beside_app, sizeof(beside_app)))
-		folders[count++] = beside_app;
-	if (saves && strcmp(saves, folders[0]) != 0)
-		folders[count++] = saves;
-	for (size_t folder = 0; folder < count; folder++)
-		for (size_t index = 0; index < sizeof(sources) / sizeof(sources[0]); index++)
-		{
-			snprintf(source, sizeof(source), "%s%s", folders[folder], sources[index]);
-			problem = game_data_extract(source, pack);
-			if (!problem)
-				return NULL;
-		}
-	return problem;
-}
-
 int main(int argc, char **argv)
 {
 	SDL_AudioSpec wanted;
 	const char *script_path = NULL;
 	const char *hashes_path = NULL, *video_hashes_path = NULL, *sound_hashes_path = NULL;
 	const char *assets_path = NULL;
-	char beside[1024];
 	char *base, *saves;
-	game_data_result assets;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
 		return fail("SDL could not start.", SDL_GetError());
@@ -512,39 +480,40 @@ int main(int argc, char **argv)
 	base = SDL_GetBasePath();
 	saves = saves_folder();
 	snprintf(eeprom_path, sizeof(eeprom_path), "%sorunners.eeprom", saves ? saves : "");
-	if (assets_path)
-		assets = game_data_load(assets_path);
-	else
 	{
-		/* (beside the executable, else in the folder of what the game keeps, where a first run puts it) */
-		snprintf(beside, sizeof(beside), "%s" ASSETS_FILE, base ? base : "");
-		assets = game_data_load(beside);
-		if (assets == GAME_DATA_MISSING && saves)
-		{
-			snprintf(beside, sizeof(beside), "%s" ASSETS_FILE, saves);
-			assets = game_data_load(beside);
-		}
-		assets_path = beside;
-	}
-	if (assets == GAME_DATA_MISSING)
-	{
-		const char *problem = first_run(base, saves, assets_path);
+		/* the folder of the game's assets: --assets, else beside the executable, beside the .app on macOS, in
+		   the folder of what the game keeps, or in the current folder */
+		char beside_app[1024], folder[1100], layout[1200];
+		const char *places[4];
+		const char *found = assets_path;
+		const char *problem;
+		size_t count = 0;
 
-		if (problem)
-			return fail("The game's assets are missing, and no ROM set to make them from was found.", problem);
-		assets = game_data_load(assets_path);
+		places[count++] = base ? base : "";
+		if (app_folder(base, beside_app, sizeof(beside_app)))
+			places[count++] = beside_app;
+		if (saves)
+			places[count++] = saves;
+		places[count++] = "";
+		for (size_t place = 0; place < count && !found; place++)
+		{
+			FILE *probe;
+
+			snprintf(folder, sizeof(folder), "%sassets", places[place]);
+			snprintf(layout, sizeof(layout), "%s/data/layout.json", folder);
+			if ((probe = fopen(layout, "rb")) != NULL)
+			{
+				fclose(probe);
+				found = folder;
+			}
+		}
+		if (!found)
+			return fail("The game's assets are missing.", "No folder 'assets' beside the game.");
+		if ((problem = assets_load(found)) != NULL)
+			return fail("The game's assets cannot be read.", problem);
 	}
 	SDL_free(base);
 	SDL_free(saves);
-	switch (assets)
-	{
-	case GAME_DATA_LOADED:
-		break;
-	case GAME_DATA_MISSING:
-		return fail("The game's assets are missing.", assets_path);
-	default:
-		return fail("The game's assets cannot be read.", assets_path);
-	}
 
 	window = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		2 * 320 * WINDOW_SCALE, S32_VIDEO_HEIGHT * WINDOW_SCALE, SDL_WINDOW_RESIZABLE);
@@ -573,11 +542,12 @@ int main(int argc, char **argv)
 	s32_board.controls_update = on_controls_update;
 	s32_board.log = on_log;
 	s32_board.frame_timing = true;
-	s32_init(game_program);
-	s32_video_init(game_tiles, sizeof(game_tiles), game_sprites, sizeof(game_sprites));
+	s32_board.program_at = data_at;
+	s32_init(NULL);
+	s32_video_init_graphics(assets_graphics());
 	s32_board.frame_shown = on_frame_shown;
-	s32_board.sound_rom = game_sound;
-	s32_board.pcm_rom = game_pcm;
+	s32_board.sound_at = assets_sound_data;
+	s32_board.pcm_at = assets_pcm_byte;
 	sound_chips_attach();
 	sound_cpu_attach();
 	if (!script)

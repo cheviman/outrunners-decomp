@@ -88,7 +88,7 @@ void player_car_update(void)
 				CAR(player_car)->segment = grid_segment;
 				grid_segment = (uint16_t)(grid_segment * 0x20u);
 				CAR(player_car)->segment_offset = grid_segment;
-				start_record = (start_record & ~0xFFFFu) | (uint16_t)(start_record + grid_segment);
+				start_record = LINKED(start_record, (uint16_t)(start_record + grid_segment));
 				grid_road_place = GRID_ROAD_PLACES(grid_road_place_lists[grid_list])[(int32_t)grid_place];
 				CAR(player_car)->road_x = (uint16_t)grid_road_place;
 				CAR(player_car)->segment_remaining = (uint16_t)(grid_road_place >> 16u);
@@ -188,7 +188,7 @@ void player_car_update(void)
 								OBJECT(current_object)->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
 								break;
 							case 1:
-								hit_object = (screen & ~0xFFFFu) | OBJECT(current_object)->player_car.hit_other;
+								hit_object = LINKED(screen, OBJECT(current_object)->player_car.hit_other);
 								own_speed = OBJECT(current_object)->player_car.speed;
 								impact = (uint32_t)(uint16_t)OBJECT(hit_object)->traffic.speed << 8;
 								other_weight = OBJECT(hit_object)->traffic.weight;

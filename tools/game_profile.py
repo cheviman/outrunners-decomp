@@ -64,6 +64,12 @@ pointers.INSTANCES = {0x208000: ("screen", 0x6000), 0x218000: ("screen", 0x6000)
                       0x20FB80: ("race", 0x80), 0x20FC00: ("race", 0x80), 0x20FC80: ("race", 0x80)}
 memory.WORK_RAM = (0x200000, 0x220000)
 memory.VARIABLES = 0x20E000
+# the program's data is the game's assets, loaded by name (runtime/src/assets.c): its tables are pointers the
+# loader sets (NAME_data), and an address the code holds reaches its data through data_at()
+memory.LOADED_TABLES = True
+memory.ROM_MACRO, memory.ROM_FUNCTION = "DATA", "data_at"
+pointers.ROM_FUNCTION = "data_at"
+SOUND_LOADED_TABLES = True    # the sound program's tables too: sound/support.h's sound_tables
 memory.PLAYER_FIELDS = ()
 memory.BUS_ONLY = []
 memory.CANONICAL = rom.canonical_address

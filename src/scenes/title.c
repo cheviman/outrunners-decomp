@@ -324,7 +324,7 @@ void title_palm_tree_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x59u;
+		animation = PALM_TREE;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x6Du;
 		if (OBJECT(current_object)->title_palm_tree.near_or_far != 0u)
@@ -382,7 +382,7 @@ void title_logo_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x25Du;
+		animation = TITLE_LOGO;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x26Au;
 		OBJECT(current_object)->x = 0x142u;
@@ -472,7 +472,7 @@ void title_logo_copy_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x25Eu;
+		animation = TITLE_LOGO_COPY;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x26Du;
 		OBJECT(current_object)->x = 2u;
@@ -645,7 +645,7 @@ void title_logo_stripe_update(void)
 	if (frames_2 != 1u)
 		return;
 	OBJECT(current_object)->draw_mode = 0xAu;
-	animation = 0x25Fu;
+	animation = TITLE_LOGO_STRIPE;
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x270u;
 	place_offset = (uint32_t)OBJECT(current_object)->title_logo_stripe.index << 2;
@@ -682,7 +682,7 @@ void title_board_palms_update(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x25Au;
+		animation = TITLE_BOARD_PALMS;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x272u;
 		OBJECT(current_object)->width_scale = 0xC0u;
@@ -738,7 +738,7 @@ void title_seagull_fly(void)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		animation = 0x25Bu;
+		animation = TITLE_SEAGULL;
 		animation_start(animation);
 		OBJECT(current_object)->palette = 0x272u;
 		OBJECT(current_object)->width_scale = 0xC0u;

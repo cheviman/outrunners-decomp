@@ -1,0 +1,434 @@
+# The MultiPCM's samples: the pcm region (mpr-15551 and mpr-15552, 4 MB) cut into named samples, read by
+# tools/pcm_samples.py (assets.json: pcm_samples). Positions and names only: every byte comes from the
+# user's own ROM set when the assets are extracted.
+#
+# 'page P sets S...'    the sound sets whose part template (the sound program's part_templates) puts page P,
+#                       the 512 KB from P x 80000, in a window of the chip: screen 1's at 100000, screen 2's
+#                       at 180000
+# 'OFFSET LENGTH NAME'  a sample: where it is in the pcm region and its length (hex); its WAV is
+#                       assets/sound/samples/NAME.wav. A NAME on more than one line: the same bytes at each
+#                       place (one WAV for them all)
+# 'uses NNN S...'       the sound sets that play header NNN, in a window (and NNN + 100, screen 2's copy)
+#
+# After '#': the headers that start in the sample, then what plays it: the sound commands ("sound NN", the
+# V70's requests), the sound program's tables (a program: instruments[NN]; a drum kit N: drum_kits[N], the
+# parts' program F0 + N; the MIDI channel and the notes the songs write) and the game's code that requests
+# them. Names come from that use: a drum by its note in the General MIDI map, an instrument by its part in
+# the songs (bass; chords: several notes at once; lead; phrase: one note only), in the folder of the first
+# song that plays it (radio order: Magical Sound Shower, Passing Breeze, Splash Wave, Picture the Rivers,
+# Blow Your Cool, Looking for the Rainbow, Speed King, Adventure, Sonic Control, Last Wave, Jingle Bell; then
+# the Mega Radio Station, Mega Driver, Dream Flying, Meaning of the Light, the race's opening, the staff
+# credits, sound 0C and the song no sound command starts, which sound set 2 is for). Nobody has listened to
+# them: a name says what plays the sample, not what it sounds like; a sound the game was not seen to
+# request is named by its sound command (sound_NN).
+
+page 2 sets 0 1 2 3 5
+page 3 sets 4
+page 4 sets 6 11
+page 5 sets 7 9 12 13 14
+page 6 sets 8
+page 7 sets 10
+
+001810 00278 engine/mad_power  # 000: the engine of car model 0, MAD POWER (car_model_engine_samples)
+001A98 00398 engine/wild_chaser  # 001: the engine of car model 7, WILD CHASER
+001E40 007D7 engine/speed_buster  # 002: the engine of car model 1, SPEED BUSTER
+002627 002B8 engine/bad_boy_road_monster  # 003: the engine of car models 4 and 5, BAD BOY and ROAD MONSTER
+0028EF 002A5 engine/smooth_operator  # 004: the engine of car model 3, SMOOTH OPERATOR
+002BA4 002E8 engine/easy_handling  # 005: the engine of car model 2, EASY HANDLING
+002E9C 002E7 engine/quick_reactor  # 006: the engine of car model 6, QUICK REACTOR
+003193 07138 tyres/wheel_slip  # 007: tyre noise 1: the wheels spinning or locked (player_car_engine)
+00A2DB 00878 tyres/skid  # 008: tyre noise 3: sliding past the model's grip in a bend (player_car_drive)
+00AB63 009BE tyres/off_road  # 009: tyre noises 2 and 8: off the road (car_model_off_road_noises)
+00B531 07D74 tyres/skid_mad_power_speed_buster  # 00A: tyre noise 4: the skid of car models 0 and 1 (car_skid_noises)
+0132B5 07A56 tyres/skid_quick_reactor_wild_chaser  # 00B: tyre noise 5: the skid of car models 6 and 7
+01AD1B 055C8 tyres/skid_easy_handling_smooth_operator  # 00C: tyre noise 6: the skid of car models 2 and 3
+0202F3 05E16 tyres/skid_bad_boy_road_monster  # 00D: tyre noise 7: the skid of car models 4 and 5
+026119 095B1 effects/game_start  # 00E: sounds 20 and 21: 21 as a game starts (game_mode_play) and in the race's opening
+02F6DA 03A1A effects/sound_22  # 00F: sound 22 (the sound test's list; nothing else found)
+033104 046FA effects/stage_30_start  # 010: sound 23: once as the road of stage 30 starts (one_shot_sound_update)
+03780E 085B7 effects/race_opening  # 011: sound 2E: in the race's opening (race_opening_sound_cues) and an ending
+03FDD5 02289 effects/rival_warning  # 012: sound 2B: the rival warning, twice (rival_alarm_update); the name entry's first letter
+04206E 04A24 effects/name_entry_letter  # 013: sound 2C: the name entry's second letter (name_entry_place_sounds)
+046AA2 07918 effects/name_entry_done  # 014: sound 2D: the name entry's third letter; the race's opening
+04E3CA 04C3F effects/crash_hit_heavy  # 015: sound 33: a crash's hit, impacts 12-21 (crash_entry hit_sound)
+053019 09AE4 effects/crash_hit_hardest  # 016: sound 34: a crash's hit, impacts 18-31
+05CB0D 023E6 effects/crash_hit_light  # 017: sound 32: a crash's hit, impacts 0-13
+05EF03 029C3 effects/crash_hit  # 018: sound 31: a crash's hit, impacts 8-17, and the car landing after it
+0618D6 070B3 effects/pass_by_1  # 019: sounds 35 and 38: a car going by (car_pass_sounds: car model 4)
+068999 06861 effects/checkpoint_passed  # 01A: sound 28: a checkpoint or the goal passed when not leading (stage_end_sounds)
+06F20A 0661D effects/checkpoint_bell  # 01B: sounds 24 and 25: nearing a checkpoint or the goal, passing one in the lead; the race's opening; Mega Driver's drum note 88
+075837 058F0 effects/crash_tumble  # 01C: sound 26: 10 frames after a hit, impacts 12-21 (crash_entry crash_sound); endings
+07B137 0CBD3 effects/crash_tumble_big  # 01D: sound 27: 10 frames after a hit, impacts 14-31; endings
+087D1A 042FF effects/pass_by_2  # 01E: sounds 36 and 39: a car going by (car models 2, 3, 5, 6)
+08C029 070E3 effects/pass_by_3  # 01F: sounds 37 and 3A: a car going by (car models 0, 1, 7); a place won or lost
+09311C 054AF effects/sound_4d  # 020: sound 4D (the sound test's list; nothing else found)
+0985DB 03748 effects/coin  # 021: sound 4E: a coin in (coins)
+09BD33 05898 effects/race_over  # 022: sound 4F: the ending's actors done without a finish (race_car_start_ending)
+0A15DB 05590 scenery/jungle  # 023: sound 51: the jungle of stage 3, again and again at random (ambient_sound_update)
+0A6B7B 04293 effects/sound_52  # 024: sound 52 (the sound test's list; nothing else found)
+0AAE1E 05E71 speech/checkpoint_in_the_lead  # 025: sound 3F, DJ message 33: a checkpoint passed in the lead (branch_arrow_update)
+0B0C9F 0281B speech/goal_first  # 026: sound 40, DJ message 34: the goal, first (goal_update)
+0B34CA 02A0D speech/sound_3c  # 027: sound 3C (an ending's actor; the sound test), among the DJ's lines
+0B5EE7 016A4 speech/go  # 028: sound 3E, DJ message 32: Go! (start_message_update)
+0B759B 02940 speech/goal  # 029: sound 41, DJ message 35: the goal, not first
+0B9EEB 045C0 speech/time_up  # 02A: sound 42, DJ message 36: the time up, stage level 3 or less (player_car_update)
+0BE4BB 013FB speech/ready  # 02B: sound 3D, DJ message 31: Ready (start_message_update)
+0BF8C6 01A8A speech/time_up_last_stages  # 02C: sound 43, DJ message 37: the time up past stage level 3
+0C1360 036F6 effects/service_credit  # 02D: sound 50: a service credit (coins)
+0C4A66 01E7F speech/bad_boy  # 0E8: sounds 60/74 (car select, DJ message 5): BAD BOY, car model 4
+0C68F5 02ABF speech/easy_handling  # 0E9: sounds 61/75 (car select, DJ message 3): EASY HANDLING, car model 2
+0C93C4 02978 speech/mad_power  # 0EA: sounds 62/76 (car select, DJ message 1): MAD POWER, car model 0
+0CBD4C 0234C speech/quick_reactor  # 0EB: sounds 63/77 (car select, DJ message 7): QUICK REACTOR, car model 6
+0CE0A8 03307 speech/road_monster  # 0EC: sounds 64/78 (car select, DJ message 6): ROAD MONSTER, car model 5
+0D13BF 033E6 speech/smooth_operator  # 0ED: sounds 65/79 (car select, DJ message 4): SMOOTH OPERATOR, car model 3
+0D47B5 02847 speech/speed_buster  # 0EE: sounds 66/7A (car select, DJ message 2): SPEED BUSTER, car model 1
+0D700C 02D64 speech/wild_chaser  # 0EF: sounds 67/7B (car select, DJ message 8): WILD CHASER, car model 7
+0D9D80 01A43 speech/youre_in  # 0F0: sound 68; the first word of sounds 90-97 (DJ messages 21-28: YOU'RE IN CAR NUMBER n!)
+0DB7D3 01C8E speech/car_number  # 0F1: sound 69; in sounds 90-97, A0-A7 and A8-AF before the car's number
+0DD471 011BC speech/one  # 0F2: sound 6A: the number 1 in the DJ's car numbers
+0DE63D 00CD2 speech/two  # 0F3: sound 6B: the number 2
+0DF31F 00F64 speech/three  # 0F4: sound 6C: the number 3
+0E0293 00DAF speech/four  # 0F5: sound 6D: the number 4
+0E1052 01163 speech/five  # 0F6: sound 6E: the number 5
+0E21C5 0171E speech/six  # 0F7: sound 6F: the number 6
+0E38F3 00F8F speech/seven  # 0F8: sound 70: the number 7
+0E4892 00EEA speech/eight  # 0F9: sound 71: the number 8
+0E578C 02DB9 speech/checkpoint  # 0FA: sound 72, DJ message 3A: a checkpoint passed, not in the lead
+0E8555 06D73 effects/checkpoint_near  # 0FB: sound 53: 20 frames after sound 24 as a checkpoint or the goal nears; an ending
+0EF2D8 0180C effects/sound_59  # 0FC: sound 59: many of the ending's actors (ending_actor_lists)
+0F0AF4 020A5 effects/sound_5a  # 0E6 0FD: sounds 5A and 5B (an ending's actor; the sound test), the whole sample looped
+0F2BA9 01168 instruments/splash_wave/lead_2  # 02E: program 14, channel 3,6, notes 40-88; Splash Wave, Blow Your Cool, the Mega Radio Station
+0F3D21 0780E instruments/splash_wave/chords  # 02F: program 15, channel 1,3, notes 45-93; Splash Wave, Blow Your Cool, Last Wave, the Mega Radio Station
+0FB53F 0260A speech/route_map  # 0FE: sound 5E, DJ message 38: the map of the route after the race (route_map_update)
+0FDB59 02405 speech/route_map_end  # 0E7 0FF: sound 5F, DJ message 39: after message 38, once the DJ is quiet
+0FFF6E 00054 effects/tone_wave  # 030: a single cycle: sounds 29 and 2A, and program 39, the melody of sounds B2-BC on channel D
+100000 0486C drums/magical_sound_shower/tom_mid  # 031: drum kit 0 note 47 (tom low mid), 0 note 48 (tom high mid); Picture the Rivers, Looking for the Rainbow
+10487C 031FB drums/magical_sound_shower/tom_low  # 032: drum kit 0 note 41 (tom floor low), 0 note 43 (tom floor high), 0 note 45 (tom low); Picture the Rivers, Looking for the Rainbow
+107A87 0F314 drums/magical_sound_shower/ride_bell  # 033: drum kit 0 note 53 (ride bell); Looking for the Rainbow
+116DAB 0C699 drums/magical_sound_shower/tom_high  # 034: drum kit 0 note 50 (tom high), 0 note 51 (ride), 0 note 52 (china); Picture the Rivers, Looking for the Rainbow
+123454 01919 instruments/unplayed/program_00  # 035: program 00, which no song plays
+124D7D 0331F instruments/picture_the_rivers/lead_2  # 036: program 01,1C,2F, channel 4,5,6, notes 32-98; Picture the Rivers, Looking for the Rainbow, Speed King, the Mega Radio Station, the unused song (set 2)
+1280AB 07545 instruments/magical_sound_shower/lead  # 037: program 02, channel 2,3, notes 38-100; Magical Sound Shower, Passing Breeze, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+12F5FF 0083C instruments/magical_sound_shower/lead_2  # 038: program 03, channel 5, notes 55-67; Magical Sound Shower; its last byte is past what its headers play
+12FE4A 02053 instruments/looking_for_the_rainbow/bass  # 039: program 04, channel 0, notes 38-57; Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+131EAC 07AD1 instruments/magical_sound_shower/chords_3  # 03A: program 05, channel 3,6, notes 40-78; Magical Sound Shower, Passing Breeze, the unused song (set 2); its last byte is past what its headers play
+13998C 01D16 instruments/picture_the_rivers/chords  # 03B: program 06, channel 1,3, notes 53-77; Picture the Rivers, Looking for the Rainbow; its last byte is past what its headers play
+13B6B1 03821 instruments/picture_the_rivers/lead  # 03C: program 07, channel 4, notes 55-88; Picture the Rivers
+13EEE2 03B87 instruments/unused_song/lead  # 03D: program 08, channel 4, notes 76-86; the unused song (set 2); its last byte is past what its headers play
+142A78 03CB6 instruments/magical_sound_shower/chords_2  # 03E: program 09, channel 3,5, notes 52-83; Magical Sound Shower, Passing Breeze, Looking for the Rainbow; its last byte is past what its headers play
+14673D 03E5E instruments/magical_sound_shower/bass  # 03F: program 0A, channel 0, notes 35-71; Magical Sound Shower, Passing Breeze; its last byte is past what its headers play
+14A5AA 01B53 instruments/magical_sound_shower/lead_3  # 040: program 0B, channel 4,5,6, notes 40-89; Magical Sound Shower, Passing Breeze, Picture the Rivers, the unused song (set 2); its last byte is past what its headers play
+14C10C 033B4 instruments/magical_sound_shower/chords  # 041: program 0C, channel 1,6, notes 53-98; Magical Sound Shower, Passing Breeze, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+14F4CF 032D0 instruments/picture_the_rivers/bass  # 042: program 0D, channel 0, notes 38-57; Picture the Rivers; its last byte is past what its headers play
+1527AE 03939 instruments/passing_breeze/lead  # 043: program 0E, channel 2,6, notes 62-89; Passing Breeze, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+1560F6 019DE drums/magical_sound_shower/hihat_closed  # 044: drum kit 0 note 42 (hihat closed); Magical Sound Shower, Passing Breeze, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+157AE3 01E1D drums/magical_sound_shower/hihat_pedal  # 045: drum kit 0 note 44 (hihat pedal); Magical Sound Shower, Passing Breeze, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+15990F 068FB drums/magical_sound_shower/hihat_open  # 046: drum kit 0 note 46 (hihat open); Magical Sound Shower, Passing Breeze, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+160219 052B4 drums/magical_sound_shower/crash  # 047: drum kit 0 note 49 (crash); Magical Sound Shower, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+1654DC 02D23 drums/magical_sound_shower/clap  # 048: drum kit 0 note 37 (side stick), 0 note 39 (clap); Picture the Rivers, Looking for the Rainbow; its last byte is past what its headers play
+16820E 01048 drums/magical_sound_shower/kick  # 049: drum kit 0 note 36 (kick); Magical Sound Shower, Passing Breeze, Picture the Rivers, Looking for the Rainbow, the unused song (set 2); its last byte is past what its headers play
+169265 06C81 drums/magical_sound_shower/kick_2  # 04A: drum kit 0 note 35 (kick 2); Passing Breeze; its last byte is past what its headers play
+16FEF5 02CE0 drums/magical_sound_shower/snare  # 04B: drum kit 0 note 38 (snare); Magical Sound Shower, Picture the Rivers, the unused song (set 2); its last byte is past what its headers play
+172BE4 01E06 drums/magical_sound_shower/snare_2  # 04C: drum kit 0 note 40 (snare 2); Magical Sound Shower, Passing Breeze, Looking for the Rainbow; its last byte is past what its headers play
+1749FA 040E0 drums/magical_sound_shower/splash  # 04D: drum kit 0 note 55 (splash); Passing Breeze, Looking for the Rainbow
+178AEA 0381F drums/magical_sound_shower/cowbell  # 04E: drum kit 0 note 56 (cowbell), which no song plays
+17C319 03A3F drums/magical_sound_shower/crash_2  # 04F: drum kit 0 note 57 (crash_2), which no song plays
+180000 019DD drums/splash_wave/hihat_closed  # 050: drum kit 2 note 42 (hihat closed); Splash Wave, Blow Your Cool, Sonic Control, Last Wave
+1819ED 01E1C drums/splash_wave/hihat_pedal  # 051: drum kit 2 note 44 (hihat pedal); Splash Wave, Blow Your Cool, Sonic Control, Last Wave
+183819 068FA drums/splash_wave/hihat_open  # 032 052: drum kit 2 note 46 (hihat open); Splash Wave, Blow Your Cool, Sonic Control, Last Wave; header 032 plays it from +1063 (drum kit 2 note 79; Last Wave)
+18A123 00D28 drums/splash_wave/tom_floor_low  # 053: drum kit 2 note 41 (tom floor low); Splash Wave, Sonic Control, Last Wave
+18AE5B 0AA29 drums/splash_wave/snare_2  # 054: drum kit 2 note 40 (snare 2); Splash Wave, Blow Your Cool, Sonic Control, Last Wave
+195894 00BB1 drums/splash_wave/kick  # 055: drum kit 2 note 36 (kick); Blow Your Cool, Sonic Control
+196455 015CD drums/splash_wave/snare  # 056: drum kit 2 note 38 (snare), 3 note 50 (tom high), 4 note 38 (snare), 4 note 62 (conga mute); Splash Wave, Blow Your Cool, Speed King, Adventure, Sonic Control, Last Wave, Jingle Bell, the Mega Radio Station, Meaning of the Light, the race's opening, the staff credits
+197A32 0252C drums/splash_wave/clap  # 057: drum kit 2 note 39 (clap); Blow Your Cool, Sonic Control
+199F6E 052B3 drums/speed_king/clap  # 058: drum kit 3 note 39 (clap), 4 note 61 (bongo low); Speed King, Adventure, the Mega Radio Station, Meaning of the Light, the staff credits
+19F231 0160A drums/splash_wave/crash  # 059: drum kit 2 note 49 (crash); Blow Your Cool, Sonic Control
+1A084B 032CF instruments/blow_your_cool/bass  # 05A: program 11, channel 0, notes 34-52; Blow Your Cool, Last Wave
+1A3B2A 025CB instruments/splash_wave/bass  # 05B: program 20, channel 0, notes 36-69; Splash Wave, Blow Your Cool, Sonic Control
+1A6105 03FAE instruments/splash_wave/chords_2  # 05C: program 19,21,2E, channel 1,3, notes 31-76; Splash Wave, Blow Your Cool, Speed King, Adventure, Jingle Bell, the Mega Radio Station, Meaning of the Light, the staff credits
+1AA0C3 04EC5 drums/splash_wave/cowbell  # 05D: drum kit 2 note 56 (cowbell); Blow Your Cool
+1AEF98 02A8B drums/splash_wave/tom_low_mid  # 05E: drum kit 2 note 47 (tom low mid); Splash Wave, Blow Your Cool, Last Wave
+1B1A33 03CB5 instruments/splash_wave/lead_3  # 05F: program 22,36, channel 2,4,6, notes 45-93; Splash Wave, Sonic Control, Last Wave, the Mega Radio Station
+1B56F8 06EE9 instruments/blow_your_cool/lead_2  # 060: program 23,28, channel 1,2,5, notes 64-96; Blow Your Cool, Sonic Control, Last Wave, the Mega Radio Station
+1BC5F1 07AD0 instruments/splash_wave/lead  # 061: program 10, channel 2,4, notes 46-88; Splash Wave, Blow Your Cool, Sonic Control, Last Wave
+1C40D1 0A069 drums/splash_wave/tom_high_mid  # 062: drum kit 2 note 48 (tom high mid); Blow Your Cool
+1CE14A 0828A drums/splash_wave/china  # 063: drum kit 2 note 52 (china); Blow Your Cool
+1D63E4 04BE8 instruments/splash_wave/lead_4  # 064: program 24, channel 3,6, notes 55-86; Splash Wave, Sonic Control
+1DAFCC 00054 instruments/blow_your_cool/lead  # 065 0B5: program 25, channel 6, notes 62-84; Blow Your Cool, Sonic Control
+1DB030 0FD14 drums/splash_wave/ride  # 066: drum kit 2 note 51 (ride); Blow Your Cool, Sonic Control
+1EAD54 03336 drums/splash_wave/ride_bell  # 067: drum kit 2 note 53 (ride bell); Blow Your Cool, Last Wave
+1EE09A 053FB drums/splash_wave/tambourine  # 068: drum kit 2 note 54 (tambourine); Blow Your Cool, Sonic Control
+1F34A5 00F77 drums/splash_wave/splash  # 069: drum kit 2 note 55 (splash); Blow Your Cool
+1F442C 0331E instruments/splash_wave/lead_5  # 06A: program 30, channel 4,6, notes 60-86; Splash Wave, Sonic Control
+1F775A 05CDB instruments/sonic_control/lead  # 06B 0B6: program 31, channel 2, notes 69-79; Sonic Control
+1FD445 00054 effects/tone_wave  # 06C 0B2: a single cycle: sounds 29 and 2A, and program 39, the melody of sounds B2-BC on channel D
+1FD4A9 00054 instruments/unplayed/program_33  # 06D 0B3: program 33, which no song plays
+1FD50D 00054 instruments/last_wave/lead  # 06E 0B4 0B7: program 34, channel 6, notes 71-94; Last Wave
+1FD571 029E0 instruments/unplayed/program_0f  # 0B1: program 0F, which no song plays (Splash Wave's set has it on channel 1, and its songs change it before they play)
+200000 02536 scenery/dragon_dance  # 0B8: sound 44: the dragon dance at the goal of stage 22 (goal_parade_dragon_update); an ending
+202546 029BF scenery/sound_45  # 0B9: sound 45: an ending's actors (ending_actor_lists)
+204F15 0D2FC scenery/matterhorn  # 0BA: sound 46: the goal at the Matterhorn, stage 27 (sounding_scenery_update), the whole sample looped
+212221 06AB5 scenery/pandas  # 0BB: sound 47: the pandas at Beijing, the goal of stage 24
+218CE6 034FC scenery/sound_48  # 0BC: sound 48: an ending's actors (ending_actor_lists)
+21C1F2 040C9 scenery/santa_sleigh  # 0BD: sound 49: Santa's sleigh over the goal of stage 26 (santa_sleigh_update)
+2202CB 041F4 scenery/cheering_japan  # 0BE: sound 4A: the cheering group with banners, the goal of stage 23
+2244CF 02233 scenery/sound_4b  # 0BF: sound 4B (the sound test's list; nothing else found)
+226712 0F422 instruments/dream_flying/chords  # 0C0: program 4D, channel 0, notes 34-78; Dream Flying, sound 0C
+235B44 04FEF instruments/dream_flying/phrase_2  # 0C1: program 4E, channel 1, notes 60-60; Dream Flying
+23AB43 0890A instruments/dream_flying/phrase  # 0C2: program 4F, channel 2, notes 72-72; Dream Flying
+24345D 03529 instruments/dream_flying/phrase_3  # 0C3: program 50, channel 3, notes 60-60; Dream Flying
+246996 0B07D drums/dream_flying/china  # 0C4: drum kit 5 note 52 (china); Dream Flying
+251A23 0B87B drums/dream_flying/ride_bell  # 0C5: drum kit 5 note 53 (ride bell); Dream Flying
+25D2AE 057AE drums/dream_flying/snare  # 0C6: drum kit 4 note 74 (guiro long), 5 note 38 (snare); Mega Driver, Dream Flying
+262A6C 04D7F drums/dream_flying/kick  # 0C7: drum kit 4 note 72 (whistle long), 5 note 36 (kick); Mega Driver, Dream Flying
+2677FB 068FA drums/speed_king/hihat_open  # 0C8: drum kit 3 note 46 (hihat open), 4 note 46 (hihat open), 4 note 58 (vibraslap), 4 note 82, 5 note 46 (hihat open); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Mega Driver, Dream Flying, Meaning of the Light, the race's opening, the staff credits
+26E105 01E1C drums/speed_king/hihat_pedal  # 0C9: drum kit 3 note 44 (hihat pedal), 4 note 44 (hihat pedal), 4 note 56 (cowbell), 5 note 42 (hihat closed); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Dream Flying, the race's opening
+26FF31 06DFE drums/dream_flying/crash  # 0CA: drum kit 4 note 86, 5 note 49 (crash); Mega Driver, Dream Flying
+276D3F 030E5 instruments/radio_station/bass_2  # 0CB: program 37,51, channel 0,4, notes 31-74; the Mega Radio Station, Dream Flying
+279E34 04F76 instruments/radio_station/chords_2  # 0CC: program 2B,52, channel 3,5, notes 48-93; the Mega Radio Station, Dream Flying
+280000 019DD drums/speed_king/hihat_closed  # 088: drum kit 3 note 42 (hihat closed), 4 note 42 (hihat closed), 4 note 54 (tambourine); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Meaning of the Light, the staff credits
+2819ED 01E1C drums/speed_king/hihat_pedal  # 089: drum kit 3 note 44 (hihat pedal), 4 note 44 (hihat pedal), 4 note 56 (cowbell), 5 note 42 (hihat closed); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Dream Flying, the race's opening
+283819 068FA drums/speed_king/hihat_open  # 08A: drum kit 3 note 46 (hihat open), 4 note 46 (hihat open), 4 note 58 (vibraslap), 4 note 82, 5 note 46 (hihat open); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Mega Driver, Dream Flying, Meaning of the Light, the race's opening, the staff credits
+28A123 052B3 drums/speed_king/clap  # 08B: drum kit 3 note 39 (clap), 4 note 61 (bongo low); Speed King, Adventure, the Mega Radio Station, Meaning of the Light, the staff credits
+28F3E6 021E6 drums/speed_king/kick  # 08C: drum kit 3 note 36 (kick); Speed King
+2915DC 0438A drums/speed_king/snare  # 08D: drum kit 3 note 38 (snare); Speed King, Adventure
+295976 0FF57 drums/speed_king/tom_low_mid  # 08E: drum kit 3 note 47 (tom low mid); Speed King, Adventure, the race's opening, the staff credits
+2A58DD 06F08 instruments/speed_king/bass_2  # 08F: program 16, channel 0, notes 52-62; Speed King
+2AC7F5 03C44 instruments/speed_king/bass  # 070: program 17, channel 0, notes 50-78; Speed King, Adventure, Jingle Bell, the race's opening, the staff credits
+2B0449 0B0B3 instruments/speed_king/lead  # 071: program 18, channel 3, notes 40-96; Speed King, Adventure, Jingle Bell, Meaning of the Light, the race's opening, the staff credits
+2BB50C 0759E instruments/speed_king/chords  # 072: program 19, channel 1,6, notes 69-87; Speed King, Adventure, Jingle Bell, Meaning of the Light, the staff credits
+2C2ABA 0873B instruments/speed_king/lead_2  # 073: program 1A, channel 4, notes 60-89; Speed King, the race's opening, the staff credits
+2CB205 0685E instruments/speed_king/lead_3  # 074: program 1B, channel 2, notes 58-93; Speed King, Adventure
+2D1A73 0331F instruments/picture_the_rivers/lead_2  # 075: program 01,1C,2F, channel 4,5,6, notes 32-98; Picture the Rivers, Looking for the Rainbow, Speed King, the Mega Radio Station, the unused song (set 2)
+2D4DA2 00D28 drums/speed_king/crash  # 076: drum kit 3 note 49 (crash); Adventure, Meaning of the Light, the race's opening, the staff credits
+2D5ADA 015CD drums/splash_wave/snare  # 077: drum kit 2 note 38 (snare), 3 note 50 (tom high), 4 note 38 (snare), 4 note 62 (conga mute); Splash Wave, Blow Your Cool, Speed King, Adventure, Sonic Control, Last Wave, Jingle Bell, the Mega Radio Station, Meaning of the Light, the race's opening, the staff credits
+2D70B7 00BB1 drums/speed_king/tom_high_mid  # 078: drum kit 3 note 48 (tom high mid); Adventure, Jingle Bell
+2D7C78 01CAE drums/speed_king/china  # 079: drum kit 3 note 52 (china); Adventure, Jingle Bell, Meaning of the Light
+2D9936 02644 drums/speed_king/cowbell  # 07A: drum kit 3 note 56 (cowbell); Adventure
+2DBF8A 01E7B drums/speed_king/vibraslap  # 07B: drum kit 3 note 58 (vibraslap); Adventure, the staff credits
+2DDE15 029C8 drums/speed_king/bongo_high  # 07C: drum kit 3 note 60 (bongo high); Adventure, Meaning of the Light
+2E07ED 01746 drums/speed_king/bongo_low  # 07D: drum kit 3 note 61 (bongo low), 3 note 62 (conga mute); Adventure, Meaning of the Light
+2E1F43 01B42 drums/speed_king/conga_low  # 07E: drum kit 3 note 64 (conga low); Adventure, Jingle Bell, Meaning of the Light, the staff credits
+2E3A95 00960 drums/speed_king/timbale_high  # 07F: drum kit 3 note 65 (timbale high); Adventure, Jingle Bell, Meaning of the Light, the staff credits
+2E4405 02103 drums/speed_king/timbale_low  # 080: drum kit 3 note 66 (timbale low); Adventure, Meaning of the Light, the staff credits
+2E6518 00D12 drums/speed_king/agogo_high  # 081: drum kit 3 note 67 (agogo high); Adventure, Jingle Bell, Meaning of the Light, the staff credits
+2E723A 03FAE instruments/splash_wave/chords_2  # 082: program 19,21,2E, channel 1,3, notes 31-76; Splash Wave, Blow Your Cool, Speed King, Adventure, Jingle Bell, the Mega Radio Station, Meaning of the Light, the staff credits
+2EB1F8 02A83 instruments/adventure/lead  # 083: program 1D, channel 5,6, notes 50-88; Adventure, Jingle Bell
+2EDC8B 05577 instruments/speed_king/lead_low  # 084: program 1E, channel 1,6, notes 36-52; Speed King, Adventure
+2F3212 051CA instruments/speed_king/lead_mid  # 085: program 1E, channel 1,6, notes 53-68; Speed King, Adventure
+2F83EC 04F43 instruments/speed_king/lead_high  # 086: program 1E, channel 1,6, notes 69-103; Speed King, Adventure
+2FD33F 0083B instruments/adventure/lead_2  # 087: program 1F, channel 4, notes 62-71; Adventure
+2FDB8A 023EC drums/speed_king/cabasa  # 06F: drum kit 3 note 69 (cabasa); Adventure
+300000 019DD drums/speed_king/hihat_closed  # 090: drum kit 3 note 42 (hihat closed), 4 note 42 (hihat closed), 4 note 54 (tambourine); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Meaning of the Light, the staff credits
+3019ED 01E1C drums/speed_king/hihat_pedal  # 091: drum kit 3 note 44 (hihat pedal), 4 note 44 (hihat pedal), 4 note 56 (cowbell), 5 note 42 (hihat closed); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Dream Flying, the race's opening
+303819 068FA drums/speed_king/hihat_open  # 092: drum kit 3 note 46 (hihat open), 4 note 46 (hihat open), 4 note 58 (vibraslap), 4 note 82, 5 note 46 (hihat open); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Mega Driver, Dream Flying, Meaning of the Light, the race's opening, the staff credits
+30A123 00BCE drums/radio_station/kick  # 093: drum kit 4 note 36 (kick), 4 note 60 (bongo high); the Mega Radio Station
+30AD01 015CD drums/splash_wave/snare  # 094: drum kit 2 note 38 (snare), 3 note 50 (tom high), 4 note 38 (snare), 4 note 62 (conga mute); Splash Wave, Blow Your Cool, Speed King, Adventure, Sonic Control, Last Wave, Jingle Bell, the Mega Radio Station, Meaning of the Light, the race's opening, the staff credits
+30C2DE 039AC instruments/radio_station/chords  # 095: program 2E, channel 1, notes 69-86; the Mega Radio Station
+30FC9A 03FAE instruments/splash_wave/chords_2  # 096: program 19,21,2E, channel 1,3, notes 31-76; Splash Wave, Blow Your Cool, Speed King, Adventure, Jingle Bell, the Mega Radio Station, Meaning of the Light, the staff credits
+313C58 06EE9 instruments/blow_your_cool/lead_2  # 097: program 23,28, channel 1,2,5, notes 64-96; Blow Your Cool, Sonic Control, Last Wave, the Mega Radio Station
+31AB51 052B3 drums/speed_king/clap  # 098: drum kit 3 note 39 (clap), 4 note 61 (bongo low); Speed King, Adventure, the Mega Radio Station, Meaning of the Light, the staff credits
+31FE14 038A8 instruments/radio_station/lead_2  # 099: program 2A, channel 4, notes 67-94; the Mega Radio Station
+3236CC 04F76 instruments/radio_station/chords_2  # 09A: program 2B,52, channel 3,5, notes 48-93; the Mega Radio Station, Dream Flying
+328652 00D36 instruments/radio_station/bass  # 09B: program 2C, channel 0, notes 31-68; the Mega Radio Station
+329398 06A6C instruments/radio_station/lead  # 09C: program 2D, channel 6, notes 52-86; the Mega Radio Station
+32FE14 0331F instruments/picture_the_rivers/lead_2  # 09D: program 01,1C,2F, channel 4,5,6, notes 32-98; Picture the Rivers, Looking for the Rainbow, Speed King, the Mega Radio Station, the unused song (set 2)
+333143 015C0 speech/own_car_call  # 09E: sound 80; the first word of sounds A8-AF (DJ messages 19-20: this screen's car)
+334713 01950 speech/number  # 09F: sound 81; the first word of sounds 98-9F (DJ messages 9-10: the cars introduced by number)
+336073 09893 speech/station_greeting  # 0A0: sound 82, DJ message 29 (the station chosen); the first part of sound B0 (message 0)
+33F916 032A7 speech/introduction_end  # 0A1: sound 83, DJ message 2A: the end of the cars' introduction, and a remark
+342BCD 025B1 speech/in_the_lead  # 0A2: sound 84; the last word of sounds A0-A7 (DJ messages 11-18: the leader's number)
+34518E 04502 speech/station_greeting_3  # 0A3: sound 85; the third part of sound B0 (DJ message 0)
+3496A0 016C4 speech/remark_2b  # 0A4: sound 86, DJ message 2B: a remark (car_radio_dj_remark_2b)
+34AD74 070CF speech/station_greeting_2  # 0A5: sound 87; the second part of sound B0 (DJ message 0)
+351E53 04902 speech/remark_2c  # 0A6: sound 88, DJ message 2C: a remark
+356765 02650 speech/own_car_cheer  # 0A7: sound 89; the last word of sounds A8-AF (this screen's car)
+358DC5 037F5 speech/remark_2d  # 0A8: sound 8A, DJ message 2D: a remark
+35C5CA 0AE1C speech/radio_last_stage  # 0A9: sound 8B, DJ message 2E: the station's message past a fork into stage level 4, the last (stage_level_radio_messages)
+3673F6 03852 speech/remark_2f  # 0AA: sound 8C, DJ message 2F: a remark
+36AC58 01DD3 speech/radio_next_stage  # 0AB: sound 8D, DJ message 30: the station's message past a fork into stage levels 0-3
+36CA3B 03A51 instruments/radio_station/lead_3  # 0AC: program 35, channel 4,5, notes 53-98; the Mega Radio Station
+37049C 03CB5 instruments/splash_wave/lead_3  # 0AD: program 22,36, channel 2,4,6, notes 45-93; Splash Wave, Sonic Control, Last Wave, the Mega Radio Station
+374161 07A50 drums/radio_station/conga_open  # 0AE: drum kit 4 note 63 (conga open); the Mega Radio Station
+37BBC1 030E5 instruments/radio_station/bass_2  # 0AF: program 37,51, channel 0,4, notes 31-74; the Mega Radio Station, Dream Flying
+37ECB6 012E1 instruments/radio_station/lead_4  # 0B0: program 38, channel 5, notes 77-84; the Mega Radio Station
+380000 0A056 drums/mega_driver/hit  # 0D0: drum kit 4 note 84; Mega Driver
+38A066 0BAD7 instruments/mega_driver/phrase  # 0D1: program 48, channel 2, notes 72-72; Mega Driver
+395B4D 0A2F6 instruments/mega_driver/phrase_4  # 0D2: program 49, channel 3, notes 72-72; Mega Driver
+39FE53 0C8AD instruments/mega_driver/phrase_2  # 0D3: program 4A, channel 4, notes 72-72; Mega Driver
+3AC710 0997F instruments/mega_driver/phrase_5  # 0D4: program 47, channel 1, notes 72-72; Mega Driver
+3B609F 052B0 instruments/mega_driver/phrase_3  # 0D5: program 4B, channel 5, notes 72-72; Mega Driver
+3BB35F 0A619 instruments/mega_driver/phrase_6  # 0D6: program 4C, channel 6, notes 72-72; Mega Driver
+3C5988 04D7F drums/dream_flying/kick  # 0D7: drum kit 4 note 72 (whistle long), 5 note 36 (kick); Mega Driver, Dream Flying
+3CA717 068FA drums/speed_king/hihat_open  # 0D8: drum kit 3 note 46 (hihat open), 4 note 46 (hihat open), 4 note 58 (vibraslap), 4 note 82, 5 note 46 (hihat open); Speed King, Adventure, Jingle Bell, the Mega Radio Station, Mega Driver, Dream Flying, Meaning of the Light, the race's opening, the staff credits
+3D1021 051BF instruments/mega_driver/bass  # 0D9: program 46, channel 0, notes 62-76; Mega Driver
+3D61F0 057AE drums/dream_flying/snare  # 0DA: drum kit 4 note 74 (guiro long), 5 note 38 (snare); Mega Driver, Dream Flying
+3DB9AE 091BC speech/welcome_1  # 0DB: the first word of sound B1, DJ message 3B (the car select and the entry countdown)
+3E4B7A 0403A speech/welcome_2  # 0DC: the second word of sound B1
+3E8BC4 031AC speech/welcome_3  # 0DD: the third word of sound B1
+3EBD80 03835 speech/welcome_4  # 0DE: the fourth word of sound B1
+3EF5C5 06247 speech/waiting_for_others  # 0DF: sound 58, DJ message 3C: the car select waiting for the race's other players
+3F581C 06DFE drums/dream_flying/crash  # 0E0: drum kit 4 note 86, 5 note 49 (crash); Mega Driver, Dream Flying
+3FC62A 02A6D drums/mega_driver/tom  # 0E1: drum kit 4 note 77 (wood block low), 4 note 79 (cuica open), 4 note 81 (triangle open), 4 note 83; Mega Driver
+
+uses 031 3 5
+uses 032 3 4 5
+uses 033 5
+uses 034 3 5
+uses 036 2 3 5
+uses 037 0 1 2 3 5
+uses 038 0
+uses 039 2 5
+uses 03A 0 1 2
+uses 03B 3 5
+uses 03C 3
+uses 03D 2
+uses 03E 0 1 5
+uses 03F 0 1
+uses 040 0 1 2 3
+uses 041 0 1 2 3 5
+uses 042 3
+uses 043 1 2 5
+uses 044 0 1 2 3 5
+uses 045 0 1 2 5
+uses 046 0 1 2 3 5
+uses 047 0 2 3 5
+uses 048 3 5
+uses 049 0 1 2 3 5
+uses 04A 1
+uses 04B 0 2 3
+uses 04C 0 1 5
+uses 04D 1 5
+uses 050 4
+uses 051 4
+uses 052 4
+uses 053 4
+uses 054 4
+uses 055 4
+uses 056 4
+uses 057 4
+uses 059 4
+uses 05A 4
+uses 05B 4
+uses 05C 4
+uses 05D 4
+uses 05E 4
+uses 05F 4
+uses 060 4
+uses 061 4
+uses 062 4
+uses 063 4
+uses 064 4
+uses 065 4
+uses 066 4
+uses 067 4
+uses 068 4
+uses 069 4
+uses 06A 4
+uses 06B 4
+uses 06E 4
+uses 06F 7
+uses 070 7
+uses 071 7
+uses 072 7
+uses 073 7
+uses 074 7
+uses 075 7
+uses 076 7
+uses 077 7
+uses 078 7
+uses 079 7
+uses 07A 7
+uses 07B 7
+uses 07C 7
+uses 07D 7
+uses 07E 7
+uses 07F 7
+uses 080 7
+uses 081 7
+uses 082 7
+uses 083 7
+uses 084 7
+uses 085 7
+uses 086 7
+uses 087 7
+uses 088 7
+uses 089 7
+uses 08A 7
+uses 08B 7
+uses 08C 7
+uses 08D 7
+uses 08E 7
+uses 08F 7
+uses 090 8
+uses 091 8
+uses 092 8
+uses 093 8
+uses 094 8
+uses 095 8
+uses 096 8
+uses 097 8
+uses 098 8
+uses 099 8
+uses 09A 8
+uses 09B 8
+uses 09C 8
+uses 09D 8
+uses 09E 8
+uses 09F 8
+uses 0A0 8
+uses 0A1 8
+uses 0A2 8
+uses 0A3 8
+uses 0A4 8
+uses 0A5 8
+uses 0A6 8
+uses 0A7 8
+uses 0A8 8
+uses 0A9 8
+uses 0AA 8
+uses 0AB 8
+uses 0AC 8
+uses 0AD 8
+uses 0AE 8
+uses 0AF 8
+uses 0B0 8
+uses 0B8 6
+uses 0B9 6
+uses 0BA 6
+uses 0BB 6
+uses 0BC 6
+uses 0BD 6
+uses 0BE 6
+uses 0BF 6
+uses 0C0 6
+uses 0C1 6
+uses 0C2 6
+uses 0C3 6
+uses 0C4 6
+uses 0C5 6
+uses 0C6 6
+uses 0C7 6
+uses 0C8 6
+uses 0C9 6
+uses 0CA 6
+uses 0CB 6
+uses 0CC 6
+uses 0D0 10
+uses 0D1 10
+uses 0D2 10
+uses 0D3 10
+uses 0D4 10
+uses 0D5 10
+uses 0D6 10
+uses 0D7 10
+uses 0D8 10
+uses 0D9 10
+uses 0DA 10
+uses 0DB 10
+uses 0DC 10
+uses 0DD 10
+uses 0DE 10
+uses 0DF 10
+uses 0E0 10
+uses 0E1 10

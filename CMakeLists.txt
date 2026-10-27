@@ -22,6 +22,19 @@ endforeach()
 # from its own source
 option(ORUNNERS_STATIC_SDL2 "Build SDL2 from its source into the executables" OFF)
 
+# A development aid: everything built with AddressSanitizer, which stops the game at a read past a piece of
+# its assets (each piece is a block of its own, runtime/src/assets.c: the code reads a table only inside it)
+option(ORUNNERS_ASAN "Build with AddressSanitizer" OFF)
+if(ORUNNERS_ASAN)
+	if(MSVC)
+		add_compile_options(/fsanitize=address /Zi)
+		add_link_options(/DEBUG /INCREMENTAL:NO)
+	else()
+		add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g)
+		add_link_options(-fsanitize=address)
+	endif()
+endif()
+
 if(MSVC)
 	add_compile_options(/W3 /utf-8)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
@@ -52,13 +65,13 @@ if(UNIX AND NOT APPLE)
 	target_link_libraries(s32runtime PUBLIC m)    # (the C library's maths are apart there)
 endif()
 
-# The game's data: no executable carries the ROM or anything from it. The game loads its assets pack when
-# it starts (runtime/src/game_data.c): tools/make_pack.py writes it beside the executables from assets/,
-# which extract_assets.py takes out of the player's ROM set (rom/, its files or its .zip; ORUNNERS_ROM picks
-# another); a change to an asset goes into the pack. The reference and the scaffold run the original code,
-# so they read the ROM set themselves when they start (runtime/src/rom_set.c). The ROM never goes into the
-# repository. Without a ROM set (a build for another machine) nothing of the game's is made, only the
-# executables
+# The game's data: no executable carries the ROM or anything from it. The game loads its assets when it
+# starts (runtime/src/assets.c): the files extract_assets.py takes out of the player's ROM set (rom/, its
+# files or its .zip; ORUNNERS_ROM picks another) into assets/, in formats the usual tools open, where it
+# looks for them (beside the executable, or the current folder's). The reference and the scaffold run the
+# original code, so they read the ROM set themselves when they start (runtime/src/rom_set.c). The ROM never
+# goes into the repository. Without a ROM set (a build for another machine) nothing of the game's is made,
+# only the executables
 find_package(Python3 COMPONENTS Interpreter)
 set(ORUNNERS_ROM ${CMAKE_SOURCE_DIR}/rom CACHE PATH "The ROM set the assets are taken out of")
 set(ORUNNERS_ROM_FILES "")
@@ -67,25 +80,17 @@ if(IS_DIRECTORY ${ORUNNERS_ROM})
 elseif(EXISTS ${ORUNNERS_ROM})
 	set(ORUNNERS_ROM_FILES ${ORUNNERS_ROM})
 endif()
-add_library(orunners_data STATIC runtime/src/game_data.c runtime/src/rom_set.c runtime/src/inflate.c
-	runtime/src/extract.c runtime/src/pack_layout.c)
+add_library(orunners_data STATIC runtime/src/game_data.c runtime/src/rom_set.c runtime/src/inflate.c)
 target_include_directories(orunners_data PUBLIC runtime/include)
 if(ORUNNERS_ROM_FILES AND Python3_FOUND)
-	file(GLOB_RECURSE ORUNNERS_ASSET_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)
-	file(GLOB ORUNNERS_FORMAT_TOOLS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tools/core/formats/*.py)
-	set(ORUNNERS_ASSETS_PACK ${ORUNNERS_BIN_DIR}/orunners.assets)
-	add_custom_command(OUTPUT ${ORUNNERS_ASSETS_PACK}
+	set(ORUNNERS_ASSETS_STAMP ${CMAKE_SOURCE_DIR}/assets/.extracted)
+	add_custom_command(OUTPUT ${ORUNNERS_ASSETS_STAMP}
 		COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/extract_assets.py ${ORUNNERS_ROM}
-		COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/tools/make_pack.py ${ORUNNERS_ASSETS_PACK}
-		DEPENDS ${ORUNNERS_ROM_FILES} ${ORUNNERS_ASSET_FILES} ${ORUNNERS_FORMAT_TOOLS} ${CMAKE_SOURCE_DIR}/assets.json
-			${CMAKE_SOURCE_DIR}/extract_assets.py ${CMAKE_SOURCE_DIR}/tools/make_pack.py
-			${CMAKE_SOURCE_DIR}/tools/orunners_rom.py ${CMAKE_SOURCE_DIR}/tools/core/asset_formats.py
-			${CMAKE_SOURCE_DIR}/tools/core/data_formats.py
-		COMMENT "Taking the assets out of the ROM set and packing them for the game")
-	add_custom_target(orunners_assets ALL DEPENDS ${ORUNNERS_ASSETS_PACK})
-	add_dependencies(orunners_data orunners_assets)
+		DEPENDS ${ORUNNERS_ROM_FILES} ${CMAKE_SOURCE_DIR}/assets.json ${CMAKE_SOURCE_DIR}/extract_assets.py
+		COMMENT "Taking the assets out of the ROM set")
+	add_custom_target(orunners_assets ALL DEPENDS ${ORUNNERS_ASSETS_STAMP})
 else()
-	message(STATUS "No ROM set at ${ORUNNERS_ROM} (or no Python): no assets pack; the game needs one beside it")
+	message(STATUS "No ROM set at ${ORUNNERS_ROM} (or no Python): no assets; the game needs them beside it")
 endif()
 
 # The game: its runtime plus its C, src/ (tools/decompile.py writes it; ORUNNERS_DECOMPILED_DIR picks
@@ -112,7 +117,8 @@ else()
 endif()
 
 if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
-	add_library(orunners_game STATIC runtime/src/game.c ${ORUNNERS_DECOMPILED})
+	add_library(orunners_game STATIC runtime/src/game.c runtime/src/assets.c runtime/src/assets_media.c
+		runtime/src/assets_midi.c runtime/src/json.c runtime/src/png.c runtime/src/inflate.c ${ORUNNERS_DECOMPILED})
 	target_include_directories(orunners_game PUBLIC runtime/include ${ORUNNERS_DECOMPILED_DIR})
 	target_link_libraries(orunners_game PUBLIC s32runtime)
 	if(MSVC)
@@ -130,7 +136,7 @@ if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	endif()
 
 	add_executable(orunners_game_headless ports/headless/main.c)
-	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_sound orunners_data)
+	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_sound)
 
 	# The game in a window (ports/sdl2): SDL2 from the system, or on Windows the development package
 	# unpacked in build/downloads/sdl2 (SDL2_DIR picks another), a library beside the executable; or, with
@@ -160,7 +166,7 @@ if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	if(SDL2_FOUND)
 		# (an .app on macOS: SDL_GetBasePath is its Resources folder)
 		add_executable(orunners WIN32 MACOSX_BUNDLE ports/sdl2/main.c)
-		target_link_libraries(orunners PRIVATE orunners_game orunners_sound orunners_data ${ORUNNERS_SDL2})
+		target_link_libraries(orunners PRIVATE orunners_game orunners_sound ${ORUNNERS_SDL2})
 		set_target_properties(orunners PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "OutRunners"
 			MACOSX_BUNDLE_GUI_IDENTIFIER io.github.cheviman.outrunners-decomp)
 		if(WIN32 AND NOT ORUNNERS_STATIC_SDL2)

@@ -211,6 +211,9 @@ static void on_sound_reset(bool held)
 /* Hooks the sound program to the board; s32_board.sound_rom and the chips have to be set */
 void sound_cpu_attach(void)
 {
+	/* the tables the program reads by name, where the chip (or the assets) has them */
+	for (size_t index = 0; index < sound_table_count; index++)
+		*sound_tables[index].data = s32_sound_rom_at(sound_tables[index].address);
 	z80.clock = z80_time(s32_board.cycles);
 	s32_board.time_passes = on_time_passes;
 	s32_board.sound_irq_changed = on_sound_irq;

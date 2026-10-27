@@ -13,6 +13,7 @@ Usage:
   python extract_assets.py --force [rom]          extract everything again
   python extract_assets.py --clean                delete every extracted asset
   python extract_assets.py --check [rom]          build back what can go into the ROM and compare the bytes
+  --only TYPE[,TYPE]                               with any of them: only the assets of those types
 
 assets.json holds positions only: every byte comes from the user's own ROM set when the assets are
 extracted, into assets/ (which, like the ROM, stays out of the repository). Each asset is in a format the
@@ -31,7 +32,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "core"))
 import asset_formats  # noqa: E402
 import data_formats  # noqa: E402
+from formats import typed  # noqa: E402
 import orunners_rom  # noqa: E402
+import pcm_samples  # noqa: E402
+import tilesets  # noqa: E402
 
 MANIFEST = ROOT / "assets.json"
 ASSETS = ROOT / "assets"
@@ -44,7 +48,6 @@ REGION_BUILDERS = {
     "sound": orunners_rom.build_sound,
     "pcm": orunners_rom.build_pcm,
 }
-TILE_SLOTS = 16    # palettes a tile sheet's PNG holds: 16 of 16 colors
 
 
 def load_manifest():
@@ -70,46 +73,6 @@ def palette_colors(program, offset, count, alternate):
             value = blue << 10 | green << 5 | red
         colors.append(asset_formats.rgb555(value & 0x7FFF))
     return colors
-
-
-def extract_tile_sheet(asset, data, program, path, columns):
-    """A sheet of 16x16 tiles as an 8-bit indexed PNG in color: the 16 palettes its tiles are shown with
-    the most (tile_palettes.json), 16 colors each, a tile's pixels at its palette's slot * 16 + pen (pen 0
-    see-through), so that index & 15 is the pen; and NAME.json beside it, each tile's palette."""
-    first = asset["offset"] // asset_formats.TILE_BYTES
-    count = len(data) // asset_formats.TILE_BYTES
-    known = json.loads((ROOT / asset["palettes"]).read_text(encoding="ascii"))
-    formats = known.get("formats", {})
-    palettes = {int(tile, 16): (int(offset, 0), source)
-                for source in ("drawn", "nearby", "chosen") for tile, offset in known[source].items()}
-    used = Counter(palettes[first + tile][0] for tile in range(count) if first + tile in palettes)
-    slots = [offset for offset, _ in used.most_common(TILE_SLOTS)]
-    colors = []
-    for offset in slots:
-        colors += palette_colors(program, offset, 16, formats.get(f"0x{offset:06X}", "alternate") == "alternate")
-    colors += [(level * 17,) * 3 for level in range(16)] * (TILE_SLOTS - len(slots))
-    rows = asset_formats.tile_sheet_pens(data, columns)
-    listing = []
-    for tile in range(count):
-        offset, source = palettes.get(first + tile, (None, "none"))
-        slot = slots.index(offset) if offset in slots else None
-        top = (tile // columns) * asset_formats.TILE_SIZE
-        left = (tile % columns) * asset_formats.TILE_SIZE
-        if slot:    # (slot 0: the pens are the indices already)
-            for y in range(top, top + asset_formats.TILE_SIZE):
-                rows[y][left:left + asset_formats.TILE_SIZE] = \
-                    [slot * 16 + pen for pen in rows[y][left:left + asset_formats.TILE_SIZE]]
-        listing.append({"tile": f"{first + tile:04X}", "palette": f"0x{offset:06X}" if offset is not None else None,
-                        "palette_from": source, "slot": slot})
-    alphas = [0 if index % 16 == 0 else 255 for index in range(TILE_SLOTS * 16)]
-    asset_formats.write_png_indexed(path, rows, colors, 8, alphas=alphas)
-    path.with_suffix(".json").write_text(json.dumps({
-        "notes": ["Each tile's palette: where its colors are in the program ROM ('palette_from': 'drawn' in the "
-                  "scenarios, 'nearby': a tile no scenario shows, given its neighbour's, or 'chosen' by hand), and "
-                  "the slot of the sheet's 16 palettes it is drawn with (null: not among them, drawn with the "
-                  "first). Index & 15 of a pixel is the pen."],
-        "tiles": listing}, indent=1) + "\n", encoding="ascii")
-    return 2
 
 
 SHEET_NOTES = ["Each piece goes back into the sprite ROM at 'word' (32-bit words, bank << 20 | address), cut from "
@@ -177,6 +140,7 @@ def extract_sprites(asset, sprites, program, path):
         return palette_colors(program, offset, count, formats.get(f"0x{offset:06X}", "alternate") == "alternate")
 
     files = 0
+    written, ends = [], []
     covered = bytearray(len(sprites) // 4)
     for whole_path, sheet in sheets.items():
         for sheet_path, rows_of_part in sheet_parts(whole_path, sheet, by_number, palettes, asset_formats.SHEET_SLOTS):
@@ -234,7 +198,11 @@ def extract_sprites(asset, sprites, program, path):
                 "palettes": [f"0x{offset:06X}" if offset is not None else None for offset in slots],
                 "rows": firsts, "frames": listing}, indent=1) + "\n", encoding="ascii")
             files += 2
-    # what no piece covers and is not empty (0xFF): sheets of 8-pixel-wide 4-bit strips in unused/
+            written.append(sheet_path)
+            ends += [(frame["word"] + frame["words"], sheet_path) for frame in members]
+    # what no piece covers and is not empty (0xFF): sheets of 8-pixel-wide 4-bit strips in unused/, named
+    # after the sheet whose graphics end before them
+    ends.sort()
     word = 0
     while word < len(covered):
         if covered[word] or sprites[word * 4:word * 4 + 4] == b"\xff\xff\xff\xff":
@@ -245,7 +213,11 @@ def extract_sprites(asset, sprites, program, path):
             word += 1
         strip = {"number": None, "width": 8, "height": word - start, "word": start, "bits": 4}
         rows = asset_formats.sprite_pens(sprites, strip)
-        name = f"unused/graphics_strip_{start:06X}"
+        before = [sheet_path for end, sheet_path in ends if end <= start]
+        name = "unused/after_" + (before[-1].replace("/", "_") if before else "start")
+        name += "_zeros" if not any(any(row) for row in rows) else ""
+        while name in written:
+            name += "_more"
         target = path / f"{name}.png"
         target.parent.mkdir(parents=True, exist_ok=True)
         asset_formats.write_png_indexed(target, rows, [(level * 17,) * 3 for level in range(16)], 8)
@@ -256,90 +228,22 @@ def extract_sprites(asset, sprites, program, path):
             "frames": [{"index": 0, "record": None, "x": 0, "y": 0, "width": 8, "height": word - start,
                         "word": f"{start:06X}", "slot": 0, "palette_from": "none"}]}, indent=1) + "\n", encoding="ascii")
         files += 2
-    return files
-
-
-# The MultiPCM's sample headers: 12 bytes each at 12 x its number, as runtime/src/multipcm.c reads them
-PCM_HEADER = 12
-PCM_FIELDS = (("start", 0, 3), ("loop", 3, 2), ("end", 5, 2), ("vibrato", 7, 1), ("attack_decay1", 8, 1),
-              ("decay_level_decay2", 9, 1), ("key_rate_release", 10, 1), ("amplitude", 11, 1))
-PCM_WINDOW = 0x80000     # the size of a page of samples, and of each of the chip's two windows
-PCM_FIXED = 0x100000     # the chip's addresses below this are the region's own; above, the windows'
-
-
-def pcm_headers(pcm):
-    """The sample headers at the start of the PCM region: [{field: value}], their number by position."""
-    count = int(json.loads(MANIFEST.read_text(encoding="utf-8"))["pcm_headers"], 0)
-    headers = []
-    for number in range(count):
-        raw = pcm[number * PCM_HEADER:(number + 1) * PCM_HEADER]
-        headers.append({name: int.from_bytes(raw[at:at + size], "big") for name, at, size in PCM_FIELDS})
-    return headers
-
-
-def pcm_header_text(headers):
-    lines = ["# The MultiPCM's sample headers, one a line by number (hex): start (its address in the chip's 2 MB,",
-             "# the format in its top bits; from 100000 the screen's window of the page its sound set picks),",
-             "# loop and end (the chip plays to 10000 - end, then goes back to loop), then the envelope and the",
-             "# LFOs as the chip takes them (runtime/src/multipcm.c)."]
-    for number, header in enumerate(headers):
-        lines.append(f"{number:03X} " + " ".join(f"{name}={header[name]:0{size * 2}X}" for name, _, size in PCM_FIELDS))
-    return "\n".join(lines) + "\n"
-
-
-def pcm_headers_from_text(path):
-    out = bytearray()
-    for line in path.read_text(encoding="ascii").splitlines():
-        if not line.strip() or line.startswith("#"):
-            continue
-        fields = dict(part.split("=") for part in line.split()[1:])
-        for name, _, size in PCM_FIELDS:
-            out += int(fields[name], 16).to_bytes(size, "big")
-    return bytes(out)
-
-
-def pcm_samples_in(headers, start, size):
-    """The samples of the headers that lie in the region's bytes start..start + size as the chip reads them:
-    [(offset into those bytes, header numbers, loop, length)]. The fixed part is the region's own; a page is
-    what a window (A for headers below 100, B from 100) shows when a sound set puts that page there."""
-    found = {}
-    for number, header in enumerate(headers):
-        address = header["start"] & 0x1FFFFF
-        length = 0x10000 - header["end"]
-        if address < PCM_FIXED:
-            offset = address - start if start < PCM_FIXED else None
-        else:
-            offset = (address & (PCM_WINDOW - 1)) if start >= PCM_FIXED else None
-        if offset is not None and 0 <= offset < size:
-            found.setdefault((offset, header["loop"], length), []).append(number)
-    return [(offset, numbers, loop, length) for (offset, loop, length), numbers in sorted(found.items())]
-
-
-def extract_pcm_bank(asset, data, pcm, path):
-    """A part of the PCM region as an 8-bit WAV (the chip's signed bytes, + 128) and NAME.json beside it:
-    the samples the headers find in it, and the sound sets that put it in a window."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    asset_formats.write_wav(path, bytes(byte ^ 0x80 for byte in data), asset["rate"], bits=8)
-    samples = pcm_samples_in(pcm_headers(pcm), asset["offset"], asset["size"])
-    path.with_suffix(".json").write_text(json.dumps({
-        "notes": ["One WAV sample a byte of the PCM region, from 'offset' (the chip's signed sample + 128). The "
-                  "samples are where the sample headers (pcm_headers.txt) start them, by sample offset in this WAV: "
-                  "their header numbers, loop and length (in samples).",
-                  "The rate is nominal: the sound program sets the pitch of every note."],
-        "offset": f"0x{asset['offset']:06X}",
-        "sound_sets": asset.get("sound_sets", []),
-        "samples": [{"at": offset, "headers": [f"{number:03X}" for number in numbers], "loop": loop, "length": length}
-                    for offset, numbers, loop, length in samples]}, indent=1) + "\n", encoding="ascii")
-    return 2
+        written.append(name)
+    # the list of the sheets, which the game reads them by
+    (path / "sheets.txt").write_text("# the sprite sheets: NAME.png and NAME.json beside this file\n"
+                                     + "".join(f"{name}\n" for name in written), encoding="ascii")
+    return files + 1
 
 
 def rom_tables(start, end):
-    """[(address, name)] of the program ROM's tables the C reads by name (src/ram.h: NAME is rom(NAME_ADDRESS))
-    in start..end: places where data pieces start, besides symbols.txt's data and table lines."""
+    """[(address, name)] of the program's tables the C reads by name (src/ram.h: a pointer the game sets,
+    NAME_data; in an older C, a macro over the ROM, rom(NAME_ADDRESS)) in start..end: places where data
+    pieces start, besides symbols.txt's data and table lines."""
     header = (ROOT / "src" / "ram.h").read_text(encoding="ascii")
     addresses = dict(re.findall(r"^#define (\w+)_ADDRESS 0x([0-9A-F]+)u", header, re.M))
     found = []
-    for name in re.findall(r"^#define (\w+) \(\(const \w+ \*\)rom\(", header, re.M):
+    for name in re.findall(r"^extern const void \*(\w+)_data;", header, re.M) + \
+            re.findall(r"^#define (\w+) \(\(const \w+ \*\)rom\(", header, re.M):
         address = int(addresses[name], 16)
         if start <= address < end:
             found.append((address, name))
@@ -373,43 +277,59 @@ def subjects_of(places, symbols_path, sources, folder, code_size):
     return subject
 
 
+def write_names(folder):
+    """names.txt beside the program's data: the address of every name symbols.txt gives (functions, code,
+    data, variables), which a piece may give for an address; the game reads it to read those pieces."""
+    from formats import common
+    lines = ["# NAME ADDRESS: the names a piece of assets/data may give for an address (symbols.txt)"]
+    lines += [f"{name} {address:06X}" for name, address in sorted(common._names()["name"].items())]
+    (folder / "names.txt").write_text("\n".join(lines) + "\n", encoding="ascii")
+    return 1
+
+
 def extract(asset, data, region_of):
     path = ROOT / asset["path"]
     kind = asset["type"]
     if kind == "program_data":
         start, end = asset["offset"], asset["offset"] + asset["size"]
         places = data_formats.pieces(ROOT / "symbols.txt", start, end) + rom_tables(start, end)
+        # a name inside a table is no piece of its own: the table holds it (the game reads both, and reads the
+        # table across it; read_crossings.txt, tools/read_crossings.py, says where the original does)
+        crossings = [(int(address, 16), name) for address, name in
+                     (line.split() for line in (ROOT / "read_crossings.txt").read_text(encoding="ascii").splitlines()
+                      if line and not line.startswith("#"))]
+        inner = typed.inner_places(places, crossings)
+        places = [place for place in places if place not in inner]
         code = data_formats.v60_code(region_of("program"), ROOT / "symbols.txt", start, end)
         # the chips' mirrors are no data of their own: kept, as the code is
         mirrors = [tuple(int(value, 0) for value in pair) for pair in asset.get("mirrors", [])]
         game_c = sorted(source for source in (ROOT / "src").rglob("*.c") if "sound" not in source.parts)
-        return data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),
-                                   default_group=subjects_of(places, ROOT / "symbols.txt", game_c, ROOT / "src",
-                                                             0x40000))
+        files = data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),
+                                    default_group=subjects_of(places, ROOT / "symbols.txt", game_c, ROOT / "src",
+                                                              0x40000),
+                                    choose=typed.format_for)
+        # the layout says which names are inside another piece, and where
+        layout = json.loads((path / "layout.json").read_text(encoding="ascii"))
+        layout["inside"] = [{"address": f"{address:06X}", "name": name} for address, name in sorted(inner)]
+        (path / "layout.json").write_text(json.dumps(layout, indent=1) + "\n", encoding="ascii")
+        return files + write_names(path)
     if kind == "sound_data":
         symbols = ROOT / asset["symbols"]
         places = data_formats.sound_pieces(symbols, asset["size"])
         sound_c = sorted((ROOT / "src" / "sound").glob("*.c"))
-        return data_formats.export(data, asset["offset"], places, ROOT / asset["formats"], path,
-                                   data_formats.z80_code(data, symbols),
-                                   default_group=subjects_of(places, symbols, sound_c, ROOT / "src" / "sound",
-                                                             0xA000))
+        files = data_formats.export(data, asset["offset"], places, ROOT / asset["formats"], path,
+                                    data_formats.z80_code(data, symbols),
+                                    default_group=subjects_of(places, symbols, sound_c, ROOT / "src" / "sound",
+                                                              0xA000))
+        # the names the pieces give for places, and their offsets in the chip (the game reads the pieces by them)
+        from formats import sound_names
+        return files + sound_names.write_names(path)
     if kind == "sprite_records":
         return extract_sprites(asset, data, region_of("program"), path)
-    if kind == "pcm_headers":
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(pcm_header_text(pcm_headers(region_of("pcm"))), encoding="ascii")
-        return 1
-    if kind == "pcm_bank":
-        return extract_pcm_bank(asset, data, region_of("pcm"), path)
-    if kind == "tiles_16x16x4":
-        path.parent.mkdir(parents=True, exist_ok=True)
-        columns = asset["columns"]
-        if "palettes" not in asset:
-            asset_formats.write_png_4bpp(path, columns * asset_formats.TILE_SIZE,
-                                         asset_formats.tile_sheet_rows(data, columns))
-            return 1
-        return extract_tile_sheet(asset, data, region_of("program"), path, columns)
+    if kind == "pcm_samples":
+        return pcm_samples.extract(data, ROOT / asset["layout"], path, asset["rate"])
+    if kind == "tilesets":
+        return tilesets.extract(asset, data, region_of("program"), path, palette_colors)
     raise SystemExit(f"assets.json: unknown type '{kind}' for {asset['path']}")
 
 
@@ -447,12 +367,9 @@ REBUILDERS = {
     "program_data": lambda asset, original: data_formats.build(ROOT / asset["path"], asset["size"], original),
     "sound_data": lambda asset, original: data_formats.build(ROOT / asset["path"], asset["size"], original),
     "sprite_records": lambda asset, original: asset_formats.build_sprite_rom(ROOT / asset["path"], asset["size"]),
-    "pcm_headers": lambda asset, original: pcm_headers_from_text(ROOT / asset["path"]),
-    "pcm_bank": lambda asset, original: bytes(byte ^ 0x80 for byte in
-                                              asset_formats.read_wav_unsigned(ROOT / asset["path"])[0]),
-    "tiles_16x16x4": lambda asset, original: asset_formats.tiles_from_sheet(
-        asset_formats.read_png_indexed(ROOT / asset["path"])[0], asset["columns"],
-        asset["size"] // asset_formats.TILE_BYTES),
+    "pcm_samples": lambda asset, original: pcm_samples.build(ROOT / asset["path"], ROOT / asset["layout"],
+                                                             asset["size"]),
+    "tilesets": lambda asset, original: tilesets.build(asset),
 }
 
 
@@ -517,19 +434,34 @@ def main():
 
     force = "--force" in arguments
     checking = "--check" in arguments
+    only = None
+    if "--only" in arguments:
+        at = arguments.index("--only")
+        if at + 1 >= len(arguments):
+            raise SystemExit("--only: no type given")
+        only = set(arguments[at + 1].split(","))
+        unknown = only - {asset["type"] for asset in manifest["assets"]}
+        if unknown:
+            raise SystemExit(f"--only: no asset of type {', '.join(sorted(unknown))} in assets.json")
+        del arguments[at:at + 2]
+        # the other types' assets stay as they are, and so do their files
+        manifest["assets"] = [asset for asset in manifest["assets"] if asset["type"] in only]
     arguments = [argument for argument in arguments if argument not in ("--force", "--check")]
     source = Path(arguments[0]) if arguments else ROOT / "rom"
     if checking:
         return check(manifest, orunners_rom.load_set(source))
     version = str(manifest["manifest_version"])
     up_to_date = saved_version == version
-    # assets an earlier manifest listed and this one no longer does
-    stale = [path for path in saved_paths if path not in listed]
+    # assets an earlier manifest listed and this one no longer does (with --only, of those types)
+    stale = [path for path in saved_paths if path not in listed] if only is None else []
     for path in stale:
         remove(path)
         print(f"  removed {path}")
     todo = [asset for asset in manifest["assets"]
             if force or not up_to_date or not (ROOT / asset["path"]).exists()]
+    if only is not None:
+        # the state keeps every type's paths: these types' as the manifest lists them now
+        listed = [path for path in saved_paths if path not in listed] + listed
     if not todo:
         if stale:
             write_state(version, listed)

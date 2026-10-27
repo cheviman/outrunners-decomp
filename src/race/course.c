@@ -87,7 +87,7 @@ void player_car_extend_course(void)
 	{
 		CAR(player_car)->course_records_read++;
 		course_place = CAR(player_car)->course;
-		run_length = (int16_t)ROM16(course_place);
+		run_length = (int16_t)DATA16(course_place);
 		course_place += 2u;
 		if ((int16_t)run_length > 0)
 			break;
@@ -105,7 +105,7 @@ void player_car_extend_course(void)
 			CAR(player_car)->course = course_place;
 			continue;
 		case 1:
-			CAR(player_car)->course = ROM32(course_place);
+			CAR(player_car)->course = DATA32(course_place);
 			continue;
 		case 2:
 			race = SCREEN(screen)->race;
@@ -119,9 +119,9 @@ void player_car_extend_course(void)
 			CAR(player_car)->course = course_place + 4u;
 			continue;
 		case 4:
-			SCREEN(screen)->built_stage_level = ROM8(course_place);
+			SCREEN(screen)->built_stage_level = DATA8(course_place);
 			course_place++;
-			SCREEN(screen)->built_stage = ROM8(course_place);
+			SCREEN(screen)->built_stage = DATA8(course_place);
 			CAR(player_car)->stage_segments = 0xFFFFu;
 			CAR(player_car)->course = course_place + 1u;
 			CAR(player_car)->stage_start = CAR(player_car)->built_segments;
@@ -135,13 +135,13 @@ void player_car_extend_course(void)
 		}
 	}
 	CAR(player_car)->run_left = run_length;
-	CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+	CAR(player_car)->pitch_step = (uint32_t)(int8_t)DATA8(course_place) << 8;
 	course_place++;
-	CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+	CAR(player_car)->heading_step = (uint32_t)(int8_t)DATA8(course_place) << 8;
 	course_place++;
-	run_width = ROM8(course_place);
+	run_width = DATA8(course_place);
 	course_place++;
-	CAR(player_car)->road_event = ROM8(course_place);
+	CAR(player_car)->road_event = DATA8(course_place);
 	CAR(player_car)->course = course_place + 1u;
 	CAR(player_car)->width_code = (uint8_t)run_width;
 	run_width = (uint16_t)(run_width * 0xB0u);
@@ -174,7 +174,7 @@ void player_car_build_segment(uint16_t ring_mask)
 		{
 			CAR(player_car)->course_records_read++;
 			course_place = CAR(player_car)->course;
-			run_length = (int16_t)ROM16(course_place);
+			run_length = (int16_t)DATA16(course_place);
 			course_place += 2u;
 			if ((int16_t)run_length > 0)
 				break;
@@ -192,7 +192,7 @@ void player_car_build_segment(uint16_t ring_mask)
 				CAR(player_car)->course = course_place;
 				continue;
 			case 1:
-				CAR(player_car)->course = ROM32(course_place);
+				CAR(player_car)->course = DATA32(course_place);
 				continue;
 			case 2:
 				race = SCREEN(screen)->race;
@@ -206,9 +206,9 @@ void player_car_build_segment(uint16_t ring_mask)
 				CAR(player_car)->course = course_place + 4u;
 				continue;
 			case 4:
-				SCREEN(screen)->built_stage_level = ROM8(course_place);
+				SCREEN(screen)->built_stage_level = DATA8(course_place);
 				course_place++;
-				SCREEN(screen)->built_stage = ROM8(course_place);
+				SCREEN(screen)->built_stage = DATA8(course_place);
 				CAR(player_car)->stage_segments = 0xFFFFu;
 				CAR(player_car)->course = course_place + 1u;
 				CAR(player_car)->stage_start = CAR(player_car)->built_segments;
@@ -222,13 +222,13 @@ void player_car_build_segment(uint16_t ring_mask)
 			}
 		}
 		CAR(player_car)->run_left = run_length;
-		CAR(player_car)->pitch_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+		CAR(player_car)->pitch_step = (uint32_t)(int8_t)DATA8(course_place) << 8;
 		course_place++;
-		CAR(player_car)->heading_step = (uint32_t)(int8_t)ROM8(course_place) << 8;
+		CAR(player_car)->heading_step = (uint32_t)(int8_t)DATA8(course_place) << 8;
 		course_place++;
-		run_width = ROM8(course_place);
+		run_width = DATA8(course_place);
 		course_place++;
-		CAR(player_car)->road_event = ROM8(course_place);
+		CAR(player_car)->road_event = DATA8(course_place);
 		CAR(player_car)->course = course_place + 1u;
 		CAR(player_car)->width_code = (uint8_t)run_width;
 		run_width = (uint16_t)(run_width * 0xB0u);

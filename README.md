@@ -11,6 +11,10 @@ the tools verify it, extract the assets and build your own executable.
 
 ## Status
 
+How much of the C reads as C written by hand, measured on every run of `python tools/noise_report.py`
+(`clean`): 392 of the 746 functions (52.5%) and 26,154 of their 27,785 lines of code (94.1%) hold nothing
+of what the table under "What is left, and why" counts. The goal before the ports is 99% of both.
+
 - [x] ROM set verification (MAME set `orunners`, World), by CRC32 and SHA-1 of every file
 - [x] Multi 32 board model in C (`runtime/`): memory map, interrupt controller and timers, the two I/O
       chips, EEPROM, the A/D converter of the wheels and pedals, and the link board with no other cabinet
@@ -110,19 +114,27 @@ the tools verify it, extract the assets and build your own executable.
 - [x] A window port (`orunners`, `ports/sdl2/`): both screens, the sound, the keyboard and game controllers;
       a control script played in the window gives the reference's frames (`coin_start`: state, picture
       and sound)
-- [x] The assets (`extract_assets.py`, driven by `assets.json`, which holds positions only): the tiles as
-      32 indexed PNG sheets in the palettes the game shows them with (`tile_palettes.json`, from a census
-      of the scenarios), the sprites as 144 sheets of the piece records at 0x122B74 (`sprite_sheets.txt`,
-      `sprite_palettes.json`), the MultiPCM's sample headers as text and its samples as WAV files (the
-      fixed megabyte and the six pages the sound sets bank in), and the program's and the sound program's
-      data as text, the code left out. `python extract_assets.py --check` builds the 17 chips back from
-      them, byte for byte (the code from the set)
-- [x] No executable carries the ROM: the game loads its assets pack (`orunners.assets`, which
-      `tools/make_pack.py` writes from the assets; on a first run the game writes it from the player's ROM
-      set itself, `--extract`), the reference and the translation scaffold read the ROM set when they
-      start, and the memory test's ROM part is the board's (`runtime/replaced.txt`: the decompiled game has
-      no ROM chips to sum). `tools/rom_in_executables.py` finds no stretch of the ROM in any executable,
-      and the 16 scenarios are identical in state, picture and sound with the game on its pack
+- [x] The assets (`extract_assets.py`, driven by `assets.json`, which holds positions only), each with a
+      name, in formats the usual tools open: the tiles as 37 tilesets by subject (the road, each course's
+      backgrounds, the route map, the title...: `tilesets.txt`), the sprites as 264 sheets by subject
+      (`cars/<car>/`, `scenery/<course>/`, `hud/`, `traffic/`...: `sprite_sheets.txt`), the MultiPCM's
+      samples as 219 WAV files by what plays them (`pcm_samples.txt`) with the 512 sample headers as text,
+      the music and the sound effects as 324 MIDI files, and the program's and the sound program's tables
+      as text records with their fields' names and addresses written as the names of what they reach.
+      `python extract_assets.py --check` builds the 17 chips back from them, byte for byte (the code from
+      the set)
+- [x] The game is not anchored to the ROM: it loads those files themselves when it starts
+      (`runtime/src/assets.c`, `assets_media.c`, `assets_midi.c`), every piece in a block of memory of its
+      own, with no image of the ROM, no region the size of a chip, no mirrors, banks or interleaving. The C
+      reads a table by its name (`game_mode_jumps[mode]`: a pointer the loader sets, `src/table.c`'s
+      `game_tables`); an address the game keeps in its variables reaches its data through the assets'
+      index (`data_at`); the video draws tiles from the tilesets by their numbers and sprites from the sheets
+      by their places, the MultiPCM plays the WAV files, the sound program reads its tables and rebuilds its
+      sequences from the MIDI files. What the loader reads is the ROM's data byte for byte (the program's
+      818 pieces and the sound program's 396), and the 16 scenarios are identical in state, picture and
+      sound. The reference and the translation scaffold read the ROM set when they start, as MAME does, and
+      the memory test's ROM part is the board's (`runtime/replaced.txt`: the decompiled game has no ROM chips
+      to sum)
 - [x] The C reads the program's data by name: the records of the program ROM are structures
       (`ROAD_ROW_RECORD(road_row_record)->animation`, `SPRITE_SIZE_STEP(size_step)->source_size`, the
       car's `car_handlings[model]`), the lists they lead to are typed
@@ -151,9 +163,9 @@ the tools verify it, extract the assets and build your own executable.
 - [x] Linux and macOS: the game builds with GCC and Clang as well as MSVC, and GitHub Actions builds it on
       every push for Linux, macOS (an .app for Apple silicon and Intel) and Windows, with no ROM set and SDL2
       inside the window port (`.github/workflows/build.yml`: a package each, the window port with its
-      licenses). On Linux (Ubuntu 24.04 on WSL, GCC 13 and Clang 18) the 16 scenarios are identical to the
-      reference in state, picture and sound, and the first run makes the same pack, byte for byte, from the
-      `rom/` folder and from the .zip. The macOS build has not been run on a Mac yet
+      licenses). On Linux (Ubuntu 24.04 on WSL, GCC 13 and Clang 18) the 16 scenarios were identical to the
+      reference in state, picture and sound (with the game on its earlier assets pack; not run again on
+      Linux since it loads the asset files). The macOS build has not been run on a Mac yet
 
 ## What is left, and why
 
@@ -166,18 +178,18 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 | R12 and R14 named after the register (`context_registers`) | 932 uses | Scratch registers whose last value the next handler reads: `race_cars_start` puts the car's address together from R12's high half, which the handler before it left (the screen's page), and the road rows' and the scenery's drawing keep the height of the last size step in R14 and skip reloading it when the object's step is the same. The C keeps them as globals, a copy for each task. Locals with that value passed from handler to handler through a variable of their own would take some 600 copies at the handlers' starts and ends (measured: 146 handlers read R12 as they start, 163 leave it), more than the uses they would take away. R27 and R28 are locals: the one function that would read them before setting them, `player_car_project_road`, does so only if its projection pattern skipped every segment, and it starts with a 1 (`symbols.txt`'s `unread` lines) |
 | Memory reached through a computed address (`mem_access`) | 150 | An element picked by a number through a pointer the code works out first and keeps (`checkpoint_board_update`'s rows: `inc.b` through a place it worked out), or a table indexed by two numbers (the checkpoints' orders, by checkpoint and by player): 36. One pointer that reaches two memories or two layouts: the road rows' last sprites (the ROM's blank places or the work RAM's ring), the memory test, the CRC of the settings, the test mode's texts (halfwords and bytes in one walk): 24. Code nothing calls, so nothing says what its pointers reach: `unrolled_copy`'s loop (a copy from any address to any other), two of the test mode's: 15. A place one before an array or past the record a pointer is in (`screen + 0x349u + forks_reached`, the next projected segment): 14. What a string move or a search leaves in a register: 10. The road's ring of segments by a byte offset: 8. The race records' copies by the player's number (`0x20FC42u + (player << 7)`): 7. The addresses boot writes where the board maps nothing (E00000, E80000): 6. Stack slots: 5. And 25 more, one by one (a table read by an index the analysis cannot bound, the slots below a screen's block, the test mode's settings through R20 plus an offset) |
 | Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 145 | The original moves them in one instruction: the sprite lists' halfwords two at a time (54: a list's jump, and its copy in the other half of the list 0x3000 bytes on, `SPRITE_WORDS(p)[6144]`), the screen's block (35: the game mode with its steps, the LCD's text four characters at a time, the memory test's results two at a time...), palette colours 64 bits at a time (16), two text cells at once (7), objects' fields (5), the projected segments copied whole (4), the car's brake lights (4), and 10 more (the unpacker's halfwords, a course record's model and name, the seats' bookkeeping bytes...) |
-| Jumps through a table with an index it does not have (`invalid_jump`) | 193 | The original jumps through its tables of code without checking the index; the C's switch has a `default:` for the indexes the table does not hold, where `invalid_jump` stops the game with the address the original would have jumped to |
+| Jumps through a table with an index it does not have (`invalid_jump`) | 191 | The original jumps through its tables of code without checking the index; the C's switch has a `default:` for the indexes the table does not hold, where `invalid_jump` stops the game with the address the original would have jumped to. Where the index's own bits keep it inside the table (a halfword shifted right by 14 for four entries), the switch has no `default:` (2) |
 | Results written back before an early return (`copy_backs`) | 40 | A function hands back what it leaves in registers through pointers (`p_leftover`); where a caller may pass one variable for two of them, writing straight through the pointer would not be the same, so the result is kept in a local and written back at each way out |
 | Functions with `bool` control flags (`control_variables`) | 17 functions, 45 flags | Where the original's jumps join paths that no nesting of ifs and loops can, a flag says which way to go instead of a goto; each is named after the code it leads to (`L_017685`, 478 uses) |
-| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 502 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later |
+| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 439 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later. A pointer moved within its 64 KB page (the next entry of a list, a link the code reads: `chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail)`) says so with `LINKED`, as the objects' links do (63) |
 | Data read through its ROM address (`rom_reads`) | 26 | The course's stream, whose commands have operands of different widths behind one pointer (16), the input test's list, which one pointer walks through two layouts (9), and the road objects' stream after a fork (1) |
-| Tables read over the pack's copy of the data (`rom_table_reads`) | 847 | The tables are in the assets pack at their own addresses, which the code keeps in RAM and in other tables, so a table is read by its name over that copy (`src/ram.h`: `rom(...)`) |
+| Tables read by their address (`rom_table_reads`) | 0 | Both programs read their tables by name: a pointer each that the loader sets (`src/table.c`'s `game_tables`, `src/sound/tables.c`'s `sound_tables`); 847 before |
 | ROM addresses printed as numbers (`raw_rom_addresses`) | 2 | The switches that go on through the original's own jump target in `car_radio_update` and `song_title_show`, where the address stands for "go on here", as the cases do |
 | Fields named after their offset (`unk_fields`) | 5 | Fields of objects of two families (`car_select_entries_run`'s choice flags, `coin_prompt_update`'s) or of any (`start_object_list`'s number in its list) |
 | A function the board puts its own in place of (`board_replaced`) | 1 | The memory test's sums of the ROM chips (`runtime/replaced.txt`): the game has no ROM chips to sum, so the board hands back the sums the program keeps for them (at 03FFF8 and 03FFFC), as good chips give |
 | Work RAM addresses printed as numbers | 37 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (screen 2's car `0x219000u`, the sprite places `0x20C000u`), the race copies' fields by player (`0x20FC42u + (player << 7)`), `car_numbers` less one and the coin meters after the first: the decompiler names a constant only when it is a variable's own address |
 | Unused names in `src/ram.h` | 50 | Places of the screens' blocks and the race records that the code reaches by their own address, which the C reads as fields, and two places of the ROM (`rom_000001`, `rom_000002`): each named after its address (`unk_208001`), and nothing uses the names |
-| Data without a name of its own | 7 named after their address, 193 stretches | Unused tables named after their address (`unk_00183B` and six more in `symbols.txt`), and the `data_XXXXXX` sections of `assets/data/`, the stretches between the named tables |
+| Data without a name of its own | 186 pieces, 1 to 6 bytes | The `data_XXXXXX` sections of `assets/data/`: the alignment between the code and the tables (zeros), the V60's `nop`s at 000000-000005, and dead code bytes in two places (00E8D9, after `halt`s) that the code reaches by no way. Every table has a name, and every piece with a structure a format of its own |
 | Board registers without a name | 6 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the bytes boot writes to E00000 and E80000-E80003, where the board maps nothing |
 | Calls through a slot that holds a function's address | 14 wrappers | `src/table.c`: how `call_code()` runs a function from a code address it reads (`call_0006B0` runs `second_task`), named after that address |
 
@@ -205,8 +217,9 @@ git clone --recursive https://github.com/cheviman/outrunners-decomp
    python tools/verify_rom.py
    ```
 
-2. Build the tools into `build/bin/` (the build takes the assets out of the ROM set into `assets/` and
-   packs them into `build/bin/orunners.assets`, which the game loads; no executable holds the ROM):
+2. Build the tools into `build/bin/` (the build takes the assets out of the ROM set into `assets/`, which
+   the game loads from the repository's folder or from beside its executable; no executable holds the
+   ROM):
 
    ```bash
    cmake -S . -B build/cmake
@@ -285,39 +298,52 @@ git clone --recursive https://github.com/cheviman/outrunners-decomp
 
    The game keeps its EEPROM (the settings and the bookkeeping, `orunners.eeprom`) beside the executable
    on Windows, and on Linux and macOS in the user's folder for it (`~/.local/share/OutRunners`,
-   `~/Library/Application Support/OutRunners`), as the executable's may not be written. It loads
-   `orunners.assets` from beside the executable or from that folder; with neither, its first run makes
-   the pack in that folder from your ROM set, `rom/` or `orunners.zip`, beside the executable (beside the
-   .app on macOS) or in that folder. The packages the CI makes hold the window port alone, so that is
-   how a player's first run goes.
+   `~/Library/Application Support/OutRunners`), as the executable's may not be written. It loads its
+   assets from the folder `assets` beside the executable (beside the .app on macOS), in that folder of the
+   user's, or in the current one (`--assets FOLDER` picks another). The packages the CI makes hold the
+   window port alone: until the game can take the assets out of a ROM set itself, the folder comes from
+   `extract_assets.py`.
 
 ## The assets
 
 `python extract_assets.py` takes the assets out of the ROM set into `assets/` (`--force` again, `--clean`
-removes them, `--check` builds the chips back from them and compares); `assets.json` says what goes where,
-in positions only, and `tile_palettes.json`, `sprite_palettes.json` and `sprite_sheets.txt` (positions and
-record numbers too) say which palette each tile and sprite piece is shown with and how the pieces are
-grouped into sheets. `tools/palette_census.py run DIR` and `resolve DIR` write those files again from the
-scenarios. The formats:
+removes them, `--check` builds the chips back from them and compares, `--only TYPE` takes one type of
+asset); `assets.json` says what goes where, in positions only, and the files beside it say how the assets
+are cut and named, in positions, numbers and names only: `tilesets.txt` (the tile numbers of each
+tileset), `sprite_sheets.txt` (the piece records of each sheet and row), `pcm_samples.txt` (where each
+sample is), `tile_palettes.json` and `sprite_palettes.json` (the palettes they are drawn with, from a census
+of the scenarios: `tools/palette_census.py run DIR` and `resolve DIR`), `read_crossings.txt` (the names
+inside a table the original reads across, `tools/read_crossings.py` from the reference's census of its data
+reads). The game reads the assets themselves, so each folder carries what it needs to (a list, an index,
+the names its texts use). The formats:
 
-- `assets/tiles/`: indexed PNG sheets of 1024 16x16 tiles, 16 palettes each (a pixel's index & 15 is its
-  pen); a JSON beside each says every tile's palette.
-- `assets/sprites/`: indexed PNG sheets, a family of objects (or a stretch of animations) each, a row an
-  animation; 4-bit sheets hold up to 8 palettes, 32 entries each (the pens the board draws, then the same
-  pens where it does not); a JSON beside each says where each piece goes back in the sprite ROM.
-- `assets/sound/pcm_headers.txt` and `assets/sound/samples/`: the MultiPCM's 512 sample headers as text,
-  and its samples as 8-bit WAV files, one byte a sample: `common.wav` and `bank_2.wav`-`bank_7.wav`, each
-  with a JSON of the samples the headers start in it.
-- `assets/data/` and `assets/sound/data/`: the program's and the sound program's data as text files by
-  subject, the C's subjects (`assets/data/race/course.txt`, `assets/sound/data/voices.txt`): a table goes
-  with the C file that reads it the most, a piece no C file reads with the code it lies in, and one past
-  the code with the piece before it. A file has a section a piece (cut where `symbols.txt` names a place
-  and where the C reads a table), and `layout.json` has the pieces in order; the code is left out (the C
-  replaces it).
+- `assets/tilesets/`: a tileset a subject (`road.png`, `courses/japan.png`, `scenes/route_map.png`),
+  8-bit indexed PNGs of 32 16x16 tiles a row, in the 16 palettes the tileset's tiles are shown with the
+  most (a pixel's index & 15 is its pen); `tilesets.txt` beside them says which tile numbers each holds.
+- `assets/sprites/`: a sheet a subject, a row an animation; 4-bit sheets hold up to 8 palettes, 32 entries
+  each (the pens the board draws, then the same pens where it does not); a JSON beside each says where
+  each piece is and where it goes in the sprite chips; `sheets.txt` lists them.
+- `assets/sound/samples/`: the MultiPCM's samples as 8-bit WAV files by what plays them (`engine/`,
+  `tyres/`, `speech/`, `drums/<song>/`, `instruments/<song>/`, `effects/`...), with a `smpl` loop where the
+  sample loops; `headers.txt`, the 512 sample headers with their fields by name and the sample each one
+  plays in each sound set; `samples.txt`, where each sample is.
+- `assets/sound/data/`: the music (`music/`), the effects (`effects/`), the DJ's voices (`voices/`) and the
+  sound sets' commands (`controls/`) as Standard MIDI Files, a tick a tick of the sound program
+  (`tools/formats/sound_music.py` says how a sequence becomes a file and back); the sound program's
+  tables as text, by subject (`chips.txt`, `tuning.txt`, `instruments.txt`, `engine.txt`, `commands.txt`).
+- `assets/data/`: the program's data as text files by subject, the C's subjects
+  (`assets/data/race/course.txt`): a table goes with the C file that reads it the most. A file has a
+  section a piece (cut where `symbols.txt` names a place and where the C reads a table; a name inside a
+  table is no cut, `layout.json`'s `inside`), and `layout.json` has the pieces in order; the code is left
+  out (the C replaces it).
 
-`python tools/make_pack.py` packs them for the game (`--check` compares what the pack puts in the board's
-memory with the set, the code left out; `--layout` writes `runtime/src/pack_layout.c`, the pieces without
-their bytes, which the first run fills from the player's set).
+The tables are text in one format (`tools/core/formats/typed.py`), which the game's loader reads as it is:
+a `layout` line names the columns (`layout road_row_record 24 animation:u16 palette:u16 flags:u8 ...`),
+then a record a line; `record` lines give the kinds of the records a list mixes, each line starting with
+its kind's name. Values: numbers (hex unsigned, decimal signed), addresses as the names of what they reach
+(`game_mode_title`, `isdn_total_text+0x4`), texts in quotes, colours as `#RRGGBB`, a value split in two as
+`HIGH:LOW` (an FM channel's block and frequency number, `4:1EE`). `names.txt` beside the data gives the
+names' addresses.
 
 ## Tools
 
@@ -337,7 +363,8 @@ counts what each mem_read and mem_write of the C reaches over the scenarios, on 
 with `ORUNNERS_MEMORY_CENSUS=ON` into `build/bin-census` (`ORUNNERS_BIN_DIR`); `report` sums it into
 `build/census/memory.txt`. The rest of `tools/` is
 OutRunners' own: the ROM set (`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets'
-census and sheets, and the pack.
+censuses, cuts and formats (`tilesets.py`, `pcm_samples.py`, `sprite_sheets.py`, `palette_census.py`,
+`read_crossings.py`, `formats/`).
 
 ## Legal
 

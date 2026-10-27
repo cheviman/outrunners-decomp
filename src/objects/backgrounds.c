@@ -32,7 +32,7 @@
    background_scroll_y). */
 void race_background_update(void)
 {
-	bool L = false;
+	bool L_017685 = false;
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0;
@@ -121,13 +121,13 @@ void race_background_update(void)
 		}
 	case 1:
 		if (SCREEN(screen)->stage_background_change != 0u)
-			L = true;
+			L_017685 = true;
 		else if (CAR(player_car)->new_branch != 0u)
 		{
 			CAR(player_car)->new_branch = 0u;
-			L = true;
+			L_017685 = true;
 		}
-		if (L)
+		if (L_017685)
 		{
 			SCREEN(screen)->background_changing = 0xFFu;
 			new_background = SCREEN(screen)->built_stage;

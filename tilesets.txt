@@ -1,0 +1,42 @@
+# The tile ROM's 32768 16x16 tiles in tilesets by subject (tools/tilesets.py writes it from the
+# census of the tilemaps the program's data holds; it can be edited by hand). A line a tileset:
+# 'NAME FIRST-LAST ...  # description', its tiles by number (hex: the bank, 0-3, in the top two of
+# 15 bits, as the tilemaps show them), in the order its PNG lays them out, 32 a row. Every tile is
+# in one tileset; 'in no page' are tiles no tilemap page of the program names.
+road 0000-067F  # the road's pages (boot_tile_pages_29_to_4e): 1664 tiles, 484 in no page
+courses/start 0680-09DF 2680-29DF  # stage 0, backgrounds 00 and 01: 1728 tiles, 601 in no page
+courses/grand_canyon 09E0-0DDF  # stage 1, backgrounds 00, 02 and 03: 1024 tiles, 113 in no page
+courses/jungle 0DE0-11FF  # stage 3, backgrounds 02, 06 and 07: 1056 tiles, 90 in no page
+courses/niagara_falls 1200-15FF  # stage 4, backgrounds 03, 08 and 09: 1024 tiles, 306 in no page
+courses/spain 1600-189F 4680-491F  # stages 7 and 29, backgrounds 06, 0E, 0F, 27 and 28, the ranking: 1344 tiles, 174 in no page
+courses/atlantic_ocean 18A0-19DF 4920-4A5F 6680-67BF  # stages 8 and 28, backgrounds 07, 08, 10, 11, 25 and 26, upper animations 0, 1 and 2, the ranking: 960 tiles, 90 in no page
+courses/switzerland 19E0-1CBF 67C0-6A9F  # stages 9 and 27, backgrounds 09, 12, 13, 23 and 24, the ranking: 1472 tiles, 309 in no page
+unused/after_switzerland 1CC0-1FFF  # 832 tiles no page names: 53 blank, 298 of one pen, 481 drawn; rows equal to rows of courses/northern_europe
+scenes/route_map 2000-263F 39E0-3C3F  # the world map, the routes and the close-up maps (set_up_background's records at 004868, 00487C, 004890 and 0048A4): 2208 tiles, 885 in no page
+unused/blank_after_route_map 2640-267F  # 64 tiles no page names: 64 blank
+courses/san_francisco 29E0-2D9F  # stage 2, backgrounds 01, 04 and 05: 960 tiles, 169 in no page
+courses/hawaii 2DA0-301F  # stage 5, backgrounds 04, 0A and 0B: 640 tiles, 76 in no page
+courses/easter_island 3020-323F  # stage 6, backgrounds 05, 0C and 0D, the lower animation: 544 tiles, 39 in no page
+courses/china 3240-35FF 6AA0-6E5F  # stages 10 and 24, backgrounds 0A, 14, 15, 1F, 20, 34 and 42, the ranking: 1920 tiles, 335 in no page
+courses/japan 3600-379F 4A60-4BFF 6E60-6FFF  # stages 11 and 23, backgrounds 0B, 0C, 16, 17, 1D and 1E, the ranking: 1248 tiles, 315 in no page
+courses/hong_kong 37A0-39DF 4C00-4E3F  # stages 12 and 22, backgrounds 0D, 18, 19, 1B and 1C, the ranking: 1152 tiles, 251 in no page
+unused/after_route_map 3C40-3FFF  # 960 tiles no page names: 79 blank, 298 of one pen, 583 drawn; rows equal to rows of courses/northern_europe
+notices 4000-40FF  # pages 5D and 5E (boot_tile_pages_5d, boot_tile_pages_5e): the FBI and EPA notices, which no tilemap of this set shows: 256 tiles, 7 in no page
+unused/after_notices 4100-41FF  # 256 tiles no page names: 16 blank, 0 of one pen, 240 drawn
+unused/blank_after_notices 4200-467F  # 1152 tiles no page names: 1152 blank
+courses/egypt 4E40-4FFF  # stages 13 and 20, backgrounds 0E, 19, 1A, 1B, 28 and 29: 448 tiles, 50 in no page
+courses/greece 5000-53BF  # stages 14 and 19, backgrounds 0F, 10, 17, 18, 1C, 1D, 26 and 27: 960 tiles, 269 in no page
+courses/australia 53C0-593F  # stage 21, backgrounds 1A and 3F, the ranking: 1408 tiles, 343 in no page
+courses/kenya 5940-5B9F  # stage 30, background 29, the ranking: 608 tiles, 104 in no page
+unused/after_kenya 5BA0-5FFF  # 1120 tiles no page names: 120 blank, 298 of one pen, 702 drawn; rows equal to rows of courses/northern_europe
+scenes/entry_countdown 6000-613F  # the WELCOME OUTRUNNERS! letter and the road picture behind it, which the name entry shows too (set_up_background's records at 006988 and 00699C): 320 tiles, 104 in no page
+scenes/name_entry 6140-61BF  # the CONGRATULATIONS! certificate (set_up_background's records at 002E4C and 002E60): 128 tiles, 26 in no page
+scenes/car_select 61C0-61FF  # the two players' frames (set_up_background's records at 006960 and 006974): 64 tiles, 40 in no page
+scenes/car_presentation 6200-621F  # the checked backdrop of the car presentation (set_up_background's records at 001AA0 and 001AB4): 32 tiles, 28 in no page
+scenes/title 6220-62BF  # the ground under the title (set_up_background's records at 01AD0C and 01AD20): 160 tiles, 0 in no page
+unused/blank_after_title 62C0-667F  # 960 tiles no page names: 960 blank
+courses/paris 7000-74DF  # stages 15 and 18, backgrounds 11, 12, 15, 16, 1E, 1F, 24 and 25: 1248 tiles, 142 in no page
+courses/germany 74E0-775F  # stages 16 and 17, backgrounds 13, 14, 20, 21, 22 and 23: 640 tiles, 51 in no page
+courses/russia 7760-791F  # stage 25, background 21, the ranking: 448 tiles, 42 in no page
+courses/northern_europe 7920-7EDF  # stage 26, background 22, the ranking: 1472 tiles, 133 in no page
+unused/after_northern_europe 7EE0-7FFF  # 288 tiles no page names: 0 blank, 288 of one pen, 0 drawn

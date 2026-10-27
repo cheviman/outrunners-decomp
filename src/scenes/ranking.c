@@ -249,7 +249,7 @@ void ranking_title_left_update(void)
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->palette = 0x2B2u;
-		animation = 0x2D2u;
+		animation = RANKING_TITLE_LEFT;
 		animation_start(animation);
 		OBJECT(current_object)->depth_layer = 0x19Eu;
 		OBJECT(current_object)->x = 0u;
@@ -281,7 +281,7 @@ void ranking_title_right_update(void)
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->palette = 0x2B3u;
-		animation = 0x2D3u;
+		animation = RANKING_TITLE_RIGHT;
 		animation_start(animation);
 		OBJECT(current_object)->depth_layer = 0x19Du;
 		OBJECT(current_object)->x = 0x13Fu;
@@ -410,7 +410,7 @@ void ranking_record_character_update(void)
 		OBJECT(current_object)->ranking_record_character.frames_left = 0x3Au;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->palette = 0x27u;
-		animation = 0x2DEu;
+		animation = NAME_ENTRY_FONT;
 		animation_start(animation);
 		ranking_record = OBJECT(current_object)->ranking_record_character.ranking_record;
 		character_index = OBJECT(current_object)->ranking_record_character.index;

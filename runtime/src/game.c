@@ -215,7 +215,7 @@ uint8_t *ram_outside(uint32_t address)
 	if ((address & 0xffffff) < 0x200000 || (address & 0xf00000) == 0xf00000)
 	{
 		for (index = 0; index < sizeof copy; index++)
-			copy[index] = *rom(address + index);
+			copy[index] = *data_at(address + index);
 		return copy;
 	}
 	fprintf(stderr, "Work RAM access at %06X (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);
@@ -223,9 +223,10 @@ uint8_t *ram_outside(uint32_t address)
 	exit(3);
 }
 
-GAME_NORETURN void rom_outside(uint32_t address)
+GAME_NORETURN void data_outside(uint32_t address)
 {
-	fprintf(stderr, "Program ROM read at %06X (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);
+	fprintf(stderr, "Game data read at %06X, where no asset has data (frame %llu)\n", address & 0xffffff,
+		(unsigned long long)frames);
 	print_recent_calls();
 	exit(3);
 }
@@ -252,8 +253,8 @@ void test_mode_memory_test_checksum(uint32_t r10, uint32_t *p_r0, uint32_t *p_r1
 {
 	const uint32_t sums = r10 < 0x100000u ? 0x03FFF8u : 0x03FFFCu;
 
-	*p_r0 = (*p_r0 & 0xFFFF0000u) | ROM16(sums);
-	*p_r1 = (*p_r1 & 0xFFFF0000u) | ROM16(sums + 2u);
+	*p_r0 = (*p_r0 & 0xFFFF0000u) | DATA16(sums);
+	*p_r1 = (*p_r1 & 0xFFFF0000u) | DATA16(sums + 2u);
 }
 
 GAME_NORETURN void invalid_jump(uint32_t address)

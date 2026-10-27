@@ -409,7 +409,7 @@ void car_name_letter_update(void)
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->depth_layer = 0x19Eu;
-		animation = 0x346u;
+		animation = CAR_NAME_FONT;
 		animation_start(animation);
 		OBJECT(current_object)->car_name_letter.palette_list = car_name_letter_palette_steps_ADDRESS;
 		OBJECT(current_object)->frame = OBJECT(current_object)->car_name_letter.character;

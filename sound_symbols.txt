@@ -324,6 +324,393 @@ comment sound_main_loop One pass of the main loop: waits, interrupts off, while 
 595D  data  stop_music_sequence
 596E  data  stop_screen_voices_sequence
 
+# ======== the sound data's pieces (the assets: assets/sound/data, sound_formats.json) ========
+# What is not the code: data and banked lines cut the chip into pieces, each in its format; 'banked' lines
+# are offsets in the chip (A000 and up: bank * 2000h + the address in the A000-BFFF window - A000h). The
+# unused_ pieces are what nothing reads (unreached code, padding, copies no command points at).
+
+0004  data    unused_restart_entries              # 0004-0037, zeros (NOPs) where the Z80's RST 08h-30h land: nothing in the program executes RST, so nothing reaches them
+005F  data    unused_nmi_entry                    # zeros (NOPs), then at 0066, the Z80's NMI entry, RETN: nothing in the program reaches it
+0068  data    unused_music_demo_loop              # code nothing calls (0068-00AB): every 8 calls (E781) counts E782 down from 20h; at 0 it starts, in turn, the first command of unused_demo_commands (14) on screen 1 (screen_1_command) and the music's fade (the music player's fade_speed = 0E)
+00AC  data    unused_demo_commands                # 14 13 12 11 10, seven times: unused_music_demo_loop reads its first byte
+00CF  data    unused_zeros_00CF                   # zeros up to sound_main (0100)
+072F  data    unused_return_072F                  # a RET no code reaches, between retune_voice_screen_1 and program_change_screen_1
+0A9B  data    unused_midi_uart                    # code nothing calls (0A9B-0B76): MIDI through a USART at ports F0 (data) and F1 (status, commands; set up as an 8251: 00 00 00 40, mode 4E, command 37): the bytes it receives (but F0-FF) go into screen 2's MIDI queue (E200, screen 2's midi_write and midi_count), and screen 1's queue goes out through it
+0BA2  data    unused_loop_0BA2                    # LD A,A; JP 0BA2: a loop no code reaches, after multiply_bytes
+0F6B  data    unused_return_0F6B                  # a RET no code reaches, between retune_voice_screen_2's end and program_change_screen_2
+1285  data    unused_loop_1285                    # LD A,A; JP 1285: a loop no code reaches, after read_midi_byte_screen_2
+154D  data    unused_fm_fnum_pointers             # fm_level_registers + 4 (the code reads its 4 registers): 12 pointers in the shape of fm_fnum_tables' (157D eleven times, then 159D); nothing reads them
+2096  data    unused_pcm_pitch_pointers           # velocity_levels + 80 (the velocity is 00-7F): 12 pointers in the shape of pcm_pitch_tables', at the runs an octave below (20C6-2226); nothing reads them
+42B2  data    unused_lowest_flags_player          # code nothing calls (42B2-42C7): of the player at HL and the two after it, the address of the one whose first byte (its flags) is lowest, into E770
+4382  data    unused_return_4382                  # NOP x4, RET: no code reaches it, before next_sequence_byte
+
+46DB  data    playlist_stop_music_2               # command FD: as playlist_stop_music
+46DF  data    playlist_magical_sound_shower       # commands 00, 01: Magical Sound Shower (radio song 0)
+46FD  data    playlist_passing_breeze             # command 02: Passing Breeze (radio song 1)
+4712  data    unused_playlist_songs_1a_1e         # a playlist no command points at: songs 1A-1E twice, then 1E over and over
+4720  data    playlist_picture_the_rivers         # command 04: Picture the Rivers (radio song 3)
+4736  data    playlist_blow_your_cool             # commands 05, 14: Blow Your Cool (radio song 4; also command 14)
+474A  data    playlist_looking_for_the_rainbow    # commands 06, 15: Looking for the Rainbow (radio song 5; also command 15)
+4757  data    playlist_speed_king                 # commands 07, 16: Speed King (radio song 6; also command 16)
+476A  data    playlist_adventure                  # commands 08, 17: Adventure (radio song 7; also command 17)
+4786  data    playlist_staff_credits              # commands 09, 18: the staff credits' music (staff_credits_code_watch, sound 9; also command 18)
+478D  data    playlist_race_opening               # commands 0A, 19: the race opening's tune (race_opening_sound_cues, sound 0A; also command 19)
+4790  data    playlist_meaning_of_the_light       # commands 0B, 1A, 1D: Meaning of the Light, the route map after a race short of the goal (game_mode_play step 12; also commands 1A, 1D)
+4795  data    playlist_music_0c                   # commands 0C, 1B: command 0C (also 1B): no V70 code found that requests it, not in the sound test
+4798  data    playlist_jingle_bell                # commands 0D, 1C: Jingle Bell (radio song 10; also command 1C)
+47A7  data    playlist_sonic_control              # command 0E: Sonic Control (radio song 8)
+47BE  data    playlist_mega_driver                # command 0F: Mega Driver, the car select's and the entry countdown's title music
+47C4  data    playlist_dream_flying               # command 10: Dream Flying, at the goal (goal_update)
+47CB  data    playlist_splash_wave                # commands 03, 11, 13: Splash Wave (radio song 2; also commands 11, 13)
+47DB  data    playlist_last_wave                  # command 12: Last Wave (radio song 9)
+47E4  data    unused_silence_playlists            # 11 copies of playlist_silence_screen no command points at
+4810  data    playlist_station_fork_jingle        # command E0: the radio station's jingle as a fork nears (car_radio_update, sound E0)
+4813  data    playlist_station_stage_09           # command E1: the radio station's music on route stage 9 (route_stage_radio_sounds)
+481B  data    playlist_station_stages_15_18       # command E2: the radio station's music on route stages 15, 18 (route_stage_radio_sounds)
+4823  data    playlist_station_stages_16_17       # command E3: the radio station's music on route stages 16, 17 (route_stage_radio_sounds)
+4829  data    playlist_station_stage_11           # command E4: the radio station's music on route stage 11 (route_stage_radio_sounds)
+482F  data    playlist_station_stages_13_20       # commands E5, F5: the radio station's music on route stages 13, 20 (route_stage_radio_sounds)
+4834  data    playlist_station_stage_12           # commands E6, F6: the radio station's music on route stage 12 (route_stage_radio_sounds)
+4839  data    playlist_station_stage_07           # commands E7, F7: the radio station's music on route stage 7 (route_stage_radio_sounds)
+483E  data    playlist_station_stage_03           # commands E8, F8: the radio station's music on route stage 3 (route_stage_radio_sounds)
+4843  data    playlist_station_stage_06           # commands E9, F9: the radio station's music on route stage 6 (route_stage_radio_sounds)
+4849  data    playlist_station_stage_10           # commands EA, FA: the radio station's music on route stage 10 (route_stage_radio_sounds)
+484E  data    playlist_unplayed_station_eb        # commands EB, FB: command EB: no route stage plays it (route_stage_radio_sounds), not in the sound test
+4853  data    playlist_station_stage_01           # command EC: the radio station's music on route stage 1 (route_stage_radio_sounds)
+4858  data    playlist_station_stage_05           # command ED: the radio station's music on route stage 5 (route_stage_radio_sounds)
+485E  data    playlist_station_fork               # command EE: the radio station's music as a fork nears (car_radio_update, sound EE)
+4863  data    playlist_station_stages_14_19       # command EF: the radio station's music on route stages 14, 19 (route_stage_radio_sounds)
+4868  data    playlist_station_stage_08           # command F0: the radio station's music on route stage 8 (route_stage_radio_sounds)
+486E  data    playlist_station_stage_02           # command F1: the radio station's music on route stage 2 (route_stage_radio_sounds)
+4876  data    playlist_station_stage_04           # command F2: the radio station's music on route stage 4 (route_stage_radio_sounds)
+487D  data    playlist_station_stage_00           # command F3: the radio station's music on route stage 0 (route_stage_radio_sounds)
+4884  data    playlist_station_stages_21_30       # command F4: the radio station's music on route stages 21-30 (route_stage_radio_sounds)
+488C  data    effect_20                           # command 20
+4894  data    effect_21_game_start                # command 21: a game starts (game_mode_play step 0) and the race opening's cue at count 120
+489C  data    effect_22                           # command 22
+48A4  data    effect_23_stage_30_start            # command 23: as stage 30's road starts being built (one_shot_sound_update)
+48AC  data    effect_24_checkpoint_leading        # command 24: a checkpoint passed in the lead, the stage end's first sound and race opening cues
+48B4  data    effect_25                           # command 25
+48BC  data    effect_26_after_crash               # command 26: 10 frames after a crash (crash tables' crash_sound)
+48C4  data    effect_27_after_crash               # command 27: 10 frames after a crash (crash tables' crash_sound)
+48CC  data    effect_28_checkpoint                # command 28: a checkpoint passed not in the lead (stage_end_sounds_update)
+48D4  data    effect_29                           # command 29
+48DC  data    effect_2a                           # command 2A
+48E4  data    effect_2b_rival_alarm               # command 2B: the rival warning, twice (rival_alarm_update); a letter entered in the name entry in 1st place
+48EC  data    effect_2c_name_entry_letter         # command 2C: a letter entered in the name entry in 2nd place (name_entry_place_sounds)
+48F4  data    effect_2d_race_opening              # command 2D: the race opening's cues at counts 1 and 160; a letter entered in 3rd place
+48FC  data    effect_2e_race_opening_2            # command 2E: the race opening's cue at count 150
+4904  data    effect_2f                           # command 2F
+490C  data    effect_30                           # command 30
+4914  data    effect_31_crash                     # command 31: a crash's hit (crash tables' hit_sound), and the car landing after a crash's bounce (player_car_update)
+491C  data    effect_32_crash_hit                 # command 32: a crash's hit (crash tables' hit_sound)
+4924  data    effect_33_crash_hit                 # command 33: a crash's hit (crash tables' hit_sound)
+492C  data    effect_34_crash_hit                 # command 34: a crash's hit (crash tables' hit_sound)
+4934  data    effect_35                           # command 35
+493C  data    effect_36_car_pass                  # command 36: a car going by: models 2 and 6 (car_pass_sounds)
+4944  data    effect_37_car_pass                  # command 37: a car going by: models 1 and 7 (car_pass_sounds); a place changed with the car close
+494C  data    effect_38_car_pass                  # command 38: a car going by: model 4 (car_pass_sounds)
+4954  data    effect_39_car_pass                  # command 39: a car going by: models 3 and 5 (car_pass_sounds)
+495C  data    effect_3a_car_pass                  # command 3A: a car going by: model 0 (car_pass_sounds); a place changed
+4964  data    effect_3b                           # command 3B
+496C  data    effect_3c                           # command 3C
+4978  data    dj_message_31                       # command 3D: DJ message 31
+4984  data    dj_message_32                       # command 3E: DJ message 32
+4990  data    dj_message_33                       # command 3F: DJ message 33
+499C  data    dj_goal_first                       # command 40: DJ message 34: at the goal in first place (goal_update)
+49A8  data    dj_goal                             # command 41: DJ message 35: at the goal, not first (goal_update)
+49B4  data    dj_time_up_36                       # command 42: DJ message 36: time up (player_car_update)
+49C0  data    dj_time_up_37                       # command 43: DJ message 37: time up (player_car_update)
+49CC  data    effect_44_dragon_dance              # command 44: the dragon dance at stage 22's goal (goal_parade_dragon_update)
+49D4  data    effect_45                           # command 45
+49DC  data    effect_46_matterhorn_crowd          # command 46: the scenery at the Matterhorn, stage 27 (sounding_scenery_update)
+49E4  data    effect_47_pandas                    # command 47: the pandas at Beijing, stage 24 (sounding_scenery_update)
+49EC  data    effect_48                           # command 48
+49F4  data    effect_49_santa_sleigh              # command 49: Santa's sleigh over stage 26's goal (santa_sleigh_update)
+49FC  data    effect_4a_cheering_crowd            # command 4A: the cheering group with banners in Japan, stage 23 (sounding_scenery_update)
+4A04  data    effect_4b                           # command 4B
+4A0C  data    effect_4c                           # command 4C
+4A14  data    effect_4d                           # command 4D
+4A1C  data    effect_4e                           # command 4E
+4A24  data    effect_4f_ending                    # command 4F: the race's ending, when its objects are done (race_car_start_ending)
+4A2C  data    effect_50                           # command 50
+4A34  data    effect_51_jungle                    # command 51: the jungle of stage 3, repeated at random (ambient_sound_update)
+4A3C  data    effect_52                           # command 52
+4A44  data    effect_53_stage_end                 # command 53: 20 frames after the stage end's first sound (stage_end_sound_cues)
+4A4C  data    effect_54                           # command 54
+4A54  data    effect_55                           # command 55
+4A5C  data    effect_56                           # command 56
+4A64  data    effect_57                           # command 57
+4A6C  data    dj_waiting                          # command 58: DJ message 3C: waiting for the race's other players (car_select_run)
+4A74  data    effect_59                           # command 59
+4A7C  data    effect_5a                           # command 5A
+4A84  data    effect_5b                           # command 5B
+4A8C  data    effect_5c                           # command 5C
+4A94  data    effect_5d                           # command 5D
+4A9C  data    dj_message_38                       # command 5E: DJ message 38
+4AA4  data    dj_message_39                       # command 5F: DJ message 39
+4AAC  data    effect_60_car_select_model_4        # command 60: car model 4 chosen in the car select (car_select_car_sounds)
+4AB8  data    effect_61_car_select_model_2        # command 61: car model 2 chosen in the car select (car_select_car_sounds)
+4AC4  data    effect_62_car_select_model_0        # command 62: car model 0 chosen in the car select (car_select_car_sounds)
+4AD0  data    effect_63_car_select_model_6        # command 63: car model 6 chosen in the car select (car_select_car_sounds)
+4ADC  data    effect_64_car_select_model_5        # command 64: car model 5 chosen in the car select (car_select_car_sounds)
+4AE8  data    effect_65_car_select_model_3        # command 65: car model 3 chosen in the car select (car_select_car_sounds)
+4AF4  data    effect_66_car_select_model_1        # command 66: car model 1 chosen in the car select (car_select_car_sounds)
+4B00  data    effect_67_car_select_model_7        # command 67: car model 7 chosen in the car select (car_select_car_sounds)
+4B0C  data    effect_68                           # command 68
+4B14  data    effect_69                           # command 69
+4B1C  data    effect_6a                           # command 6A
+4B24  data    effect_6b                           # command 6B
+4B2C  data    effect_6c                           # command 6C
+4B34  data    effect_6d                           # command 6D
+4B3C  data    effect_6e                           # command 6E
+4B44  data    effect_6f                           # command 6F
+4B4C  data    effect_70                           # command 70
+4B54  data    effect_71                           # command 71
+4B5C  data    dj_message_3a                       # command 72: DJ message 3A
+4B68  data    effect_73                           # command 73
+4B70  data    dj_car_model_4                      # command 74: DJ message 05: car model 4's name
+4B78  data    dj_car_model_2                      # command 75: DJ message 03: car model 2's name
+4B80  data    dj_car_model_0                      # command 76: DJ message 01: car model 0's name
+4B88  data    dj_car_model_6                      # command 77: DJ message 07: car model 6's name
+4B90  data    dj_car_model_5                      # command 78: DJ message 06: car model 5's name
+4B98  data    dj_car_model_3                      # command 79: DJ message 04: car model 3's name
+4BA0  data    dj_car_model_1                      # command 7A: DJ message 02: car model 1's name
+4BA8  data    dj_car_model_7                      # command 7B: DJ message 08: car model 7's name
+4BB0  data    effect_7c                           # command 7C
+4BB8  data    effect_7d                           # command 7D
+4BC0  data    effect_7e                           # command 7E
+4BC8  data    effect_7f                           # command 7F
+4BD0  data    effect_80                           # command 80
+4BD8  data    effect_81                           # command 81
+4BE0  data    dj_station                          # command 82: DJ message 29: as the radio goes to the station
+4BE8  data    dj_cars_introduced                  # command 83: DJ message 2A: after the cars' introduction (car_radio_dj_remark_2a)
+4BF0  data    effect_84                           # command 84
+4BF8  data    effect_85                           # command 85
+4C00  data    dj_remark_2b                        # command 86: DJ message 2B: a remark (car_radio_dj_remark_2b)
+4C08  data    effect_87                           # command 87
+4C10  data    dj_remark_2c                        # command 88: DJ message 2C: a remark (car_radio_dj_remark_2c)
+4C18  data    effect_89                           # command 89
+4C20  data    dj_remark_2d                        # command 8A: DJ message 2D: a remark (car_radio_dj_remark_2d)
+4C28  data    dj_checkpoint_final                 # command 8B: DJ message 2E: at the last checkpoint (stage_level_radio_messages, level 4)
+4C30  data    dj_remark_2f                        # command 8C: DJ message 2F: a remark (car_radio_dj_remark_2f)
+4C38  data    dj_checkpoint                       # command 8D: DJ message 30: at a checkpoint (stage_level_radio_messages, levels 0-3)
+4C40  data    effect_8e                           # command 8E
+4C48  data    effect_8f                           # command 8F
+4C50  data    select_sound_set_0                  # command D0: CC 20 0 on channel E: sound set 0 (part_templates)
+4C58  data    select_sound_set_1                  # command D1: CC 20 1 on channel E: sound set 1 (part_templates)
+4C60  data    select_sound_set_2                  # command D2: CC 20 2 on channel E: sound set 2 (part_templates)
+4C68  data    select_sound_set_3                  # command D3: CC 20 3 on channel E: sound set 3 (part_templates)
+4C70  data    select_sound_set_4                  # command D4: CC 20 4 on channel E: sound set 4 (part_templates)
+4C78  data    select_sound_set_5                  # command D5: CC 20 5 on channel E: sound set 5 (part_templates)
+4C80  data    select_sound_set_6                  # command D6: CC 20 6 on channel E: sound set 6 (part_templates)
+4C88  data    select_sound_set_7                  # command D7: CC 20 7 on channel E: sound set 7 (part_templates)
+4C90  data    select_sound_set_8                  # command D8: CC 20 8 on channel E: sound set 8 (part_templates)
+4C98  data    select_sound_set_9                  # command D9: CC 20 9 on channel E: sound set 9 (part_templates)
+4CA0  data    select_sound_set_a                  # command DA: CC 20 A on channel E: sound set A (part_templates)
+4CA8  data    select_sound_set_b                  # command DB: CC 20 B on channel E: sound set B (part_templates)
+4CB0  data    channel_a_notes_off                 # command DC: CC 7B on channel A (all notes off)
+4CB8  data    channel_a_full_volume               # command DD: CC 7 7F on channel A
+4CC0  data    stop_all_voices_7d                  # commands DE, FC: CC 50 7D on channel E: the screen's MultiPCM voices stop (also command FC)
+4CC8  data    stop_all_voices_7f                  # commands DF, FE: CC 50 7F on channel E: the screen's MultiPCM voices stop (also command FE)
+4CD0  data    effect_b2                           # commands B2, B4, B8, BC
+4D9A  data    effect_b3                           # commands B3, B5, B9, BD
+4EBC  data    effect_b6                           # commands B6, BA, BE
+4FDE  data    effect_b7                           # commands B7, BB, BF
+5100  data    unused_effect_program_7d            # an effect no command points at: effect_b3's tune with program 7D on channel B
+5222  data    unused_effect_program_7e            # an effect no command points at: effect_b3's tune with program 7E on channel B
+5344  data    unused_effect_program_7f            # an effect no command points at: effect_b3's tune with program 7F on channel B
+5466  data    dj_message_21                       # command 90: DJ message 21
+5479  data    dj_message_22                       # command 91: DJ message 22
+548C  data    dj_message_23                       # command 92: DJ message 23
+549F  data    dj_message_24                       # command 93: DJ message 24
+54B2  data    dj_message_25                       # command 94: DJ message 25
+54C5  data    dj_message_26                       # command 95: DJ message 26
+54D8  data    dj_message_27                       # command 96: DJ message 27
+54EB  data    dj_message_28                       # command 97: DJ message 28
+54FE  data    dj_car_number_1                     # command 98: DJ message 09: car number 1
+550C  data    dj_car_number_2                     # command 99: DJ message 0A: car number 2
+551A  data    dj_car_number_3                     # command 9A: DJ message 0B: car number 3
+5528  data    dj_car_number_4                     # command 9B: DJ message 0C: car number 4
+5536  data    dj_car_number_5                     # command 9C: DJ message 0D: car number 5
+5544  data    dj_car_number_6                     # command 9D: DJ message 0E: car number 6
+5552  data    dj_car_number_7                     # command 9E: DJ message 0F: car number 7
+5560  data    dj_car_number_8                     # command 9F: DJ message 10: car number 8
+556E  data    dj_leader_car_1                     # command A0: DJ message 11: the leader, car number 1 (car_radio_dj_leader)
+5581  data    dj_leader_car_2                     # command A1: DJ message 12: the leader, car number 2 (car_radio_dj_leader)
+5594  data    dj_leader_car_3                     # command A2: DJ message 13: the leader, car number 3 (car_radio_dj_leader)
+55A7  data    dj_leader_car_4                     # command A3: DJ message 14: the leader, car number 4 (car_radio_dj_leader)
+55BA  data    dj_leader_car_5                     # command A4: DJ message 15: the leader, car number 5 (car_radio_dj_leader)
+55CD  data    dj_leader_car_6                     # command A5: DJ message 16: the leader, car number 6 (car_radio_dj_leader)
+55E0  data    dj_leader_car_7                     # command A6: DJ message 17: the leader, car number 7 (car_radio_dj_leader)
+55F3  data    dj_leader_car_8                     # command A7: DJ message 18: the leader, car number 8 (car_radio_dj_leader)
+5606  data    dj_own_car_1                        # command A8: DJ message 19: this screen's car, number 1 (car_radio_dj_own_car)
+561E  data    dj_own_car_2                        # command A9: DJ message 1A: this screen's car, number 2 (car_radio_dj_own_car)
+5636  data    dj_own_car_3                        # command AA: DJ message 1B: this screen's car, number 3 (car_radio_dj_own_car)
+564E  data    dj_own_car_4                        # command AB: DJ message 1C: this screen's car, number 4 (car_radio_dj_own_car)
+5666  data    dj_own_car_5                        # command AC: DJ message 1D: this screen's car, number 5 (car_radio_dj_own_car)
+567E  data    dj_own_car_6                        # command AD: DJ message 1E: this screen's car, number 6 (car_radio_dj_own_car)
+5696  data    dj_own_car_7                        # command AE: DJ message 1F: this screen's car, number 7 (car_radio_dj_own_car)
+56AE  data    dj_own_car_8                        # command AF: DJ message 20: this screen's car, number 8 (car_radio_dj_own_car)
+56C6  data    dj_station_hello                    # command B0: DJ message 00: the first message on the station (talk_step 0)
+56D9  data    dj_entry                            # command B1: DJ message 3B: the car select and the entry countdown
+56F1  data    song_records                        # the songs' records (songs, commands C0-CF)
+5974  data    unused_fill_005974                  # FF up to the banked part's songs (0x10000), nothing reads it
+10000  banked  magical_sound_shower_04             # song 04
+10273  banked  magical_sound_shower_05             # song 05
+104EC  banked  magical_sound_shower_06             # song 06
+106D7  banked  magical_sound_shower_07             # song 07
+10943  banked  magical_sound_shower_08             # song 08
+10C9D  banked  magical_sound_shower_09             # song 09
+10ECA  banked  magical_sound_shower_0a             # song 0A
+11736  banked  magical_sound_shower_0b             # song 0B
+12117  banked  magical_sound_shower_0c             # song 0C
+12D9E  banked  magical_sound_shower_0d             # song 0D
+1306C  banked  magical_sound_shower_0e             # song 0E
+1343A  banked  magical_sound_shower_0f             # song 0F
+13C43  banked  passing_breeze_10                   # song 10
+13F1E  banked  passing_breeze_11                   # song 11
+141CB  banked  passing_breeze_12                   # song 12
+149D3  banked  passing_breeze_13                   # song 13
+15083  banked  passing_breeze_14                   # song 14
+1570E  banked  passing_breeze_15                   # song 15
+15872  banked  passing_breeze_16                   # song 16
+159E8  banked  passing_breeze_17                   # song 17
+16AAB  banked  passing_breeze_18                   # song 18
+16E5E  banked  passing_breeze_19                   # song 19
+172A6  banked  unplayed_song_1a                    # song 1A: only in unused_playlist_songs_1a_1e
+1766E  banked  unplayed_song_1b                    # song 1B: only in unused_playlist_songs_1a_1e
+17986  banked  unplayed_song_1c                    # song 1C: only in unused_playlist_songs_1a_1e
+192EF  banked  unplayed_song_1d                    # song 1D: only in unused_playlist_songs_1a_1e
+1A552  banked  unplayed_song_1e                    # song 1E: only in unused_playlist_songs_1a_1e
+1B5E3  banked  picture_the_rivers_1f               # song 1F
+1B8F8  banked  picture_the_rivers_20               # song 20
+1C130  banked  picture_the_rivers_21               # song 21
+1D2D8  banked  picture_the_rivers_22               # song 22
+1DEB4  banked  picture_the_rivers_23               # song 23
+1E96F  banked  picture_the_rivers_24               # song 24
+1F44B  banked  picture_the_rivers_25               # song 25
+1F6AA  banked  picture_the_rivers_26               # song 26
+1F994  banked  picture_the_rivers_27               # song 27
+20074  banked  picture_the_rivers_28               # song 28
+20F42  banked  looking_for_the_rainbow_29          # song 29
+21229  banked  looking_for_the_rainbow_2a          # song 2A
+21F09  banked  looking_for_the_rainbow_2b          # song 2B
+235F3  banked  looking_for_the_rainbow_2c          # song 2C
+23C62  banked  looking_for_the_rainbow_2d          # song 2D
+242FD  banked  looking_for_the_rainbow_2e          # song 2E
+24AB4  banked  looking_for_the_rainbow_2f          # song 2F
+25F79  banked  speed_king_30                       # song 30
+26679  banked  speed_king_31                       # song 31
+26D99  banked  speed_king_32                       # song 32
+27254  banked  speed_king_33                       # song 33
+280A1  banked  speed_king_34                       # song 34
+28F1C  banked  speed_king_35                       # song 35
+29651  banked  speed_king_36                       # song 36
+2A171  banked  speed_king_37                       # song 37
+2B689  banked  speed_king_38                       # song 38
+2C0B2  banked  speed_king_39                       # song 39
+2D238  banked  unplayed_song_3a                    # song 3A: in no playlist
+2D3C5  banked  adventure_3b                        # song 3B
+2D75B  banked  adventure_3c                        # song 3C
+2DD7F  banked  adventure_3d                        # song 3D
+2F367  banked  adventure_3e                        # song 3E
+3080F  banked  adventure_3f                        # song 3F
+30D57  banked  adventure_40                        # song 40
+31B38  banked  adventure_41                        # song 41
+31C40  banked  staff_credits_42                    # song 42
+32041  banked  staff_credits_43                    # song 43
+324D5  banked  staff_credits_44                    # song 44
+32FEC  banked  race_opening_45                     # song 45
+33200  banked  meaning_of_the_light_46             # song 46
+34670  banked  music_0c_47                         # song 47
+355A5  banked  jingle_bell_48                      # song 48
+35614  banked  jingle_bell_49                      # song 49
+35EF4  banked  jingle_bell_4a                      # song 4A
+3668C  banked  blow_your_cool_4b                   # song 4B
+36AEB  banked  blow_your_cool_4c                   # song 4C
+374E4  banked  blow_your_cool_4d                   # song 4D
+379B2  banked  blow_your_cool_4e                   # song 4E
+37CFE  banked  blow_your_cool_4f                   # song 4F
+386A4  banked  blow_your_cool_50                   # song 50
+38AC7  banked  blow_your_cool_51                   # song 51
+38B1C  banked  blow_your_cool_52                   # song 52
+390D8  banked  blow_your_cool_53                   # song 53
+39705  banked  blow_your_cool_54                   # song 54
+39E6C  banked  blow_your_cool_55                   # song 55
+3AA74  banked  blow_your_cool_56                   # song 56
+3B1F5  banked  blow_your_cool_57                   # song 57
+3B4EB  banked  sonic_control_58                    # song 58
+3B983  banked  sonic_control_59                    # song 59
+3C96F  banked  sonic_control_5a                    # song 5A
+3D6B2  banked  sonic_control_5b                    # song 5B
+3E6EF  banked  sonic_control_5c                    # song 5C
+3EABC  banked  sonic_control_5d                    # song 5D
+3EF14  banked  sonic_control_5e                    # song 5E
+3F30C  banked  sonic_control_5f                    # song 5F
+3FA36  banked  sonic_control_60                    # song 60
+3FF07  banked  sonic_control_61                    # song 61
+42D67  banked  mega_driver_62                      # song 62
+42E29  banked  mega_driver_63                      # song 63
+43543  banked  station_stage_08_64                 # song 64
+441F8  banked  station_stage_08_65                 # song 65
+44370  banked  station_stage_03_66                 # song 66
+44CC1  banked  station_stage_10_67                 # song 67
+459E1  banked  station_stages_13_20_68             # song 68
+46291  banked  station_stages_15_18_69             # song 69
+4672A  banked  station_stages_15_18_6a             # song 6A
+46ED6  banked  station_stages_15_18_6b             # song 6B
+46F31  banked  station_stages_16_17_6c             # song 6C
+482AA  banked  station_stages_16_17_6d             # song 6D
+4847F  banked  station_stage_05_6e                 # song 6E
+488B4  banked  station_stage_05_6f                 # song 6F
+4898B  banked  station_stage_12_70                 # song 70
+496E0  banked  unplayed_station_eb_71              # song 71
+49DE4  banked  station_stage_11_72                 # song 72
+4A94E  banked  station_stage_11_73                 # song 73
+4AB09  banked  station_stage_06_74                 # song 74
+4C044  banked  station_stage_06_75                 # song 75
+4C3D3  banked  station_fork_jingle_76              # song 76
+4C94A  banked  station_stage_07_77                 # song 77
+4DFAB  banked  station_stage_02_78                 # song 78
+4E108  banked  station_stage_02_79                 # song 79
+4E4B4  banked  station_stage_02_7a                 # song 7A
+4E96C  banked  station_stage_02_7b                 # song 7B
+4EAC5  banked  station_stage_09_7c                 # song 7C
+4EBF5  banked  station_stage_09_7d                 # song 7D
+4EFBB  banked  station_stage_09_7e                 # song 7E
+4F390  banked  station_stage_09_7f                 # song 7F
+4F8CF  banked  station_stage_01_80                 # song 80
+50A17  banked  station_fork_81                     # song 81
+51176  banked  station_stages_14_19_82             # song 82
+5395B  banked  station_stage_04_83                 # song 83
+53CD9  banked  station_stage_04_84                 # song 84
+54684  banked  station_stage_00_85                 # song 85
+54CA3  banked  station_stage_00_86                 # song 86
+556DA  banked  station_stage_00_87                 # song 87
+55AFC  banked  station_stages_21_30_88             # song 88
+55D3E  banked  station_stages_21_30_89             # song 89
+56B19  banked  station_stages_21_30_8a             # song 8A
+57338  banked  station_stages_21_30_8b             # song 8B
+57DB0  banked  dream_flying_8c                     # song 8C
+5804A  banked  dream_flying_8d                     # song 8D
+582E4  banked  dream_flying_8e                     # song 8E
+58572  banked  splash_wave_8f                      # song 8F
+59AD7  banked  splash_wave_90                      # song 90
+5AD32  banked  splash_wave_91                      # song 91
+5BB96  banked  splash_wave_92                      # song 92
+5CE25  banked  splash_wave_93                      # song 93
+5CE82  banked  splash_wave_94                      # song 94
+5D5D3  banked  splash_wave_95                      # song 95
+5DBE3  banked  splash_wave_96                      # song 96
+5E19F  banked  splash_wave_97                      # song 97
+5E70C  banked  splash_wave_98                      # song 98
+5F4CC  banked  last_wave_99                        # song 99
+5F96F  banked  last_wave_9a                        # song 9A
+602F6  banked  last_wave_9b                        # song 9B
+60A9E  banked  last_wave_9c                        # song 9C
+613A5  banked  unused_fill_0613A5                  # FF to the chip's end, nothing reads it
+
 # ======== ports ========
 
 0080  port  FM_ADDRESS

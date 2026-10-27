@@ -5,16 +5,16 @@
  *                 format tools/core/system32/reference/s32ref uses
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    26-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  *    Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]
  *                             [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]
  *                             [--sprite-census FILE] [--tile-census FILE] [--memory-census FILE]
- *                             [--assets FILE] [--extract ROM_SET]
- *    The game's data is its assets pack (game/data.h): --assets, or orunners.assets beside the executable.
- *    --extract first writes that pack from the player's ROM set (a .zip or a folder), as the first run does.
+ *                             [--assets FOLDER]
+ *    The game's data is its assets (game/assets.h), the files extract_assets.py writes: --assets, or the
+ *    folder 'assets' beside the executable, or the one in the current folder (a run from the repository).
  *    The scaffold (ORUNNERS_SCAFFOLD) runs the original code, so it reads the ROM set in rom/ instead.
  *
  *    The board runs with frame timing, as s32ref does by default, and the hashes are the ones s32ref
@@ -33,8 +33,12 @@
 #include "s32/script.h"
 #include "s32/video.h"
 #include "sound/chips.h"
+#ifdef ORUNNERS_SCAFFOLD
 #include "game/data.h"
 #include "game/extract.h"
+#else
+#include "game/assets.h"
+#endif
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -43,8 +47,7 @@
 
 #define USAGE "Usage: orunners_headless [--frames N] [--hashes FILE] [--script FILE] [--dump-frame N --dump-dir DIR]" \
 	" [--video-hashes FILE] [--video-dump N ... --video-dir DIR] [--sound-hashes FILE]" \
-	" [--sprite-census FILE] [--tile-census FILE] [--memory-census FILE] [--assets FILE] [--extract ROM_SET]\n"
-#define ASSETS_FILE "orunners.assets"
+	" [--sprite-census FILE] [--tile-census FILE] [--memory-census FILE] [--assets FOLDER]\n"
 #define MAX_VIDEO_DUMPS 64
 #define CENSUS_SLOTS (1u << 22)     /* open addressing for the censuses' hashes */
 #define TILE_CENSUS_EVERY 30        /* the tilemaps are looked at every this many frames */
@@ -256,6 +259,31 @@ static void on_controls_update(void)
 	s32_script_apply(script, s32_board.frame);
 }
 
+#ifndef ORUNNERS_SCAFFOLD
+static char beside_layout[1100];
+
+/* The game's assets (game/assets.h): 'given', else the folder 'assets' beside the executable, else the one
+   in the current folder (a run from the repository); NULL, or what failed */
+static const char *load_assets(const char *program, const char *given)
+{
+	const char *slash = strrchr(program, '/'), *backslash = strrchr(program, '\\');
+	const char *last = slash > backslash ? slash : backslash;
+	char folder[1024];
+	FILE *probe;
+
+	if (given)
+		return assets_load(given);
+	snprintf(folder, sizeof(folder), "%.*sassets", last ? (int)(last - program + 1) : 0, program);
+	snprintf(beside_layout, sizeof(beside_layout), "%s/data/layout.json", folder);
+	if ((probe = fopen(beside_layout, "rb")) != NULL)
+	{
+		fclose(probe);
+		return assets_load(folder);
+	}
+	return assets_load("assets");
+}
+#endif
+
 int main(int argc, char **argv)
 {
 	const char *hashes_path = NULL;
@@ -266,8 +294,6 @@ int main(int argc, char **argv)
 	const char *tile_census_path = NULL;
 	const char *memory_census_path = NULL;
 	const char *assets_path = NULL;
-	const char *extract_source = NULL;
-	char beside[1024];
 	bool frames_given = false;
 
 	for (int index = 1; index < argc; index++)
@@ -301,8 +327,6 @@ int main(int argc, char **argv)
 			memory_census_path = argv[++index];
 		else if (strcmp(argv[index], "--assets") == 0 && index + 1 < argc)
 			assets_path = argv[++index];
-		else if (strcmp(argv[index], "--extract") == 0 && index + 1 < argc)
-			extract_source = argv[++index];
 		else
 		{
 			fprintf(stderr, USAGE);
@@ -311,8 +335,6 @@ int main(int argc, char **argv)
 	}
 #ifdef ORUNNERS_SCAFFOLD
 	(void)assets_path;
-	(void)extract_source;
-	(void)beside;
 	{
 		const char *problem = game_rom_set_load("rom");
 
@@ -323,36 +345,18 @@ int main(int argc, char **argv)
 		}
 	}
 #else
-	if (!assets_path)
 	{
-		/* (the executable's folder, as argv[0] gives it) */
-		const char *slash = strrchr(argv[0], '/'), *backslash = strrchr(argv[0], '\\');
-		const char *last = slash > backslash ? slash : backslash;
-
-		snprintf(beside, sizeof(beside), "%.*s" ASSETS_FILE, last ? (int)(last - argv[0] + 1) : 0, argv[0]);
-		assets_path = beside;
-	}
-	if (extract_source)
-	{
-		const char *problem = game_data_extract(extract_source, assets_path);
+		const char *problem = load_assets(argv[0], assets_path);
 
 		if (problem)
 		{
-			fprintf(stderr, "%s: %s\n", extract_source, problem);
+			fprintf(stderr, "%s\n", problem);
 			return 1;
 		}
 	}
-	switch (game_data_load(assets_path))
-	{
-	case GAME_DATA_LOADED:
-		break;
-	case GAME_DATA_MISSING:
-		fprintf(stderr, "%s: no game assets\n", assets_path);
-		return 1;
-	default:
-		fprintf(stderr, "%s: the game assets cannot be read\n", assets_path);
-		return 1;
-	}
+	s32_board.program_at = data_at;
+	if (getenv("ORUNNERS_DUMP_ASSETS") && !assets_dump(getenv("ORUNNERS_DUMP_ASSETS")))
+		fprintf(stderr, "%s cannot be written\n", getenv("ORUNNERS_DUMP_ASSETS"));
 #endif
 	if (script_path)
 	{
@@ -395,13 +399,26 @@ int main(int argc, char **argv)
 	s32_board.controls_update = on_controls_update;
 	s32_board.log = on_log;
 	s32_board.frame_timing = true;
+#ifdef ORUNNERS_SCAFFOLD
 	s32_init(game_program);
+#else
+	s32_init(NULL);
+#endif
 	if (video_hashes || video_dump_count || sprite_census || tile_census)
+#ifdef ORUNNERS_SCAFFOLD
 		s32_video_init(game_tiles, sizeof(game_tiles), game_sprites, sizeof(game_sprites));
+#else
+		s32_video_init_graphics(assets_graphics());
+#endif
 	if (sound_hashes_path)
 	{
+#ifdef ORUNNERS_SCAFFOLD
 		s32_board.sound_rom = game_sound;
 		s32_board.pcm_rom = game_pcm;
+#else
+		s32_board.sound_at = assets_sound_data;
+		s32_board.pcm_at = assets_pcm_byte;
+#endif
 		sound_chips_attach();
 		sound_cpu_attach();
 		sound_hashes = fopen(sound_hashes_path, "w");
