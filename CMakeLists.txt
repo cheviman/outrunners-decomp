@@ -2,7 +2,7 @@
 # Description: build of the OutRunners runtime and its development tools
 # Version:     0.1.0
 # Created:     11-10-2026
-# Modified:    21-10-2026
+# Modified:    27-10-2026
 # Author:      Sebastian Toyos
 cmake_minimum_required(VERSION 3.20)
 project(outrunners C CXX)
@@ -18,9 +18,19 @@ foreach(config IN ITEMS "" _DEBUG _RELEASE _RELWITHDEBINFO _MINSIZEREL)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY${config} ${ORUNNERS_BIN_DIR})
 endforeach()
 
+# The packages a player downloads (.github/workflows/build.yml) carry SDL2 inside the window port, built
+# from its own source
+option(ORUNNERS_STATIC_SDL2 "Build SDL2 from its source into the executables" OFF)
+
 if(MSVC)
 	add_compile_options(/W3 /utf-8)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+	# with ORUNNERS_STATIC_SDL2 the C runtime goes inside the executables too: they need no Visual C++
+	# redistributable on the player's machine
+	if(ORUNNERS_STATIC_SDL2)
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+		set(CMAKE_POLICY_DEFAULT_CMP0091 NEW)    # (SDL2's targets too)
+	endif()
 endif()
 
 # Multi 32 board model (script.c drives the controls in test runs; video.c draws the two screens; sound.c
@@ -38,6 +48,9 @@ add_library(s32runtime STATIC
 	runtime/src/sound_chips.c
 )
 target_include_directories(s32runtime PUBLIC runtime/include)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(s32runtime PUBLIC m)    # (the C library's maths are apart there)
+endif()
 
 # The game's data: no executable carries the ROM or anything from it. The game loads its assets pack when
 # it starts (runtime/src/game_data.c): tools/make_pack.py writes it beside the executables from assets/,
@@ -120,20 +133,37 @@ if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	target_link_libraries(orunners_game_headless PRIVATE orunners_game orunners_sound orunners_data)
 
 	# The game in a window (ports/sdl2): SDL2 from the system, or on Windows the development package
-	# unpacked in build/downloads/sdl2 (SDL2_DIR picks another), a library beside the executable
-	set(ORUNNERS_SDL2_UNPACKED "")
-	if(WIN32)    # (the VC package: its libraries are Windows' only)
-		file(GLOB ORUNNERS_SDL2_UNPACKED ${CMAKE_SOURCE_DIR}/build/downloads/sdl2/SDL2-*/cmake)
-	endif()
-	find_package(SDL2 CONFIG QUIET HINTS ${ORUNNERS_SDL2_UNPACKED})
-	if(SDL2_FOUND)
-		set(ORUNNERS_SDL2 SDL2::SDL2)
-		if(TARGET SDL2::SDL2main)
-			list(APPEND ORUNNERS_SDL2 SDL2::SDL2main)
+	# unpacked in build/downloads/sdl2 (SDL2_DIR picks another), a library beside the executable; or, with
+	# ORUNNERS_STATIC_SDL2, SDL2 built from its own source into the executable
+	if(ORUNNERS_STATIC_SDL2)
+		include(FetchContent)
+		FetchContent_Declare(SDL2 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git GIT_TAG release-2.32.10
+			GIT_SHALLOW TRUE)
+		set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+		set(SDL_STATIC ON CACHE BOOL "" FORCE)
+		set(SDL_TEST OFF CACHE BOOL "" FORCE)
+		set(SDL_FORCE_STATIC_VCRT ON CACHE BOOL "" FORCE)    # (MSVC: the C runtime inside, as the game's)
+		FetchContent_MakeAvailable(SDL2)
+		set(ORUNNERS_SDL2 SDL2::SDL2-static)
+		set(SDL2_FOUND TRUE)
+	else()
+		set(ORUNNERS_SDL2_UNPACKED "")
+		if(WIN32)    # (the VC package: its libraries are Windows' only, a source tree shared with WSL has it)
+			file(GLOB ORUNNERS_SDL2_UNPACKED ${CMAKE_SOURCE_DIR}/build/downloads/sdl2/SDL2-*/cmake)
 		endif()
-		add_executable(orunners WIN32 ports/sdl2/main.c)
+		find_package(SDL2 CONFIG QUIET HINTS ${ORUNNERS_SDL2_UNPACKED})
+		set(ORUNNERS_SDL2 SDL2::SDL2)
+	endif()
+	if(TARGET SDL2::SDL2main)
+		list(APPEND ORUNNERS_SDL2 SDL2::SDL2main)
+	endif()
+	if(SDL2_FOUND)
+		# (an .app on macOS: SDL_GetBasePath is its Resources folder)
+		add_executable(orunners WIN32 MACOSX_BUNDLE ports/sdl2/main.c)
 		target_link_libraries(orunners PRIVATE orunners_game orunners_sound orunners_data ${ORUNNERS_SDL2})
-		if(WIN32)
+		set_target_properties(orunners PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "OutRunners"
+			MACOSX_BUNDLE_GUI_IDENTIFIER io.github.cheviman.outrunners-decomp)
+		if(WIN32 AND NOT ORUNNERS_STATIC_SDL2)
 			add_custom_command(TARGET orunners POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE_DIR:orunners>)
 		endif()

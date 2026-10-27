@@ -3,11 +3,14 @@
  *    Description: native stacks for the game's tasks (host/tasks.h): fibers on Windows, ucontext elsewhere
  *    Version:     0.1.0
  *    Created:     20-10-2026
- *    Modified:    20-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
  */
+#if defined(__APPLE__) && !defined(_XOPEN_SOURCE)
+#define _XOPEN_SOURCE 600    /* (macOS keeps the ucontext routines behind it, and marks them deprecated) */
+#endif
 #include "host/tasks.h"
 
 #include <stdio.h>
@@ -79,6 +82,10 @@ void host_task_switch(host_task *to)
 #else
 
 #include <ucontext.h>
+
+#ifdef __APPLE__
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 struct host_task
 {

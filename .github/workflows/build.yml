@@ -1,0 +1,105 @@
+# Name:        build.yml
+# Description: builds the game on clean machines with no ROM set (Linux with GCC, macOS with Clang,
+#              Windows with MSVC), SDL2 inside the executables, and packs what a player runs: the window
+#              port, which loads the player's assets pack, with its licenses
+# Version:     0.1.0
+# Created:     27-10-2026
+# Modified:    27-10-2026
+# Author:      Sebastian Toyos
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-24.04
+          - name: macos-universal
+            os: macos-14
+          - name: windows-x64
+            os: windows-2022
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      # (tools/core, the shared core, holds the licenses of MAME's and ymfm's code the board follows)
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      # SDL2 is built from its source (ORUNNERS_STATIC_SDL2): on Linux it needs the headers of what it talks
+      # to (it loads the libraries themselves when the game runs)
+      - name: Tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libasound2-dev libpulse-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxss-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libegl1-mesa-dev libgl1-mesa-dev libudev-dev libdbus-1-dev
+
+      - name: Tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build/cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DORUNNERS_REFERENCE_TOOLS=OFF -DORUNNERS_STATIC_SDL2=ON
+
+      - name: Configure (macOS, Apple silicon and Intel)
+        if: runner.os == 'macOS'
+        run: cmake -S . -B build/cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DORUNNERS_REFERENCE_TOOLS=OFF -DORUNNERS_STATIC_SDL2=ON "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build/cmake -DORUNNERS_REFERENCE_TOOLS=OFF -DORUNNERS_STATIC_SDL2=ON
+
+      - name: Build
+        run: cmake --build build/cmake --config Release --parallel
+
+      # what a player runs (no headless runs, no build leftovers), in an archive of our own: the artifacts'
+      # zip loses the executables' permissions. With it, the terms the executable comes with: the project's,
+      # MAME's and ymfm's (BSD-3: the board's libraries follow their behavior and tables) and SDL2's (zlib).
+      # The .app is signed ad hoc (no certificate): macOS then offers to open it anyway, where a bundle
+      # signed in part is "damaged"
+      - name: Pack
+        shell: bash
+        run: |
+          mkdir -p dist/outrunners/licenses
+          for file in build/bin/*; do
+            case "$(basename "$file")" in
+              *headless*|*.pdb|*.ilk|*.exp|*.lib|*.a) ;;
+              *) cp -R "$file" dist/outrunners/ ;;
+            esac
+          done
+          cp LICENSE dist/outrunners/LICENSE.txt
+          cp tools/core/system32/reference/mame/LICENSE dist/outrunners/licenses/MAME.txt
+          cp tools/core/system32/reference/ymfm/LICENSE dist/outrunners/licenses/ymfm.txt
+          cp build/cmake/_deps/sdl2-src/LICENSE.txt dist/outrunners/licenses/SDL2.txt
+          if [ "$RUNNER_OS" = macOS ]; then
+            for app in dist/outrunners/*.app; do
+              codesign --force --deep --sign - "$app"
+              codesign --verify --deep --strict --verbose=2 "$app"
+            done
+          fi
+          ls -la dist/outrunners dist/outrunners/licenses
+          cd dist
+          case "$RUNNER_OS" in
+            Linux) tar czf outrunners-${{ matrix.name }}.tar.gz outrunners ;;
+            macOS) ditto -c -k --keepParent outrunners outrunners-${{ matrix.name }}.zip ;;
+            Windows) 7z a -tzip outrunners-${{ matrix.name }}.zip outrunners ;;
+          esac
+          cd ..
+          tar czf dist/outrunners-${{ matrix.name }}-all.tar.gz -C build bin
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: outrunners-${{ matrix.name }}
+          path: |
+            dist/outrunners-${{ matrix.name }}.*
+            dist/outrunners-${{ matrix.name }}-all.tar.gz

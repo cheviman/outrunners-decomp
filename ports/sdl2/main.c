@@ -4,7 +4,7 @@
  *                 keeps the pace, around the same game and board the headless runs check
  *    Version:     0.1.0
  *    Created:     21-10-2026
- *    Modified:    25-10-2026
+ *    Modified:    27-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -16,16 +16,19 @@
  *    puts them in the window, the left screen beside the right; when the board reads the controls the port
  *    hands it the keyboard and the game controllers; when the game finishes a frame the port queues the
  *    frame's sound and waits for the frame's time (60 a second) to pass. The EEPROM (the game's settings,
- *    bookkeeping) is kept in orunners.eeprom beside the executable.
+ *    bookkeeping) is kept in orunners.eeprom, beside the executable on Windows and in the user's folder for
+ *    the game elsewhere (saves_folder).
  *
- *    The game's data is its assets pack (game/data.h): orunners.assets beside the executable, or --assets.
- *    The first run, with no pack there, makes it from the player's ROM set beside the executable (the
- *    folder rom/ or orunners.zip; game/extract.h).
+ *    The game's data is its assets pack (game/data.h): orunners.assets beside the executable or in that
+ *    folder, or --assets. The first run, with no pack there, makes it in that folder from the player's ROM
+ *    set (the folder rom/ or orunners.zip; game/extract.h), beside the executable, beside the .app on macOS
+ *    or in that folder.
  *
- *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end;
- *    --fast runs it without waiting for the frames' time. --hashes, --video-hashes and --sound-hashes
- *    write for each frame the hashes ports/headless and tools/core/system32/reference/s32ref write, so a script run in
- *    the window compares with the reference frame by frame.
+ *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end,
+ *    from a blank EEPROM that it does not keep; --fast runs it without waiting for the frames' time.
+ *    --hashes, --video-hashes and --sound-hashes write for each frame the hashes ports/headless and
+ *    tools/core/system32/reference/s32ref write, so a script run in the window compares with the reference
+ *    frame by frame.
  *
  *    Controls (the cabinet's player 1; player 2 on the second game controller):
  *      left, right arrows             the wheel (it comes back to the centre when let go)
@@ -99,7 +102,7 @@ static void save_eeprom(void)
 {
 	FILE *output;
 
-	if (!s32_board.eeprom.dirty)
+	if (script || !s32_board.eeprom.dirty)    /* (a script starts from a blank EEPROM: the player's stays) */
 		return;
 	output = fopen(eeprom_path, "wb");
 	if (!output)
@@ -397,6 +400,70 @@ static FILE *open_hashes(const char *path)
 	return path ? fopen(path, "w") : NULL;
 }
 
+/* Where the game keeps what it writes (the EEPROM, the pack a first run makes): beside the executable on
+   Windows; elsewhere the user's own folder for the game (SDL_GetPrefPath: ~/.local/share/OutRunners,
+   ~/Library/Application Support/OutRunners), as the executable's may not be written (an .app, /usr/bin).
+   The caller frees it (SDL_free) */
+static char *saves_folder(void)
+{
+#ifdef _WIN32
+	return SDL_GetBasePath();
+#else
+	return SDL_GetPrefPath("", "OutRunners");
+#endif
+}
+
+/* On macOS, the folder the .app is in (the game's base is the .app's Resources folder: where the player sees
+   the game is beside the .app); 0 elsewhere */
+static int app_folder(const char *base, char *folder, size_t size)
+{
+#ifdef __APPLE__
+	static const char inside[] = ".app/Contents/Resources/";
+	const size_t length = base ? strlen(base) : 0, tail = sizeof(inside) - 1;
+	size_t end;
+
+	if (length < tail || length >= size || strcmp(base + length - tail, inside) != 0)
+		return 0;
+	for (end = length - tail; end > 0 && base[end - 1] != '/'; end--)
+		;    /* (back over the .app's name) */
+	memcpy(folder, base, end);
+	folder[end] = '\0';
+	return end > 0;
+#else
+	(void)base;
+	(void)folder;
+	(void)size;
+	return 0;
+#endif
+}
+
+/* The first run: the pack from the player's ROM set (the folder rom/ or orunners.zip) beside the executable,
+   beside the .app on macOS, or in the folder of what the game keeps; NULL once it is made, else what went
+   wrong with the last place tried */
+static const char *first_run(const char *base, const char *saves, const char *pack)
+{
+	static const char *const sources[] = { "rom", "orunners.zip" };
+	const char *folders[3];
+	const char *problem = "";
+	char beside_app[1024], source[1024];
+	size_t count = 0;
+
+	folders[count++] = base ? base : "";
+	if (app_folder(base, beside_app, sizeof(beside_app)))
+		folders[count++] = beside_app;
+	if (saves && strcmp(saves, folders[0]) != 0)
+		folders[count++] = saves;
+	for (size_t folder = 0; folder < count; folder++)
+		for (size_t index = 0; index < sizeof(sources) / sizeof(sources[0]); index++)
+		{
+			snprintf(source, sizeof(source), "%s%s", folders[folder], sources[index]);
+			problem = game_data_extract(source, pack);
+			if (!problem)
+				return NULL;
+		}
+	return problem;
+}
+
 int main(int argc, char **argv)
 {
 	SDL_AudioSpec wanted;
@@ -404,7 +471,8 @@ int main(int argc, char **argv)
 	const char *hashes_path = NULL, *video_hashes_path = NULL, *sound_hashes_path = NULL;
 	const char *assets_path = NULL;
 	char beside[1024];
-	char *base;
+	char *base, *saves;
+	game_data_result assets;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
 		return fail("SDL could not start.", SDL_GetError());
@@ -442,31 +510,33 @@ int main(int argc, char **argv)
 			: (video_hashes_path && !video_hashes ? video_hashes_path : sound_hashes_path));
 
 	base = SDL_GetBasePath();
-	snprintf(eeprom_path, sizeof(eeprom_path), "%sorunners.eeprom", base ? base : "");
-	if (!assets_path)
+	saves = saves_folder();
+	snprintf(eeprom_path, sizeof(eeprom_path), "%sorunners.eeprom", saves ? saves : "");
+	if (assets_path)
+		assets = game_data_load(assets_path);
+	else
 	{
+		/* (beside the executable, else in the folder of what the game keeps, where a first run puts it) */
 		snprintf(beside, sizeof(beside), "%s" ASSETS_FILE, base ? base : "");
+		assets = game_data_load(beside);
+		if (assets == GAME_DATA_MISSING && saves)
+		{
+			snprintf(beside, sizeof(beside), "%s" ASSETS_FILE, saves);
+			assets = game_data_load(beside);
+		}
 		assets_path = beside;
 	}
-	if (game_data_load(assets_path) == GAME_DATA_MISSING)
+	if (assets == GAME_DATA_MISSING)
 	{
-		/* (the first run: the pack from the player's ROM set beside the executable) */
-		static const char *const sources[] = { "rom", "orunners.zip" };
-		const char *problem = NULL;
-		char source[1024];
+		const char *problem = first_run(base, saves, assets_path);
 
-		for (size_t index = 0; index < sizeof(sources) / sizeof(sources[0]); index++)
-		{
-			snprintf(source, sizeof(source), "%s%s", base ? base : "", sources[index]);
-			problem = game_data_extract(source, assets_path);
-			if (!problem)
-				break;
-		}
 		if (problem)
 			return fail("The game's assets are missing, and no ROM set to make them from was found.", problem);
+		assets = game_data_load(assets_path);
 	}
 	SDL_free(base);
-	switch (game_data_load(assets_path))
+	SDL_free(saves);
+	switch (assets)
 	{
 	case GAME_DATA_LOADED:
 		break;
@@ -519,8 +589,7 @@ int main(int argc, char **argv)
 	if (!setjmp(finished))
 		program_run();
 
-	if (!script)
-		save_eeprom();
+	save_eeprom();
 	if (hashes)
 		fclose(hashes);
 	if (video_hashes)

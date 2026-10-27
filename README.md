@@ -149,7 +149,12 @@ the tools verify it, extract the assets and build your own executable.
       prompts, the car select, the ranking, the name entry, the route map) and `src/sound/` (the sound
       program: its main loop, the MIDI messages, the FM voices, the engine noise, the sequences), each
       file with its header and what it holds
-- [ ] Other ports
+- [x] Linux and macOS: the game builds with GCC and Clang as well as MSVC, and GitHub Actions builds it on
+      every push for Linux, macOS (an .app for Apple silicon and Intel) and Windows, with no ROM set and SDL2
+      inside the window port (`.github/workflows/build.yml`: a package each, the window port with its
+      licenses). On Linux (Ubuntu 24.04 on WSL, GCC 13 and Clang 18) the 16 scenarios are identical to the
+      reference in state, picture and sound, and the first run makes the same pack, byte for byte, from the
+      `rom/` folder and from the .zip. The macOS build has not been run on a Mac yet
 
 ## What is left, and why
 
@@ -180,8 +185,11 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 ## Getting started
 
 Requirements: Python 3.10 or newer, CMake 3.20 or newer and a C11 / C++17 compiler (Visual Studio Build
-Tools on Windows). The window port needs SDL2 2.32: on Windows its development package for Visual C++
-(`SDL2-devel-2.32.10-VC.zip`) unpacked in `build/downloads/sdl2/`, elsewhere the system's.
+Tools on Windows, GCC or Clang on Linux, Xcode's command line tools on macOS). The window port needs SDL2
+2.30 or newer: on Windows its development package for Visual C++ (`SDL2-devel-2.32.10-VC.zip`) unpacked in
+`build/downloads/sdl2/`, elsewhere the system's (`libsdl2-dev` on Debian and Ubuntu); or, with
+`-DORUNNERS_STATIC_SDL2=ON`, SDL2 2.32.10 built from its source into the executable (CMake fetches it from
+GitHub), as the packages are. On Linux and macOS the commands below run with `python3`.
 
 The decompiler, the analysis tools and the asset formats are a project of their own,
 [arcade-decomp](https://github.com/cheviman/arcade-decomp), which this repository keeps in `tools/core/` as
@@ -272,9 +280,17 @@ git clone --recursive https://github.com/cheviman/outrunners-decomp
    The two screens side by side, the cabinet's two seats. Arrows: the wheel, gas and brake; Q and A:
    shift up and down; space: the DJ, `[` and `]`: the songs; 5 and 6: coins; 1 and 2: starts; 9: service;
    F2: test; F11: full screen; Escape: quit. A game controller per player: the left stick is the wheel,
-   the triggers the pedals, the shoulders the gears. `--script FILE` plays a control script instead
-   (`--fast` without waiting for the frames' time), and `--hashes`, `--video-hashes` and
-   `--sound-hashes` write the same hashes as the reference.
+   the triggers the pedals, the shoulders the gears. `--script FILE` plays a control script instead,
+   from a blank EEPROM it does not keep (`--fast` without waiting for the frames' time), and `--hashes`,
+   `--video-hashes` and `--sound-hashes` write the same hashes as the reference.
+
+   The game keeps its EEPROM (the settings and the bookkeeping, `orunners.eeprom`) beside the executable
+   on Windows, and on Linux and macOS in the user's folder for it (`~/.local/share/OutRunners`,
+   `~/Library/Application Support/OutRunners`), as the executable's may not be written. It loads
+   `orunners.assets` from beside the executable or from that folder; with neither, its first run makes
+   the pack in that folder from your ROM set, `rom/` or `orunners.zip`, beside the executable (beside the
+   .app on macOS) or in that folder. The packages the CI makes hold the window port alone, so that is
+   how a player's first run goes.
 
 ## The assets
 
@@ -330,4 +346,6 @@ census and sheets, and the pack.
 - The board's runtime (`runtime/`) follows the behavior of MAME's System 32 and Multi 32 driver, its sound
   chips and ymfm's YM3438, BSD 3-Clause, whose terms are in `tools/core/system32/reference/mame/LICENSE`
   and `ymfm/LICENSE` beside it.
+- The window port links SDL2 (zlib License); the packages the CI makes carry it inside the executable, with
+  its terms and the ones above in `licenses/`.
 - OutRunners is a trademark of SEGA. This project is not affiliated with or endorsed by SEGA.
