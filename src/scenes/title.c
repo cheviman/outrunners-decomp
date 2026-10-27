@@ -54,7 +54,7 @@ void title_screen_update(void)
 		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.second_scroll_y_address)[0] = 0xFFF0u;
 		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.scroll_x_address)[0] = 0x360u;
 		scroll_x_address = OBJECT(current_object)->title_screen.scroll_x_address;
-		mem_write16(scroll_x_address, mem_read16(scroll_x_address) + ((SCREEN(screen)->car_number * 5u) << 6));
+		VIDEO_REGISTER_WORDS(scroll_x_address)[0] += (SCREEN(screen)->car_number * 5u) << 6;
 		VIDEO_REGISTER_WORDS(OBJECT(current_object)->title_screen.scroll_y_address)[0] = 0x72u;
 		next_attract_car = SCREEN(screen)->next_attract_car;
 		SCREEN(screen)->attract_car = next_attract_car;
@@ -81,9 +81,9 @@ void title_screen_update(void)
 	case 1:
 		title_screen_start_palms();
 		scroll_x_address_2 = OBJECT(current_object)->title_screen.scroll_x_address;
-		mem_write16(scroll_x_address_2, mem_read16(scroll_x_address_2) + 8u);
+		VIDEO_REGISTER_WORDS(scroll_x_address_2)[0] += 8u;
 		second_scroll_x_address = OBJECT(current_object)->title_screen.second_scroll_x_address;
-		mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) + 0x14u);
+		VIDEO_REGISTER_WORDS(second_scroll_x_address)[0] += 0x14u;
 		frames = (uint8_t)OBJECT(current_object)->title_screen.frames;
 		OBJECT(current_object)->title_screen.frames = (OBJECT(current_object)->title_screen.frames & 0xFF00u) | (frames - 1u & 0xFFu);
 		if (frames != 1u)
@@ -119,9 +119,9 @@ void title_screen_update(void)
 	case 2:
 		title_screen_start_palms();
 		scroll_x_address_3 = OBJECT(current_object)->title_screen.scroll_x_address;
-		mem_write16(scroll_x_address_3, mem_read16(scroll_x_address_3) + 8u);
+		VIDEO_REGISTER_WORDS(scroll_x_address_3)[0] += 8u;
 		second_scroll_x_address_2 = OBJECT(current_object)->title_screen.second_scroll_x_address;
-		mem_write16(second_scroll_x_address_2, mem_read16(second_scroll_x_address_2) + 0x14u);
+		VIDEO_REGISTER_WORDS(second_scroll_x_address_2)[0] += 0x14u;
 		OBJECT(current_object)->title_screen.frames++;
 		if (OBJECT(current_object)->title_screen.frames != TITLE_WAVE_FRAMES(OBJECT(current_object)->title_screen.wave_times)[0])
 			return;

@@ -360,7 +360,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		segment_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + segment_then_offset);
 		r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
 		segment_length = ROAD_SEGMENT(segment_record)->heading;
-		segment_length = (uint16_t)(segment_length - mem_read16(r12));
+		segment_length = (uint16_t)(segment_length - ROAD_SEGMENT(r12)->heading);
 		segment_length = sine_table[segment_length & 0xFFFu] * road_x;
 		carry = (segment_length >> 5) & 1u;
 		segment_length = (int32_t)(((int32_t)segment_length >> 6) + 0x8000u + carry) >> 8;
@@ -376,7 +376,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		{
 			r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
 			segment_length = ROAD_SEGMENT(segment_record)->heading;
-			segment_length = (uint16_t)(segment_length - mem_read16(r12));
+			segment_length = (uint16_t)(segment_length - ROAD_SEGMENT(r12)->heading);
 			segment_length = sine_table[segment_length & 0xFFFu] * road_x;
 			carry = (segment_length >> 5) & 1u;
 			segment_length = ((int32_t)segment_length >> 6) + 0x8000u + carry;
@@ -461,7 +461,7 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 		OBJECT(current_object)->player_car.world_x = (int32_t)(offset_x * 2u + (ROAD_SEGMENT(segment_record)->x << 8)) >> 8;
 		OBJECT(current_object)->player_car.world_z = (int32_t)(offset_z * 2u + (ROAD_SEGMENT(segment_record)->z << 8)) >> 8;
 		segment_remaining = segment_length - segment_fraction;
-		height = divide_s32(mem_read32(r12 + 0xCu) * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + OBJECT(current_object)->player_car.bounce_height;
+		height = divide_s32(ROAD_SEGMENT(r12)->y * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + OBJECT(current_object)->player_car.bounce_height;
 	}
 	else
 	{
@@ -476,7 +476,7 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 	OBJECT(current_object)->player_car.previous_world_y = previous_world_y;
 	CAR(player_car)->segment_remaining = segment_remaining;
 	heading_start = (uint16_t)((uint32_t)ROAD_SEGMENT(segment_record)->heading << 4);
-	heading_end = (uint16_t)((uint32_t)mem_read16(r12) << 4);
+	heading_end = (uint16_t)((uint32_t)ROAD_SEGMENT(r12)->heading << 4);
 	quadrant_heading = heading_start;
 	switch (quadrant_heading >> 14)
 	{
@@ -530,11 +530,11 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	OBJECT(current_object)->player_car.view_target_x = ((int32_t)(offset_x * 2u) >> 8) + ROAD_SEGMENT(segment_record)->x;
 	OBJECT(current_object)->player_car.view_target_z = ((int32_t)(offset_z * 2u) >> 8) + ROAD_SEGMENT(segment_record)->z;
 	segment_remaining = segment_length - segment_fraction;
-	OBJECT(current_object)->player_car.view_target_y = divide_s32(mem_read32(((r12 & ~0xFFFFu) | (r12 & 0xAFFFu)) + 0xCu) * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
+	OBJECT(current_object)->player_car.view_target_y = divide_s32(ROAD_SEGMENT((r12 & ~0xFFFFu) | (r12 & 0xAFFFu))->y * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
 	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
-	pitch = mem_read32(r12 + 4u);
-	yaw = mem_read32(r12 + 0xCu);
-	far_z = mem_read32(r12 + 8u);
+	pitch = ROAD_SEGMENT(r12)->x;
+	yaw = ROAD_SEGMENT(r12)->y;
+	far_z = ROAD_SEGMENT(r12)->z;
 	near_x = ROAD_SEGMENT(segment_record)->x;
 	near_y = ROAD_SEGMENT(segment_record)->y;
 	near_z = ROAD_SEGMENT(segment_record)->z;
@@ -543,9 +543,9 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
 	pitch_here = (uint16_t)pitch;
 	yaw_here = yaw;
-	pitch = mem_read32(r12 + 4u);
-	yaw = mem_read32(r12 + 0xCu);
-	far_z = mem_read32(r12 + 8u);
+	pitch = ROAD_SEGMENT(r12)->x;
+	yaw = ROAD_SEGMENT(r12)->y;
+	far_z = ROAD_SEGMENT(r12)->z;
 	near_x = ROAD_SEGMENT(segment_record)->x;
 	near_y = ROAD_SEGMENT(segment_record)->y;
 	near_z = ROAD_SEGMENT(segment_record)->z;
@@ -860,7 +860,7 @@ void player_car_next_surfaces(void)
 uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width)
 {
 	uint32_t carry = 0;
-	uint16_t beyond_edge = 0, inner_edge_1 = 0, inner_edge_2 = 0, low_side = 0, outer_edge_1 = 0, outer_edge_2 = 0;
+	uint16_t beyond_edge = 0, inner_edge = 0, inner_edge_2 = 0, low_side = 0, outer_edge = 0, outer_edge_2 = 0;
 	uint32_t empty_bits = 0, roadside_surface = 0, segment = 0, surface_bits = 0, surface_start = 0;
 
 	roadside_surface = CAR(player_car)->surface_entry_1;
@@ -904,16 +904,16 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 		drag = (drag * CAR_HANDLING(r12)->off_road_drag) >> 4;
 		player_car_off_road_shake();
 	}
-	inner_edge_1 = ROADSIDE_SURFACE(roadside_surface)->inner_edge;
-	outer_edge_1 = ROADSIDE_SURFACE(roadside_surface)->outer_edge;
+	inner_edge = ROADSIDE_SURFACE(roadside_surface)->inner_edge;
+	outer_edge = ROADSIDE_SURFACE(roadside_surface)->outer_edge;
 	inner_edge_2 = ROADSIDE_SURFACE(r14)->inner_edge;
 	outer_edge_2 = ROADSIDE_SURFACE(r14)->outer_edge;
 	beyond_edge = (uint16_t)(half_width - road_half_width);
 	half_width += road_half_width;
-	carry = inner_edge_1 < beyond_edge;
+	carry = inner_edge < beyond_edge;
 	surface_bits = (uint8_t)(empty_bits * 2u + carry);
 	surface_bits = (uint8_t)(surface_bits * 2u);
-	carry = outer_edge_1 < beyond_edge;
+	carry = outer_edge < beyond_edge;
 	surface_bits = (uint8_t)(surface_bits + empty_bits + carry);
 	surface_bits = (uint8_t)(surface_bits * 2u);
 	carry = half_width < inner_edge_2;
@@ -979,10 +979,10 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 	}
 	beyond_edge = (uint16_t)(low_side - road_half_width);
 	low_side += road_half_width;
-	carry = inner_edge_1 < beyond_edge;
+	carry = inner_edge < beyond_edge;
 	surface_bits = (uint8_t)(empty_bits * 2u + carry);
 	surface_bits = (uint8_t)(surface_bits * 2u);
-	carry = outer_edge_1 < beyond_edge;
+	carry = outer_edge < beyond_edge;
 	surface_bits = (uint8_t)(surface_bits + empty_bits + carry);
 	surface_bits = (uint8_t)(surface_bits * 2u);
 	carry = low_side < inner_edge_2;

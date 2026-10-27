@@ -108,7 +108,7 @@ void upload_queued_palettes(void)
 void upload_palette(uint32_t colour_block)
 {
 	uint32_t blocks_left = 0, palette_address = 0;
-	uint32_t colours_0_place = 0, colours_2_3 = 0, colours_4_place = 0, colours_6_7 = 0, colours_8_place = 0, colours_10_11 = 0, colours_12_place = 0, colours_14_15 = 0;
+	uint32_t colours_0_place = 0, colours_2 = 0, colours_4_place = 0, colours_6 = 0, colours_8_place = 0, colours_10 = 0, colours_12_place = 0, colours_14 = 0;
 
 	palette_address = SCREEN(screen)->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u | PALETTE_BLOCK(colour_block)->place;
@@ -120,27 +120,27 @@ void upload_palette(uint32_t colour_block)
 	{
 		colours_0_place = palette_address;
 		palette_address += 8u;
-		colours_2_3 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		mem_write32(colours_0_place, AS32(PALETTE_COLOURS(colour_block)[0]));
-		mem_write32(colours_0_place + 4u, colours_2_3);
+		colours_2 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		io_write32(colours_0_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		io_write32(colours_0_place + 4u, colours_2);
 		colour_block += 8u;
 		colours_4_place = palette_address;
 		palette_address += 8u;
-		colours_6_7 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		mem_write32(colours_4_place, AS32(PALETTE_COLOURS(colour_block)[0]));
-		mem_write32(colours_4_place + 4u, colours_6_7);
+		colours_6 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		io_write32(colours_4_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		io_write32(colours_4_place + 4u, colours_6);
 		colour_block += 8u;
 		colours_8_place = palette_address;
 		palette_address += 8u;
-		colours_10_11 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		mem_write32(colours_8_place, AS32(PALETTE_COLOURS(colour_block)[0]));
-		mem_write32(colours_8_place + 4u, colours_10_11);
+		colours_10 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		io_write32(colours_8_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		io_write32(colours_8_place + 4u, colours_10);
 		colour_block += 8u;
 		colours_12_place = palette_address;
 		palette_address += 8u;
-		colours_14_15 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		mem_write32(colours_12_place, AS32(PALETTE_COLOURS(colour_block)[0]));
-		mem_write32(colours_12_place + 4u, colours_14_15);
+		colours_14 = AS32(PALETTE_COLOURS(colour_block)[2]);
+		io_write32(colours_12_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		io_write32(colours_12_place + 4u, colours_14);
 		blocks_left--;
 		colour_block += 8u;
 	} while (blocks_left != 0u);
@@ -151,7 +151,7 @@ void upload_palette(uint32_t colour_block)
 void upload_palette_list(uint32_t colour_list)
 {
 	uint32_t blocks_left = 0, colour_source = 0, entries_left = 0, palette_address = 0;
-	uint32_t colours_2_3 = 0, colours_6_7 = 0, colours_10_11 = 0, colours_14_15 = 0;
+	uint32_t colours_2 = 0, colours_6 = 0, colours_10 = 0, colours_14 = 0;
 
 	palette_address = SCREEN(screen)->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u;
@@ -167,21 +167,21 @@ void upload_palette_list(uint32_t colour_list)
 		colour_list += 2u;
 		do
 		{
-			colours_2_3 = AS32(PALETTE_COLOURS(colour_source)[2]);
-			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[0]));
-			mem_write32(palette_address + 4u, colours_2_3);
+			colours_2 = AS32(PALETTE_COLOURS(colour_source)[2]);
+			io_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[0]));
+			io_write32(palette_address + 4u, colours_2);
 			palette_address += 8u;
-			colours_6_7 = AS32(PALETTE_COLOURS(colour_source)[6]);
-			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[4]));
-			mem_write32(palette_address + 4u, colours_6_7);
+			colours_6 = AS32(PALETTE_COLOURS(colour_source)[6]);
+			io_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[4]));
+			io_write32(palette_address + 4u, colours_6);
 			palette_address += 8u;
-			colours_10_11 = AS32(PALETTE_COLOURS(colour_source)[10]);
-			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[8]));
-			mem_write32(palette_address + 4u, colours_10_11);
+			colours_10 = AS32(PALETTE_COLOURS(colour_source)[10]);
+			io_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[8]));
+			io_write32(palette_address + 4u, colours_10);
 			palette_address += 8u;
-			colours_14_15 = AS32(PALETTE_COLOURS(colour_source)[14]);
-			mem_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[12]));
-			mem_write32(palette_address + 4u, colours_14_15);
+			colours_14 = AS32(PALETTE_COLOURS(colour_source)[14]);
+			io_write32(palette_address, AS32(PALETTE_COLOURS(colour_source)[12]));
+			io_write32(palette_address + 4u, colours_14);
 			blocks_left--;
 			palette_address += 8u;
 		} while (blocks_left != 0u);

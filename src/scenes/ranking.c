@@ -28,21 +28,21 @@ void load_course_records(void)
 	{
 		if ((int8_t)BACKUP_COURSE_RECORD(backup_record)->model >= 0)
 		{
-			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record)->model);
+			COURSE_RECORD_COPY(r12)->model = BACKUP_COURSE_RECORD(backup_record)->model;
 			model_place = r12;
 			r12 = r12 + 1u;
-			mem_write8(model_place, mem_read8(model_place) & 7u);
+			COURSE_RECORD_COPY(model_place)->model &= 7u;
 			backup_record++;
-			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0]);
+			COURSE_RECORD_COPY(r12 - 0x1u)->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1]);
+			COURSE_RECORD_COPY(r12 - 0x2u)->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write8(r12, BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2]);
+			COURSE_RECORD_COPY(r12 - 0x3u)->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
 			r12 = r12 + 1u;
 			backup_record++;
-			mem_write16(r12, BACKUP_COURSE_RECORD(backup_record - 0x4u)->time);
+			COURSE_RECORD_COPY(r12 - 0x4u)->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
 			r12 = r12 + 2u;
 			course_record += 6u;
 			courses_left--;
@@ -51,10 +51,10 @@ void load_course_records(void)
 				return;
 			continue;
 		}
-		mem_write32(r12, AS32(COURSE_RECORD(course_record)->model));
+		COURSE_RECORD_COPY(r12)->model_and_name = COURSE_RECORD(course_record)->model_and_name;
 		r12 = r12 + 4u;
 		course_record += 4u;
-		mem_write16(r12, COURSE_RECORD(course_record - 0x4u)->time);
+		COURSE_RECORD_COPY(r12 - 0x4u)->time = COURSE_RECORD(course_record - 0x4u)->time;
 		r12 = r12 + 2u;
 		backup_record += 6u;
 		courses_left--;
@@ -164,7 +164,7 @@ void ranking_background_update(void)
 			if (SCREEN(screen)->unpack_state != 0u)
 			{
 				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 				return;
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 0u)
@@ -176,7 +176,7 @@ void ranking_background_update(void)
 			if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
 			{
 				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 				return;
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
@@ -198,7 +198,7 @@ void ranking_background_update(void)
 			if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
 			{
 				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 				return;
 			}
 			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
@@ -216,13 +216,13 @@ void ranking_background_update(void)
 				OBJECT(current_object)->state = 4u;
 			}
 			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-			mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+			VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 			return;
 		case 3:
 			if ((SCREEN(screen)->flags & 1u) == 0u)
 				OBJECT(current_object)->state = 0u;
 			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-			mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+			VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 			return;
 		case 4:
 			break;
@@ -231,7 +231,7 @@ void ranking_background_update(void)
 		}
 	}
 	scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-	mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 3u);
+	VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 }
 
 /* The left half of the ranking's title, OutRunner of OutRunners (animation 2D2, palette 2B2) at x 0, y

@@ -51,8 +51,8 @@ uint32_t read_switches_and_analog(void)
 	calibration = analog_calibration_addresses[screen_turn];
 	do
 	{
-		mem_write8(converter, 0xFFu);
-		reading = (((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)(mem_read8(converter) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) * 2u) & ~0xFFu) | mem_read8(converter)) >> 7;
+		io_write8(converter, 0xFFu);
+		reading = (((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)(io_read8(converter) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) >> 7;
 		ANALOG_VALUES(raw_place)[0] = (uint8_t)reading;
 		calibration_low = ANALOG_CALIBRATION_BYTES(calibration)[0];
 		calibration++;
@@ -86,11 +86,11 @@ void pack_seat_inputs(void)
 	uint8_t chip_1_port_e = 0, chip_1_port_a = 0, chip_2_port_e = 0, chip_2_port_a = 0;
 
 	chip_1_port_e = io_read8(IO_1_PORT_E);
-	chip_1_port_a = io_read8(IO_1_PORT_A);
+	chip_1_port_a = io_read8(0xC00000u);
 	port_a_on = (uint8_t)~chip_1_port_a;
 	seat_buttons = ((~chip_1_port_e * 2u * 2u) & 0x40u) | ((((uint32_t)port_a_on << 4) | (port_a_on >> 4)) & 0x3Fu);
 	chip_2_port_e = io_read8(IO_2_PORT_E);
-	chip_2_port_a = io_read8(IO_2_PORT_A);
+	chip_2_port_a = io_read8(0xC80000u);
 	port_a_on = (uint8_t)~chip_2_port_a;
 	other_seat_buttons = ((~chip_2_port_e * 2u * 2u) & 0x40u) | ((((uint32_t)port_a_on << 4) | (port_a_on >> 4)) & 0x3Fu);
 	analog_place = analog_inputs_ADDRESS;
@@ -132,19 +132,19 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
 
 	if (SCREEN(link_event_place - 0x40u)->link_event != 0u)
 	{
-		mem_write16(link_place, SCREEN(link_event_place - 0x40u)->link_event);
+		io_write16(link_place, SCREEN(link_event_place - 0x40u)->link_event);
 		link_place += 2u;
 		link_event_place++;
-		mem_write16(link_place, SCREEN(link_event_place - 0x41u)->link_event_data_1);
+		io_write16(link_place, SCREEN(link_event_place - 0x41u)->link_event_data_1);
 		link_place += 2u;
 		link_event_place++;
-		mem_write16(link_place, SCREEN(link_event_place - 0x42u)->link_event_data_2);
+		io_write16(link_place, SCREEN(link_event_place - 0x42u)->link_event_data_2);
 		link_place += 2u;
 		link_event_place++;
-		mem_write16(link_place, SCREEN(link_event_place - 0x43u)->link_event_data_3);
+		io_write16(link_place, SCREEN(link_event_place - 0x43u)->link_event_data_3);
 		link_place += 2u;
 		link_event_place++;
-		mem_write16(link_place, SCREEN(link_event_place - 0x44u)->link_event_data_4);
+		io_write16(link_place, SCREEN(link_event_place - 0x44u)->link_event_data_4);
 		link_place += 2u;
 		link_event_place = link_event_place + 1u - 4u;
 		SCREEN(link_event_place - 0x41u)->link_event_data_1 = 0u;
@@ -155,21 +155,21 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
 	}
 	else
 	{
-		mem_write16(link_place, 0u);
+		io_write16(link_place, 0u);
 		link_place += 2u;
-		mem_write16(link_place, (uint8_t)seat_buttons);
+		io_write16(link_place, (uint8_t)seat_buttons);
 		wheel_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
-		mem_write16(link_place, (uint8_t)~wheel_input);
+		io_write16(link_place, (uint8_t)~wheel_input);
 		gas_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
-		mem_write16(link_place, gas_input);
+		io_write16(link_place, gas_input);
 		brake_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
-		mem_write16(link_place, brake_input);
+		io_write16(link_place, brake_input);
 		link_place += 2u;
 	}
 	*p_analog_place = analog_place;
@@ -202,7 +202,7 @@ uint32_t queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record)
 
 	if (isdn_mode != 0u)
 		seat_record = SCREEN(seat_screen)->race_copy + 0x2Cu;
-	inputs = (uint8_t)~mem_read8(r12 + 2u);
+	inputs = (uint8_t)~io_read8(r12 + 2u);
 	seat_inputs = (SEAT_INPUTS(seat_record)->buttons | ((uint32_t)SEAT_INPUTS(seat_record)->wheel << 8u) | ((uint32_t)SEAT_INPUTS(seat_record)->gas << 16u) | ((uint32_t)SEAT_INPUTS(seat_record)->brake << 24u));
 	inputs = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
 	input_write_place = SCREEN(seat_screen)->input_write_place;

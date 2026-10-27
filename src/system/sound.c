@@ -101,18 +101,18 @@ void player_car_start_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) != 0u && advertise_sound == 0u)
 	{
 		sound_page = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
-		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
+		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 0u;
+		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests |= 0x20u;
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_SAMPLE_1_ADDRESS, car_model_engine_samples[CAR(player_car)->model]);
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_sample = car_model_engine_samples[CAR(player_car)->model];
 	loudness = 0x10u;
 	if (CAR(player_car)->transmission != 0u)
 		loudness = 0x30u;
-	mem_write8(sound_page + SOUND_ENGINE_LOUDNESS_1_ADDRESS, loudness);
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 1u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, 0xA0u);
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_loudness = loudness;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 1u;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests = 0xA0u;
 }
 
 /* Sets the engine's pitch from the revs (car revs) each frame, or silences it in the demo without sound. */
@@ -123,13 +123,13 @@ void player_car_engine_sound(void)
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
 		sound_page = (uint32_t)SCREEN(screen)->index << 8;
-		mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, CAR(player_car)->revs >> 8);
-		mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, 0x20u);
+		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = CAR(player_car)->revs >> 8;
+		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests = 0x20u;
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 0u;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests |= 0x20u;
 }
 
 /* set_tyre_noise, unless the car is off the road (car off_road), where the off-road noise plays. Used by
@@ -157,8 +157,8 @@ void set_tyre_noise(uint8_t tyre_noise)
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 0u;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests |= 0x20u;
 }
 
 /* Fades out the screen's music with 20 (fade_out_music_at): a step every 4 x (20 + 1) of the sound
@@ -191,7 +191,7 @@ void reset_screen_sound(void)
 	uint32_t sound_page = 0;
 
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;
-	mem_write8(sound_page + SOUND_COMMAND_1_ADDRESS, 0x1Fu);
-	mem_write8(sound_page + SOUND_ENGINE_REVS_1_ADDRESS, 0u);
-	mem_write8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS, mem_read8(sound_page + SOUND_ENGINE_REQUESTS_1_ADDRESS) | 0x20u);
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->command = 0x1Fu;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 0u;
+	SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_requests |= 0x20u;
 }

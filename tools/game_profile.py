@@ -47,6 +47,11 @@ pointers.HANDLER_FIELD = ("object", 4)
 pointers.VARIABLE_BLOCKS = {0x20E600: 0x80,      # the settings, which the test mode walks with R20
                             0x20E716: 0x19}      # the memory test's results, which it writes through R20
 pointers.WORK_RAM = (0x200000, 0x220000)
+# the board's devices (runtime/src/machine.c): the sprite control, the two screens' palettes and mixers, the
+# link board (its memory is a byte on each halfword), the two I/O chips, the interrupt controller, the
+# random number generator
+pointers.DEVICE_AREAS = ((0x500000, 0x500010), (0x600000, 0x700000), (0x800000, 0x801004),
+                         (0xC00000, 0xD00010), (0xD80000, 0xD80010))
 pointers.BASE_KINDS = {0x208000: ("screen", 0), 0x218000: ("screen", 0)}
 pointers.PAGE_LINK_KINDS = {"screen": ("object", 0)}
 pointers.NESTED = {"screen": ((0x1000, 0x200, "car"),)

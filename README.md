@@ -50,9 +50,9 @@ the tools verify it, extract the assets and build your own executable.
       every function, the ones no scenario runs included (and in the sound program's 60, with `--sound`). The VBLANK handler
       asks the runtime to swap the tasks (`swap_tasks`), and a function that returns for its caller too
       says so (`left_caller`). The registers the whole program shares are globals, a copy for each task:
-      `current_object`, `player_car` and `screen` (named by `symbols.txt`), and R12, R14, R27 and R28,
-      scratch registers whose last value the next function may read, still named after them (1,495 uses,
-      which `tools/noise_report.py` counts). The game's structures are typed (`tools/core/decompiler/pointers.py`, with `tools/game_profile.py`'s structures):
+      `current_object`, `player_car` and `screen` (named by `symbols.txt`), and R12 and R14, scratch
+      registers whose last value the next function may read, still named after them (932 uses, which
+      `tools/noise_report.py` counts; R27 and R28 are locals: 1,495 uses with them). The game's structures are typed (`tools/core/decompiler/pointers.py`, with `tools/game_profile.py`'s structures):
       the objects (0x100 bytes, 124 in the page of each screen's block), the screen's car (0x200 bytes at
       1000 of the block), the course's ring of segments (128 of 0x20 bytes from 2000 of the block) and the
       block of the screen a task runs (`SCREEN_1`, `SCREEN_2`), read as `OBJECT(p)->field`,
@@ -83,24 +83,23 @@ the tools verify it, extract the assets and build your own executable.
       `car_models`, the checkpoint board's `row_steps`: a family's field cannot be an array yet), and
       fields of objects of two families (the choice flags `car_select_entries_run` starts) or of any
       (`start_object_list`'s number in its list)
-- [x] The memory the code reaches through pointers, typed: a record of the work RAM or the program ROM a
+- [x] The memory the code reaches through pointers, typed: a record of the work RAM, of the program ROM
+      or of the board's plain memories (the video RAM, the sprite RAM, the RAM the sound program shares) a
       local, a parameter or a field points at is a structure, so `mem_read16(projected_segment + 4u)` reads
-      `PROJECTED_SEGMENT(projected_segment)->x` (each screen's ring of views and the road as it projects
-      it, the sprites' depth lists, the cars' hit boxes, the crash tables, the courses' starts, the coin
-      chutes, the seats' credits and inputs, the lamps, the settings' copies, the palettes' and the packed
-      tiles' lists, the text records), and the board's registers have names (`IO_1_PORT_E`,
-      `IRQ_ACKNOWLEDGE`, `LINK_BOARD_ON`, `SPRITE_LIST_1_A`). 2,465 reads and writes still go through a
-      computed address (`tools/noise_report.py`, mem_access; 2,877 before). By what the scenarios saw each
-      reach (`tools/memory_census.py`, with the game built with `ORUNNERS_MEMORY_CENSUS`): 601 the board's
-      memories (sprite, video and palette RAM, the mixers, the RAM shared with the sound board, the I/O
-      chips, the interrupt controller), which the C reaches through the bus as the original does; 944 the
-      work RAM: pointers that step through a record a field at a time (the link's blocks of records, the
-      palette fades), the clears of whole blocks (`start_object`, `boot`), R12, R14, R27 and R28 used as
-      pointers, the arrays inside a record read with a variable index (`screen + 0x480u + player`) and the
-      fields that hold the address of a single value (the route map's and the backgrounds' video register
-      copies), which the decompiler cannot type yet; 19 the program ROM, in streams that mix widths or
-      kinds of record (the test mode's texts); and 901 run in no scenario (`unrolled_copy`, a copy nothing
-      calls, and the link between cabinets: its board's memory and the copies of the race records)
+      `PROJECTED_SEGMENT(projected_segment)->x` (each screen's ring of views and the road as it projects it,
+      the sprites' depth lists and the sprite lists' entries, the text layer's cells, the cars' hit boxes,
+      riders and sprays, the crash tables, the courses' starts, the coin chutes, the seats' credits and
+      inputs, the lamps, the settings' copies, the bookkeeping and the course records the sound program's RAM
+      keeps, the palettes' and the packed tiles' lists, the text records); a pointer that walks values of one
+      width reads `NAME(p)[i]` (`OBJECT_WORDS(object_bytes)[1] = 0u`), an array inside a record by a number
+      the code works out reads `SCREEN(screen)->places[player]`, and an unrolled copy or clear is the loop
+      it does. The board's registers have names: a variable in its plain memories (`MACHINE_ID_TEXT_CELL`,
+      `NBG0_SCROLL_X[layer]`), a device's register read and written by name or by the address the code
+      works out, through the bus (`io_read8(IO_1_CNT)`, `io_write16(board_records, ...)`: 371,
+      `board_registers`, not noise). 150 reads and writes still go through a computed address
+      (`tools/noise_report.py`, mem_access; 2,877 before this was typed): see "What is left, and why".
+      `tools/memory_census.py` says what each one reaches over the scenarios, with the game built with
+      `ORUNNERS_MEMORY_CENSUS`
 - [x] The game's own video and sound: `runtime/src/video.c` draws both screens; the sound program,
       decompiled into C (`src/sound/`, `tools/decompile_sound.py` from `sound_symbols.txt`), runs on the
       board's time with the YM3438 (`runtime/src/ym3438.c`) and the MultiPCM (`runtime/src/multipcm.c`,
@@ -164,22 +163,22 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 
 | What | Count | Why |
 |---|---|---|
-| R12, R14, R27 and R28 named after the register (`context_registers`) | 1,495 uses | Scratch registers whose last value the next function may read (a handler what the one before it left, the caller what the callee left in them). The C keeps them as globals, a copy for each task, and a value one function leaves in them is often a different thing in the next, so one name would not fit them |
-| Memory reached through a computed address (`mem_access`) | 2,465 | 601 reach the board's memories, which go through the bus; 944 the work RAM, through pointers that step a field at a time, the clears of whole blocks, R12, R14, R27 and R28 used as pointers, arrays inside a record read with a variable index (`screen + 0x480u + player`) and fields that hold the address of one value (the scenes' video register copies), which the decompiler cannot type yet; 19 the program ROM, in streams that mix widths or kinds of record; 901 run in no scenario (the unused `unrolled_copy`, the link between cabinets). See the Status |
-| Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 79 | The original moves them in one instruction: the screen's game mode with its steps (16), palette colours copied 64 bits at a time (16), the LCD's text four characters at a time (14), the memory test's results two at a time (9), the projected segments copied whole (4), the car's brake lights (4), and 16 more (the traffic's offsets, the unpacker's halfwords, the seats' bookkeeping bytes...) |
+| R12 and R14 named after the register (`context_registers`) | 932 uses | Scratch registers whose last value the next handler reads: `race_cars_start` puts the car's address together from R12's high half, which the handler before it left (the screen's page), and the road rows' and the scenery's drawing keep the height of the last size step in R14 and skip reloading it when the object's step is the same. The C keeps them as globals, a copy for each task. Locals with that value passed from handler to handler through a variable of their own would take some 600 copies at the handlers' starts and ends (measured: 146 handlers read R12 as they start, 163 leave it), more than the uses they would take away. R27 and R28 are locals: the one function that would read them before setting them, `player_car_project_road`, does so only if its projection pattern skipped every segment, and it starts with a 1 (`symbols.txt`'s `unread` lines) |
+| Memory reached through a computed address (`mem_access`) | 150 | An element picked by a number through a pointer the code works out first and keeps (`checkpoint_board_update`'s rows: `inc.b` through a place it worked out), or a table indexed by two numbers (the checkpoints' orders, by checkpoint and by player): 36. One pointer that reaches two memories or two layouts: the road rows' last sprites (the ROM's blank places or the work RAM's ring), the memory test, the CRC of the settings, the test mode's texts (halfwords and bytes in one walk): 24. Code nothing calls, so nothing says what its pointers reach: `unrolled_copy`'s loop (a copy from any address to any other), two of the test mode's: 15. A place one before an array or past the record a pointer is in (`screen + 0x349u + forks_reached`, the next projected segment): 14. What a string move or a search leaves in a register: 10. The road's ring of segments by a byte offset: 8. The race records' copies by the player's number (`0x20FC42u + (player << 7)`): 7. The addresses boot writes where the board maps nothing (E00000, E80000): 6. Stack slots: 5. And 25 more, one by one (a table read by an index the analysis cannot bound, the slots below a screen's block, the test mode's settings through R20 plus an offset) |
+| Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 145 | The original moves them in one instruction: the sprite lists' halfwords two at a time (54: a list's jump, and its copy in the other half of the list 0x3000 bytes on, `SPRITE_WORDS(p)[6144]`), the screen's block (35: the game mode with its steps, the LCD's text four characters at a time, the memory test's results two at a time...), palette colours 64 bits at a time (16), two text cells at once (7), objects' fields (5), the projected segments copied whole (4), the car's brake lights (4), and 10 more (the unpacker's halfwords, a course record's model and name, the seats' bookkeeping bytes...) |
 | Jumps through a table with an index it does not have (`invalid_jump`) | 193 | The original jumps through its tables of code without checking the index; the C's switch has a `default:` for the indexes the table does not hold, where `invalid_jump` stops the game with the address the original would have jumped to |
 | Results written back before an early return (`copy_backs`) | 40 | A function hands back what it leaves in registers through pointers (`p_leftover`); where a caller may pass one variable for two of them, writing straight through the pointer would not be the same, so the result is kept in a local and written back at each way out |
-| Functions with `bool` control flags (`control_variables`) | 17 functions, 51 flags | Where the original's jumps join paths that no nesting of ifs and loops can, a flag says which way to go instead of a goto; each is named after the code it leads to (`L_017685`, 512 uses) |
-| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 523 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later |
+| Functions with `bool` control flags (`control_variables`) | 17 functions, 45 flags | Where the original's jumps join paths that no nesting of ifs and loops can, a flag says which way to go instead of a goto; each is named after the code it leads to (`L_017685`, 478 uses) |
+| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 502 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later |
 | Data read through its ROM address (`rom_reads`) | 26 | The course's stream, whose commands have operands of different widths behind one pointer (16), the input test's list, which one pointer walks through two layouts (9), and the road objects' stream after a fork (1) |
 | Tables read over the pack's copy of the data (`rom_table_reads`) | 847 | The tables are in the assets pack at their own addresses, which the code keeps in RAM and in other tables, so a table is read by its name over that copy (`src/ram.h`: `rom(...)`) |
 | ROM addresses printed as numbers (`raw_rom_addresses`) | 2 | The switches that go on through the original's own jump target in `car_radio_update` and `song_title_show`, where the address stands for "go on here", as the cases do |
-| Fields named after their offset (`unk_fields`) | 11 | The bytes of two families' arrays (the car radio's `car_models`, the checkpoint board's `row_steps`: a family's field cannot be an array yet) and fields of objects of two families (`car_select_entries_run`'s choice flags) or of any (`start_object_list`'s number in its list) |
+| Fields named after their offset (`unk_fields`) | 5 | Fields of objects of two families (`car_select_entries_run`'s choice flags, `coin_prompt_update`'s) or of any (`start_object_list`'s number in its list) |
 | A function the board puts its own in place of (`board_replaced`) | 1 | The memory test's sums of the ROM chips (`runtime/replaced.txt`): the game has no ROM chips to sum, so the board hands back the sums the program keeps for them (at 03FFF8 and 03FFFC), as good chips give |
-| Work RAM addresses printed as numbers | 36 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (screen 2's car `0x219000u`, the sprite places `0x20C000u`), the race copies' fields by player (`0x20FC42u + (player << 7)`), `car_numbers` less one and the coin meters after the first: the decompiler names a constant only when it is a variable's own address |
-| Unused names in `src/ram.h` | 46 | Places of the screens' blocks and the race records that the code reaches by their own address, which the C reads as fields, and two places of the ROM (`rom_000001`, `rom_000002`): each named after its address (`unk_208001`), and nothing uses the names |
+| Work RAM addresses printed as numbers | 37 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (screen 2's car `0x219000u`, the sprite places `0x20C000u`), the race copies' fields by player (`0x20FC42u + (player << 7)`), `car_numbers` less one and the coin meters after the first: the decompiler names a constant only when it is a variable's own address |
+| Unused names in `src/ram.h` | 50 | Places of the screens' blocks and the race records that the code reaches by their own address, which the C reads as fields, and two places of the ROM (`rom_000001`, `rom_000002`): each named after its address (`unk_208001`), and nothing uses the names |
 | Data without a name of its own | 7 named after their address, 193 stretches | Unused tables named after their address (`unk_00183B` and six more in `symbols.txt`), and the `data_XXXXXX` sections of `assets/data/`, the stretches between the named tables |
-| Board registers without a name | 5 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the four bytes boot writes to E80000-E80003, where the board maps nothing |
+| Board registers without a name | 6 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the bytes boot writes to E00000 and E80000-E80003, where the board maps nothing |
 | Calls through a slot that holds a function's address | 14 wrappers | `src/table.c`: how `call_code()` runs a function from a code address it reads (`call_0006B0` runs `second_task`), named after that address |
 
 ## Getting started

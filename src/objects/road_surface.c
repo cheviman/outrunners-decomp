@@ -330,7 +330,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 												if ((int16_t)max_depth < (int16_t)line_select)
 													line_select = (uint16_t)max_depth;
 												r12 = r12 - 2u;
-												mem_write16(r12, line_select + r14);
+												LINE_SELECTS(r12)[0] = line_select + r14;
 												line = point_line;
 											}
 										}
@@ -470,9 +470,9 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		{
 			r12 = r12 - 4u;
 			line--;
-			if (((line != 0u) & (mem_read32(r12) != 0u)) == 0u)
+			if (((line != 0u) & (LINE_SELECT_PAIRS(r12)[0] != 0u)) == 0u)
 				break;
-			mem_write32(r12, 0u);
+			LINE_SELECT_PAIRS(r12)[0] = 0u;
 		}
 		SCREEN(screen)->road_top_line = point_line;
 		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
@@ -483,7 +483,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		return;
 	}
 	r12 = r12 - 2u;
-	mem_write16(r12, 0u);
+	LINE_SELECTS(r12)[0] = 0u;
 	if (zero)
 	{
 		SCREEN(screen)->road_top_line = point_line;
@@ -499,9 +499,9 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	{
 		r12 = r12 - 4u;
 		line--;
-		if (((line != 0u) & (mem_read32(r12) != 0u)) == 0u)
+		if (((line != 0u) & (LINE_SELECT_PAIRS(r12)[0] != 0u)) == 0u)
 			break;
-		mem_write32(r12, 0u);
+		LINE_SELECT_PAIRS(r12)[0] = 0u;
 	}
 	SCREEN(screen)->road_top_line = point_line;
 	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
@@ -604,7 +604,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 				if ((int16_t)max_depth < (int16_t)line_select)
 					line_select = (uint16_t)max_depth;
 				r12 = r12 - 2u;
-				mem_write16(r12, line_select + r14);
+				LINE_SELECTS(r12)[0] = line_select + r14;
 				line = point_line;
 				if (line == 0u)
 				{
@@ -629,7 +629,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 						if ((int16_t)max_depth < (int16_t)line_select)
 							line_select = (uint16_t)max_depth;
 						r12 = r12 - 2u;
-						mem_write16(r12, line_select + r14);
+						LINE_SELECTS(r12)[0] = line_select + r14;
 						line = point_line;
 						if (line == 0u)
 						{
@@ -656,7 +656,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 						if ((int16_t)max_depth < (int16_t)line_select)
 							line_select = (uint16_t)max_depth;
 						r12 = r12 - 2u;
-						mem_write16(r12, line_select + r14);
+						LINE_SELECTS(r12)[0] = line_select + r14;
 						line = point_line;
 						if (line == 0u)
 						{
@@ -681,7 +681,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					if ((int16_t)max_depth < (int16_t)line_select)
 						line_select = (uint16_t)max_depth;
 					r12 = r12 - 2u;
-					mem_write16(r12, line_select + r14);
+					LINE_SELECTS(r12)[0] = line_select + r14;
 					line = point_line;
 					if (line == 0u)
 					{
@@ -716,15 +716,15 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 		{
 			r12 = r12 - 4u;
 			line--;
-			if (((line != 0u) & (mem_read32(r12) != 0u)) == 0u)
+			if (((line != 0u) & (LINE_SELECT_PAIRS(r12)[0] != 0u)) == 0u)
 				break;
-			mem_write32(r12, 0u);
+			LINE_SELECT_PAIRS(r12)[0] = 0u;
 		}
 		road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth);
 		return;
 	}
 	r12 = r12 - 2u;
-	mem_write16(r12, 0u);
+	LINE_SELECTS(r12)[0] = 0u;
 	if (zero)
 	{
 		road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth);
@@ -735,9 +735,9 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	{
 		r12 = r12 - 4u;
 		line--;
-		if (((line != 0u) & (mem_read32(r12) != 0u)) == 0u)
+		if (((line != 0u) & (LINE_SELECT_PAIRS(r12)[0] != 0u)) == 0u)
 			break;
-		mem_write32(r12, 0u);
+		LINE_SELECT_PAIRS(r12)[0] = 0u;
 	}
 	road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth);
 }
@@ -782,7 +782,7 @@ void road_surface_fill_lines(uint32_t line, uint32_t point_line, uint32_t point_
 			if ((int16_t)max_depth < (int16_t)line_select)
 				line_select = (uint16_t)max_depth;
 			r12 = r12 - 2u;
-			mem_write16(r12, line_select + r14);
+			LINE_SELECTS(r12)[0] = line_select + r14;
 			line_count--;
 		} while (line_count != 0u);
 		zero = 1u == 0u;
@@ -808,7 +808,7 @@ void road_surface_fill_lines(uint32_t line, uint32_t point_line, uint32_t point_
 			if ((int16_t)max_depth < (int16_t)line_select)
 				line_select = (uint16_t)max_depth;
 			r12 = r12 - 2u;
-			mem_write16(r12, line_select + r14);
+			LINE_SELECTS(r12)[0] = line_select + r14;
 			line_count--;
 		} while (line_count != 0u);
 		zero = 0u == 0u;
@@ -857,7 +857,7 @@ void road_surface_fill_skipped_lines(uint8_t fraction_shift, uint32_t rounding, 
 			line_select = (uint16_t)max_depth;
 			x_step = 0u;
 		}
-		mem_write16(r12, line_select + r14);
+		LINE_SELECTS(r12)[0] = line_select + r14;
 		r12 = r12 + 2u;
 		line_count--;
 	} while (line_count != 0u);
@@ -917,7 +917,7 @@ void road_tiles_change_update(void)
 		OBJECT(current_object)->state++;
 	case 1:
 		step = OBJECT(current_object)->road_tiles_change.step;
-		move_halfwords(mem_read32(current_object + 0x28u + step * 4u), mem_read32(current_object + 0x18u + step * 4u), 0x200u);
+		move_halfwords(OBJECT(current_object)->road_tiles_change.target_pages[(int32_t)step], OBJECT(current_object)->road_tiles_change.source_pages[(int32_t)step], 0x200u);
 		OBJECT(current_object)->road_tiles_change.step++;
 		pages_left = OBJECT(current_object)->road_tiles_change.pages_left;
 		OBJECT(current_object)->road_tiles_change.pages_left = pages_left - 1u;
@@ -1008,7 +1008,7 @@ void road_tiles_change_update(void)
 		OBJECT(current_object)->state++;
 	case 4:
 		step = OBJECT(current_object)->road_tiles_change.step;
-		move_halfwords(mem_read32(current_object + 0x28u + step * 4u), mem_read32(current_object + 0x18u + step * 4u), 0x200u);
+		move_halfwords(OBJECT(current_object)->road_tiles_change.target_pages[(int32_t)step], OBJECT(current_object)->road_tiles_change.source_pages[(int32_t)step], 0x200u);
 		OBJECT(current_object)->road_tiles_change.step++;
 		pages_left_2 = OBJECT(current_object)->road_tiles_change.pages_left;
 		OBJECT(current_object)->road_tiles_change.pages_left = pages_left_2 - 1u;

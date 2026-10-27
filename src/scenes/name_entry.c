@@ -60,10 +60,10 @@ uint32_t course_record_beaten(void)
    time and the name (draw_text). */
 void name_entry_update(void)
 {
-	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
+	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L = false, L_002133 = false;
 	uint8_t letter_character = 0, letter_index = 0, new_steps = 0, sound_code = 0, steps = 0, turn_rate = 0;
 	uint16_t buttons_pressed = 0, new_angle = 0, turn_buttons = 0;
-	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, ignored_2 = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
+	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, ignored = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
 	uint32_t kept_letter = 0, kept_place = 0;
 	uint8_t letters_left = 0, turn_delay = 0, entered_letter = 0;
 	uint16_t spin_frames = 0, timer = 0, timer_2 = 0;
@@ -127,7 +127,7 @@ void name_entry_update(void)
 			text_record = current_object + 0xA4u;
 			draw_text(text_record);
 			text_record = current_object + 0x9Au;
-			ignored_2 = draw_text(text_record);
+			ignored = draw_text(text_record);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -258,13 +258,13 @@ void name_entry_update(void)
 								case 0x0020D4u:
 									do
 									{
-										if (L_002130 || !L_00212C)
+										if (L || !L_00212C)
 										{
-											if (L_002130 || !L_0020FB)
+											if (L || !L_0020FB)
 											{
-												if (L_002130 || letter == 0x1Eu)
+												if (L || letter == 0x1Eu)
 												{
-													L_002130 = false;
+													L = false;
 													OBJECT(current_object)->name_entry.gas_step--;
 													L_002133 = true;
 												}
@@ -294,10 +294,10 @@ void name_entry_update(void)
 											{
 												L_00212C = false;
 												OBJECT(current_object)->name_entry.place = name_place;
-												L_002130 = true;
+												L = true;
 											}
 										}
-									} while (L_002130);
+									} while (L);
 									if (L_002133)
 										break;
 									break;
@@ -344,7 +344,7 @@ void name_entry_update(void)
 						text_record = current_object + 0xA4u;
 						draw_text(text_record);
 						text_record = current_object + 0x9Au;
-						ignored_2 = draw_text(text_record);
+						ignored = draw_text(text_record);
 						return;
 					}
 				}
@@ -413,7 +413,7 @@ void name_entry_update(void)
 		text_record = current_object + 0xA4u;
 		draw_text(text_record);
 		text_record = current_object + 0x9Au;
-		ignored_2 = draw_text(text_record);
+		ignored = draw_text(text_record);
 		return;
 	case 4:
 		break;
@@ -423,7 +423,7 @@ void name_entry_update(void)
 	text_record = current_object + 0xA4u;
 	draw_text(text_record);
 	text_record = current_object + 0x9Au;
-	ignored_2 = draw_text(text_record);
+	ignored = draw_text(text_record);
 }
 
 /* A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow

@@ -20,10 +20,14 @@ void car_radio_start(void)
 	uint32_t object = 0, player = 0, race = 0, racers_left = 0;
 
 	object = current_object + 0x80u;
-	OBJECT(object - 0x80u)->list_data = 0xFFFFFFFFu;
-	OBJECT(object - 0x80u)->unk_84 = 0xFFFFu;
-	OBJECT(object - 0x80u)->unk_86 = 0xFFu;
-	OBJECT(object - 0x80u)->unk_87 = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[0] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[1] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[2] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[3] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[4] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[5] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[6] = 0xFFu;
+	OBJECT(object - 0x80u)->car_radio.car_models[7] = 0xFFu;
 	race = SCREEN(screen)->host_record + 0x1Fu;
 	racers_left = RACE(race - 0x1Fu)->racer_count;
 	OBJECT(current_object)->car_radio.cars_to_introduce = racers_left;
@@ -31,7 +35,7 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		mem_write8(current_object + 0x80u + car_numbers[player], mem_read8(0x20FC49u + (player << 7)));
+		OBJECT(current_object)->car_radio.car_models[car_numbers[player]] = mem_read8(0x20FC49u + (player << 7));
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);
@@ -85,7 +89,7 @@ void car_radio_read_buttons(void)
    remarks (dj_remark_lists), 5 nothing. */
 void car_radio_update(void)
 {
-	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
+	bool L = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
 	uint8_t fade_level = 0, message = 0, queued_message = 0, route_stage = 0, sound = 0;
 	uint16_t buttons = 0;
 	uint32_t car_number = 0, object = 0, remark_choice = 0, remark_list = 0, remark_routine = 0, song = 0, song_number = 0, title = 0;
@@ -116,7 +120,7 @@ void car_radio_update(void)
 					{
 						do
 						{
-							jump_target = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : car_radio_state_jumps[OBJECT(current_object)->state];
+							jump_target = L ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : car_radio_state_jumps[OBJECT(current_object)->state];
 							switch (jump_target)
 							{
 							case 0x019068u:
@@ -173,7 +177,7 @@ void car_radio_update(void)
 								request_sound((uint8_t)song_number);
 								return;
 							case 0x0190F0u:
-								if (!L_019118)
+								if (!L)
 								{
 									if (!L_019132)
 									{
@@ -196,7 +200,7 @@ void car_radio_update(void)
 								}
 								do
 								{
-									if (L_019137 || (!L_019118 && !L_019132 && (L_01914C || L_019154 || L_019167 || L_019180 || SCREEN(screen)->nearing_fork != 0u)))
+									if (L_019137 || (!L && !L_019132 && (L_01914C || L_019154 || L_019167 || L_019180 || SCREEN(screen)->nearing_fork != 0u)))
 									{
 										if (L_019137 || L_01914C || !L_019154)
 										{
@@ -273,15 +277,15 @@ void car_radio_update(void)
 									}
 									else
 									{
-										if (L_019118 || !L_019132)
+										if (L || !L_019132)
 										{
-											if (!L_019118)
+											if (!L)
 											{
 												sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
 												request_sound(sound);
 												OBJECT(current_object)->state++;
 											}
-											L_019118 = false;
+											L = false;
 										}
 										if (L_019132 || SCREEN(screen)->nearing_fork != 0u)
 										{
@@ -322,7 +326,7 @@ void car_radio_update(void)
 									return;
 								case 1:
 									car_number = OBJECT(current_object)->car_radio.next_car_number;
-									while ((int8_t)mem_read8(current_object + 0x80u + car_number) < 0)
+									while ((int8_t)OBJECT(current_object)->car_radio.car_models[(int32_t)car_number] < 0)
 									{
 										car_number = (uint8_t)(car_number + 1u);
 									}
@@ -332,7 +336,7 @@ void car_radio_update(void)
 									OBJECT(current_object)->car_radio.talk_step++;
 									return;
 								case 2:
-									message = (uint8_t)(mem_read8(current_object + 0x80u + OBJECT(current_object)->car_radio.next_car_number) + 1u);
+									message = (uint8_t)(OBJECT(current_object)->car_radio.car_models[OBJECT(current_object)->car_radio.next_car_number] + 1u);
 									start_dj_message(message);
 									OBJECT(current_object)->car_radio.next_car_number++;
 									cars_to_introduce = OBJECT(current_object)->car_radio.cars_to_introduce;
@@ -407,7 +411,7 @@ void car_radio_update(void)
 								}
 								break;
 							case 0x019118u:
-								L_019118 = true;
+								L = true;
 								break;
 							case 0x019132u:
 								L_019132 = true;
@@ -427,7 +431,7 @@ void car_radio_update(void)
 							default:
 								invalid_jump(jump_target);
 							}
-						} while (L_019118);
+						} while (L);
 					} while (L_019132);
 				} while (L_01914C);
 			} while (L_019154);
@@ -546,7 +550,7 @@ uint32_t start_song_title(uint32_t song_title)
    that cycle every 2 frames (song_title_colours by colour_step). */
 void song_title_show(void)
 {
-	bool L_019387 = false, L_01938A = false;
+	bool L = false, L_01938A = false;
 	uint32_t negative = 0;
 	uint16_t colour = 0, next_speed = 0, speed = 0;
 	uint32_t colour_step = 0, position = 0, record = 0, text = 0;
@@ -571,11 +575,11 @@ void song_title_show(void)
 		case 0x019369u:
 			do
 			{
-				if (L_019387 || L_01938A || (uint16_t)OBJECT(current_object)->song_title.time_left == 0u)
+				if (L || L_01938A || (uint16_t)OBJECT(current_object)->song_title.time_left == 0u)
 				{
-					if (L_019387 || !L_01938A)
+					if (L || !L_01938A)
 					{
-						L_019387 = false;
+						L = false;
 						OBJECT(current_object)->state++;
 					}
 					L_01938A = false;
@@ -633,9 +637,9 @@ void song_title_show(void)
 					OBJECT(current_object)->song_title.speed = speed - 1u;
 					OBJECT(current_object)->song_title.slide = (uint16_t)position;
 					OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
-					L_019387 = (uint16_t)position == 0u;
+					L = (uint16_t)position == 0u;
 				}
-			} while (L_019387);
+			} while (L);
 			break;
 		case 0x01938Au:
 			L_01938A = true;

@@ -32,7 +32,7 @@
    background_scroll_y). */
 void race_background_update(void)
 {
-	bool L_017685 = false;
+	bool L = false;
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0;
@@ -78,13 +78,13 @@ void race_background_update(void)
 		page_count = 4u;
 		do
 		{
-			mem_write32(r12, byte_swap32(page_number) | TILE_PAGE_ENTRIES(tile_pages)[0]);
+			OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_number) | TILE_PAGE_ENTRIES(tile_pages)[0];
 			page_number++;
 			page_count--;
 			tile_pages += 4u;
 			r12 = r12 + 4u;
 		} while (page_count != 0u);
-		mem_write32(r12, 0xFFFFFFFFu);
+		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 		unpack_tile_pages(tile_page_list);
 		TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = stage_tile_banks[SCREEN(screen)->first_stage];
 		SCREEN(screen)->background_changing = 0u;
@@ -121,13 +121,13 @@ void race_background_update(void)
 		}
 	case 1:
 		if (SCREEN(screen)->stage_background_change != 0u)
-			L_017685 = true;
+			L = true;
 		else if (CAR(player_car)->new_branch != 0u)
 		{
 			CAR(player_car)->new_branch = 0u;
-			L_017685 = true;
+			L = true;
 		}
-		if (L_017685)
+		if (L)
 		{
 			SCREEN(screen)->background_changing = 0xFFu;
 			new_background = SCREEN(screen)->built_stage;
@@ -149,13 +149,13 @@ void race_background_update(void)
 			page_count = 9u;
 			do
 			{
-				mem_write32(r12, byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0]);
+				OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0];
 				page_half++;
 				page_count--;
 				tile_pages += 4u;
 				r12 = r12 + 4u;
 			} while (page_count != 0u);
-			mem_write32(r12, 0xFFFFFFFFu);
+			OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 			queue_tile_pages(tile_page_list);
 			page_word_set = OBJECT(current_object)->race_background.page_half * 2u;
 			branch = SCREEN(screen)->stage_background_branch;

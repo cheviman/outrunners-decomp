@@ -142,10 +142,10 @@ void player_car_build_hit_boxes(void)
 		}
 		CAR_HIT_BOX(hit_box)->player = racer_player;
 		r12 = RACE_COPY_1 + (uint16_t)(racer_player << 7);
-		segment_fraction = mem_read16(r12 + 0x40u);
-		road_x = mem_read16(r12 + 0x44u);
-		segment = mem_read16(r12 + 0x42u);
-		model = mem_read8(r12 + 0x49u);
+		segment_fraction = RACE(r12)->segment_fraction;
+		road_x = (uint16_t)RACE(r12)->road_x;
+		segment = RACE(r12)->segment;
+		model = RACE(r12)->model;
 		hit_box += 2u;
 		hit_box = player_car_write_hit_box(segment, model, hit_box, segment_fraction, road_x);
 		racers_left--;
@@ -270,7 +270,7 @@ void road_row_hit_check(uint8_t hit_kind, uint32_t *p_along_distance, uint32_t *
 				if ((int16_t)(((item_across + ITEM_HIT_BOX(item_hit_box - 0x4u)->across_start - car_across_end) ^ across_distance) & ((item_along - car_along_end) ^ along_distance)) < 0)
 				{
 					object = CAR(player_car)->object;
-					mem_write16(object, mem_read16(object) | 4u);
+					OBJECT(object)->flags |= 4u;
 					OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 					along_distance = (uint16_t)((int16_t)along_distance >> 1);
 					CAR(player_car)->hit_along = along_distance;
@@ -347,7 +347,7 @@ void road_row_pair_crash_check(uint32_t *p_along_distance, uint32_t *p_next_hit_
 				if ((int16_t)((((mirrored_across_start - car_across_end) ^ (0u - item_across - car_across_start)) & item_along) | (((item_across - car_across_end) ^ across_distance) & item_along)) < 0)
 				{
 					object = CAR(player_car)->object;
-					mem_write16(object, mem_read16(object) | 4u);
+					OBJECT(object)->flags |= 4u;
 					OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 					along_distance = (uint16_t)((int16_t)along_distance >> 1);
 					CAR(player_car)->hit_along = along_distance;
@@ -424,7 +424,7 @@ void road_row_pair_crash_check_unflipped(void)
 			item_along = (uint16_t)((item_along - car_along_end) ^ along_distance);
 		} while ((int16_t)((((mirrored_across_end - car_across_start) ^ (mirrored_across - car_across_end)) & item_along) | (((item_across - car_across_end) ^ across_distance) & item_along)) >= 0);
 		object = CAR(player_car)->object;
-		mem_write16(object, mem_read16(object) | 4u);
+		OBJECT(object)->flags |= 4u;
 		OBJECT(CAR(player_car)->object)->player_car.hit_kind = hit_kind;
 		CAR(player_car)->hit_along = (int16_t)along_distance >> 1;
 		CAR(player_car)->hit_across = (int16_t)across_distance >> 1;
@@ -461,7 +461,7 @@ void player_car_check_car_hits(void)
 		return;
 	for (;;)
 	{
-		other_player = mem_read16(r14);
+		other_player = CAR_HIT_BOX(r14)->player;
 		r14 = r14 + 2u;
 		if (own_player == other_player)
 		{
@@ -471,7 +471,7 @@ void player_car_check_car_hits(void)
 				return;
 			continue;
 		}
-		other_record = mem_read32(r14);
+		other_record = CAR_HIT_BOX(r14 - 0x2u)->record;
 		r14 = r14 + 4u;
 		if ((RACE(other_record)->car_flags & 8u) != 0u)
 		{
@@ -481,9 +481,9 @@ void player_car_check_car_hits(void)
 				return;
 			continue;
 		}
-		other_along_start = mem_read16(r14);
+		other_along_start = CAR_HIT_BOX(r14 - 0x6u)->first_segment;
 		r14 = r14 + 2u;
-		segment_gap = (uint16_t)(r12 - mem_read16(r14));
+		segment_gap = (uint16_t)(r12 - CAR_HIT_BOX(r14 - 0x8u)->last_segment);
 		r14 = r14 + 2u;
 		if ((int16_t)((car_last_segment - other_along_start) ^ segment_gap) >= 0)
 		{
@@ -495,18 +495,18 @@ void player_car_check_car_hits(void)
 		}
 		other_along_start = (uint16_t)((other_along_start - r12) << 7);
 		other_along_end = (uint16_t)other_along_start;
-		other_along_start += mem_read16(r14);
+		other_along_start += CAR_HIT_BOX(r14 - 0xAu)->along_start;
 		r14 = r14 + 2u;
-		other_along_end += mem_read16(r14);
+		other_along_end += CAR_HIT_BOX(r14 - 0xCu)->along_end;
 		r14 = r14 + 2u;
-		other_across = mem_read16(r14);
+		other_across = CAR_HIT_BOX(r14 - 0xEu)->across_start;
 		r14 = r14 + 2u;
-		other_across = (uint16_t)((other_across - car_across_end) ^ (mem_read16(r14) - car_across_start));
+		other_across = (uint16_t)((other_across - car_across_end) ^ (CAR_HIT_BOX(r14 - 0x10u)->across_end - car_across_start));
 		r14 = r14 + 2u;
 		if ((int16_t)(other_across & ((other_along_start - car_along_end) ^ (other_along_end - car_along_start))) < 0)
 		{
 			object = CAR(player_car)->object;
-			mem_write16(object, mem_read16(object) | 4u);
+			OBJECT(object)->flags |= 4u;
 			OBJECT(CAR(player_car)->object)->player_car.hit_kind = 2u;
 			OBJECT(CAR(player_car)->object)->player_car.hit_other = other_player;
 		}

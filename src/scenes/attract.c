@@ -52,9 +52,9 @@ void bar_picture_bar_start(void)
 	OBJECT(current_object)->depth_layer = 3u;
 	OBJECT(current_object)->x = 0xA0u;
 	OBJECT(current_object)->y = 0x70u;
-	random_x = io_read8(RANDOM_NUMBER);
+	random_x = io_read8(0xD80000u);
 	OBJECT(current_object)->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
-	random_y = io_read8(RANDOM_NUMBER);
+	random_y = io_read8(0xD80000u);
 	OBJECT(current_object)->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
 	OBJECT(current_object)->handler = bar_picture_bar_fly_ADDRESS;
 }
@@ -271,7 +271,7 @@ void staff_credits_code_watch(uint32_t new_controls, uint32_t control_reading)
 	queue_sound(sound_code);
 	SCREEN(screen)->mode_timer += 0x4B0u;
 	presentation_timer = OBJECT(current_object)->staff_credits_code.presentation + 0x10u;
-	mem_write16(presentation_timer, mem_read16(presentation_timer) + 0x4B0u);
+	OBJECT(presentation_timer - 0x10u)->car_presentation.timer += 0x4B0u;
 	OBJECT(current_object)->staff_credits_code.frames_left = 0x4B0u;
 	OBJECT(current_object)->handler = staff_credits_code_show_ADDRESS;
 	staff_credits_code_show();

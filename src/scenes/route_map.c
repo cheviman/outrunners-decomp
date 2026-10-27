@@ -113,7 +113,7 @@ void route_map_update(void)
 										return;
 									case 0x003644u:
 										OBJECT(current_object)->route_map.sea_colour_address = route_map_sea_colour_addresses[SCREEN(screen)->index];
-										mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
+										io_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
 										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x200u;
 										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x200u;
 										VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_x_address)[0] = 0xA0u;
@@ -136,16 +136,16 @@ void route_map_update(void)
 										if (timer == 1u)
 										{
 											PAGE_SELECT(OBJECT(current_object)->route_map.second_pages_address)[0] = 0u;
-											mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0x7EE0u);
+											io_write16(OBJECT(current_object)->route_map.sea_colour_address, 0x7EE0u);
 											OBJECT(current_object)->route_map.timer = 9u;
 											OBJECT(current_object)->state++;
 										}
 										return;
 									case 0x0036DFu:
 										zoom_x_address = OBJECT(current_object)->route_map.zoom_x_address;
-										mem_write16(zoom_x_address, mem_read16(zoom_x_address) + 0x20u);
+										VIDEO_REGISTER_WORDS(zoom_x_address)[0] += 0x20u;
 										zoom_y_address = OBJECT(current_object)->route_map.zoom_y_address;
-										mem_write16(zoom_y_address, mem_read16(zoom_y_address) + 0x20u);
+										VIDEO_REGISTER_WORDS(zoom_y_address)[0] += 0x20u;
 										send_video_registers = 0xFFu;
 										timer_2 = OBJECT(current_object)->route_map.timer;
 										OBJECT(current_object)->route_map.timer = timer_2 - 1u;
@@ -263,21 +263,21 @@ void route_map_update(void)
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_x_address)[0] = 0x400u;
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_y_address)[0] = 0x400u;
 												scroll_x_address = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address, mem_read16(scroll_x_address) - 0x180u);
+												VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 0x180u;
 												scroll_x_address_2 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_2, mem_read16(scroll_x_address_2) - ((uint32_t)OBJECT(current_object)->route_map.first_branch << 8));
+												VIDEO_REGISTER_WORDS(scroll_x_address_2)[0] -= (uint32_t)OBJECT(current_object)->route_map.first_branch << 8;
 												scroll_y_address = OBJECT(current_object)->route_map.scroll_y_address;
-												mem_write16(scroll_y_address, mem_read16(scroll_y_address) - 0xF7u);
+												VIDEO_REGISTER_WORDS(scroll_y_address)[0] -= 0xF7u;
 												scroll_x_address_3 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_3, (int16_t)mem_read16(scroll_x_address_3) >> 1);
+												VIDEO_REGISTER_WORDS(scroll_x_address_3)[0] = (int16_t)VIDEO_REGISTER_WORDS(scroll_x_address_3)[0] >> 1;
 												scroll_y_address_2 = OBJECT(current_object)->route_map.scroll_y_address;
-												mem_write16(scroll_y_address_2, (int16_t)mem_read16(scroll_y_address_2) >> 1);
+												VIDEO_REGISTER_WORDS(scroll_y_address_2)[0] = (int16_t)VIDEO_REGISTER_WORDS(scroll_y_address_2)[0] >> 1;
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_x_address)[0] = 0xA0u;
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.zoom_center_y_address)[0] = 0x70u;
 												scroll_x_address_4 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_4, mem_read16(scroll_x_address_4) + 0x1D0u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_4)[0] += 0x1D0u;
 												scroll_y_address_3 = OBJECT(current_object)->route_map.scroll_y_address;
-												mem_write16(scroll_y_address_3, mem_read16(scroll_y_address_3) + 0xA3u);
+												VIDEO_REGISTER_WORDS(scroll_y_address_3)[0] += 0xA3u;
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
 												VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 												OBJECT(current_object)->x = route_map_whole_scroll_xs[OBJECT(current_object)->route_map.first_branch];
@@ -336,13 +336,13 @@ void route_map_update(void)
 											{
 												SCREEN(screen)->route_map_signals |= 8u;
 												scroll_x_address_5 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_5, mem_read16(scroll_x_address_5) - 8u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_5)[0] -= 8u;
 												OBJECT(current_object)->x += 8u;
 												return;
 											}
 											SCREEN(screen)->route_map_signals |= 4u;
 											scroll_x_address_6 = OBJECT(current_object)->route_map.scroll_x_address;
-											mem_write16(scroll_x_address_6, mem_read16(scroll_x_address_6) + 8u);
+											VIDEO_REGISTER_WORDS(scroll_x_address_6)[0] += 8u;
 											OBJECT(current_object)->x -= 8u;
 											return;
 										}
@@ -377,13 +377,13 @@ void route_map_update(void)
 											{
 												SCREEN(screen)->route_map_signals |= 8u;
 												scroll_x_address_7 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_7, mem_read16(scroll_x_address_7) - 5u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_7)[0] -= 5u;
 												OBJECT(current_object)->x += 5u;
 												return;
 											}
 											SCREEN(screen)->route_map_signals |= 4u;
 											scroll_x_address_8 = OBJECT(current_object)->route_map.scroll_x_address;
-											mem_write16(scroll_x_address_8, mem_read16(scroll_x_address_8) + 5u);
+											VIDEO_REGISTER_WORDS(scroll_x_address_8)[0] += 5u;
 											OBJECT(current_object)->x -= 5u;
 											return;
 										}
@@ -434,18 +434,18 @@ void route_map_update(void)
 												{
 													SCREEN(screen)->route_map_signals |= 1u;
 													scroll_y_address_4 = OBJECT(current_object)->route_map.scroll_y_address;
-													mem_write16(scroll_y_address_4, mem_read16(scroll_y_address_4) + 4u);
+													VIDEO_REGISTER_WORDS(scroll_y_address_4)[0] += 4u;
 													scroll_x_address_9 = OBJECT(current_object)->route_map.scroll_x_address;
-													mem_write16(scroll_x_address_9, mem_read16(scroll_x_address_9) - 1u);
+													VIDEO_REGISTER_WORDS(scroll_x_address_9)[0]--;
 													OBJECT(current_object)->y -= 4u;
 													OBJECT(current_object)->x++;
 													return;
 												}
 												SCREEN(screen)->route_map_signals |= 2u;
 												scroll_y_address_5 = OBJECT(current_object)->route_map.scroll_y_address;
-												mem_write16(scroll_y_address_5, mem_read16(scroll_y_address_5) - 4u);
+												VIDEO_REGISTER_WORDS(scroll_y_address_5)[0] -= 4u;
 												scroll_x_address_10 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_10, mem_read16(scroll_x_address_10) + 1u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_10)[0]++;
 												OBJECT(current_object)->y += 4u;
 												OBJECT(current_object)->x--;
 												return;
@@ -454,18 +454,18 @@ void route_map_update(void)
 											{
 												SCREEN(screen)->route_map_signals |= 2u;
 												scroll_y_address_5 = OBJECT(current_object)->route_map.scroll_y_address;
-												mem_write16(scroll_y_address_5, mem_read16(scroll_y_address_5) - 4u);
+												VIDEO_REGISTER_WORDS(scroll_y_address_5)[0] -= 4u;
 												scroll_x_address_10 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_10, mem_read16(scroll_x_address_10) + 1u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_10)[0]++;
 												OBJECT(current_object)->y += 4u;
 												OBJECT(current_object)->x--;
 												return;
 											}
 											SCREEN(screen)->route_map_signals |= 1u;
 											scroll_y_address_4 = OBJECT(current_object)->route_map.scroll_y_address;
-											mem_write16(scroll_y_address_4, mem_read16(scroll_y_address_4) + 4u);
+											VIDEO_REGISTER_WORDS(scroll_y_address_4)[0] += 4u;
 											scroll_x_address_9 = OBJECT(current_object)->route_map.scroll_x_address;
-											mem_write16(scroll_x_address_9, mem_read16(scroll_x_address_9) - 1u);
+											VIDEO_REGISTER_WORDS(scroll_x_address_9)[0]--;
 											OBJECT(current_object)->y -= 4u;
 											OBJECT(current_object)->x++;
 											return;
@@ -506,7 +506,7 @@ void route_map_update(void)
 													return;
 												}
 												scroll_x_address_11 = OBJECT(current_object)->route_map.scroll_x_address;
-												mem_write16(scroll_x_address_11, mem_read16(scroll_x_address_11) - 7u);
+												VIDEO_REGISTER_WORDS(scroll_x_address_11)[0] -= 7u;
 												OBJECT(current_object)->x += 7u;
 												return;
 											}
@@ -517,7 +517,7 @@ void route_map_update(void)
 												return;
 											}
 											scroll_x_address_12 = OBJECT(current_object)->route_map.scroll_x_address;
-											mem_write16(scroll_x_address_12, mem_read16(scroll_x_address_12) + 7u);
+											VIDEO_REGISTER_WORDS(scroll_x_address_12)[0] += 7u;
 											OBJECT(current_object)->x -= 7u;
 											return;
 										}
@@ -543,13 +543,13 @@ void route_map_update(void)
 										break;
 									case 0x003CF1u:
 										zoom_x_address_2 = OBJECT(current_object)->route_map.zoom_x_address;
-										mem_write16(zoom_x_address_2, mem_read16(zoom_x_address_2) - 0x40u);
+										VIDEO_REGISTER_WORDS(zoom_x_address_2)[0] -= 0x40u;
 										zoom_y_address_2 = OBJECT(current_object)->route_map.zoom_y_address;
-										mem_write16(zoom_y_address_2, mem_read16(zoom_y_address_2) - 0x40u);
+										VIDEO_REGISTER_WORDS(zoom_y_address_2)[0] -= 0x40u;
 										scroll_x_address_13 = OBJECT(current_object)->route_map.scroll_x_address;
-										mem_write16(scroll_x_address_13, mem_read16(scroll_x_address_13) + OBJECT(current_object)->x);
+										VIDEO_REGISTER_WORDS(scroll_x_address_13)[0] += OBJECT(current_object)->x;
 										scroll_y_address_6 = OBJECT(current_object)->route_map.scroll_y_address;
-										mem_write16(scroll_y_address_6, mem_read16(scroll_y_address_6) + OBJECT(current_object)->y);
+										VIDEO_REGISTER_WORDS(scroll_y_address_6)[0] += OBJECT(current_object)->y;
 										send_video_registers = 0xFFu;
 										timer_4 = OBJECT(current_object)->route_map.timer;
 										OBJECT(current_object)->route_map.timer = timer_4 - 1u;
@@ -565,9 +565,9 @@ void route_map_update(void)
 											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
 											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 											second_scroll_x_address = OBJECT(current_object)->route_map.second_scroll_x_address;
-											mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) - 0x88u);
+											VIDEO_REGISTER_WORDS(second_scroll_x_address)[0] -= 0x88u;
 											second_scroll_y_address = OBJECT(current_object)->route_map.second_scroll_y_address;
-											mem_write16(second_scroll_y_address, mem_read16(second_scroll_y_address) - 0x70u);
+											VIDEO_REGISTER_WORDS(second_scroll_y_address)[0] -= 0x70u;
 											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0];
 											VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0];
 											send_video_registers = 0xFFu;
@@ -575,7 +575,7 @@ void route_map_update(void)
 										}
 										return;
 									case 0x003D94u:
-										mem_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
+										io_write16(OBJECT(current_object)->route_map.sea_colour_address, 0u);
 										object = start_object();
 										OBJECT(object)->handler = route_map_direction_sign_show_ADDRESS;
 										legs_left = OBJECT(current_object)->route_map.stage;

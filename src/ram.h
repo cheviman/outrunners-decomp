@@ -1385,13 +1385,13 @@
 #define VIDEO_LINE_CONTROL_HIGH_ADDRESS 0x31FF05u
 #define VIDEO_LINE_CONTROL_HIGH BOARD8(VIDEO_LINE_CONTROL_HIGH_ADDRESS)
 #define NBG0_SCROLL_X_ADDRESS 0x31FF10u
-#define NBG0_SCROLL_X BOARD32(NBG0_SCROLL_X_ADDRESS)
+#define NBG0_SCROLL_X ((uint32_t *)board(NBG0_SCROLL_X_ADDRESS))
 #define NBG0_SCROLL_Y_ADDRESS 0x31FF14u
-#define NBG0_SCROLL_Y BOARD32(NBG0_SCROLL_Y_ADDRESS)
+#define NBG0_SCROLL_Y ((uint32_t *)board(NBG0_SCROLL_Y_ADDRESS))
 #define NBG2_SCROLL_X_ADDRESS 0x31FF20u
-#define NBG2_SCROLL_X BOARD32(NBG2_SCROLL_X_ADDRESS)
+#define NBG2_SCROLL_X ((uint32_t *)board(NBG2_SCROLL_X_ADDRESS))
 #define NBG2_SCROLL_Y_ADDRESS 0x31FF24u
-#define NBG2_SCROLL_Y BOARD32(NBG2_SCROLL_Y_ADDRESS)
+#define NBG2_SCROLL_Y ((uint32_t *)board(NBG2_SCROLL_Y_ADDRESS))
 #define SPRITE_SCREEN_1_LIST_JUMP_ADDRESS 0x400020u
 #define SPRITE_SCREEN_1_LIST_JUMP BOARD16(SPRITE_SCREEN_1_LIST_JUMP_ADDRESS)
 #define SPRITE_SCREEN_2_LIST_JUMP_ADDRESS 0x400030u
@@ -1413,17 +1413,17 @@
 #define SPRITE_LIST_2_B_HALFWAY_ADDRESS 0x41D000u
 #define SPRITE_LIST_2_B_HALFWAY BOARD16(SPRITE_LIST_2_B_HALFWAY_ADDRESS)
 #define SOUND_COMMAND_1_ADDRESS 0x700700u
-#define SOUND_COMMAND_1 BOARD8(SOUND_COMMAND_1_ADDRESS)
+#define SOUND_COMMAND_1 ((uint8_t *)board(SOUND_COMMAND_1_ADDRESS))
 #define SOUND_SECOND_COMMAND_1_ADDRESS 0x700708u
-#define SOUND_SECOND_COMMAND_1 BOARD8(SOUND_SECOND_COMMAND_1_ADDRESS)
+#define SOUND_SECOND_COMMAND_1 ((uint8_t *)board(SOUND_SECOND_COMMAND_1_ADDRESS))
 #define SOUND_ENGINE_REVS_1_ADDRESS 0x700710u
-#define SOUND_ENGINE_REVS_1 BOARD8(SOUND_ENGINE_REVS_1_ADDRESS)
+#define SOUND_ENGINE_REVS_1 ((uint8_t *)board(SOUND_ENGINE_REVS_1_ADDRESS))
 #define SOUND_ENGINE_REQUESTS_1_ADDRESS 0x700712u
-#define SOUND_ENGINE_REQUESTS_1 BOARD8(SOUND_ENGINE_REQUESTS_1_ADDRESS)
+#define SOUND_ENGINE_REQUESTS_1 ((uint8_t *)board(SOUND_ENGINE_REQUESTS_1_ADDRESS))
 #define SOUND_ENGINE_SAMPLE_1_ADDRESS 0x700713u
-#define SOUND_ENGINE_SAMPLE_1 BOARD8(SOUND_ENGINE_SAMPLE_1_ADDRESS)
+#define SOUND_ENGINE_SAMPLE_1 ((uint8_t *)board(SOUND_ENGINE_SAMPLE_1_ADDRESS))
 #define SOUND_ENGINE_LOUDNESS_1_ADDRESS 0x700714u
-#define SOUND_ENGINE_LOUDNESS_1 BOARD8(SOUND_ENGINE_LOUDNESS_1_ADDRESS)
+#define SOUND_ENGINE_LOUDNESS_1 ((uint8_t *)board(SOUND_ENGINE_LOUDNESS_1_ADDRESS))
 #define SOUND_TYRE_NOISE_1_ADDRESS 0x700718u
 #define SOUND_TYRE_NOISE_1 BOARD8(SOUND_TYRE_NOISE_1_ADDRESS)
 #define SOUND_COMMAND_2_ADDRESS 0x700800u
@@ -1875,7 +1875,8 @@ struct object
 		} car_name_letter;
 		struct
 		{
-			uint8_t pad_02[0x10];
+			uint8_t pad_02[0xE];
+			uint16_t timer;
 			uint8_t palette_step;
 			uint8_t pad_13[0x1];
 			uint32_t staff_credits_code;
@@ -1897,8 +1898,7 @@ struct object
 			uint8_t pad_2E[0xA];
 			uint32_t remark_list;
 			uint8_t pad_3C[0x44];
-			uint8_t car_models;
-			uint8_t pad_81[0x7];
+			uint8_t car_models[0x8];
 			uint8_t cars_to_introduce;
 			uint8_t next_car_number;
 		} car_radio;
@@ -1947,7 +1947,7 @@ struct object
 			uint8_t pad_1C[0x24];
 			uint32_t shown_players;
 			uint8_t pad_44[0x3C];
-			uint32_t car_flags;
+			uint32_t car_flags[0x8];
 		} car_select_entries;
 		struct
 		{
@@ -1964,8 +1964,11 @@ struct object
 			uint32_t passing_order;
 			uint32_t checkpoint_count;
 			uint16_t leader_time;
-			uint8_t pad_1E[0xD2];
-			uint8_t row_steps;
+			uint8_t pad_1E[0x62];
+			uint32_t car_sprites[0x8];
+			uint16_t row_offsets[0x8];
+			uint8_t pad_B0[0x40];
+			uint8_t row_steps[0x8];
 		} checkpoint_board;
 		struct
 		{
@@ -2795,10 +2798,8 @@ struct object
 			uint8_t pages_left;
 			uint8_t pad_13[0x1];
 			uint32_t road;
-			uint32_t source_pages;
-			uint8_t pad_1C[0xC];
-			uint32_t target_pages;
-			uint8_t pad_2C[0xC];
+			uint32_t source_pages[0x4];
+			uint32_t target_pages[0x4];
 			uint32_t data;
 			uint32_t flag;
 		} road_tiles_change;
@@ -4357,8 +4358,16 @@ struct bar_picture_bar
 
 struct course_record
 {
-	uint8_t model;
-	uint8_t name[0x3];
+	union
+	{
+		uint32_t model_and_name;
+		uint8_t model;
+		struct
+		{
+			uint8_t pad_00[0x1];
+			uint8_t name[0x3];
+		};
+	};
 	uint16_t time;
 };
 
@@ -4568,6 +4577,22 @@ struct time_digit_step
 	uint32_t cell_step;
 };
 
+struct screen_sound_page
+{
+	uint8_t command;
+	uint8_t pad_01[0x7];
+	uint8_t second_command;
+	uint8_t pad_09[0x7];
+	uint8_t engine_revs;
+	uint8_t pad_11[0x1];
+	uint8_t engine_requests;
+	uint8_t engine_sample;
+	uint8_t engine_loudness;
+	uint8_t pad_15[0x3];
+	uint8_t tyre_noise;
+	uint8_t pad_19[0xE7];
+};
+
 struct road_segment
 {
 	uint16_t heading;
@@ -4599,7 +4624,8 @@ struct view
 	uint16_t yaw;
 	uint16_t window_offset;
 	uint16_t horizon_line;
-	uint8_t pad_14[0xC];
+	uint16_t segment_remaining;
+	uint8_t pad_16[0xA];
 };
 
 struct projected_segment
@@ -4952,6 +4978,61 @@ struct time_digit
 	uint32_t remaining;
 };
 
+struct backed_up_setting
+{
+	uint8_t value;
+	uint8_t pad_01[0x3B];
+	uint8_t backup;
+};
+
+struct bookkeeping_block
+{
+	uint16_t checksum;
+	uint16_t coin_credits;
+	uint16_t service_credits;
+	uint16_t chute_a_coins;
+	uint8_t pad_08[0x2];
+	uint16_t chute_b_coins;
+	uint8_t pad_0C[0x4];
+	uint32_t total_time;
+	uint16_t games_a;
+	uint16_t games_b;
+	uint32_t play_time_a;
+	uint32_t play_time_b;
+	uint16_t longest_play;
+	uint16_t shortest_play;
+	uint8_t pad_24[0x5A];
+};
+
+struct course_entry
+{
+	uint16_t length;
+	uint32_t jump;
+};
+
+struct course_record_entry
+{
+	uint8_t model;
+	uint8_t name;
+	uint16_t name_rest;
+	uint16_t time;
+};
+
+struct course_record_copy
+{
+	union
+	{
+		uint32_t model_and_name;
+		uint8_t model;
+		struct
+		{
+			uint8_t pad_00[0x1];
+			uint8_t name[0x3];
+		};
+	};
+	uint16_t time;
+};
+
 #pragma pack(pop)
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
@@ -5034,6 +5115,7 @@ _Static_assert(sizeof(struct output_test_output) == 0x4, "struct output_test_out
 _Static_assert(sizeof(struct coin_setting_record) == 0x4, "struct coin_setting_record has the size of the program ROM's records");
 _Static_assert(sizeof(struct privilege_mode_setting) == 0x2, "struct privilege_mode_setting has the size of the program ROM's records");
 _Static_assert(sizeof(struct time_digit_step) == 0x8, "struct time_digit_step has the size of the program ROM's records");
+_Static_assert(sizeof(struct screen_sound_page) == 0x100, "struct screen_sound_page has the size of the board's memory");
 _Static_assert(sizeof(struct road_segment) == 0x20, "struct road_segment has the size of the game's blocks");
 _Static_assert(sizeof(struct view) == 0x20, "struct view has the size of the game's blocks");
 _Static_assert(sizeof(struct projected_segment) == 0x10, "struct projected_segment has the size of the game's blocks");
@@ -5074,6 +5156,11 @@ _Static_assert(sizeof(struct bookkeeping_count16) == 0x7E, "struct bookkeeping_c
 _Static_assert(sizeof(struct bookkeeping_count32) == 0x80, "struct bookkeeping_count32 has the size of the board's memory");
 _Static_assert(sizeof(struct bookkeeping_count8) == 0x7D, "struct bookkeeping_count8 has the size of the board's memory");
 _Static_assert(sizeof(struct time_digit) == 0x8, "struct time_digit has the size of the game's blocks");
+_Static_assert(sizeof(struct backed_up_setting) == 0x3D, "struct backed_up_setting has the size of the game's blocks");
+_Static_assert(sizeof(struct bookkeeping_block) == 0x7E, "struct bookkeeping_block has the size of the board's memory");
+_Static_assert(sizeof(struct course_entry) == 0x6, "struct course_entry has the size of the program ROM's records");
+_Static_assert(sizeof(struct course_record_entry) == 0x6, "struct course_record_entry has the size of the game's blocks");
+_Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_copy has the size of the game's blocks");
 
 #define OBJECT(address) ((struct object *)ram(address))
 #define CAR(address) ((struct car *)ram(address))
@@ -5196,6 +5283,7 @@ _Static_assert(sizeof(struct time_digit) == 0x8, "struct time_digit has the size
 #define COIN_SETTING_RECORD(address) ((const struct coin_setting_record *)rom(address))
 #define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)rom(address))
 #define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)rom(address))
+#define SCREEN_SOUND_PAGE(address) ((struct screen_sound_page *)board(address))
 #define ROAD_SEGMENT(address) ((struct road_segment *)ram(address))
 #define VIEW(address) ((struct view *)ram(address))
 #define PROJECTED_SEGMENT(address) ((struct projected_segment *)ram(address))
@@ -5303,6 +5391,15 @@ _Static_assert(sizeof(struct time_digit) == 0x8, "struct time_digit has the size
 #define LCD_CHARACTERS(address) ((uint8_t *)ram(address))
 #define SETTINGS_WORDS(address) ((uint16_t *)ram(address))
 #define TIME_DIGIT(address) ((struct time_digit *)ram(address))
+#define TESTED_SOUND_RAM_BYTES(address) ((uint8_t *)board(address))
+#define TIME_DIFFICULTY_SECONDS(address) ((uint8_t *)ram(address))
+#define BACKED_UP_SETTING(address) ((struct backed_up_setting *)ram(address))
+#define BOOKKEEPING_BLOCK(address) ((struct bookkeeping_block *)board(address))
+#define COURSE_ENTRY(address) ((const struct course_entry *)rom(address))
+#define COURSE_RECORD_ENTRY(address) ((struct course_record_entry *)ram(address))
+#define LINE_SELECT_PAIRS(address) ((uint32_t *)board(address))
+#define COURSE_RECORD_COPY(address) ((struct course_record_copy *)ram(address))
+#define BITMAP_LAYER_WORDS(address) ((uint32_t *)board(address))
 
 /* the program ROM's tables of records, by name: name[i].field */
 #define bar_picture_bars_ADDRESS 0x0011B1u

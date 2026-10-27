@@ -1001,7 +1001,7 @@ void stage_entry_spare_return(void)
 void goal_update(void)
 {
 	uint8_t dj_message = 0;
-	uint32_t animation = 0, finish_time = 0, ignored_2 = 0, object = 0, result_object = 0, song_title = 0, sound_code = 0, text = 0;
+	uint32_t animation = 0, finish_time = 0, ignored = 0, object = 0, result_object = 0, song_title = 0, sound_code = 0, text = 0;
 	uint16_t timer = 0, title_timer = 0, result_timer = 0, show_timer = 0;
 	uint32_t state = 0;
 
@@ -1071,7 +1071,7 @@ void goal_update(void)
 		text = total_time_text_ADDRESS;
 		draw_text(text);
 		text = current_object + 0x80u;
-		ignored_2 = draw_text(text);
+		ignored = draw_text(text);
 		return;
 	case 5:
 		result_timer = OBJECT(current_object)->goal.timer;
@@ -1081,7 +1081,7 @@ void goal_update(void)
 			text = total_time_text_ADDRESS;
 			draw_text(text);
 			text = current_object + 0x80u;
-			ignored_2 = draw_text(text);
+			ignored = draw_text(text);
 			return;
 		}
 		OBJECT(current_object)->flags = 0u;
@@ -1097,7 +1097,7 @@ void goal_update(void)
 		text = total_time_text_ADDRESS;
 		draw_text(text);
 		text = current_object + 0x80u;
-		ignored_2 = draw_text(text);
+		ignored = draw_text(text);
 		return;
 	}
 	song_title = dream_flying_song_title_ADDRESS;
@@ -1123,7 +1123,7 @@ void goal_update(void)
 	text = total_time_text_ADDRESS;
 	draw_text(text);
 	text = current_object + 0x80u;
-	ignored_2 = draw_text(text);
+	ignored = draw_text(text);
 }
 
 /* With two players, the result at the end of the race: the screen's place in big letters (animation 2F8:
@@ -1333,7 +1333,7 @@ void checkpoint_board_update(void)
 		do
 		{
 			racer = RACE_ORDER_PLAYERS(race)[0];
-			mem_write32(current_object + 0x80u + racer * 4u, checkpoint_board_car_sprites[mem_read8(0x20FC49u + (racer << 5) * 4u)]);
+			OBJECT(current_object)->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[mem_read8(0x20FC49u + (racer << 5) * 4u)];
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);
@@ -1375,7 +1375,7 @@ void checkpoint_board_update(void)
 		{
 			do
 			{
-				jump_target = L_00CCFC ? 0xCCECu : L_00CCFC ? 0xCCECu : checkpoint_board_row_state_jumps[mem_read8(current_object + 0xF0u + row_player)];
+				jump_target = L_00CCFC ? 0xCCECu : L_00CCFC ? 0xCCECu : checkpoint_board_row_state_jumps[OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]];
 				switch (jump_target)
 				{
 				case 0x00CC84u:
@@ -1398,11 +1398,11 @@ void checkpoint_board_update(void)
 					screen_player = SCREEN(screen)->player;
 					if (screen_player != row_player)
 					{
-						L_00CCDE = mem_read8(current_object + 0xF0u + screen_player) != 0u;
+						L_00CCDE = OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)screen_player] != 0u;
 						if (!L_00CCDE)
 						{
-							mem_write16(current_object + 0xA0u + row_player * 2u, 0u);
-							mem_write8(current_object + 0xF0u + row_player, 2u);
+							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0u;
+							OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player] = 2u;
 							L_00CCFC = true;
 						}
 					}
@@ -1414,7 +1414,7 @@ void checkpoint_board_update(void)
 						OBJECT(current_object)->checkpoint_board.blink_timer = 8u;
 					}
 					L_00CCDE = false;
-					mem_write16(current_object + 0xA0u + row_player * 2u, 0x100u);
+					OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0x100u;
 					started_step = current_object + 0xF0u + row_player;
 					mem_write8(started_step, mem_read8(started_step) + 1u);
 				case 0x00CCECu:
@@ -1444,8 +1444,8 @@ void checkpoint_board_update(void)
 						{
 							leaving_step = current_object + 0xF0u + row_player;
 							mem_write8(leaving_step, mem_read8(leaving_step) + 1u);
-							row_offset = (uint16_t)(mem_read16(current_object + 0xA0u + row_player * 2u) - 0x10u);
-							mem_write16(current_object + 0xA0u + row_player * 2u, row_offset);
+							row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
+							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
 							if (row_offset != 0xFF00u)
 								checkpoint_board_draw_row(row_player);
 							else
@@ -1478,8 +1478,8 @@ void checkpoint_board_update(void)
 					L_00CCFC = true;
 					break;
 				case 0x00CD32u:
-					row_offset = (uint16_t)(mem_read16(current_object + 0xA0u + row_player * 2u) - 0x10u);
-					mem_write16(current_object + 0xA0u + row_player * 2u, row_offset);
+					row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
+					OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
 					if (row_offset == 0xFF00u)
 					{
 						OBJECT(current_object)->checkpoint_board.rows_shown--;
@@ -1506,10 +1506,14 @@ void checkpoint_board_update(void)
 	if (OBJECT(current_object)->checkpoint_board.rows_shown == 0u)
 	{
 		object = current_object + 0xF0u;
-		AS32(OBJECT(object - 0xF0u)->checkpoint_board.row_steps) = 0u;
-		OBJECT(object - 0xF0u)->unk_F4 = 0u;
-		OBJECT(object - 0xF0u)->unk_F6 = 0u;
-		OBJECT(object - 0xF0u)->unk_F7 = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[0] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[1] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[2] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[3] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[4] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[5] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[6] = 0u;
+		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[7] = 0u;
 		OBJECT(current_object)->state--;
 	}
 }
@@ -1522,7 +1526,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	uint32_t animation = 0, car_sprite = 0, place = 0, row = 0, row_x = 0, text_x = 0, time_text = 0;
 
 	place = checkpoint_board_number_places_ADDRESS + OBJECT(current_object)->checkpoint_board.row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + mem_read16(current_object + 0xA0u + player * 2u));
+	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	animation = checkpoint_board_number_animations[mem_read8(car_numbers_ADDRESS + player)];
@@ -1532,7 +1536,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	animation_start(animation);
 	draw_object(row_x);
 	place = checkpoint_board_car_places_ADDRESS + OBJECT(current_object)->checkpoint_board.row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + mem_read16(current_object + 0xA0u + player * 2u));
+	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	car_sprite = current_object + 0x80u + player * 4u;
@@ -1547,7 +1551,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	draw_object(row_x);
 	row = OBJECT(current_object)->checkpoint_board.row;
 	text_x = checkpoint_board_time_places[row];
-	text_x = (text_x & ~0xFFFFu) | (uint16_t)(text_x + mem_read16(current_object + 0xA0u + player * 2u));
+	text_x = (text_x & ~0xFFFFu) | (uint16_t)(text_x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	text_attribute = 0xC0u;
 	if (row != 0u)
 		text_attribute = 0x90u;
@@ -1557,7 +1561,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	if (row == 0u)
 		return;
 	place = checkpoint_board_behind_places_ADDRESS + row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + mem_read16(current_object + 0xA0u + player * 2u));
+	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	animation = 0x36u;

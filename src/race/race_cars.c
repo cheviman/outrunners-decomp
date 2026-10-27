@@ -77,13 +77,13 @@ void race_cars_start(void)
 		OBJECT(object)->rider_gesture.car = r12;
 		OBJECT(object)->rider_gesture.rider = rider;
 		OBJECT(object)->rider_gesture.model = model;
-		OBJECT(object)->rider_gesture.player = mem_read8(r12 + 9u);
+		OBJECT(object)->rider_gesture.player = OBJECT(r12)->race_car.player;
 		object = start_object();
 		OBJECT(object)->handler = rider_gesture_update_ADDRESS;
 		OBJECT(object)->rider_gesture.car = r12;
 		OBJECT(object)->rider_gesture.rider = rider + 8u;
 		OBJECT(object)->rider_gesture.model = model;
-		OBJECT(object)->rider_gesture.player = mem_read8(r12 + 9u);
+		OBJECT(object)->rider_gesture.player = OBJECT(r12)->race_car.player;
 		cars_left--;
 	} while (cars_left != 0u);
 	OBJECT(current_object)->flags = 0u;
@@ -103,7 +103,7 @@ void race_cars_start(void)
    race_car_start_ending. */
 void race_car_draw(void)
 {
-	bool L_00978F = false, L_009874 = false, L_009AAD = false, L_009B31 = false;
+	bool L_00978F = false, L = false, L_009AAD = false, L_009B31 = false;
 	uint8_t hard_acceleration_frame = 0, wheel_effect_sides = 0;
 	uint16_t crash_text_y = 0, element = 0, far_segment = 0, other_spray = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
 	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, first_rider = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
@@ -155,11 +155,11 @@ void race_car_draw(void)
 			if (!L_009B31)
 			{
 				scale = (uint16_t)((int16_t)scale >> 4);
-				L_009874 = true;
+				L = true;
 			}
 		}
 	}
-	if (!L_009874 && OBJECT(current_object)->race_car.rival != 0u)
+	if (!L && OBJECT(current_object)->race_car.rival != 0u)
 	{
 		OBJECT(current_object)->race_car.special_body = 0u;
 		OBJECT(current_object)->race_car.gesture_shown = 0u;
@@ -196,7 +196,7 @@ void race_car_draw(void)
 	}
 	else
 	{
-		if (!L_009874)
+		if (!L)
 		{
 			depth_layer = 0x1C0u;
 			scale = 0x100u;

@@ -573,7 +573,7 @@ void goal_actor_rider_place(uint32_t scene)
 	uint32_t carry = 0;
 	uint32_t animation = 0, piece = 0, race = 0, view = 0, view_offsets = 0, width_scale = 0, x_offset = 0, y = 0;
 
-	OBJECT(current_object)->palette = mem_read16(r12 + 6u);
+	OBJECT(current_object)->palette = RACE_CAR_RIDER(r12)->palette;
 	OBJECT(current_object)->depth_layer = OBJECT(scene)->depth_layer;
 	race = SCREEN(screen)->race_copy;
 	piece = SPRITE_ANIMATION(sprite_animations[RACE(race)->animation])->frames[RACE(race)->frame] + 2u;
@@ -586,13 +586,13 @@ void goal_actor_rider_place(uint32_t scene)
 	piece += 2u;
 	y = (uint16_t)SPRITE_PIECE(piece - 0x4u)->y_offset;
 	x_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->x_offset;
-	view_offsets = mem_read32(r12) + (view << 4);
+	view_offsets = RACE_CAR_RIDER(r12)->places + (view << 4);
 	x_offset = (uint16_t)(x_offset + CAR_PART_PLACE(view_offsets)->x);
 	y = (uint16_t)(y + CAR_PART_PLACE(view_offsets)->y);
-	animation = mem_read16(r12 + 4u) + view;
+	animation = RACE_CAR_RIDER(r12)->animation + view;
 	OBJECT(current_object)->animation = animation;
 	animation_start(animation);
-	OBJECT(current_object)->frame = mem_read8(r12 + 0xAu);
+	OBJECT(current_object)->frame = RACE_CAR_RIDER(r12)->frame;
 	width_scale = OBJECT(scene)->width_scale;
 	OBJECT(current_object)->width_scale = width_scale;
 	OBJECT(current_object)->height_scale = width_scale;

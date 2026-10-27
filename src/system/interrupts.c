@@ -145,31 +145,31 @@ void vblank_update_scrolls(void)
 	uint32_t new_scroll = 0, old_scroll = 0, other_layer = 0, running_layer = 0;
 
 	running_layer = SCREEN(screen)->index * 2u;
-	mem_write32(NBG0_SCROLL_X_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x10u + running_layer * 4u));
-	mem_write32(NBG0_SCROLL_Y_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x14u + running_layer * 4u));
+	NBG0_SCROLL_X[running_layer] = RAM32(video_registers_ADDRESS + 0x10u + running_layer * 4u);
+	NBG0_SCROLL_Y[running_layer] = RAM32(video_registers_ADDRESS + 0x14u + running_layer * 4u);
 	other_layer = 0u - running_layer + 2u;
 	old_scroll = RAM32(video_registers_ADDRESS + 0x10u + other_layer * 4u);
 	new_scroll = scroll_targets[other_layer];
 	RAM32(video_registers_ADDRESS + 0x10u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 6;
-	mem_write32(NBG0_SCROLL_X_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
+	NBG0_SCROLL_X[other_layer] = (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6;
 	old_scroll = RAM32(video_registers_ADDRESS + 0x14u + other_layer * 4u);
 	new_scroll = scroll_targets[1 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x14u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 7;
-	mem_write32(NBG0_SCROLL_Y_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
-	mem_write32(NBG2_SCROLL_X_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x20u + running_layer * 4u));
-	mem_write32(NBG2_SCROLL_Y_ADDRESS + running_layer * 4u, RAM32(video_registers_ADDRESS + 0x24u + running_layer * 4u));
+	NBG0_SCROLL_Y[other_layer] = (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7;
+	NBG2_SCROLL_X[running_layer] = RAM32(video_registers_ADDRESS + 0x20u + running_layer * 4u);
+	NBG2_SCROLL_Y[running_layer] = RAM32(video_registers_ADDRESS + 0x24u + running_layer * 4u);
 	old_scroll = RAM32(video_registers_ADDRESS + 0x20u + other_layer * 4u);
 	new_scroll = scroll_targets[4 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x20u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 6;
-	mem_write32(NBG2_SCROLL_X_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6);
+	NBG2_SCROLL_X[other_layer] = (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6;
 	old_scroll = RAM32(video_registers_ADDRESS + 0x24u + other_layer * 4u);
 	new_scroll = scroll_targets[5 + other_layer];
 	RAM32(video_registers_ADDRESS + 0x24u + other_layer * 4u) = new_scroll;
 	new_scroll = new_scroll << 7;
-	mem_write32(NBG2_SCROLL_Y_ADDRESS + other_layer * 4u, (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7);
+	NBG2_SCROLL_Y[other_layer] = (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7;
 	control_byte = (uint8_t)(video_registers[2] >> 8u);
 	VIDEO_LINE_CONTROL_HIGH = control_byte;
 	video_registers[2] = (video_registers[2] & 0xFFu) | (((control_byte + 4u) & 0xECu & 0xFFu) << 8u);
@@ -306,7 +306,7 @@ void send_sound_requests(void)
 	queue++;
 	if (sound_queue_read != sound_queue_write)
 	{
-		mem_write8(command_offset + SOUND_COMMAND_1_ADDRESS, SCREEN(queue - 0x802u)->sound_queue[(int32_t)sound_queue_read]);
+		SOUND_COMMAND_1[command_offset] = SCREEN(queue - 0x802u)->sound_queue[(int32_t)sound_queue_read];
 		SCREEN(queue - 0x802u)->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
 	}
 	second_queue = screen + 0x840u;
@@ -316,7 +316,7 @@ void send_sound_requests(void)
 	second_queue++;
 	if (second_sound_queue_read != second_sound_queue_write)
 	{
-		mem_write8(command_offset + SOUND_SECOND_COMMAND_1_ADDRESS, SCREEN(second_queue - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_read]);
+		SOUND_SECOND_COMMAND_1[command_offset] = SCREEN(second_queue - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_read];
 		SCREEN(second_queue - 0x842u)->second_sound_queue_read = (second_sound_queue_read + 1u) & 0x1Fu;
 	}
 }

@@ -284,7 +284,7 @@ void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_w
 	do
 	{
 		lines = eeprom_set_lines(lines, lines_port);
-		eeprom_word = ((eeprom_word & ~0xFFu) | mem_read8(r12)) * 2u;
+		eeprom_word = ((eeprom_word & ~0xFFu) | io_read8(r12)) * 2u;
 		lines = (uint8_t)(lines ^ 0x40u);
 		lines = eeprom_set_lines(lines, lines_port);
 		lines = (uint8_t)(lines ^ 0x40u);
@@ -335,7 +335,7 @@ uint32_t eeprom_write_word(uint32_t eeprom_word, uint32_t lines, uint8_t command
 	{
 		lines = (lines & ~0xFFu) | (uint8_t)(lines | 0x20u);
 		lines = eeprom_set_lines(lines, lines_port);
-		data_out = mem_read8(r12);
+		data_out = io_read8(r12);
 		lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
 		lines = eeprom_set_lines(lines, lines_port);
 	} while ((int8_t)data_out >= 0);
@@ -398,6 +398,6 @@ void eeprom_begin(uint32_t *p_lines, uint32_t *p_lines_port)
 uint32_t eeprom_set_lines(uint32_t lines, uint32_t lines_port)
 {
 	lines = (lines & ~0xFFu) | (uint8_t)(lines | 0x10u);
-	mem_write8(lines_port, lines);
+	io_write8(lines_port, lines);
 	return lines;
 }

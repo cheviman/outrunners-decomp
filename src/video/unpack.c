@@ -296,15 +296,15 @@ void unpack_list(uint32_t block_list)
 
 	do
 	{
-		r12 = mem_read32(block_list);
+		r12 = PACKED_BLOCK_ENTRY(block_list)->source;
 		block_list += 4u;
-		destination = mem_read32(block_list);
+		destination = PACKED_BLOCK_ENTRY(block_list - 0x4u)->destination;
 		next_entry = block_list + 4u;
 		source = r12;
 		r12 = next_entry;
 		unpack(source, destination);
 		block_list = r12;
-	} while ((int32_t)mem_read32(block_list) >= 0);
+	} while ((int32_t)PACKED_BLOCK_ENTRY(block_list)->source >= 0);
 }
 
 /* Unpacks a list of tilemap pages into video RAM at once (unpack): each 32-bit entry a page number in

@@ -430,7 +430,7 @@ void player_car_update(void)
 					OBJECT(current_object)->player_car.step++;
 					OBJECT(current_object)->player_car.finished = 0xFFu;
 					stage_count_place = SCREEN(screen)->race + 0x60u;
-					mem_write8(stage_count_place, mem_read8(stage_count_place) + 1u);
+					RACE(stage_count_place - 0x60u)->stage_count++;
 					OBJECT(current_object)->player_car.stop_position = CAR(player_car)->segment;
 					player_car_clear_hit();
 					OBJECT(current_object)->flags |= 8u;
@@ -766,19 +766,19 @@ void player_car_publish(void)
 		shown_view = r12;
 		SCREEN(screen)->shown_view = shown_view;
 	}
-	mem_write32(r12, CAR(player_car)->view_x);
+	VIEW(r12)->x = CAR(player_car)->view_x;
 	CAR(player_car)->view_x = VIEW(shown_view)->x;
-	mem_write32(r12 + 4u, CAR(player_car)->view_y);
+	VIEW(r12)->y = CAR(player_car)->view_y;
 	CAR(player_car)->view_y = VIEW(shown_view)->y;
-	mem_write32(r12 + 8u, CAR(player_car)->view_z);
+	VIEW(r12)->z = CAR(player_car)->view_z;
 	CAR(player_car)->view_z = VIEW(shown_view)->z;
-	mem_write16(r12 + 0xCu, CAR(player_car)->view_pitch);
+	VIEW(r12)->pitch = CAR(player_car)->view_pitch;
 	CAR(player_car)->view_pitch = VIEW(shown_view)->pitch;
-	mem_write16(r12 + 0xEu, CAR(player_car)->view_yaw);
+	VIEW(r12)->yaw = CAR(player_car)->view_yaw;
 	CAR(player_car)->view_yaw = VIEW(shown_view)->yaw;
-	mem_write16(r12 + 0x10u, CAR(player_car)->window_offset);
-	mem_write16(r12 + 0x14u, CAR(player_car)->segment_remaining);
-	mem_write16(r12 + 0x12u, SCREEN(screen)->horizon_line);
+	VIEW(r12)->window_offset = CAR(player_car)->window_offset;
+	VIEW(r12)->segment_remaining = CAR(player_car)->segment_remaining;
+	VIEW(r12)->horizon_line = SCREEN(screen)->horizon_line;
 	SCREEN(screen)->horizon_line = VIEW(shown_view)->horizon_line;
 	if (isdn_mode == 0u)
 	{
@@ -827,15 +827,15 @@ void clear_published_car(void)
 	r12 = screen + 0x600u + (uint16_t)(view_ring_slot << 5);
 	SCREEN(screen)->shown_view = r12;
 	CAR(player_car)->view_x = 0;
-	mem_write32(r12, 0u);
+	VIEW(r12)->x = 0u;
 	CAR(player_car)->view_y = 0;
-	mem_write32(r12 + 4u, 0u);
+	VIEW(r12)->y = 0u;
 	CAR(player_car)->view_z = 0;
-	mem_write32(r12 + 8u, 0u);
+	VIEW(r12)->z = 0u;
 	CAR(player_car)->view_pitch = 0u;
-	mem_write16(r12 + 0xCu, 0u);
+	VIEW(r12)->pitch = 0u;
 	CAR(player_car)->view_yaw = 0u;
-	mem_write16(r12 + 0xEu, 0u);
+	VIEW(r12)->yaw = 0u;
 	CAR(player_car)->wheel_effect_sides = 0u;
 	RACE(race)->wheel_effect_sides = 0u;
 	CAR(player_car)->hard_acceleration = 0u;
@@ -853,11 +853,11 @@ void clear_published_car(void)
 	CAR(player_car)->window_segment = 0u;
 	RACE(race)->window_segment = 0u;
 	CAR(player_car)->window_offset = 0u;
-	mem_write16(r12 + 0x10u, 0u);
+	VIEW(r12)->window_offset = 0u;
 	CAR(player_car)->segment_remaining = 0u;
-	mem_write16(r12 + 0x14u, 0u);
+	VIEW(r12)->segment_remaining = 0u;
 	SCREEN(screen)->horizon_line = 0u;
-	mem_write16(r12 + 0x12u, 0u);
+	VIEW(r12)->horizon_line = 0u;
 	OBJECT(current_object)->player_car.bounce_height &= 0xFFFF0000u;
 	RACE(race)->bounce_height = 0;
 }

@@ -18,7 +18,7 @@
 void lcd_start(void)
 {
 	uint8_t nibble = 0;
-	uint32_t character_row = 0, text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0, to_send = 0, wait_count = 0;
+	uint32_t character_row = 0, text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0, to_send = 0, wait_count = 0;
 
 	lcd_send_step = 0u;
 	lcd_busy = 0u;
@@ -47,19 +47,19 @@ void lcd_start(void)
 	lcd_command_nibble_after_pause(nibble);
 	nibble = 0xC0u;
 	lcd_command_nibble_after_pause(nibble);
-	text_0_to_3 = lcd_boot_text[0].text_0_to_3;
-	text_4_to_7 = lcd_boot_text[0].text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to_7;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to_7;
-	text_8_to_11 = lcd_boot_text[0].text_8_to_11;
-	text_12_to_15 = lcd_boot_text[0].text_12_to_15;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to_15;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to_15;
-	to_send = (text_8_to_11 & ~0xFFu) | 0x40u;
+	text_0_to = lcd_boot_text[0].text_0_to_3;
+	text_4_to = lcd_boot_text[0].text_4_to_7;
+	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to;
+	text_8_to = lcd_boot_text[0].text_8_to_11;
+	text_12_to = lcd_boot_text[0].text_12_to_15;
+	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to;
+	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to;
+	to_send = (text_8_to & ~0xFFu) | 0x40u;
 	r12 = unk_218F20_ADDRESS;
 	lcd_command_nibble_after_pause((uint8_t)to_send);
 	to_send &= ~0xFFu;
@@ -155,23 +155,23 @@ void lcd_write_command_nibble(uint8_t nibble)
    (screen button_lamps), and lcd_restart_frames 0 so that the next VBLANK starts the LCDs again. */
 void lcd_reset(void)
 {
-	uint32_t text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0;
+	uint32_t text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0;
 
 	lcd_restart_frames = 0u;
 	SCREEN(SCREEN_1)->button_lamps = 0u;
 	SCREEN(SCREEN_2)->button_lamps = 0u;
-	text_0_to_3 = lcd_boot_text[0].text_0_to_3;
-	text_4_to_7 = lcd_boot_text[0].text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to_7;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to_7;
-	text_8_to_11 = lcd_boot_text[0].text_8_to_11;
-	text_12_to_15 = lcd_boot_text[0].text_12_to_15;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to_15;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to_15;
+	text_0_to = lcd_boot_text[0].text_0_to_3;
+	text_4_to = lcd_boot_text[0].text_4_to_7;
+	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to;
+	text_8_to = lcd_boot_text[0].text_8_to_11;
+	text_12_to = lcd_boot_text[0].text_12_to_15;
+	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to;
+	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to;
 	r12 = unk_218F20_ADDRESS;
 }
 
@@ -186,7 +186,7 @@ void lcd_refresh(void)
 	uint8_t nibble = 0, send_step = 0;
 	uint8_t half_step = 0;
 	uint16_t restart_frames = 0;
-	uint32_t lcd_text_4_to_7 = 0, lcd_send_buffer_1_0_long = 0, lcd_text_12_to_15 = 0, lcd_send_buffer_1_8_long = 0, lcd_text_4_to_7_2 = 0, lcd_send_buffer_2_0_long = 0, lcd_text_12_to_15_2 = 0, lcd_send_buffer_2_8_long = 0, lcd_send_buffer_1_0_long_2 = 0, lcd_send_buffer_1_8_long_2 = 0, lcd_send_buffer_2_0_long_2 = 0, lcd_send_buffer_2_8_long_2 = 0;
+	uint32_t lcd_text_4_to = 0, lcd_send_buffer_1_0_long = 0, lcd_text_12_to = 0, lcd_send_buffer_1_8_long = 0, lcd_text_4_to_7 = 0, lcd_send_buffer_2_0_long = 0, lcd_text_12_to_15 = 0, lcd_send_buffer_2_8_long = 0, lcd_send_buffer_1_0_long_2 = 0, lcd_send_buffer_1_8_long_2 = 0, lcd_send_buffer_2_0_long_2 = 0, lcd_send_buffer_2_8_long_2 = 0;
 
 	restart_frames = lcd_restart_frames;
 	lcd_restart_frames = restart_frames - 1u;
@@ -204,46 +204,46 @@ void lcd_refresh(void)
 	if (carry == 0u)
 	{
 		lcd_send_step = 0u;
-		lcd_text_4_to_7 = SCREEN(SCREEN_1)->lcd_text_4_to_7;
+		lcd_text_4_to = SCREEN(SCREEN_1)->lcd_text_4_to_7;
 		lcd_send_buffer_1_0_long = AS32(SCREEN(SCREEN_1)->lcd_text);
 		lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long;
 		lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long >> 8u);
 		lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long >> 16u);
 		lcd_send_buffer_1[3] = (uint8_t)(lcd_send_buffer_1_0_long >> 24u);
-		lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to_7;
-		lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
-		lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
-		lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
-		lcd_text_12_to_15 = SCREEN(SCREEN_1)->lcd_text_12_to_15;
+		lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to;
+		lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to >> 8u);
+		lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to >> 16u);
+		lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to >> 24u);
+		lcd_text_12_to = SCREEN(SCREEN_1)->lcd_text_12_to_15;
 		lcd_send_buffer_1_8_long = SCREEN(SCREEN_1)->lcd_text_8_to_11;
 		lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long;
 		lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long >> 8u);
 		lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long >> 16u);
 		lcd_send_buffer_1[11] = (uint8_t)(lcd_send_buffer_1_8_long >> 24u);
-		lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to_15;
-		lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
-		lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
-		lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
-		lcd_text_4_to_7_2 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
+		lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to;
+		lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to >> 8u);
+		lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to >> 16u);
+		lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to >> 24u);
+		lcd_text_4_to_7 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
 		lcd_send_buffer_2_0_long = AS32(SCREEN(SCREEN_2)->lcd_text);
 		lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long;
 		lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long >> 8u);
 		lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long >> 16u);
 		lcd_send_buffer_2[3] = (uint8_t)(lcd_send_buffer_2_0_long >> 24u);
-		lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7_2;
-		lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7_2 >> 8u);
-		lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7_2 >> 16u);
-		lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7_2 >> 24u);
-		lcd_text_12_to_15_2 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
+		lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7;
+		lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
+		lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
+		lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
+		lcd_text_12_to_15 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
 		lcd_send_buffer_2_8_long = SCREEN(SCREEN_2)->lcd_text_8_to_11;
 		lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long;
 		lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long >> 8u);
 		lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long >> 16u);
 		lcd_send_buffer_2[11] = (uint8_t)(lcd_send_buffer_2_8_long >> 24u);
-		lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15_2;
-		lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15_2 >> 8u);
-		lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15_2 >> 16u);
-		lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15_2 >> 24u);
+		lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15;
+		lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
+		lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
+		lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
 		return;
 	}
 	half_step = send_step;
@@ -252,46 +252,46 @@ void lcd_refresh(void)
 		nibble = 4u;
 	lcd_write_command_nibble(nibble);
 	lcd_send_step = 0u;
-	lcd_text_4_to_7 = SCREEN(SCREEN_1)->lcd_text_4_to_7;
+	lcd_text_4_to = SCREEN(SCREEN_1)->lcd_text_4_to_7;
 	lcd_send_buffer_1_0_long_2 = AS32(SCREEN(SCREEN_1)->lcd_text);
 	lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long_2;
 	lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 8u);
 	lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 16u);
 	lcd_send_buffer_1[3] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 24u);
-	lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to_7;
-	lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
-	lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
-	lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
-	lcd_text_12_to_15 = SCREEN(SCREEN_1)->lcd_text_12_to_15;
+	lcd_send_buffer_1[4] = (uint8_t)lcd_text_4_to;
+	lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4_to >> 8u);
+	lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4_to >> 16u);
+	lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4_to >> 24u);
+	lcd_text_12_to = SCREEN(SCREEN_1)->lcd_text_12_to_15;
 	lcd_send_buffer_1_8_long_2 = SCREEN(SCREEN_1)->lcd_text_8_to_11;
 	lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long_2;
 	lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 8u);
 	lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 16u);
 	lcd_send_buffer_1[11] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 24u);
-	lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to_15;
-	lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
-	lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
-	lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
-	lcd_text_4_to_7_2 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
+	lcd_send_buffer_1[12] = (uint8_t)lcd_text_12_to;
+	lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12_to >> 8u);
+	lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12_to >> 16u);
+	lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12_to >> 24u);
+	lcd_text_4_to_7 = SCREEN(SCREEN_2)->lcd_text_4_to_7;
 	lcd_send_buffer_2_0_long_2 = AS32(SCREEN(SCREEN_2)->lcd_text);
 	lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long_2;
 	lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 8u);
 	lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 16u);
 	lcd_send_buffer_2[3] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 24u);
-	lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7_2;
-	lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7_2 >> 8u);
-	lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7_2 >> 16u);
-	lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7_2 >> 24u);
-	lcd_text_12_to_15_2 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
+	lcd_send_buffer_2[4] = (uint8_t)lcd_text_4_to_7;
+	lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_to_7 >> 8u);
+	lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_to_7 >> 16u);
+	lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_to_7 >> 24u);
+	lcd_text_12_to_15 = SCREEN(SCREEN_2)->lcd_text_12_to_15;
 	lcd_send_buffer_2_8_long_2 = SCREEN(SCREEN_2)->lcd_text_8_to_11;
 	lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long_2;
 	lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 8u);
 	lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 16u);
 	lcd_send_buffer_2[11] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 24u);
-	lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15_2;
-	lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15_2 >> 8u);
-	lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15_2 >> 16u);
-	lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15_2 >> 24u);
+	lcd_send_buffer_2[12] = (uint8_t)lcd_text_12_to_15;
+	lcd_send_buffer_2[13] = (uint8_t)(lcd_text_12_to_15 >> 8u);
+	lcd_send_buffer_2[14] = (uint8_t)(lcd_text_12_to_15 >> 16u);
+	lcd_send_buffer_2[15] = (uint8_t)(lcd_text_12_to_15 >> 24u);
 }
 
 /* One nibble to the LCDs each timer interrupt (int_vector_43), with the other bits of port G
@@ -385,7 +385,7 @@ void lcd_send_next_nibble(void)
 void lcd_update(void)
 {
 	uint8_t character = 0, space_character = 0;
-	uint32_t ignored_2 = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_end = 0, text_place = 0;
+	uint32_t ignored = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_end = 0, text_place = 0;
 	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
 	text_place = screen + 0xF10u;
@@ -452,7 +452,7 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll = lcd_scroll + 1u;
 		if (character == 0x60u)
 			character = 7u;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		mem_write8(text_end, character);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
@@ -467,7 +467,7 @@ void lcd_update(void)
 		}
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
@@ -484,13 +484,13 @@ void lcd_update(void)
 		}
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		break;
 	case 2:
-		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored_2);
+		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		mem_write8(text_end, 0x20u);
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
@@ -750,20 +750,20 @@ void lcd_race_info_time(void)
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
 	text_place = screen + 0xF20u - 1u;
-	SCREEN(text_place - 0xF1Fu)->lcd_text_12_to_15 = (SCREEN(text_place - 0xF1Fu)->lcd_text_12_to_15 & 0xFFFFFFu) | ((digit + 0x30u & 0xFFu) << 24u);
+	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
 	text_place--;
-	SCREEN(text_place - 0xF1Eu)->lcd_text_12_to_15 = (SCREEN(text_place - 0xF1Eu)->lcd_text_12_to_15 & 0xFF00FFFFu) | ((digit + 0x30u & 0xFFu) << 16u);
+	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
 	text_place = text_place - 1u - 1u;
-	SCREEN(text_place - 0xF1Cu)->lcd_text_12_to_15 = (SCREEN(text_place - 0xF1Cu)->lcd_text_12_to_15 & 0xFFFFFF00u) | (digit + 0x30u & 0xFFu);
+	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(6u, &race_time, &digit);
 	text_place--;
-	SCREEN(text_place - 0xF1Bu)->lcd_text_8_to_11 = (SCREEN(text_place - 0xF1Bu)->lcd_text_8_to_11 & 0xFFFFFFu) | ((digit + 0x30u & 0xFFu) << 24u);
-	mem_write8(text_place - 1u - 1u, race_time + 0x30u);
+	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
+	LCD_CHARACTERS(text_place)[-2] = race_time + 0x30u;
 }
 
 /* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */

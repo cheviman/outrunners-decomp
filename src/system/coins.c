@@ -158,7 +158,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		if (COIN_METER(coin_meter - 0x2u)->pulses_owed != 0u)
 		{
 			COIN_METER(coin_meter - 0x2u)->pulses_owed--;
-			mem_write8(r12, mem_read8(r12) | shift_by(1u, (uint8_t)meter_bit, 8));
+			PORT_OUTPUT_BITS(r12)[0] |= shift_by(1u, (uint8_t)meter_bit, 8);
 			COIN_METER(coin_meter - 0x2u)->frames = 0x606u;
 		}
 		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
@@ -190,7 +190,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		write_bookkeeping_credits();
 		return;
 	}
-	mem_write8(r12, mem_read8(r12) & rotate_by(0xFEu, (uint8_t)meter_bit, 8));
+	PORT_OUTPUT_BITS(r12)[0] &= rotate_by(0xFEu, (uint8_t)meter_bit, 8);
 	r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
 	bookkeeping_update_checksum(meter_frames);
@@ -202,13 +202,13 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
    seat2_bookkeeping_byte) at R12: 701F74 in the bookkeeping or 701FF0 in its backup. */
 void write_bookkeeping_credits(void)
 {
-	mem_write16(r12, (seat1_credits | ((uint32_t)seat1_coin_units << 8u)));
+	BOOKKEEPING_HALFWORDS(r12)[0] = (seat1_credits | ((uint32_t)seat1_coin_units << 8u));
 	r12 = r12 + 2u;
-	mem_write16(r12, AS16(seat1_bookkeeping_byte));
+	BOOKKEEPING_HALFWORDS(r12)[0] = AS16(seat1_bookkeeping_byte);
 	r12 = r12 + 2u;
-	mem_write16(r12, (seat2_credits | ((uint32_t)seat2_coin_units << 8u)));
+	BOOKKEEPING_HALFWORDS(r12)[0] = (seat2_credits | ((uint32_t)seat2_coin_units << 8u));
 	r12 = r12 + 2u;
-	mem_write16(r12, AS16(seat2_bookkeeping_byte));
+	BOOKKEEPING_HALFWORDS(r12)[0] = AS16(seat2_bookkeeping_byte);
 	r12 = r12 + 2u;
 }
 
@@ -263,7 +263,7 @@ uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_
 	seat_credits = COIN_CHUTE_VARIANT(chute_entry)->credits;
 	io_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
 	owed_pulses = COIN_CHUTE_VARIANT(chute_entry)->pulses_owed;
-	mem_write8(owed_pulses, mem_read8(owed_pulses) + 1u);
+	COIN_METER(owed_pulses - 0x2u)->pulses_owed++;
 	counter = COIN_CHUTE_VARIANT(chute_entry)->counter;
 	bookkeeping_increment16(counter);
 	if (SEAT_CREDITS(seat_credits)->credits >= 9u)

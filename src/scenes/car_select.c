@@ -622,7 +622,7 @@ void car_attendant_run(void)
 {
 	uint32_t negative = 0;
 	uint16_t target_side = 0;
-	uint32_t across = 0, animation = 0, attendant_angle = 0, down = 0, ignored_2 = 0, point_depth = 0, radius = 0;
+	uint32_t across = 0, animation = 0, attendant_angle = 0, down = 0, ignored = 0, point_depth = 0, radius = 0;
 	uint16_t angle_to_front = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -674,7 +674,7 @@ void car_attendant_run(void)
 			down = 0x6Cu;
 			point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 			turntable_draw(across, down, point_depth);
-			ignored_2 = animation_advance(0u);
+			ignored = animation_advance(0u);
 			return;
 		}
 		if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.car_chosen == 0u)
@@ -690,7 +690,7 @@ void car_attendant_run(void)
 			down = 0x6Cu;
 			point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 			turntable_draw(across, down, point_depth);
-			ignored_2 = animation_advance(0u);
+			ignored = animation_advance(0u);
 			return;
 		}
 		OBJECT(current_object)->car_attendant.side_offset = 0;
@@ -729,7 +729,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored_2 = animation_advance(0u);
+		ignored = animation_advance(0u);
 		return;
 	case 3:
 		break;
@@ -745,7 +745,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored_2 = animation_advance(0u);
+		ignored = animation_advance(0u);
 		return;
 	default:
 		invalid_jump(car_attendant_state_jumps[OBJECT(current_object)->state]);
@@ -779,7 +779,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored_2 = animation_advance(0u);
+		ignored = animation_advance(0u);
 		return;
 	}
 	if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.transmission_chosen != 0u)
@@ -801,7 +801,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored_2 = animation_advance(0u);
+		ignored = animation_advance(0u);
 		return;
 	}
 	animation = 0x269u;
@@ -818,7 +818,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored_2 = animation_advance(0u);
+		ignored = animation_advance(0u);
 		return;
 	}
 	animation_start(animation);
@@ -833,7 +833,7 @@ void car_attendant_run(void)
 	down = 0x6Cu;
 	point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 	turntable_draw(across, down, point_depth);
-	ignored_2 = animation_advance(0u);
+	ignored = animation_advance(0u);
 }
 
 /* One of the eight cars on the car select's turntable (car: its model and its place, car << 9), by
@@ -1255,8 +1255,8 @@ void transmission_choice_run(void)
 		object = OBJECT(current_object)->transmission_choice.car_select;
 		OBJECT(current_object)->y -= 0x10u;
 		second_scroll_y_address = OBJECT(object)->car_select.second_scroll_y_address;
-		panels_y = mem_read16(second_scroll_y_address);
-		mem_write16(second_scroll_y_address, panels_y - 0x10u);
+		panels_y = VIDEO_REGISTER_WORDS(second_scroll_y_address)[0];
+		VIDEO_REGISTER_WORDS(second_scroll_y_address)[0] = panels_y - 0x10u;
 		if (panels_y != 0x10u)
 			return;
 		OBJECT(current_object)->state++;
@@ -1279,7 +1279,7 @@ void transmission_choice_run(void)
 			slide_step = (uint16_t)OBJECT(current_object)->transmission_choice.slide_step;
 			OBJECT(current_object)->x += slide_step;
 			second_scroll_x_address = OBJECT(object)->car_select.second_scroll_x_address;
-			mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) + slide_step);
+			VIDEO_REGISTER_WORDS(second_scroll_x_address)[0] += slide_step;
 			slide_frames = OBJECT(current_object)->transmission_choice.slide_frames;
 			OBJECT(current_object)->transmission_choice.slide_frames = slide_frames - 1u;
 			if (slide_frames == 1u)
@@ -1303,7 +1303,7 @@ void transmission_choice_run(void)
 		slide_step = (uint16_t)OBJECT(current_object)->transmission_choice.slide_step;
 		OBJECT(current_object)->x += slide_step;
 		second_scroll_x_address = OBJECT(object)->car_select.second_scroll_x_address;
-		mem_write16(second_scroll_x_address, mem_read16(second_scroll_x_address) + slide_step);
+		VIDEO_REGISTER_WORDS(second_scroll_x_address)[0] += slide_step;
 		slide_frames = OBJECT(current_object)->transmission_choice.slide_frames;
 		OBJECT(current_object)->transmission_choice.slide_frames = slide_frames - 1u;
 		if (slide_frames == 1u)
@@ -1899,14 +1899,14 @@ void car_select_entries_run(void)
 			chosen_car = car_choice;
 			if ((int32_t)car_choice >= 0)
 			{
-				car_flag = mem_read32(current_object + 0x80u + chosen_car * 4u);
+				car_flag = OBJECT(current_object)->car_select_entries.car_flags[(int32_t)chosen_car];
 				object = start_object();
 				if (car_flag == 0u)
 				{
 					OBJECT(object)->handler = choice_flag_start_ADDRESS;
 					OBJECT(object)->choice_flag.top_flag = object;
 					OBJECT(object)->choice_flag.entries = current_object;
-					mem_write32(current_object + 0x80u + chosen_car * 4u, object);
+					OBJECT(current_object)->car_select_entries.car_flags[(int32_t)chosen_car] = object;
 				}
 				else
 				{

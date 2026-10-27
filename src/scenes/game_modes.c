@@ -375,7 +375,7 @@ void game_mode_play(void)
 			player = SCREEN(screen)->player;
 			do
 			{
-				racer = mem_read8(race);
+				racer = RACE_ORDER_PLAYERS(race)[0];
 				zero = (uint8_t)(racer - player) == 0u;
 				race++;
 				racers_left--;

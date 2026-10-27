@@ -24,7 +24,7 @@
 void test_mode_start(void)
 {
 	uint16_t sound = 0;
-	uint32_t text_0_to_3 = 0, text_12_to_15 = 0, text_4_to_7 = 0, text_8_to_11 = 0;
+	uint32_t text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0;
 	uint32_t port_d_outputs_0_halfword = 0, port_g_outputs_0_halfword = 0;
 
 	io_write16(LINK_BOARD_ON, 0u);
@@ -57,8 +57,8 @@ void test_mode_start(void)
 	sound = 0x1Fu;
 	test_mode_queue_sound(sound);
 	test_mode_queue_sound_screen_2(sound);
-	SOUND_ENGINE_REVS_1 = 0u;
-	SOUND_ENGINE_REQUESTS_1 |= 0x20u;
+	SOUND_ENGINE_REVS_1[0] = 0u;
+	SOUND_ENGINE_REQUESTS_1[0] |= 0x20u;
 	SOUND_ENGINE_REVS_2 = 0u;
 	SOUND_ENGINE_REQUESTS_2 |= 0x20u;
 	wheel_motor[0] = 0u;
@@ -87,18 +87,18 @@ void test_mode_start(void)
 	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
 	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
 	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
-	text_0_to_3 = test_mode_lcd_text;
-	text_4_to_7 = test_mode_lcd_text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to_7;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to_3;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to_7;
-	text_8_to_11 = test_mode_lcd_text_8_to_11;
-	text_12_to_15 = test_mode_lcd_text_12_to_15;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to_15;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to_11;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to_15;
+	text_0_to = test_mode_lcd_text;
+	text_4_to = test_mode_lcd_text_4_to_7;
+	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to;
+	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to;
+	text_8_to = test_mode_lcd_text_8_to_11;
+	text_12_to = test_mode_lcd_text_12_to_15;
+	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to;
+	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to;
+	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to;
 	test_mode_routine = test_mode_menu_ADDRESS;
 	r12 = unk_218F20_ADDRESS;
 	test_mode_read_controls();
@@ -182,8 +182,8 @@ void test_mode_menu_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -478,7 +478,7 @@ void test_mode_memory_test_run(uint16_t character)
 uint32_t test_mode_memory_test_draw(uint32_t cell_value)
 {
 	uint32_t cell_contents = 0, result_cells = 0, result_offset = 0, result_place = 0, result_text = 0, results_left = 0, text = 0;
-	uint8_t colour = 0, character_0 = 0, character_1 = 0, character_2 = 0;
+	uint8_t colour = 0, character = 0, character_1 = 0, character_2 = 0;
 	uint16_t cell = 0;
 
 	text = memory_test_page_text_ADDRESS;
@@ -497,22 +497,22 @@ uint32_t test_mode_memory_test_draw(uint32_t cell_value)
 		cell = TEST_MODE_CELLS(result_cells)[0];
 		result_cells += 2u;
 		r12 = (r12 & ~0xFFFFu) | cell;
-		character_0 = MEMORY_TEST_RESULT_TEXT(result_text - 0x1u)->character_0;
+		character = MEMORY_TEST_RESULT_TEXT(result_text - 0x1u)->character_0;
 		result_text++;
-		cell_contents = (uint16_t)(cell_contents << 8) | character_0;
-		mem_write16(r12, cell_contents);
+		cell_contents = (uint16_t)(cell_contents << 8) | character;
+		TEXT_LAYER_CELLS(r12)[0] = cell_contents;
 		r12 = r12 + 2u;
 		character_1 = MEMORY_TEST_RESULT_TEXT(result_text - 0x2u)->character_1;
 		result_text++;
 		cell_contents = (cell_contents & ~0xFFu) | character_1;
-		mem_write16(r12, cell_contents);
+		TEXT_LAYER_CELLS(r12)[0] = cell_contents;
 		r12 = r12 + 2u;
 		character_2 = MEMORY_TEST_RESULT_TEXT(result_text - 0x3u)->character_2;
 		cell_contents = (cell_contents & ~0xFFu) | character_2;
-		mem_write16(r12, cell_contents);
+		TEXT_LAYER_CELLS(r12)[0] = cell_contents;
 		r12 = r12 + 2u;
 		cell_contents = (cell_contents & ~0xFFu) | MEMORY_TEST_RESULT_TEXT(result_text - 0x3u)->character_3;
-		mem_write16(r12, cell_contents);
+		TEXT_LAYER_CELLS(r12)[0] = cell_contents;
 		r12 = r12 + 2u;
 		results_left--;
 		result_place++;
@@ -677,7 +677,7 @@ uint32_t test_mode_memory_test_halfwords(uint32_t failures, uint32_t memory_star
 		halfwords_left = halfword_count;
 		do
 		{
-			mem_write16(r12, expected);
+			io_write16(r12, expected);
 			r12 = r12 + 2u;
 			address_bits = (uint16_t)r12;
 			rotation = 6u;
@@ -713,12 +713,12 @@ uint32_t test_mode_memory_test_halfwords(uint32_t failures, uint32_t memory_star
 		halfwords_left = halfword_count;
 		do
 		{
-			found = mem_read16(r12);
+			found = io_read16(r12);
 			r12 = r12 + 2u;
 			if (found != expected)
 			{
 				failures = (failures & ~0xFFFFu) | (uint16_t)(failures ^ expected);
-				failures = (failures & ~0xFFFFu) | (uint16_t)(failures ^ mem_read16(r12 - 2u));
+				failures = (failures & ~0xFFFFu) | (uint16_t)(failures ^ io_read16(r12 - 2u));
 			}
 			address_bits = (uint16_t)r12;
 			rotation = 6u;
@@ -765,7 +765,7 @@ uint32_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 	uint16_t address_bits = 0;
 	uint32_t byte_count = 0, bytes_left = 0;
 	uint8_t read_byte = 0;
-	uint16_t address_low_15 = 0, address_low_12 = 0, address_low_9 = 0, address_low_6 = 0, checked_address_low_15 = 0, checked_address_low_12 = 0, checked_address_low_9 = 0, checked_address_low_6 = 0;
+	uint16_t address_low_15 = 0, address_low_12 = 0, address_low_9 = 0, address_low = 0, checked_address_low_15 = 0, checked_address_low_12 = 0, checked_address_low_9 = 0, checked_address_low = 0;
 
 	byte_count = size_then_wrong_bits;
 	pass_pattern = 1u;
@@ -777,7 +777,7 @@ uint32_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 		bytes_left = byte_count;
 		do
 		{
-			mem_write8(r12, pattern);
+			TESTED_SOUND_RAM_BYTES(r12)[0] = pattern;
 			r12 = r12 + 1u;
 			turn = 6u;
 			address_low_15 = r12 * 2u;
@@ -795,9 +795,9 @@ uint32_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 					if (address_low_9 != 0u)
 					{
 						turn--;
-						address_low_6 = (uint32_t)address_bits << 3;
-						address_bits = address_low_6;
-						if (address_low_6 != 0u)
+						address_low = (uint32_t)address_bits << 3;
+						address_bits = address_low;
+						if (address_low != 0u)
 						{
 							turn--;
 							if ((uint16_t)((uint32_t)address_bits << 3) != 0u)
@@ -814,12 +814,12 @@ uint32_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 		bytes_left = byte_count;
 		do
 		{
-			read_byte = mem_read8(r12);
+			read_byte = TESTED_SOUND_RAM_BYTES(r12)[0];
 			r12 = r12 + 1u;
 			if (read_byte != pattern)
 			{
 				size_then_wrong_bits = (size_then_wrong_bits & ~0xFFu) | (uint8_t)(size_then_wrong_bits ^ pattern);
-				size_then_wrong_bits = (size_then_wrong_bits & ~0xFFu) | (uint8_t)(size_then_wrong_bits ^ mem_read8(r12 - 1u));
+				size_then_wrong_bits = (size_then_wrong_bits & ~0xFFu) | (uint8_t)(size_then_wrong_bits ^ TESTED_SOUND_RAM_BYTES(r12)[-1]);
 			}
 			turn = 6u;
 			checked_address_low_15 = r12 * 2u;
@@ -837,9 +837,9 @@ uint32_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 					if (checked_address_low_9 != 0u)
 					{
 						turn--;
-						checked_address_low_6 = (uint32_t)address_bits << 3;
-						address_bits = checked_address_low_6;
-						if (checked_address_low_6 != 0u)
+						checked_address_low = (uint32_t)address_bits << 3;
+						address_bits = checked_address_low;
+						if (checked_address_low != 0u)
 						{
 							turn--;
 							if ((uint16_t)((uint32_t)address_bits << 3) != 0u)
@@ -868,7 +868,7 @@ uint32_t test_mode_memory_test_nibbles(uint32_t size_then_wrong_bits, uint32_t r
 	uint16_t pass_pattern = 0, pattern = 0;
 	uint32_t address_bits = 0, halfword_count = 0, halfwords_left = 0;
 	uint16_t read_halfword = 0;
-	uint32_t address_low_17 = 0, address_low_15 = 0, address_low_13 = 0, address_low_11 = 0, address_low_9 = 0, address_low_7 = 0, address_low_5 = 0, checked_address_low_17 = 0, checked_address_low_15 = 0, checked_address_low_13 = 0, checked_address_low_11 = 0, checked_address_low_9 = 0, checked_address_low_7 = 0, checked_address_low_5 = 0;
+	uint32_t address_low_17 = 0, address_low_15 = 0, address_low_13 = 0, address_low_11 = 0, address_low_9 = 0, address_low_7 = 0, address_low = 0, checked_address_low_17 = 0, checked_address_low_15 = 0, checked_address_low_13 = 0, checked_address_low_11 = 0, checked_address_low_9 = 0, checked_address_low_7 = 0, checked_address_low = 0;
 
 	halfword_count = size_then_wrong_bits >> 1;
 	pass_pattern = 0x1111u;
@@ -913,9 +913,9 @@ uint32_t test_mode_memory_test_nibbles(uint32_t size_then_wrong_bits, uint32_t r
 								if (address_low_7 != 0u)
 								{
 									turn--;
-									address_low_5 = address_bits * 2u * 2u;
-									address_bits = address_low_5;
-									if (address_low_5 != 0u)
+									address_low = address_bits * 2u * 2u;
+									address_bits = address_low;
+									if (address_low != 0u)
 									{
 										turn--;
 										if (address_bits * 2u * 2u != 0u)
@@ -973,9 +973,9 @@ uint32_t test_mode_memory_test_nibbles(uint32_t size_then_wrong_bits, uint32_t r
 								if (checked_address_low_7 != 0u)
 								{
 									turn--;
-									checked_address_low_5 = address_bits * 2u * 2u;
-									address_bits = checked_address_low_5;
-									if (checked_address_low_5 != 0u)
+									checked_address_low = address_bits * 2u * 2u;
+									address_bits = checked_address_low;
+									if (checked_address_low != 0u)
 									{
 										turn--;
 										if (address_bits * 2u * 2u != 0u)
@@ -1013,7 +1013,7 @@ void test_mode_memory_test_blink(void)
 		character = (uint16_t)((character & ~0xFFu) | TEST_MODE_CHARACTERS(now_testing)[0]);
 		cell = next_cell;
 		next_cell += 2u;
-		mem_write16(cell, mem_read16(cell) ^ character);
+		TEXT_LAYER_CELLS(cell)[0] ^= character;
 		now_testing++;
 	} while (TEST_MODE_CHARACTERS(now_testing)[0] != 0u);
 }
@@ -1067,8 +1067,8 @@ void test_mode_volume_adjustment_select(uint32_t character)
 		{
 			test_mode_blink_timer = 5;
 			blink_cell = test_mode_blink_address;
-			cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-			mem_write16(blink_cell, cursor_character);
+			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
 				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 		}
@@ -1105,8 +1105,8 @@ void test_mode_volume_adjustment_select(uint32_t character)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -1160,10 +1160,10 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 	controls_left = 3u;
 	do
 	{
-		range_start = mem_read8(r12);
+		range_start = ANALOG_CALIBRATION_BYTES(r12)[0];
 		range_start = range_start >> 3;
 		r12 = r12 + 1u;
-		range_length = mem_read8(r12);
+		range_length = ANALOG_CALIBRATION_BYTES(r12)[0];
 		range_length = range_length >> 3;
 		range_length = (uint8_t)(range_length - range_start);
 		range_length = (uint8_t)(range_length + 1u);
@@ -1183,10 +1183,10 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 	controls_left = 3u;
 	do
 	{
-		range_start = mem_read8(r12);
+		range_start = ANALOG_CALIBRATION_BYTES(r12)[0];
 		range_start = range_start >> 3;
 		r12 = r12 + 1u;
-		range_length = mem_read8(r12);
+		range_length = ANALOG_CALIBRATION_BYTES(r12)[0];
 		range_length = range_length >> 3;
 		range_length = (uint8_t)(range_length - range_start);
 		range_length = (uint8_t)(range_length + 1u);
@@ -1208,7 +1208,7 @@ uint32_t test_mode_volume_adjustment_draw(uint32_t character)
 	controls_left = 6u;
 	do
 	{
-		position_step = mem_read8(r12) >> 3;
+		position_step = ANALOG_POSITIONS(r12)[0] >> 3;
 		position_cell = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
 		cell = (cell & ~0xFFFFu) | position_cell;
@@ -1286,7 +1286,7 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 	controls_left = 6u;
 	do
 	{
-		position = mem_read8(r12);
+		position = ANALOG_POSITIONS(r12)[0];
 		range_low = VOLUME_RANGE(range)->low;
 		r12 = r12 + 1u;
 		range++;
@@ -1319,12 +1319,12 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 		r12 = (r12 & ~0xFFu) | ROM8(item);
 		item++;
 		bit = ROM8(item);
-		carry = (mem_read32(r12) & shl32(1u, (int)(bit))) != 0u;
+		carry = (io_read32(r12) & shl32(1u, (int)(bit))) != 0u;
 		item++;
 		cell = (cell & ~0xFFFFu) | ROM16(item);
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		port_b = (port_b & ~0xFFu) | (uint8_t)r12;
-		carry = (mem_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
+		carry = (io_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
 		item += 2u;
 		cell = (cell & ~0xFFFFu) | ROM16(item);
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
@@ -1332,10 +1332,10 @@ uint32_t test_mode_input_test_draw(uint32_t character)
 	} while ((int16_t)ROM16(item) >= 0);
 	r12 = (r12 & ~0xFFu) | 8u;
 	port_b = (port_b & ~0xFFu) | (uint8_t)r12;
-	test_switches = mem_read8(r12);
+	test_switches = io_read8(r12);
 	r12 = (r12 & ~0xFFu) | 0xAu;
-	test_switches = test_switches & (mem_read8(r12) >> 4);
-	test_switches_b = mem_read8(port_b) & (mem_read8((port_b & ~0xFFu) | (uint8_t)r12) >> 4);
+	test_switches = test_switches & (io_read8(r12) >> 4);
+	test_switches_b = io_read8(port_b) & (mem_read8((port_b & ~0xFFu) | (uint8_t)r12) >> 4);
 	carry = (test_switches & 1u) != 0u;
 	item += 2u;
 	cell = (cell & ~0xFFFFu) | ROM16(item);
@@ -1440,8 +1440,8 @@ void test_mode_output_test_run(void)
 		{
 			test_mode_blink_timer = 5;
 			blink_cell = test_mode_blink_address;
-			cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-			mem_write16(blink_cell, cursor_character);
+			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
 				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 		}
@@ -1461,8 +1461,8 @@ void test_mode_output_test_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -1486,7 +1486,7 @@ void test_mode_output_test_draw(void)
 		r12 = OUTPUT_TEST_OUTPUT(output - 0x2u)->variable;
 		output++;
 		r12 = r12 + GAME_VARIABLES;
-		carry = (mem_read32(r12) & shl32(1u, (int)(OUTPUT_TEST_OUTPUT(output - 0x3u)->bit))) != 0u;
+		carry = (OUTPUT_BITS(r12)[0] & shl32(1u, (int)(OUTPUT_TEST_OUTPUT(output - 0x3u)->bit))) != 0u;
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = output_test_on_off_cells[carry];
 		output++;
 	} while (OUTPUT_TEST_OUTPUT(output)->cell != 0u);
@@ -1590,8 +1590,8 @@ void test_mode_sound_test_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -1958,8 +1958,8 @@ void test_mode_game_assignments_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -2000,7 +2000,7 @@ uint32_t test_mode_game_assignments_draw(void)
 	do
 	{
 		cell = row_cell;
-		seconds = mem_read8(r12);
+		seconds = TIME_DIFFICULTY_SECONDS(r12)[0];
 		r12 = r12 + 1u;
 		if (seconds == 0u)
 		{
@@ -2112,7 +2112,7 @@ void test_mode_game_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
+	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
 	test_mode_flags |= 2u;
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -2205,8 +2205,8 @@ void test_mode_coin_assignments_run(uint32_t item_count)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -2281,7 +2281,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours)
 				description++;
 				if ((uint8_t)description_byte == 0u)
 					break;
-				mem_write16(r12, description_byte);
+				TEXT_LAYER_CELLS(r12)[0] = description_byte;
 				r12 = r12 + 2u;
 			}
 		}
@@ -2395,8 +2395,8 @@ void test_mode_coin_assignments_manual_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -2601,7 +2601,7 @@ void test_mode_coin_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
+	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
 	test_mode_flags |= 2u;
 	bookkeeping_clear_credits();
 	test_mode_routine = test_mode_menu_ADDRESS;
@@ -2695,8 +2695,8 @@ void test_mode_network_assignments_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -2810,7 +2810,7 @@ void test_mode_network_assignments_exit(void)
 			test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (mem_read8(current_object + 0x3Cu) == mem_read8(current_object));
+	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
 	test_mode_flags |= 2u;
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -2884,7 +2884,7 @@ uint32_t test_mode_bookkeeping_draw_totals(void)
 	digit_count = 5u;
 	test_mode_draw_number(digit_count, &coins_a, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF334u;
-	coins_b = mem_read16(current_object + 0xAu);
+	coins_b = BOOKKEEPING_BLOCK(current_object)->chute_b_coins;
 	coin_sum += coins_b;
 	colours = 0x64u;
 	digit_count = 5u;
@@ -2896,14 +2896,14 @@ uint32_t test_mode_bookkeeping_draw_totals(void)
 	plural_offset = 0xFFFFFFFEu;
 	test_mode_draw_count(total_coins, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF4B4u;
-	coin_credits = mem_read16(current_object + 2u);
+	coin_credits = BOOKKEEPING_BLOCK(current_object)->coin_credits;
 	credit_sum = coin_credits;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(coin_credits, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF534u;
-	service_credits = mem_read16(current_object + 4u);
+	service_credits = BOOKKEEPING_BLOCK(current_object)->service_credits;
 	credit_sum += service_credits;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
@@ -2916,39 +2916,39 @@ uint32_t test_mode_bookkeeping_draw_totals(void)
 	plural_offset = 0xFFFFFFFEu;
 	test_mode_draw_count(total_credits, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF6B4u;
-	games_a = mem_read16(current_object + 0x14u);
+	games_a = BOOKKEEPING_BLOCK(current_object)->games_a;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(games_a, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF734u;
-	games_b = mem_read16(current_object + 0x16u);
+	games_b = BOOKKEEPING_BLOCK(current_object)->games_b;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(games_b, digit_count, plural_offset, &colours, &cell);
 	time_cell = TEXT_CELL(20, 16);
-	total_time = mem_read32(current_object + 0x10u);
+	total_time = BOOKKEEPING_BLOCK(current_object)->total_time;
 	time_cell = test_mode_draw_duration(total_time, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF8A8u;
-	play_time_a = mem_read32(current_object + 0x18u);
+	play_time_a = BOOKKEEPING_BLOCK(current_object)->play_time_a;
 	time_cell = test_mode_draw_duration(play_time_a, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF928u;
-	play_time_b = mem_read32(current_object + 0x1Cu);
+	play_time_b = BOOKKEEPING_BLOCK(current_object)->play_time_b;
 	time_cell = test_mode_draw_duration(play_time_b, time_cell);
-	games_a = mem_read16(current_object + 0x14u);
-	game_count = mem_read16(current_object + 0x16u) + games_a;
+	games_a = BOOKKEEPING_BLOCK(current_object)->games_a;
+	game_count = BOOKKEEPING_BLOCK(current_object)->games_b + games_a;
 	total_games = game_count;
 	if (game_count == 0u)
 		return games_a;
 	time_cell = (time_cell & ~0xFFFFu) | 0xFA34u;
-	average_time = divide_u32(mem_read32(current_object + 0x18u) + mem_read32(current_object + 0x1Cu), total_games);
+	average_time = divide_u32(BOOKKEEPING_BLOCK(current_object)->play_time_a + BOOKKEEPING_BLOCK(current_object)->play_time_b, total_games);
 	test_mode_draw_minutes_seconds(&average_time, &time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xFAB4u;
-	longest_time = mem_read16(current_object + 0x20u);
+	longest_time = BOOKKEEPING_BLOCK(current_object)->longest_play;
 	test_mode_draw_minutes_seconds(&longest_time, &time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xFB34u;
-	shortest_time = mem_read16(current_object + 0x22u);
+	shortest_time = BOOKKEEPING_BLOCK(current_object)->shortest_play;
 	test_mode_draw_minutes_seconds(&shortest_time, &time_cell);
 	return shortest_time;
 }
@@ -3065,7 +3065,7 @@ uint32_t test_mode_bookkeeping_draw_histogram(void)
 				divisor = TIME_DIGIT_STEP(digit_step)->divisor;
 				digit_step += 4u;
 				divux_pair(divisor, &car_then_time, &rest_time);
-				mem_write16(r12, car_then_time + zero_character);
+				TEXT_LAYER_CELLS(r12)[0] = car_then_time + zero_character;
 				r12 = r12 + TIME_DIGIT_STEP(digit_step - 0x4u)->cell_step;
 				car_then_time = rest_time;
 				digit_step += 4u;
@@ -3202,8 +3202,8 @@ void test_mode_backup_data_clear_run(void)
 		{
 			test_mode_blink_timer = 5;
 			blink_cell = test_mode_blink_address;
-			cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-			mem_write16(blink_cell, cursor_character);
+			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
 				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 		}
@@ -3229,8 +3229,8 @@ void test_mode_backup_data_clear_run(void)
 	{
 		test_mode_blink_timer = 5;
 		blink_cell = test_mode_blink_address;
-		cursor_character = mem_read16(blink_cell) ^ 0x6A7Fu;
-		mem_write16(blink_cell, cursor_character);
+		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
+		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
 			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
 	}
@@ -3305,7 +3305,7 @@ void test_mode_exit_caution_wait(void)
 uint32_t test_mode_set_up_colours(void)
 {
 	uint16_t background_colour = 0, level = 0, level_colour = 0, white = 0;
-	uint32_t halfword_count = 0, ignored_2 = 0, levels_left = 0, palette_place = 0, rows_left = 0, screen_1_colour = 0, screen_2_colour = 0, tile_place = 0, tile_row = 0, tile_step = 0, tiles_left = 0;
+	uint32_t halfword_count = 0, ignored = 0, levels_left = 0, palette_place = 0, rows_left = 0, screen_1_colour = 0, screen_2_colour = 0, tile_place = 0, tile_row = 0, tile_step = 0, tiles_left = 0;
 
 	background_colour = 0x733u;
 	set_halfwords(PALETTE_RAM + 0x8000u, 0x4000u, background_colour);
@@ -3315,7 +3315,7 @@ uint32_t test_mode_set_up_colours(void)
 	move_halfwords(PALETTE_RAM + 0x9E00u, test_mode_palettes_1_ADDRESS, halfword_count);
 	halfword_count = test_mode_palettes_2_bytes;
 	halfword_count = halfword_count >> 1;
-	move_string(test_mode_palettes_2_ADDRESS, halfword_count, 0x689E00u, halfword_count, 2u, 0u, 0u, 0u, &palette_place, &ignored_2);
+	move_string(test_mode_palettes_2_ADDRESS, halfword_count, 0x689E00u, halfword_count, 2u, 0u, 0u, 0u, &palette_place, &ignored);
 	level = 0u;
 	levels_left = 0x20u;
 	palette_place = (palette_place & ~0x8000u) + 2u;
@@ -3324,23 +3324,23 @@ uint32_t test_mode_set_up_colours(void)
 		screen_2_colour = palette_place;
 		screen_1_colour = screen_2_colour & ~0x80000u;
 		level_colour = (uint16_t)level;
-		mem_write16(screen_1_colour, level_colour);
-		mem_write16(screen_2_colour, level_colour);
+		io_write16(screen_1_colour, level_colour);
+		io_write16(screen_2_colour, level_colour);
 		white = (uint16_t)level_colour;
 		level_colour = (uint16_t)((uint32_t)level_colour << 5);
 		screen_1_colour += 2u;
-		mem_write16(screen_1_colour, level_colour);
+		io_write16(screen_1_colour, level_colour);
 		screen_2_colour += 2u;
-		mem_write16(screen_2_colour, level_colour);
+		io_write16(screen_2_colour, level_colour);
 		white += level_colour;
 		level_colour = (uint16_t)((uint32_t)level_colour << 5);
 		screen_1_colour += 2u;
-		mem_write16(screen_1_colour, level_colour);
+		io_write16(screen_1_colour, level_colour);
 		screen_2_colour += 2u;
-		mem_write16(screen_2_colour, level_colour);
+		io_write16(screen_2_colour, level_colour);
 		white += level_colour;
-		mem_write16(screen_1_colour + 2u, white);
-		mem_write16(screen_2_colour + 2u, white);
+		io_write16(screen_1_colour + 2u, white);
+		io_write16(screen_2_colour + 2u, white);
 		level++;
 		levels_left--;
 		palette_place += 0x20u;
@@ -3634,11 +3634,11 @@ void test_mode_read_controls(void)
 	do
 	{
 		reading = 0u;
-		mem_write8(converter_input, 0xFFu);
+		io_write8(converter_input, 0xFFu);
 		bits_left = 8u;
 		do
 		{
-			converter_bits = mem_read8(converter_input);
+			converter_bits = io_read8(converter_input);
 			carry = (uint8_t)(converter_bits * 2u) < converter_bits;
 			reading = (uint8_t)(reading * 2u + carry);
 			bits_left--;
@@ -3669,7 +3669,7 @@ void test_mode_send_sound(void)
 	if ((int16_t)inverted_request >= 0)
 		SOUND_COMMAND_2 = ~inverted_command;
 	else
-		SOUND_COMMAND_1 = ~inverted_command;
+		SOUND_COMMAND_1[0] = ~inverted_command;
 	test_mode_sound_queue_read = (read_index + 1u) & 0xFu;
 }
 
