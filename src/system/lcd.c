@@ -453,7 +453,7 @@ void lcd_update(void)
 		if (character == 0x60u)
 			character = 7u;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
-		mem_write8(text_end, character);
+		LCD_CHARACTERS(text_end)[0] = character;
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
@@ -468,7 +468,7 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
-		mem_write8(text_end, 0x20u);
+		LCD_CHARACTERS(text_end)[0] = 0x20u;
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		break;
@@ -485,13 +485,13 @@ void lcd_update(void)
 		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
 		SCREEN(screen)->lcd_scroll_step++;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
-		mem_write8(text_end, 0x20u);
+		LCD_CHARACTERS(text_end)[0] = 0x20u;
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		break;
 	case 2:
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
-		mem_write8(text_end, 0x20u);
+		LCD_CHARACTERS(text_end)[0] = 0x20u;
 		SCREEN(screen)->lcd_scroll_frames = 5u;
 		SCREEN(screen)->lcd_scroll_step++;
 		lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;

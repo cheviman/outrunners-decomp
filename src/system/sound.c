@@ -153,7 +153,7 @@ void set_tyre_noise(uint8_t tyre_noise)
 
 	if ((SCREEN(screen)->demo_flags & 0x100u) == 0u || advertise_sound != 0u)
 	{
-		mem_write8(((uint32_t)SCREEN(screen)->index << 8) + SOUND_TYRE_NOISE_1_ADDRESS, tyre_noise);
+		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS)[SCREEN(screen)->index].tyre_noise = tyre_noise;
 		return;
 	}
 	sound_page = (uint32_t)SCREEN(screen)->index << 8;

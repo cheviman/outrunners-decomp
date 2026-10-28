@@ -392,71 +392,60 @@ void place_number_update(void)
    time. */
 void lap_timer_update(void)
 {
-	bool L_00C4B3 = false;
 	uint32_t animation = 0, checkpoint_time = 0, checkpoints = 0, lap_time = 0, object = 0, player = 0, text = 0, time_text = 0;
 	uint16_t split_frames = 0;
-	uint32_t jump_target = 0;
 
-	do
+	switch (OBJECT(current_object)->state)
 	{
-		jump_target = L_00C4B3 ? 0xC4B3u : lap_timer_state_jumps[OBJECT(current_object)->state];
-		switch (jump_target)
+	case 0:
+		animation = LAP_TIMER;
+		OBJECT(current_object)->palette = 0x4Au;
+		OBJECT(current_object)->draw_mode = 8u;
+		OBJECT(current_object)->depth_layer = 0x19Eu;
+		OBJECT(current_object)->x = 0xE0u;
+		OBJECT(current_object)->y = 0x16u;
+		animation_start(animation);
+		object = current_object + 0x80u;
+		OBJECT(object - 0x80u)->lap_timer.text_x = 0xF8u;
+		object += 2u;
+		OBJECT(object - 0x82u)->lap_timer.text_y = 0xEu;
+		OBJECT(object - 0x82u)->lap_timer.text_attribute = 0x90u;
+		OBJECT(current_object)->lap_timer.checkpoints = RACE(SCREEN(screen)->race_copy)->stage_count;
+		OBJECT(current_object)->state++;
+		return;
+	case 2:
+		split_frames = OBJECT(current_object)->lap_timer.split_frames;
+		OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
+		if (split_frames != 1u)
 		{
-		case 0x00C45Cu:
-			animation = LAP_TIMER;
-			OBJECT(current_object)->palette = 0x4Au;
-			OBJECT(current_object)->draw_mode = 8u;
-			OBJECT(current_object)->depth_layer = 0x19Eu;
-			OBJECT(current_object)->x = 0xE0u;
-			OBJECT(current_object)->y = 0x16u;
-			animation_start(animation);
-			object = current_object + 0x80u;
-			OBJECT(object - 0x80u)->lap_timer.text_x = 0xF8u;
-			object += 2u;
-			OBJECT(object - 0x82u)->lap_timer.text_y = 0xEu;
-			OBJECT(object - 0x82u)->lap_timer.text_attribute = 0x90u;
-			OBJECT(current_object)->lap_timer.checkpoints = RACE(SCREEN(screen)->race_copy)->stage_count;
-			OBJECT(current_object)->state++;
-			return;
-		case 0x00C4B3u:
-			for (;;)
-			{
-				text = current_object + 0x80u;
-				time_text = text + 6u;
-				player = SCREEN(screen)->player;
-				checkpoints = SCREEN(screen)->checkpoints_passed[(int32_t)player];
-				if (OBJECT(current_object)->lap_timer.checkpoints == checkpoints)
-					break;
-				OBJECT(current_object)->lap_timer.checkpoints = checkpoints;
-				checkpoints = (uint8_t)(checkpoints - 1u);
-				OBJECT(current_object)->state = lap_timer_checkpoint_states[checkpoints];
-				checkpoints = (uint8_t)(checkpoints << 3);
-				lap_time = SCREEN(screen)->checkpoint_times_by_player[(uint8_t)(checkpoints + player)];
-				checkpoint_time = CAR(player_car)->checkpoint_time;
-				CAR(player_car)->checkpoint_time = lap_time;
-				lap_time -= checkpoint_time;
-				time_to_text(lap_time, time_text);
-				OBJECT(current_object)->lap_timer.text_attribute = 0xB0u;
-				OBJECT(current_object)->lap_timer.split_frames = 0xB4u;
-				io_write8(EVENT_CODE, SCREEN(screen)->index * 2u + (~SCREEN(screen)->current_stage_level & 1u) + 8u);
-				split_frames = OBJECT(current_object)->lap_timer.split_frames;
-				OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
-				if (split_frames != 1u)
-				{
-					text = current_object + 0x80u;
-					draw_text(text);
-					draw_object(lap_time);
-					return;
-				}
-				OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
-				OBJECT(current_object)->state--;
-			}
-			lap_time = CAR(player_car)->race_time / 0xAu - CAR(player_car)->checkpoint_time;
-			time_to_text(lap_time, time_text);
+			text = current_object + 0x80u;
 			draw_text(text);
 			draw_object(lap_time);
 			return;
-		case 0x00C53Bu:
+		}
+		OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
+		OBJECT(current_object)->state--;
+	case 1:
+		for (;;)
+		{
+			text = current_object + 0x80u;
+			time_text = text + 6u;
+			player = SCREEN(screen)->player;
+			checkpoints = SCREEN(screen)->checkpoints_passed[(int32_t)player];
+			if (OBJECT(current_object)->lap_timer.checkpoints == checkpoints)
+				break;
+			OBJECT(current_object)->lap_timer.checkpoints = checkpoints;
+			checkpoints = (uint8_t)(checkpoints - 1u);
+			OBJECT(current_object)->state = lap_timer_checkpoint_states[checkpoints];
+			checkpoints = (uint8_t)(checkpoints << 3);
+			lap_time = SCREEN(screen)->checkpoint_times_by_player[(uint8_t)(checkpoints + player)];
+			checkpoint_time = CAR(player_car)->checkpoint_time;
+			CAR(player_car)->checkpoint_time = lap_time;
+			lap_time -= checkpoint_time;
+			time_to_text(lap_time, time_text);
+			OBJECT(current_object)->lap_timer.text_attribute = 0xB0u;
+			OBJECT(current_object)->lap_timer.split_frames = 0xB4u;
+			io_write8(EVENT_CODE, SCREEN(screen)->index * 2u + (~SCREEN(screen)->current_stage_level & 1u) + 8u);
 			split_frames = OBJECT(current_object)->lap_timer.split_frames;
 			OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
 			if (split_frames != 1u)
@@ -468,15 +457,18 @@ void lap_timer_update(void)
 			}
 			OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
 			OBJECT(current_object)->state--;
-			L_00C4B3 = true;
-			break;
-		case 0x00C541u:
-			text = current_object + 0x80u;
-			draw_text(text);
-			draw_object(lap_time);
-			return;
 		}
-	} while (L_00C4B3);
+		lap_time = CAR(player_car)->race_time / 0xAu - CAR(player_car)->checkpoint_time;
+		time_to_text(lap_time, time_text);
+		draw_text(text);
+		draw_object(lap_time);
+		return;
+	case 3:
+		text = current_object + 0x80u;
+		draw_text(text);
+		draw_object(lap_time);
+		return;
+	}
 }
 
 /* Unused: does nothing (a lone return after lap_timer_update's last jump to draw_object). */
@@ -719,7 +711,7 @@ void time_digits_draw(uint32_t digits)
 	do
 	{
 		digit = digits & 0xFu;
-		flip = mem_read8(digit_record);
+		flip = TIME_DIGIT(digit_record)->flip;
 		negative = flip >> 7;
 		digit_record++;
 		shown_digit = TIME_DIGIT(digit_record - 0x1u)->digit;

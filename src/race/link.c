@@ -862,13 +862,13 @@ void network_check_blink_text(void)
 	network_check_blink_counter++;
 	if ((network_check_blink_counter & 0xFu) != 0u)
 		return;
-	cell = 0x310000u | 0xF000u | (OBJECT(current_object)->flags | ((uint32_t)OBJECT(current_object)->flags_high << 8u));
+	cell = 0x310000u | 0xF000u | TEXT_LAYER_RECORD(current_object)->cell;
 	current_object = current_object + 2u;
-	character = (uint16_t)((uint32_t)(uint8_t)OBJECT(current_object - 0x2u)->flags_upper << 8);
+	character = (uint16_t)((uint32_t)TEXT_LAYER_RECORD(current_object - 0x2u)->attribute << 8);
 	current_object = current_object + 1u;
 	for (;;)
 	{
-		character = (uint16_t)((character & ~0xFFu) | mem_read8(current_object));
+		character = (uint16_t)((character & ~0xFFu) | TEXT_CHARACTERS(current_object)[0]);
 		current_object = current_object + 1u;
 		if ((uint8_t)character == 0u)
 			break;

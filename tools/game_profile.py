@@ -62,6 +62,9 @@ pointers.NESTED = {"screen": ((0x1000, 0x200, "car"),)
 pointers.BELOW = {"screen": (0x8000, "object_area")}
 pointers.INSTANCES = {0x208000: ("screen", 0x6000), 0x218000: ("screen", 0x6000), 0x20FB00: ("race", 0x80),
                       0x20FB80: ("race", 0x80), 0x20FC00: ("race", 0x80), 0x20FC80: ("race", 0x80)}
+# records the code reaches by a number from a fixed address, whose places have names of their own: each screen's
+# page of the sound RAM, by the screen's index (set_tyre_noise)
+pointers.NUMBERED_RECORDS = {0x700700: "screen_sound_page"}
 memory.WORK_RAM = (0x200000, 0x220000)
 memory.VARIABLES = 0x20E000
 # the program's data is the game's assets, loaded by name (runtime/src/assets.c): its tables are pointers the

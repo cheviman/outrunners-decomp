@@ -2196,9 +2196,9 @@ struct object
 			uint16_t flags_upper;
 			uint32_t handler;
 			uint8_t slot;
-			uint8_t unk_09;
-			uint8_t unk_0A;
-			uint8_t unk_0B;
+			uint8_t number;
+			uint8_t car;
+			uint8_t car_colour;
 			uint8_t state;
 			uint8_t unk_0D;
 			uint8_t unk_0E;
@@ -4886,6 +4886,14 @@ struct screen_fade_start
 	uint8_t channels;
 };
 
+struct stored_duration
+{
+	uint8_t seconds;
+	uint8_t minutes;
+	uint8_t hours;
+	uint16_t days;
+};
+
 struct background_registers
 {
 	uint32_t pages_address;
@@ -5652,6 +5660,7 @@ _Static_assert(sizeof(struct screen_hardware) == 0x10, "struct screen_hardware h
 _Static_assert(sizeof(struct screen_view_default) == 0x1A, "struct screen_view_default has the size of the program ROM's records");
 _Static_assert(sizeof(struct hidden_layer_pair) == 0x2, "struct hidden_layer_pair has the size of the program ROM's records");
 _Static_assert(sizeof(struct screen_fade_start) == 0x4, "struct screen_fade_start has the size of the program ROM's records");
+_Static_assert(sizeof(struct stored_duration) == 0x5, "struct stored_duration has the size of the game's blocks");
 _Static_assert(sizeof(struct background_registers) == 0x30, "struct background_registers has the size of the program ROM's records");
 _Static_assert(sizeof(struct background_setup) == 0x14, "struct background_setup has the size of the program ROM's records");
 _Static_assert(sizeof(struct bar_picture_bar) == 0x8, "struct bar_picture_bar has the size of the program ROM's records");
@@ -5734,6 +5743,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define OBJECT_LIST(address) ((struct object_list *)ram(address))
 #define ROAD_ROW_RECORD(address) ((const struct road_row_record *)data_at(address))
 #define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)data_at(address))
+#define ROAD_OBJECT_STREAM_FORKS(address) ((const uint32_t *)data_at(address))
 #define FLASHING_SCENERY_RECORD(address) ((const struct flashing_scenery_record *)data_at(address))
 #define FLASHING_SCENERY_PALETTES(address) ((const int16_t *)data_at(address))
 #define AURORA_RECORD(address) ((const struct aurora_record *)data_at(address))
@@ -5804,6 +5814,10 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define SCREEN_FADE_START(address) ((const struct screen_fade_start *)data_at(address))
 #define TEXT_FONT_ROWS(address) ((const uint8_t *)data_at(address))
 #define TEXT_CHARACTERS(address) ((const uint8_t *)data_at(address))
+#define COURSE_BYTES(address) ((const uint8_t *)data_at(address))
+#define INPUT_TEST_BYTES(address) ((const uint8_t *)data_at(address))
+#define TEST_MODE_TEXT_BYTES(address) ((const uint8_t *)data_at(address))
+#define STORED_DURATION(address) ((struct stored_duration *)ram(address))
 #define BACKGROUND_REGISTERS(address) ((const struct background_registers *)data_at(address))
 #define BACKGROUND_SETUP(address) ((const struct background_setup *)data_at(address))
 #define FIRST_ATTRACT_CARS(address) ((const uint8_t *)data_at(address))

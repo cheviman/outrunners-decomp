@@ -103,6 +103,7 @@ field road_object_stream_entry 00 position s16       # 01273D: segments from the
 field road_object_stream_entry 02 command u16        # 012733: 0 start an object, 1 the stage's end, 2 the end, 3 a fork
 field road_object_stream_entry 04 handler u32        # 012767 "mov.w [R10+], 4[R21]": the new object's handler
 field road_object_stream_entry 08 parameter u32      # 01276C "mov.w [R10+], 18[R21]": its field 18 (most often its record)
+elements road_object_stream_forks u32 road_object_stream_entry   # a fork's table: the streams of its two branches, by the branch the car takes (road_object_stream_read, state 3)
 # A flashing_scenery object's record (flashing_scenery_update 012923-012956, from field 18): road_row_record's
 # fields, but with the address of the list of palettes the scenery cycles through (flashing_scenery_palettes)
 # in place of the palette; then the hit box (none: all 11 records in the streams, 021027-02D04C, have 0)
@@ -291,6 +292,9 @@ field object 08 slot u8                # its slot in the objects' area (start_ob
 field object 00 flags u8               # bit 0: the object is live (run_objects runs it; else it frees its slot)
 field object 04 handler u32            # the code run_objects runs for it each frame ("jsr [4[R20]]", 011CD2)
 field object 0C state u8               # the step its handler is at: most handlers go by it through a table
+field object 09 number u8              # what the code that starts it numbers it by: its place in its start list (start_object_list), a choice flag's player
+field object 0A car u8                 # a choice flag's car (car_select_entries_run)
+field object 0B car_colour u8          # the car whose colours the coin prompt's pieces take (coin_prompt_update)
 # How draw_object draws it (by draw_mode, through draw_object_mode_jumps): an animation of the animations (sprite_animations),
 # each a list of frames, each a list of pieces; the palette word (sprite_palettes); flags bits 6-7 flip it
 field object 30 x u16                  # draw mode 0: its place on the screen, less the screen's scroll (screen 14, 16)
@@ -1105,7 +1109,7 @@ comment backdrop_landmark_update Keeps the landmark on the background's panorama
 comment backdrop_translucent_start Sets up a sprite on the background that is drawn every other frame, so it looks faint (the pyramids of stages 13 and 20, the spray of stage 4's falls): as backdrop_near_start, layer 1, frame_count 0; then backdrop_translucent_update.
 comment backdrop_translucent_update Keeps the sprite on the background's panorama at the panorama's own speed (as backdrop_far_update), animates it and draws it only on even frames (frame_count), so it looks faint. By state: 0 waits until it is off the screen; 1 drawn while on the screen; off it, it ends once leaving.
 comment backdrop_off_screen Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x (field 30) more than half_width beyond the screen's edges (0..140).
-scoped object road_object_stream 80 stream u32 rom
+scoped object road_object_stream 80 stream u32 road_object_stream_forks   # the stream it reads (an entry), or at a fork (state 3) the fork's table
 scoped object road_object_stream 84 stage_start u16
 scoped object road_object_stream 86 stage u8
 scoped object crest_clip 10 crest u8
@@ -1671,6 +1675,14 @@ local step_screen_fade 0116A8,0116B1,0116BA,0116C3,0116CC,0116D5 R19 fade_start 
 elements text_font_rows u8                        # a character's 8 rows of 8 one-bit pixels
 local load_shadowed_text_font 0117FE R19 font_rows text_font_rows
 elements text_characters u8                       # a text's characters, closed by 0
+elements course_bytes u8                         # a course's records (stage_courses): a halfword, a run's length or 0 - its command, then its operands (player_car_extend_course and player_car_build_segment read them a byte or a halfword at a time)
+elements input_test_bytes u8                     # input_test_items as test_mode_input_test_draw walks them: the numbers' cells (halfwords), then each switch's port and bit (bytes) and its two cells (halfwords)
+elements test_mode_text_bytes u8                 # a test mode text record as test_mode_draw_texts walks it: lines of a cell (a halfword), characters and colour changes (bytes), each closed by 0
+struct stored_duration 5                         # a time as the unused test_mode_duration_to_seconds and test_mode_split_minutes_seconds keep it
+field stored_duration 00 seconds u8
+field stored_duration 01 minutes u8
+field stored_duration 02 hours u8
+field stored_duration 03 days u16
 local network_check_toggle_memory_text 00D739 R28 memory_text text_characters
 122B5C  table  text_sprite_words_0_1  u32         # draw_text, draw_text_at (011A15 "mov.w [R0+], R1" from 122B5C): a character's sprite words 0 and 1 (000A, 0802)
 122B60  table  text_sprite_size  u32              # 011A18: words 2 and 3, its size (D008, 0008), with sprite_screen_bit
@@ -2137,7 +2149,7 @@ scoped object ranking_record_character 09 index u8
 scoped object ranking_record_character 0A course u8
 scoped object ranking_record_character 10 slide_steps u8
 scoped object ranking_record_character 12 colour_delay u8
-scoped object ranking_record_character 14 ranking_record u32 object
+scoped object ranking_record_character 14 ranking_record u32 object.ranking_record
 scoped object ranking_record_character 82 frames_left u16
 scoped object ranking_record_car 09 course u8
 scoped object ranking_record_car 10 wait_frames u16
@@ -5934,7 +5946,7 @@ local player_car_extend_course 00FD22 R5 ring_mask
 local player_car_extend_course 00FEE6 R0 run_length   # a course record's first halfword: a run's length, or 0 - its command
 local player_car_extend_course 00FFC4 R0 branch
 local player_car_extend_course 00FF08,00FF1B R1 run_width   # the run's width code, then * B0
-local player_car_extend_course 00FEE1 R11 course_place
+local player_car_extend_course 00FEE1 R11 course_place course_bytes
 local player_car_extend_course 00FFEA,00FFF5 R2 forks_taken
 local player_car_build_segment 00FEE6 R0 run_length
 local player_car_build_segment 00FE03 R1 pitch_sine
@@ -5943,7 +5955,7 @@ local player_car_build_segment 00FDF9,00FE0B R2 pitch_cosine     # the pitch ang
 local player_car_build_segment 00FE13 R3 heading_sine
 local player_car_build_segment 00FDFE,00FE1B R4 heading_cosine
 local player_car_build_segment 00FE75 R11 ring_segment road_segment   # the segment it writes, at build_offset in the ring
-local player_car_build_segment 00FEE1 R11 course_place
+local player_car_build_segment 00FEE1 R11 course_place course_bytes
 # player_car_project_road: the view's rotation (view_matrix_*), then each segment from the window
 local player_car_project_road 010070 R1 view_pitch    # "movz.hw C[D0[R25]], R1": the shown view's
 local player_car_project_road 010077 R2 view_yaw      # E[D0[R25]]
@@ -7191,7 +7203,7 @@ local test_mode_memory_test_halfwords 01CA6B,01CABA R0 failures
 # (test_mode_set_cursor, test_mode_clear_cursor, test_mode_colour_line) take a colour and hand it back in
 # the cells' high byte, a blank in that colour, which the pages keep as their character.
 param test_mode_draw_texts R0 character
-param test_mode_draw_texts R10 text   # a text record of the ROM (all its callers pass one); its walk mixes halfwords and bytes, so it has no type: as one into the ROM it would read ROM16/ROM8 (rom_reads)
+param test_mode_draw_texts R10 text test_mode_text_bytes   # a text record of the ROM (all its callers pass one), as bytes: its walk mixes halfwords (the lines' cells) and bytes (characters, colours)
 local test_mode_draw_texts 01F0CA,01F0D1,01F0D9 R11 cell text_layer_cells
 param test_mode_draw_instructions R0 character
 local test_mode_draw_instructions 01F02C R10 text
@@ -7321,7 +7333,7 @@ local test_mode_input_test_draw 01D17A,01D196 R2 range_low      # the range's lo
 local test_mode_input_test_draw 01D1B7 R2 digit_count
 local test_mode_input_test_draw 01D151 R10 text
 local test_mode_input_test_draw 01D159,01D1A2,01D1BA,01D1BD,01D1E1,01D1F7,01D238,01D24B R10 cell text_layer_cells
-local test_mode_input_test_draw 01D160,01D1BA,01D1D2,01D1D5,01D1E1,01D1F7,01D207,01D238 R11 item
+local test_mode_input_test_draw 01D160,01D1BA,01D1D2,01D1D5,01D1E1,01D1F7,01D207,01D238 R11 item input_test_bytes
 local test_mode_input_test_draw 01D16A R13 range volume_range
 local test_mode_input_test_draw 01D17A,01D185 R13 range
 local test_mode_input_test_draw 01D1CB,01D1EB,01D20C R13 port_b io     # the same port of monitor B's I/O chip (C80000 on) as R12 of monitor A's
@@ -7429,6 +7441,7 @@ local test_mode_game_assignments_draw 01DACC,01DB34 R9 stages_left
 local test_mode_game_assignments_draw 01DAA1 t3 bar_length     # game_difficulty * 2: two cells a level
 local test_mode_game_assignments_time 01DB68 R1 stage_item       # the item under the cursor, 1-6: the stage's time_difficulty is the item's byte from time_difficulty - 1
 local test_mode_game_assignments_time 01DB72,01DB79 R0 seconds
+local test_mode_game_assignments_time entry R20 current_object &settings_magic   # the game assignments page keeps R20 at the settings (test_mode_game_assignments)
 # The coin assignments. Their pages' item routines take in R1 what the page's loop left there (the
 # page's item count, 3 or 4, when SERVICE has just moved the cursor) and pass it on unused:
 # test_mode_coin_assignments_manual_draw keeps only its upper half, under the colours.
@@ -7595,12 +7608,12 @@ local test_mode_draw_minutes_seconds 01E9F5,01EA02,01EA07,01EA11 R1 colour
 local test_mode_draw_minutes_seconds 01E9F3 s4 saved_remainder
 local test_mode_draw_minutes_seconds 01E9FC,01EA02,01EA0E,01EA11 R10 number_cell
 local test_mode_draw_minutes_seconds 01E9F9,01EA0B R2 digit_count
-param test_mode_duration_to_seconds R10 duration        # a time kept as its seconds, minutes and hours (a byte each) and its days (a halfword after them): read from the days down
+param test_mode_duration_to_seconds R10 duration stored_duration   # a time kept as its seconds, minutes and hours (a byte each) and its days (a halfword after them): read from the days down
 result test_mode_duration_to_seconds R0 seconds
 local test_mode_duration_to_seconds 01EA1E,01EA2E,01EA44 R0 seconds
 constant test_mode_split_minutes_seconds 3C SECONDS_PER_MINUTE   # "divux #3C, R0" at 01EA4E
 param test_mode_split_minutes_seconds R0 seconds
-param test_mode_split_minutes_seconds R10 stored_time   # where it writes the seconds, then the minutes
+param test_mode_split_minutes_seconds R10 stored_time stored_duration   # where it writes the seconds, then the minutes
 local test_mode_split_minutes_seconds 01EA4B,01EA4E R1 remainder
 # The backup data clear, the exit and the colours
 local test_mode_backup_data_clear_start 01EDC4 R0 character
@@ -7920,6 +7933,8 @@ local print_text_layer 01187E R19 text_record text_characters
 local print_text_layer_list 011868 R19 text_record text_layer_record   # what print_text_layer hands back: the list's next string
 elements text_halfword_characters u16           # print_text_layer_halfwords' characters, ORed with the attribute
 local print_text_layer_halfwords 0118DC R19 text_record text_halfword_characters
+local network_check_blink_text entry R20 current_object text_layer_record   # the text record its caller points R20 at (not an object): its cell and attribute, then
+local network_check_blink_text 00D702,00D708 R20 current_object text_characters   # its characters, closed by 0
 # A string draw_text draws in sprites: its place (32 bits, x in the low half and y in the high half: "mov.w
 # [R19+], R3; rot.w #10, R3" 011A62), the attribute or-ed into the sprites' ("or.h [R19+], R5" 011A6F), then the
 # characters closed by 0 ("movea.b 6[R19], R18" 011A32, draw_text_sprites: text_characters); census
@@ -8129,7 +8144,7 @@ param race_car_draw_spray R27 spray race_car_spray                     # the spr
 param note_road_crest R27 crest_y
 param note_road_crest R28 crest_layer
 param road_row_hit_check R27 hit_kind                    # into the car's object (player_car hit_kind): 0 a crash, 3 slowed
-local car_select_entries_run 005F85 R27 lcd_text_end     # where the string move left off in the LCD's text
+local car_select_entries_run 005F85 R27 lcd_text_end lcd_characters   # where the string move left off in the LCD's text
 local race_car_draw 0098FB,00991C R27 first_rider race_car_rider
 local race_car_draw 009900,00991C R28 second_rider race_car_rider
 local race_car_draw 0099D7,0099E9,0099F3 R27 spray
@@ -8168,7 +8183,7 @@ local road_surface_halfway_lines 016EB5 R28 last_frame_points   # the other half
 local road_surface_halfway_lines 016EC9,016ED2,016EE8,016F0C,016F18,016F24 R28 last_frame_points road_points
 local road_tiles_change_update 0172DE,017405 R27 target_end
 local road_tiles_change_update 0172DE,017405 R28 source_end
-local lcd_update 018A91,018AC2 R27 text_end
+local lcd_update 018A91,018AC2 R27 text_end lcd_characters
 local test_mode_memory_test_blink 01CC85,01CC94 R27 next_cell text_layer_cells
 local test_mode_set_up_colours 01EFAE,01EFBB,01EFFC R27 palette_place
 
@@ -8361,7 +8376,7 @@ elements output_bits u32 ram          # the game's output bits as the output tes
 elements stage_game_counts u16 board  # how many games ended at a stage (701F24 on, seven: PRE-STAGE, STAGE 1-5, COMPLETE), which test_mode_bookkeeping_draw_histogram walks twice
 struct backup_course_record 6 board   # a course's record as the backup keeps it (701F32 on, ten: AUSTRALIA to KENYA), laid out as course_record: load_course_records copies it into course_records, test_mode_bookkeeping_draw_histogram shows it; a negative model: none
 field backup_course_record 04 time u16        # in hundredths
-scoped global test_mode_blink_prompt 20E708 test_mode_prompt_text u32   # test_mode_blink_address as the prompt pages use it: a text record of the ROM (test_mode_show_exit_prompt 01F2BC, test_mode_show_continue_prompt 01F2DE), not a cell; its walk of the record mixes halfwords and bytes, so it has no type
+scoped global test_mode_blink_prompt 20E708 test_mode_prompt_text u32 test_mode_text_bytes   # test_mode_blink_address as the prompt pages use it: a text record of the ROM (test_mode_show_exit_prompt 01F2BC, test_mode_show_continue_prompt 01F2DE), not a cell
 elements tile_pixel_rows u32 board    # a row of a tile's eight pixels in video RAM, 4 bits each (test_mode_set_up_colours: the four solid tiles from 318020)
 # The scenes' own (route map, car select, ranking, name entry, attract)
 elements player_place u8 ram          # a player's place in the race (screen places, 0 first): stage_result_line place_address (screen + 320 + player), the final place it draws big

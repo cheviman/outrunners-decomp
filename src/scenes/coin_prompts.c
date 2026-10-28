@@ -54,8 +54,8 @@ void coin_prompt_update(void)
 	OBJECT(current_object)->coin_prompt.car = OBJECT(current_object)->coin_prompt.next_car;
 	object = start_object();
 	OBJECT(object)->handler = coin_prompt_car_drive_ADDRESS;
-	OBJECT(object)->coin_prompt_car.car = OBJECT(current_object)->coin_prompt.next_car;
-	OBJECT(object)->coin_prompt_car.car_colour = OBJECT(current_object)->coin_prompt.next_car;
+	OBJECT(object)->car = OBJECT(current_object)->coin_prompt.next_car;
+	OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.next_car;
 	OBJECT(current_object)->coin_prompt.next_car++;
 	OBJECT(current_object)->coin_prompt.next_car &= 7u;
 	if (free_play != 0u)
@@ -85,7 +85,7 @@ void coin_prompt_update(void)
 			first_piece = 0u;
 			object = coin_prompt_start_key_prompt(piece_count, first_piece);
 			OBJECT(current_object)->coin_prompt.message = message;
-			OBJECT(object)->unk_0B = OBJECT(current_object)->coin_prompt.car;
+			OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.car;
 			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
 				SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
 			return;
@@ -100,7 +100,7 @@ void coin_prompt_update(void)
 		OBJECT(object)->coin_prompt_message.message = message;
 	}
 	OBJECT(current_object)->coin_prompt.message = message;
-	OBJECT(object)->unk_0B = OBJECT(current_object)->coin_prompt.car;
+	OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.car;
 	if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
 		SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
 }
@@ -115,9 +115,9 @@ void coin_prompt_car_drive(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
-		animation = coin_prompt_car_animations[OBJECT(current_object)->coin_prompt_car.car];
+		animation = coin_prompt_car_animations[OBJECT(current_object)->car];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_car_palettes[OBJECT(current_object)->coin_prompt_car.car_colour] + 4u;
+		OBJECT(current_object)->palette = coin_prompt_car_palettes[OBJECT(current_object)->car_colour] + 4u;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->width_scale = 0x40u;
 		OBJECT(current_object)->height_scale = 0x40u;
@@ -166,7 +166,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->draw_mode = 0u;
 		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->coin_prompt_message.car_colour];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->car_colour];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
@@ -181,7 +181,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->draw_mode = 0u;
 		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->coin_prompt_message.car_colour];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->car_colour];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;

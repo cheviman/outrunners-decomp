@@ -45,7 +45,7 @@ void road_object_stream_read(void)
 		if (SCREEN(screen)->route_stage == OBJECT(current_object)->road_object_stream.stage)
 			return;
 		OBJECT(current_object)->state -= 2u;
-		OBJECT(current_object)->road_object_stream.stream = DATA32(OBJECT(current_object)->road_object_stream.stream + CAR(player_car)->branch * 4u);
+		OBJECT(current_object)->road_object_stream.stream = ROAD_OBJECT_STREAM_FORKS(OBJECT(current_object)->road_object_stream.stream)[CAR(player_car)->branch];
 		break;
 	}
 	entry = OBJECT(current_object)->road_object_stream.stream;

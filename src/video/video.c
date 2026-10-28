@@ -137,19 +137,16 @@ uint16_t init_video(void)
 uint16_t reset_tile_layers(void)
 {
 	uint32_t index = 0;
-	uint32_t first_scroll_target = 0, second_scroll_target = 0;
 
 	VIDEO_CONTROL &= 0xFFFu;
 	video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
-	RAM32(video_registers_ADDRESS + 0x40u + index * 4u) = 0u;
-	RAM32(video_registers_ADDRESS + 0x48u + index * 4u) = 0u;
-	first_scroll_target = scroll_targets_ADDRESS + index * 8u;
-	mem_write32(first_scroll_target, 0u);
-	mem_write32(first_scroll_target + 4u, 0u);
-	second_scroll_target = scroll_targets_ADDRESS + 0x10u + index * 8u;
-	mem_write32(second_scroll_target, 0u);
-	mem_write32(second_scroll_target + 4u, 0u);
+	AS32(video_registers[32 + index * 2u]) = 0u;
+	AS32(video_registers[36 + index * 2u]) = 0u;
+	scroll_targets[index * 2u] = 0u;
+	scroll_targets[1 + index * 2u] = 0u;
+	scroll_targets[4 + index * 2u] = 0u;
+	scroll_targets[5 + index * 2u] = 0u;
 	return index;
 }
 

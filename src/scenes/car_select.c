@@ -1793,7 +1793,7 @@ void car_select_entries_run(void)
 		players_left = player_count;
 		do
 		{
-			mem_write8(lcd_text_end + mem_read8(0x20E02Fu + players_left), 0x5Fu);
+			LCD_CHARACTERS(lcd_text_end)[mem_read8(0x20E02Fu + players_left)] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];
@@ -1809,7 +1809,7 @@ void car_select_entries_run(void)
 		players_left = player_count;
 		do
 		{
-			mem_write8(lcd_text_end + mem_read8(0x20E02Fu + players_left), 0x5Fu);
+			LCD_CHARACTERS(lcd_text_end)[mem_read8(0x20E02Fu + players_left)] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];
@@ -1859,8 +1859,8 @@ void car_select_entries_run(void)
 					OBJECT(object)->stacked_choice_flag.below = OBJECT(car_flag)->choice_flag.top_flag;
 					OBJECT(car_flag)->choice_flag.top_flag = object;
 				}
-				OBJECT(object)->unk_09 = racer;
-				OBJECT(object)->unk_0A = chosen_car;
+				OBJECT(object)->number = racer;
+				OBJECT(object)->car = chosen_car;
 				OBJECT(current_object)->car_select_entries.shown_players |= shl32(1u, (int)(racer));
 			}
 		}
@@ -1884,7 +1884,7 @@ void choice_flag_start(void)
 	OBJECT(current_object)->depth_layer = 0xEEu;
 	animation = CHOICE_FLAG;
 	animation_start(animation);
-	car = OBJECT(current_object)->choice_flag.car;
+	car = OBJECT(current_object)->car;
 	OBJECT(current_object)->palette = choice_flag_palettes[car];
 	OBJECT(current_object)->choice_flag.angle = car << 9;
 	object = start_object();
@@ -1954,7 +1954,7 @@ void stacked_choice_flag_start(void)
 	OBJECT(current_object)->depth_layer = 0xEEu;
 	animation = CHOICE_FLAG;
 	animation_start(animation);
-	OBJECT(current_object)->palette = choice_flag_palettes[OBJECT(current_object)->stacked_choice_flag.car];
+	OBJECT(current_object)->palette = choice_flag_palettes[OBJECT(current_object)->car];
 	object = start_object();
 	OBJECT(object)->handler = choice_flag_number_start_ADDRESS;
 	OBJECT(object)->choice_flag_number.flag = current_object;

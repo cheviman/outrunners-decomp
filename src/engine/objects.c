@@ -97,7 +97,7 @@ uint32_t start_object(void)
 		object = screen - 0x7F00u;
 		return object;
 	}
-	mem_write8(free_flag, 0xFFu);
+	OBJECT_SLOT_FLAGS(free_flag)[0] = 0xFFu;
 	object = screen - 0x7C00u + (free_index << 8);
 	object_bytes = object;
 	for (uint32_t repeat = 0; repeat < 31u; repeat++)
@@ -133,7 +133,7 @@ uint32_t reserve_object_slot(void)
 		object = screen - 0x7F00u;
 		return object;
 	}
-	mem_write8(free_flag, 0xFFu);
+	OBJECT_SLOT_FLAGS(free_flag)[0] = 0xFFu;
 	object = LINKED(free_flag, (uint16_t)(free_flag << 8));
 	move_halfwords(object, zero_block_ADDRESS, 0x80u);
 	return object;
@@ -163,7 +163,7 @@ uint32_t start_object_list(uint32_t handler_list)
 	{
 		object = start_object();
 		OBJECT(object)->handler = OBJECT_HANDLERS(handler_list)[0];
-		OBJECT(object)->unk_09 = list_index;
+		OBJECT(object)->number = list_index;
 		list_index++;
 		objects_left--;
 		handler_list += 4u;

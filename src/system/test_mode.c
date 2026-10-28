@@ -1304,7 +1304,7 @@ uint16_t test_mode_input_test_draw(uint16_t character)
 		TEXT_LAYER_CELLS(cell)[(uint8_t)position >> 4] = 0x6403u;
 		colour = 0x64u;
 		digit_count = 2u;
-		cell = LINKED(cell, DATA16(item));
+		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 		r14 += 2u;
 		item += 2u;
 		cell = test_mode_draw_hex_number(position, colour, digit_count, cell);
@@ -1314,20 +1314,20 @@ uint16_t test_mode_input_test_draw(uint16_t character)
 	port_b = 0xC80000u;
 	do
 	{
-		port_a = (port_a & ~0xFFu) | DATA8(item);
+		port_a = (port_a & ~0xFFu) | INPUT_TEST_BYTES(item)[0];
 		item++;
-		bit = DATA8(item);
+		bit = INPUT_TEST_BYTES(item)[0];
 		carry = (io_read32(port_a) & shl32(1u, (int)(bit))) != 0u;
 		item++;
-		cell = LINKED(cell, DATA16(item));
+		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		port_b = (port_b & ~0xFFu) | (uint8_t)port_a;
 		carry = (io_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
 		item += 2u;
-		cell = LINKED(cell, DATA16(item));
+		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		item += 2u;
-	} while ((int16_t)DATA16(item) >= 0);
+	} while ((int16_t)AS16(INPUT_TEST_BYTES(item)[0]) >= 0);
 	port_a = (port_a & ~0xFFu) | 8u;
 	port_b = (port_b & ~0xFFu) | (uint8_t)port_a;
 	test_switches = io_read8(port_a);
@@ -1336,15 +1336,15 @@ uint16_t test_mode_input_test_draw(uint16_t character)
 	test_switches_b = io_read8(port_b) & (mem_read8((port_b & ~0xFFu) | (uint8_t)r12) >> 4);
 	carry = (test_switches & 1u) != 0u;
 	item += 2u;
-	cell = LINKED(cell, DATA16(item));
+	cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 	carry = (test_switches_b & 1u) != 0u;
 	item += 2u;
-	cell = LINKED(cell, DATA16(item));
+	cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 	test_switches = test_switches & test_switches_b;
 	carry = (test_switches & 2u) != 0u;
-	AS32(TEXT_LAYER_CELLS(LINKED(cell, DATA16(item + 2u)))[0]) = input_test_on_off_cells[carry];
+	AS32(TEXT_LAYER_CELLS(LINKED(cell, AS16(INPUT_TEST_BYTES(item)[2])))[0]) = input_test_on_off_cells[carry];
 	return test_switches;
 }
 
@@ -2056,10 +2056,10 @@ void test_mode_game_assignments_time(void)
 	uint32_t stage_item = 0;
 
 	stage_item = test_mode_page_cursor;
-	seconds = (uint8_t)(mem_read8(current_object + 0x31u + stage_item) + 1u);
+	seconds = (uint8_t)(time_difficulty[stage_item - 1u] + 1u);
 	if ((int8_t)seconds > 5)
 		seconds = 0xFBu;
-	mem_write8(current_object + 0x31u + stage_item, seconds);
+	time_difficulty[stage_item - 1u] = seconds;
 	test_mode_game_assignments_draw();
 }
 
@@ -2521,11 +2521,11 @@ void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t ite
 {
 	uint32_t setting = 0;
 
-	setting = (item_count & ~0xFFu) | mem_read8(current_object + setting_offset);
+	setting = (item_count & ~0xFFu) | RAM8(settings_magic_ADDRESS + setting_offset);
 	setting = (setting & ~0xFFu) | (uint8_t)(setting + 1u);
 	if ((uint8_t)setting >= 0xAu)
 		setting = (setting & ~0xFFu) | 1u;
-	mem_write8(current_object + setting_offset, setting);
+	RAM8(settings_magic_ADDRESS + setting_offset) = setting;
 	if (free_play == 0u)
 		coin_setting = 0x1Au;
 	test_mode_coin_assignments_manual_draw(setting);
@@ -3120,11 +3120,11 @@ uint32_t test_mode_duration_to_seconds(uint32_t duration)
 	uint32_t seconds = 0;
 
 	duration = duration + 5u - 2u;
-	seconds = mem_read16(duration) * 0x18u;
+	seconds = STORED_DURATION(duration - 0x3u)->days * 0x18u;
 	duration--;
-	seconds = (seconds + mem_read8(duration)) * 0x3Cu;
+	seconds = (seconds + STORED_DURATION(duration - 0x2u)->hours) * 0x3Cu;
 	duration--;
-	seconds = (seconds + mem_read8(duration)) * 0x3Cu + mem_read8(duration - 1u);
+	seconds = (seconds + STORED_DURATION(duration - 0x1u)->minutes) * 0x3Cu + STORED_DURATION(duration - 0x1u)->seconds;
 	return seconds;
 }
 
@@ -3136,8 +3136,8 @@ void test_mode_split_minutes_seconds(uint32_t seconds, uint32_t stored_time)
 
 	remainder = 0u;
 	divux_pair(SECONDS_PER_MINUTE, &seconds, &remainder);
-	mem_write8(stored_time, remainder);
-	mem_write8(stored_time + 1u, seconds);
+	STORED_DURATION(stored_time)->seconds = remainder;
+	STORED_DURATION(stored_time)->minutes = seconds;
 }
 
 /* Opens the BACKUP DATA CLEAR page: YES (CLEAR) and NO (CANCEL), the instructions, the cursor on NO;
@@ -3387,7 +3387,7 @@ void test_mode_blink_prompt(uint16_t character)
 	if ((int8_t)blink_timer >= 0)
 		return;
 	text = test_mode_prompt_text;
-	cell = 0x310000u | mem_read16(text);
+	cell = 0x310000u | AS16(TEST_MODE_TEXT_BYTES(text)[0]);
 	if (TEXT_LAYER_CELLS(cell)[0] == 0u)
 	{
 		test_mode_draw_texts(character, text);
@@ -3439,13 +3439,13 @@ uint16_t test_mode_draw_texts(uint16_t character, uint32_t text)
 	cell = TEXT_CELL(0, 0);
 	for (;;)
 	{
-		cell = LINKED(cell, mem_read16(text));
+		cell = LINKED(cell, AS16(TEST_MODE_TEXT_BYTES(text)[0]));
 		text += 2u;
 		if ((uint16_t)cell == 0u)
 			break;
 		for (;;)
 		{
-			character = (uint16_t)((character & ~0xFFu) | mem_read8(text));
+			character = (uint16_t)((character & ~0xFFu) | TEST_MODE_TEXT_BYTES(text)[0]);
 			text++;
 			if ((uint8_t)character == 0u)
 				break;

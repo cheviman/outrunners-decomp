@@ -377,7 +377,7 @@ void ranking_record_start(void)
    to the left, 16 pixels a frame, and ends at x -20. */
 void ranking_record_character_update(void)
 {
-	uint32_t animation = 0, character_index = 0, object = 0, ranking_record = 0;
+	uint32_t animation = 0, character_index = 0, object = 0;
 	uint8_t colour_delay = 0;
 	uint16_t frames_left = 0;
 
@@ -390,10 +390,10 @@ void ranking_record_character_update(void)
 		OBJECT(current_object)->palette = 0x27u;
 		animation = NAME_ENTRY_FONT;
 		animation_start(animation);
-		ranking_record = OBJECT(current_object)->ranking_record_character.ranking_record;
+		object = OBJECT(current_object)->ranking_record_character.ranking_record;
 		character_index = OBJECT(current_object)->ranking_record_character.index;
 		OBJECT(current_object)->depth_layer = OBJECT(current_object)->ranking_record_character.index;
-		OBJECT(current_object)->frame = mem_read8(ranking_record + 0x80u + character_index);
+		OBJECT(current_object)->frame = OBJECT(object)->ranking_record.text[(int32_t)character_index];
 		OBJECT(current_object)->x = ranking_record_character_xs[character_index];
 		OBJECT(current_object)->y = ranking_record_character_ys[character_index];
 		OBJECT(current_object)->ranking_record_character.slide_steps = 0u;
