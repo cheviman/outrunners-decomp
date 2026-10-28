@@ -231,7 +231,7 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 {
 	uint32_t carry = 0;
 	uint8_t control_value = 0, controller_number = 0, data_byte = 0, delta_byte = 0, delta_time_left_high = 0, delta_time_left_low = 0, delta_time_low = 0, meta_51_value = 0, meta_bytes_left = 0, meta_type = 0, new_delta_high = 0, playlist_byte = 0, playlist_player_low = 0, queued_byte = 0, status = 0, sysex_byte = 0, sysex_bytes_left = 0, system_status = 0, volume_value = 0, write_index = 0, zero_delta = 0;
-	uint16_t delta_time_at = 0, player = 0, player_address_2 = 0, playlist = 0, playlist_player = 0, position = 0, sequence_player = 0;
+	uint16_t delta_time_at = 0, player = 0, playlist = 0, playlist_player = 0, position = 0, sequence_player = 0;
 	uint8_t queue_page = 0, saved_write_index = 0;
 	uint16_t player_page_start = 0, saved_player = 0;
 	uint8_t controller = 0;
@@ -586,8 +586,8 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 		if (((SEQUENCE_PLAYER(player)->flags >> 4) & 1u) != 0u)
 		{
 			z80_block(17, 1);
-			player_address_2 = (playlist_player & ~0xFFu) | playlist_player_low;
-			start_sound(player_address_2, playlist_byte);
+			playlist_player |= playlist_player_low;
+			start_sound(playlist_player, playlist_byte);
 			z80_block(20, 2);
 			queue_pointer = ((uint32_t)queue_page << 8) | saved_write_index;
 			write_index = saved_write_index;

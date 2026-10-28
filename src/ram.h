@@ -1641,7 +1641,7 @@ extern const void *sound_test_exit_cell_data;
 #define sound_test_exit_cell (*(const uint16_t *)sound_test_exit_cell_data)
 #define sound_test_codes_ADDRESS 0x01D7C6u
 extern const void *sound_test_codes_data;
-#define sound_test_codes (*(const uint8_t *)sound_test_codes_data)
+#define sound_test_codes ((const uint8_t *)sound_test_codes_data)
 #define test_mode_game_assignments_item_jumps_ADDRESS 0x01DBD0u
 extern const void *test_mode_game_assignments_item_jumps_data;
 #define test_mode_game_assignments_item_jumps ((const uint32_t *)test_mode_game_assignments_item_jumps_data)

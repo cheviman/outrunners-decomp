@@ -358,10 +358,10 @@ void credit_display_update(void)
 		credit_display_digit();
 	}
 	OBJECT(current_object)->credit_display.digit_kind = 0u;
-	OBJECT(current_object)->credit_display.digit = credit_digit_characters[(uint8_t)units];
+	OBJECT(current_object)->credit_display.digit = credit_digit_characters[units];
 	OBJECT(current_object)->x = 0xB4u;
 	credit_display_digit();
-	if ((uint8_t)coin_units_shown != 0u)
+	if (coin_units_shown != 0u)
 	{
 		OBJECT(current_object)->credit_display.digit_kind = 1u;
 		OBJECT(current_object)->credit_display.digit = coin_units_shown;

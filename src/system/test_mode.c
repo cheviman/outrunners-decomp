@@ -1621,7 +1621,7 @@ void test_mode_sound_test_play_a(void)
 	sound_number = sound_test_number_a;
 	if (sound_number < 0x40u)
 	{
-		sound_code = mem_read8(sound_test_codes_ADDRESS + sound_number);
+		sound_code = sound_test_codes[sound_number];
 		if (sound_code == 0u)
 		{
 			sound_test_number_a = 0u;
@@ -1641,7 +1641,7 @@ void test_mode_sound_test_play_a(void)
 	saved_sound_number = sound_number;
 	test_mode_queue_sound(sound_set_request);
 	sound_number = saved_sound_number;
-	sound_code = mem_read8(sound_test_codes_ADDRESS + sound_number);
+	sound_code = sound_test_codes[sound_number];
 	if (sound_code == 0u)
 	{
 		sound_test_number_a = 0u;
@@ -1662,7 +1662,7 @@ void test_mode_sound_test_play_b(void)
 	sound_number = sound_test_number_b;
 	if (sound_number < 0x40u)
 	{
-		sound_code = mem_read8(sound_test_codes_ADDRESS + sound_number);
+		sound_code = sound_test_codes[sound_number];
 		if (sound_code == 0u)
 		{
 			sound_test_number_b = 0u;
@@ -1682,7 +1682,7 @@ void test_mode_sound_test_play_b(void)
 	saved_sound_number = sound_number;
 	test_mode_queue_sound_screen_2(sound_set_request);
 	sound_number = saved_sound_number;
-	sound_code = mem_read8(sound_test_codes_ADDRESS + sound_number);
+	sound_code = sound_test_codes[sound_number];
 	if (sound_code == 0u)
 	{
 		sound_test_number_b = 0u;

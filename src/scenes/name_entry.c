@@ -284,13 +284,13 @@ void name_entry_update(void)
 												name_place = kept_place;
 												saved_letter = kept_letter;
 												entered_letter = saved_letter;
-												letter_character = mem_read8(name_entry_letters_ADDRESS + saved_letter);
+												letter_character = name_entry_letters[saved_letter];
 												if (entered_letter == 0x1Du)
 													letter_character = 0x20u;
 												OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
-												name_place = (name_place & ~0xFFu) | (uint8_t)(name_place + 1u);
+												name_place = (uint8_t)(name_place + 1u);
 											}
-											if (L_00212C || (uint8_t)name_place != 3u)
+											if (L_00212C || name_place != 3u)
 											{
 												L_00212C = false;
 												OBJECT(current_object)->name_entry.place = name_place;

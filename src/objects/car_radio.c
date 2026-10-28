@@ -89,7 +89,7 @@ void car_radio_read_buttons(void)
    remarks (dj_remark_lists), 5 nothing. */
 void car_radio_update(void)
 {
-	bool L_019118 = false, L_019132 = false, L_019137 = false, L_01914C = false, L_019154 = false, L_019167 = false, L_019180 = false;
+	bool L_019132 = false, L_019137 = false, L_01914C = false, L_019185 = false, L_0191A8 = false;
 	uint8_t fade_level = 0, message = 0, queued_message = 0, route_stage = 0, sound = 0;
 	uint16_t buttons = 0;
 	uint32_t car_number = 0, object = 0, remark_choice = 0, remark_list = 0, remark_routine = 0, song = 0, song_number = 0, title = 0;
@@ -116,321 +116,262 @@ void car_radio_update(void)
 			{
 				do
 				{
-					do
+					jump_target = L_01914C ? 0x1914Cu : L_019132 ? 0x19132u : L_019137 ? 0x190F0u : L_019185 ? 0x19154u : car_radio_state_jumps[OBJECT(current_object)->state];
+					switch (jump_target)
 					{
-						do
+					case 0x019068u:
+						song_number = CAR(player_car)->song;
+						song_number = car_radio_song(song_number);
+						request_sound((uint8_t)song_number);
+						OBJECT(current_object)->state++;
+					case 0x019078u:
+						buttons = OBJECT(current_object)->car_radio.buttons;
+						if ((buttons & 0x100u) != 0u)
 						{
-							jump_target = L_019118 ? 0x190F0u : L_019132 ? 0x190F0u : L_01914C ? 0x190F0u : L_019154 ? 0x190F0u : L_019167 ? 0x190F0u : L_019180 ? 0x190F0u : car_radio_state_jumps[OBJECT(current_object)->state];
-							switch (jump_target)
+							OBJECT(current_object)->state = 2u;
+							sound = 0x1Fu;
+							request_sound(sound);
+							return;
+						}
+						if ((buttons & 0x200u) != 0u)
+						{
+							if ((buttons & 0x400u) != 0u)
 							{
-							case 0x019068u:
-								song_number = CAR(player_car)->song;
+								song_number = 0xAu;
 								song_number = car_radio_song(song_number);
 								request_sound((uint8_t)song_number);
-								OBJECT(current_object)->state++;
-							case 0x019078u:
-								buttons = OBJECT(current_object)->car_radio.buttons;
-								if ((buttons & 0x100u) != 0u)
-								{
-									OBJECT(current_object)->state = 2u;
-									sound = 0x1Fu;
-									request_sound(sound);
-									return;
-								}
-								if ((buttons & 0x200u) != 0u)
-								{
-									if ((buttons & 0x400u) != 0u)
-									{
-										song_number = 0xAu;
-										song_number = car_radio_song(song_number);
-										request_sound((uint8_t)song_number);
-										return;
-									}
-									sound = 0x1Fu;
-									request_sound(sound);
-									song = CAR(player_car)->song;
-									previous_song = song - 1u;
-									song_number = previous_song;
-									if ((int8_t)previous_song < 0)
-										song_number = 9u;
-									CAR(player_car)->song = song_number;
-									song_number = car_radio_song(song_number);
-									request_sound((uint8_t)song_number);
-									return;
-								}
-								if ((buttons & 0x400u) == 0u && (buttons & 0x40u) == 0u)
-									return;
-								sound = 0x1Fu;
-								request_sound(sound);
-								song_number = CAR(player_car)->song;
-								song_number = (uint8_t)(song_number + 1u);
-								if ((int8_t)song_number < 0xA)
-								{
-									CAR(player_car)->song = song_number;
-									song_number = car_radio_song(song_number);
-									request_sound((uint8_t)song_number);
-									return;
-								}
-								song_number = 0u;
+								return;
+							}
+							sound = 0x1Fu;
+							request_sound(sound);
+							song = CAR(player_car)->song;
+							previous_song = song - 1u;
+							song_number = previous_song;
+							if ((int8_t)previous_song >= 0)
+							{
 								CAR(player_car)->song = song_number;
 								song_number = car_radio_song(song_number);
 								request_sound((uint8_t)song_number);
 								return;
-							case 0x0190F0u:
-								if (!L_019118)
-								{
-									if (!L_019132)
-									{
-										if (!L_01914C)
-										{
-											if (!L_019154)
-											{
-												if (!L_019167)
-												{
-													if (!L_019180)
-													{
-														title = radio_station_title_ADDRESS;
-														car_radio_show_title(title);
-														OBJECT(current_object)->car_radio.queued_message = 0x29u;
-													}
-												}
-											}
-										}
-									}
-								}
-								do
-								{
-									if (L_019137 || (!L_019118 && !L_019132 && (L_01914C || L_019154 || L_019167 || L_019180 || SCREEN(screen)->nearing_fork != 0u)))
-									{
-										if (L_019137 || L_01914C || !L_019154)
-										{
-											if (L_019137 || L_01914C || !L_019167)
-											{
-												if (L_019137 || L_01914C || !L_019180)
-												{
-													if (L_019137 || !L_01914C)
-													{
-														L_019137 = false;
-														sound = 0xE0u;
-														request_sound(sound);
-														OBJECT(current_object)->car_radio.timer = 0xB4u;
-														OBJECT(current_object)->state = 5u;
-													}
-													L_01914C = false;
-													timer = OBJECT(current_object)->car_radio.timer;
-													OBJECT(current_object)->car_radio.timer = timer - 1u;
-												}
-											}
-										}
-										if (L_019154 || L_019167 || L_019180 || timer == 1u)
-										{
-											if (L_019154 || !L_019167)
-											{
-												if (L_019154 || !L_019180)
-												{
-													if (!L_019154)
-														OBJECT(current_object)->state++;
-													L_019154 = false;
-												}
-											}
-											if (!L_019167 && !L_019180 && SCREEN(screen)->nearing_fork == 0u)
-											{
-												OBJECT(current_object)->car_radio.queued_message = stage_level_radio_messages[SCREEN(screen)->current_stage_level];
-												sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
-												request_sound(sound);
-												OBJECT(current_object)->state = 3u;
-											}
-											else
-											{
-												if (L_019167 || !L_019180)
-												{
-													if (!L_019167)
-													{
-														sound = 0xEEu;
-														request_sound(sound);
-														OBJECT(current_object)->state++;
-													}
-													L_019167 = false;
-												}
-												if (L_019180 || SCREEN(screen)->nearing_fork == 0u)
-												{
-													if (!L_019180)
-													{
-														fade_level = 0x7Fu;
-														fade_out_music_at(fade_level);
-														OBJECT(current_object)->car_radio.timer = 0x78u;
-														OBJECT(current_object)->state++;
-													}
-													L_019180 = false;
-													timer_2 = OBJECT(current_object)->car_radio.timer;
-													OBJECT(current_object)->car_radio.timer = timer_2 - 1u;
-													if (timer_2 == 1u)
-													{
-														OBJECT(current_object)->car_radio.queued_message = stage_level_radio_messages[SCREEN(screen)->current_stage_level];
-														sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
-														request_sound(sound);
-														OBJECT(current_object)->state = 3u;
-													}
-												}
-											}
-										}
-									}
-									else
-									{
-										if (L_019118 || !L_019132)
-										{
-											if (!L_019118)
-											{
-												sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
-												request_sound(sound);
-												OBJECT(current_object)->state++;
-											}
-											L_019118 = false;
-										}
-										if (L_019132 || SCREEN(screen)->nearing_fork != 0u)
-										{
-											if (!L_019132)
-											{
-												fade_level = 0x3Fu;
-												fade_out_music_at(fade_level);
-												OBJECT(current_object)->car_radio.timer = 0x3Cu;
-												OBJECT(current_object)->state++;
-											}
-											L_019132 = false;
-											timer_3 = OBJECT(current_object)->car_radio.timer;
-											OBJECT(current_object)->car_radio.timer = timer_3 - 1u;
-											L_019137 = timer_3 == 1u;
-										}
-									}
-								} while (L_019137);
-								if ((OBJECT(current_object)->car_radio.buttons & 0x700u) != 0u)
-								{
-									OBJECT(current_object)->state = 0u;
-									OBJECT(current_object)->car_radio.talk_step = 4u;
-									SCREEN(screen)->dj_mouth_shapes = 0u;
-									sound = 0x1Fu;
-									request_sound(sound);
-									return;
-								}
-								if (SCREEN(screen)->dj_mouth_shapes != 0u)
-								{
-									OBJECT(current_object)->car_radio.queued_message = 0u;
-									return;
-								}
-								switch (OBJECT(current_object)->car_radio.talk_step)
-								{
-								case 0:
-									message = 0u;
-									start_dj_message(message);
-									OBJECT(current_object)->car_radio.talk_step++;
-									return;
-								case 1:
-									car_number = OBJECT(current_object)->car_radio.next_car_number;
-									while ((int8_t)OBJECT(current_object)->car_radio.car_models[(int32_t)car_number] < 0)
-									{
-										car_number = (uint8_t)(car_number + 1u);
-									}
-									OBJECT(current_object)->car_radio.next_car_number = car_number;
-									car_number = (uint8_t)(car_number + 9u);
-									start_dj_message((uint8_t)car_number);
-									OBJECT(current_object)->car_radio.talk_step++;
-									return;
-								case 2:
-									message = (uint8_t)(OBJECT(current_object)->car_radio.car_models[OBJECT(current_object)->car_radio.next_car_number] + 1u);
-									start_dj_message(message);
-									OBJECT(current_object)->car_radio.next_car_number++;
-									cars_to_introduce = OBJECT(current_object)->car_radio.cars_to_introduce;
-									OBJECT(current_object)->car_radio.cars_to_introduce = cars_to_introduce - 1u;
-									if (cars_to_introduce == 1u)
-									{
-										OBJECT(current_object)->car_radio.talk_step++;
-										return;
-									}
-									OBJECT(current_object)->car_radio.talk_step--;
-									return;
-								case 3:
-									message = 0x2Au;
-									start_dj_message(message);
-									OBJECT(current_object)->car_radio.talk_step++;
-									return;
-								case 4:
-									queued_message = OBJECT(current_object)->car_radio.queued_message;
-									if (queued_message != 0u)
-									{
-										OBJECT(current_object)->car_radio.remark_list = 0u;
-										start_dj_message(queued_message);
-										return;
-									}
-									if (OBJECT(current_object)->state != 3u)
-										return;
-									remark_list = OBJECT(current_object)->car_radio.remark_list;
-									if (remark_list == 0u)
-									{
-										remark_choice = random_number();
-										remark_choice &= 0x3FFu;
-										if ((int32_t)remark_choice >= 0xE)
-											return;
-										remark_list = dj_remark_lists[remark_choice];
-									}
-									remark_routine = REMARK_ROUTINES(remark_list)[0];
-									remark_list += 4u;
-									if (REMARK_ROUTINES(remark_list)[0] == 0u)
-										remark_list = 0u;
-									OBJECT(current_object)->car_radio.remark_list = remark_list;
-									switch (remark_routine)
-									{
-									case 0x01929Eu:
-										car_radio_dj_leader();
-										return;
-									case 0x0192B1u:
-										car_radio_dj_own_car();
-										return;
-									case 0x0192BCu:
-										car_radio_dj_remark_2a();
-										return;
-									case 0x0192C3u:
-										car_radio_dj_remark_2b();
-										return;
-									case 0x0192CAu:
-										car_radio_dj_remark_2d();
-										return;
-									case 0x0192D1u:
-										car_radio_dj_remark_2f();
-										return;
-									case 0x0192D8u:
-										car_radio_dj_remark_2c();
-										return;
-									}
-									break;
-								case 5:
-									return;
-								}
-								break;
-							case 0x019118u:
-								L_019118 = true;
-								break;
-							case 0x019132u:
-								L_019132 = true;
-								break;
-							case 0x01914Cu:
-								L_01914C = true;
-								break;
-							case 0x019154u:
-								L_019154 = true;
-								break;
-							case 0x019167u:
-								L_019167 = true;
-								break;
-							case 0x019180u:
-								L_019180 = true;
-								break;
 							}
-						} while (L_019118);
-					} while (L_019132);
+							song_number = 9u;
+							CAR(player_car)->song = song_number;
+							song_number = car_radio_song(song_number);
+							request_sound((uint8_t)song_number);
+							return;
+						}
+						if ((buttons & 0x400u) == 0u && (buttons & 0x40u) == 0u)
+							return;
+						sound = 0x1Fu;
+						request_sound(sound);
+						song_number = CAR(player_car)->song;
+						song_number = (uint8_t)(song_number + 1u);
+						if ((int8_t)song_number < 0xA)
+						{
+							CAR(player_car)->song = song_number;
+							song_number = car_radio_song(song_number);
+							request_sound((uint8_t)song_number);
+							return;
+						}
+						song_number = 0u;
+						CAR(player_car)->song = song_number;
+						song_number = car_radio_song(song_number);
+						request_sound((uint8_t)song_number);
+						return;
+					case 0x0190F0u:
+						if (!L_019137)
+						{
+							title = radio_station_title_ADDRESS;
+							car_radio_show_title(title);
+							OBJECT(current_object)->car_radio.queued_message = 0x29u;
+						}
+						if (L_019137 || SCREEN(screen)->nearing_fork != 0u)
+						{
+							L_019137 = false;
+							sound = 0xE0u;
+							request_sound(sound);
+							OBJECT(current_object)->car_radio.timer = 0xB4u;
+							OBJECT(current_object)->state = 5u;
+							L_01914C = true;
+						}
+						if (L_01914C)
+							break;
+						sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
+						request_sound(sound);
+						OBJECT(current_object)->state++;
+					case 0x019118u:
+						if (SCREEN(screen)->nearing_fork != 0u)
+						{
+							fade_level = 0x3Fu;
+							fade_out_music_at(fade_level);
+							OBJECT(current_object)->car_radio.timer = 0x3Cu;
+							OBJECT(current_object)->state++;
+							L_019132 = true;
+						}
+						if (L_019132)
+							break;
+						L_0191A8 = true;
+						break;
+					case 0x019132u:
+						L_019132 = false;
+						timer = OBJECT(current_object)->car_radio.timer;
+						OBJECT(current_object)->car_radio.timer = timer - 1u;
+						L_0191A8 = timer != 1u;
+						if (L_0191A8)
+							break;
+						L_019137 = true;
+						break;
+					case 0x01914Cu:
+						L_01914C = false;
+						timer_2 = OBJECT(current_object)->car_radio.timer;
+						OBJECT(current_object)->car_radio.timer = timer_2 - 1u;
+						L_0191A8 = timer_2 != 1u;
+						if (L_0191A8)
+							break;
+						OBJECT(current_object)->state++;
+					case 0x019154u:
+						if (L_019185 || SCREEN(screen)->nearing_fork == 0u)
+						{
+							L_019185 = false;
+							OBJECT(current_object)->car_radio.queued_message = stage_level_radio_messages[SCREEN(screen)->current_stage_level];
+							sound = route_stage_radio_sounds[SCREEN(screen)->route_stage];
+							request_sound(sound);
+							OBJECT(current_object)->state = 3u;
+							L_0191A8 = true;
+						}
+						if (L_0191A8)
+							break;
+						sound = 0xEEu;
+						request_sound(sound);
+						OBJECT(current_object)->state++;
+					case 0x019167u:
+						L_0191A8 = SCREEN(screen)->nearing_fork != 0u;
+						if (L_0191A8)
+							break;
+						fade_level = 0x7Fu;
+						fade_out_music_at(fade_level);
+						OBJECT(current_object)->car_radio.timer = 0x78u;
+						OBJECT(current_object)->state++;
+					case 0x019180u:
+						timer_3 = OBJECT(current_object)->car_radio.timer;
+						OBJECT(current_object)->car_radio.timer = timer_3 - 1u;
+						L_0191A8 = timer_3 != 1u;
+						if (L_0191A8)
+							break;
+						L_019185 = true;
+						break;
+					}
 				} while (L_01914C);
-			} while (L_019154);
-		} while (L_019167);
-	} while (L_019180);
+			} while (L_019132);
+			if (L_0191A8)
+				break;
+		} while (L_019137);
+		if (L_0191A8)
+		{
+			if ((OBJECT(current_object)->car_radio.buttons & 0x700u) != 0u)
+			{
+				OBJECT(current_object)->state = 0u;
+				OBJECT(current_object)->car_radio.talk_step = 4u;
+				SCREEN(screen)->dj_mouth_shapes = 0u;
+				sound = 0x1Fu;
+				request_sound(sound);
+				return;
+			}
+			if (SCREEN(screen)->dj_mouth_shapes != 0u)
+			{
+				OBJECT(current_object)->car_radio.queued_message = 0u;
+				return;
+			}
+			switch (OBJECT(current_object)->car_radio.talk_step)
+			{
+			case 0:
+				message = 0u;
+				start_dj_message(message);
+				OBJECT(current_object)->car_radio.talk_step++;
+				return;
+			case 1:
+				car_number = OBJECT(current_object)->car_radio.next_car_number;
+				while ((int8_t)OBJECT(current_object)->car_radio.car_models[(int32_t)car_number] < 0)
+				{
+					car_number = (uint8_t)(car_number + 1u);
+				}
+				OBJECT(current_object)->car_radio.next_car_number = car_number;
+				car_number = (uint8_t)(car_number + 9u);
+				start_dj_message((uint8_t)car_number);
+				OBJECT(current_object)->car_radio.talk_step++;
+				return;
+			case 2:
+				message = (uint8_t)(OBJECT(current_object)->car_radio.car_models[OBJECT(current_object)->car_radio.next_car_number] + 1u);
+				start_dj_message(message);
+				OBJECT(current_object)->car_radio.next_car_number++;
+				cars_to_introduce = OBJECT(current_object)->car_radio.cars_to_introduce;
+				OBJECT(current_object)->car_radio.cars_to_introduce = cars_to_introduce - 1u;
+				if (cars_to_introduce == 1u)
+				{
+					OBJECT(current_object)->car_radio.talk_step++;
+					return;
+				}
+				OBJECT(current_object)->car_radio.talk_step--;
+				return;
+			case 3:
+				message = 0x2Au;
+				start_dj_message(message);
+				OBJECT(current_object)->car_radio.talk_step++;
+				return;
+			case 4:
+				queued_message = OBJECT(current_object)->car_radio.queued_message;
+				if (queued_message != 0u)
+				{
+					OBJECT(current_object)->car_radio.remark_list = 0u;
+					start_dj_message(queued_message);
+					return;
+				}
+				if (OBJECT(current_object)->state != 3u)
+					return;
+				remark_list = OBJECT(current_object)->car_radio.remark_list;
+				if (remark_list == 0u)
+				{
+					remark_choice = random_number();
+					remark_choice &= 0x3FFu;
+					if ((int32_t)remark_choice >= 0xE)
+						return;
+					remark_list = dj_remark_lists[remark_choice];
+				}
+				remark_routine = REMARK_ROUTINES(remark_list)[0];
+				remark_list += 4u;
+				if (REMARK_ROUTINES(remark_list)[0] == 0u)
+					remark_list = 0u;
+				OBJECT(current_object)->car_radio.remark_list = remark_list;
+				switch (remark_routine)
+				{
+				case 0x01929Eu:
+					car_radio_dj_leader();
+					return;
+				case 0x0192B1u:
+					car_radio_dj_own_car();
+					return;
+				case 0x0192BCu:
+					car_radio_dj_remark_2a();
+					return;
+				case 0x0192C3u:
+					car_radio_dj_remark_2b();
+					return;
+				case 0x0192CAu:
+					car_radio_dj_remark_2d();
+					return;
+				case 0x0192D1u:
+					car_radio_dj_remark_2f();
+					return;
+				case 0x0192D8u:
+					car_radio_dj_remark_2c();
+					return;
+				}
+				break;
+			case 5:
+				return;
+			}
+		}
+	} while (L_019185);
 }
 
 /* A DJ remark: message 11 plus the car number of the car in the lead. */
@@ -545,122 +486,49 @@ uint32_t start_song_title(uint32_t song_title)
    that cycle every 2 frames (song_title_colours by colour_step). */
 void song_title_show(void)
 {
-	bool L_019387 = false, L_01938A = false;
 	uint32_t negative = 0;
 	uint16_t colour = 0, next_speed = 0, speed = 0;
 	uint32_t colour_step = 0, position = 0, record = 0, text = 0;
 	uint16_t time_left = 0, new_time_left = 0;
-	uint32_t jump_target = 0;
 
-	do
+	switch (OBJECT(current_object)->state)
 	{
-		jump_target = L_01938A ? 0x19369u : song_title_state_jumps[OBJECT(current_object)->state];
-		switch (jump_target)
+	case 0:
+		record = OBJECT(current_object)->song_title.text;
+		OBJECT(current_object)->x = SONG_TITLE_RECORD(record)->x;
+		record += 2u;
+		OBJECT(current_object)->song_title.text = record;
+		SCREEN(screen)->lcd_scroll_request = record;
+		OBJECT(current_object)->song_title.slide = 0xD2;
+		OBJECT(current_object)->song_title.y = 0xC8u;
+		OBJECT(current_object)->song_title.speed = 0x14u;
+		OBJECT(current_object)->state++;
+	case 1:
+		if ((uint16_t)OBJECT(current_object)->song_title.time_left != 0u)
 		{
-		case 0x019344u:
-			record = OBJECT(current_object)->song_title.text;
-			OBJECT(current_object)->x = SONG_TITLE_RECORD(record)->x;
-			record += 2u;
-			OBJECT(current_object)->song_title.text = record;
-			SCREEN(screen)->lcd_scroll_request = record;
-			OBJECT(current_object)->song_title.slide = 0xD2;
-			OBJECT(current_object)->song_title.y = 0xC8u;
-			OBJECT(current_object)->song_title.speed = 0x14u;
-			OBJECT(current_object)->state++;
-		case 0x019369u:
-			do
-			{
-				if (L_019387 || L_01938A || (uint16_t)OBJECT(current_object)->song_title.time_left == 0u)
-				{
-					if (L_019387 || !L_01938A)
-					{
-						L_019387 = false;
-						OBJECT(current_object)->state++;
-					}
-					L_01938A = false;
-					time_left = OBJECT(current_object)->song_title.time_left;
-					new_time_left = time_left - 1u;
-					negative = new_time_left >> 15;
-					OBJECT(current_object)->song_title.time_left = new_time_left;
-					if ((int16_t)time_left > 1)
-					{
-						position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
-						position = (position & ~0xFFFFu) | (uint16_t)(position + OBJECT(current_object)->x);
-						colour_step = OBJECT(current_object)->song_title.colour_step;
-						colour_step = (uint8_t)(colour_step + 1u);
-						OBJECT(current_object)->song_title.colour_step = colour_step;
-						colour_step = colour_step >> 1;
-						colour = song_title_colours[colour_step & 7u];
-						text = OBJECT(current_object)->song_title.text;
-						draw_text_at(position, colour, text);
-						return;
-					}
-					if (negative)
-					{
-						OBJECT(current_object)->state += 2u;
-						position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
-						position = (position & ~0xFFFFu) | (uint16_t)(position - 0x28u);
-						OBJECT(current_object)->song_title.slide = (uint16_t)position;
-						OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
-						if ((int16_t)position <= -0xD2)
-						{
-							OBJECT(current_object)->flags = 0u;
-							return;
-						}
-					}
-					else
-					{
-						OBJECT(current_object)->state++;
-						position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
-						next_speed = (uint16_t)(OBJECT(current_object)->song_title.speed + 1u);
-						position = (position & ~0xFFFFu) | (uint16_t)(position - next_speed);
-						OBJECT(current_object)->song_title.speed = next_speed;
-						OBJECT(current_object)->song_title.slide = (uint16_t)position;
-						OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
-						if ((int16_t)position <= -0xD2)
-						{
-							OBJECT(current_object)->flags = 0u;
-							return;
-						}
-					}
-				}
-				else
-				{
-					position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
-					speed = OBJECT(current_object)->song_title.speed;
-					position = (position & ~0xFFFFu) | (uint16_t)(position - speed);
-					OBJECT(current_object)->song_title.speed = speed - 1u;
-					OBJECT(current_object)->song_title.slide = (uint16_t)position;
-					OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
-					L_019387 = (uint16_t)position == 0u;
-				}
-			} while (L_019387);
-			break;
-		case 0x01938Au:
-			L_01938A = true;
-			break;
-		case 0x019394u:
 			position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
-			next_speed = (uint16_t)(OBJECT(current_object)->song_title.speed + 1u);
-			position = (position & ~0xFFFFu) | (uint16_t)(position - next_speed);
-			OBJECT(current_object)->song_title.speed = next_speed;
+			speed = OBJECT(current_object)->song_title.speed;
+			position = (position & ~0xFFFFu) | (uint16_t)(position - speed);
+			OBJECT(current_object)->song_title.speed = speed - 1u;
 			OBJECT(current_object)->song_title.slide = (uint16_t)position;
 			OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
-			if ((int16_t)position <= -0xD2)
-			{
-				OBJECT(current_object)->flags = 0u;
-				return;
-			}
-			position = (position & ~0xFFFFu) | (uint16_t)(position + OBJECT(current_object)->x);
-			colour_step = OBJECT(current_object)->song_title.colour_step;
-			colour_step = (uint8_t)(colour_step + 1u);
-			OBJECT(current_object)->song_title.colour_step = colour_step;
-			colour_step = colour_step >> 1;
-			colour = song_title_colours[colour_step & 7u];
-			text = OBJECT(current_object)->song_title.text;
-			draw_text_at(position, colour, text);
-			return;
-		case 0x0193BAu:
+			if ((uint16_t)position != 0u)
+				break;
+		}
+		OBJECT(current_object)->state++;
+	case 2:
+		time_left = OBJECT(current_object)->song_title.time_left;
+		new_time_left = time_left - 1u;
+		negative = new_time_left >> 15;
+		OBJECT(current_object)->song_title.time_left = new_time_left;
+		if ((int16_t)time_left > 1)
+		{
+			position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
+			break;
+		}
+		if (negative)
+		{
+			OBJECT(current_object)->state += 2u;
 			position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
 			position = (position & ~0xFFFFu) | (uint16_t)(position - 0x28u);
 			OBJECT(current_object)->song_title.slide = (uint16_t)position;
@@ -670,17 +538,34 @@ void song_title_show(void)
 				OBJECT(current_object)->flags = 0u;
 				return;
 			}
-			position = (position & ~0xFFFFu) | (uint16_t)(position + OBJECT(current_object)->x);
-			colour_step = OBJECT(current_object)->song_title.colour_step;
-			colour_step = (uint8_t)(colour_step + 1u);
-			OBJECT(current_object)->song_title.colour_step = colour_step;
-			colour_step = colour_step >> 1;
-			colour = song_title_colours[colour_step & 7u];
-			text = OBJECT(current_object)->song_title.text;
-			draw_text_at(position, colour, text);
+			break;
+		}
+		OBJECT(current_object)->state++;
+	case 3:
+		position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
+		next_speed = (uint16_t)(OBJECT(current_object)->song_title.speed + 1u);
+		position = (position & ~0xFFFFu) | (uint16_t)(position - next_speed);
+		OBJECT(current_object)->song_title.speed = next_speed;
+		OBJECT(current_object)->song_title.slide = (uint16_t)position;
+		OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
+		if ((int16_t)position <= -0xD2)
+		{
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-	} while (L_01938A);
+		break;
+	case 4:
+		position = ((uint16_t)OBJECT(current_object)->song_title.slide | ((uint32_t)OBJECT(current_object)->song_title.y << 16u));
+		position = (position & ~0xFFFFu) | (uint16_t)(position - 0x28u);
+		OBJECT(current_object)->song_title.slide = (uint16_t)position;
+		OBJECT(current_object)->song_title.y = (uint16_t)(position >> 16u);
+		if ((int16_t)position <= -0xD2)
+		{
+			OBJECT(current_object)->flags = 0u;
+			return;
+		}
+		break;
+	}
 	position = (position & ~0xFFFFu) | (uint16_t)(position + OBJECT(current_object)->x);
 	colour_step = OBJECT(current_object)->song_title.colour_step;
 	colour_step = (uint8_t)(colour_step + 1u);
