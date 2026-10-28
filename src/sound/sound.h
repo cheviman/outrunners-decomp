@@ -3,7 +3,7 @@
  *    Description: the sound program's ports, variables, tables, structures and functions
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -623,13 +623,13 @@ void sound_irq(void);
 void sound_main_loop(void);
 void drum_timeout_tick(void);
 void sound_init(void);
-uint16_t init_fm_chip(void);
+void init_fm_chip(void);
 uint16_t write_fm_channel(uint8_t fm_register, uint8_t value);
 void write_fm(uint8_t fm_register, uint8_t value);
 void write_fm_part2(uint8_t fm_register, uint8_t value);
 void init_pcm_chip(void);
 void write_pcm_register(uint8_t pcm_register, uint8_t value);
-void init_voice_channels(uint32_t unused_c);
+void init_voice_channels(void);
 void init_parts(void);
 uint16_t read_table_word(uint16_t table, uint8_t entry);
 

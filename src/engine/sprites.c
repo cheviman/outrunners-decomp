@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -16,7 +16,7 @@
    offsets (20, 24) and set fields 30 and 32 to where it lands and 3C to the road's depth layer there,
    some draw it at the screen position in 30 and 32, some copy a ready sprite entry from the address in
    field 38; then links it into the depth list of layer 3C (screen + 5000). */
-uint32_t draw_object(uint32_t routine_then_layer)
+uint16_t draw_object(uint32_t routine_then_layer)
 {
 	uint32_t depth_list = 0, layer_head = 0, left_caller = 0, sprite_entry = 0;
 
@@ -146,33 +146,39 @@ void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, 
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
-	if ((int16_t)window_segment <= (int16_t)segment)
+	if ((int16_t)segment < (int16_t)window_segment)
 	{
-		projected_offset = (uint16_t)(projected_offset * 0x10u);
-		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
-		if (scale != 0u)
-		{
-			projected_offset = (uint16_t)(projected_offset + 0x10u);
-			r12 = screen + 0x3000u + projected_offset;
-			next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
-			if (next_scale != 0u)
-			{
-				ring_offset = (uint16_t)(ring_offset << 5);
-				position_fraction = OBJECT(current_object)->position_fraction;
-				near_weight = (uint16_t)(0x80u - position_fraction);
-				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
-				scale = (scale * near_weight + next_scale * position_fraction) >> 7;
-				draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
-				*p_leftover = x;
-				return;
-			}
-		}
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
 	}
-	*p_left_caller = 1u;
-	*p_leftover = projected_offset;
+	projected_offset = (uint16_t)(projected_offset * 0x10u);
+	projected_segment = screen + 0x3000u + projected_offset;
+	scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
+	if (scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	projected_offset = (uint16_t)(projected_offset + 0x10u);
+	r12 = screen + 0x3000u + projected_offset;
+	next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
+	if (next_scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	ring_offset = (uint16_t)(ring_offset << 5);
+	position_fraction = OBJECT(current_object)->position_fraction;
+	near_weight = (uint16_t)(0x80u - position_fraction);
+	x = OBJECT(current_object)->x_offset + (uint32_t)ROAD_SEGMENT(screen + 0x2000u + (ring_offset & 0xFFFu))->half_width * OBJECT(current_object)->side;
+	x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
+	y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
+	scale = (scale * near_weight + next_scale * position_fraction) >> 7;
+	draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+	*p_leftover = x;
 }
 
 /* Draw mode 7: as draw_object_from_road_edge, at the size of scale_shift 0 whatever the object's. */
@@ -187,33 +193,39 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_spri
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
-	if ((int16_t)window_segment <= (int16_t)segment)
+	if ((int16_t)segment < (int16_t)window_segment)
 	{
-		projected_offset = (uint16_t)(projected_offset * 0x10u);
-		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
-		if (scale != 0u)
-		{
-			projected_offset = (uint16_t)(projected_offset + 0x10u);
-			r12 = screen + 0x3000u + projected_offset;
-			next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
-			if (next_scale != 0u)
-			{
-				ring_offset = (uint16_t)(ring_offset << 5);
-				position_fraction = OBJECT(current_object)->position_fraction;
-				near_weight = (uint16_t)(0x80u - position_fraction);
-				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
-				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 11;
-				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
-				*p_leftover = x;
-				return;
-			}
-		}
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
 	}
-	*p_left_caller = 1u;
-	*p_leftover = projected_offset;
+	projected_offset = (uint16_t)(projected_offset * 0x10u);
+	projected_segment = screen + 0x3000u + projected_offset;
+	scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
+	if (scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	projected_offset = (uint16_t)(projected_offset + 0x10u);
+	r12 = screen + 0x3000u + projected_offset;
+	next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
+	if (next_scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	ring_offset = (uint16_t)(ring_offset << 5);
+	position_fraction = OBJECT(current_object)->position_fraction;
+	near_weight = (uint16_t)(0x80u - position_fraction);
+	x = OBJECT(current_object)->x_offset + (uint32_t)ROAD_SEGMENT(screen + 0x2000u + (ring_offset & 0xFFFu))->half_width * OBJECT(current_object)->side;
+	x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
+	y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
+	scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 11;
+	draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+	*p_leftover = x;
 }
 
 /* Draw mode B (the traffic cars'): as draw_object_from_road_edge, at twice the size of
@@ -229,33 +241,39 @@ void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
-	if ((int16_t)window_segment <= (int16_t)segment)
+	if ((int16_t)segment < (int16_t)window_segment)
 	{
-		projected_offset = (uint16_t)(projected_offset * 0x10u);
-		projected_segment = screen + 0x3000u + projected_offset;
-		scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
-		if (scale != 0u)
-		{
-			projected_offset = (uint16_t)(projected_offset + 0x10u);
-			r12 = screen + 0x3000u + projected_offset;
-			next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
-			if (next_scale != 0u)
-			{
-				ring_offset = (uint16_t)(ring_offset << 5);
-				position_fraction = OBJECT(current_object)->position_fraction;
-				near_weight = (uint16_t)(0x80u - position_fraction);
-				x = OBJECT(current_object)->x_offset + (uint32_t)mem_read16(screen + 0x2000u + (ring_offset & 0xFFFu) + 0x12u) * OBJECT(current_object)->side;
-				x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
-				y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
-				scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 10;
-				draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
-				*p_leftover = x;
-				return;
-			}
-		}
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
 	}
-	*p_left_caller = 1u;
-	*p_leftover = projected_offset;
+	projected_offset = (uint16_t)(projected_offset * 0x10u);
+	projected_segment = screen + 0x3000u + projected_offset;
+	scale = (int16_t)PROJECTED_SEGMENT(projected_segment)->scale;
+	if (scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	projected_offset = (uint16_t)(projected_offset + 0x10u);
+	r12 = screen + 0x3000u + projected_offset;
+	next_scale = (int16_t)PROJECTED_SEGMENT(r12)->scale;
+	if (next_scale == 0u)
+	{
+		*p_left_caller = 1u;
+		*p_leftover = projected_offset;
+		return;
+	}
+	ring_offset = (uint16_t)(ring_offset << 5);
+	position_fraction = OBJECT(current_object)->position_fraction;
+	near_weight = (uint16_t)(0x80u - position_fraction);
+	x = OBJECT(current_object)->x_offset + (uint32_t)ROAD_SEGMENT(screen + 0x2000u + (ring_offset & 0xFFFu))->half_width * OBJECT(current_object)->side;
+	x = (int32_t)((int16_t)(((int32_t)(x * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x) * near_weight + (int16_t)(((int32_t)(x * next_scale) >> 12) + PROJECTED_SEGMENT(r12)->x) * position_fraction) >> 7;
+	y = (uint16_t)((int32_t)((int16_t)PROJECTED_SEGMENT(projected_segment)->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
+	scale = (int32_t)(scale * near_weight + next_scale * position_fraction) >> 10;
+	draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
+	*p_leftover = x;
 }
 
 /* Draw mode 4: as draw_object_at_segment, but the segment counted from the screen car's own
@@ -277,8 +295,7 @@ void draw_object_at_car_window_segment(uint32_t *p_leftover, uint32_t *p_sprite_
 		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
-			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			x = (uint16_t)(((int32_t)(OBJECT(current_object)->x_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x);
 			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
 			*p_leftover = x;
@@ -309,8 +326,7 @@ void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint
 		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
-			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			x = (uint16_t)(((int32_t)(OBJECT(current_object)->x_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x);
 			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			scale = shift_by(scale, OBJECT(current_object)->scale_shift, 32) >> 4;
 			draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
@@ -340,8 +356,7 @@ void draw_object_at_car_window_segment_on_road(uint32_t *p_leftover, uint32_t *p
 		scale = PROJECTED_SEGMENT(projected_segment)->scale;
 		if (scale != 0u)
 		{
-			x = (int32_t)(OBJECT(current_object)->x_offset * scale) >> 12;
-			x = (x & ~0xFFFFu) | (uint16_t)(x + PROJECTED_SEGMENT(projected_segment)->x);
+			x = (uint16_t)(((int32_t)(OBJECT(current_object)->x_offset * scale) >> 12) + PROJECTED_SEGMENT(projected_segment)->x);
 			y = PROJECTED_SEGMENT(projected_segment)->y;
 			draw_object_at_segment_scale(y, projected_segment, &x, p_sprite_entry, p_left_caller);
 			*p_leftover = x;

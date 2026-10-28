@@ -3,7 +3,7 @@
  *    Description: unpacking the tile pages and the lists of packed blocks, a step each frame
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -315,9 +315,9 @@ void unpack_tile_pages(uint32_t page_list)
 	uint32_t destination = 0, entry_word = 0, page_bits = 0, source = 0;
 	uint32_t next_entry = 0;
 
-	while ((int32_t)mem_read32(page_list) >= 0)
+	while ((int32_t)TILE_PAGE_ENTRIES(page_list)[0] >= 0)
 	{
-		page_bits = mem_read32(page_list);
+		page_bits = TILE_PAGE_ENTRIES(page_list)[0];
 		entry_word = page_bits;
 		page_bits &= ~0xFFFFFFu;
 		destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;

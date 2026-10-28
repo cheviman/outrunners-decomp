@@ -56,7 +56,7 @@ comment drum_timeout_tick The drum notes' time-out, on every timer tick: drum_ti
 comment sound_init Sets the sound up at reset: the MultiPCM (init_pcm_chip) and the YM3438 (init_fm_chip); both screens' MIDI queues empty (screen_1_midi_write 0, screen_1_midi_read and screen_2_midi_read FF), next_voice the first voice, screen_1_tick_countdown 1, drum_timeout_wait 140 ticks, both music volumes FF; the voices' chip channels (init_voice_channels) and both screens' parts (init_parts); last, YM3438 register 27 = 15: timer A loaded and its interrupt on.
 
 01ED  func  init_fm_chip
-comment init_fm_chip Sets the YM3438 up: fm_global_init's 11 pairs on part I (the LFO on, timer A 3F0 and timer B FF, all six channels keyed off, the DAC off), then fm_operator_init's 36 pairs on both parts (every operator silent: total level 7F, release FF, no SSG-EG). Hands back the last register written in last_register.
+comment init_fm_chip Sets the YM3438 up: fm_global_init's 11 pairs on part I (the LFO on, timer A 3F0 and timer B FF, all six channels keyed off, the DAC off), then fm_operator_init's 36 pairs on both parts (every operator silent: total level 7F, release FF, no SSG-EG).
 
 0212  func  write_fm_channel
 comment write_fm_channel Writes value to the YM3438 register fm_register on the part fm_channel's bit 2 picks (write_fm_part2 when it is set, else write_fm); hands fm_register back with value in its high byte.
@@ -895,7 +895,6 @@ field  tyre_noise  03  duration            u8
 
 # ======== parameters ========
 
-param  init_fm_chip              bc  last_register
 param  write_fm_channel          bc  fm_register
 param  write_fm_channel          a   value
 param  write_fm                  bc  fm_register
@@ -904,7 +903,6 @@ param  write_fm_part2            bc  fm_register
 param  write_fm_part2            a   value
 param  write_pcm_register        bc  pcm_register
 param  write_pcm_register        a   value
-param  init_voice_channels       bc  unused_c
 param  read_table_word           hl  table
 param  read_table_word           a   entry
 param  skip_midi_data_screen_1   bc  first_byte
@@ -1082,7 +1080,6 @@ local  start_song                    4238,423B  hl  song_record     # the song's
 # ======== locals (batch Z80) ========
 # The values the C still named after the Z80's registers; the names of SegaSonic's sound program where the
 # code is the same (its play_midi_message, step_player, the FM patch loops).
-local  sound_init                    01B7  bc last_register                               # BC as init_fm_chip hands it back (the last register number of fm_operator_init); only passed on to init_voice_channels, which does not use it
 local  init_fm_chip                  01F0,01F9,01FE,020F  b  pairs_left                   # B: the register/value pairs of fm_global_init (11) and fm_operator_init (36) left (DJNZ at 01F9, 020F)
 local  write_fm_channel              0219  bc  register_and_value                         # BC handed back: the register in C, the value in B (one instruction, 0219, on both ways out: the C wrote it as two variables, bc and bc_2)
 local  init_pcm_chip                 029E,02C2  b  voices_left                            # B: the 28 entries of voice_chip_channels set up (DJNZ at 02C2)

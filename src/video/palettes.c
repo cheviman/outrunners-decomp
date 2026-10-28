@@ -3,7 +3,7 @@
  *    Description: the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -67,7 +67,7 @@ void queue_palette_upload(uint32_t list_flag, uint32_t colour_record)
 	if ((int32_t)SCREEN(upload_queue - 0x900u)->palette_upload_count < 0x80)
 	{
 		upload_count = SCREEN(upload_queue - 0x900u)->palette_upload_count + 1u;
-		mem_write32(upload_queue + upload_count * 4u, colour_record | list_flag);
+		SCREEN(upload_queue - 0x900u)->palette_uploads[(int32_t)(upload_count - 1u)] = colour_record | list_flag;
 		SCREEN(upload_queue - 0x900u)->palette_upload_count = upload_count;
 	}
 }
@@ -396,7 +396,8 @@ void race_background_fade_palettes(uint32_t fade_list)
    and ends. */
 void race_background_fade_watch_update(void)
 {
-	uint32_t all_flags = 0, fade = 0, fade_flags = 0, fade_slot = 0, fades_left = 0;
+	uint8_t all_flags = 0, fade_flags = 0;
+	uint32_t fade = 0, fade_slot = 0, fades_left = 0;
 
 	all_flags = 0u;
 	fade_slot = current_object + 0x80u;
@@ -407,7 +408,7 @@ void race_background_fade_watch_update(void)
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
-			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
+			fade_flags = (uint8_t)(OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				BACKGROUND_FADES(fade_slot)[-1] = 0u;
@@ -453,8 +454,8 @@ uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint3
    (to) into its differences (54 on); then palette_fade_step. */
 void palette_fade_prepare(void)
 {
-	uint16_t to_colour = 0;
-	uint32_t difference_place = 0, from = 0, from_colour = 0, to = 0;
+	uint16_t from_colour = 0, to_colour = 0;
+	uint32_t difference_place = 0, from = 0, to = 0;
 	uint8_t colours_left = 0;
 
 	from = OBJECT(current_object)->palette_fade.from;
@@ -471,10 +472,7 @@ void palette_fade_prepare(void)
 	to_colour = to_colour >> 5;
 	PALETTE_FADE_DIFFERENCES(difference_place)[0] = (from_colour & 0x1Fu) - (to_colour & 0x1Fu);
 	difference_place++;
-	from_colour = from_colour >> 5;
-	from_colour = from_colour & 0x1Fu;
-	from_colour = (uint8_t)(from_colour - ((to_colour >> 5) & 0x1Fu));
-	PALETTE_FADE_DIFFERENCES(difference_place)[0] = from_colour;
+	PALETTE_FADE_DIFFERENCES(difference_place)[0] = ((from_colour >> 5) & 0x1Fu) - ((to_colour >> 5) & 0x1Fu);
 	difference_place++;
 	colours_left = OBJECT(current_object)->palette_fade.colours_left;
 	OBJECT(current_object)->palette_fade.colours_left = colours_left - 1u;
@@ -483,7 +481,7 @@ void palette_fade_prepare(void)
 	if (colours_left == 1u)
 	{
 		OBJECT(current_object)->handler = palette_fade_step_ADDRESS;
-		palette_fade_step(from_colour);
+		palette_fade_step();
 		return;
 	}
 	OBJECT(current_object)->palette_fade.from = from;
@@ -497,16 +495,17 @@ void palette_fade_prepare(void)
    and queues them (queue_palette_list with its record at 28: 8 bytes, the colours, palette_offset,
    blocks); ends when no colour moved, or when the screen fades out (screen flags bit 0, with fade_kind
    at most 5 and even). */
-void palette_fade_step(uint32_t from_colour)
+void palette_fade_step(void)
 {
 	bool L_0186AA = false, L_0186B2 = false, L_0186BA = false, L_0186CB = false, L_0186D1 = false, L_0186D7 = false, L_0186E0 = false, L_0186E9 = false, L_0186F2 = false;
+	uint8_t fade_kind = 0;
 	uint16_t colour_step = 0;
-	uint32_t colour_place = 0, colours_left = 0, difference_place = 0, fade_kind = 0, upload = 0;
+	uint32_t colour_place = 0, colours_left = 0, difference_place = 0, upload = 0;
 	uint8_t delay = 0;
 
 	if ((SCREEN(screen)->flags & 1u) != 0u)
 	{
-		fade_kind = (from_colour & ~0xFFu) | SCREEN(screen)->fade_kind;
+		fade_kind = SCREEN(screen)->fade_kind;
 		if ((int8_t)fade_kind <= 5 && (fade_kind & 1u) == 0u)
 		{
 			OBJECT(current_object)->flags = 0u;

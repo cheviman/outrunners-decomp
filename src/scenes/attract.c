@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -103,12 +103,12 @@ void bar_picture_bar_fly(void)
 		OBJECT(current_object)->y = y_motion;
 		if (landed == 0u)
 		{
-			y_motion = draw_object(y_motion);
+			draw_object(y_motion);
 			return;
 		}
 		OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
 		OBJECT(current_object)->frame = 0xDu;
-		y_motion = draw_object(y_motion);
+		draw_object(y_motion);
 		return;
 	}
 	y_motion = 1u;
@@ -121,21 +121,19 @@ void bar_picture_bar_fly(void)
 	OBJECT(current_object)->y = y_motion;
 	if (landed == 0u)
 	{
-		y_motion = draw_object(y_motion);
+		draw_object(y_motion);
 		return;
 	}
 	OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
 	OBJECT(current_object)->frame = 0xDu;
-	y_motion = draw_object(y_motion);
+	draw_object(y_motion);
 }
 
 /* Only unused code reaches it (bar_picture_start): the bar in its place: draws it (draw_object) each
    frame. */
 void bar_picture_bar_draw(void)
 {
-	uint32_t ignored = 0;
-
-	ignored = draw_object(0u);
+	draw_object(0u);
 }
 
 /* The lamp show of the attract modes (game_mode_title, game_mode_car_presentation, game_mode_demo_race,
@@ -168,12 +166,9 @@ void attract_lamps_update(void)
    the picture's colours cycle. State 2 (the palette only, no picture) is not set by its own code. */
 void car_presentation_update(void)
 {
-	uint32_t animation = 0, background_setup = 0, colour_list = 0, object = 0, palette_index = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, background_setup = 0, colour_list = 0, object = 0, palette_index = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = car_presentation_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		object = start_object();
@@ -189,16 +184,15 @@ void car_presentation_update(void)
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0x60u;
 		OBJECT(current_object)->depth_layer = 0u;
-		routine = SCREEN(screen)->attract_car;
-		animation = attract_car_picture_animations[routine];
+		animation = attract_car_picture_animations[SCREEN(screen)->attract_car];
 		OBJECT(current_object)->palette = 0x275u;
 		animation_start(animation);
 		animation_advance(0u);
-		draw_object(routine);
+		draw_object(0u);
 		break;
 	case 1:
 		animation_advance(0u);
-		draw_object(routine);
+		draw_object(0u);
 		palette_index = OBJECT(current_object)->car_presentation.palette_step;
 		colour_list = car_presentation_palette_cycle[palette_index];
 		if (colour_list == 0u)
@@ -231,16 +225,16 @@ void staff_credits_code_start(void)
 	uint32_t zero = 0;
 	uint32_t new_controls = 0;
 
-	staff_credits_code_read_controls(0u, &new_controls, &zero);
+	staff_credits_code_read_controls(&new_controls, &zero);
 	OBJECT(current_object)->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
 	OBJECT(current_object)->handler = staff_credits_code_watch_ADDRESS;
-	staff_credits_code_watch(new_controls, 0u);
+	staff_credits_code_watch(new_controls);
 }
 
 /* Watches the controls for the code (staff_credits_code_sequence: shift down twice, shift up twice, the
    wheel left, right, left, right, the brake, the gas; a wrong one starts over); when it is complete:
    sound 9, the presentation 1200 frames longer (screen mode_timer), and staff_credits_code_show. */
-void staff_credits_code_watch(uint32_t new_controls, uint32_t control_reading)
+void staff_credits_code_watch(uint32_t new_controls)
 {
 	uint32_t zero = 0;
 	uint8_t sound_code = 0;
@@ -248,7 +242,7 @@ void staff_credits_code_watch(uint32_t new_controls, uint32_t control_reading)
 	uint8_t element = 0;
 	uint32_t presentation_timer = 0;
 
-	staff_credits_code_read_controls(control_reading, &new_controls, &zero);
+	staff_credits_code_read_controls(&new_controls, &zero);
 	if (zero)
 	{
 		staff_credits_code_done();
@@ -307,33 +301,33 @@ void staff_credits_code_done(void)
 /* Reads the controls as bits (0 shift up, 1 shift down, 2 the wheel right, 3 the wheel left, 4 the
    brake, 5 the gas, each with less needed to stay on), keeps them in controls_held and returns the ones
    newly on (zero set when there are none). */
-void staff_credits_code_read_controls(uint32_t control_reading, uint32_t *p_new_controls, uint32_t *p_zero)
+void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero)
 {
 	uint32_t new_controls = *p_new_controls;
 	uint32_t zero = *p_zero;
-	uint8_t controls_now = 0, newly_on = 0;
-	uint32_t control_bit = 0, held_before = 0, reading = 0;
+	uint8_t controls_now = 0, newly_on = 0, reading = 0;
+	uint32_t control_bit = 0, held_before = 0;
 	uint8_t pressed_controls = 0;
 
 	held_before = (new_controls & ~0xFFu) | OBJECT(current_object)->staff_credits_code.controls_held;
 	controls_now = 0u;
-	reading = (control_reading & ~0xFFu) | (uint8_t)~SCREEN(screen)->wheel;
+	reading = (uint8_t)~SCREEN(screen)->wheel;
 	if ((held_before & 8u) != 0u)
 	{
-		if ((uint8_t)reading < 0x40u)
+		if (reading < 0x40u)
 			controls_now |= 8u;
 	}
-	else if ((uint8_t)reading < 0x20u)
+	else if (reading < 0x20u)
 		controls_now |= 8u;
 	control_bit = 2u;
-	controls_now = staff_credits_code_control_bit(held_before, controls_now, (uint8_t)reading, control_bit);
-	reading = (reading & ~0xFFu) | SCREEN(screen)->gas;
+	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
+	reading = SCREEN(screen)->gas;
 	control_bit = 5u;
-	controls_now = staff_credits_code_control_bit(held_before, controls_now, (uint8_t)reading, control_bit);
-	reading = (reading & ~0xFFu) | SCREEN(screen)->brake;
+	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
+	reading = SCREEN(screen)->brake;
 	control_bit = 4u;
-	controls_now = staff_credits_code_control_bit(held_before, controls_now, (uint8_t)reading, control_bit);
-	reading = (reading & ~0xFFu) | (uint8_t)SCREEN(screen)->buttons;
+	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
+	reading = (uint8_t)SCREEN(screen)->buttons;
 	if ((reading & 0x10u) != 0u)
 		controls_now |= 1u;
 	if ((reading & 0x20u) != 0u)
@@ -353,10 +347,10 @@ uint8_t staff_credits_code_control_bit(uint32_t held_before, uint8_t controls_no
 {
 	if ((held_before & shl32(1u, (int)(control_bit))) != 0u)
 	{
-		if ((uint8_t)reading >= 0xC0u)
+		if (reading >= 0xC0u)
 			controls_now |= shl32(1u, (int)(control_bit));
 	}
-	else if ((uint8_t)reading >= 0xE0u)
+	else if (reading >= 0xE0u)
 	{
 		controls_now |= shl32(1u, (int)(control_bit));
 		return controls_now;
@@ -398,7 +392,7 @@ void car_name_start(void)
    ends once x is negative. */
 void car_name_letter_update(void)
 {
-	uint32_t animation = 0, ignored = 0;
+	uint32_t animation = 0;
 	uint8_t delay = 0, slide_frames = 0;
 	uint16_t frames_left = 0;
 
@@ -447,7 +441,7 @@ void car_name_letter_update(void)
 		if (frames_left == 1u)
 			OBJECT(current_object)->state++;
 		step_palette();
-		ignored = draw_object(0u);
+		draw_object(0u);
 		return;
 	case 2:
 		OBJECT(current_object)->x -= 0x18u;
@@ -460,7 +454,7 @@ void car_name_letter_update(void)
 		if (frames_left == 1u)
 			OBJECT(current_object)->state++;
 		step_palette();
-		ignored = draw_object(0u);
+		draw_object(0u);
 		return;
 	case 3:
 		break;
@@ -469,7 +463,7 @@ void car_name_letter_update(void)
 		if ((int16_t)OBJECT(current_object)->x >= 0)
 		{
 			step_palette();
-			ignored = draw_object(0u);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->flags = 0u;
@@ -480,7 +474,7 @@ void car_name_letter_update(void)
 	if (frames_left == 1u)
 		OBJECT(current_object)->state++;
 	step_palette();
-	ignored = draw_object(0u);
+	draw_object(0u);
 }
 
 /* The captions over the demo race of the attract mode: counts its frames and runs the routines of
@@ -596,13 +590,10 @@ void demo_captions_start(uint8_t first_record, uint32_t record_count)
    0-7, 240 for 8-11), animated and drawn until frames_left runs out. */
 void demo_caption_update(void)
 {
-	uint32_t animation = 0, picture = 0, record_offset = 0, state_routine = 0;
+	uint32_t animation = 0, picture = 0;
 	uint16_t frames_left = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	state_routine = demo_caption_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
@@ -615,12 +606,11 @@ void demo_caption_update(void)
 			return;
 		}
 		animation_advance(0u);
-		state_routine = draw_object(state_routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->draw_mode = 0u;
-	record_offset = (uint32_t)OBJECT(current_object)->demo_caption.record << 4;
-	picture = demo_caption_pictures_ADDRESS + record_offset;
+	picture = demo_caption_pictures_ADDRESS + ((uint32_t)OBJECT(current_object)->demo_caption.record << 4);
 	animation = PICTURE_RECORD(picture)->animation;
 	picture += 2u;
 	animation_start(animation);
@@ -638,5 +628,5 @@ void demo_caption_update(void)
 	OBJECT(current_object)->demo_caption.frames_left = PICTURE_RECORD(picture - 0xCu)->frames_left;
 	OBJECT(current_object)->state++;
 	animation_advance(0u);
-	record_offset = draw_object(record_offset);
+	draw_object(0u);
 }

@@ -3,7 +3,7 @@
  *    Description: the text: the fonts, the text layer's strings, numbers in hexadecimal and BCD, text in sprites
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -298,7 +298,7 @@ void draw_text_at(uint32_t place, uint16_t attribute, uint32_t text)
 	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
 	font = text_sprite_font;
 	attribute |= text_sprite_palette;
-	text = draw_text_sprites(sprite_words_0, sprite_size, place, font, attribute, sprite, sprite_copy, text);
+	draw_text_sprites(sprite_words_0, sprite_size, place, font, attribute, sprite, sprite_copy, text);
 }
 
 /* Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character

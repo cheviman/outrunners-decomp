@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -106,7 +106,8 @@ void race_car_draw(void)
 	bool L_00978F = false, L_009874 = false, L_009AAD = false, L_009B31 = false;
 	uint8_t hard_acceleration_frame = 0, wheel_effect_sides = 0;
 	uint16_t crash_text_y = 0, element = 0, far_segment = 0, other_spray = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
-	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, first_rider = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
+	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, depth_list = 0, distance_behind = 0, first_rider = 0, gestures_shown = 0, group = 0, ignored = 0, older_group = 0, own_race = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
+	uint8_t second_rider_gesture = 0;
 	uint16_t past_limit = 0, swapped_rider = 0, swapped_spray = 0;
 
 	OBJECT(current_object)->race_car.blink_counter++;
@@ -278,8 +279,10 @@ void race_car_draw(void)
 					r12 = RACE_CAR_RIDER(first_rider)->animation + view;
 					sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
 				}
-				r12 = (r12 & ~0xFFu) | OBJECT(current_object)->race_car.gesture_shown;
-				if ((r12 & RACE_CAR_RIDER(second_rider)->gesture_mask) == 0u)
+				gestures_shown = (r12 & ~0xFFu) | OBJECT(current_object)->race_car.gesture_shown;
+				second_rider_gesture = gestures_shown & RACE_CAR_RIDER(second_rider)->gesture_mask;
+				r12 = (gestures_shown & ~0xFFu) | second_rider_gesture;
+				if (second_rider_gesture == 0u)
 				{
 					r14 = second_rider_frame;
 					rider_places = RACE_CAR_RIDER(second_rider)->places;

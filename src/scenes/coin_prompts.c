@@ -3,7 +3,7 @@
  *    Description: the prompts for coins and the ignition key, and the credits shown
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -109,19 +109,15 @@ void coin_prompt_update(void)
    one of the eight cars (car) at a quarter of its size, 14 a frame, ending at the left edge. */
 void coin_prompt_car_drive(void)
 {
-	uint32_t animation = 0, palette = 0;
+	uint32_t animation = 0;
 	uint16_t x = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	palette = coin_prompt_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		animation = coin_prompt_car_animations[OBJECT(current_object)->coin_prompt_car.car];
 		animation_start(animation);
-		palette = (uint16_t)(coin_prompt_car_palettes[OBJECT(current_object)->coin_prompt_car.car_colour] + 4u);
-		OBJECT(current_object)->palette = palette;
+		OBJECT(current_object)->palette = coin_prompt_car_palettes[OBJECT(current_object)->coin_prompt_car.car_colour] + 4u;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		OBJECT(current_object)->width_scale = 0x40u;
 		OBJECT(current_object)->height_scale = 0x40u;
@@ -138,7 +134,7 @@ void coin_prompt_car_drive(void)
 	OBJECT(current_object)->x = x;
 	if ((int16_t)x >= 0)
 	{
-		palette = draw_object(palette);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->flags = 0u;
@@ -150,18 +146,15 @@ void coin_prompt_car_drive(void)
    before, then a layer back for 30 frames, and ends; ends at once when the prompt's message changes. */
 void coin_prompt_message_update(void)
 {
-	uint32_t animation = 0, car_colour = 0;
+	uint32_t animation = 0;
 	uint8_t frames = 0, frames_2 = 0, frames_3 = 0;
-	uint32_t state = 0;
 
 	if (OBJECT(OBJECT(current_object)->coin_prompt_message.prompt)->coin_prompt.message != OBJECT(current_object)->coin_prompt_message.message)
 	{
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	state = OBJECT(current_object)->state;
-	car_colour = coin_prompt_message_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->coin_prompt_message.frames = 6u;
@@ -173,8 +166,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->draw_mode = 0u;
 		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(animation);
-		car_colour = OBJECT(current_object)->coin_prompt_message.car_colour;
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[car_colour];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->coin_prompt_message.car_colour];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
@@ -189,8 +181,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->draw_mode = 0u;
 		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
 		animation_start(animation);
-		car_colour = OBJECT(current_object)->coin_prompt_message.car_colour;
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[car_colour];
+		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->coin_prompt_message.car_colour];
 		OBJECT(current_object)->x = 0xA0u;
 		OBJECT(current_object)->y = 0xC0u;
 		OBJECT(current_object)->depth_layer = 0x19Du;
@@ -204,7 +195,7 @@ void coin_prompt_message_update(void)
 		OBJECT(current_object)->coin_prompt_message.frames = frames_2 - 1u;
 		if (frames_2 != 1u)
 		{
-			car_colour = draw_object(car_colour);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->flags = 0u;
@@ -215,7 +206,7 @@ void coin_prompt_message_update(void)
 	OBJECT(current_object)->coin_prompt_message.frames = frames_3 - 1u;
 	if (frames_3 != 1u)
 	{
-		car_colour = draw_object(car_colour);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->depth_layer--;
@@ -225,7 +216,7 @@ void coin_prompt_message_update(void)
 	OBJECT(current_object)->coin_prompt_message.frames = frames_2 - 1u;
 	if (frames_2 != 1u)
 	{
-		car_colour = draw_object(car_colour);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->flags = 0u;
@@ -254,13 +245,10 @@ uint32_t coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_piece)
    runs out (24 or 30 frames) and ends. */
 void ignition_key_prompt_update(void)
 {
-	uint32_t animation = 0, piece = 0, piece_offset = 0, state_routine = 0;
+	uint32_t animation = 0, piece = 0;
 	uint16_t frames_left = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	state_routine = ignition_key_prompt_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
@@ -273,12 +261,11 @@ void ignition_key_prompt_update(void)
 			return;
 		}
 		animation_advance(0u);
-		state_routine = draw_object(state_routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->draw_mode = 0u;
-	piece_offset = (uint32_t)OBJECT(current_object)->ignition_key_prompt.piece << 4;
-	piece = ignition_key_prompt_pieces_ADDRESS + piece_offset;
+	piece = ignition_key_prompt_pieces_ADDRESS + ((uint32_t)OBJECT(current_object)->ignition_key_prompt.piece << 4);
 	animation = PICTURE_RECORD(piece)->animation;
 	piece += 2u;
 	animation_start(animation);
@@ -296,7 +283,7 @@ void ignition_key_prompt_update(void)
 	OBJECT(current_object)->ignition_key_prompt.frames_left = PICTURE_RECORD(piece - 0xCu)->frames_left;
 	OBJECT(current_object)->state++;
 	animation_advance(0u);
-	piece_offset = draw_object(piece_offset);
+	draw_object(0u);
 }
 
 /* The credits line under the prompt (title, car presentations, demo races); ends in game mode 6. With
@@ -307,8 +294,8 @@ void ignition_key_prompt_update(void)
    and C8), each drawn with credit_display_digit. */
 void credit_display_update(void)
 {
-	uint8_t coin_units_shown = 0, units = 0;
-	uint32_t coin_units = 0, credits = 0, ignored = 0, text = 0;
+	uint8_t coin_units = 0, coin_units_shown = 0, credits = 0, units = 0;
+	uint32_t text = 0;
 	uint32_t credits_kept = 0, coin_units_kept = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -323,14 +310,14 @@ void credit_display_update(void)
 		{
 			OBJECT(current_object)->state++;
 			text = credit_free_play_text_ADDRESS;
-			ignored = draw_text(text);
+			draw_text(text);
 			return;
 		}
 		OBJECT(current_object)->state += 2u;
 		break;
 	case 1:
 		text = credit_free_play_text_ADDRESS;
-		ignored = draw_text(text);
+		draw_text(text);
 		return;
 	case 2:
 		break;

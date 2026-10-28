@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -36,7 +36,8 @@ void isdn_count_players(void)
    down, then a fade out; 6 when it is over, game mode 2 (the title). */
 void game_mode_isdn_connection(void)
 {
-	uint32_t colour_block = 0, handler_list = 0, lamp_place = 0, link_status = 0;
+	uint8_t link_status = 0;
+	uint32_t colour_block = 0, handler_list = 0, lamp_place = 0;
 	uint8_t mode_timer = 0;
 
 	switch (SCREEN(screen)->mode_step)
@@ -138,7 +139,7 @@ void isdn_status_update(void)
 		{
 			OBJECT(current_object)->state++;
 			text_record = isdn_failed_text;
-			text_record = print_text_layer(text_record);
+			print_text_layer(text_record);
 			return;
 		}
 		blink_frames = OBJECT(current_object)->isdn_status.blink_counter;
@@ -146,7 +147,7 @@ void isdn_status_update(void)
 		OBJECT(current_object)->isdn_status.blink_counter = blink_frames;
 		blink_frames = blink_frames >> 3;
 		text_record = isdn_connecting_texts[blink_frames & 1u];
-		text_record = print_text_layer(text_record);
+		print_text_layer(text_record);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -1047,7 +1048,7 @@ void race_entries_update(void)
 	uint32_t entrant_count = 0, entrant_list = 0, entry_frames = 0, machines = 0, other_race = 0, player = 0, players_left = 0, race = 0, request = 0;
 	uint8_t game_over = 0;
 	uint16_t old_entry_frames = 0;
-	uint32_t last_four_entrants = 0, race_order_long = 0;
+	uint32_t entrants_2 = 0, race_order_long = 0;
 
 	race = SCREEN(screen)->race;
 	r12 = RACE_COPY_1;
@@ -1175,12 +1176,12 @@ void race_entries_update(void)
 	entrant_count = SCREEN(entrant_list - 0x30Fu)->entrant_count;
 	entrant_count = (uint8_t)(entrant_count + 1u);
 	SCREEN(entrant_list - 0x30Fu)->entrant_count = entrant_count;
-	mem_write8(entrant_list + entrant_count, entrant);
+	SCREEN(entrant_list - 0x30Fu)->entrants[(int32_t)(entrant_count - 1u)] = entrant;
 	if (SCREEN(screen)->player == entrant)
 	{
 		RACE(race)->entry_request = 0u;
 		SCREEN(screen)->entry_accepted = 0xFFu;
-		entrants = SCREEN(entrant_list - 0x30Fu)->entrants;
+		entrants = SCREEN(entrant_list - 0x30Fu)->entrants[0];
 		SCREEN(screen)->host_player = entrants;
 		if (SCREEN(screen)->player == entrants)
 			SCREEN(screen)->is_host = 0xFFu;
@@ -1191,13 +1192,13 @@ void race_entries_update(void)
 		RACE(r14 - 0x1Fu)->racer_count = SCREEN(entrant_list - 0x30Fu)->entrant_count;
 		r14++;
 		entrant_list++;
-		last_four_entrants = SCREEN(entrant_list - 0x310u)->last_four_entrants;
-		race_order_long = AS32(SCREEN(entrant_list - 0x310u)->entrants);
+		entrants_2 = AS32(SCREEN(entrant_list - 0x310u)->entrants[4]);
+		race_order_long = AS32(SCREEN(entrant_list - 0x310u)->entrants[0]);
 		RACE(r14 - 0x20u)->race_order = (uint8_t)race_order_long;
 		RACE(r14 - 0x20u)->race_order_1 = (uint8_t)(race_order_long >> 8u);
 		RACE(r14 - 0x20u)->race_order_2 = (uint8_t)(race_order_long >> 16u);
 		RACE(r14 - 0x20u)->race_order_3 = (uint8_t)(race_order_long >> 24u);
-		RACE(r14 - 0x20u)->race_order_4_7 = last_four_entrants;
+		RACE(r14 - 0x20u)->race_order_4_7 = entrants_2;
 		r14 += 8u;
 	}
 }
@@ -1223,7 +1224,7 @@ void race_progress_update(void)
 	uint16_t order = 0, pass_time = 0;
 	uint32_t ahead_player = 0, ahead_race = 0, checked_race = 0, checkpoint = 0, checkpoint_offset = 0, comparisons_left = 0, counted_stages = 0, fork_index = 0, host_order = 0, host_racer_count = 0, next_player = 0, order_entry = 0, order_place = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, passing_race = 0, race = 0, race_2 = 0, racer = 0, racer_count = 0, racers_left = 0, sort_place = 0;
 	uint8_t racer_total = 0;
-	uint32_t pass_counter = 0, swapped_player = 0, player_checkpoint_count = 0, checkpoint_pass_count = 0;
+	uint32_t swapped_player = 0;
 
 	race = SCREEN(screen)->race;
 	r12 = SCREEN(screen)->host_record;
@@ -1263,8 +1264,7 @@ void race_progress_update(void)
 				checkpoint = (uint8_t)(checkpoint - 1u);
 				RACE(race)->pass_checkpoint = checkpoint;
 				order = SCREEN(screen)->counted_passes[(int32_t)checkpoint];
-				pass_counter = screen + 0x338u + checkpoint;
-				mem_write8(pass_counter, mem_read8(pass_counter) + 1u);
+				SCREEN(screen)->counted_passes[(int32_t)checkpoint]++;
 				RACE(race)->pass_order = (uint8_t)order;
 				branch = (uint8_t)((uint16_t)RACE(passing_race)->road_x >> 15);
 				RACE(race)->pass_branch = branch;
@@ -1357,15 +1357,13 @@ void race_progress_update(void)
 		pass_branch = RACE(r12)->pass_branch;
 		pass_time = RACE(r12)->pass_time;
 		checkpoint_offset = pass_checkpoint * 2u;
-		player_checkpoint_count = screen + 0x480u + pass_player;
-		mem_write8(player_checkpoint_count, mem_read8(player_checkpoint_count) + 1u);
-		checkpoint_pass_count = screen + 0x35Au + pass_checkpoint;
-		mem_write8(checkpoint_pass_count, mem_read8(checkpoint_pass_count) + 1u);
-		mem_write8(screen + 0x360u + checkpoint_offset * 4u + pass_player, pass_order);
-		mem_write8(screen + 0x390u + checkpoint_offset * 4u + pass_order, pass_player);
+		SCREEN(screen)->checkpoints_passed[(int32_t)pass_player]++;
+		SCREEN(screen)->checkpoint_passes[(int32_t)pass_checkpoint]++;
+		SCREEN(screen)->checkpoint_orders[(int32_t)(checkpoint_offset * 4u + pass_player)] = pass_order;
+		SCREEN(screen)->checkpoint_order[(int32_t)(checkpoint_offset * 4u + pass_order)] = pass_player;
 		checkpoint_offset = checkpoint_offset * 2u;
-		mem_write16(screen + 0x3C0u + checkpoint_offset * 4u + pass_player * 2u, pass_time);
-		mem_write16(screen + 0x420u + checkpoint_offset * 4u + pass_order * 2u, pass_time);
+		SCREEN(screen)->checkpoint_times_by_player[(int32_t)(checkpoint_offset * 2u + pass_player)] = pass_time;
+		SCREEN(screen)->checkpoint_times[(int32_t)(checkpoint_offset * 2u + pass_order)] = pass_time;
 		if (pass_order == 0u && pass_checkpoint != 5u)
 		{
 			SCREEN(screen)->forks_decided++;
@@ -1389,7 +1387,7 @@ void race_progress_update(void)
    cleared (clear_lcd). */
 void entry_invitation_step(void)
 {
-	uint32_t ignored = 0, index = 0, lamp = 0, object_list = 0;
+	uint32_t index = 0, lamp = 0, object_list = 0;
 
 	switch (SCREEN(screen)->game_step)
 	{
@@ -1403,7 +1401,7 @@ void entry_invitation_step(void)
 	case 2:
 		SCREEN(screen)->game_step++;
 		object_list = entry_invitation_objects_ADDRESS;
-		ignored = start_object_list(object_list);
+		start_object_list(object_list);
 		return;
 	case 3:
 		if (SCREEN(screen)->index != 0u)

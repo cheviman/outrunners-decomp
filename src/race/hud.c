@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -15,18 +15,15 @@
    D6), 1 draws the frame of the revs (car revs >> 11, 32 steps). */
 void rev_meter_update(void)
 {
-	uint32_t animation = 0, state_code = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0;
 
-	state = OBJECT(current_object)->state;
-	state_code = rev_meter_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
 		OBJECT(current_object)->frame = CAR(player_car)->revs >> 11;
-		state_code = draw_object(state_code);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -45,13 +42,11 @@ void rev_meter_update(void)
    keeps the maximum (for the LCD's pages), then draws its digits from the units leftwards. */
 void speedometer_update(void)
 {
-	uint32_t animation = 0, digit = 0, speed_kmh = 0, state_code = 0;
+	uint16_t state_code = 0;
+	uint32_t animation = 0, digit = 0, speed_kmh = 0;
 	uint32_t saved_speed_kmh = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	state_code = speedometer_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -86,7 +81,7 @@ void speedometer_update(void)
 			divx_pair(0xAu, &speed_kmh, &digit);
 			OBJECT(current_object)->frame = digit;
 			saved_speed_kmh = speed_kmh;
-			state_code = draw_object(state_code);
+			draw_object(state_code);
 			speed_kmh = saved_speed_kmh;
 			OBJECT(current_object)->x -= 8u;
 		} while ((uint16_t)speed_kmh != 0u);
@@ -97,17 +92,14 @@ void speedometer_update(void)
 /* The km/h after the speed: state 0 sets it up (animation 10 at 127, CE), 1 draws it. */
 void speed_unit_update(void)
 {
-	uint32_t animation = 0, state_code = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0;
 
-	state = OBJECT(current_object)->state;
-	state_code = speed_unit_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		state_code = draw_object(state_code);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -130,12 +122,9 @@ void speed_unit_update(void)
 void gear_indicator_update(void)
 {
 	uint8_t buttons_pressed = 0, tyre_noise = 0;
-	uint32_t animation = 0, gear = 0, object = 0, old_ratio = 0, state_code = 0, top_gear_then_frames = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, gear = 0, object = 0, old_ratio = 0, top_gear_then_frames = 0;
 
-	state = OBJECT(current_object)->state;
-	state_code = gear_indicator_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -177,7 +166,7 @@ void gear_indicator_update(void)
 		{
 			if (CAR(player_car)->at_goal != 0u || CAR(player_car)->race_over != 0u)
 				OBJECT(current_object)->state++;
-			top_gear_then_frames = draw_object(top_gear_then_frames);
+			draw_object(top_gear_then_frames);
 			return;
 		}
 		top_gear_then_frames = 0u;
@@ -196,10 +185,10 @@ void gear_indicator_update(void)
 		OBJECT(current_object)->gear_indicator.redline_frames = top_gear_then_frames;
 		if (CAR(player_car)->at_goal != 0u || CAR(player_car)->race_over != 0u)
 			OBJECT(current_object)->state++;
-		top_gear_then_frames = draw_object(top_gear_then_frames);
+		draw_object(top_gear_then_frames);
 		return;
 	case 2:
-		state_code = draw_object(state_code);
+		draw_object(0u);
 		return;
 	}
 }
@@ -209,13 +198,9 @@ void gear_indicator_update(void)
    and lets the gear indicator start it again. */
 void shift_up_hint_update(void)
 {
-	uint16_t state_code = 0;
 	uint32_t animation = 0, blink = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	state_code = (uint16_t)shift_up_hint_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -236,12 +221,11 @@ void shift_up_hint_update(void)
 			OBJECT(OBJECT(current_object)->shift_up_hint.indicator)->gear_indicator.redline_frames = 0u;
 			return;
 		}
-		blink = (state_code & ~0xFFu) | OBJECT(current_object)->shift_up_hint.blink;
-		blink = (blink & ~0xFFu) | (uint8_t)(blink + 1u);
+		blink = (uint8_t)(OBJECT(current_object)->shift_up_hint.blink + 1u);
 		OBJECT(current_object)->shift_up_hint.blink = blink;
 		if ((blink & 4u) != 0u)
 			return;
-		blink = draw_object(blink);
+		draw_object(blink);
 		return;
 	}
 }
@@ -251,32 +235,29 @@ void shift_up_hint_update(void)
    screen's place (screen place) changes passes the new one to the place_number (its place, state 2). */
 void place_count_update(void)
 {
-	uint32_t animation = 0, count_frame = 0, initial_place = 0, object = 0, place = 0;
+	uint8_t count_frame = 0, place = 0;
+	uint32_t animation = 0, initial_place = 0, object = 0;
 	uint32_t saved_count_frame = 0;
 	uint8_t racer_count = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	place = place_count_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		initial_place = (place & ~0xFFu) | SCREEN(screen)->place;
-		if (OBJECT(current_object)->place_count.place != (uint8_t)initial_place)
+		initial_place = SCREEN(screen)->place;
+		if (OBJECT(current_object)->place_count.place != initial_place)
 		{
 			OBJECT(current_object)->place_count.place = initial_place;
 			object = OBJECT(current_object)->place_count.number;
 			OBJECT(object)->place_number.place = initial_place;
 			OBJECT(object)->state = 2u;
 		}
-		initial_place = draw_object(initial_place);
+		draw_object(initial_place);
 		return;
 	}
-	count_frame = (place & ~0xFFu) | RACE(SCREEN(screen)->host_record)->racer_count;
-	racer_count = count_frame;
-	count_frame = (count_frame & ~0xFFu) | (uint8_t)(racer_count - 1u);
+	racer_count = RACE(SCREEN(screen)->host_record)->racer_count;
+	count_frame = (uint8_t)(racer_count - 1u);
 	if (racer_count == 1u)
 	{
 		OBJECT(current_object)->flags = 0u;
@@ -291,22 +272,22 @@ void place_count_update(void)
 	saved_count_frame = count_frame;
 	animation_start(animation);
 	OBJECT(current_object)->frame = saved_count_frame;
-	place = (count_frame & ~0xFFu) | SCREEN(screen)->place;
+	place = SCREEN(screen)->place;
 	OBJECT(current_object)->place_count.place = place;
 	object = start_object();
 	OBJECT(object)->handler = place_number_update_ADDRESS;
 	OBJECT(object)->place_number.place = place;
 	OBJECT(current_object)->place_count.number = object;
 	OBJECT(current_object)->state++;
-	initial_place = (place & ~0xFFu) | SCREEN(screen)->place;
-	if (OBJECT(current_object)->place_count.place != (uint8_t)initial_place)
+	initial_place = SCREEN(screen)->place;
+	if (OBJECT(current_object)->place_count.place != initial_place)
 	{
 		OBJECT(current_object)->place_count.place = initial_place;
 		object = OBJECT(current_object)->place_count.number;
 		OBJECT(object)->place_number.place = initial_place;
 		OBJECT(object)->state = 2u;
 	}
-	initial_place = draw_object(initial_place);
+	draw_object(initial_place);
 }
 
 /* The screen's place, 1st or 2nd, at the bottom left: state 0 sets it up (animation 4, the place's frame
@@ -316,11 +297,8 @@ void place_number_update(void)
 {
 	uint32_t animation = 0, new_palette = 0, palette = 0;
 	uint8_t place = 0, new_place = 0, frames = 0, blink_timer = 0, frames_left = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	new_palette = place_number_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0u;
@@ -336,7 +314,7 @@ void place_number_update(void)
 		OBJECT(current_object)->x = 0x1Cu;
 		OBJECT(current_object)->y = 0xD8u;
 		OBJECT(current_object)->state++;
-		palette = draw_object(palette);
+		draw_object(palette);
 		return;
 	case 2:
 		new_place = ~~OBJECT(current_object)->place_number.place;
@@ -366,11 +344,11 @@ void place_number_update(void)
 			OBJECT(current_object)->draw_mode = 0u;
 			OBJECT(current_object)->state++;
 		}
-		new_palette = draw_object(new_palette);
+		draw_object(new_palette);
 		return;
 	case 1:
 	case 5:
-		new_palette = draw_object(new_palette);
+		draw_object(0u);
 		return;
 	}
 	blink_timer = OBJECT(current_object)->place_number.blink_timer;
@@ -384,7 +362,7 @@ void place_number_update(void)
 	OBJECT(current_object)->place_number.frames = frames_left - 1u;
 	if (frames_left != 1u)
 	{
-		new_palette = draw_object(new_palette);
+		draw_object(new_palette);
 		return;
 	}
 	OBJECT(current_object)->flags &= 0xFDu;
@@ -402,7 +380,7 @@ void place_number_update(void)
 		OBJECT(current_object)->draw_mode = 0u;
 		OBJECT(current_object)->state++;
 	}
-	new_palette = draw_object(new_palette);
+	draw_object(new_palette);
 }
 
 /* The lap time after LAP at the top right: state 0 sets it up (the label, the text record and the
@@ -415,15 +393,13 @@ void place_number_update(void)
 void lap_timer_update(void)
 {
 	bool L_00C4B3 = false;
-	uint32_t animation = 0, checkpoint_signal = 0, checkpoint_time = 0, checkpoints = 0, lap_time = 0, object = 0, player = 0, text = 0, time_text = 0;
+	uint32_t animation = 0, checkpoint_time = 0, checkpoints = 0, lap_time = 0, object = 0, player = 0, text = 0, time_text = 0;
 	uint16_t split_frames = 0;
-	uint32_t state = 0, jump_target = 0;
+	uint32_t jump_target = 0;
 
-	state = OBJECT(current_object)->state;
-	checkpoint_signal = lap_timer_state_jumps[state];
 	do
 	{
-		jump_target = L_00C4B3 ? 0xC4B3u : lap_timer_state_jumps[state];
+		jump_target = L_00C4B3 ? 0xC4B3u : lap_timer_state_jumps[OBJECT(current_object)->state];
 		switch (jump_target)
 		{
 		case 0x00C45Cu:
@@ -462,18 +438,14 @@ void lap_timer_update(void)
 				time_to_text(lap_time, time_text);
 				OBJECT(current_object)->lap_timer.text_attribute = 0xB0u;
 				OBJECT(current_object)->lap_timer.split_frames = 0xB4u;
-				checkpoint_signal = (lap_time & ~0xFFu) | SCREEN(screen)->index;
-				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal * 2u);
-				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + (~SCREEN(screen)->current_stage_level & 1u));
-				checkpoint_signal = (checkpoint_signal & ~0xFFu) | (uint8_t)(checkpoint_signal + 8u);
-				io_write8(EVENT_CODE, checkpoint_signal);
+				io_write8(EVENT_CODE, SCREEN(screen)->index * 2u + (~SCREEN(screen)->current_stage_level & 1u) + 8u);
 				split_frames = OBJECT(current_object)->lap_timer.split_frames;
 				OBJECT(current_object)->lap_timer.split_frames = split_frames - 1u;
 				if (split_frames != 1u)
 				{
 					text = current_object + 0x80u;
 					draw_text(text);
-					checkpoint_signal = draw_object(checkpoint_signal);
+					draw_object(lap_time);
 					return;
 				}
 				OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
@@ -482,7 +454,7 @@ void lap_timer_update(void)
 			lap_time = CAR(player_car)->race_time / 0xAu - CAR(player_car)->checkpoint_time;
 			time_to_text(lap_time, time_text);
 			draw_text(text);
-			lap_time = draw_object(lap_time);
+			draw_object(lap_time);
 			return;
 		case 0x00C53Bu:
 			split_frames = OBJECT(current_object)->lap_timer.split_frames;
@@ -491,7 +463,7 @@ void lap_timer_update(void)
 			{
 				text = current_object + 0x80u;
 				draw_text(text);
-				checkpoint_signal = draw_object(checkpoint_signal);
+				draw_object(lap_time);
 				return;
 			}
 			OBJECT(current_object)->lap_timer.text_attribute = 0x90u;
@@ -501,7 +473,7 @@ void lap_timer_update(void)
 		case 0x00C541u:
 			text = current_object + 0x80u;
 			draw_text(text);
-			checkpoint_signal = draw_object(checkpoint_signal);
+			draw_object(lap_time);
 			return;
 		}
 	} while (L_00C4B3);
@@ -532,12 +504,11 @@ void stage_indicator_start(void)
    route_stage_level: PRE-STAGE, 1 to 4, FINAL STAGE) and the label itself. */
 void stage_indicator_draw(void)
 {
-	uint32_t stage_level = 0, text = 0;
+	uint32_t text = 0;
 
-	stage_level = SCREEN(screen)->route_stage_level;
-	text = stage_level_texts[stage_level];
+	text = stage_level_texts[SCREEN(screen)->route_stage_level];
 	draw_text(text);
-	stage_level = draw_object(stage_level);
+	draw_object(0u);
 }
 
 /* The start's messages in the middle of the screen: state 0 shows YOU'RE IN CAR NUMBER n! (animation 28F
@@ -548,11 +519,8 @@ void start_message_update(void)
 {
 	uint32_t animation = 0, dj_message = 0;
 	uint8_t frames = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	dj_message = start_message_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0u;
@@ -568,7 +536,7 @@ void start_message_update(void)
 		OBJECT(current_object)->state++;
 		if (OBJECT(CAR(player_car)->object)->player_car.timer != 0x1Eu)
 		{
-			dj_message = draw_object(dj_message);
+			draw_object(dj_message);
 			return;
 		}
 		animation = 0x31u;
@@ -581,7 +549,7 @@ void start_message_update(void)
 	case 1:
 		if (OBJECT(CAR(player_car)->object)->player_car.timer != 0x1Eu)
 		{
-			dj_message = draw_object(dj_message);
+			draw_object(dj_message);
 			return;
 		}
 		animation = 0x31u;
@@ -601,12 +569,12 @@ void start_message_update(void)
 			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		dj_message = draw_object(dj_message);
+		draw_object(dj_message);
 		return;
 	}
 	if (OBJECT(CAR(player_car)->object)->player_car.timer != 0u)
 	{
-		dj_message = draw_object(dj_message);
+		draw_object(dj_message);
 		return;
 	}
 	animation = 0x32u;
@@ -623,7 +591,7 @@ void start_message_update(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	dj_message = draw_object(dj_message);
+	draw_object(dj_message);
 }
 
 /* The time left in seconds at the top centre, and the time up: state 0 waits for the race's time
@@ -895,7 +863,7 @@ void time_left_display_check_extension(void)
    extend_time_message_blink. */
 void extend_time_message_start(void)
 {
-	uint32_t animation = 0, index = 0, lamp = 0;
+	uint32_t animation = 0, lamp = 0;
 
 	OBJECT(current_object)->draw_mode = 8u;
 	OBJECT(current_object)->depth_layer = 0x19Fu;
@@ -907,16 +875,15 @@ void extend_time_message_start(void)
 	OBJECT(current_object)->extend_time_message.frames = 0x5Au;
 	OBJECT(current_object)->extend_time_message.blink = 0u;
 	OBJECT(current_object)->handler = extend_time_message_blink_ADDRESS;
-	index = SCREEN(screen)->index;
-	lamp = GAME_VARIABLES + index * 4u;
+	lamp = GAME_VARIABLES + SCREEN(screen)->index * 4u;
 	SCREEN_LAMPS(lamp)->checkpoint_timer = 1u;
 	SCREEN_LAMPS(lamp)->checkpoint_period = 0x10u;
 	SCREEN_LAMPS(lamp)->checkpoint_blinks = 0x10u;
-	extend_time_message_blink(index);
+	extend_time_message_blink();
 }
 
 /* Blinks EXTEND TIME (4 frames on, 4 off) until its frames run out. */
-void extend_time_message_blink(uint32_t leftover)
+void extend_time_message_blink(void)
 {
 	uint32_t blink = 0;
 	uint8_t frames = 0;
@@ -928,12 +895,11 @@ void extend_time_message_blink(uint32_t leftover)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	blink = (leftover & ~0xFFu) | OBJECT(current_object)->extend_time_message.blink;
-	blink = (blink & ~0xFFu) | (uint8_t)(blink + 1u);
+	blink = (uint8_t)(OBJECT(current_object)->extend_time_message.blink + 1u);
 	OBJECT(current_object)->extend_time_message.blink = blink;
 	if ((blink & 4u) != 0u)
 		return;
-	blink = draw_object(blink);
+	draw_object(blink);
 }
 
 /* The start of a stage's road (position 0 of streams 1-30): when the car (car segment) reaches it, the
@@ -979,13 +945,11 @@ void stage_entry_spare_return(void)
 void goal_update(void)
 {
 	uint8_t dj_message = 0;
-	uint32_t animation = 0, finish_time = 0, ignored = 0, object = 0, result_object = 0, song_title = 0, sound_code = 0, text = 0;
+	uint16_t sound_code = 0;
+	uint32_t animation = 0, finish_time = 0, object = 0, result_object = 0, song_title = 0, text = 0;
 	uint16_t timer = 0, title_timer = 0, result_timer = 0, show_timer = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	sound_code = goal_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		if ((int16_t)CAR(player_car)->segment < OBJECT(current_object)->position)
@@ -1049,7 +1013,7 @@ void goal_update(void)
 		text = total_time_text_ADDRESS;
 		draw_text(text);
 		text = current_object + 0x80u;
-		ignored = draw_text(text);
+		draw_text(text);
 		return;
 	case 5:
 		result_timer = OBJECT(current_object)->goal.timer;
@@ -1059,7 +1023,7 @@ void goal_update(void)
 			text = total_time_text_ADDRESS;
 			draw_text(text);
 			text = current_object + 0x80u;
-			ignored = draw_text(text);
+			draw_text(text);
 			return;
 		}
 		OBJECT(current_object)->flags = 0u;
@@ -1073,12 +1037,12 @@ void goal_update(void)
 		text = total_time_text_ADDRESS;
 		draw_text(text);
 		text = current_object + 0x80u;
-		ignored = draw_text(text);
+		draw_text(text);
 		return;
 	}
 	song_title = dream_flying_song_title_ADDRESS;
 	start_song_title(song_title);
-	sound_code = (sound_code & ~0xFFu) | 0x10u;
+	sound_code = 0x10u;
 	request_sound((uint8_t)sound_code);
 	if (RACE(SCREEN(screen)->host_record)->racer_count != 1u)
 	{
@@ -1099,7 +1063,7 @@ void goal_update(void)
 	text = total_time_text_ADDRESS;
 	draw_text(text);
 	text = current_object + 0x80u;
-	ignored = draw_text(text);
+	draw_text(text);
 }
 
 /* With two players, the result at the end of the race: the screen's place in big letters (animation 2F8:
@@ -1133,7 +1097,6 @@ void race_result_start(void)
 /* Draws the place or Loser until its frames run out. */
 void race_result_hold(void)
 {
-	uint32_t ignored = 0;
 	uint16_t frames = 0;
 
 	frames = OBJECT(current_object)->race_result.frames;
@@ -1143,7 +1106,7 @@ void race_result_hold(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	ignored = draw_object(0u);
+	draw_object(0u);
 }
 
 /* The verdict over the place: Winner (animation 2F6), blinking (race_result_verdict_blink), for the
@@ -1180,7 +1143,6 @@ void race_result_verdict_start(void)
 /* Blinks Winner (4 frames on, 4 off) until its frames run out. */
 void race_result_verdict_blink(void)
 {
-	uint32_t ignored = 0;
 	uint16_t frames = 0;
 
 	frames = OBJECT(current_object)->race_result.frames;
@@ -1192,7 +1154,7 @@ void race_result_verdict_blink(void)
 	}
 	if ((OBJECT(current_object)->race_result.frames & 4u) == 0u)
 		return;
-	ignored = draw_object(0u);
+	draw_object(0u);
 }
 
 /* The arrow of the way taken at a fork, at the bottom centre, with CHECK POINT scrolling on the LCD
@@ -1248,7 +1210,7 @@ void branch_arrow_update(void)
 			}
 			OBJECT(current_object)->palette = palette;
 			OBJECT(current_object)->branch_arrow.palette_list = palette_list;
-			palette = draw_object(palette);
+			draw_object(palette);
 			return;
 		}
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -1278,7 +1240,7 @@ void branch_arrow_update(void)
 	}
 	OBJECT(current_object)->palette = palette;
 	OBJECT(current_object)->branch_arrow.palette_list = palette_list;
-	palette = draw_object(palette);
+	draw_object(palette);
 }
 
 /* The times at a checkpoint, in rows under the top line: state 0 takes each player's car image
@@ -1296,7 +1258,7 @@ void checkpoint_board_update(void)
 	uint32_t blink_on = 0, checkpoint = 0, checkpoint_count = 0, leave_segment = 0, object = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
 	uint8_t blink_timer = 0, rows_left = 0;
 	uint16_t gap = 0, offset_before = 0;
-	uint32_t jump_target = 0, started_step = 0, sliding_offset = 0, arrived_step = 0, leaving_step = 0, gone_step = 0;
+	uint32_t jump_target = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1307,7 +1269,7 @@ void checkpoint_board_update(void)
 		do
 		{
 			racer = RACE_ORDER_PLAYERS(race)[0];
-			OBJECT(current_object)->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[mem_read8(0x20FC49u + (racer << 5) * 4u)];
+			OBJECT(current_object)->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[RACE(RACE_COPY_1)[racer].model];
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);
@@ -1387,16 +1349,14 @@ void checkpoint_board_update(void)
 					}
 					L_00CCDE = false;
 					OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0x100u;
-					started_step = current_object + 0xF0u + row_player;
-					mem_write8(started_step, mem_read8(started_step) + 1u);
+					OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
 				case 0x00CCECu:
 					if (!L_00CCFC)
 					{
 						if (!L_00CCFC)
 						{
-							sliding_offset = current_object + 0xA0u + row_player * 2u;
-							offset_before = mem_read16(sliding_offset);
-							mem_write16(sliding_offset, offset_before - 0x10u);
+							offset_before = OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player];
+							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = offset_before - 0x10u;
 						}
 					}
 					if (!L_00CCFC && !L_00CCFC && offset_before != 0x10u)
@@ -1406,16 +1366,12 @@ void checkpoint_board_update(void)
 						if (!L_00CCFC)
 						{
 							if (!L_00CCFC)
-							{
-								arrived_step = current_object + 0xF0u + row_player;
-								mem_write8(arrived_step, mem_read8(arrived_step) + 1u);
-							}
+								OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
 						}
 						L_00CCFC = false;
 						if (OBJECT(current_object)->checkpoint_board.leave_segment == 0u || CAR(player_car)->race_over != 0u)
 						{
-							leaving_step = current_object + 0xF0u + row_player;
-							mem_write8(leaving_step, mem_read8(leaving_step) + 1u);
+							OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
 							row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
 							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
 							if (row_offset != 0xFF00u)
@@ -1423,8 +1379,7 @@ void checkpoint_board_update(void)
 							else
 							{
 								OBJECT(current_object)->checkpoint_board.rows_shown--;
-								gone_step = current_object + 0xF0u + row_player;
-								mem_write8(gone_step, mem_read8(gone_step) + 1u);
+								OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
 								checkpoint_board_draw_row(row_player);
 							}
 						}
@@ -1455,8 +1410,7 @@ void checkpoint_board_update(void)
 					if (row_offset == 0xFF00u)
 					{
 						OBJECT(current_object)->checkpoint_board.rows_shown--;
-						gone_step = current_object + 0xF0u + row_player;
-						mem_write8(gone_step, mem_read8(gone_step) + 1u);
+						OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
 					}
 					checkpoint_board_draw_row(row_player);
 					break;
@@ -1492,22 +1446,20 @@ void checkpoint_board_update(void)
    time text (draw_text_at; another colour after the first row) and, after the first, BEHIND. */
 void checkpoint_board_draw_row(uint32_t player)
 {
-	uint16_t text_attribute = 0;
-	uint32_t animation = 0, car_sprite = 0, place = 0, row = 0, row_x = 0, text_x = 0, time_text = 0;
+	uint16_t row_x = 0, text_attribute = 0;
+	uint32_t animation = 0, car_sprite = 0, place = 0, row = 0, row_x_2 = 0, text_x = 0, time_text = 0;
 
 	place = checkpoint_board_number_places_ADDRESS + OBJECT(current_object)->checkpoint_board.row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
-	OBJECT(current_object)->x = row_x;
+	OBJECT(current_object)->x = CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player];
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	animation = checkpoint_board_number_animations[car_numbers[player]];
 	OBJECT(current_object)->palette = 0x27u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 8u;
 	animation_start(animation);
-	draw_object(row_x);
+	draw_object(0u);
 	place = checkpoint_board_car_places_ADDRESS + OBJECT(current_object)->checkpoint_board.row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
-	OBJECT(current_object)->x = row_x;
+	OBJECT(current_object)->x = CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player];
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	car_sprite = current_object + 0x80u + player * 4u;
 	animation = BOARD_CAR_SPRITE(car_sprite)->animation;
@@ -1527,19 +1479,18 @@ void checkpoint_board_draw_row(uint32_t player)
 		text_attribute = 0x90u;
 	time_text = current_object + 0xB0u + player * 2u * 4u;
 	draw_text_at(text_x, text_attribute, time_text);
-	row = OBJECT(current_object)->checkpoint_board.row;
-	if (row == 0u)
+	row_x_2 = OBJECT(current_object)->checkpoint_board.row;
+	if (row_x_2 == 0u)
 		return;
-	place = checkpoint_board_behind_places_ADDRESS + row * 4u;
-	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
-	OBJECT(current_object)->x = row_x;
+	place = checkpoint_board_behind_places_ADDRESS + row_x_2 * 4u;
+	OBJECT(current_object)->x = CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player];
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
 	animation = CHECKPOINT_BOARD_ROW;
 	OBJECT(current_object)->palette = 0x4Au;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 8u;
 	animation_start(animation);
-	row_x = draw_object(row_x);
+	draw_object(row_x_2);
 }
 
 /* Writes the first car's time R0 as M'SS"HH into player R1's row text. */

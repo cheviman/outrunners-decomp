@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -89,16 +89,16 @@ void test_mode_start(void)
 	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
 	text_0_to = test_mode_lcd_text;
 	text_4_to = test_mode_lcd_text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text) = text_0_to;
-	SCREEN(SCREEN_1)->lcd_text_4_to_7 = text_4_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text) = text_0_to;
-	SCREEN(SCREEN_2)->lcd_text_4_to_7 = text_4_to;
+	AS32(SCREEN(SCREEN_1)->lcd_text[0]) = text_0_to;
+	AS32(SCREEN(SCREEN_1)->lcd_text[4]) = text_4_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text[0]) = text_0_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text[4]) = text_4_to;
 	text_8_to = test_mode_lcd_text_8_to_11;
 	text_12_to = test_mode_lcd_text_12_to_15;
-	SCREEN(SCREEN_1)->lcd_text_8_to_11 = text_8_to;
-	SCREEN(SCREEN_1)->lcd_text_12_to_15 = text_12_to;
-	SCREEN(SCREEN_2)->lcd_text_8_to_11 = text_8_to;
-	SCREEN(SCREEN_2)->lcd_text_12_to_15 = text_12_to;
+	AS32(SCREEN(SCREEN_1)->lcd_text[8]) = text_8_to;
+	AS32(SCREEN(SCREEN_1)->lcd_text[12]) = text_12_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
+	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
 	test_mode_routine = test_mode_menu_ADDRESS;
 	r12 = unk_218F20_ADDRESS;
 	test_mode_read_controls();
@@ -1798,7 +1798,7 @@ uint16_t test_mode_crt_test_draw_bars(uint32_t character)
 	drawn_character = 0x8003u;
 	cell = test_mode_crt_test_draw_bar(drawn_character, cell);
 	drawn_character = 0x8004u;
-	cell = test_mode_crt_test_draw_bar(drawn_character, cell);
+	test_mode_crt_test_draw_bar(drawn_character, cell);
 	return drawn_character;
 }
 
@@ -2044,10 +2044,8 @@ uint16_t test_mode_game_assignments_draw(void)
 /* GAME DIFFICULTY: game_difficulty one level harder, after the eighth back to the first; redraws. */
 void test_mode_game_assignments_difficulty(void)
 {
-	uint32_t ignored = 0;
-
 	game_difficulty = (game_difficulty + 1u) & 7u;
-	ignored = test_mode_game_assignments_draw();
+	test_mode_game_assignments_draw();
 }
 
 /* TIME DIFFICULTY: the time_difficulty of the stage under the cursor (items 1-6: PRE-STAGE, STAGE 1-4,
@@ -2055,36 +2053,34 @@ void test_mode_game_assignments_difficulty(void)
 void test_mode_game_assignments_time(void)
 {
 	uint8_t seconds = 0;
-	uint32_t ignored = 0, stage_item = 0;
+	uint32_t stage_item = 0;
 
 	stage_item = test_mode_page_cursor;
 	seconds = (uint8_t)(mem_read8(current_object + 0x31u + stage_item) + 1u);
 	if ((int8_t)seconds > 5)
 		seconds = 0xFBu;
 	mem_write8(current_object + 0x31u + stage_item, seconds);
-	ignored = test_mode_game_assignments_draw();
+	test_mode_game_assignments_draw();
 }
 
 /* STEERING WHEEL REACTION: steering_wheel_reaction on or off (1 or 0); redraws. */
 void test_mode_game_assignments_steering(void)
 {
 	uint32_t carry = 0;
-	uint32_t ignored = 0;
 
 	carry = steering_wheel_reaction > 0u;
 	steering_wheel_reaction = 1u - carry;
-	ignored = test_mode_game_assignments_draw();
+	test_mode_game_assignments_draw();
 }
 
 /* ADVERTISE SOUND: advertise_sound on or off (1 or 0); redraws. */
 void test_mode_game_assignments_advertise(void)
 {
 	uint32_t carry = 0;
-	uint32_t ignored = 0;
 
 	carry = advertise_sound > 0u;
 	advertise_sound = 1u - carry;
-	ignored = test_mode_game_assignments_draw();
+	test_mode_game_assignments_draw();
 }
 
 /* The game assignments' EXIT: compares game_difficulty, time_difficulty, steering_wheel_reaction and
@@ -2523,7 +2519,7 @@ void test_mode_coin_assignments_step_coin_to_credit(uint32_t item_count)
    redraws (test_mode_coin_assignments_manual_draw). */
 void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t item_count)
 {
-	uint32_t ignored = 0, setting = 0;
+	uint32_t setting = 0;
 
 	setting = (item_count & ~0xFFu) | mem_read8(current_object + setting_offset);
 	setting = (setting & ~0xFFu) | (uint8_t)(setting + 1u);
@@ -2532,7 +2528,7 @@ void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t ite
 	mem_write8(current_object + setting_offset, setting);
 	if (free_play == 0u)
 		coin_setting = 0x1Au;
-	ignored = test_mode_coin_assignments_manual_draw(setting);
+	test_mode_coin_assignments_manual_draw(setting);
 }
 
 /* BONUS ADDER: steps bonus_adder through none (0), 2 to 9 and back to none; from free play (FF) it goes
@@ -2540,7 +2536,6 @@ void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t ite
 void test_mode_coin_assignments_step_bonus_adder(uint32_t item_count)
 {
 	uint8_t bonus = 0;
-	uint32_t ignored = 0;
 	uint8_t next_bonus = 0;
 
 	bonus = bonus_adder;
@@ -2554,7 +2549,7 @@ void test_mode_coin_assignments_step_bonus_adder(uint32_t item_count)
 		bonus = 0u;
 	bonus_adder = bonus;
 	coin_setting = 0x1Au;
-	ignored = test_mode_coin_assignments_manual_draw(item_count);
+	test_mode_coin_assignments_manual_draw(item_count);
 }
 
 /* MULTIPLIER: test_mode_coin_assignments_step_value with first_chute_multiplier (1 COIN COUNTS AS N
@@ -2663,11 +2658,10 @@ void test_mode_network_assignments_run(void)
 	if ((test_mode_buttons_pressed & 2u) != 0u)
 	{
 		current_object = settings_magic_ADDRESS;
-		page_cursor = test_mode_page_cursor;
-		switch (page_cursor)
+		switch (test_mode_page_cursor)
 		{
 		case 0:
-			test_mode_network_assignments_toggle_communication(page_cursor);
+			test_mode_network_assignments_toggle_communication();
 			break;
 		case 1:
 			test_mode_network_assignments_toggle_privilege_mode();
@@ -2729,32 +2723,28 @@ uint16_t test_mode_network_assignments_draw(void)
 /* COMMUNICATION: switches stand_alone (NETWORK, STAND-ALONE), puts the privilege mode back to MASTER
    (link_master 1, isdn_mode 0, test_mode_privilege_mode 1), shows or hides the PRIVILEGE MODE and
    CABINET ID labels and redraws the values. */
-void test_mode_network_assignments_toggle_communication(uint32_t page_cursor)
+void test_mode_network_assignments_toggle_communication(void)
 {
 	uint32_t carry = 0;
-	uint16_t stand_alone_then_colour_2 = 0;
-	uint32_t cell = 0, ignored = 0, stand_alone_then_colour = 0;
+	uint16_t stand_alone_then_colour = 0;
+	uint32_t cell = 0;
 	uint32_t saved_colour = 0;
-	uint8_t stand_alone_setting = 0;
 
 	carry = stand_alone > 0u;
-	stand_alone_then_colour = 1u;
-	stand_alone_setting = stand_alone_then_colour;
-	stand_alone_then_colour = (uint8_t)(stand_alone_setting - carry);
-	stand_alone = stand_alone_then_colour;
+	stand_alone = 1u - carry;
 	link_master = 1u;
 	isdn_mode = 0u;
 	test_mode_privilege_mode = 1u;
 	stand_alone_then_colour = 0x60u;
-	if (stand_alone_setting != carry)
+	if (1u != carry)
 		stand_alone_then_colour = 0x6Eu;
 	cell = TEXT_CELL(8, 12);
 	saved_colour = stand_alone_then_colour;
-	test_mode_colour_line((uint16_t)stand_alone_then_colour, cell);
+	test_mode_colour_line(stand_alone_then_colour, cell);
 	cell = TEXT_CELL(8, 14);
-	stand_alone_then_colour_2 = (uint16_t)saved_colour;
-	test_mode_colour_line(stand_alone_then_colour_2, cell);
-	ignored = test_mode_network_assignments_draw();
+	stand_alone_then_colour = (uint16_t)saved_colour;
+	test_mode_colour_line(stand_alone_then_colour, cell);
+	test_mode_network_assignments_draw();
 }
 
 /* PRIVILEGE MODE: switches test_mode_privilege_mode between SLAVE and MASTER and sets link_master and
@@ -2762,7 +2752,7 @@ void test_mode_network_assignments_toggle_communication(uint32_t page_cursor)
    cannot be reached); redraws. */
 void test_mode_network_assignments_toggle_privilege_mode(void)
 {
-	uint32_t ignored = 0, privilege = 0, setting = 0;
+	uint32_t privilege = 0, setting = 0;
 	uint8_t stepped_privilege = 0;
 
 	privilege = test_mode_privilege_mode;
@@ -2774,16 +2764,14 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 	setting = privilege_mode_settings_ADDRESS + privilege * 2u;
 	link_master = PRIVILEGE_MODE_SETTING(setting)->master;
 	isdn_mode = PRIVILEGE_MODE_SETTING(setting)->isdn;
-	ignored = test_mode_network_assignments_draw();
+	test_mode_network_assignments_draw();
 }
 
 /* CABINET ID: steps cabinet_id through 0-3 (shown 1-4); redraws. */
 void test_mode_network_assignments_step_cabinet_id(void)
 {
-	uint32_t ignored = 0;
-
 	cabinet_id = (cabinet_id + 1u) & 3u;
-	ignored = test_mode_network_assignments_draw();
+	test_mode_network_assignments_draw();
 }
 
 /* EXIT of the NETWORK ASSIGNMENTS page: when stand_alone, link_master, isdn_mode or cabinet_id differ
@@ -3368,7 +3356,7 @@ void test_mode_draw_instructions(uint32_t character)
 	uint32_t text = 0;
 
 	text = test_mode_instructions_text_ADDRESS;
-	character = test_mode_draw_texts((uint16_t)character, text);
+	test_mode_draw_texts((uint16_t)character, text);
 }
 
 /* Makes PUSH TEST BUTTON TO EXIT (the text record at 01F2BC, row 25) the prompt test_mode_blink_prompt
@@ -3438,7 +3426,7 @@ void test_mode_clear_cursor(void)
 	TEXT_LAYER_CELLS(cell)[0] = 0u;
 	cell += 4u;
 	colour = 0x60u;
-	colour = test_mode_colour_line((uint16_t)colour, cell);
+	test_mode_colour_line((uint16_t)colour, cell);
 }
 
 /* Draws the text record at R10 on the text layer: lines of a cell (halfword), characters and colour

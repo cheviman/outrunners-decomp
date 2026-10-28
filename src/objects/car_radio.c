@@ -3,7 +3,7 @@
  *    Description: the car radio: the songs, the DJ and his messages, the songs' titles
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -35,7 +35,7 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		OBJECT(current_object)->car_radio.car_models[car_numbers[player]] = mem_read8(0x20FC49u + (player << 7));
+		OBJECT(current_object)->car_radio.car_models[car_numbers[player]] = RACE(RACE_COPY_1)[player].model;
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);
@@ -499,12 +499,13 @@ void car_radio_dj_remark_2c(void)
 /* Shows the title of song R0 (radio_songs: 0 Magical Sound Shower, 1 Passing Breeze, 2 Splash Wave, 3
    Picture the Rivers, 4 Blow Your Cool, 5 Looking for the Rainbow, 6 Speed King, 7 Adventure, 8 Sonic
    Control, 9 Last Wave, 10 Jingle Bell) and returns the song's sound. */
-uint32_t car_radio_song(uint32_t song_number)
+uint8_t car_radio_song(uint32_t song_number)
 {
-	uint32_t song_entry = 0, song_sound = 0;
+	uint8_t song_sound = 0;
+	uint32_t song_entry = 0;
 
 	song_entry = radio_songs[song_number];
-	song_sound = byte_swap32(song_entry);
+	song_sound = (uint8_t)byte_swap32(song_entry);
 	song_entry &= 0xFFFFFFu;
 	car_radio_show_title(song_entry);
 	return song_sound;

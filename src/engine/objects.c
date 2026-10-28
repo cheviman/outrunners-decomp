@@ -3,7 +3,7 @@
  *    Description: the objects: the object loop, starting and freeing objects and their lists, the random numbers
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -56,10 +56,10 @@ void run_objects(void)
 			call_code(OBJECT(current_object)->handler);
 			next_list = OBJECT_AREA(screen - 0x8000u)->next_list;
 			OBJECT_LIST(next_list)->count++;
-			mem_write16(OBJECT_AREA(screen - 0x8000u)->next_list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count * 2u, current_object);
+			OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count - 1u)] = current_object;
 			continue;
 		}
-		mem_write8(screen - 0x7FF0u + OBJECT(current_object)->slot, 0u);
+		OBJECT_AREA(screen - 0x8000u)->slots[OBJECT(current_object)->slot] = 0u;
 	}
 	object_list = OBJECT_AREA(screen - 0x8000u)->list;
 	blocks_left = OBJECT_LIST(object_list)->count;
@@ -112,7 +112,7 @@ uint32_t start_object(void)
 	OBJECT(object)->slot = free_index;
 	list = OBJECT_AREA(screen - 0x8000u)->list;
 	OBJECT_LIST(list)->count++;
-	mem_write16(OBJECT_AREA(screen - 0x8000u)->list + OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count * 2u, object);
+	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count - 1u)] = object;
 	return object;
 }
 
@@ -144,7 +144,7 @@ uint32_t reserve_object_slot(void)
    n + 4, for reserve_object_slot's slot n slot n + 10. */
 void free_object_slot(uint16_t object)
 {
-	mem_write8(screen - 0x7FF0u + ((uint16_t)object >> 8), 0u);
+	OBJECT_AREA(screen - 0x8000u)->slots[(uint16_t)object >> 8] = 0u;
 }
 
 /* Starts an object for each handler of the list R10 (a 32-bit count, then the handlers: the

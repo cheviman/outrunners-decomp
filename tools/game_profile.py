@@ -86,6 +86,16 @@ memory.NOTES = {
               "   sound program shares), by name: lvalues through board() */"],
 }
 memory.PLAIN_HARDWARE = ("VIDEO", "SPRITE_RAM", "SOUND")
+# the routines that work on memory by its address, whatever is there (noise_report.py: their mem_access is
+# the original's): function -> why
+MEMORY_ROUTINES = {
+    "test_mode_memory_test_words": "the memory test: writes and reads back every word of a memory it is given",
+    "test_mode_memory_test_nibbles": "the memory test: every halfword of a memory it is given, a nibble at a time",
+    "test_mode_memory_test_bytes": "the memory test: every byte of a memory it is given",
+    "crc16": "a checksum of the bytes at any address it is given",
+    "unrolled_copy": "copies any number of bytes from any address to any other",
+    "boot": "writes the register values at 0000A4 to E00000 and E80000, which this board does not map",
+}
 # (R27 and R28 are not: no function reads what another left in them; player_car_project_road could, were
 # its projection pattern to skip every segment, but segment_projection_pattern starts with a 1)
 signatures.CONTEXT = (12, 14, 20, 23, 25, 32)

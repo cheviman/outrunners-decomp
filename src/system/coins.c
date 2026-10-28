@@ -3,7 +3,7 @@
  *    Description: the coins and credits, and the bookkeeping
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -293,7 +293,7 @@ uint16_t insert_coin(uint32_t released_switches, uint16_t credits_given, uint32_
 		}
 		SEAT_CREDITS(seat_credits)->credits++;
 		show_title_on_credit();
-		credits_given = (uint16_t)((credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u));
+		credits_given = (uint8_t)(credits_given + 1u);
 		credit_units -= units_per_credit;
 	} while (SEAT_CREDITS(seat_credits)->credits < 9u);
 	credit_units = 0u;
@@ -452,7 +452,7 @@ void bookkeeping_check(void)
 	{
 		source = SOUND_RAM + 0x1F02u;
 		destination = SOUND_RAM + 0x1F7Eu;
-		checksum = bookkeeping_copy(checksum, source, destination);
+		bookkeeping_copy(checksum, source, destination);
 		return;
 	}
 	block = SOUND_RAM + 0x1F7Eu;
@@ -461,10 +461,10 @@ void bookkeeping_check(void)
 	{
 		destination = SOUND_RAM + 0x1F02u;
 		source = SOUND_RAM + 0x1F7Eu;
-		checksum = bookkeeping_copy(checksum, source, destination);
+		bookkeeping_copy(checksum, source, destination);
 		return;
 	}
-	checksum = bookkeeping_reset(checksum);
+	bookkeeping_reset(checksum);
 }
 
 /* Resets the bookkeeping: the defaults at 011458 into the block (701F02), then the block into its backup
@@ -511,7 +511,7 @@ void bookkeeping_check_block(void)
 	checksum = bookkeeping_checksum(0u, block);
 	if (BOOKKEEPING_CHECKSUM != checksum)
 	{
-		checksum = bookkeeping_reset(checksum);
+		bookkeeping_reset(checksum);
 		return;
 	}
 }

@@ -3,7 +3,7 @@
  *    Description: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -26,7 +26,8 @@
    frame for the running task's screen (screen_1_vblanks, screen_2_vblanks). */
 void int_vector_40(void)
 {
-	uint32_t calibration = 0, screen_vblank_counter = 0, tile_bank_bits = 0;
+	uint8_t tile_bank_bits = 0;
+	uint32_t calibration = 0, screen_vblank_counter = 0;
 	uint32_t saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
 
 	saved_screen = screen;
@@ -55,10 +56,10 @@ void int_vector_40(void)
 			move_halfwords(VIDEO_CONTROL_ADDRESS, video_registers_ADDRESS, 0x48u);
 		}
 		tile_bank_bits = tile_banks[0];
-		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[1]);
-		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[2]);
-		tile_bank_bits = (uint8_t)((tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[3]);
-		io_write8(IO_1_PORT_H, (tile_bank_bits << 6) | (tile_bank_bits >> 2));
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[1]);
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[2]);
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[3]);
+		io_write8(IO_1_PORT_H, ((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2));
 	}
 	finish_sprite_list();
 	send_sound_requests();
@@ -74,10 +75,10 @@ void int_vector_40(void)
 			pack_seat_inputs();
 			break;
 		case 1:
-			tile_bank_bits = queue_seat_inputs();
+			queue_seat_inputs();
 			break;
 		}
-		check_test_button(tile_bank_bits);
+		check_test_button();
 		if (free_play == 0u)
 			update_coins(calibration);
 	}
@@ -273,14 +274,14 @@ void int_vector_02(void)
 	halt();
 	halt();
 	halt();
-	check_test_button(0u);
+	check_test_button();
 }
 
 /* Turns the test mode on (test_mode_on FF) when TEST has just been pressed (bit 7 of switches_pressed,
    the inputs newly pressed); the boot task's loop then runs the test mode. */
-void check_test_button(uint32_t leftover)
+void check_test_button(void)
 {
-	if ((((leftover & ~0xFFu) | switches_pressed) & 0x80u) != 0u)
+	if ((switches_pressed & 0x80u) != 0u)
 		test_mode_on = 0xFFu;
 }
 

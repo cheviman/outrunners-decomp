@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -95,7 +95,8 @@ void rider_gesture_update(void)
 {
 	uint32_t zero = 0;
 	uint8_t visible_mask = 0;
-	uint32_t animation = 0, object = 0, rider = 0, scale = 0;
+	uint16_t scale = 0;
+	uint32_t animation = 0, object = 0, rider = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -159,7 +160,7 @@ void rider_gesture_update(void)
 			scale = 0x100u;
 		OBJECT(current_object)->width_scale = scale;
 		OBJECT(current_object)->height_scale = scale;
-		rider_gesture_place((uint16_t)scale, object);
+		rider_gesture_place(scale, object);
 		draw_object(scale);
 		animation_advance(0u);
 		if (OBJECT(current_object)->frame_time == 0u)
@@ -630,7 +631,7 @@ void goal_actor_run(void)
 			script_word += 2u;
 			if (OBJECT(current_object)->goal_actor.counter <= wait_count)
 			{
-				step_value = draw_object(step_value);
+				draw_object(step_value);
 				return;
 			}
 			OBJECT(current_object)->goal_actor.counter = 0u;
@@ -757,11 +758,10 @@ void goal_actor_run(void)
 			script = OBJECT(current_object)->goal_actor.script;
 			OBJECT(current_object)->goal_actor.script = next_step;
 			OBJECT(current_object)->goal_actor.step = script;
-			step_value = draw_object(step_value);
+			draw_object(step_value);
 			return;
 		}
 		command = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-		step_value = goal_actor_command_jumps[command];
 		script_word += 2u;
 		switch (command)
 		{
@@ -771,7 +771,7 @@ void goal_actor_run(void)
 			script = OBJECT(current_object)->goal_actor.script;
 			OBJECT(current_object)->goal_actor.script = next_step;
 			OBJECT(current_object)->goal_actor.step = script;
-			step_value = draw_object(step_value);
+			draw_object(step_value);
 			return;
 		case 1:
 			OBJECT(current_object)->flags = 0u;
@@ -789,7 +789,7 @@ void goal_actor_run(void)
 			script = OBJECT(current_object)->goal_actor.script;
 			OBJECT(current_object)->goal_actor.script = next_step;
 			OBJECT(current_object)->goal_actor.step = script;
-			step_value = draw_object(step_value);
+			draw_object(step_value);
 			return;
 		case 4:
 			CAR(player_car)->segment_progress = (CAR(player_car)->segment_progress & 0xFFFF0000u) | ((uint16_t)CAR(player_car)->segment_progress + 0x4000u & 0xFFFFu);
@@ -797,7 +797,7 @@ void goal_actor_run(void)
 			script = OBJECT(current_object)->goal_actor.script;
 			OBJECT(current_object)->goal_actor.script = next_step;
 			OBJECT(current_object)->goal_actor.step = script;
-			step_value = draw_object(step_value);
+			draw_object(step_value);
 			return;
 		case 5:
 			break;

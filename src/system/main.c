@@ -3,7 +3,7 @@
  *    Description: the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -427,7 +427,6 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 {
 	uint8_t lamp_blink = 0;
 	uint32_t index = 0, play_mode = 0;
-	uint32_t seat_outputs = 0;
 
 	if (mode == 0u || mode == 6u)
 		return mode;
@@ -445,8 +444,7 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 			SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 		}
 		SCREEN(screen)->start_lamp_blink = 0u;
-		seat_outputs = port_d_outputs_ADDRESS + index;
-		mem_write8(seat_outputs, mem_read8(seat_outputs) & ~4u);
+		port_d_outputs[index] &= ~4u;
 		play_mode = 6u;
 		AS32(SCREEN(screen)->game_mode) = 6u;
 		SCREEN(screen)->link_event = 1u;
@@ -468,8 +466,7 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 	}
 	SCREEN(screen)->start_lamp_blink = 0u;
-	seat_outputs = port_d_outputs_ADDRESS + index;
-	mem_write8(seat_outputs, mem_read8(seat_outputs) & ~4u);
+	port_d_outputs[index] &= ~4u;
 	play_mode = 6u;
 	AS32(SCREEN(screen)->game_mode) = 6u;
 	SCREEN(screen)->link_event = 1u;

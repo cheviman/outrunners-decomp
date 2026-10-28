@@ -3,7 +3,7 @@
  *    Description: the course: its segments built ahead of the car, the road projected for the view
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -67,7 +67,7 @@ void player_car_extend_course(void)
 	if (SCREEN(screen)->forks_decided < forks_reached)
 		return;
 	course = CAR(player_car)->course;
-	branch = mem_read8(screen + 0x349u + forks_reached);
+	branch = SCREEN(screen)->route_branches[(int32_t)(forks_reached - 1u)];
 	CAR(player_car)->branch = branch;
 	branch_stages = COURSE_FORK(course)->branch_stages[(int32_t)branch];
 	CAR(player_car)->course = COURSE_FORK(course)->branch_courses[(int32_t)branch];
@@ -379,7 +379,7 @@ void player_car_project_road(void)
 			segments_left--;
 			if (segments_left == 0u)
 			{
-				mem_write16(projected_segment + 0x10u, 0u);
+				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
 				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 				return;
 			}
@@ -398,7 +398,7 @@ void player_car_project_road(void)
 			segments_left--;
 			if (segments_left == 0u)
 			{
-				mem_write16(projected_segment + 0x10u, 0u);
+				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
 				crest_y = (uint16_t)previous_y;
 				crest_layer = 3u;
 				note_road_crest(crest_y, crest_layer);
@@ -433,7 +433,7 @@ void player_car_project_road(void)
 			segments_left--;
 			if (segments_left == 0u)
 			{
-				mem_write16(projected_segment + 0x10u, 0u);
+				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
 				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 				return;
 			}
@@ -443,7 +443,7 @@ void player_car_project_road(void)
 		if (segments_left == 0u)
 			break;
 	}
-	mem_write16(projected_segment + 0x10u, 0u);
+	PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
 	note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 }
 

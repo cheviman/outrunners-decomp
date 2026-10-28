@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -2290,7 +2290,8 @@ struct object
 			uint16_t unk_E2;
 			uint8_t unk_E4;
 			uint8_t pad_E5[0xB];
-			uint16_t unk_F0;
+			uint8_t unk_F0;
+			uint8_t pad_F1[0x1];
 			uint16_t unk_F2;
 			uint16_t unk_F4;
 			uint8_t unk_F6;
@@ -2899,11 +2900,7 @@ struct object
 			uint16_t name_x;
 			uint16_t name_y;
 			uint16_t name_attribute;
-			union
-			{
-				uint32_t name_word;
-				uint8_t name;
-			};
+			uint8_t name[0x4];
 			uint16_t time_x;
 			uint16_t time_y;
 			uint16_t time_attribute;
@@ -3230,7 +3227,7 @@ struct object
 			uint8_t pad_02[0x7];
 			uint8_t course;
 			uint8_t pad_0A[0x76];
-			uint8_t text;
+			uint8_t text[0x10];
 		} ranking_record;
 		struct
 		{
@@ -4226,9 +4223,7 @@ struct screen
 	uint8_t host_player;
 	uint8_t pad_30D[0x2];
 	uint8_t entrant_count;
-	uint8_t entrants;
-	uint8_t pad_311[0x3];
-	uint32_t last_four_entrants;
+	uint8_t entrants[0x8];
 	uint8_t is_host;
 	uint8_t entry_accepted;
 	uint8_t in_game;
@@ -4252,8 +4247,7 @@ struct screen
 	uint8_t pad_353[0x7];
 	uint8_t checkpoint_passes[0x6];
 	uint8_t checkpoint_orders[0x30];
-	uint8_t checkpoint_order;
-	uint8_t pad_391[0x2F];
+	uint8_t checkpoint_order[0x30];
 	uint16_t checkpoint_times_by_player[0x30];
 	uint16_t checkpoint_times[0x30];
 	uint8_t checkpoints_passed[0x8];
@@ -4280,7 +4274,7 @@ struct screen
 	uint8_t second_sound_queue[0x20];
 	uint8_t pad_862[0x9E];
 	uint32_t palette_upload_count;
-	uint8_t pad_904[0x1FC];
+	uint32_t palette_uploads[0x7F];
 	uint16_t unpack_state;
 	uint8_t unpack_read_place;
 	uint8_t unpack_write_place;
@@ -4299,11 +4293,7 @@ struct screen
 	uint8_t pad_F0C[0x2];
 	uint8_t palette_fades_started;
 	uint8_t nearing_fork;
-	uint8_t lcd_text;
-	uint8_t pad_F11[0x3];
-	uint32_t lcd_text_4_to_7;
-	uint32_t lcd_text_8_to_11;
-	uint32_t lcd_text_12_to_15;
+	uint8_t lcd_text[0x10];
 	uint16_t button_lamps;
 	uint8_t music_lamp_mode;
 	uint8_t arrows_lamp_mode;
@@ -4362,8 +4352,8 @@ struct object_area
 	uint32_t list_first;
 	uint32_t next_list;
 	uint32_t list_end;
-	uint8_t slots;
-	uint8_t pad_11[0x7FEF];
+	uint8_t slots[0x7C];
+	uint8_t pad_8C[0x7F74];
 };
 
 struct race
@@ -4452,7 +4442,7 @@ struct race
 struct object_list
 {
 	uint16_t count;
-	uint8_t pad_02[0xFE];
+	uint16_t objects[0x7F];
 };
 
 struct road_row_record
@@ -5892,6 +5882,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define BOARD_CAR_SPRITE(address) ((struct board_car_sprite *)ram(address))
 #define CHECKPOINT_PASS(address) ((struct checkpoint_pass *)ram(address))
 #define OBJECT_WORDS(address) ((uint32_t *)ram(address))
+#define OBJECT_SLOT_FLAGS(address) ((uint8_t *)ram(address))
 #define PLAYER_CAR_NUMBERS(address) ((uint8_t *)ram(address))
 #define SEEN_RECORD_SERIALS(address) ((uint8_t *)ram(address))
 #define RACE_RECORD_WORDS(address) ((uint32_t *)ram(address))

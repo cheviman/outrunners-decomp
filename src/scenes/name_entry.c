@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -63,7 +63,7 @@ void name_entry_update(void)
 	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
 	uint8_t letter_character = 0, letter_index = 0, new_steps = 0, sound_code = 0, steps = 0, turn_rate = 0;
 	uint16_t buttons_pressed = 0, new_angle = 0, turn_buttons = 0;
-	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, ignored = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
+	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
 	uint32_t kept_letter = 0, kept_place = 0;
 	uint8_t letters_left = 0, turn_delay = 0, entered_letter = 0;
 	uint16_t spin_frames = 0, timer = 0, timer_2 = 0;
@@ -127,7 +127,7 @@ void name_entry_update(void)
 			text_record = current_object + 0xA4u;
 			draw_text(text_record);
 			text_record = current_object + 0x9Au;
-			ignored = draw_text(text_record);
+			draw_text(text_record);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -287,7 +287,7 @@ void name_entry_update(void)
 												letter_character = mem_read8(name_entry_letters_ADDRESS + saved_letter);
 												if (entered_letter == 0x1Du)
 													letter_character = 0x20u;
-												mem_write8(current_object + 0xA0u + name_place, letter_character);
+												OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
 												name_place = (name_place & ~0xFFu) | (uint8_t)(name_place + 1u);
 											}
 											if (L_00212C || (uint8_t)name_place != 3u)
@@ -304,7 +304,7 @@ void name_entry_update(void)
 								case 0x0020E2u:
 									if (letter == 0x1Eu)
 									{
-										mem_write8(current_object + 0xA0u + name_place, 0u);
+										OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
 										name_place = (uint8_t)(name_place - 1u);
 										L_00212C = true;
 									}
@@ -330,7 +330,7 @@ void name_entry_update(void)
 					letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
 					if ((game_frame_count & 4u) == 0u)
 						letter_character = 0u;
-					mem_write8(current_object + 0xA0u + name_place, letter_character);
+					OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
 					timer = OBJECT(current_object)->name_entry.timer;
 					OBJECT(current_object)->name_entry.timer = timer - 1u;
 					if (timer != 1u)
@@ -342,7 +342,7 @@ void name_entry_update(void)
 						text_record = current_object + 0xA4u;
 						draw_text(text_record);
 						text_record = current_object + 0x9Au;
-						ignored = draw_text(text_record);
+						draw_text(text_record);
 						return;
 					}
 				}
@@ -353,10 +353,15 @@ void name_entry_update(void)
 			}
 		} while (L_00209D);
 		OBJECT(current_object)->name_entry.open = 0u;
-		mem_write8(current_object + 0xA0u + name_place, 0u);
-		entered_name = OBJECT(current_object)->name_entry.name_word;
+		OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
+		entered_name = (OBJECT(current_object)->name_entry.name[0] | ((uint32_t)OBJECT(current_object)->name_entry.name[1] << 8u) | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 16u) | ((uint32_t)OBJECT(current_object)->name_entry.name[3] << 24u));
 		if (entered_name == 0u)
-			OBJECT(current_object)->name_entry.name_word = 0x2D2D2Du;
+		{
+			OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+			OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+			OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+			OBJECT(current_object)->name_entry.name[3] = 0u;
+		}
 		else
 		{
 			rejected_name = name_entry_rejected_names_ADDRESS;
@@ -366,7 +371,10 @@ void name_entry_update(void)
 				rejected_name += 4u;
 				if (entered_name == element)
 				{
-					OBJECT(current_object)->name_entry.name_word = 0x2D2D2Du;
+					OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[3] = 0u;
 					break;
 				}
 			}
@@ -384,8 +392,8 @@ void name_entry_update(void)
 			RACE(race)->record_serial++;
 			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 			RACE(race)->record_model = CAR(player_car)->model;
-			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
-			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
+			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
+			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
 			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
 			OBJECT(current_object)->state++;
 		}
@@ -401,15 +409,15 @@ void name_entry_update(void)
 			RACE(race)->record_serial++;
 			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
 			RACE(race)->record_model = CAR(player_car)->model;
-			RACE(race)->record_name = OBJECT(current_object)->name_entry.name;
-			RACE(race)->record_name_rest = (uint16_t)(OBJECT(current_object)->name_entry.name_word >> 8u);
+			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
+			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
 			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
 			OBJECT(current_object)->state++;
 		}
 		text_record = current_object + 0xA4u;
 		draw_text(text_record);
 		text_record = current_object + 0x9Au;
-		ignored = draw_text(text_record);
+		draw_text(text_record);
 		return;
 	case 4:
 		break;
@@ -417,7 +425,7 @@ void name_entry_update(void)
 	text_record = current_object + 0xA4u;
 	draw_text(text_record);
 	text_record = current_object + 0x9Au;
-	ignored = draw_text(text_record);
+	draw_text(text_record);
 }
 
 /* A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow
@@ -520,9 +528,8 @@ void name_entry_letter_update(void)
 	carry = (letter_scale >> 3) & 1u;
 	letter_scale = ((int32_t)letter_scale >> 4) + carry;
 	OBJECT(current_object)->height_scale = letter_scale;
-	letter_scale = (int32_t)(letter_scale * OBJECT(current_object)->name_entry_letter.width_factor) >> 8;
-	OBJECT(current_object)->width_scale = letter_scale;
-	letter_scale = draw_object(letter_scale);
+	OBJECT(current_object)->width_scale = (int32_t)(letter_scale * OBJECT(current_object)->name_entry_letter.width_factor) >> 8;
+	draw_object(letter_scale);
 }
 
 /* Shows the name entry on the cabinet LCD: 0 clears it (clear_lcd), shows the DJ's face (screen dj_face
@@ -583,17 +590,14 @@ void name_entry_lcd_update(void)
    name_entry_drivers_update, which with state 1 draws it; then it draws itself every frame. */
 void name_entry_car_update(void)
 {
-	uint32_t animation = 0, model = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, model = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = name_entry_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -615,17 +619,14 @@ void name_entry_car_update(void)
    them; then drawn every frame. */
 void name_entry_drivers_update(void)
 {
-	uint32_t animation = 0, model = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, model = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = name_entry_drivers_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -646,17 +647,14 @@ void name_entry_drivers_update(void)
    it up; drawn every frame. */
 void name_entry_course_name_update(void)
 {
-	uint32_t animation = 0, course_number = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, course_number = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = name_entry_course_name_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -671,5 +669,5 @@ void name_entry_course_name_update(void)
 	OBJECT(current_object)->height_scale = 0x100u;
 	OBJECT(current_object)->width_scale = 0x100u;
 	OBJECT(current_object)->y = 0x40u;
-	course_number = draw_object(course_number);
+	draw_object(course_number);
 }

@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -616,7 +616,7 @@ void car_attendant_run(void)
 {
 	uint32_t negative = 0;
 	uint16_t target_side = 0;
-	uint32_t across = 0, animation = 0, attendant_angle = 0, down = 0, ignored = 0, point_depth = 0, radius = 0;
+	uint32_t across = 0, animation = 0, attendant_angle = 0, down = 0, point_depth = 0, radius = 0;
 	uint16_t angle_to_front = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -668,7 +668,7 @@ void car_attendant_run(void)
 			down = 0x6Cu;
 			point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 			turntable_draw(across, down, point_depth);
-			ignored = animation_advance(0u);
+			animation_advance(0u);
 			return;
 		}
 		if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.car_chosen == 0u)
@@ -684,7 +684,7 @@ void car_attendant_run(void)
 			down = 0x6Cu;
 			point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 			turntable_draw(across, down, point_depth);
-			ignored = animation_advance(0u);
+			animation_advance(0u);
 			return;
 		}
 		OBJECT(current_object)->car_attendant.side_offset = 0;
@@ -723,7 +723,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	case 3:
 		break;
@@ -739,7 +739,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	attendant_angle = (uint16_t)OBJECT(current_object)->car_attendant.side_offset;
@@ -771,7 +771,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	if (OBJECT(OBJECT(current_object)->car_attendant.car_select)->car_select.transmission_chosen != 0u)
@@ -793,7 +793,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	animation = STANDING;
@@ -810,7 +810,7 @@ void car_attendant_run(void)
 		down = 0x6Cu;
 		point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 		turntable_draw(across, down, point_depth);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	animation_start(animation);
@@ -825,7 +825,7 @@ void car_attendant_run(void)
 	down = 0x6Cu;
 	point_depth = ((int32_t)(point_depth * radius) >> 14) + 0x140u;
 	turntable_draw(across, down, point_depth);
-	ignored = animation_advance(0u);
+	animation_advance(0u);
 }
 
 /* One of the eight cars on the car select's turntable (car: its model and its place, car << 9), by
@@ -836,13 +836,10 @@ void car_attendant_run(void)
    and goes to 2, where draw_object draws it where it was. */
 void turntable_car_show(void)
 {
-	uint32_t across = 0, animation = 0, car_angle = 0, down = 0, ignored = 0, look = 0, point_depth = 0, ring_radius = 0, routine = 0, seen_angle = 0;
+	uint32_t across = 0, animation = 0, car_angle = 0, down = 0, look = 0, point_depth = 0, ring_radius = 0, seen_angle = 0;
 	uint16_t angle_from_front = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = turntable_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -856,7 +853,7 @@ void turntable_car_show(void)
 	case 1:
 		break;
 	case 2:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	car_angle = OBJECT(current_object)->turntable_car.car;
@@ -876,7 +873,7 @@ void turntable_car_show(void)
 	point_depth = (int32_t)((0u - cosine_table[seen_angle]) * ring_radius) >> 14;
 	down = 0x70u;
 	point_depth += 0x140u;
-	ignored = turntable_draw(across, down, point_depth);
+	turntable_draw(across, down, point_depth);
 }
 
 /* A ring of scenery round the car select's turntable (one of twelve groups, from 006A18: the crowd, the
@@ -888,7 +885,7 @@ void turntable_car_show(void)
 void turntable_scenery_show(void)
 {
 	uint16_t item_flags = 0, leftover = 0, size = 0;
-	uint32_t across = 0, animation = 0, down = 0, group = 0, ignored = 0, item_angle = 0, item_place = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
+	uint32_t across = 0, animation = 0, down = 0, group = 0, item_angle = 0, item_place = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
 	uint32_t kept_saved_place = 0, kept_item_place = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -949,7 +946,7 @@ void turntable_scenery_show(void)
 		ITEM_PLACE_WORDS(saved_place)[0] = item_flags & ~0xDFu;
 		saved_place += 2u;
 	}
-	ignored = animation_advance(0u);
+	animation_advance(0u);
 }
 
 /* Starts the eight letters of WELCOME! (itself the first), then welcome_letter_show. */
@@ -976,11 +973,8 @@ void welcome_letter_show(void)
 {
 	uint32_t animation = 0, letter_index = 0, place = 0;
 	uint16_t frames_left = 0, delay_left = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	letter_index = welcome_letter_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 8u;
@@ -993,8 +987,7 @@ void welcome_letter_show(void)
 		OBJECT(current_object)->x = WELCOME_LETTER_PLACE(place)->x;
 		OBJECT(current_object)->y = 0x50u;
 		OBJECT(current_object)->frame = WELCOME_LETTER_PLACE(place)->letter;
-		letter_index = (uint16_t)(letter_index * 2u);
-		OBJECT(current_object)->welcome_letter.delay = letter_index;
+		OBJECT(current_object)->welcome_letter.delay = letter_index * 2u;
 		OBJECT(current_object)->welcome_letter.frames_left = 0x2Du;
 		OBJECT(current_object)->welcome_letter.palette_list = welcome_letter_palette_steps_ADDRESS;
 		OBJECT(current_object)->state++;
@@ -1035,13 +1028,10 @@ void welcome_letter_show(void)
    (timer); 2 hidden 10 frames; it ends as soon as the car is chosen (car_select car_chosen). */
 void select_car_heading_show(void)
 {
-	uint32_t animation = 0, object = 0, piece = 0, routine = 0;
+	uint32_t animation = 0, object = 0, piece = 0;
 	uint16_t timer = 0, timer_2 = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = select_car_heading_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		piece = select_instruction_pieces_ADDRESS;
@@ -1080,7 +1070,7 @@ void select_car_heading_show(void)
 			OBJECT(current_object)->select_car_heading.timer = (OBJECT(current_object)->select_car_heading.timer & 0xFF00u) | 0xAu;
 			OBJECT(current_object)->state++;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 1:
 		if (OBJECT(OBJECT(current_object)->select_car_heading.car_select)->car_select.car_chosen != 0u)
@@ -1095,7 +1085,7 @@ void select_car_heading_show(void)
 			OBJECT(current_object)->select_car_heading.timer = (OBJECT(current_object)->select_car_heading.timer & 0xFF00u) | 0xAu;
 			OBJECT(current_object)->state++;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		if (OBJECT(OBJECT(current_object)->select_car_heading.car_select)->car_select.car_chosen != 0u)
@@ -1121,13 +1111,10 @@ void select_car_heading_show(void)
    (transmission_chosen), when it ends. */
 void select_instruction_show(void)
 {
-	uint32_t ignored = 0, piece_animation = 0, routine = 0;
+	uint32_t piece_animation = 0;
 	uint16_t timer = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = select_instruction_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -1137,8 +1124,8 @@ void select_instruction_show(void)
 		OBJECT(current_object)->state++;
 		if (OBJECT(OBJECT(current_object)->select_instruction.car_select)->car_select.car_chosen == 0u)
 		{
-			draw_object(routine);
-			ignored = animation_advance(0u);
+			draw_object(0u);
+			animation_advance(0u);
 			return;
 		}
 		OBJECT(current_object)->select_instruction.timer = 0x10u;
@@ -1147,8 +1134,8 @@ void select_instruction_show(void)
 	case 1:
 		if (OBJECT(OBJECT(current_object)->select_instruction.car_select)->car_select.car_chosen == 0u)
 		{
-			draw_object(routine);
-			ignored = animation_advance(0u);
+			draw_object(0u);
+			animation_advance(0u);
 			return;
 		}
 		OBJECT(current_object)->select_instruction.timer = 0x10u;
@@ -1158,8 +1145,8 @@ void select_instruction_show(void)
 		OBJECT(current_object)->select_instruction.timer = timer - 1u;
 		if (timer != 1u)
 		{
-			draw_object(routine);
-			ignored = animation_advance(0u);
+			draw_object(0u);
+			animation_advance(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1168,8 +1155,8 @@ void select_instruction_show(void)
 			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		draw_object(routine);
-		ignored = animation_advance(0u);
+		draw_object(0u);
+		animation_advance(0u);
 		return;
 	case 2:
 		break;
@@ -1179,8 +1166,8 @@ void select_instruction_show(void)
 			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		draw_object(routine);
-		ignored = animation_advance(0u);
+		draw_object(0u);
+		animation_advance(0u);
 		return;
 	}
 	OBJECT(current_object)->y -= 2u;
@@ -1188,8 +1175,8 @@ void select_instruction_show(void)
 	OBJECT(current_object)->select_instruction.timer = timer - 1u;
 	if (timer != 1u)
 	{
-		draw_object(routine);
-		ignored = animation_advance(0u);
+		draw_object(0u);
+		animation_advance(0u);
 		return;
 	}
 	OBJECT(current_object)->state++;
@@ -1198,8 +1185,8 @@ void select_instruction_show(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	draw_object(routine);
-	ignored = animation_advance(0u);
+	draw_object(0u);
+	animation_advance(0u);
 }
 
 /* The transmission choice of the car select: the AUTOMATIC and MANUAL panels (on the second tile layer,
@@ -1323,7 +1310,7 @@ void transmission_choice_run(void)
    (transmission_choice), which slide it. Nothing sets state 2 (drawing only). */
 void automatic_panel_show(void)
 {
-	uint32_t animation = 0, object = 0, panel_y = 0;
+	uint32_t animation = 0, object = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1346,9 +1333,8 @@ void automatic_panel_show(void)
 	case 2:
 		object = OBJECT(current_object)->automatic_panel.choice;
 		OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-		panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-		OBJECT(current_object)->y = panel_y;
-		panel_y = draw_object(panel_y);
+		OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+		draw_object(0u);
 		return;
 	}
 	if (CAR(player_car)->transmission != 0u)
@@ -1356,17 +1342,15 @@ void automatic_panel_show(void)
 		OBJECT(current_object)->palette = 0x2AEu;
 		object = OBJECT(current_object)->automatic_panel.choice;
 		OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-		panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-		OBJECT(current_object)->y = panel_y;
-		panel_y = draw_object(panel_y);
+		OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+		draw_object(0u);
 		return;
 	}
 	step_palette();
 	object = OBJECT(current_object)->automatic_panel.choice;
 	OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-	panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-	OBJECT(current_object)->y = panel_y;
-	panel_y = draw_object(panel_y);
+	OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+	draw_object(0u);
 }
 
 /* The MANUAL TRANSMISSION title of the right panel of the transmission choice, by state
@@ -1376,7 +1360,7 @@ void automatic_panel_show(void)
    slide it. Nothing sets state 2 (drawing only). */
 void manual_panel_show(void)
 {
-	uint32_t animation = 0, object = 0, panel_y = 0;
+	uint32_t animation = 0, object = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1400,9 +1384,8 @@ void manual_panel_show(void)
 	case 2:
 		object = OBJECT(current_object)->manual_panel.choice;
 		OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-		panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-		OBJECT(current_object)->y = panel_y;
-		panel_y = draw_object(panel_y);
+		OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+		draw_object(0u);
 		return;
 	}
 	if (CAR(player_car)->transmission == 0u)
@@ -1410,17 +1393,15 @@ void manual_panel_show(void)
 		OBJECT(current_object)->palette = 0x2AEu;
 		object = OBJECT(current_object)->manual_panel.choice;
 		OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-		panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-		OBJECT(current_object)->y = panel_y;
-		panel_y = draw_object(panel_y);
+		OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+		draw_object(0u);
 		return;
 	}
 	step_palette();
 	object = OBJECT(current_object)->manual_panel.choice;
 	OBJECT(current_object)->x = 0u - OBJECT(object)->x + OBJECT(current_object)->x_offset;
-	panel_y = (uint16_t)(0u - OBJECT(object)->y + OBJECT(current_object)->y_offset);
-	OBJECT(current_object)->y = panel_y;
-	panel_y = draw_object(panel_y);
+	OBJECT(current_object)->y = 0u - OBJECT(object)->y + OBJECT(current_object)->y_offset;
+	draw_object(0u);
 }
 
 /* Sets up the label of the automatic transmission's panel (sprite set 2C1, 24 below the panel's place;
@@ -1463,7 +1444,7 @@ void transmission_label_start_manual(void)
    ends when the panel ends. */
 void transmission_label_follow(void)
 {
-	uint32_t label_y = 0, object = 0;
+	uint32_t object = 0;
 
 	object = OBJECT(current_object)->transmission_label.panel;
 	if ((OBJECT(object)->flags & 1u) == 0u)
@@ -1472,10 +1453,9 @@ void transmission_label_follow(void)
 		return;
 	}
 	OBJECT(current_object)->x = OBJECT(object)->x + OBJECT(current_object)->x_offset;
-	label_y = (uint16_t)(OBJECT(object)->y + OBJECT(current_object)->y_offset);
-	OBJECT(current_object)->y = label_y;
+	OBJECT(current_object)->y = OBJECT(object)->y + OBJECT(current_object)->y_offset;
 	OBJECT(current_object)->palette = OBJECT(object)->palette;
-	label_y = draw_object(label_y);
+	draw_object(0u);
 }
 
 /* Sets up the couple who drive the chosen car (a man and a woman, by the car's model: 006E58) on the
@@ -1543,7 +1523,7 @@ void car_caption_show(void)
 		}
 		OBJECT(current_object)->frame = car_model;
 		OBJECT(current_object)->palette = car_caption_palettes[car_model];
-		car_model = draw_object(car_model);
+		draw_object(car_model);
 		return;
 	case 1:
 		if (OBJECT(OBJECT(current_object)->car_caption.car_select)->car_select.car_chosen != 0u)
@@ -1566,7 +1546,7 @@ void car_caption_show(void)
 		}
 		OBJECT(current_object)->frame = car_model;
 		OBJECT(current_object)->palette = car_caption_palettes[car_model];
-		car_model = draw_object(car_model);
+		draw_object(car_model);
 		return;
 	case 2:
 		if (OBJECT(OBJECT(current_object)->car_caption.car_select)->car_select.car_chosen != 0u)
@@ -1635,7 +1615,7 @@ void car_gears_caption_show(void)
 			OBJECT(current_object)->state++;
 		}
 		OBJECT(current_object)->frame = car_gears_caption_frames[car_model];
-		car_model = draw_object(car_model);
+		draw_object(car_model);
 		return;
 	case 1:
 		if (OBJECT(OBJECT(current_object)->car_gears_caption.car_select)->car_select.car_chosen != 0u)
@@ -1657,7 +1637,7 @@ void car_gears_caption_show(void)
 			OBJECT(current_object)->state++;
 		}
 		OBJECT(current_object)->frame = car_gears_caption_frames[car_model];
-		car_model = draw_object(car_model);
+		draw_object(car_model);
 		return;
 	case 2:
 		if (OBJECT(OBJECT(current_object)->car_gears_caption.car_select)->car_select.car_chosen != 0u)
@@ -1690,13 +1670,10 @@ void car_gears_caption_show(void)
    (car_select entry_over) JUST A MOMENT PLEASE (animation 28D) instead: 3 drawn 20 frames, 4 hidden 10. */
 void waiting_banner_show(void)
 {
-	uint32_t animation = 0, routine = 0;
+	uint32_t animation = 0;
 	uint8_t timer = 0, timer_2 = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = waiting_banner_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0u;
@@ -1722,7 +1699,7 @@ void waiting_banner_show(void)
 			OBJECT(current_object)->waiting_banner.timer = 0xAu;
 			OBJECT(current_object)->state++;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 1:
 		if (OBJECT(OBJECT(current_object)->waiting_banner.car_select)->car_select.entry_over != 0u)
@@ -1739,7 +1716,7 @@ void waiting_banner_show(void)
 			OBJECT(current_object)->waiting_banner.timer = 0xAu;
 			OBJECT(current_object)->state++;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 3:
 		timer = OBJECT(current_object)->waiting_banner.timer;
@@ -1749,7 +1726,7 @@ void waiting_banner_show(void)
 			OBJECT(current_object)->waiting_banner.timer = 0xAu;
 			OBJECT(current_object)->state++;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		if (OBJECT(OBJECT(current_object)->waiting_banner.car_select)->car_select.entry_over != 0u)
@@ -1765,7 +1742,7 @@ void waiting_banner_show(void)
 				OBJECT(current_object)->waiting_banner.timer = 0xAu;
 				OBJECT(current_object)->state++;
 			}
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		timer_2 = OBJECT(current_object)->waiting_banner.timer;
@@ -1799,9 +1776,9 @@ void waiting_banner_show(void)
 void car_select_entries_run(void)
 {
 	uint8_t own_car_number = 0;
-	uint32_t car_flag = 0, chosen_car = 0, flag_blink_frames = 0, ignored = 0, lcd_text_end = 0, object = 0, players_left = 0, racer = 0, racer_car_number = 0, racer_place = 0, racers_left = 0;
+	uint32_t car_flag = 0, chosen_car = 0, flag_blink_frames = 0, ignored = 0, lcd_text_end = 0, object = 0, own_number = 0, players_left = 0, racer = 0, racer_car_number = 0, racer_place = 0, racers_left = 0;
 	uint8_t blink_timer = 0;
-	uint32_t own_digit_place = 0, car_choice = 0;
+	uint32_t car_choice = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1848,8 +1825,8 @@ void car_select_entries_run(void)
 	OBJECT(current_object)->car_select_entries.blink_timer = blink_timer - 1u;
 	if (blink_timer == 1u)
 	{
-		own_digit_place = screen + 0xF18u + OBJECT(current_object)->car_select_entries.own_number;
-		mem_write8(own_digit_place, mem_read8(own_digit_place) ^ OBJECT(current_object)->car_select_entries.digit_toggle);
+		own_number = OBJECT(current_object)->car_select_entries.own_number;
+		SCREEN(screen)->lcd_text[(int32_t)(own_number + 8u)] ^= OBJECT(current_object)->car_select_entries.digit_toggle;
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
 	}
 	racer_place = OBJECT(current_object)->car_select_entries.race_order;
@@ -1862,8 +1839,8 @@ void car_select_entries_run(void)
 		if (SCREEN(screen)->player != racer && (OBJECT(current_object)->car_select_entries.shown_players & shl32(1u, (int)(racer))) == 0u)
 		{
 			racer_car_number = car_numbers[racer];
-			mem_write8(screen + 0xF18u + racer_car_number, racer_car_number + 0x31u);
-			car_choice = mem_read8(0x20FC48u + (racer << 7)) - 1u;
+			SCREEN(screen)->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
+			car_choice = RACE(RACE_COPY_1)[racer].car_choice - 1u;
 			chosen_car = car_choice;
 			if ((int32_t)car_choice >= 0)
 			{
@@ -1964,7 +1941,7 @@ void choice_flag_follow(void)
 	carry = (flag_y >> 11) & 1u;
 	OBJECT(current_object)->x = flag_x;
 	OBJECT(current_object)->y = ((int32_t)flag_y >> 12) + 0x60u + carry;
-	perspective = draw_object(perspective);
+	draw_object(perspective);
 }
 
 /* Sets up the flag of one more player on a car that has one (on the last flag there, below), starts its
@@ -1989,7 +1966,7 @@ void stacked_choice_flag_start(void)
    and visible); else it is not drawn. */
 void stacked_choice_flag_follow(void)
 {
-	uint32_t flag_y = 0, object = 0;
+	uint32_t object = 0;
 	uint8_t below_shown = 0;
 
 	object = OBJECT(current_object)->stacked_choice_flag.below;
@@ -2000,9 +1977,8 @@ void stacked_choice_flag_follow(void)
 		if (below_shown != 0u)
 		{
 			OBJECT(current_object)->x = OBJECT(object)->x + 3u;
-			flag_y = (uint16_t)(OBJECT(object)->y - 0x14u);
-			OBJECT(current_object)->y = flag_y;
-			flag_y = draw_object(flag_y);
+			OBJECT(current_object)->y = OBJECT(object)->y - 0x14u;
+			draw_object(0u);
 			return;
 		}
 	}
@@ -2028,7 +2004,7 @@ void choice_flag_number_start(void)
    and visible); else it is not drawn. */
 void choice_flag_number_follow(void)
 {
-	uint32_t number_y = 0, object = 0;
+	uint32_t object = 0;
 	uint8_t flag_shown = 0;
 
 	object = OBJECT(current_object)->choice_flag_number.flag;
@@ -2039,9 +2015,8 @@ void choice_flag_number_follow(void)
 		if (flag_shown != 0u)
 		{
 			OBJECT(current_object)->x = OBJECT(object)->x + 0x13u;
-			number_y = (uint16_t)(OBJECT(object)->y - 0x10u);
-			OBJECT(current_object)->y = number_y;
-			number_y = draw_object(number_y);
+			OBJECT(current_object)->y = OBJECT(object)->y - 0x10u;
+			draw_object(0u);
 			return;
 		}
 	}
@@ -2239,12 +2214,9 @@ void entry_countdown_count(void)
 	divux_pair(0xAu, &time_shown, &remainder);
 	zero = (uint32_t)(time_shown == 0u);
 	if (zero == 0u)
-	{
-		time_shown = (time_shown & ~0xFFu) | (uint8_t)(time_shown + 0x30u);
-		SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFFFF00u) | (time_shown & 0xFFu);
-	}
-	SCREEN(screen)->lcd_text_8_to_11 = (SCREEN(screen)->lcd_text_8_to_11 & 0xFFFF00FFu) | ((remainder + 0x30u & 0xFFu) << 8u);
-	time_shown = draw_object(time_shown);
+		SCREEN(screen)->lcd_text[8] = time_shown + 0x30u;
+	SCREEN(screen)->lcd_text[9] = remainder + 0x30u;
+	draw_object(time_shown);
 }
 
 /* Does nothing (the number is no longer drawn): the entry time is over. */
@@ -2274,12 +2246,11 @@ void entry_banner_blink(void)
 {
 	uint32_t blink_frames = 0;
 
-	blink_frames = OBJECT(current_object)->entry_banner.blink;
-	blink_frames = (uint8_t)(blink_frames + 1u);
+	blink_frames = (uint8_t)(OBJECT(current_object)->entry_banner.blink + 1u);
 	OBJECT(current_object)->entry_banner.blink = blink_frames;
 	if ((blink_frames & 0x10u) != 0u)
 		return;
-	blink_frames = draw_object(blink_frames);
+	draw_object(blink_frames);
 }
 
 /* Sets up the ring of cars around the entry countdown with the first car's sprite (turntable_car_looks),
@@ -2305,7 +2276,7 @@ void entry_car_ring_start(void)
 void entry_car_ring_draw(void)
 {
 	uint32_t carry = 0;
-	uint32_t animation = 0, copy_count = 0, ignored = 0, look = 0, ring_angle = 0, ring_car = 0, ring_x = 0, ring_y = 0, y_by_four = 0;
+	uint32_t animation = 0, copy_count = 0, ignored = 0, look = 0, ring_angle = 0, ring_car = 0, ring_x = 0, ring_y = 0;
 	uint8_t copies = 0;
 
 	copy_count = OBJECT(current_object)->entry_car_ring.copies;
@@ -2335,17 +2306,16 @@ void entry_car_ring_draw(void)
 		carry = (ring_x >> 9) & 1u;
 		ring_x = (uint16_t)(((int32_t)ring_x >> 10) + 0xA0u + carry);
 		ring_y = 0u - cosine_table[ring_angle];
-		y_by_four = ring_y * 2u * 2u;
-		ring_y += y_by_four;
+		ring_y += ring_y * 2u * 2u;
 		carry = (ring_y >> 9) & 1u;
 		OBJECT(current_object)->x = ring_x;
 		OBJECT(current_object)->y = ((int32_t)ring_y >> 10) + 0x70u + carry;
-		draw_object(y_by_four);
+		draw_object(ring_angle);
 		copies = OBJECT(current_object)->entry_car_ring.copies;
 		OBJECT(current_object)->entry_car_ring.copies = copies - 1u;
 	} while (copies != 1u);
 	animation_advance(0u);
-	ignored = animation_advance(ignored);
+	animation_advance(ignored);
 }
 
 /* Sends cars up the road behind the entry countdown (entry_traffic_car), by state: 0 one chance in 16
@@ -2386,7 +2356,7 @@ void entry_traffic_run(void)
 void entry_traffic_car_drive(void)
 {
 	uint8_t pass_sound = 0, tyre_noise = 0;
-	uint32_t animation = 0, ignored = 0, look = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, size = 0, traffic_car = 0, traffic_path_step = 0;
+	uint32_t animation = 0, ignored = 0, look = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, traffic_car = 0, traffic_path_step = 0;
 	uint8_t spin_chance = 0;
 	uint16_t spin_delay = 0, spin_delay_2 = 0;
 
@@ -2420,7 +2390,7 @@ void entry_traffic_car_drive(void)
 				OBJECT(current_object)->height_scale = path_size;
 				OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
 				OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-				path_size = draw_object(path_size);
+				draw_object(path_size);
 				return;
 			}
 			pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
@@ -2446,7 +2416,7 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->height_scale = path_size;
 			OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
 			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-			path_size = draw_object(path_size);
+			draw_object(path_size);
 			return;
 		}
 		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
@@ -2465,7 +2435,7 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->height_scale = path_size;
 			OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
 			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-			path_size = draw_object(path_size);
+			draw_object(path_size);
 			return;
 		}
 		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
@@ -2490,21 +2460,20 @@ void entry_traffic_car_drive(void)
 			path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 			OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 			traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-			size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+			mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
 			traffic_path_step += 2u;
-			if (size == 0u)
+			if (mirrored_x != 0u)
 			{
-				pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-				request_sound(pass_sound);
-				OBJECT(current_object)->flags = 0u;
+				OBJECT(current_object)->width_scale = mirrored_x;
+				OBJECT(current_object)->height_scale = mirrored_x;
+				OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+				OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+				draw_object(mirrored_x);
 				return;
 			}
-			OBJECT(current_object)->width_scale = size;
-			OBJECT(current_object)->height_scale = size;
-			mirrored_x = (uint16_t)(0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x);
-			OBJECT(current_object)->x = mirrored_x;
-			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-			mirrored_x = draw_object(mirrored_x);
+			pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
+			request_sound(pass_sound);
+			OBJECT(current_object)->flags = 0u;
 			return;
 		}
 		animation_advance(0u);
@@ -2517,41 +2486,39 @@ void entry_traffic_car_drive(void)
 		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-		size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
 		traffic_path_step += 2u;
-		if (size == 0u)
+		if (mirrored_x != 0u)
 		{
-			pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-			request_sound(pass_sound);
-			OBJECT(current_object)->flags = 0u;
+			OBJECT(current_object)->width_scale = mirrored_x;
+			OBJECT(current_object)->height_scale = mirrored_x;
+			OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			draw_object(mirrored_x);
 			return;
 		}
-		OBJECT(current_object)->width_scale = size;
-		OBJECT(current_object)->height_scale = size;
-		mirrored_x = (uint16_t)(0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x);
-		OBJECT(current_object)->x = mirrored_x;
-		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-		mirrored_x = draw_object(mirrored_x);
+		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
+		request_sound(pass_sound);
+		OBJECT(current_object)->flags = 0u;
 		return;
 	case 2:
 		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-		size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
 		traffic_path_step += 2u;
-		if (size == 0u)
+		if (mirrored_x != 0u)
 		{
-			pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-			request_sound(pass_sound);
-			OBJECT(current_object)->flags = 0u;
+			OBJECT(current_object)->width_scale = mirrored_x;
+			OBJECT(current_object)->height_scale = mirrored_x;
+			OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			draw_object(mirrored_x);
 			return;
 		}
-		OBJECT(current_object)->width_scale = size;
-		OBJECT(current_object)->height_scale = size;
-		mirrored_x = (uint16_t)(0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x);
-		OBJECT(current_object)->x = mirrored_x;
-		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-		mirrored_x = draw_object(mirrored_x);
+		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
+		request_sound(pass_sound);
+		OBJECT(current_object)->flags = 0u;
 		return;
 	}
 	traffic_car = random_number();
@@ -2586,7 +2553,7 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->height_scale = path_size;
 			OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
 			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-			path_size = draw_object(path_size);
+			draw_object(path_size);
 			return;
 		}
 		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
@@ -2599,21 +2566,20 @@ void entry_traffic_car_drive(void)
 	path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 	OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 	traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-	size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+	mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
 	traffic_path_step += 2u;
-	if (size == 0u)
+	if (mirrored_x != 0u)
 	{
-		pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-		request_sound(pass_sound);
-		OBJECT(current_object)->flags = 0u;
+		OBJECT(current_object)->width_scale = mirrored_x;
+		OBJECT(current_object)->height_scale = mirrored_x;
+		OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		draw_object(mirrored_x);
 		return;
 	}
-	OBJECT(current_object)->width_scale = size;
-	OBJECT(current_object)->height_scale = size;
-	mirrored_x = (uint16_t)(0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x);
-	OBJECT(current_object)->x = mirrored_x;
-	OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-	mirrored_x = draw_object(mirrored_x);
+	pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
+	request_sound(pass_sound);
+	OBJECT(current_object)->flags = 0u;
 }
 
 /* Gives the object the next palette (palette, an index into the sprites' palette words, sprite_palettes)

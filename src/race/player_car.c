@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -39,7 +39,7 @@ void player_car_update(void)
 	uint32_t overflow = 0;
 	uint8_t crash_hit_sound = 0, dj_message = 0, frame_time = 0, landing_sound = 0, tyre_noise = 0;
 	uint16_t grid_segment = 0, view_height_offset = 0;
-	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, crash_entry = 0, crash_sound = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, gravity = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_object = 0, hit_side = 0, ignored = 0, impact = 0, model = 0, new_bounce_speed = 0, new_height = 0, object = 0, old_height = 0, other_record = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0;
+	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, crash_entry = 0, crash_sound = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, gravity = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_object = 0, hit_side = 0, impact = 0, model = 0, new_bounce_speed = 0, new_height = 0, object = 0, old_height = 0, other_record = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0;
 	uint8_t hit_guard = 0, crash_sound_delay = 0;
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
 	uint32_t jump_target = 0, stage_count_place = 0;
@@ -483,7 +483,7 @@ void player_car_update(void)
 						player_car_extend_course();
 						player_car_project_road();
 						player_car_engine_sound();
-						ignored = animation_advance(0u);
+						animation_advance(0u);
 						return;
 					}
 					OBJECT(current_object)->player_car.step++;
@@ -507,7 +507,7 @@ void player_car_update(void)
 					player_car_extend_course();
 					player_car_project_road();
 					player_car_engine_sound();
-					ignored = animation_advance(0u);
+					animation_advance(0u);
 					return;
 				case 4:
 					OBJECT(current_object)->player_car.gas = 0u;
@@ -529,7 +529,7 @@ void player_car_update(void)
 					player_car_extend_course();
 					player_car_project_road();
 					player_car_engine_sound();
-					ignored = animation_advance(0u);
+					animation_advance(0u);
 					return;
 				case 5:
 					OBJECT(current_object)->player_car.gas = 0u;
@@ -544,7 +544,7 @@ void player_car_update(void)
 					player_car_extend_course();
 					player_car_project_road();
 					player_car_engine_sound();
-					ignored = animation_advance(0u);
+					animation_advance(0u);
 					return;
 				}
 				break;
@@ -913,12 +913,12 @@ void player_car_animate(void)
 {
 	uint8_t frame_time = 0, slide = 0;
 	uint16_t view_height = 0;
-	uint32_t ignored = 0, model_then_animation = 0;
+	uint32_t model_then_animation = 0;
 
 	model_then_animation = CAR(player_car)->model;
 	if ((OBJECT(current_object)->flags & 4u) != 0u)
 	{
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	if (CAR(player_car)->skidding != 0u)
@@ -947,7 +947,7 @@ void player_car_animate(void)
 			OBJECT(current_object)->frame_countdown = frame_time;
 			OBJECT(current_object)->frame = 0u;
 		}
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 	if (OBJECT(current_object)->player_car.acceleration <= 0 || CAR(player_car)->wheel_slip == 0u)
@@ -966,7 +966,7 @@ void player_car_animate(void)
 		OBJECT(current_object)->frame_countdown = frame_time;
 		OBJECT(current_object)->frame = 0u;
 	}
-	ignored = animation_advance(0u);
+	animation_advance(0u);
 }
 
 /* The car's body as it steers: the model's animation (player_car_steer_animations) in the row of the
@@ -1353,7 +1353,7 @@ void player_car_check_rivals(void)
    the rival_alarm, then it ends. */
 void rival_warning_update(void)
 {
-	uint32_t ignored = 0, object = 0, text = 0;
+	uint32_t object = 0, text = 0;
 	uint8_t off_frames = 0, on_frames = 0, blinks = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -1382,7 +1382,7 @@ void rival_warning_update(void)
 	if (on_frames != 1u)
 	{
 		text = rival_warning_text_ADDRESS;
-		ignored = draw_text(text);
+		draw_text(text);
 		return;
 	}
 	blinks = OBJECT(current_object)->rival_warning.blinks;

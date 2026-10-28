@@ -3,7 +3,7 @@
  *    Description: the traffic: its cars, convoys, people and their hits
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -95,7 +95,7 @@ void traffic_spawner_update(void)
 		racer_list++;
 		do
 		{
-			view_bottom = race_copy_window_segments[(uint32_t)RACER_NUMBERS(racer_list)[0] << 6];
+			view_bottom = RACE(RACE_COPY_1)[RACER_NUMBERS(racer_list)[0]].window_segment;
 			view_top = (uint16_t)((uint32_t)view_bottom + traffic_draw_distance);
 			view_bottom -= traffic_draw_distance;
 			view_top++;
@@ -126,7 +126,7 @@ void traffic_spawner_update(void)
 void traffic_car_start_convoy(void)
 {
 	uint16_t spacing = 0;
-	uint32_t follower_position = 0, leader = 0, line = 0, object = 0;
+	uint32_t leader = 0, line = 0, object = 0;
 
 	line = OBJECT(current_object)->traffic.record;
 	spacing = (uint16_t)TRAFFIC_LINE_RECORD(line)->spacing;
@@ -139,9 +139,7 @@ void traffic_car_start_convoy(void)
 		if (r12 == 0u)
 			break;
 		object = start_object();
-		follower_position = (uint16_t)OBJECT(leader)->position;
-		follower_position = (uint16_t)(follower_position - spacing);
-		OBJECT(object)->position = follower_position;
+		OBJECT(object)->position = OBJECT(leader)->position - spacing;
 		OBJECT(object)->handler = traffic_follower_update_ADDRESS;
 		OBJECT(object)->traffic_follower.stop_distance = OBJECT(leader)->traffic.stop_distance;
 		OBJECT(object)->traffic_follower.record = r12;
@@ -151,21 +149,18 @@ void traffic_car_start_convoy(void)
 	}
 	OBJECT(current_object)->traffic.record = line;
 	OBJECT(current_object)->handler = traffic_car_update_ADDRESS;
-	traffic_car_update(follower_position);
+	traffic_car_update();
 }
 
 /* A traffic car, drawn from the angle the player sees it at. By state: 0 traffic_car_start; 1 moves
    along the road by speed (128ths of a segment a frame, position_fraction carrying into position), then
    traffic_car_draw; once the screen's car has reached the goal (car at_goal) it ends when it is 8
    segments behind the view. */
-void traffic_car_update(uint32_t follower_position)
+void traffic_car_update(void)
 {
-	uint32_t position_fraction = 0, trailing_position = 0, whole_segment = 0;
-	uint32_t state = 0;
+	uint16_t position_fraction = 0, whole_segment = 0;
 
-	state = OBJECT(current_object)->state;
-	trailing_position = traffic_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		traffic_car_start();
@@ -173,42 +168,23 @@ void traffic_car_update(uint32_t follower_position)
 	case 1:
 		break;
 	}
-	if (CAR(player_car)->at_goal == 0u)
-	{
-		position_fraction = (trailing_position & ~0xFFFFu) | OBJECT(current_object)->position_fraction;
-		position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction + OBJECT(current_object)->traffic.speed);
-		whole_segment = (follower_position & ~0xFFFFu) | 0x80u;
-		if ((int16_t)whole_segment <= (int16_t)position_fraction)
-		{
-			do
-			{
-				OBJECT(current_object)->position++;
-				position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction - whole_segment);
-			} while ((int16_t)whole_segment <= (int16_t)position_fraction);
-		}
-		traffic_car_draw(position_fraction, whole_segment);
-		return;
-	}
-	trailing_position = (trailing_position & ~0xFFFFu) | (uint16_t)OBJECT(current_object)->position;
-	trailing_position = (trailing_position & ~0xFFFFu) | (uint16_t)(trailing_position - 8u);
-	if ((int16_t)trailing_position < (int16_t)RACE(SCREEN(screen)->race_copy)->window_segment)
+	if (CAR(player_car)->at_goal != 0u && (int16_t)(OBJECT(current_object)->position - 8u) < (int16_t)RACE(SCREEN(screen)->race_copy)->window_segment)
 	{
 		SCREEN(screen)->traffic_count--;
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	position_fraction = (trailing_position & ~0xFFFFu) | OBJECT(current_object)->position_fraction;
-	position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction + OBJECT(current_object)->traffic.speed);
-	whole_segment = (follower_position & ~0xFFFFu) | 0x80u;
-	if ((int16_t)whole_segment <= (int16_t)position_fraction)
+	position_fraction = (uint16_t)(OBJECT(current_object)->position_fraction + OBJECT(current_object)->traffic.speed);
+	whole_segment = 0x80u;
+	if ((int16_t)position_fraction >= 0x80)
 	{
 		do
 		{
 			OBJECT(current_object)->position++;
-			position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction - whole_segment);
+			position_fraction -= whole_segment;
 		} while ((int16_t)whole_segment <= (int16_t)position_fraction);
 	}
-	traffic_car_draw(position_fraction, whole_segment);
+	traffic_car_draw(position_fraction);
 }
 
 /* Sets up a traffic car from its record (the address of its sprite record, then side, x_offset and
@@ -259,18 +235,18 @@ void traffic_car_start(void)
    (+2) and the car's pitch (car view_pitch), shaken for 20 frames after a hit (shake,
    traffic_shake_frame_offsets); traffic_hit_check, and on a hit traffic_start_hit_sound and shake = 1;
    draw_object. */
-void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
+void traffic_car_draw(uint16_t position_fraction)
 {
 	uint32_t zero = 0, negative = 0, carry = 0;
 	uint8_t passing_sound = 0, row = 0;
-	uint16_t height_difference = 0, object_height = 0, screen_x_quarter = 0, segment = 0, window_segment = 0;
-	uint32_t car_segment_record = 0, frame = 0, position = 0, race = 0, seen_from = 0, segment_record = 0;
+	uint16_t height_difference = 0, object_height = 0, position = 0, screen_x_quarter = 0, seen_from = 0, segment = 0, window_segment = 0;
+	uint32_t car_segment_record = 0, frame = 0, race = 0, segment_record = 0;
 	uint32_t saved_position = 0, saved_seen_from = 0;
 	uint8_t raw_row = 0;
 
 	OBJECT(current_object)->position_fraction = position_fraction;
-	position = (position_fraction & ~0xFFFFu) | (uint16_t)OBJECT(current_object)->position;
-	zero = traffic_out_of_view((uint16_t)position);
+	position = (uint16_t)OBJECT(current_object)->position;
+	zero = traffic_out_of_view(position);
 	if (zero)
 	{
 		SCREEN(screen)->traffic_count--;
@@ -278,8 +254,7 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 		return;
 	}
 	race = SCREEN(screen)->race_copy;
-	seen_from = (whole_segment & ~0xFFFFu) | (uint16_t)position;
-	seen_from = (seen_from & ~0xFFFFu) | (uint16_t)(seen_from - SCREEN(screen)->traffic_draw_distance);
+	seen_from = (uint16_t)(position - SCREEN(screen)->traffic_draw_distance);
 	segment = RACE(race)->segment;
 	if (OBJECT(current_object)->traffic.passed != 0u)
 	{
@@ -290,8 +265,8 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 			saved_seen_from = seen_from;
 			passing_sound = OBJECT(current_object)->traffic.passing_sound;
 			request_sound(passing_sound);
-			seen_from = saved_seen_from;
-			position = saved_position;
+			seen_from = (uint16_t)saved_seen_from;
+			position = (uint16_t)saved_position;
 		}
 	}
 	else if ((int16_t)position < (int16_t)segment)
@@ -301,8 +276,8 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 		saved_seen_from = seen_from;
 		passing_sound = OBJECT(current_object)->traffic.passing_sound;
 		request_sound(passing_sound);
-		seen_from = saved_seen_from;
-		position = saved_position;
+		seen_from = (uint16_t)saved_seen_from;
+		position = (uint16_t)saved_position;
 	}
 	window_segment = RACE(race)->window_segment;
 	if ((int16_t)position < (int16_t)window_segment || (int16_t)window_segment <= (int16_t)seen_from)
@@ -315,15 +290,14 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 	frame = (uint16_t)((int16_t)((frame << 4) - ((uint32_t)ROAD_SEGMENT(segment_record)->heading << 4)) >> 6);
 	screen_x_quarter = (uint16_t)((int16_t)OBJECT(current_object)->traffic.screen_x >> 2);
 	carry = (uint16_t)(frame + screen_x_quarter) < frame;
-	frame = (uint16_t)(frame + screen_x_quarter);
-	frame = (frame & ~0xFFu) | (uint8_t)(frame + 0x10u + carry);
+	frame = (uint8_t)(frame + screen_x_quarter + 0x10u + carry);
 	if ((int8_t)frame >= 4)
 	{
 		if ((int8_t)frame > 0x1B)
-			frame = (frame & ~0xFFu) | 0x1Bu;
+			frame = 0x1Bu;
 	}
 	else
-		frame = (frame & ~0xFFu) | 4u;
+		frame = 4u;
 	height_difference = (uint16_t)(((uint32_t)height_difference << 4) - ((uint32_t)object_height << 4) + ((int16_t)((uint32_t)CAR(player_car)->view_pitch << 4) >> 2));
 	carry = (height_difference >> 9) & 1u;
 	raw_row = ((int16_t)height_difference >> 10) + carry;
@@ -335,10 +309,10 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 	}
 	else
 		row = 0u;
-	frame = (frame & ~0xFFu) | (uint8_t)(frame + ((uint32_t)row << 5));
+	frame = (uint8_t)(frame + ((uint32_t)row << 5));
 	if (OBJECT(current_object)->traffic.shake != 0u)
 	{
-		frame = (frame & ~0xFFu) | (uint8_t)(frame + traffic_shake_frame_offsets[OBJECT(current_object)->traffic.shake]);
+		frame = (uint8_t)(frame + traffic_shake_frame_offsets[OBJECT(current_object)->traffic.shake]);
 		OBJECT(current_object)->traffic.shake++;
 		if (OBJECT(current_object)->traffic.shake == 0x15u)
 			OBJECT(current_object)->traffic.shake = 0u;
@@ -350,7 +324,7 @@ void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment)
 		traffic_start_hit_sound();
 		OBJECT(current_object)->traffic.shake = 1u;
 	}
-	frame = draw_object(frame);
+	draw_object(frame);
 }
 
 /* A vehicle in a line of road traffic behind a 0138EB leader (traffic_car_start_convoy starts the line
@@ -367,7 +341,7 @@ void traffic_follower_update(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	}
-	traffic_car_update(0u);
+	traffic_car_update();
 	if (OBJECT(current_object)->flags == 0u)
 	{
 		OBJECT(current_object)->flags = 1u;
@@ -401,13 +375,10 @@ void pulled_vehicle_update(void)
    and 12, and what the traffic_figure teams pull (013AD8 runs it). */
 void traffic_stopping_car_update(void)
 {
-	uint32_t position_fraction = 0, trailing_position = 0, whole_segment = 0;
+	uint16_t position_fraction = 0, whole_segment = 0;
 	uint16_t stop_distance = 0, speed = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	trailing_position = traffic_stopping_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		traffic_car_start();
@@ -415,23 +386,17 @@ void traffic_stopping_car_update(void)
 	case 1:
 		break;
 	}
-	if (CAR(player_car)->at_goal != 0u)
+	if (CAR(player_car)->at_goal != 0u && (int16_t)(OBJECT(current_object)->position - 8u) < (int16_t)RACE(SCREEN(screen)->race_copy)->window_segment)
 	{
-		trailing_position = (trailing_position & ~0xFFFFu) | (uint16_t)OBJECT(current_object)->position;
-		trailing_position = (trailing_position & ~0xFFFFu) | (uint16_t)(trailing_position - 8u);
-		if ((int16_t)trailing_position < (int16_t)RACE(SCREEN(screen)->race_copy)->window_segment)
-		{
-			SCREEN(screen)->traffic_count--;
-			OBJECT(current_object)->flags = 0u;
-			return;
-		}
+		SCREEN(screen)->traffic_count--;
+		OBJECT(current_object)->flags = 0u;
+		return;
 	}
-	position_fraction = (trailing_position & ~0xFFFFu) | OBJECT(current_object)->position_fraction;
-	position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction + OBJECT(current_object)->traffic.speed);
+	position_fraction = (uint16_t)(OBJECT(current_object)->position_fraction + OBJECT(current_object)->traffic.speed);
 	whole_segment = 0x80u;
-	if ((int16_t)position_fraction < (int16_t)whole_segment)
+	if ((int16_t)position_fraction < 0x80)
 	{
-		traffic_car_draw(position_fraction, whole_segment);
+		traffic_car_draw(position_fraction);
 		return;
 	}
 	OBJECT(current_object)->position++;
@@ -451,12 +416,12 @@ void traffic_stopping_car_update(void)
 	}
 	for (;;)
 	{
-		position_fraction = (position_fraction & ~0xFFFFu) | (uint16_t)(position_fraction - whole_segment);
+		position_fraction -= whole_segment;
 		if ((int16_t)position_fraction < (int16_t)whole_segment)
 			break;
 		OBJECT(current_object)->position++;
 	}
-	traffic_car_draw(position_fraction, whole_segment);
+	traffic_car_draw(position_fraction);
 }
 
 /* The leader of a team (the horses pulling a covered wagon in stage 1, the reindeer pulling a sleigh in
@@ -505,8 +470,8 @@ void traffic_figure_start_team(void)
 void traffic_figure_update(void)
 {
 	uint32_t zero = 0, negative = 0;
-	uint16_t position_fraction = 0, seen_from = 0, whole_segment = 0;
-	uint32_t animation = 0, ignored = 0, position = 0, race = 0, record = 0, traffic_sprite_record = 0;
+	uint16_t position = 0, position_fraction = 0, seen_from = 0, whole_segment = 0;
+	uint32_t animation = 0, race = 0, record = 0, traffic_sprite_record = 0;
 	uint16_t stop_distance = 0, speed = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -591,7 +556,7 @@ void traffic_figure_update(void)
 		}
 		OBJECT(current_object)->position_fraction = position_fraction;
 		position = (uint16_t)OBJECT(current_object)->position;
-		zero = traffic_out_of_view((uint16_t)position);
+		zero = traffic_out_of_view(position);
 		if (zero)
 		{
 			SCREEN(screen)->traffic_count--;
@@ -609,7 +574,7 @@ void traffic_figure_update(void)
 				traffic_start_hit_sound();
 		}
 		draw_object(position);
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		return;
 	}
 }
@@ -663,11 +628,11 @@ uint32_t traffic_out_of_view(uint16_t position)
 	{
 		stretch_top = STRETCH_ENDS(stretch)[0];
 		stretch += 2u;
-		if (stretch_top < (uint16_t)position)
+		if (stretch_top < position)
 			break;
 		stretch_bottom = STRETCH_ENDS(stretch)[0];
 		stretch += 2u;
-		if (stretch_bottom < (uint16_t)position)
+		if (stretch_bottom < position)
 		{
 			zero = 1u == 0u;
 			return zero;

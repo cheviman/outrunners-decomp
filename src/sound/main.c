@@ -3,7 +3,7 @@
  *    Description: the sound program's frame: the reset, the timer interrupt, sound_init and the chips set up and written
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -159,12 +159,11 @@ void drum_timeout_tick(void)
 void sound_init(void)
 {
 	uint8_t fm_register = 0, value = 0;
-	uint16_t last_register = 0;
 
 	z80_block(17, 1);
 	init_pcm_chip();
 	z80_block(17, 1);
-	last_register = init_fm_chip();
+	init_fm_chip();
 	z80_block(172, 15);
 	screen_1_midi_write = 0u;
 	screen_1_midi_read = 0xFFu;
@@ -174,7 +173,7 @@ void sound_init(void)
 	AS16(drum_timeout_wait) = 0x8Cu;
 	screen_1_music_volume = 0xFFu;
 	screen_2_music_volume = 0xFFu;
-	init_voice_channels(last_register);
+	init_voice_channels();
 	z80_block(17, 1);
 	init_parts();
 	z80_block(31, 3);
@@ -186,11 +185,11 @@ void sound_init(void)
 
 /* Sets the YM3438 up: fm_global_init's 11 pairs on part I (the LFO on, timer A 3F0 and timer B FF, all
    six channels keyed off, the DAC off), then fm_operator_init's 36 pairs on both parts (every operator
-   silent: total level 7F, release FF, no SSG-EG). Hands back the last register written in last_register. */
-uint16_t init_fm_chip(void)
+   silent: total level 7F, release FF, no SSG-EG). */
+void init_fm_chip(void)
 {
 	uint8_t fm_register = 0, pairs_left = 0, register_number = 0, value = 0;
-	uint16_t init_entry = 0, last_register = 0;
+	uint16_t init_entry = 0;
 
 	z80_block(17, 2);
 	init_entry = fm_global_init_ADDRESS;
@@ -232,8 +231,6 @@ uint16_t init_fm_chip(void)
 		z80_cycles(5);
 	}
 	z80_block(10, 1);
-	last_register = ((uint32_t)pairs_left << 8) | register_number;
-	return last_register;
 }
 
 /* Writes value to the YM3438 register fm_register on the part fm_channel's bit 2 picks (write_fm_part2
@@ -359,7 +356,7 @@ void write_pcm_register(uint8_t pcm_register, uint8_t value)
 
 /* Gives the 30 voices their chip_channel from voice_chip_channels: voices 0-23 the MultiPCM voices
    (00-06, 08-0E, 10-16, 18-1A), voices 24-29 the YM3438's channels (80-82 on part I, 84-86 on part II). */
-void init_voice_channels(uint32_t unused_c)
+void init_voice_channels(void)
 {
 	uint8_t voices_left = 0;
 	uint16_t code_entry = 0, voice = 0;

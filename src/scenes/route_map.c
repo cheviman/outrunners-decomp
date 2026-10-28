@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -201,7 +201,7 @@ void route_map_update(void)
 										else
 										{
 											OBJECT(object)->stage_result_line.last = 1u;
-											leg_distance = mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7));
+											leg_distance = RACE(RACE_COPY_1)[SCREEN(screen)->player].segment;
 											stage_lengths = SCREEN(screen)->stage_lengths[0];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_lengths);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(((leg_distance * 5u) << 2) + leg_distance * 2u, stage_lengths);
@@ -320,7 +320,7 @@ void route_map_update(void)
 										else
 										{
 											lengths_place = screen + 0x700u;
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
+											leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 											branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 3u * 2u, branch_road_length);
@@ -360,7 +360,7 @@ void route_map_update(void)
 										}
 										else
 										{
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
+											leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
 											stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, stage_length);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
@@ -416,7 +416,7 @@ void route_map_update(void)
 										else
 										{
 											lengths_place = screen + 0x700u;
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
+											leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 											branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 											OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 5u * 2u, branch_road_length);
@@ -428,7 +428,7 @@ void route_map_update(void)
 										OBJECT(current_object)->route_map.leg_frames = branch_leg_frames;
 										if ((int8_t)branch_leg_frames >= 0)
 										{
-											if (mem_read8(screen + 0x34Au + (OBJECT(current_object)->route_map.stage - 1u)) != 0u)
+											if (SCREEN(screen)->route_branches[(int32_t)(OBJECT(current_object)->route_map.stage - 1u)] != 0u)
 											{
 												if (OBJECT(current_object)->route_map.first_branch != 0u)
 												{
@@ -484,7 +484,7 @@ void route_map_update(void)
 										}
 										else
 										{
-											leg_distance = (uint32_t)mem_read16(0x20FC42u + ((uint32_t)SCREEN(screen)->player << 7)) - CAR(player_car)->reached_stage_start;
+											leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
 											stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 											OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_length);
 											OBJECT(current_object)->route_map.last_leg_progress += 4u;
@@ -645,12 +645,9 @@ void route_map_update(void)
    (map_depth_from_y). */
 void route_map_car_update(void)
 {
-	uint32_t animation = 0, car_model = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, car_model = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -665,7 +662,7 @@ void route_map_car_update(void)
 		OBJECT(current_object)->frame = 0xCu;
 		map_depth_from_y();
 		OBJECT(current_object)->state++;
-		car_model = draw_object(car_model);
+		draw_object(car_model);
 		return;
 	case 1:
 		if ((SCREEN(screen)->route_map_signals & 0x10u) != 0u)
@@ -676,18 +673,18 @@ void route_map_car_update(void)
 		if (OBJECT(OBJECT(current_object)->route_map_car.route_map)->route_map.stage != 0u)
 		{
 			OBJECT(current_object)->state++;
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		if ((SCREEN(screen)->route_map_signals & 0x80u) != 0u)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->y -= 4u;
 		OBJECT(current_object)->x++;
 		map_depth_from_y();
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		if ((SCREEN(screen)->route_map_signals & 0x10u) != 0u)
@@ -698,7 +695,7 @@ void route_map_car_update(void)
 		if ((SCREEN(screen)->route_map_signals & 0x80u) != 0u)
 		{
 			map_depth_from_y();
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		if ((SCREEN(screen)->route_map_signals & 4u) != 0u)
@@ -707,7 +704,7 @@ void route_map_car_update(void)
 			if ((SCREEN(screen)->route_map_signals & 0x20u) != 0u)
 				OBJECT(current_object)->x += 7u;
 			map_depth_from_y();
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		if ((SCREEN(screen)->route_map_signals & 8u) != 0u)
@@ -717,11 +714,11 @@ void route_map_car_update(void)
 			{
 				OBJECT(current_object)->x -= 7u;
 				map_depth_from_y();
-				routine = draw_object(routine);
+				draw_object(0u);
 				return;
 			}
 			map_depth_from_y();
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		if ((SCREEN(screen)->route_map_signals & 1u) == 0u)
@@ -729,17 +726,17 @@ void route_map_car_update(void)
 			if ((SCREEN(screen)->route_map_signals & 2u) == 0u)
 			{
 				map_depth_from_y();
-				routine = draw_object(routine);
+				draw_object(0u);
 				return;
 			}
 			OBJECT(current_object)->frame = 0xCu;
 			map_depth_from_y();
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->frame = 6u;
 		map_depth_from_y();
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -752,12 +749,9 @@ void route_map_car_update(void)
    of 8 (blink); both end when the map zooms out (screen route_map_signals bit 4). */
 void route_map_sign_update(void)
 {
-	uint32_t animation = 0, goal = 0, sign_kind = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, sign_kind = 0;
 
-	state = OBJECT(current_object)->state;
-	sign_kind = route_map_sign_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -793,7 +787,7 @@ void route_map_sign_update(void)
 		OBJECT(current_object)->x += OBJECT(current_object)->route_map_sign.x_offset;
 		OBJECT(current_object)->y += OBJECT(current_object)->route_map_sign.y_offset;
 		animation_advance(0u);
-		sign_kind = draw_object(sign_kind);
+		draw_object(sign_kind);
 		return;
 	case 1:
 		if ((SCREEN(screen)->route_map_signals & 0x10u) != 0u)
@@ -806,7 +800,7 @@ void route_map_sign_update(void)
 		OBJECT(current_object)->x += OBJECT(current_object)->route_map_sign.x_offset;
 		OBJECT(current_object)->y += OBJECT(current_object)->route_map_sign.y_offset;
 		animation_advance(0u);
-		sign_kind = draw_object(sign_kind);
+		draw_object(sign_kind);
 		return;
 	case 2:
 		if ((SCREEN(screen)->route_map_signals & 0x10u) != 0u)
@@ -814,15 +808,14 @@ void route_map_sign_update(void)
 			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		goal = SCREEN(screen)->current_stage - 0x15u;
-		OBJECT(current_object)->route_map_sign.x_offset = route_map_goal_xs[goal];
+		OBJECT(current_object)->route_map_sign.x_offset = route_map_goal_xs[SCREEN(screen)->current_stage - 0x15u];
 		OBJECT(current_object)->x = OBJECT(OBJECT(current_object)->route_map_sign.route_map)->x;
 		OBJECT(current_object)->x += OBJECT(current_object)->route_map_sign.x_offset;
 		OBJECT(current_object)->y = 0x5Cu;
 		OBJECT(current_object)->route_map_sign.blink--;
 		if ((OBJECT(current_object)->route_map_sign.blink & 4u) == 0u)
 			return;
-		goal = draw_object(goal);
+		draw_object(0u);
 		return;
 	}
 }
@@ -836,18 +829,14 @@ void route_map_sign_update(void)
    layer follows its y (map_depth_from_y). */
 void route_map_landmark_update(void)
 {
-	uint32_t animation = 0, landmark = 0, record_offset = 0, routine = 0;
+	uint32_t animation = 0, landmark = 0;
 	uint8_t frame_toggle = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_landmark_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
-		record_offset = ((uint32_t)OBJECT(current_object)->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)SCREEN(screen)->route_branches[0] << 9);
-		landmark = route_map_landmarks_ADDRESS + record_offset;
+		landmark = route_map_landmarks_ADDRESS + (((uint32_t)OBJECT(current_object)->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)SCREEN(screen)->route_branches[0] << 9));
 		animation = ROUTE_MAP_LANDMARK_RECORD(landmark)->animation;
 		landmark += 2u;
 		animation_start(animation);
@@ -867,7 +856,7 @@ void route_map_landmark_update(void)
 		OBJECT(current_object)->route_map_landmark.index_then_half_rate = (uint8_t)ROUTE_MAP_LANDMARK_RECORD(landmark - 0xAu)->half_rate;
 		OBJECT(current_object)->state++;
 		map_depth_from_y();
-		record_offset = draw_object(record_offset);
+		draw_object(0u);
 		return;
 	case 1:
 		if ((SCREEN(screen)->route_map_signals & 0x10u) != 0u)
@@ -889,7 +878,7 @@ void route_map_landmark_update(void)
 		}
 		map_depth_from_y();
 		animation_advance(0u);
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -943,7 +932,7 @@ void stage_result_line_draw(void)
 	draw_text_at(text_place, attribute, stage_result_text);
 	text_place = (saved_position & ~0xFFFFu) | (uint16_t)(saved_position + 0x40u);
 	player = SCREEN(screen)->player;
-	place_index = mem_read8(screen + 0x360u + player + (OBJECT(current_object)->stage_result_line.stage << 3)) * 3u;
+	place_index = SCREEN(screen)->checkpoint_orders[(int32_t)(player + (OBJECT(current_object)->stage_result_line.stage << 3))] * 3u;
 	if (OBJECT(current_object)->stage_result_line.last == 0u)
 	{
 		place_text = stage_result_places_ADDRESS + place_index * 2u;
@@ -973,7 +962,7 @@ void stage_result_line_draw(void)
 	if (final_place != 0u)
 		place_palette = 0x42u;
 	OBJECT(current_object)->palette = place_palette;
-	place_palette = draw_object(place_palette);
+	draw_object(place_palette);
 }
 
 /* A leg of the route the player drove, drawn in red over the map shown after the race (003520), by
@@ -988,17 +977,14 @@ void stage_result_line_draw(void)
    it. */
 void route_map_leg_show(void)
 {
-	uint32_t animation = 0, fork_index = 0, leg_stage = 0, object = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, fork_index = 0, leg_stage = 0, object = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_leg_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->draw_mode = 0u;
@@ -1064,7 +1050,7 @@ void route_map_leg_show(void)
 		fork_index = OBJECT(current_object)->route_map_leg.leg - 1u;
 		animation = route_map_fork_leg_animations[OBJECT(OBJECT(current_object)->route_map_leg.map)->route_map.first_branch * 2u + SCREEN(screen)->route_branches[(int32_t)fork_index]];
 		animation_start(animation);
-		leg_stage = mem_read8(screen + 0x343u + fork_index);
+		leg_stage = SCREEN(screen)->route_stages[(int32_t)(fork_index - 1u)];
 		OBJECT(current_object)->x = route_map_stage_xs[leg_stage];
 		OBJECT(current_object)->y = route_map_stage_ys[leg_stage];
 		object = start_object();
@@ -1136,17 +1122,14 @@ void route_map_leg_show(void)
    stage's place), shifted like the legs; 1 draws it. */
 void route_map_leg_car_show(void)
 {
-	uint32_t animation = 0, fork_index = 0, leg_stage = 0, model = 0, place = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, fork_index = 0, leg_stage = 0, model = 0, place = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_leg_car_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		break;
 	case 1:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->draw_mode = 0u;
@@ -1185,7 +1168,7 @@ void route_map_leg_car_show(void)
 	case 5:
 		fork_index = OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.leg - 1u;
 		place = route_map_fork_leg_car_places_ADDRESS + (((SCREEN(screen)->route_branches[0] * 3u) << 6) + ((SCREEN(screen)->route_branches[(int32_t)fork_index] * 3u) << 5) + ((uint32_t)OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.progress << 3));
-		leg_stage = mem_read8(screen + 0x343u + fork_index);
+		leg_stage = SCREEN(screen)->route_stages[(int32_t)(fork_index - 1u)];
 		OBJECT(current_object)->x = route_map_stage_xs[leg_stage];
 		OBJECT(current_object)->y = route_map_stage_ys[leg_stage];
 		OBJECT(current_object)->x += ROUTE_MAP_LEG_CAR_PLACE(place)->x;
@@ -1213,12 +1196,9 @@ void route_map_leg_car_end(void)
    and is drawn; 2 FINISH blinks, drawn 4 frames out of 8 (blink). */
 void route_map_checkpoint_show(void)
 {
-	uint32_t animation = 0, finish_index = 0, kind = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, finish_index = 0, kind = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_checkpoint_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -1234,7 +1214,7 @@ void route_map_checkpoint_show(void)
 		OBJECT(current_object)->depth_layer = 0x194u;
 		if (OBJECT(current_object)->route_map_checkpoint.kind == 1u)
 		{
-			finish_index = SCREEN(screen)->route_branches[0] * 2u + mem_read8(screen + 0x34Au + (OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->route_map_leg.leg - 1u));
+			finish_index = SCREEN(screen)->route_branches[0] * 2u + SCREEN(screen)->route_branches[(int32_t)(OBJECT(OBJECT(current_object)->route_map_checkpoint.leg)->route_map_leg.leg - 1u)];
 			OBJECT(current_object)->x += route_map_finish_x_offsets[finish_index];
 			OBJECT(current_object)->y += route_map_finish_y_offsets[finish_index];
 			OBJECT(current_object)->state++;
@@ -1243,13 +1223,13 @@ void route_map_checkpoint_show(void)
 		return;
 	case 1:
 		animation_advance(0u);
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		OBJECT(current_object)->route_map_checkpoint.blink--;
 		if ((OBJECT(current_object)->route_map_checkpoint.blink & 4u) == 0u)
 			return;
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -1281,17 +1261,15 @@ void route_map_direction_sign_show(void)
 		colour_cycle = OBJECT(current_object)->route_map_direction_sign.colour_timer;
 		colour_cycle = (colour_cycle & ~0xFFu) | (uint8_t)(colour_cycle + 1u);
 		OBJECT(current_object)->route_map_direction_sign.colour_timer = colour_cycle;
-		colour_cycle = (uint16_t)(((colour_cycle >> 2) & 3u) + OBJECT(current_object)->route_map_direction_sign.palette_base);
-		OBJECT(current_object)->palette = colour_cycle;
-		colour_cycle = draw_object(colour_cycle);
+		OBJECT(current_object)->palette = ((colour_cycle >> 2) & 3u) + OBJECT(current_object)->route_map_direction_sign.palette_base;
+		draw_object(colour_cycle);
 		return;
 	case 2:
 		colour_cycle = OBJECT(current_object)->route_map_direction_sign.colour_timer;
 		colour_cycle = (colour_cycle & ~0xFFu) | (uint8_t)(colour_cycle + 1u);
 		OBJECT(current_object)->route_map_direction_sign.colour_timer = colour_cycle;
-		colour_cycle = (uint16_t)(((colour_cycle >> 2) & 3u) + OBJECT(current_object)->route_map_direction_sign.palette_base);
-		OBJECT(current_object)->palette = colour_cycle;
-		colour_cycle = draw_object(colour_cycle);
+		OBJECT(current_object)->palette = ((colour_cycle >> 2) & 3u) + OBJECT(current_object)->route_map_direction_sign.palette_base;
+		draw_object(colour_cycle);
 		return;
 	}
 }
@@ -1301,13 +1279,10 @@ void route_map_direction_sign_show(void)
    2 drawn 15 frames; 3 hidden 5 frames, back to 2. */
 void route_map_wait_banner_show(void)
 {
-	uint32_t animation = 0, routine = 0;
+	uint32_t animation = 0;
 	uint8_t wait_count = 0, timer = 0, timer_2 = 0, timer_3 = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = route_map_wait_banner_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->route_map_wait_banner.timer++;
@@ -1335,12 +1310,12 @@ void route_map_wait_banner_show(void)
 		{
 			OBJECT(current_object)->route_map_wait_banner.timer = 0xFu;
 			OBJECT(current_object)->state++;
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->width_scale += 0x12u;
 		OBJECT(current_object)->height_scale += 0x12u;
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		timer_2 = OBJECT(current_object)->route_map_wait_banner.timer;
@@ -1349,10 +1324,10 @@ void route_map_wait_banner_show(void)
 		{
 			OBJECT(current_object)->route_map_wait_banner.timer = 5u;
 			OBJECT(current_object)->state++;
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 3:
 		timer_3 = OBJECT(current_object)->route_map_wait_banner.timer;
@@ -1371,13 +1346,10 @@ void route_map_wait_banner_show(void)
    it up, tiny; 0 and 1 grow it to full size in 15 frames (timer); 2 draws it. */
 void game_over_banner_show(void)
 {
-	uint32_t animation = 0, routine = 0;
+	uint32_t animation = 0;
 	uint8_t timer = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = game_over_banner_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->draw_mode = 0xAu;
@@ -1395,7 +1367,7 @@ void game_over_banner_show(void)
 	case 1:
 		break;
 	case 2:
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	timer = OBJECT(current_object)->game_over_banner.timer;
@@ -1403,10 +1375,10 @@ void game_over_banner_show(void)
 	if (timer == 1u)
 	{
 		OBJECT(current_object)->state++;
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 	OBJECT(current_object)->width_scale += 0x12u;
 	OBJECT(current_object)->height_scale += 0x12u;
-	routine = draw_object(routine);
+	draw_object(0u);
 }

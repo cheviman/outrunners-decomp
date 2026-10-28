@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -29,14 +29,7 @@ static void call_0006B0(void)
    takes, and what it hands back dropped. */
 static void call_0018A4(void)
 {
-	staff_credits_code_watch(0, 0);
-}
-
-/* How call_code() runs extend_time_message_blink from a slot that holds its address: with 0 for what it
-   takes, and what it hands back dropped. */
-static void call_00C857(void)
-{
-	extend_time_message_blink(0);
+	staff_credits_code_watch(0);
 }
 
 /* How call_code() runs draw_object from a slot that holds its address: with 0 for what it takes, and
@@ -44,20 +37,6 @@ static void call_00C857(void)
 static void call_00EAE4(void)
 {
 	draw_object(0);
-}
-
-/* How call_code() runs traffic_car_update from a slot that holds its address: with 0 for what it takes,
-   and what it hands back dropped. */
-static void call_0138EB(void)
-{
-	traffic_car_update(0);
-}
-
-/* How call_code() runs palette_fade_step from a slot that holds its address: with 0 for what it takes,
-   and what it hands back dropped. */
-static void call_01864A(void)
-{
-	palette_fade_step(0);
 }
 
 /* How call_code() runs test_mode_memory_test_run from a slot that holds its address: with 0 for what it
@@ -214,7 +193,7 @@ const game_code_entry game_code[] =
 	{ 0x00C59Cu, start_message_update },
 	{ 0x00C65Fu, time_left_display_update },
 	{ 0x00C7ECu, extend_time_message_start },
-	{ 0x00C857u, call_00C857 },
+	{ 0x00C857u, extend_time_message_blink },
 	{ 0x00C873u, stage_entry_update },
 	{ 0x00C8B6u, goal_update },
 	{ 0x00C9EDu, race_result_start },
@@ -252,7 +231,7 @@ const game_code_entry game_code[] =
 	{ 0x01369Au, goal_parade_dragon_update },
 	{ 0x01376Cu, traffic_spawner_update },
 	{ 0x01389Eu, traffic_car_start_convoy },
-	{ 0x0138EBu, call_0138EB },
+	{ 0x0138EBu, traffic_car_update },
 	{ 0x013AB7u, traffic_follower_update },
 	{ 0x013AD8u, pulled_vehicle_update },
 	{ 0x013AF9u, traffic_stopping_car_update },
@@ -293,7 +272,7 @@ const game_code_entry game_code[] =
 	{ 0x018110u, backdrop_translucent_update },
 	{ 0x01854Au, race_background_fade_watch_update },
 	{ 0x0185D2u, palette_fade_prepare },
-	{ 0x01864Au, call_01864A },
+	{ 0x01864Au, palette_fade_step },
 	{ 0x018BA0u, lcd_race_info_start },
 	{ 0x018BB2u, lcd_race_info_update },
 	{ 0x018E32u, lcd_race_info_finish },

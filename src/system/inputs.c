@@ -3,7 +3,7 @@
  *    Description: the controls: the switches and the analog inputs (wheel, pedals), each seat's inputs and the screens' new presses
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -178,7 +178,7 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
 
 /* queue_screen_inputs for screen 1 (seat_1_buttons, the first I/O chip) and screen 2 (seat_2_buttons,
    the second): the VBLANK on screen 2's turn. */
-uint32_t queue_seat_inputs(void)
+void queue_seat_inputs(void)
 {
 	uint32_t seat_record = 0, seat_screen = 0;
 
@@ -189,14 +189,14 @@ uint32_t queue_seat_inputs(void)
 	seat_screen = SCREEN_2;
 	seat_record = seat_2_buttons_ADDRESS;
 	r12 = 0xC80000u;
-	return queue_screen_inputs(seat_screen, seat_record);
+	queue_screen_inputs(seat_screen, seat_record);
 }
 
 /* Puts a screen's inputs into its ring of eight (screen + 130, at input_write_place): the seat's buttons
    (R11) with ~port B of its I/O chip (R12 + 2) in bits 8-15; and the record's wheel, gas and brake into
    the screen's wheel, gas and brake. On ISDN the record is the screen's race_copy's +2C (the inputs the
    link brought). */
-uint32_t queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record)
+void queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record)
 {
 	uint32_t input_write_place = 0, inputs = 0, seat_inputs = 0;
 
@@ -204,12 +204,10 @@ uint32_t queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record)
 		seat_record = SCREEN(seat_screen)->race_copy + 0x2Cu;
 	inputs = (uint8_t)~io_read8(r12 + 2u);
 	seat_inputs = (SEAT_INPUTS(seat_record)->buttons | ((uint32_t)SEAT_INPUTS(seat_record)->wheel << 8u) | ((uint32_t)SEAT_INPUTS(seat_record)->gas << 16u) | ((uint32_t)SEAT_INPUTS(seat_record)->brake << 24u));
-	inputs = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
 	input_write_place = SCREEN(seat_screen)->input_write_place;
-	SCREEN(seat_screen)->input_ring[(int32_t)input_write_place] = inputs;
+	SCREEN(seat_screen)->input_ring[(int32_t)input_write_place] = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
 	SCREEN(seat_screen)->input_write_place = (input_write_place + 1u) & 7u;
 	AS32(SCREEN(seat_screen)->wheel) = seat_inputs >> 8;
-	return inputs;
 }
 
 /* Takes the screen's inputs for the frame from its ring (input_read_place; both frame loops, before

@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -273,7 +273,7 @@ uint32_t start_object_list(uint32_t handler_list);
 uint32_t random_number(void);
 
 /* engine/sprites.c: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road */
-uint32_t draw_object(uint32_t routine_then_layer);
+uint16_t draw_object(uint32_t routine_then_layer);
 void draw_object_between_segments(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
@@ -333,7 +333,7 @@ void car_radio_dj_remark_2b(void);
 void car_radio_dj_remark_2d(void);
 void car_radio_dj_remark_2f(void);
 void car_radio_dj_remark_2c(void);
-uint32_t car_radio_song(uint32_t song_number);
+uint8_t car_radio_song(uint32_t song_number);
 void car_radio_show_title(uint32_t title);
 uint32_t start_song_title(uint32_t song_title);
 void song_title_show(void);
@@ -413,9 +413,9 @@ void fork_branch_sprite(uint32_t *p_height_word, uint32_t *p_offset_palette);
 /* objects/traffic.c: the traffic: its cars, convoys, people and their hits */
 void traffic_spawner_update(void);
 void traffic_car_start_convoy(void);
-void traffic_car_update(uint32_t follower_position);
+void traffic_car_update(void);
 void traffic_car_start(void);
-void traffic_car_draw(uint32_t position_fraction, uint32_t whole_segment);
+void traffic_car_draw(uint16_t position_fraction);
 void traffic_follower_update(void);
 void pulled_vehicle_update(void);
 void traffic_stopping_car_update(void);
@@ -464,7 +464,7 @@ void time_digits_start(void);
 void time_digits_draw(uint32_t digits);
 void time_left_display_check_extension(void);
 void extend_time_message_start(void);
-void extend_time_message_blink(uint32_t leftover);
+void extend_time_message_blink(void);
 void stage_entry_update(void);
 void stage_entry_spare_return(void);
 void goal_update(void);
@@ -580,10 +580,10 @@ void bar_picture_bar_draw(void);
 void attract_lamps_update(void);
 void car_presentation_update(void);
 void staff_credits_code_start(void);
-void staff_credits_code_watch(uint32_t new_controls, uint32_t control_reading);
+void staff_credits_code_watch(uint32_t new_controls);
 void staff_credits_code_show(void);
 void staff_credits_code_done(void);
-void staff_credits_code_read_controls(uint32_t control_reading, uint32_t *p_new_controls, uint32_t *p_zero);
+void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero);
 uint8_t staff_credits_code_control_bit(uint32_t held_before, uint8_t controls_now, uint8_t reading, uint32_t control_bit);
 void car_name_start(void);
 void car_name_letter_update(void);
@@ -756,8 +756,8 @@ uint16_t bookkeeping_checksum(uint32_t checksum, uint32_t block);
 uint32_t read_switches_and_analog(void);
 void pack_seat_inputs(void);
 void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint32_t *p_analog_place, uint32_t *p_link_place);
-uint32_t queue_seat_inputs(void);
-uint32_t queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record);
+void queue_seat_inputs(void);
+void queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record);
 uint32_t take_screen_inputs(void);
 
 /* system/interrupts.c: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link */
@@ -770,7 +770,7 @@ void int_vector_43(void);
 void int_vector_44(void);
 void int_default(void);
 void int_vector_02(void);
-void check_test_button(uint32_t leftover);
+void check_test_button(void);
 void send_sound_requests(void);
 void count_total_time(void);
 void update_lamps(void);
@@ -778,7 +778,7 @@ void update_button_lamps(uint32_t screen_block, uint32_t port_g);
 
 /* system/lcd.c: the cabinets' LCD: its driver and the race's information on it */
 void lcd_start(void);
-uint32_t lcd_write_character(uint32_t character);
+void lcd_write_character(uint8_t character);
 void lcd_write_data_nibble(uint8_t nibble);
 void lcd_command_nibble_after_pause(uint8_t nibble);
 void lcd_write_command_nibble(uint8_t nibble);
@@ -908,7 +908,7 @@ void test_mode_coin_assignments_exit(void);
 void test_mode_network_assignments_start(void);
 void test_mode_network_assignments_run(void);
 uint16_t test_mode_network_assignments_draw(void);
-void test_mode_network_assignments_toggle_communication(uint32_t page_cursor);
+void test_mode_network_assignments_toggle_communication(void);
 void test_mode_network_assignments_toggle_privilege_mode(void);
 void test_mode_network_assignments_step_cabinet_id(void);
 void test_mode_network_assignments_exit(void);
@@ -961,7 +961,7 @@ void race_background_fade_palettes(uint32_t fade_list);
 void race_background_fade_watch_update(void);
 uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to);
 void palette_fade_prepare(void);
-void palette_fade_step(uint32_t from_colour);
+void palette_fade_step(void);
 
 /* video/text.c: the text: the fonts, the text layer's strings, numbers in hexadecimal and BCD, text in sprites */
 void load_text_font(void);

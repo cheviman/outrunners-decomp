@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -141,7 +141,7 @@ uint32_t road_object_stream_end(void)
 void crest_clip_update(void)
 {
 	uint16_t depth_layer = 0;
-	uint32_t clip_bottom = 0, crest = 0;
+	uint32_t crest = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -168,9 +168,8 @@ void crest_clip_update(void)
 		if (depth_layer < OBJECT(current_object)->depth_layer)
 		{
 			OBJECT(current_object)->depth_layer = depth_layer;
-			clip_bottom = (uint16_t)(SCREEN(screen)->crest_heights[(int32_t)crest] + SCREEN(screen)->sprite_origin_y - 1u);
-			OBJECT(current_object)->crest_clip.clip_bottom = clip_bottom;
-			draw_object(clip_bottom);
+			OBJECT(current_object)->crest_clip.clip_bottom = SCREEN(screen)->crest_heights[(int32_t)crest] + SCREEN(screen)->sprite_origin_y - 1u;
+			draw_object(depth_layer);
 		}
 		OBJECT(current_object)->crest_clip.crest++;
 	} while (OBJECT(current_object)->crest_clip.crest <= SCREEN(screen)->crest_count);
@@ -367,13 +366,9 @@ void overhead_scenery_update(void)
    odd), so it looks faint. It never ends. */
 void aurora_update(void)
 {
-	uint16_t routine = 0;
-	uint32_t countdown = 0, record = 0;
-	uint32_t state = 0;
+	uint32_t record = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = (uint16_t)aurora_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -405,21 +400,19 @@ void aurora_update(void)
 		if ((int16_t)OBJECT(current_object)->x >= 0xA0)
 			OBJECT(current_object)->state++;
 		aurora_count_down();
-		countdown = (routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown;
-		if ((countdown & 1u) == 0u)
+		if ((OBJECT(current_object)->aurora.countdown & 1u) == 0u)
 			return;
 		animation_advance(0u);
-		countdown = draw_object(countdown);
+		draw_object(0u);
 		return;
 	case 2:
 		break;
 	}
 	aurora_count_down();
-	countdown = (routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown;
-	if ((countdown & 1u) == 0u)
+	if ((OBJECT(current_object)->aurora.countdown & 1u) == 0u)
 		return;
 	animation_advance(0u);
-	countdown = draw_object(countdown);
+	draw_object(0u);
 }
 
 /* Counts the current animation's frames down; when they run out, aurora_next_animation. */
@@ -573,12 +566,9 @@ void animated_scenery_pair_update(void)
 void road_crosser_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, crossing_animation = 0, road_crosser_record = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, crossing_animation = 0, road_crosser_record = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = road_crosser_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -616,7 +606,7 @@ void road_crosser_update(void)
 		OBJECT(current_object)->state++;
 		if ((int16_t)CAR(player_car)->segment < OBJECT(current_object)->road_crosser.trigger_position)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -629,7 +619,7 @@ void road_crosser_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->road_crosser.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->road_crosser.screen_x >= -0xF0 && OBJECT(current_object)->road_crosser.screen_x <= 0x130)
 					return;
 			}
@@ -640,7 +630,7 @@ void road_crosser_update(void)
 	case 2:
 		if ((int16_t)CAR(player_car)->segment < OBJECT(current_object)->road_crosser.trigger_position)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -653,7 +643,7 @@ void road_crosser_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->road_crosser.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->road_crosser.screen_x >= -0xF0 && OBJECT(current_object)->road_crosser.screen_x <= 0x130)
 					return;
 			}
@@ -669,7 +659,7 @@ void road_crosser_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->road_crosser.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->road_crosser.screen_x >= -0xF0 && OBJECT(current_object)->road_crosser.screen_x <= 0x130)
 					return;
 			}
@@ -691,13 +681,10 @@ void road_crosser_update(void)
    leaves -F0..130. */
 void kangaroo_update(void)
 {
-	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, hop_animation = 0, position_fraction = 0, road_crosser_record = 0, routine = 0;
-	uint32_t state = 0;
+	uint16_t draw_distance = 0, position = 0, position_fraction = 0;
+	uint32_t animation = 0, hop_animation = 0, road_crosser_record = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = kangaroo_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -733,7 +720,7 @@ void kangaroo_update(void)
 		OBJECT(current_object)->state++;
 		if ((int16_t)CAR(player_car)->segment < OBJECT(current_object)->kangaroo.trigger_position)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -749,7 +736,7 @@ void kangaroo_update(void)
 		position_fraction = (uint16_t)(OBJECT(current_object)->position_fraction + (CAR(player_car)->speed >> 9));
 		if ((int16_t)position_fraction >= 0x80)
 		{
-			position_fraction = (uint16_t)(position_fraction - 0x80u);
+			position_fraction -= 0x80u;
 			OBJECT(current_object)->position++;
 			if ((int16_t)(0u - OBJECT(current_object)->kangaroo.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
@@ -776,7 +763,7 @@ void kangaroo_update(void)
 	case 2:
 		if ((int16_t)CAR(player_car)->segment < OBJECT(current_object)->kangaroo.trigger_position)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -792,7 +779,7 @@ void kangaroo_update(void)
 		position_fraction = (uint16_t)(OBJECT(current_object)->position_fraction + (CAR(player_car)->speed >> 9));
 		if ((int16_t)position_fraction >= 0x80)
 		{
-			position_fraction = (uint16_t)(position_fraction - 0x80u);
+			position_fraction -= 0x80u;
 			OBJECT(current_object)->position++;
 			if ((int16_t)(0u - OBJECT(current_object)->kangaroo.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
@@ -827,7 +814,7 @@ void kangaroo_update(void)
 		position_fraction = (uint16_t)(OBJECT(current_object)->position_fraction + (CAR(player_car)->speed >> 9));
 		if ((int16_t)position_fraction >= 0x80)
 		{
-			position_fraction = (uint16_t)(position_fraction - 0x80u);
+			position_fraction -= 0x80u;
 			OBJECT(current_object)->position++;
 			if ((int16_t)(0u - OBJECT(current_object)->kangaroo.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
@@ -865,12 +852,9 @@ void kangaroo_update(void)
 void moving_scenery_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, moving_scenery_record = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, moving_scenery_record = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = moving_scenery_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -917,7 +901,7 @@ void moving_scenery_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->moving_scenery.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->moving_scenery.screen_x >= -0xF0 && OBJECT(current_object)->moving_scenery.screen_x <= 0x130)
 					return;
 			}
@@ -934,7 +918,7 @@ void moving_scenery_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->moving_scenery.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->moving_scenery.screen_x >= -0xF0 && OBJECT(current_object)->moving_scenery.screen_x <= 0x130)
 					return;
 			}
@@ -957,13 +941,10 @@ void moving_scenery_update(void)
 void swooping_helicopter_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, routine = 0, swooping_helicopter_record = 0;
+	uint32_t animation = 0, swooping_helicopter_record = 0;
 	uint8_t dive_countdown = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = swooping_helicopter_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -1007,7 +988,7 @@ void swooping_helicopter_update(void)
 		{
 			OBJECT(current_object)->state++;
 			OBJECT(current_object)->swooping_helicopter.dive_countdown = OBJECT(current_object)->swooping_helicopter.dive_frames;
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		return;
@@ -1021,7 +1002,7 @@ void swooping_helicopter_update(void)
 			if ((int16_t)(0u - OBJECT(current_object)->swooping_helicopter.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 			{
 				animation_advance(0u);
-				draw_object(routine);
+				draw_object(0u);
 				if (OBJECT(current_object)->swooping_helicopter.screen_x >= -0xF0 && OBJECT(current_object)->swooping_helicopter.screen_x <= 0x130)
 					return;
 			}
@@ -1042,7 +1023,7 @@ void swooping_helicopter_update(void)
 		if ((int16_t)(0u - OBJECT(current_object)->swooping_helicopter.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 		{
 			animation_advance(0u);
-			draw_object(routine);
+			draw_object(0u);
 			if (OBJECT(current_object)->swooping_helicopter.screen_x >= -0xF0 && OBJECT(current_object)->swooping_helicopter.screen_x <= 0x130)
 				return;
 		}
@@ -1062,7 +1043,7 @@ void swooping_helicopter_update(void)
 		if ((int16_t)(0u - OBJECT(current_object)->swooping_helicopter.draw_distance + OBJECT(current_object)->position) < (int16_t)CAR(player_car)->window_segment)
 		{
 			animation_advance(0u);
-			draw_object(routine);
+			draw_object(0u);
 			if (OBJECT(current_object)->swooping_helicopter.screen_x >= -0xF0 && OBJECT(current_object)->swooping_helicopter.screen_x <= 0x130)
 				return;
 		}
@@ -1083,11 +1064,8 @@ void start_gate_update(void)
 {
 	uint16_t position = 0, row_length = 0;
 	uint32_t animation = 0, ignored = 0, ignored_2 = 0, seconds_left = 0, start_gate_record = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	seconds_left = start_gate_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -1123,7 +1101,7 @@ void start_gate_update(void)
 		return;
 	case 1:
 		road_row_crash_check(&ignored, &ignored_2);
-		seconds_left = draw_object(seconds_left);
+		draw_object(0u);
 		return;
 	case 2:
 		seconds_left = OBJECT(CAR(player_car)->object)->player_car.timer;
@@ -1132,10 +1110,10 @@ void start_gate_update(void)
 		OBJECT(current_object)->palette = start_gate_light_palettes[seconds_left];
 		if (seconds_left == 0u)
 			OBJECT(current_object)->state++;
-		seconds_left = draw_object(seconds_left);
+		draw_object(seconds_left);
 		return;
 	case 3:
-		seconds_left = draw_object(seconds_left);
+		draw_object(seconds_left);
 		return;
 	}
 }
@@ -1147,12 +1125,9 @@ void start_gate_update(void)
    position, else animation_advance and draw_object. */
 void start_flagman_update(void)
 {
-	uint32_t animation = 0, flagman_record = 0, frames_to_start = 0, go_animation = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, flagman_record = 0, go_animation = 0;
 
-	state = OBJECT(current_object)->state;
-	frames_to_start = start_flagman_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		OBJECT(current_object)->state++;
@@ -1172,10 +1147,9 @@ void start_flagman_update(void)
 		OBJECT(current_object)->scale_shift = 1u;
 		return;
 	case 1:
-		frames_to_start = OBJECT(CAR(player_car)->object)->player_car.timer;
-		if (frames_to_start != 0u)
+		if (OBJECT(CAR(player_car)->object)->player_car.timer != 0u)
 		{
-			frames_to_start = draw_object(frames_to_start);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1188,7 +1162,7 @@ void start_flagman_update(void)
 			return;
 		}
 		animation_advance(0u);
-		draw_object(frames_to_start);
+		draw_object(0u);
 		return;
 	case 2:
 		if (OBJECT(current_object)->position <= (int16_t)CAR(player_car)->window_segment)
@@ -1198,7 +1172,7 @@ void start_flagman_update(void)
 			return;
 		}
 		animation_advance(0u);
-		draw_object(frames_to_start);
+		draw_object(0u);
 		return;
 	}
 }
@@ -1212,12 +1186,9 @@ void start_flagman_update(void)
 void flagman_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, flagman_record = 0, in_view_animation = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, flagman_record = 0, in_view_animation = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = flagman_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		flagman_record = OBJECT(current_object)->flagman.record;
@@ -1254,7 +1225,7 @@ void flagman_update(void)
 			return;
 		}
 		animation_advance(0u);
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		if (OBJECT(current_object)->position <= (int16_t)CAR(player_car)->window_segment)
@@ -1264,7 +1235,7 @@ void flagman_update(void)
 			return;
 		}
 		animation_advance(0u);
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -1307,10 +1278,9 @@ void start_balloon_update(void)
 		animation_advance(0u);
 		rise_speed = (uint16_t)(OBJECT(current_object)->start_balloon.rise_speed + 1u);
 		OBJECT(current_object)->start_balloon.rise_speed = rise_speed;
-		rise_speed = rise_speed >> 1;
-		OBJECT(current_object)->y_offset -= rise_speed;
+		OBJECT(current_object)->y_offset -= rise_speed >> 1;
 		OBJECT(current_object)->x_offset += 8u;
-		rise_speed = draw_object(rise_speed);
+		draw_object(rise_speed);
 		return;
 	case 2:
 		if (OBJECT(current_object)->position <= (int16_t)CAR(player_car)->window_segment || OBJECT(current_object)->y_offset < -0x3000)
@@ -1321,10 +1291,9 @@ void start_balloon_update(void)
 		animation_advance(0u);
 		rise_speed = (uint16_t)(OBJECT(current_object)->start_balloon.rise_speed + 1u);
 		OBJECT(current_object)->start_balloon.rise_speed = rise_speed;
-		rise_speed = rise_speed >> 1;
-		OBJECT(current_object)->y_offset -= rise_speed;
+		OBJECT(current_object)->y_offset -= rise_speed >> 1;
 		OBJECT(current_object)->x_offset += 8u;
-		rise_speed = draw_object(rise_speed);
+		draw_object(rise_speed);
 		return;
 	}
 }
@@ -1405,57 +1374,66 @@ void west_east_panel_update(void)
 		OBJECT(current_object)->y -= 2u;
 		if (OBJECT(current_object)->y == 0xDCu)
 			OBJECT(current_object)->state++;
-		if (RACE(SCREEN(screen)->host_record)->time_left == 0u || CAR(player_car)->segment > 0x250u)
+		if (RACE(SCREEN(screen)->host_record)->time_left != 0u && CAR(player_car)->segment <= 0x250u)
 		{
-			OBJECT(current_object)->state++;
-			OBJECT(current_object)->y += 2u;
-			if (OBJECT(current_object)->y == 0x118u)
-			{
-				OBJECT(current_object)->flags = 0u;
-				OBJECT(current_object)->flags_high = 0u;
-				return;
-			}
+			palette = OBJECT(current_object)->west_east_panel.colour_count;
+			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
+			OBJECT(current_object)->west_east_panel.colour_count = palette;
+			OBJECT(current_object)->palette = ((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette;
+			draw_object(palette);
+			return;
 		}
-		palette = OBJECT(current_object)->west_east_panel.colour_count;
-		palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
-		OBJECT(current_object)->west_east_panel.colour_count = palette;
-		palette = (uint16_t)(((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette);
-		OBJECT(current_object)->palette = palette;
-		palette = draw_object(palette);
+		OBJECT(current_object)->state++;
+		OBJECT(current_object)->y += 2u;
+		if (OBJECT(current_object)->y != 0x118u)
+		{
+			palette = OBJECT(current_object)->west_east_panel.colour_count;
+			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
+			OBJECT(current_object)->west_east_panel.colour_count = palette;
+			OBJECT(current_object)->palette = ((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette;
+			draw_object(palette);
+			return;
+		}
+		OBJECT(current_object)->flags = 0u;
+		OBJECT(current_object)->flags_high = 0u;
 		return;
 	case 2:
-		if (RACE(SCREEN(screen)->host_record)->time_left == 0u || CAR(player_car)->segment > 0x250u)
+		if (RACE(SCREEN(screen)->host_record)->time_left != 0u && CAR(player_car)->segment <= 0x250u)
 		{
-			OBJECT(current_object)->state++;
-			OBJECT(current_object)->y += 2u;
-			if (OBJECT(current_object)->y == 0x118u)
-			{
-				OBJECT(current_object)->flags = 0u;
-				OBJECT(current_object)->flags_high = 0u;
-				return;
-			}
+			palette = OBJECT(current_object)->west_east_panel.colour_count;
+			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
+			OBJECT(current_object)->west_east_panel.colour_count = palette;
+			OBJECT(current_object)->palette = ((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette;
+			draw_object(palette);
+			return;
 		}
-		palette = OBJECT(current_object)->west_east_panel.colour_count;
-		palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
-		OBJECT(current_object)->west_east_panel.colour_count = palette;
-		palette = (uint16_t)(((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette);
-		OBJECT(current_object)->palette = palette;
-		palette = draw_object(palette);
+		OBJECT(current_object)->state++;
+		OBJECT(current_object)->y += 2u;
+		if (OBJECT(current_object)->y != 0x118u)
+		{
+			palette = OBJECT(current_object)->west_east_panel.colour_count;
+			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
+			OBJECT(current_object)->west_east_panel.colour_count = palette;
+			OBJECT(current_object)->palette = ((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette;
+			draw_object(palette);
+			return;
+		}
+		OBJECT(current_object)->flags = 0u;
+		OBJECT(current_object)->flags_high = 0u;
 		return;
 	case 3:
 		OBJECT(current_object)->y += 2u;
-		if (OBJECT(current_object)->y == 0x118u)
+		if (OBJECT(current_object)->y != 0x118u)
 		{
-			OBJECT(current_object)->flags = 0u;
-			OBJECT(current_object)->flags_high = 0u;
+			palette = OBJECT(current_object)->west_east_panel.colour_count;
+			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
+			OBJECT(current_object)->west_east_panel.colour_count = palette;
+			OBJECT(current_object)->palette = ((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette;
+			draw_object(palette);
 			return;
 		}
-		palette = OBJECT(current_object)->west_east_panel.colour_count;
-		palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
-		OBJECT(current_object)->west_east_panel.colour_count = palette;
-		palette = (uint16_t)(((palette >> 2) & 3u) + OBJECT(current_object)->west_east_panel.base_palette);
-		OBJECT(current_object)->palette = palette;
-		palette = draw_object(palette);
+		OBJECT(current_object)->flags = 0u;
+		OBJECT(current_object)->flags_high = 0u;
 		return;
 	}
 }
@@ -1472,11 +1450,8 @@ void santa_sleigh_update(void)
 	uint16_t draw_distance = 0, position = 0;
 	uint32_t animation = 0, ignored = 0, santa_sleigh_record = 0, sound = 0;
 	uint8_t sound_countdown = 0, sound_countdown_2 = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	sound = santa_sleigh_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		santa_sleigh_record = OBJECT(current_object)->santa_sleigh.record;
@@ -1526,7 +1501,7 @@ void santa_sleigh_update(void)
 		animation_advance(0u);
 		if (OBJECT(current_object)->santa_sleigh.screen_x >= -0xB0)
 		{
-			sound = draw_object(sound);
+			draw_object(sound);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1546,7 +1521,7 @@ void santa_sleigh_update(void)
 			OBJECT(current_object)->state = 2u;
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
-		sound = draw_object(sound);
+		draw_object(sound);
 		return;
 	case 3:
 		sound_countdown_2 = OBJECT(current_object)->santa_sleigh.sound_countdown;
@@ -1564,7 +1539,7 @@ void santa_sleigh_update(void)
 			OBJECT(current_object)->state = 2u;
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
-		sound = draw_object(sound);
+		draw_object(sound);
 		return;
 	}
 }
@@ -1579,12 +1554,9 @@ void santa_sleigh_update(void)
 void goal_parade_rightward_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, ignored = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, goal_parade_record = 0, ignored = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = goal_parade_rightward_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		goal_parade_record = OBJECT(current_object)->goal_parade.record;
@@ -1620,7 +1592,7 @@ void goal_parade_rightward_update(void)
 		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xB0)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1632,14 +1604,14 @@ void goal_parade_rightward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags |= 0x40u;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
 		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xB0)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1651,7 +1623,7 @@ void goal_parade_rightward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags |= 0x40u;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 3:
 		OBJECT(current_object)->x_offset -= OBJECT(current_object)->goal_parade.x_speed;
@@ -1661,7 +1633,7 @@ void goal_parade_rightward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags |= 0x40u;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -1740,12 +1712,9 @@ void sounding_scenery_update(void)
 void goal_parade_leftward_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, ignored = 0, routine = 0;
-	uint32_t state = 0;
+	uint32_t animation = 0, goal_parade_record = 0, ignored = 0;
 
-	state = OBJECT(current_object)->state;
-	routine = goal_parade_leftward_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		goal_parade_record = OBJECT(current_object)->goal_parade.record;
@@ -1781,7 +1750,7 @@ void goal_parade_leftward_update(void)
 		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1793,14 +1762,14 @@ void goal_parade_leftward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
 		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
-			routine = draw_object(routine);
+			draw_object(0u);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1812,7 +1781,7 @@ void goal_parade_leftward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	case 3:
 		OBJECT(current_object)->x_offset -= OBJECT(current_object)->goal_parade.x_speed;
@@ -1822,7 +1791,7 @@ void goal_parade_leftward_update(void)
 			OBJECT(current_object)->state--;
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
-		routine = draw_object(routine);
+		draw_object(0u);
 		return;
 	}
 }
@@ -1871,11 +1840,11 @@ void goal_parade_dragon_update(void)
 			random_bits = random_number();
 			if ((random_bits & 3u) == 0u)
 			{
-				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				random_bits = 0x44u;
 				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			random_bits = draw_object(random_bits);
+			draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1886,11 +1855,11 @@ void goal_parade_dragon_update(void)
 			random_bits = random_number();
 			if ((random_bits & 3u) == 0u)
 			{
-				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				random_bits = 0x44u;
 				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			random_bits = draw_object(random_bits);
+			draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state--;
@@ -1898,11 +1867,11 @@ void goal_parade_dragon_update(void)
 		random_bits = random_number();
 		if ((random_bits & 3u) == 0u)
 		{
-			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			random_bits = 0x44u;
 			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		random_bits = draw_object(random_bits);
+		draw_object(random_bits);
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
@@ -1911,11 +1880,11 @@ void goal_parade_dragon_update(void)
 			random_bits = random_number();
 			if ((random_bits & 3u) == 0u)
 			{
-				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				random_bits = 0x44u;
 				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			random_bits = draw_object(random_bits);
+			draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1926,11 +1895,11 @@ void goal_parade_dragon_update(void)
 			random_bits = random_number();
 			if ((random_bits & 3u) == 0u)
 			{
-				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				random_bits = 0x44u;
 				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			random_bits = draw_object(random_bits);
+			draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state--;
@@ -1938,11 +1907,11 @@ void goal_parade_dragon_update(void)
 		random_bits = random_number();
 		if ((random_bits & 3u) == 0u)
 		{
-			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			random_bits = 0x44u;
 			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		random_bits = draw_object(random_bits);
+		draw_object(random_bits);
 		return;
 	case 3:
 		OBJECT(current_object)->x_offset -= OBJECT(current_object)->goal_parade.x_speed;
@@ -1954,11 +1923,11 @@ void goal_parade_dragon_update(void)
 		random_bits = random_number();
 		if ((random_bits & 3u) == 0u)
 		{
-			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			random_bits = 0x44u;
 			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		random_bits = draw_object(random_bits);
+		draw_object(random_bits);
 		return;
 	}
 }
@@ -2033,7 +2002,7 @@ void fork_branch_draw(void)
 		segment = (uint16_t)(segment + window_segment);
 		distance_from_start = segment - start_position;
 		branch_distance = distance_from_start;
-	} while ((int16_t)distance_from_start < 0 || (int16_t)mem_read16(view_record + 0x16u) >= 2);
+	} while ((int16_t)distance_from_start < 0 || (int16_t)PROJECTED_SEGMENT(view_record)[1].y >= 2);
 	last_y = (int16_t)PROJECTED_SEGMENT(view_record)->y;
 	rows_to_fill = 0u;
 	if (start_position <= segment_position)

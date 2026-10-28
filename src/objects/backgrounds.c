@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -35,16 +35,13 @@ void race_background_update(void)
 	bool L_017685 = false;
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
-	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0;
-	uint32_t animation = 0, background = 0, background_inverted = 0, fades = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_address = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, state_routine = 0, tile_page_list = 0, tile_pages = 0, view_turn = 0;
+	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
+	uint32_t animation = 0, background = 0, background_inverted = 0, fades = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_address = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
 	uint32_t view_turn_kept = 0;
 	uint8_t first_background = 0;
 	uint16_t signed_turn = 0, turn_back = 0, slope_scroll_y = 0;
-	uint32_t state = 0;
 
-	state = OBJECT(current_object)->state;
-	state_routine = race_background_state_jumps[state];
-	switch (state)
+	switch (OBJECT(current_object)->state)
 	{
 	case 0:
 		index = SCREEN(screen)->index;
@@ -79,10 +76,10 @@ void race_background_update(void)
 		do
 		{
 			OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_number) | TILE_PAGE_ENTRIES(tile_pages)[0];
+			r12 += 4u;
 			page_number++;
 			page_count--;
 			tile_pages += 4u;
-			r12 += 4u;
 		} while (page_count != 0u);
 		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 		unpack_tile_pages(tile_page_list);
@@ -150,10 +147,10 @@ void race_background_update(void)
 			do
 			{
 				OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0];
+				r12 += 4u;
 				page_half++;
 				page_count--;
 				tile_pages += 4u;
-				r12 += 4u;
 			} while (page_count != 0u);
 			OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 			queue_tile_pages(tile_page_list);
@@ -167,16 +164,14 @@ void race_background_update(void)
 		}
 		break;
 	case 2:
-		view_turn = (state_routine & ~0xFFFFu) | CAR(player_car)->view_yaw;
-		view_turn = (view_turn & ~0xFFFFu) | (uint16_t)(view_turn << 4);
-		signed_turn = (int16_t)view_turn >> 4;
+		signed_turn = (int16_t)((uint32_t)CAR(player_car)->view_yaw << 4) >> 4;
 		zero = signed_turn == 0u;
-		view_turn = (view_turn & ~0xFFFFu) | signed_turn;
+		view_turn = signed_turn;
 		if ((int16_t)signed_turn < 0)
 		{
 			turn_back = 0u - view_turn;
 			zero = turn_back == 0u;
-			view_turn = (view_turn & ~0xFFFFu) | turn_back;
+			view_turn = turn_back;
 		}
 		switch (OBJECT(current_object)->race_background.change_step)
 		{
@@ -226,7 +221,7 @@ void race_background_update(void)
 			SCREEN(screen)->background_at_start = 0u;
 			route_stage = SCREEN(screen)->route_stage;
 			race_background_start_objects(route_stage);
-			view_turn = view_turn_kept;
+			view_turn = (uint16_t)view_turn_kept;
 			OBJECT(current_object)->race_background.change_step++;
 			if ((int16_t)view_turn <= 0x160)
 			{
@@ -724,7 +719,8 @@ void sunset_fade_start(void)
    background_fading) it stops them and ends. */
 void sunset_fade_wait(void)
 {
-	uint32_t all_flags = 0, fade = 0, fade_flags = 0, fade_slot = 0, fades_left = 0;
+	uint8_t all_flags = 0, fade_flags = 0;
+	uint32_t fade = 0, fade_slot = 0, fades_left = 0;
 
 	all_flags = 0u;
 	fade_slot = current_object + 0x18u;
@@ -735,7 +731,7 @@ void sunset_fade_wait(void)
 		fade_slot += 4u;
 		if (fade != 0u)
 		{
-			fade_flags = (OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
+			fade_flags = (uint8_t)(OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				FADE_OBJECTS(fade_slot)[-1] = 0u;
@@ -793,8 +789,7 @@ void backdrop_far_start(void)
 void backdrop_far_update(void)
 {
 	uint32_t zero = 0;
-	uint16_t scroll_x = 0;
-	uint32_t minus_y = 0;
+	uint32_t scroll_x = 0;
 
 	OBJECT(current_object)->backdrop.leaving |= SCREEN(screen)->backdrops_leaving;
 	scroll_x = CAR(player_car)->view_yaw;
@@ -815,9 +810,8 @@ void backdrop_far_update(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		minus_y = (uint16_t)(SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop.height);
-		OBJECT(current_object)->y = 0u - minus_y;
-		minus_y = draw_object(minus_y);
+		OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop.height);
+		draw_object(scroll_x);
 		return;
 	}
 	if (OBJECT(current_object)->backdrop.leaving != 0u)
@@ -894,7 +888,7 @@ void backdrop_near_update(void)
 	y_change = (uint16_t)(0u - minus_y - OBJECT(current_object)->y);
 	if ((int16_t)y_change > 1 || (int16_t)y_change < -1)
 		OBJECT(current_object)->y = 0u - minus_y;
-	minus_y = draw_object(minus_y);
+	draw_object(minus_y);
 }
 
 /* Sets up a landmark on the horizon that grows as the car approaches (Tiananmen in stage 10, the castle
@@ -990,7 +984,7 @@ void backdrop_landmark_update(void)
 	y_change = (uint16_t)(0u - minus_y - OBJECT(current_object)->y);
 	if ((int16_t)y_change > 1 || (int16_t)y_change < -1)
 		OBJECT(current_object)->y = 0u - minus_y;
-	minus_y = draw_object(minus_y);
+	draw_object(minus_y);
 }
 
 /* Unused object handler: sets up a sprite on the background as backdrop_far_start does, with
@@ -1025,7 +1019,7 @@ void backdrop_flashing_start(void)
 void backdrop_flashing_update(void)
 {
 	uint32_t zero = 0;
-	uint16_t palette = 0, scroll_x = 0;
+	uint16_t scroll_x = 0;
 	uint32_t minus_y = 0;
 	uint16_t other_palette = 0;
 
@@ -1036,9 +1030,9 @@ void backdrop_flashing_update(void)
 	OBJECT(current_object)->x = 0u - (((scroll_x - OBJECT(current_object)->backdrop_flashing.panorama_x) & 0x3FFu) - 0x2A0u);
 	animation_advance(0u);
 	other_palette = OBJECT(current_object)->backdrop_flashing.other_palette;
-	palette = OBJECT(current_object)->palette;
+	minus_y = OBJECT(current_object)->palette;
 	OBJECT(current_object)->palette = other_palette;
-	OBJECT(current_object)->backdrop_flashing.other_palette = palette;
+	OBJECT(current_object)->backdrop_flashing.other_palette = minus_y;
 	switch (OBJECT(current_object)->state)
 	{
 	case 0:
@@ -1053,9 +1047,8 @@ void backdrop_flashing_update(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		minus_y = (uint16_t)(SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_flashing.height);
-		OBJECT(current_object)->y = 0u - minus_y;
-		minus_y = draw_object(minus_y);
+		OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_flashing.height);
+		draw_object(minus_y);
 		return;
 	}
 	if (OBJECT(current_object)->backdrop_flashing.leaving != 0u)
@@ -1095,8 +1088,7 @@ void backdrop_translucent_start(void)
 void backdrop_translucent_update(void)
 {
 	uint32_t zero = 0;
-	uint16_t scroll_x = 0;
-	uint32_t minus_y = 0;
+	uint32_t scroll_x = 0;
 
 	OBJECT(current_object)->backdrop_translucent.leaving |= SCREEN(screen)->backdrops_leaving;
 	scroll_x = CAR(player_car)->view_yaw;
@@ -1125,9 +1117,8 @@ void backdrop_translucent_update(void)
 	}
 	if ((OBJECT(current_object)->backdrop_translucent.frame_count & 1u) != 0u)
 		return;
-	minus_y = (uint16_t)(SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_translucent.height);
-	OBJECT(current_object)->y = 0u - minus_y;
-	minus_y = draw_object(minus_y);
+	OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_translucent.height);
+	draw_object(scroll_x);
 }
 
 /* Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x
