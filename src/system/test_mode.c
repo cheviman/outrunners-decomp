@@ -123,7 +123,8 @@ void test_mode_frame(void)
 void test_mode_menu(void)
 {
 	uint32_t carry = 0;
-	uint32_t cell_value = 0, cursor_cell = 0, heading = 0, text = 0;
+	uint16_t cell_value = 0;
+	uint32_t cursor_cell = 0, heading = 0, text = 0;
 
 	if (test_mode_cursor == 0u)
 	{
@@ -140,7 +141,7 @@ void test_mode_menu(void)
 	carry = (test_mode_flags & 1u) != 0u;
 	heading = carry;
 	text = test_mode_menu_headings[heading];
-	heading = test_mode_draw_texts(heading, text);
+	heading = test_mode_draw_texts((uint16_t)heading, text);
 	test_mode_draw_instructions(heading);
 	cursor_cell = 0x310000u | test_mode_menu_cursor_cells[test_mode_cursor];
 	test_mode_set_cursor(heading, cursor_cell);
@@ -191,7 +192,7 @@ void test_mode_menu_run(void)
 
 /* While SERVICE is held as the menu is drawn: E2PROM WRITE COUNT and the count (eeprom_write_count, 5
    digits) at the bottom of the menu. */
-uint16_t test_mode_menu_show_write_count(uint32_t cell_value)
+uint16_t test_mode_menu_show_write_count(uint16_t cell_value)
 {
 	uint32_t attribute = 0, cell = 0, digits = 0, text = 0, write_count = 0;
 
@@ -225,7 +226,7 @@ void test_mode_menu_toggle_continue(void)
 	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	heading = 0u - (0xFFFFFFFFu + carry);
 	text = test_mode_menu_headings[heading];
-	test_mode_draw_texts(heading, text);
+	test_mode_draw_texts((uint16_t)heading, text);
 	test_mode_routine = test_mode_menu_ADDRESS;
 }
 
@@ -455,7 +456,7 @@ void test_mode_memory_test(void)
 	memory_test_results[24] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	failures = test_mode_memory_test_draw(failures);
+	failures = test_mode_memory_test_draw((uint16_t)failures);
 	SOUND_PROGRAM_HOLD = 0u;
 	interrupts_on();
 	test_mode_show_exit_prompt();
@@ -475,7 +476,7 @@ void test_mode_memory_test_run(uint16_t character)
 /* Draws the memory test's page (MEMORY TEST, 837-8890 <ROM> and its four chips, 837-8676 <RAM> and its
    21, NOW TESTING) and each chip's result from memory_test_results beside its name: ---- (not yet),
    TEST, GOOD or BAD. */
-uint16_t test_mode_memory_test_draw(uint32_t cell_value)
+uint16_t test_mode_memory_test_draw(uint16_t cell_value)
 {
 	uint16_t cell_contents = 0;
 	uint32_t result_cells = 0, result_place = 0, result_text = 0, results_left = 0, text = 0;
@@ -1016,7 +1017,8 @@ void test_mode_memory_test_blink(void)
    B: STEERING WHEEL, ACCELERATOR, BRAKE) and the prompt; then test_mode_volume_adjustment_select. */
 void test_mode_volume_adjustment(void)
 {
-	uint32_t cell = 0, character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = volume_adjustment_page_text_ADDRESS;
@@ -1028,7 +1030,7 @@ void test_mode_volume_adjustment(void)
 	cell = 0x310000u | volume_adjustment_cancel_cell;
 	character = test_mode_set_cursor(character, cell);
 	test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
-	test_mode_volume_adjustment_select((uint16_t)character);
+	test_mode_volume_adjustment_select(character);
 }
 
 /* Each frame: the bars (test_mode_volume_adjustment_draw); SERVICE moves the cursor between ADJUST and
@@ -1038,7 +1040,8 @@ void test_mode_volume_adjustment(void)
 void test_mode_volume_adjustment_select(uint16_t character)
 {
 	uint8_t position = 0;
-	uint32_t analog_input = 0, cell = 0, controls_left = 0, drawn_character = 0, page_cursor = 0, range = 0, text = 0;
+	uint16_t drawn_character = 0;
+	uint32_t analog_input = 0, cell = 0, controls_left = 0, page_cursor = 0, range = 0, text = 0;
 	uint8_t blink_timer = 0;
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
@@ -1140,7 +1143,7 @@ void test_mode_volume_adjustment_adjust(void)
 
 /* Draws the six controls' bars (32 cells, a cell for 8 steps): the range of volume_ranges in green and
    the control's position (test_mode_analog_inputs) in red. */
-uint16_t test_mode_volume_adjustment_draw(uint32_t character)
+uint16_t test_mode_volume_adjustment_draw(uint16_t character)
 {
 	uint16_t range_character = 0;
 	uint32_t bar_cells = 0, calibration = 0, cell = 0, controls_left = 0, position_step = 0, range_length = 0, range_start = 0, text = 0;
@@ -1217,14 +1220,15 @@ uint16_t test_mode_volume_adjustment_draw(uint32_t character)
    BUTTON TO EXIT, then test_mode_input_test_run. */
 void test_mode_input_test(void)
 {
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 
 	character = test_mode_clear_text();
 	text = input_test_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
 	test_mode_routine = test_mode_input_test_run_ADDRESS;
-	test_mode_input_test_run((uint16_t)character);
+	test_mode_input_test_run(character);
 }
 
 /* The input test, each frame: the inputs (test_mode_input_test_draw); TEST goes on to
@@ -1263,7 +1267,7 @@ void test_mode_input_test_release(void)
    mark on a bar of 16 cells and a hexadecimal number; SHIFT UP, SHIFT DOWN, START, DJ/MUSIC, <<, >>,
    COIN and SERVICE On or Off, read from each I/O chip's ports (active low); TEST On when either
    monitor's is pressed. */
-uint16_t test_mode_input_test_draw(uint32_t character)
+uint16_t test_mode_input_test_draw(uint16_t character)
 {
 	uint32_t carry = 0;
 	uint8_t colour = 0, test_switches_b = 0;
@@ -1349,7 +1353,8 @@ uint16_t test_mode_input_test_draw(uint32_t character)
    test_mode_output_test_run. */
 void test_mode_output_test(void)
 {
-	uint32_t cell = 0, character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = output_test_page_text_ADDRESS;
@@ -1514,7 +1519,8 @@ void test_mode_output_test_exit(void)
    the prompt; then test_mode_sound_test_run. */
 void test_mode_sound_test(void)
 {
-	uint32_t cell = 0, character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = sound_test_page_text_ADDRESS;
@@ -1697,7 +1703,8 @@ void test_mode_sound_test_exit(void)
    PUSH TEST BUTTON TO CONTINUE; then test_mode_crt_test_bars_run. */
 void test_mode_crt_test(void)
 {
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 
 	character = test_mode_clear_text();
 	io_write16(BACKGROUND_COLOUR_1, 0u);
@@ -1707,7 +1714,7 @@ void test_mode_crt_test(void)
 	character = test_mode_crt_test_draw_bars(character);
 	test_mode_show_continue_prompt();
 	test_mode_routine = test_mode_crt_test_bars_run_ADDRESS;
-	test_mode_crt_test_bars_run((uint16_t)character);
+	test_mode_crt_test_bars_run(character);
 }
 
 /* The colour bars, each frame: TEST goes on to the second page (test_mode_crt_test_grid); the message
@@ -1723,14 +1730,15 @@ void test_mode_crt_test_bars_run(uint16_t character)
    blinking PUSH TEST BUTTON TO EXIT; then test_mode_crt_test_grid_run. */
 void test_mode_crt_test_grid(void)
 {
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 
 	character = test_mode_crt_test_draw_grid(0u);
 	text = crt_test_second_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
 	test_mode_routine = test_mode_crt_test_grid_run_ADDRESS;
-	test_mode_crt_test_grid_run((uint16_t)character);
+	test_mode_crt_test_grid_run(character);
 }
 
 /* The crosshatch, each frame: TEST clears the text layer, gives the background back its blue (733) and
@@ -1873,7 +1881,8 @@ uint16_t test_mode_crt_test_draw_grid(uint32_t character)
    the prompt, the cursor on EXIT (test_mode_page_cursor 9); then test_mode_game_assignments_run. */
 void test_mode_game_assignments(void)
 {
-	uint32_t cell = 0, character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = game_assignments_page_text_ADDRESS;
@@ -1953,10 +1962,10 @@ void test_mode_game_assignments_run(void)
 /* Draws the game settings: game_difficulty + 1 (1-8) and its bar from EASY to HARD (two cells a level),
    the six stages' time_difficulty (NORMAL, or +n SEC / -n SEC), and steering_wheel_reaction and
    advertise_sound (bit 0) as On or Off. */
-uint32_t test_mode_game_assignments_draw(void)
+uint16_t test_mode_game_assignments_draw(void)
 {
-	uint16_t sign_character = 0;
-	uint32_t advertise_on = 0, bar_cells_left = 0, cell = 0, colour = 0, digit_count = 0, grey = 0, number = 0, row_cell = 0, seconds = 0, stages_left = 0, steering_on = 0, text = 0;
+	uint16_t grey = 0, sign_character = 0;
+	uint32_t advertise_on = 0, bar_cells_left = 0, cell = 0, colour = 0, digit_count = 0, number = 0, row_cell = 0, seconds = 0, stages_left = 0, steering_on = 0, text = 0;
 	uint32_t bar_length = 0;
 
 	current_object = settings_magic_ADDRESS;
@@ -2025,11 +2034,11 @@ uint32_t test_mode_game_assignments_draw(void)
 	steering_on = steering_wheel_reaction;
 	steering_on = steering_on & 1u;
 	text = steering_wheel_reaction_texts[steering_on];
-	test_mode_draw_texts(steering_on, text);
+	test_mode_draw_texts((uint16_t)steering_on, text);
 	advertise_on = advertise_sound;
 	advertise_on = advertise_on & 1u;
 	text = advertise_sound_texts[advertise_on];
-	return test_mode_draw_texts(advertise_on, text);
+	return test_mode_draw_texts((uint16_t)advertise_on, text);
 }
 
 /* GAME DIFFICULTY: game_difficulty one level harder, after the eighth back to the first; redraws. */
@@ -2116,15 +2125,16 @@ void test_mode_coin_assignments(void)
    (test_mode_coin_assignments_manual_start) returns here; then test_mode_coin_assignments_run. */
 void test_mode_coin_assignments_show(void)
 {
-	uint32_t cell = 0, character = 0, colours = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, character_2 = 0, colours = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = coin_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
-	test_mode_coin_assignments_draw(&character, &colours);
-	test_mode_draw_instructions(character);
+	test_mode_coin_assignments_draw(&character_2, &colours);
+	test_mode_draw_instructions(character_2);
 	cell = 0x310000u | coin_assignments_cursor_cells[test_mode_page_cursor];
-	test_mode_set_cursor(character, cell);
+	test_mode_set_cursor(character_2, cell);
 	test_mode_routine = test_mode_coin_assignments_run_ADDRESS;
 	test_mode_coin_assignments_run(colours);
 }
@@ -2313,7 +2323,8 @@ void test_mode_coin_assignments_next_setting(void)
    (test_mode_page_cursor 3) and goes on in test_mode_coin_assignments_manual_run. */
 void test_mode_coin_assignments_manual_start(uint32_t item_count)
 {
-	uint32_t cell = 0, character = 0, coins_for_credit = 0, text = 0;
+	uint16_t character = 0, coins_for_credit = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = coin_manual_page_text_ADDRESS;
@@ -2389,7 +2400,7 @@ void test_mode_coin_assignments_manual_run(void)
    adds a coin for every bonus_adder counted (the rest carried on), and the credits (at most 9) show as
    two digits (test_mode_draw_two_digits) with what is left over as a fraction of a credit in the font's
    fraction characters. */
-uint32_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
+uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 {
 	uint32_t bonus_rest = 0, cell = 0, coins_for_bonus = 0, coins_for_credit = 0, colours = 0, counted_coins = 0, credits = 0, digit_count = 0, leftover_coins = 0, multiplier = 0, numerator = 0, plural_offset = 0, rows_left = 0, shown_bonus = 0, shown_multiplier = 0, text = 0, toward_bonus = 0;
 	uint32_t saved_leftover_coins = 0;
@@ -2409,17 +2420,17 @@ uint32_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 		digit_count = 1u;
 		test_mode_draw_number(digit_count, &shown_bonus, &colours, &cell);
 		text = bonus_adder_text_ADDRESS;
-		test_mode_draw_texts(shown_bonus, text);
+		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
 	else if ((int8_t)shown_bonus < 0)
 	{
 		text = bonus_free_play_text_ADDRESS;
-		test_mode_draw_texts(shown_bonus, text);
+		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
 	else
 	{
 		text = no_bonus_adder_text_ADDRESS;
-		test_mode_draw_texts(shown_bonus, text);
+		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
 	cell = TEXT_CELL(32, 12);
 	shown_multiplier = first_chute_multiplier;
@@ -2594,7 +2605,8 @@ void test_mode_coin_assignments_exit(void)
    test_mode_network_assignments_run. */
 void test_mode_network_assignments_start(void)
 {
-	uint32_t cell = 0, character = 0, hidden_colour = 0, text = 0;
+	uint16_t character = 0, hidden_colour = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = network_assignments_page_text_ADDRESS;
@@ -2684,18 +2696,19 @@ void test_mode_network_assignments_run(void)
 /* Draws the network settings: COMMUNICATION NETWORK or STAND-ALONE (stand_alone), PRIVILEGE MODE SLAVE
    or MASTER (test_mode_privilege_mode), CABINET ID 1-4 (cabinet_id + 1); the last two hidden (colour 6E)
    when stand-alone. */
-uint32_t test_mode_network_assignments_draw(void)
+uint16_t test_mode_network_assignments_draw(void)
 {
+	uint16_t cabinet_number_then_colour_2 = 0;
 	uint32_t cabinet_number_then_colour = 0, cell = 0, colour = 0, digit_count = 0, privilege = 0, stand_alone_bit = 0, text = 0;
 
 	current_object = settings_magic_ADDRESS;
 	stand_alone_bit = stand_alone;
 	stand_alone_bit = stand_alone_bit & 1u;
 	text = communication_texts[stand_alone_bit];
-	test_mode_draw_texts(stand_alone_bit, text);
+	test_mode_draw_texts((uint16_t)stand_alone_bit, text);
 	privilege = test_mode_privilege_mode;
 	text = privilege_mode_texts[privilege];
-	test_mode_draw_texts(privilege, text);
+	test_mode_draw_texts((uint16_t)privilege, text);
 	cell = TEXT_CELL(33, 14);
 	colour = 0x64u;
 	digit_count = 1u;
@@ -2704,11 +2717,11 @@ uint32_t test_mode_network_assignments_draw(void)
 	if (stand_alone != 0u)
 	{
 		cell = TEXT_CELL(28, 12);
-		cabinet_number_then_colour = (cabinet_number_then_colour & ~0xFFu) | 0x6Eu;
-		cabinet_number_then_colour = test_mode_colour_line(cabinet_number_then_colour, cell);
+		cabinet_number_then_colour_2 = 0x6Eu;
+		test_mode_colour_line(cabinet_number_then_colour_2, cell);
 		cell = TEXT_CELL(33, 14);
-		cabinet_number_then_colour |= 0x6Eu;
-		cabinet_number_then_colour = test_mode_colour_line(cabinet_number_then_colour, cell);
+		cabinet_number_then_colour = 0x6Eu;
+		cabinet_number_then_colour = test_mode_colour_line((uint16_t)cabinet_number_then_colour, cell);
 	}
 	return cabinet_number_then_colour;
 }
@@ -2719,6 +2732,7 @@ uint32_t test_mode_network_assignments_draw(void)
 void test_mode_network_assignments_toggle_communication(uint32_t page_cursor)
 {
 	uint32_t carry = 0;
+	uint16_t stand_alone_then_colour_2 = 0;
 	uint32_t cell = 0, ignored = 0, stand_alone_then_colour = 0;
 	uint32_t saved_colour = 0;
 	uint8_t stand_alone_setting = 0;
@@ -2736,10 +2750,10 @@ void test_mode_network_assignments_toggle_communication(uint32_t page_cursor)
 		stand_alone_then_colour = 0x6Eu;
 	cell = TEXT_CELL(8, 12);
 	saved_colour = stand_alone_then_colour;
-	test_mode_colour_line(stand_alone_then_colour, cell);
+	test_mode_colour_line((uint16_t)stand_alone_then_colour, cell);
 	cell = TEXT_CELL(8, 14);
-	stand_alone_then_colour = saved_colour;
-	test_mode_colour_line(stand_alone_then_colour, cell);
+	stand_alone_then_colour_2 = (uint16_t)saved_colour;
+	test_mode_colour_line(stand_alone_then_colour_2, cell);
 	ignored = test_mode_network_assignments_draw();
 }
 
@@ -2799,16 +2813,16 @@ void test_mode_network_assignments_exit(void)
    test_mode_bookkeeping_wait. */
 void test_mode_bookkeeping_start(void)
 {
-	uint16_t character_2 = 0;
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 
 	character = test_mode_clear_text();
 	text = bookkeeping_first_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
-	character_2 = test_mode_bookkeeping_draw_totals();
+	character = test_mode_bookkeeping_draw_totals();
 	test_mode_show_continue_prompt();
 	test_mode_routine = test_mode_bookkeeping_wait_ADDRESS;
-	test_mode_bookkeeping_wait(character_2);
+	test_mode_bookkeeping_wait(character);
 }
 
 /* Blinks the prompt (test_mode_blink_prompt) until TEST, then the second page
@@ -2825,16 +2839,16 @@ void test_mode_bookkeeping_wait(uint16_t character)
    (test_mode_show_exit_prompt); goes on in test_mode_bookkeeping_second_page_wait. */
 void test_mode_bookkeeping_second_page_start(void)
 {
-	uint16_t character_2 = 0;
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 
 	character = test_mode_clear_text();
 	text = bookkeeping_second_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
-	character_2 = test_mode_bookkeeping_draw_histogram();
+	character = test_mode_bookkeeping_draw_histogram();
 	test_mode_show_exit_prompt();
 	test_mode_routine = test_mode_bookkeeping_second_page_wait_ADDRESS;
-	test_mode_bookkeeping_second_page_wait(character_2);
+	test_mode_bookkeeping_second_page_wait(character);
 }
 
 /* Blinks the prompt until TEST, then back to the menu. */
@@ -3142,7 +3156,8 @@ void test_mode_split_minutes_seconds(uint32_t seconds, uint32_t stored_time)
    goes on in test_mode_backup_data_clear_run. */
 void test_mode_backup_data_clear_start(void)
 {
-	uint32_t cell = 0, character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t cell = 0, text = 0;
 
 	character = test_mode_clear_text();
 	text = backup_data_clear_page_text_ADDRESS;
@@ -3162,7 +3177,8 @@ void test_mode_backup_data_clear_start(void)
    (test_mode_show_exit_prompt) until TEST (test_mode_backup_data_clear_wait). */
 void test_mode_backup_data_clear_run(void)
 {
-	uint32_t cell = 0, character = 0, hidden_colour = 0, instructions_cell = 0, text = 0;
+	uint16_t hidden_colour = 0;
+	uint32_t cell = 0, character = 0, instructions_cell = 0, text = 0;
 	uint8_t blink_timer = 0;
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
@@ -3195,7 +3211,7 @@ void test_mode_backup_data_clear_run(void)
 		TEXT_LAYER_CELLS(test_mode_blink_address)[0] = 0x6A7Fu;
 		character = bookkeeping_reset(character);
 		text = backup_data_clear_completed_text_ADDRESS;
-		test_mode_draw_texts(character, text);
+		test_mode_draw_texts((uint16_t)character, text);
 		instructions_cell = 0x310000u | test_mode_instructions_text;
 		hidden_colour = 0x6Eu;
 		test_mode_colour_line(hidden_colour, instructions_cell);
@@ -3233,7 +3249,8 @@ void test_mode_backup_data_clear_wait(void)
    for TEST first (test_mode_exit_caution_wait). */
 void test_mode_exit(void)
 {
-	uint32_t character = 0, text = 0;
+	uint16_t character = 0;
+	uint32_t text = 0;
 	uint32_t flags_before = 0, test_mode_flags_long = 0;
 
 	flags_before = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
@@ -3351,7 +3368,7 @@ void test_mode_draw_instructions(uint32_t character)
 	uint32_t text = 0;
 
 	text = test_mode_instructions_text_ADDRESS;
-	character = test_mode_draw_texts(character, text);
+	character = test_mode_draw_texts((uint16_t)character, text);
 }
 
 /* Makes PUSH TEST BUTTON TO EXIT (the text record at 01F2BC, row 25) the prompt test_mode_blink_prompt
@@ -3372,7 +3389,7 @@ void test_mode_show_continue_prompt(void)
 
 /* Blinks the prompt whose text record test_mode_blink_address holds: when test_mode_blink_timer runs
    out, draws it (shown 21 frames) if its first cell is empty, else erases it (hidden 11 frames). */
-void test_mode_blink_prompt(uint32_t character)
+void test_mode_blink_prompt(uint16_t character)
 {
 	uint32_t cell = 0, text = 0;
 	uint8_t blink_timer = 0;
@@ -3408,7 +3425,7 @@ uint16_t test_mode_set_cursor(uint32_t character, uint32_t cell)
 	test_mode_blink_timer = 0;
 	cell += 4u;
 	colour = 0x6Au;
-	return test_mode_colour_line(colour, cell);
+	return test_mode_colour_line((uint16_t)colour, cell);
 }
 
 /* Takes the cursor off its line: clears its cell (test_mode_blink_address) and puts the line back in
@@ -3421,13 +3438,13 @@ void test_mode_clear_cursor(void)
 	TEXT_LAYER_CELLS(cell)[0] = 0u;
 	cell += 4u;
 	colour = 0x60u;
-	colour = test_mode_colour_line(colour, cell);
+	colour = test_mode_colour_line((uint16_t)colour, cell);
 }
 
 /* Draws the text record at R10 on the text layer: lines of a cell (halfword), characters and colour
    changes (a negative byte: its complement is the colour, the cells' high byte), each closed by 0; a 0
    cell ends it. */
-uint32_t test_mode_draw_texts(uint32_t character, uint32_t text)
+uint16_t test_mode_draw_texts(uint16_t character, uint32_t text)
 {
 	uint32_t cell = 0;
 
@@ -3440,7 +3457,7 @@ uint32_t test_mode_draw_texts(uint32_t character, uint32_t text)
 			break;
 		for (;;)
 		{
-			character = (character & ~0xFFu) | mem_read8(text);
+			character = (uint16_t)((character & ~0xFFu) | mem_read8(text));
 			text++;
 			if ((uint8_t)character == 0u)
 				break;
@@ -3450,8 +3467,7 @@ uint32_t test_mode_draw_texts(uint32_t character, uint32_t text)
 				cell += 2u;
 				continue;
 			}
-			character = (character & ~0xFFu) | (uint8_t)~character;
-			character = (character & ~0xFFFFu) | (uint16_t)(character << 8);
+			character = (uint16_t)((uint32_t)(uint8_t)~character << 8);
 		}
 	}
 	return character;
@@ -3545,11 +3561,11 @@ uint32_t test_mode_draw_hex_number(uint32_t number, uint8_t colour, uint32_t dig
 
 /* Gives the text from cell R10 up to the next empty cell the colour R0 (60 grey, 6A white, 6E
    hidden...). */
-uint32_t test_mode_colour_line(uint32_t colour, uint32_t cell)
+uint16_t test_mode_colour_line(uint16_t colour, uint32_t cell)
 {
 	uint16_t character = 0;
 
-	colour = (colour & ~0xFFFFu) | (uint16_t)(colour << 8);
+	colour = (uint16_t)((uint32_t)colour << 8);
 	for (;;)
 	{
 		character = TEXT_LAYER_CELLS(cell)[0] & ~0xE00u;

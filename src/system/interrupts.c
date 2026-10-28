@@ -322,7 +322,8 @@ void send_sound_requests(void)
    for every 73rd second). */
 void count_total_time(void)
 {
-	uint32_t time_count = 0, total_time = 0;
+	uint16_t time_count = 0;
+	uint32_t total_time = 0;
 
 	if (test_mode_on != 0u)
 		return;
@@ -349,7 +350,7 @@ void count_total_time(void)
 		total_time_count = time_count;
 		return;
 	}
-	time_count = (uint16_t)(time_count - 0x3E8u);
+	time_count -= 0x3E8u;
 	total_time_count = time_count - 0x3E8u;
 	if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
 	{

@@ -21,9 +21,11 @@ rom_reads 26
 rom_table_reads 0
 board_replaced 1
 functions 746
-lines 40098
-casts 2776
-partial_writes 259
+lines 40094
+casts 2796
+partial_writes 245
 board_registers 371
-clean_functions 691
+clean_functions 695
 clean_lines 955
+faithful_functions 802
+faithful_lines 983

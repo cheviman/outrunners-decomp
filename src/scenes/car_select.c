@@ -887,8 +887,8 @@ void turntable_car_show(void)
    halfway copy; then animation_advance. */
 void turntable_scenery_show(void)
 {
-	uint16_t item_flags = 0, size = 0;
-	uint32_t across = 0, animation = 0, down = 0, group = 0, ignored = 0, item_angle = 0, item_place = 0, leftover = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
+	uint16_t item_flags = 0, leftover = 0, size = 0;
+	uint32_t across = 0, animation = 0, down = 0, group = 0, ignored = 0, item_angle = 0, item_place = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
 	uint32_t kept_saved_place = 0, kept_item_place = 0;
 
 	switch (OBJECT(current_object)->state)
@@ -2055,7 +2055,7 @@ void choice_flag_number_follow(void)
    the depth layer (3C) 100 - d >> 4, the width and height scale (100000 / d) * the object's size (1C) >>
    12. Not drawn (flags bit 5 cleared) with d under 10 or x outside -28..168. Used by car_attendant,
    turntable_car and turntable_scenery. */
-uint32_t turntable_draw(uint32_t across, uint32_t down, uint32_t point_depth)
+uint16_t turntable_draw(uint32_t across, uint32_t down, uint32_t point_depth)
 {
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint8_t fraction_shift = 0;
@@ -2095,8 +2095,7 @@ uint32_t turntable_draw(uint32_t across, uint32_t down, uint32_t point_depth)
 			OBJECT(current_object)->y = shift_signed_by(down, fraction_shift, 32) + 0x60u + carry;
 			scale = scale * OBJECT(current_object)->turntable.size;
 			carry = v60_sha_cy(scale, fraction_shift, 32);
-			scale = shift_signed_by(scale, fraction_shift, 32);
-			scale = (scale & ~0xFFFFu) | (uint16_t)(scale + carry);
+			scale = (uint16_t)(shift_signed_by(scale, fraction_shift, 32) + carry);
 			OBJECT(current_object)->width_scale = scale;
 			OBJECT(current_object)->height_scale = scale;
 			return draw_object(scale);
@@ -2345,7 +2344,7 @@ void entry_car_ring_draw(void)
 		copies = OBJECT(current_object)->entry_car_ring.copies;
 		OBJECT(current_object)->entry_car_ring.copies = copies - 1u;
 	} while (copies != 1u);
-	ignored = animation_advance(0u);
+	animation_advance(0u);
 	ignored = animation_advance(ignored);
 }
 
@@ -2402,10 +2401,10 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay - 1u;
 			if (spin_delay == 1u)
 			{
-				ignored = animation_advance(0u);
-				ignored = animation_advance(ignored);
-				ignored = animation_advance(ignored);
-				ignored = animation_advance(ignored);
+				animation_advance(0u);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
 				animation_advance(ignored);
 				tyre_noise = 4u;
 				set_tyre_noise(tyre_noise);
@@ -2429,10 +2428,10 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->flags = 0u;
 			return;
 		}
-		ignored = animation_advance(0u);
-		ignored = animation_advance(ignored);
-		ignored = animation_advance(ignored);
-		ignored = animation_advance(ignored);
+		animation_advance(0u);
+		animation_advance(ignored);
+		animation_advance(ignored);
+		animation_advance(ignored);
 		animation_advance(ignored);
 		tyre_noise = 4u;
 		set_tyre_noise(tyre_noise);
@@ -2480,10 +2479,10 @@ void entry_traffic_car_drive(void)
 			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay_2 - 1u;
 			if (spin_delay_2 == 1u)
 			{
-				ignored = animation_advance(0u);
-				ignored = animation_advance(ignored);
-				ignored = animation_advance(ignored);
-				ignored = animation_advance(ignored);
+				animation_advance(0u);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
 				animation_advance(ignored);
 				pass_sound = 4u;
 				set_tyre_noise(pass_sound);
@@ -2508,10 +2507,10 @@ void entry_traffic_car_drive(void)
 			mirrored_x = draw_object(mirrored_x);
 			return;
 		}
-		ignored = animation_advance(0u);
-		ignored = animation_advance(ignored);
-		ignored = animation_advance(ignored);
-		ignored = animation_advance(ignored);
+		animation_advance(0u);
+		animation_advance(ignored);
+		animation_advance(ignored);
+		animation_advance(ignored);
 		animation_advance(ignored);
 		pass_sound = 4u;
 		set_tyre_noise(pass_sound);

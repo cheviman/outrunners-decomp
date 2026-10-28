@@ -256,7 +256,7 @@ void second_task(uint32_t entry_point)
 					L_000719 = false;
 					if (second_task_waiting == 0u)
 						link_send_records();
-					input_changes = wait_for_frame(input_changes);
+					wait_for_frame(input_changes);
 					L_00077F = test_mode_on != 0u;
 					if (L_00077F)
 						break;
@@ -313,7 +313,7 @@ void second_task(uint32_t entry_point)
 			{
 				second_task_waiting = 0xFFu;
 				link_send_records();
-				input_changes = wait_for_frame(input_changes);
+				wait_for_frame(input_changes);
 				second_task_waiting = 0u;
 				L_00077F = test_mode_on != 0u;
 				if (L_00077F)

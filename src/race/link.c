@@ -288,7 +288,7 @@ void network_check(void)
 	io_write32(LINK_BOARD_FLAGS, board_flags_status | 1u);
 	do
 	{
-		board_reply = wait_for_frame(board_reply);
+		wait_for_frame(board_reply);
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -455,7 +455,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			wait_for_frame(ignored);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -475,7 +475,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			wait_for_frame(ignored);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -489,7 +489,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			wait_for_frame(ignored);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -510,7 +510,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			ignored = wait_for_frame(ignored);
+			wait_for_frame(ignored);
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -528,7 +528,7 @@ void network_check_result(uint32_t machine)
 	do
 	{
 		saved_frames_left = frames_left;
-		ignored = wait_for_frame(ignored);
+		wait_for_frame(ignored);
 		frames_left = saved_frames_left - 1u;
 	} while (frames_left != 0u);
 	clear_text_layer();
@@ -707,7 +707,7 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 
 	do
 	{
-		ignored = wait_for_frame(ignored);
+		wait_for_frame(ignored);
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -721,7 +721,7 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 	link_wait_frames = 0x3Cu;
 	do
 	{
-		ignored = wait_for_frame(ignored);
+		wait_for_frame(ignored);
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -966,14 +966,14 @@ void link_take_master_settings(void)
 	if (test_mode_on != 0u)
 		return;
 	link_send_records();
-	ignored = wait_for_frame(0u);
-	ignored = wait_for_frame(ignored);
-	ignored = wait_for_frame(ignored);
-	ignored = wait_for_frame(ignored);
-	ignored = wait_for_frame(ignored);
+	wait_for_frame(0u);
+	wait_for_frame(ignored);
+	wait_for_frame(ignored);
+	wait_for_frame(ignored);
+	wait_for_frame(ignored);
 	for (;;)
 	{
-		ignored = wait_for_frame(ignored);
+		wait_for_frame(ignored);
 		if (isdn_mode == 0u)
 			break;
 		isdn_records_ready = io_read8(LINK_ISDN_RECORDS_READY);
@@ -996,7 +996,7 @@ void link_take_master_settings(void)
 		players_left--;
 	} while (players_left != 0u);
 	move_halfwords(BOOKKEEPING_COURSE_RECORDS_ADDRESS, WORK_RAM + 0xFC30u, 0x1Eu);
-	bookkeeping_update_checksum(players_left);
+	bookkeeping_update_checksum((uint16_t)players_left);
 	move_halfwords(SOUND_RAM + 0x1FAEu, WORK_RAM + 0xFC30u, 0x1Eu);
 	load_course_records();
 	race = RACE_COPY_1;
@@ -1518,7 +1518,7 @@ void course_records_update(void)
 				backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS + record_offset;
 				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = (COURSE_RECORD_ENTRY(r12)->model | ((uint32_t)COURSE_RECORD_ENTRY(r12)->name << 8u) | ((uint32_t)COURSE_RECORD_ENTRY(r12)->name_rest << 16u));
 				BACKUP_COURSE_RECORD(backup_record)->time = COURSE_RECORD_ENTRY(r12)->time;
-				bookkeeping_update_checksum(ignored);
+				bookkeeping_update_checksum((uint16_t)ignored);
 				backup_record = SOUND_RAM + 0x1FAEu + record_offset;
 				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = (COURSE_RECORD_ENTRY(r12)->model | ((uint32_t)COURSE_RECORD_ENTRY(r12)->name << 8u) | ((uint32_t)COURSE_RECORD_ENTRY(r12)->name_rest << 16u));
 				BACKUP_COURSE_RECORD(backup_record)->time = COURSE_RECORD_ENTRY(r12)->time;

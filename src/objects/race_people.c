@@ -657,7 +657,7 @@ void goal_actor_run(void)
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
-			ignored = animation_advance(ignored);
+			animation_advance(ignored);
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)

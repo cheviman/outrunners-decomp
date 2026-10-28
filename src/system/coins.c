@@ -164,7 +164,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		}
 		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(meter_frames);
+		bookkeeping_update_checksum((uint16_t)meter_frames);
 		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
@@ -175,7 +175,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		COIN_METER(coin_meter - 0x1u)->frames_off--;
 		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(meter_frames);
+		bookkeeping_update_checksum((uint16_t)meter_frames);
 		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
@@ -186,7 +186,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 	{
 		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
-		bookkeeping_update_checksum(meter_frames);
+		bookkeeping_update_checksum((uint16_t)meter_frames);
 		r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits();
 		return;
@@ -194,7 +194,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 	PORT_OUTPUT_BITS(r12)[0] &= rotate_by(0xFEu, meter_bit, 8);
 	r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
-	bookkeeping_update_checksum(meter_frames);
+	bookkeeping_update_checksum((uint16_t)meter_frames);
 	r12 = BOOKKEEPING_BACKUP_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
 }
@@ -469,13 +469,13 @@ void bookkeeping_check(void)
 
 /* Resets the bookkeeping: the defaults at 011458 into the block (701F02), then the block into its backup
    (701F7E), with the checksum. */
-uint32_t bookkeeping_reset(uint32_t checksum)
+uint16_t bookkeeping_reset(uint32_t checksum)
 {
 	uint32_t destination = 0, source = 0;
 
 	source = bookkeeping_defaults_ADDRESS;
 	destination = SOUND_RAM + 0x1F02u;
-	checksum = bookkeeping_copy(checksum, source, destination);
+	bookkeeping_copy(checksum, source, destination);
 	source = SOUND_RAM + 0x1F02u;
 	destination = SOUND_RAM + 0x1F7Eu;
 	return bookkeeping_copy(checksum, source, destination);
@@ -483,15 +483,15 @@ uint32_t bookkeeping_reset(uint32_t checksum)
 
 /* Copies 3E halfwords from R2 over R3 (the bookkeeping and its backup at 701F7E, either way, or the
    defaults), then bookkeeping_update_checksum. */
-uint32_t bookkeeping_copy(uint32_t checksum, uint32_t source, uint32_t destination)
+uint16_t bookkeeping_copy(uint32_t checksum, uint32_t source, uint32_t destination)
 {
 	move_halfwords(destination, source, 0x3Eu);
-	return bookkeeping_update_checksum(checksum);
+	return bookkeeping_update_checksum((uint16_t)checksum);
 }
 
 /* Writes the checksum of the bookkeeping (701F02-701F7D in the shared sound RAM) into 701F00, after a
    change to it; returns it. */
-uint32_t bookkeeping_update_checksum(uint32_t checksum)
+uint16_t bookkeeping_update_checksum(uint16_t checksum)
 {
 	uint32_t block = 0;
 

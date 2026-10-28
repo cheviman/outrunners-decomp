@@ -20,8 +20,8 @@
    resets the backup RAM's data (bookkeeping_reset); each one saves the result (eeprom_write_settings). */
 void load_settings(uint32_t checksum)
 {
-	uint16_t new_checksum_2 = 0, write_count = 0;
-	uint32_t new_checksum = 0, settings = 0, settings_length = 0;
+	uint16_t new_checksum = 0, write_count = 0;
+	uint32_t settings = 0, settings_length = 0;
 
 	eeprom_read_settings(checksum);
 	if (settings_magic == 0x41474553u)
@@ -30,13 +30,13 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		eeprom_write_count = 0x64u;
 		backup_eeprom_write_count = 0x64u;
-		new_checksum_2 = signature_checksum();
-		settings_signature = new_checksum_2;
+		new_checksum = signature_checksum();
+		settings_signature = new_checksum;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum_2 = crc16(settings, settings_length);
-		settings_checksum = new_checksum_2;
-		backup_settings_checksum = new_checksum_2;
+		new_checksum = crc16(settings, settings_length);
+		settings_checksum = new_checksum;
+		backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
@@ -44,13 +44,13 @@ void load_settings(uint32_t checksum)
 	{
 		bookkeeping_reset(checksum);
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		new_checksum_2 = signature_checksum();
-		settings_signature = new_checksum_2;
+		new_checksum = signature_checksum();
+		settings_signature = new_checksum;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum_2 = crc16(settings, settings_length);
-		settings_checksum = new_checksum_2;
-		backup_settings_checksum = new_checksum_2;
+		new_checksum = crc16(settings, settings_length);
+		settings_checksum = new_checksum;
+		backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
@@ -61,21 +61,21 @@ void load_settings(uint32_t checksum)
 		bookkeeping_reset(new_checksum);
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum_2 = crc16(settings, settings_length);
+		new_checksum = crc16(settings, settings_length);
 		settings = settings_checksum_ADDRESS;
-		if (settings_checksum == new_checksum_2)
+		if (settings_checksum == new_checksum)
 		{
 			write_count = SETTINGS_COPY(settings)->write_count;
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 			eeprom_write_count = write_count;
 			backup_eeprom_write_count = write_count;
-			new_checksum_2 = signature_checksum();
-			settings_signature = new_checksum_2;
+			new_checksum = signature_checksum();
+			settings_signature = new_checksum;
 			settings = eeprom_write_count_ADDRESS;
 			settings_length = 0x3Au;
-			new_checksum_2 = crc16(settings, settings_length);
-			settings_checksum = new_checksum_2;
-			backup_settings_checksum = new_checksum_2;
+			new_checksum = crc16(settings, settings_length);
+			settings_checksum = new_checksum;
+			backup_settings_checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
@@ -87,13 +87,13 @@ void load_settings(uint32_t checksum)
 		{
 			bookkeeping_reset(checksum);
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-			new_checksum_2 = signature_checksum();
-			settings_signature = new_checksum_2;
+			new_checksum = signature_checksum();
+			settings_signature = new_checksum;
 			settings = eeprom_write_count_ADDRESS;
 			settings_length = 0x3Au;
-			new_checksum_2 = crc16(settings, settings_length);
-			settings_checksum = new_checksum_2;
-			backup_settings_checksum = new_checksum_2;
+			new_checksum = crc16(settings, settings_length);
+			settings_checksum = new_checksum;
+			backup_settings_checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
@@ -101,20 +101,20 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		eeprom_write_count = write_count;
 		backup_eeprom_write_count = write_count;
-		new_checksum_2 = signature_checksum();
-		settings_signature = new_checksum_2;
+		new_checksum = signature_checksum();
+		settings_signature = new_checksum;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum_2 = crc16(settings, settings_length);
-		settings_checksum = new_checksum_2;
-		backup_settings_checksum = new_checksum_2;
+		new_checksum = crc16(settings, settings_length);
+		settings_checksum = new_checksum;
+		backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
 	settings = eeprom_write_count_ADDRESS;
 	settings_length = 0x3Au;
-	new_checksum_2 = crc16(settings, settings_length);
-	if (settings_checksum != new_checksum_2)
+	new_checksum = crc16(settings, settings_length);
+	if (settings_checksum != new_checksum)
 	{
 		settings = backup_eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
@@ -127,20 +127,20 @@ void load_settings(uint32_t checksum)
 		}
 		bookkeeping_reset(checksum);
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		new_checksum_2 = signature_checksum();
-		settings_signature = new_checksum_2;
+		new_checksum = signature_checksum();
+		settings_signature = new_checksum;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum_2 = crc16(settings, settings_length);
-		settings_checksum = new_checksum_2;
-		backup_settings_checksum = new_checksum_2;
+		new_checksum = crc16(settings, settings_length);
+		settings_checksum = new_checksum;
+		backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
 	settings = backup_eeprom_write_count_ADDRESS;
 	settings_length = 0x3Au;
-	new_checksum_2 = crc16(settings, settings_length);
-	if (settings_checksum != new_checksum_2 || backup_settings_checksum != new_checksum_2)
+	new_checksum = crc16(settings, settings_length);
+	if (settings_checksum != new_checksum || backup_settings_checksum != new_checksum)
 	{
 		move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 		eeprom_write_settings();

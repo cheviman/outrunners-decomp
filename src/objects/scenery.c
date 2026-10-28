@@ -367,9 +367,8 @@ void overhead_scenery_update(void)
    odd), so it looks faint. It never ends. */
 void aurora_update(void)
 {
-	uint16_t countdown = 0, routine = 0;
-	uint32_t odd_countdown = 0, record = 0;
-	uint8_t odd = 0;
+	uint16_t routine = 0;
+	uint32_t countdown = 0, record = 0;
 	uint32_t state = 0;
 
 	state = OBJECT(current_object)->state;
@@ -406,25 +405,21 @@ void aurora_update(void)
 		if ((int16_t)OBJECT(current_object)->x >= 0xA0)
 			OBJECT(current_object)->state++;
 		aurora_count_down();
-		countdown = (uint16_t)((routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown);
-		odd = countdown & 1u;
-		odd_countdown = (countdown & ~0xFFu) | odd;
-		if (odd == 0u)
+		countdown = (routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown;
+		if ((countdown & 1u) == 0u)
 			return;
 		animation_advance(0u);
-		odd_countdown = draw_object(odd_countdown);
+		countdown = draw_object(countdown);
 		return;
 	case 2:
 		break;
 	}
 	aurora_count_down();
-	countdown = (uint16_t)((routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown);
-	odd = countdown & 1u;
-	odd_countdown = (countdown & ~0xFFu) | odd;
-	if (odd == 0u)
+	countdown = (routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown;
+	if ((countdown & 1u) == 0u)
 		return;
 	animation_advance(0u);
-	odd_countdown = draw_object(odd_countdown);
+	countdown = draw_object(countdown);
 }
 
 /* Counts the current animation's frames down; when they run out, aurora_next_animation. */
@@ -1528,7 +1523,7 @@ void santa_sleigh_update(void)
 			request_sound((uint8_t)sound);
 		}
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->santa_sleigh.x_speed;
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		if (OBJECT(current_object)->santa_sleigh.screen_x >= -0xB0)
 		{
 			sound = draw_object(sound);
@@ -1622,7 +1617,7 @@ void goal_parade_rightward_update(void)
 			return;
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xB0)
 		{
 			routine = draw_object(routine);
@@ -1641,7 +1636,7 @@ void goal_parade_rightward_update(void)
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xB0)
 		{
 			routine = draw_object(routine);
@@ -1783,7 +1778,7 @@ void goal_parade_leftward_update(void)
 			return;
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
 			routine = draw_object(routine);
@@ -1802,7 +1797,7 @@ void goal_parade_leftward_update(void)
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
-		ignored = animation_advance(0u);
+		animation_advance(0u);
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
 			routine = draw_object(routine);
@@ -1838,8 +1833,7 @@ void goal_parade_leftward_update(void)
 void goal_parade_dragon_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, random_bits = 0, sound = 0;
-	uint8_t chance = 0;
+	uint32_t animation = 0, goal_parade_record = 0, random_bits = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1875,15 +1869,13 @@ void goal_parade_dragon_update(void)
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
 			random_bits = random_number();
-			chance = random_bits & 3u;
-			sound = (random_bits & ~0xFFu) | chance;
-			if (chance == 0u)
+			if ((random_bits & 3u) == 0u)
 			{
-				sound = (sound & ~0xFFu) | 0x44u;
-				request_sound((uint8_t)sound);
+				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			sound = draw_object(sound);
+			random_bits = draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1892,44 +1884,38 @@ void goal_parade_dragon_update(void)
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xF0)
 		{
 			random_bits = random_number();
-			chance = random_bits & 3u;
-			sound = (random_bits & ~0xFFu) | chance;
-			if (chance == 0u)
+			if ((random_bits & 3u) == 0u)
 			{
-				sound = (sound & ~0xFFu) | 0x44u;
-				request_sound((uint8_t)sound);
+				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			sound = draw_object(sound);
+			random_bits = draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state--;
 		OBJECT(current_object)->flags &= 0xBFu;
 		random_bits = random_number();
-		chance = random_bits & 3u;
-		sound = (random_bits & ~0xFFu) | chance;
-		if (chance == 0u)
+		if ((random_bits & 3u) == 0u)
 		{
-			sound = (sound & ~0xFFu) | 0x44u;
-			request_sound((uint8_t)sound);
+			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		sound = draw_object(sound);
+		random_bits = draw_object(random_bits);
 		return;
 	case 2:
 		OBJECT(current_object)->x_offset += OBJECT(current_object)->goal_parade.x_speed;
 		if (OBJECT(current_object)->goal_parade.screen_x >= -0xB0)
 		{
 			random_bits = random_number();
-			chance = random_bits & 3u;
-			sound = (random_bits & ~0xFFu) | chance;
-			if (chance == 0u)
+			if ((random_bits & 3u) == 0u)
 			{
-				sound = (sound & ~0xFFu) | 0x44u;
-				request_sound((uint8_t)sound);
+				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			sound = draw_object(sound);
+			random_bits = draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state++;
@@ -1938,29 +1924,25 @@ void goal_parade_dragon_update(void)
 		if (OBJECT(current_object)->goal_parade.screen_x <= 0xF0)
 		{
 			random_bits = random_number();
-			chance = random_bits & 3u;
-			sound = (random_bits & ~0xFFu) | chance;
-			if (chance == 0u)
+			if ((random_bits & 3u) == 0u)
 			{
-				sound = (sound & ~0xFFu) | 0x44u;
-				request_sound((uint8_t)sound);
+				random_bits = (random_bits & ~0xFFu) | 0x44u;
+				request_sound((uint8_t)random_bits);
 			}
 			animation_advance(0u);
-			sound = draw_object(sound);
+			random_bits = draw_object(random_bits);
 			return;
 		}
 		OBJECT(current_object)->state--;
 		OBJECT(current_object)->flags &= 0xBFu;
 		random_bits = random_number();
-		chance = random_bits & 3u;
-		sound = (random_bits & ~0xFFu) | chance;
-		if (chance == 0u)
+		if ((random_bits & 3u) == 0u)
 		{
-			sound = (sound & ~0xFFu) | 0x44u;
-			request_sound((uint8_t)sound);
+			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		sound = draw_object(sound);
+		random_bits = draw_object(random_bits);
 		return;
 	case 3:
 		OBJECT(current_object)->x_offset -= OBJECT(current_object)->goal_parade.x_speed;
@@ -1970,15 +1952,13 @@ void goal_parade_dragon_update(void)
 			OBJECT(current_object)->flags &= 0xBFu;
 		}
 		random_bits = random_number();
-		chance = random_bits & 3u;
-		sound = (random_bits & ~0xFFu) | chance;
-		if (chance == 0u)
+		if ((random_bits & 3u) == 0u)
 		{
-			sound = (sound & ~0xFFu) | 0x44u;
-			request_sound((uint8_t)sound);
+			random_bits = (random_bits & ~0xFFu) | 0x44u;
+			request_sound((uint8_t)random_bits);
 		}
 		animation_advance(0u);
-		sound = draw_object(sound);
+		random_bits = draw_object(random_bits);
 		return;
 	}
 }

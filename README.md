@@ -12,8 +12,12 @@ the tools verify it, extract the assets and build your own executable.
 ## Status
 
 How much of the C reads as C written by hand, measured on every run of `python tools/noise_report.py`
-(`clean`): 516 of the 746 functions (69.2%) and 26,127 of their 27,353 lines of code (95.5%) hold nothing
-of what the table under "What is left, and why" counts. The goal before the ports is 99% of both.
+(`clean`): 519 of the 746 functions (69.6%) and 26,137 of their 27,349 lines of code (95.6%) hold nothing
+of what the table under "What is left, and why" counts. Some of that the C has to keep to do what the
+original does: R12 and R14 where a value goes from one function to another through them, and several
+fields moved in one access as the original's one instruction moves them (the table's first and third
+rows). Without counting those (`faithful`), 599 functions (80.3%) and 26,896 lines of code (98.3%) are
+clean. The goal before the ports is 99% of both, in that measure.
 
 - [x] ROM set verification (MAME set `orunners`, World), by CRC32 and SHA-1 of every file
 - [x] Multi 32 board model in C (`runtime/`): memory map, interrupt controller and timers, the two I/O
@@ -173,10 +177,11 @@ of what the table under "What is left, and why" counts. The goal before the port
       the table, where the 16 scenarios run as well); R12 and R14 are locals wherever their value stays
       within a function; what every call passes and every way back hands back is followed bit by bit
       across functions (`knownbits.across`), so a byte every caller passes as a byte is a byte's sum; a
-      function returns no more of its result than its callers read (25 return 8 or 16 bits); the sound
+      function returns no more of its result than its callers read, and a register a function only hands
+      back as it was is no argument its caller has to work out where it drops what comes back; the sound
       program puts no byte back into the pair it was taken from unchanged, and a pointer moved within its
-      256-byte page reads `IN_PAGE(queue_pointer, write_index)`. Partial writes 439 -> 259, casts 2,856 ->
-      2,776; `tools/check_structure.py` finds every function's control flow as the program's jumps
+      256-byte page reads `IN_PAGE(queue_pointer, write_index)`. Partial writes 439 -> 245, casts 2,856 ->
+      2,796; `tools/check_structure.py` finds every function's control flow as the program's jumps
 
 ## What is left, and why
 
@@ -192,7 +197,7 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 | Jumps through a table with an index it does not have (`invalid_jump`) | 0 | The original jumps through its tables of code without checking the index, and so does the C: its switch has the cases the table holds and no `default:` (191 before). `python tools/decompile.py --checks` (and `decompile_sound.py --checks`) writes the C for a build where an index the table does not hold stops the game with the address the original would have jumped to (`invalid_jump`, 192 places); the 16 scenarios are identical in that build too. Three functions end in such a switch whose every case returns, which compilers warn about (MSVC's C4715) |
 | Results written back before an early return (`copy_backs`) | 40 | A function hands back what it leaves in registers through pointers (`p_leftover`); where a caller may pass one variable for two of them, writing straight through the pointer would not be the same, so the result is kept in a local and written back at each way out |
 | Functions with `bool` control flags (`control_variables`) | 17 functions, 45 flags | Where the original's jumps join paths that no nesting of ifs and loops can, a flag says which way to go instead of a goto; each is named after the code it leads to (`L_017685`, 478 uses) |
-| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 259 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later: a pair packed in one register (`draw_text_at`'s position, x in the low halfword and y in the high one), halfword sums on a register whose high half goes on into a product or a store, a result the callers' variables take whole through a pointer. What every call passes and every way back hands back is followed bit by bit across functions, and a function returns only what its callers read of its result (25 return 8 or 16 bits), so those need none (439 before). A pointer moved within its 64 KB page (the next entry of a list, a link the code reads: `chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail)`) says so with `LINKED`, as the objects' links do (82), and one of the sound program's within its 256-byte page with `IN_PAGE` (49: the MIDI queue's next byte, a sequence player's field) |
+| Partial writes of a variable, `(x & ~0xFFFFu) \| ...` (`partial_writes`) | 245 | The V70 writes the low byte or halfword of a 32-bit register and keeps the rest; the C does the same where the rest is read later: a pair packed in one register (`draw_text_at`'s position, x in the low halfword and y in the high one), halfword sums on a register whose high half goes on into a product or a store, a result the callers' variables take whole through a pointer. What every call passes and every way back hands back is followed bit by bit across functions, a function returns only what its callers read of its result, and a register a function only hands back is worked out only where its caller reads it afterwards, so those need none (439 before). A pointer moved within its 64 KB page (the next entry of a list, a link the code reads: `chain_tail = LINKED(chain_tail, DEPTH_LIST(depth_list)->tail)`) says so with `LINKED`, as the objects' links do (82), and one of the sound program's within its 256-byte page with `IN_PAGE` (49: the MIDI queue's next byte, a sequence player's field) |
 | Data read through its ROM address (`rom_reads`) | 26 | The course's stream, whose commands have operands of different widths behind one pointer (16), the input test's list, which one pointer walks through two layouts (9), and the road objects' stream after a fork (1) |
 | Tables read by their address (`rom_table_reads`) | 0 | Both programs read their tables by name: a pointer each that the loader sets (`src/table.c`'s `game_tables`, `src/sound/tables.c`'s `sound_tables`); 847 before |
 | ROM addresses printed as numbers (`raw_rom_addresses`) | 2 | The switches that go on through the original's own jump target in `car_radio_update` and `song_title_show`, where the address stands for "go on here", as the cases do |
