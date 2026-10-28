@@ -21,9 +21,8 @@
    branch_road_length (14A) after them. */
 uint32_t init_screen(void)
 {
-	bool L_013DB6 = false;
-	uint16_t course_length = 0;
-	uint32_t command_routine = 0, courses_left = 0, index = 0, length_place = 0, screen_hardware = 0, section_length = 0, stage_course = 0;
+	uint16_t course_length = 0, section_length = 0;
+	uint32_t command_routine = 0, courses_left = 0, index = 0, length = 0, length_place = 0, screen_hardware = 0, stage_course = 0;
 	uint32_t command = 0;
 
 	index = screen >> 16;
@@ -50,40 +49,35 @@ uint32_t init_screen(void)
 		section_length = 0u;
 		course_length = 0u;
 		stage_course += 4u;
+		course_length += section_length;
 		for (;;)
 		{
-			course_length += section_length;
-			for (;;)
+			length = COURSE_ENTRY(r12)->length;
+			r12 += 6u;
+			if ((int16_t)length >= 0)
 			{
-				section_length = COURSE_ENTRY(r12)->length;
-				r12 += 6u;
-				if ((int16_t)section_length >= 0)
-					break;
-				command = (uint16_t)~section_length;
-				command_routine = course_length_command_jumps[command];
-				switch (command)
-				{
-				case 2:
-				case 4:
-					continue;
-				case 0:
-					r12 = COURSE_ENTRY(r12)[-1].jump;
-					continue;
-				case 3:
-					r12 -= 2u;
-					continue;
-				case 1:
-				case 5:
-					L_013DB6 = true;
-					break;
-				}
-				if (L_013DB6)
-					break;
+				course_length += length;
+				continue;
 			}
-			if (L_013DB6)
+			command = (uint16_t)~length;
+			command_routine = course_length_command_jumps[command];
+			switch (command)
+			{
+			case 2:
+			case 4:
+				continue;
+			case 0:
+				r12 = COURSE_ENTRY(r12)[-1].jump;
+				continue;
+			case 3:
+				r12 -= 2u;
+				continue;
+			case 1:
+			case 5:
 				break;
+			}
+			break;
 		}
-		L_013DB6 = false;
 		STAGE_LENGTH_LIST(length_place)[0] = course_length;
 		courses_left--;
 		length_place += 2u;

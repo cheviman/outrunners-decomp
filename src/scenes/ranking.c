@@ -143,86 +143,74 @@ void ranking_background_update(void)
 
 	if (SCREEN(screen)->game_mode == 5u)
 	{
-		switch (OBJECT(current_object)->state)
+		for (;;)
 		{
-		case 0:
-			OBJECT(current_object)->ranking_background.courses_shown = OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.courses_shown;
-			if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
+			switch (OBJECT(current_object)->state)
 			{
-				if (SCREEN(screen)->index != 0u)
-					io_write8(IO_2_CNT, 0x86u);
-				else
-					io_write8(IO_1_CNT, 6u);
-				SCREEN(screen)->fade_kind = 1u;
-				SCREEN(screen)->flags |= 1u;
-			}
-			ranking_background_load();
-			OBJECT(current_object)->state++;
-		case 1:
-			if (SCREEN(screen)->unpack_state != 0u)
-			{
-				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
-				return;
-			}
-			if (OBJECT(current_object)->ranking_background.courses_shown != 0u)
-			{
-				SCREEN(screen)->fade_kind = 3u;
-				SCREEN(screen)->flags |= 1u;
-			}
-			OBJECT(current_object)->state++;
-			if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
-			{
-				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
-				return;
-			}
-			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
-			{
-				SCREEN(screen)->fade_kind = 2u;
-				SCREEN(screen)->flags |= 1u;
+			case 0:
+				OBJECT(current_object)->ranking_background.courses_shown = OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.courses_shown;
+				if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
+				{
+					if (SCREEN(screen)->index != 0u)
+						io_write8(IO_2_CNT, 0x86u);
+					else
+						io_write8(IO_1_CNT, 6u);
+					SCREEN(screen)->fade_kind = 1u;
+					SCREEN(screen)->flags |= 1u;
+				}
+				ranking_background_load();
 				OBJECT(current_object)->state++;
-				if ((SCREEN(screen)->flags & 1u) == 0u)
+			case 1:
+				if (SCREEN(screen)->unpack_state != 0u)
+					break;
+				if (OBJECT(current_object)->ranking_background.courses_shown != 0u)
+				{
+					SCREEN(screen)->fade_kind = 3u;
+					SCREEN(screen)->flags |= 1u;
+				}
+				OBJECT(current_object)->state++;
+				if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
+					break;
+				if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
+				{
+					SCREEN(screen)->fade_kind = 2u;
+					SCREEN(screen)->flags |= 1u;
+					OBJECT(current_object)->state++;
+					if ((SCREEN(screen)->flags & 1u) != 0u)
+						break;
 					OBJECT(current_object)->state = 0u;
-			}
-			else
-			{
+					break;
+				}
 				SCREEN(screen)->fade_kind = 0u;
 				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state = 4u;
-			}
-			break;
-		case 2:
-			if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
-			{
-				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
-				return;
-			}
-			if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
-			{
-				SCREEN(screen)->fade_kind = 2u;
-				SCREEN(screen)->flags |= 1u;
-				OBJECT(current_object)->state++;
-				if ((SCREEN(screen)->flags & 1u) == 0u)
+				continue;
+			case 2:
+				if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
+					break;
+				if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
+				{
+					SCREEN(screen)->fade_kind = 2u;
+					SCREEN(screen)->flags |= 1u;
+					OBJECT(current_object)->state++;
+					if ((SCREEN(screen)->flags & 1u) != 0u)
+						break;
 					OBJECT(current_object)->state = 0u;
-			}
-			else
-			{
+					break;
+				}
 				SCREEN(screen)->fade_kind = 0u;
 				SCREEN(screen)->flags |= 1u;
 				OBJECT(current_object)->state = 4u;
+				continue;
+			case 3:
+				if ((SCREEN(screen)->flags & 1u) == 0u)
+					OBJECT(current_object)->state = 0u;
+				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
+				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
+				return;
+			case 4:
+				break;
 			}
-			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-			VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
-			return;
-		case 3:
-			if ((SCREEN(screen)->flags & 1u) == 0u)
-				OBJECT(current_object)->state = 0u;
-			scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
-			VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
-			return;
-		case 4:
 			break;
 		}
 	}

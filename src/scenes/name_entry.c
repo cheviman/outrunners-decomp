@@ -60,7 +60,7 @@ uint32_t course_record_beaten(void)
    time and the name (draw_text). */
 void name_entry_update(void)
 {
-	bool L_00200F = false, L_00209D = false, L_0020B6 = false, L_0020FB = false, L_00212C = false, L_002130 = false, L_002133 = false;
+	bool L_00200F = false, L_0020B6 = false, L_0020FB = false, L_002133 = false;
 	uint8_t letter_character = 0, letter_index = 0, new_steps = 0, sound_code = 0, steps = 0, turn_rate = 0;
 	uint16_t buttons_pressed = 0, new_angle = 0, turn_buttons = 0;
 	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
@@ -124,11 +124,7 @@ void name_entry_update(void)
 			remaining_time = remaining_time / 0x1Eu;
 			remaining_time = binary_to_bcd(remaining_time);
 			time_digits_draw(remaining_time);
-			text_record = current_object + 0xA4u;
-			draw_text(text_record);
-			text_record = current_object + 0x9Au;
-			draw_text(text_record);
-			return;
+			break;
 		}
 		OBJECT(current_object)->state++;
 	case 2:
@@ -177,9 +173,13 @@ void name_entry_update(void)
 				{
 					OBJECT(current_object)->name_entry.turn_delay = 0xF;
 					new_steps = 4u;
-					if (wheel_position >> 2 != 0u)
+					if (wheel_position >> 2 == 0u)
+						OBJECT(current_object)->name_entry.turn_steps = new_steps;
+					else
+					{
 						new_steps = (uint8_t)(0u - new_steps);
-					OBJECT(current_object)->name_entry.turn_steps = new_steps;
+						OBJECT(current_object)->name_entry.turn_steps = new_steps;
+					}
 				}
 			}
 			else
@@ -197,9 +197,13 @@ void name_entry_update(void)
 						{
 							OBJECT(current_object)->name_entry.turn_delay = 0xF;
 							new_steps = 4u;
-							if (wheel_position >> 2 != 0u)
+							if (wheel_position >> 2 == 0u)
+								OBJECT(current_object)->name_entry.turn_steps = new_steps;
+							else
+							{
 								new_steps = (uint8_t)(0u - new_steps);
-							OBJECT(current_object)->name_entry.turn_steps = new_steps;
+								OBJECT(current_object)->name_entry.turn_steps = new_steps;
+							}
 						}
 					}
 				}
@@ -213,9 +217,13 @@ void name_entry_update(void)
 					{
 						OBJECT(current_object)->name_entry.turn_delay = 0xF;
 						new_steps = 4u;
-						if (wheel_position >> 2 != 0u)
+						if (wheel_position >> 2 == 0u)
+							OBJECT(current_object)->name_entry.turn_steps = new_steps;
+						else
+						{
 							new_steps = (uint8_t)(0u - new_steps);
-						OBJECT(current_object)->name_entry.turn_steps = new_steps;
+							OBJECT(current_object)->name_entry.turn_steps = new_steps;
+						}
 					}
 				}
 				else
@@ -225,133 +233,112 @@ void name_entry_update(void)
 		OBJECT(current_object)->name_entry.letter = ((OBJECT(current_object)->name_entry.wheel_angle + 0x40u) & 0xFFFu) >> 7;
 		do
 		{
-			jump_target = L_00209D ? 0x2090u : name_entry_gas_step_jumps[OBJECT(current_object)->name_entry.gas_step];
-			switch (jump_target)
+			do
 			{
-			case 0x002090u:
-				if (!L_00209D && SCREEN(screen)->gas >= 0x40u)
-					L_002133 = true;
-				else
+				do
 				{
-					if (!L_00209D)
+					jump_target = L_002133 ? 0x2090u : L_002133 ? 0x2090u : L_002133 ? 0x2090u : name_entry_gas_step_jumps[OBJECT(current_object)->name_entry.gas_step];
+					switch (jump_target)
+					{
+					case 0x002090u:
+						if (L_002133 || L_002133 || L_002133 || SCREEN(screen)->gas >= 0x40u)
+						{
+							L_002133 = false;
+							name_place = OBJECT(current_object)->name_entry.place;
+							letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
+							if ((game_frame_count & 4u) == 0u)
+								letter_character = 0u;
+							OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+							timer = OBJECT(current_object)->name_entry.timer;
+							OBJECT(current_object)->name_entry.timer = timer - 1u;
+							if (timer == 1u)
+								break;
+							remaining_time = OBJECT(current_object)->name_entry.timer;
+							remaining_time = remaining_time / 0x1Eu;
+							remaining_time = binary_to_bcd(remaining_time);
+							time_digits_draw(remaining_time);
+							text_record = current_object + 0xA4u;
+							draw_text(text_record);
+							text_record = current_object + 0x9Au;
+							draw_text(text_record);
+							return;
+						}
 						OBJECT(current_object)->name_entry.gas_step++;
-					L_00209D = false;
-					if (SCREEN(screen)->gas < 0xC0u)
-					{
-						buttons_pressed = (uint16_t)SCREEN(screen)->buttons_pressed;
-						L_0020B6 = (buttons_pressed & 0x100u) != 0u || (buttons_pressed & 0x40u) != 0u;
+					case 0x00209Du:
+						if (SCREEN(screen)->gas < 0xC0u)
+						{
+							buttons_pressed = (uint16_t)SCREEN(screen)->buttons_pressed;
+							L_0020B6 = (buttons_pressed & 0x100u) != 0u || (buttons_pressed & 0x40u) != 0u;
+							if (!L_0020B6)
+								L_002133 = true;
+						}
 						if (!L_0020B6)
-							L_002133 = true;
-					}
-					if (L_0020B6 || !L_002133)
-					{
+						{
+							if (L_002133)
+								break;
+						}
 						L_0020B6 = false;
 						letter = OBJECT(current_object)->name_entry.letter;
 						name_place = OBJECT(current_object)->name_entry.place;
 						do
 						{
-							do
+							jump_target_2 = L_0020FB ? 0x20D4u : name_entry_place_jumps[name_place];
+							switch (jump_target_2)
 							{
-								jump_target_2 = L_00212C ? 0x20D4u : L_0020FB ? 0x20D4u : name_entry_place_jumps[name_place];
-								switch (jump_target_2)
+							case 0x0020D4u:
+								if (L_0020FB || letter != 0x1Eu)
 								{
-								case 0x0020D4u:
-									do
+									if (!L_0020FB)
 									{
-										if (L_002130 || !L_00212C)
-										{
-											if (L_002130 || !L_0020FB)
-											{
-												if (L_002130 || letter == 0x1Eu)
-												{
-													L_002130 = false;
-													OBJECT(current_object)->name_entry.gas_step--;
-													L_002133 = true;
-												}
-											}
-										}
-										if (L_002133)
+										if (letter == 0x1Fu)
 											break;
-										if (L_00212C || L_0020FB || letter != 0x1Fu)
-										{
-											if (!L_00212C)
-											{
-												L_0020FB = false;
-												kept_letter = letter;
-												kept_place = name_place;
-												sound_code = name_entry_place_sounds[name_place];
-												request_sound(sound_code);
-												name_place = kept_place;
-												saved_letter = kept_letter;
-												entered_letter = saved_letter;
-												letter_character = name_entry_letters[saved_letter];
-												if (entered_letter == 0x1Du)
-													letter_character = 0x20u;
-												OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
-												name_place = (uint8_t)(name_place + 1u);
-											}
-											if (L_00212C || name_place != 3u)
-											{
-												L_00212C = false;
-												OBJECT(current_object)->name_entry.place = name_place;
-												L_002130 = true;
-											}
-										}
-									} while (L_002130);
-									if (L_002133)
-										break;
-									break;
-								case 0x0020E2u:
-									if (letter == 0x1Eu)
-									{
-										OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
-										name_place = (uint8_t)(name_place - 1u);
-										L_00212C = true;
 									}
-									if (L_00212C)
+									L_0020FB = false;
+									kept_letter = letter;
+									kept_place = name_place;
+									sound_code = name_entry_place_sounds[name_place];
+									request_sound(sound_code);
+									name_place = kept_place;
+									saved_letter = kept_letter;
+									entered_letter = saved_letter;
+									letter_character = name_entry_letters[saved_letter];
+									if (entered_letter == 0x1Du)
+										letter_character = 0x20u;
+									OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+									name_place = (uint8_t)(name_place + 1u);
+									if (name_place == 3u)
 										break;
-									L_0020FB = letter != 0x1Fu;
-									if (L_0020FB)
-										break;
-									break;
+									OBJECT(current_object)->name_entry.place = name_place;
+								}
+								OBJECT(current_object)->name_entry.gas_step--;
+								L_002133 = true;
+								break;
+							case 0x0020E2u:
+								if (letter == 0x1Eu)
+								{
+									OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
+									name_place = (uint8_t)(name_place - 1u);
+									OBJECT(current_object)->name_entry.place = name_place;
+									OBJECT(current_object)->name_entry.gas_step--;
+									L_002133 = true;
 								}
 								if (L_002133)
 									break;
-							} while (L_00212C);
+								if (letter == 0x1Fu)
+									break;
+								L_0020FB = true;
+								break;
+							}
 							if (L_002133)
 								break;
 						} while (L_0020FB);
+						if (L_002133)
+							break;
+						break;
 					}
-				}
-				if (L_002133)
-				{
-					L_002133 = false;
-					name_place = OBJECT(current_object)->name_entry.place;
-					letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
-					if ((game_frame_count & 4u) == 0u)
-						letter_character = 0u;
-					OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
-					timer = OBJECT(current_object)->name_entry.timer;
-					OBJECT(current_object)->name_entry.timer = timer - 1u;
-					if (timer != 1u)
-					{
-						remaining_time = OBJECT(current_object)->name_entry.timer;
-						remaining_time = remaining_time / 0x1Eu;
-						remaining_time = binary_to_bcd(remaining_time);
-						time_digits_draw(remaining_time);
-						text_record = current_object + 0xA4u;
-						draw_text(text_record);
-						text_record = current_object + 0x9Au;
-						draw_text(text_record);
-						return;
-					}
-				}
-				break;
-			case 0x00209Du:
-				L_00209D = true;
-				break;
-			}
-		} while (L_00209D);
+				} while (L_002133);
+			} while (L_002133);
+		} while (L_002133);
 		OBJECT(current_object)->name_entry.open = 0u;
 		OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
 		entered_name = (OBJECT(current_object)->name_entry.name[0] | ((uint32_t)OBJECT(current_object)->name_entry.name[1] << 8u) | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 16u) | ((uint32_t)OBJECT(current_object)->name_entry.name[3] << 24u));
@@ -361,64 +348,58 @@ void name_entry_update(void)
 			OBJECT(current_object)->name_entry.name[1] = 0x2Du;
 			OBJECT(current_object)->name_entry.name[2] = 0x2Du;
 			OBJECT(current_object)->name_entry.name[3] = 0u;
+			OBJECT(current_object)->state++;
+			OBJECT(current_object)->name_entry.timer = 0x3Cu;
+			OBJECT(current_object)->name_entry.spin_frames = 0u;
+			timer_2 = OBJECT(current_object)->name_entry.timer;
+			OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
+			if (timer_2 != 1u)
+				break;
+			SCREEN(screen)->button_lamps = 0u;
+			SCREEN(screen)->game_step = 0x15u;
+			race = SCREEN(screen)->race;
+			RACE(race)->record_serial++;
+			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
+			RACE(race)->record_model = CAR(player_car)->model;
+			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
+			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
+			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
+			OBJECT(current_object)->state++;
+			break;
 		}
-		else
+		rejected_name = name_entry_rejected_names_ADDRESS;
+		while ((int32_t)REJECTED_NAMES(rejected_name)[0] >= 0)
 		{
-			rejected_name = name_entry_rejected_names_ADDRESS;
-			while ((int32_t)REJECTED_NAMES(rejected_name)[0] >= 0)
+			element = REJECTED_NAMES(rejected_name)[0];
+			rejected_name += 4u;
+			if (entered_name == element)
 			{
-				element = REJECTED_NAMES(rejected_name)[0];
-				rejected_name += 4u;
-				if (entered_name == element)
-				{
-					OBJECT(current_object)->name_entry.name[0] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[1] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[2] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[3] = 0u;
-					break;
-				}
+				OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+				OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+				OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+				OBJECT(current_object)->name_entry.name[3] = 0u;
+				break;
 			}
 		}
 		OBJECT(current_object)->state++;
 		OBJECT(current_object)->name_entry.timer = 0x3Cu;
 		OBJECT(current_object)->name_entry.spin_frames = 0u;
-		timer_2 = OBJECT(current_object)->name_entry.timer;
-		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
-		if (timer_2 == 1u)
-		{
-			SCREEN(screen)->button_lamps = 0u;
-			SCREEN(screen)->game_step = 0x15u;
-			race = SCREEN(screen)->race;
-			RACE(race)->record_serial++;
-			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
-			RACE(race)->record_model = CAR(player_car)->model;
-			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
-			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
-			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
-			OBJECT(current_object)->state++;
-		}
-		break;
 	case 3:
 		timer_2 = OBJECT(current_object)->name_entry.timer;
 		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
-		if (timer_2 == 1u)
-		{
-			SCREEN(screen)->button_lamps = 0u;
-			SCREEN(screen)->game_step = 0x15u;
-			race = SCREEN(screen)->race;
-			RACE(race)->record_serial++;
-			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
-			RACE(race)->record_model = CAR(player_car)->model;
-			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
-			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
-			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
-			OBJECT(current_object)->state++;
-		}
-		text_record = current_object + 0xA4u;
-		draw_text(text_record);
-		text_record = current_object + 0x9Au;
-		draw_text(text_record);
-		return;
+		if (timer_2 != 1u)
+			break;
+		SCREEN(screen)->button_lamps = 0u;
+		SCREEN(screen)->game_step = 0x15u;
+		race = SCREEN(screen)->race;
+		RACE(race)->record_serial++;
+		RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
+		RACE(race)->record_model = CAR(player_car)->model;
+		RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
+		RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
+		RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
+		OBJECT(current_object)->state++;
+		break;
 	case 4:
 		break;
 	}

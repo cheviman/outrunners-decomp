@@ -497,7 +497,7 @@ void palette_fade_prepare(void)
    at most 5 and even). */
 void palette_fade_step(void)
 {
-	bool L_0186AA = false, L_0186B2 = false, L_0186BA = false, L_0186CB = false, L_0186D1 = false, L_0186D7 = false, L_0186E0 = false, L_0186E9 = false, L_0186F2 = false;
+	bool L_0186AA = false, L_0186B2 = false, L_0186BA = false;
 	uint8_t fade_kind = 0;
 	uint16_t colour_step = 0;
 	uint32_t colour_place = 0, colours_left = 0, difference_place = 0, upload = 0;
@@ -533,175 +533,193 @@ void palette_fade_step(void)
 					{
 						do
 						{
-							if (L_0186D1 || L_0186D7 || L_0186E0 || L_0186E9 || L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+							if (L_0186AA || L_0186B2 || L_0186B2 || L_0186BA || L_0186BA || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
 							{
-								for (;;)
+								do
 								{
 									do
 									{
-										if (L_0186B2 || L_0186B2 || L_0186D1 || L_0186D7 || !L_0186E0)
+										do
 										{
-											do
+											if (L_0186AA || L_0186AA || L_0186AA || L_0186AA || !L_0186B2)
 											{
-												do
+												if (L_0186AA || L_0186AA || L_0186AA || L_0186AA || !L_0186B2)
 												{
-													do
+													if (L_0186AA || L_0186AA || L_0186AA || L_0186AA || !L_0186BA)
 													{
-														if (L_0186CB || L_0186AA || L_0186AA || !L_0186B2)
+														if (L_0186AA || L_0186AA || L_0186AA || L_0186AA || !L_0186BA)
 														{
-															if (L_0186CB || L_0186AA || L_0186AA || !L_0186B2)
+															if (!L_0186AA)
 															{
-																if (L_0186CB || L_0186AA || L_0186AA || !L_0186D1)
+																if (!L_0186AA)
 																{
-																	if (L_0186CB || L_0186AA || L_0186AA || !L_0186D7)
+																	if (!L_0186AA)
 																	{
-																		if (L_0186CB || L_0186AA || L_0186AA || !L_0186E9)
+																		if (!L_0186AA)
 																		{
-																			if (L_0186CB || L_0186AA || L_0186AA || !L_0186F2)
-																			{
-																				if (L_0186CB || !L_0186AA)
-																				{
-																					if (L_0186CB || !L_0186AA)
-																					{
-																						L_0186CB = false;
-																						PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
-																						colour_step++;
-																						difference_place++;
-																					}
-																				}
-																				L_0186AA = false;
-																			}
+																			PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+																			colour_step++;
+																			difference_place++;
 																		}
 																	}
 																}
 															}
+															L_0186AA = false;
 														}
-														if (L_0186B2 || L_0186B2 || L_0186D1 || L_0186D7 || L_0186E9 || L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+													}
+												}
+											}
+											for (;;)
+											{
+												do
+												{
+													if (L_0186B2 || L_0186B2 || L_0186B2 || L_0186B2 || L_0186BA || L_0186BA || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+													{
+														if (L_0186B2 || L_0186B2 || L_0186B2 || L_0186B2 || !L_0186BA)
 														{
-															for (;;)
+															if (L_0186B2 || L_0186B2 || L_0186B2 || L_0186B2 || !L_0186BA)
 															{
-																do
+																if (!L_0186B2)
 																{
-																	if (L_0186BA || L_0186BA || L_0186B2 || L_0186B2 || L_0186D1 || L_0186D7 || L_0186E9 || !L_0186F2)
+																	if (!L_0186B2)
 																	{
-																		if (!L_0186BA)
+																		if (!L_0186B2)
 																		{
-																			if (!L_0186BA)
+																			if (!L_0186B2)
 																			{
-																				if (L_0186B2 || L_0186B2 || !L_0186D1)
-																				{
-																					if (L_0186B2 || L_0186B2 || L_0186D7 || !L_0186E9)
-																					{
-																						if (!L_0186B2)
-																						{
-																							if (!L_0186B2)
-																							{
-																								L_0186D7 = false;
-																								PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
-																								colour_step += 0x20u;
-																								difference_place++;
-																							}
-																						}
-																						L_0186B2 = false;
-																					}
-																				}
-																			}
-																		}
-																		if (L_0186BA || L_0186BA || L_0186D1 || L_0186E9 || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
-																		{
-																			if (L_0186BA || L_0186BA || !L_0186D1)
-																			{
-																				if (!L_0186BA)
-																				{
-																					if (!L_0186BA)
-																					{
-																						L_0186E9 = false;
-																						PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
-																						colour_step += 0x400u;
-																						difference_place++;
-																					}
-																				}
-																				L_0186BA = false;
-																				PALETTE_FADE_COLOURS(colour_place)[0] += colour_step;
-																				colours_left--;
-																				colour_place += 2u;
-																				if (colours_left == 0u)
-																				{
-																					upload = current_object + 0x28u;
-																					queue_palette_list(upload);
-																					return;
-																				}
-																				colour_step = 0u;
-																				L_0186CB = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
-																			}
-																			if (!L_0186CB)
-																			{
-																				if (L_0186D1 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
-																				{
-																					L_0186D1 = false;
-																					PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
-																					colour_step--;
-																					difference_place++;
-																					L_0186AA = true;
-																				}
-																				if (!L_0186AA)
-																				{
-																					difference_place++;
-																					L_0186AA = true;
-																				}
+																				PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+																				colour_step += 0x20u;
+																				difference_place++;
 																			}
 																		}
 																	}
-																	if (L_0186CB)
-																		break;
-																	if (L_0186AA)
-																		break;
-																	if (L_0186F2 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
-																	{
-																		L_0186F2 = false;
-																		PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
-																		colour_step -= 0x400u;
-																		difference_place++;
-																		L_0186BA = true;
-																	}
-																} while (L_0186BA);
-																if (L_0186CB)
-																	break;
-																if (L_0186AA)
-																	break;
+																}
+																L_0186B2 = false;
+															}
+														}
+														if (L_0186BA || L_0186BA || PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+														{
+															if (!L_0186BA)
+															{
+																if (!L_0186BA)
+																{
+																	PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+																	colour_step += 0x400u;
+																	difference_place++;
+																}
+															}
+														}
+														else
+														{
+															if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+															{
+																PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+																colour_step -= 0x400u;
 																difference_place++;
 																L_0186BA = true;
 															}
+															if (!L_0186BA)
+																difference_place++;
 														}
-													} while (L_0186CB);
-												} while (L_0186AA);
-											} while (L_0186AA);
-										}
-										if (L_0186E0 || PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
-										{
-											L_0186E0 = false;
-											PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
-											colour_step -= 0x20u;
-											difference_place++;
-											L_0186B2 = true;
-										}
-									} while (L_0186B2);
-									difference_place++;
-									L_0186B2 = true;
-								}
+														L_0186BA = false;
+														PALETTE_FADE_COLOURS(colour_place)[0] += colour_step;
+														colours_left--;
+														colour_place += 2u;
+														if (colours_left == 0u)
+														{
+															upload = current_object + 0x28u;
+															queue_palette_list(upload);
+															return;
+														}
+														colour_step = 0u;
+														if (PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+														{
+															PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+															colour_step++;
+															difference_place++;
+															L_0186AA = true;
+														}
+														if (!L_0186AA)
+														{
+															if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+															{
+																PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+																colour_step--;
+																difference_place++;
+																L_0186AA = true;
+															}
+															if (!L_0186AA)
+															{
+																difference_place++;
+																L_0186AA = true;
+															}
+														}
+													}
+													if (L_0186AA)
+														break;
+													if (L_0186AA)
+														break;
+													if (L_0186AA)
+														break;
+													if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+													{
+														PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+														colour_step -= 0x20u;
+														difference_place++;
+														L_0186B2 = true;
+													}
+												} while (L_0186B2);
+												if (L_0186AA)
+													break;
+												difference_place++;
+												L_0186B2 = true;
+											}
+										} while (L_0186AA);
+									} while (L_0186AA);
+								} while (L_0186AA);
 							}
-							L_0186D1 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
-						} while (L_0186D1);
+							if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+							{
+								PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+								colour_step--;
+								difference_place++;
+								L_0186AA = true;
+							}
+						} while (L_0186AA);
 						difference_place++;
-						L_0186D7 = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
-					} while (L_0186D7);
-					L_0186E0 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
-				} while (L_0186E0);
+						if (PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+						{
+							PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+							colour_step += 0x20u;
+							difference_place++;
+							L_0186B2 = true;
+						}
+					} while (L_0186B2);
+					if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+					{
+						PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+						colour_step -= 0x20u;
+						difference_place++;
+						L_0186B2 = true;
+					}
+				} while (L_0186B2);
 				difference_place++;
-				L_0186E9 = PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0;
-			} while (L_0186E9);
-			L_0186F2 = PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0;
-		} while (L_0186F2);
+				if (PALETTE_FADE_DIFFERENCES(difference_place)[0] < 0)
+				{
+					PALETTE_FADE_DIFFERENCES(difference_place)[0]++;
+					colour_step += 0x400u;
+					difference_place++;
+					L_0186BA = true;
+				}
+			} while (L_0186BA);
+			if (PALETTE_FADE_DIFFERENCES(difference_place)[0] > 0)
+			{
+				PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
+				colour_step -= 0x400u;
+				difference_place++;
+				L_0186BA = true;
+			}
+		} while (L_0186BA);
 		difference_place++;
 		colour_place += 2u;
 		colours_left--;

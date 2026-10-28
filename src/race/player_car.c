@@ -1027,40 +1027,38 @@ uint16_t player_car_view_height(void)
    and it lags the car's rises and drops (car view_rise). */
 void player_car_move_view(void)
 {
-	bool L_007ACB = false, L_007AFA = false;
 	uint16_t climb = 0, last_negated_speed = 0, nod = 0, nod_step = 0, rise_step = 0, side_step = 0, side_target = 0, view_rise = 0, view_side = 0;
 	uint32_t object = 0, rise_over_margin = 0, view_shift_rival = 0;
 	uint16_t speed_drop = 0, nod_target = 0, eased_step = 0, negative_side_target = 0, positive_side_target = 0, drop_target = 0, climb_target = 0;
-	uint32_t jump_target = 0, rise = 0, rise_with_margin = 0;
+	uint32_t rise = 0, rise_with_margin = 0;
 
-	do
+	for (;;)
 	{
-		do
+		switch (OBJECT(current_object)->player_car.rival_step)
 		{
-			jump_target = L_007AFA ? 0x7AFAu : L_007ACB ? 0x792Bu : player_car_rival_step_jumps[OBJECT(current_object)->player_car.rival_step];
-			switch (jump_target)
+		case 0:
+			OBJECT(current_object)->player_car.rival_step++;
+			if (OBJECT(current_object)->player_car.rival_near != 0u)
 			{
-			case 0x007927u:
-				OBJECT(current_object)->player_car.rival_step++;
-			case 0x00792Bu:
-				if (!L_007ACB)
-				{
-					if (OBJECT(current_object)->player_car.rival_near == 0u)
-						break;
-					object = start_object();
-					OBJECT(object)->handler = rival_warning_update_ADDRESS;
-				}
-				L_007ACB = false;
+				object = start_object();
+				OBJECT(object)->handler = rival_warning_update_ADDRESS;
 				OBJECT(current_object)->player_car.rival_step = 2u;
-			case 0x007AD1u:
-				player_car_check_rivals();
-				if (OBJECT(current_object)->player_car.rival_near == 0u)
-				{
-					OBJECT(current_object)->player_car.rival_step = 3u;
-					L_007AFA = true;
-				}
-				if (L_007AFA)
-					break;
+				continue;
+			}
+			break;
+		case 1:
+			if (OBJECT(current_object)->player_car.rival_near != 0u)
+			{
+				object = start_object();
+				OBJECT(object)->handler = rival_warning_update_ADDRESS;
+				OBJECT(current_object)->player_car.rival_step = 2u;
+				continue;
+			}
+			break;
+		case 2:
+			player_car_check_rivals();
+			if (OBJECT(current_object)->player_car.rival_near != 0u)
+			{
 				view_shift_rival = CAR(player_car)->view_shift_rival;
 				if (view_shift_rival == 0xFF00u)
 					break;
@@ -1068,12 +1066,28 @@ void player_car_move_view(void)
 				CAR(player_car)->view_pitch_rival += 8u;
 				CAR(player_car)->view_shift_rival = view_shift_rival;
 				break;
-			case 0x007AFAu:
-				L_007AFA = false;
-				player_car_check_rivals();
-				L_007ACB = OBJECT(current_object)->player_car.rival_near != 0u;
-				if (L_007ACB)
-					break;
+			}
+			OBJECT(current_object)->player_car.rival_step = 3u;
+			player_car_check_rivals();
+			if (OBJECT(current_object)->player_car.rival_near != 0u)
+			{
+				OBJECT(current_object)->player_car.rival_step = 2u;
+				continue;
+			}
+			view_shift_rival = CAR(player_car)->view_shift_rival;
+			if (view_shift_rival == 0u)
+			{
+				OBJECT(current_object)->player_car.rival_step = 1u;
+				break;
+			}
+			view_shift_rival = (uint16_t)(view_shift_rival + 0x10u);
+			CAR(player_car)->view_pitch_rival -= 8u;
+			CAR(player_car)->view_shift_rival = view_shift_rival;
+			break;
+		case 3:
+			player_car_check_rivals();
+			if (OBJECT(current_object)->player_car.rival_near == 0u)
+			{
 				view_shift_rival = CAR(player_car)->view_shift_rival;
 				if (view_shift_rival == 0u)
 				{
@@ -1085,8 +1099,11 @@ void player_car_move_view(void)
 				CAR(player_car)->view_shift_rival = view_shift_rival;
 				break;
 			}
-		} while (L_007AFA);
-	} while (L_007ACB);
+			OBJECT(current_object)->player_car.rival_step = 2u;
+			continue;
+		}
+		break;
+	}
 	CAR(player_car)->hard_acceleration = 0u;
 	nod_step = (uint16_t)(0u - OBJECT(current_object)->player_car.speed);
 	last_negated_speed = OBJECT(current_object)->player_car.last_negated_speed;

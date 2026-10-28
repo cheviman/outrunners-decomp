@@ -326,6 +326,7 @@ void car_radio_start(void);
 void car_radio_wait_start(void);
 void car_radio_read_buttons(void);
 void car_radio_update(void);
+void car_radio_talk(void);
 void car_radio_dj_leader(void);
 void car_radio_dj_own_car(void);
 void car_radio_dj_remark_2a(void);

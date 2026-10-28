@@ -1244,13 +1244,11 @@ void branch_arrow_update(void)
    back to 1. */
 void checkpoint_board_update(void)
 {
-	bool L_00CCDE = false, L_00CCFC = false;
 	uint8_t checkpoints_passed = 0;
 	uint16_t row_offset = 0;
 	uint32_t blink_on = 0, checkpoint = 0, checkpoint_count = 0, leave_segment = 0, object = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
 	uint8_t blink_timer = 0, rows_left = 0;
 	uint16_t gap = 0, offset_before = 0;
-	uint32_t jump_target = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -1270,14 +1268,6 @@ void checkpoint_board_update(void)
 		OBJECT(current_object)->checkpoint_board.checkpoint_count = checkpoint_count;
 		OBJECT(current_object)->checkpoint_board.rows_shown = 0u;
 		OBJECT(current_object)->state++;
-		checkpoints_passed = CHECKPOINT_COUNTS(OBJECT(current_object)->checkpoint_board.checkpoint_count)[0];
-		if (OBJECT(current_object)->checkpoint_board.checkpoints_seen == checkpoints_passed)
-			return;
-		OBJECT(current_object)->checkpoint_board.checkpoints_seen = checkpoints_passed;
-		OBJECT(current_object)->checkpoint_board.checkpoint = checkpoints_passed - 1u;
-		OBJECT(current_object)->checkpoint_board.leave_segment = CAR(player_car)->segment + 0xC0u;
-		OBJECT(current_object)->state++;
-		break;
 	case 1:
 		checkpoints_passed = CHECKPOINT_COUNTS(OBJECT(current_object)->checkpoint_board.checkpoint_count)[0];
 		if (OBJECT(current_object)->checkpoint_board.checkpoints_seen == checkpoints_passed)
@@ -1297,120 +1287,118 @@ void checkpoint_board_update(void)
 	do
 	{
 		row_player = CHECKPOINT_PASS(OBJECT(current_object)->checkpoint_board.passing_order)->player;
-		do
+		switch (OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player])
 		{
-			do
+		case 0:
+			OBJECT(current_object)->checkpoint_board.rows_shown++;
+			row_time = SCREEN(screen)->checkpoint_times_by_player[(int32_t)(((uint32_t)OBJECT(current_object)->checkpoint_board.checkpoint << 3) + row_player)];
+			player = row_player;
+			if (OBJECT(current_object)->checkpoint_board.row != 0u)
 			{
-				jump_target = L_00CCFC ? 0xCCECu : L_00CCFC ? 0xCCECu : checkpoint_board_row_state_jumps[OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]];
-				switch (jump_target)
+				gap = row_time - OBJECT(current_object)->checkpoint_board.leader_time;
+				row_time = gap;
+				if ((int16_t)gap < 0)
+					row_time = 0u;
+				checkpoint_board_gap_time(row_time, player);
+			}
+			else
+			{
+				OBJECT(current_object)->checkpoint_board.leader_time = row_time;
+				checkpoint_board_leader_time(row_time, player);
+			}
+			screen_player = SCREEN(screen)->player;
+			if (screen_player == row_player)
+			{
+				OBJECT(current_object)->checkpoint_board.blink_on = 4u;
+				OBJECT(current_object)->checkpoint_board.blink_timer = 8u;
+			}
+			else if (OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)screen_player] == 0u)
+			{
+				OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0u;
+				OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player] = 2u;
+				if (OBJECT(current_object)->checkpoint_board.leave_segment != 0u && CAR(player_car)->race_over == 0u)
 				{
-				case 0x00CC84u:
-					OBJECT(current_object)->checkpoint_board.rows_shown++;
-					row_time = SCREEN(screen)->checkpoint_times_by_player[(int32_t)(((uint32_t)OBJECT(current_object)->checkpoint_board.checkpoint << 3) + row_player)];
-					player = row_player;
-					if (OBJECT(current_object)->checkpoint_board.row != 0u)
+					if (SCREEN(screen)->player != row_player)
 					{
-						gap = row_time - OBJECT(current_object)->checkpoint_board.leader_time;
-						row_time = gap;
-						if ((int16_t)gap < 0)
-							row_time = 0u;
-						checkpoint_board_gap_time(row_time, player);
-					}
-					else
-					{
-						OBJECT(current_object)->checkpoint_board.leader_time = row_time;
-						checkpoint_board_leader_time(row_time, player);
-					}
-					screen_player = SCREEN(screen)->player;
-					if (screen_player != row_player)
-					{
-						L_00CCDE = OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)screen_player] != 0u;
-						if (!L_00CCDE)
-						{
-							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0u;
-							OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player] = 2u;
-							L_00CCFC = true;
-						}
-					}
-					if (!L_00CCDE)
-					{
-						if (L_00CCFC)
-							break;
-						OBJECT(current_object)->checkpoint_board.blink_on = 4u;
-						OBJECT(current_object)->checkpoint_board.blink_timer = 8u;
-					}
-					L_00CCDE = false;
-					OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0x100u;
-					OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
-				case 0x00CCECu:
-					if (!L_00CCFC)
-					{
-						if (!L_00CCFC)
-						{
-							offset_before = OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player];
-							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = offset_before - 0x10u;
-						}
-					}
-					if (!L_00CCFC && !L_00CCFC && offset_before != 0x10u)
 						checkpoint_board_draw_row(row_player);
-					else
-					{
-						if (!L_00CCFC)
-						{
-							if (!L_00CCFC)
-								OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
-						}
-						L_00CCFC = false;
-						if (OBJECT(current_object)->checkpoint_board.leave_segment == 0u || CAR(player_car)->race_over != 0u)
-						{
-							OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
-							row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
-							OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
-							if (row_offset != 0xFF00u)
-								checkpoint_board_draw_row(row_player);
-							else
-							{
-								OBJECT(current_object)->checkpoint_board.rows_shown--;
-								OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
-								checkpoint_board_draw_row(row_player);
-							}
-						}
-						else if (SCREEN(screen)->player != row_player)
-							checkpoint_board_draw_row(row_player);
-						else
-						{
-							blink_on = OBJECT(current_object)->checkpoint_board.blink_on;
-							blink_timer = OBJECT(current_object)->checkpoint_board.blink_timer;
-							OBJECT(current_object)->checkpoint_board.blink_timer = blink_timer - 1u;
-							if (blink_timer == 1u)
-							{
-								blink_on = blink_on ^ 4u;
-								OBJECT(current_object)->checkpoint_board.blink_on = blink_on;
-								OBJECT(current_object)->checkpoint_board.blink_timer = 4u + blink_on;
-							}
-							if (blink_on != 0u)
-								checkpoint_board_draw_row(row_player);
-						}
+						break;
 					}
-					break;
-				case 0x00CCFCu:
-					L_00CCFC = true;
-					break;
-				case 0x00CD32u:
-					row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
-					OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
-					if (row_offset == 0xFF00u)
+					blink_on = OBJECT(current_object)->checkpoint_board.blink_on;
+					blink_timer = OBJECT(current_object)->checkpoint_board.blink_timer;
+					OBJECT(current_object)->checkpoint_board.blink_timer = blink_timer - 1u;
+					if (blink_timer == 1u)
 					{
-						OBJECT(current_object)->checkpoint_board.rows_shown--;
-						OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+						blink_on = blink_on ^ 4u;
+						OBJECT(current_object)->checkpoint_board.blink_on = blink_on;
+						OBJECT(current_object)->checkpoint_board.blink_timer = 4u + blink_on;
 					}
+					if (blink_on == 0u)
+						break;
 					checkpoint_board_draw_row(row_player);
 					break;
-				case 0x00CD55u:
+				}
+				OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+				row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
+				OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
+				if (row_offset != 0xFF00u)
+				{
+					checkpoint_board_draw_row(row_player);
 					break;
 				}
-			} while (L_00CCFC);
-		} while (L_00CCFC);
+				OBJECT(current_object)->checkpoint_board.rows_shown--;
+				OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+				checkpoint_board_draw_row(row_player);
+				break;
+			}
+			OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = 0x100u;
+			OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+		case 1:
+			offset_before = OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player];
+			OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = offset_before - 0x10u;
+			if (offset_before != 0x10u)
+			{
+				checkpoint_board_draw_row(row_player);
+				break;
+			}
+			OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+		case 2:
+			if (OBJECT(current_object)->checkpoint_board.leave_segment != 0u && CAR(player_car)->race_over == 0u)
+			{
+				if (SCREEN(screen)->player != row_player)
+				{
+					checkpoint_board_draw_row(row_player);
+					break;
+				}
+				blink_on = OBJECT(current_object)->checkpoint_board.blink_on;
+				blink_timer = OBJECT(current_object)->checkpoint_board.blink_timer;
+				OBJECT(current_object)->checkpoint_board.blink_timer = blink_timer - 1u;
+				if (blink_timer == 1u)
+				{
+					blink_on = blink_on ^ 4u;
+					OBJECT(current_object)->checkpoint_board.blink_on = blink_on;
+					OBJECT(current_object)->checkpoint_board.blink_timer = 4u + blink_on;
+				}
+				if (blink_on == 0u)
+					break;
+				checkpoint_board_draw_row(row_player);
+				break;
+			}
+			OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+		case 3:
+			row_offset = (uint16_t)(OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] - 0x10u);
+			OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)row_player] = row_offset;
+			if (row_offset != 0xFF00u)
+			{
+				checkpoint_board_draw_row(row_player);
+				break;
+			}
+			OBJECT(current_object)->checkpoint_board.rows_shown--;
+			OBJECT(current_object)->checkpoint_board.row_steps[(int32_t)row_player]++;
+			checkpoint_board_draw_row(row_player);
+			break;
+		case 4:
+			break;
+		}
 		OBJECT(current_object)->checkpoint_board.passing_order++;
 		OBJECT(current_object)->checkpoint_board.row++;
 		rows_left = OBJECT(current_object)->checkpoint_board.rows_left;
