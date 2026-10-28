@@ -396,24 +396,16 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		segment_length = (int32_t)segment_length >> 8;
 		CAR(player_car)->segment_fraction = segment_fraction;
 	}
-	if (isdn_mode != 0u)
+	if (isdn_mode == 0u)
 	{
-		CAR(player_car)->road_x = road_x;
-		player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
-		*p_segment_record = segment_record;
-		*p_road_x = road_x;
-		*p_segment_fraction = segment_fraction;
-		*p_segment_length = segment_length;
-		return;
-	}
-	max_road_x = ROAD_SEGMENT(segment_record)->half_width;
-	min_road_x = (uint16_t)(0u - max_road_x);
-	max_road_x += 0x60u;
-	min_road_x -= 0x60u;
-	if ((int16_t)road_x < (int16_t)max_road_x)
-	{
-		if ((int16_t)min_road_x < (int16_t)road_x)
+		max_road_x = ROAD_SEGMENT(segment_record)->half_width;
+		min_road_x = (uint16_t)(0u - max_road_x);
+		max_road_x += 0x60u;
+		min_road_x -= 0x60u;
+		if ((int16_t)max_road_x <= (int16_t)road_x)
 		{
+			road_x = (road_x & ~0xFFFFu) | max_road_x;
+			CAR(player_car)->road_x = road_x;
 			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
 			*p_segment_record = segment_record;
 			*p_road_x = road_x;
@@ -421,18 +413,20 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 			*p_segment_length = segment_length;
 			return;
 		}
-		road_x = (road_x & ~0xFFFFu) | min_road_x;
+		if ((int16_t)min_road_x < (int16_t)road_x)
+			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
+		else
+		{
+			road_x = (road_x & ~0xFFFFu) | min_road_x;
+			CAR(player_car)->road_x = road_x;
+			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
+		}
+	}
+	else
+	{
 		CAR(player_car)->road_x = road_x;
 		player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
-		*p_segment_record = segment_record;
-		*p_road_x = road_x;
-		*p_segment_fraction = segment_fraction;
-		*p_segment_length = segment_length;
-		return;
 	}
-	road_x = (road_x & ~0xFFFFu) | max_road_x;
-	CAR(player_car)->road_x = road_x;
-	player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
 	*p_segment_record = segment_record;
 	*p_road_x = road_x;
 	*p_segment_fraction = segment_fraction;

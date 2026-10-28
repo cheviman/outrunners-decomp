@@ -164,24 +164,25 @@ void playlist_command(uint16_t queue_pointer, uint16_t player, uint16_t page, ui
 		playlist = z80_read16(saved_playlist);
 		playlist_byte = z80_read8(playlist);
 		playlist++;
-		*p_playlist = playlist;
-		*p_playlist_byte = playlist_byte;
-		return;
+		break;
 	case 0x003FD4u:
 		z80_block(53, 6);
 		playlist = saved_playlist;
 		playlist_byte = (SCREEN_PAGE(page)->playlist_choice_1 & 7u) | 0x90u;
-		*p_playlist = playlist;
-		*p_playlist_byte = playlist_byte;
-		return;
+		break;
 	case 0x003FDDu:
 		z80_block(53, 6);
 		playlist = saved_playlist;
 		playlist_byte = (SCREEN_PAGE(page)->playlist_choice_2 & 7u) | 0x90u;
-		*p_playlist = playlist;
-		*p_playlist_byte = playlist_byte;
-		return;
+		break;
 	case 0x003FE6u:
+		z80_block(117, 15);
+		saved_player = player;
+		cleared_player = saved_player;
+		playlist_byte = 0u;
+		z80_write8(cleared_player, 0u);
+		move_block(cleared_player, (uint16_t)(cleared_player + 1u), 0x30u, 1u);
+		playlist = saved_playlist;
 		break;
 	case 0x003FF7u:
 		z80_block(32, 4);
@@ -201,17 +202,8 @@ void playlist_command(uint16_t queue_pointer, uint16_t player, uint16_t page, ui
 		}
 		z80_block(30, 3);
 		playlist = saved_playlist;
-		*p_playlist = playlist;
-		*p_playlist_byte = playlist_byte;
-		return;
+		break;
 	}
-	z80_block(117, 15);
-	saved_player = player;
-	cleared_player = saved_player;
-	playlist_byte = 0u;
-	z80_write8(cleared_player, 0u);
-	move_block(cleared_player, (uint16_t)(cleared_player + 1u), 0x30u, 1u);
-	playlist = saved_playlist;
 	*p_playlist = playlist;
 	*p_playlist_byte = playlist_byte;
 }

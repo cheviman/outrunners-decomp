@@ -1410,23 +1410,23 @@ void set_voice_modulation_screen_1(uint16_t part, uint16_t *p_voices_left, uint1
 		z80_block(16, 2);
 		voice--;
 		voices_left = (register_and_value & ~0xFFu) | pan_register;
-		*p_voices_left = voices_left;
-		*p_voice = voice;
-		return;
 	}
-	do
+	else
 	{
-		z80_block(27, 3);
-	} while (z80_read8(pcm_data) & 1u);
-	z80_block(73, 7);
-	z80_write8(pcm_voice_select, chip_channel);
-	lfo_register = 6u;
-	value = voice_modulation | MIDI_PART(part)->lfo_frequency;
-	count_and_register = (voices_left & ~0xFFu) | 6u;
-	write_pcm_register((uint8_t)count_and_register, value);
-	z80_block(16, 2);
-	voice--;
-	voices_left = (count_and_register & ~0xFFu) | lfo_register;
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(73, 7);
+		z80_write8(pcm_voice_select, chip_channel);
+		lfo_register = 6u;
+		value = voice_modulation | MIDI_PART(part)->lfo_frequency;
+		count_and_register = (voices_left & ~0xFFu) | 6u;
+		write_pcm_register((uint8_t)count_and_register, value);
+		z80_block(16, 2);
+		voice--;
+		voices_left = (count_and_register & ~0xFFu) | lfo_register;
+	}
 	*p_voices_left = voices_left;
 	*p_voice = voice;
 }
@@ -3019,23 +3019,23 @@ void set_voice_modulation_screen_2(uint16_t part, uint16_t *p_voices_left, uint1
 		z80_block(16, 2);
 		voice--;
 		voices_left = (register_and_value & ~0xFFu) | pan_register;
-		*p_voices_left = voices_left;
-		*p_voice = voice;
-		return;
 	}
-	do
+	else
 	{
-		z80_block(27, 3);
-	} while (z80_read8(pcm_data) & 1u);
-	z80_block(73, 7);
-	z80_write8(pcm_voice_select, chip_channel);
-	lfo_register = 6u;
-	value = voice_modulation | MIDI_PART(part)->lfo_frequency;
-	count_and_register = (voices_left & ~0xFFu) | 6u;
-	write_pcm_register((uint8_t)count_and_register, value);
-	z80_block(16, 2);
-	voice--;
-	voices_left = (count_and_register & ~0xFFu) | lfo_register;
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(73, 7);
+		z80_write8(pcm_voice_select, chip_channel);
+		lfo_register = 6u;
+		value = voice_modulation | MIDI_PART(part)->lfo_frequency;
+		count_and_register = (voices_left & ~0xFFu) | 6u;
+		write_pcm_register((uint8_t)count_and_register, value);
+		z80_block(16, 2);
+		voice--;
+		voices_left = (count_and_register & ~0xFFu) | lfo_register;
+	}
 	*p_voices_left = voices_left;
 	*p_voice = voice;
 }

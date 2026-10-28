@@ -671,14 +671,14 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
 	uint32_t board_flags = 0;
 
 	link_wait_frames = 0xE10u;
-	do
+	for (;;)
 	{
 		*p_board_reply = wait_for_frame(*p_board_reply);
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
 			*p_left_caller = 1u;
-			return;
+			break;
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
@@ -693,8 +693,12 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
 			return;
 		}
 		board_flags = io_read32(LINK_BOARD_FLAGS);
-	} while ((board_flags & 0x80u) == 0u);
-	network_check_clear_status_line();
+		if ((board_flags & 0x80u) != 0u)
+		{
+			network_check_clear_status_line();
+			break;
+		}
+	}
 }
 
 /* ISDN mode: waits, WAIT blinking, until the link board's byte 800000 (its machine count) is set, then
@@ -765,7 +769,6 @@ void network_check_greeting(uint32_t *p_board_reply, uint32_t *p_left_caller)
 		io_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
 		network_check_error(error_texts, p_board_reply, p_left_caller);
-		return;
 	}
 }
 

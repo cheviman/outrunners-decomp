@@ -12,7 +12,7 @@ context_registers 715
 var_fields 0
 mem_access 48
 wide_access 206
-copy_backs 64
+copy_backs 13
 invalid_jump 0
 unknown_code 0
 raw_rom_addresses 0
@@ -21,12 +21,12 @@ rom_reads 0
 rom_table_reads 0
 board_replaced 1
 functions 744
-lines 39613
+lines 39578
 casts 2727
 partial_writes 174
 mixed_partial_writes 37
 board_registers 371
-clean_functions 744
-clean_lines 959
-faithful_functions 928
-faithful_lines 994
+clean_functions 752
+clean_lines 960
+faithful_functions 944
+faithful_lines 996

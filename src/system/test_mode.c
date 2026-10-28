@@ -3473,8 +3473,8 @@ void test_mode_draw_count(uint32_t number, uint32_t digit_count, uint32_t plural
 		colours |= 0x53u;
 	mem_write16(*p_cell + plural_offset * 2u, colours);
 	colours = byte_swap32(colours << 8);
-	test_mode_draw_number(digit_count, &number, &colours, p_cell);
 	*p_colours = colours;
+	test_mode_draw_number(digit_count, &number, p_colours, p_cell);
 }
 
 /* Draws the number R0 in decimal in R2 cells ending at text cell R10 + 2 * R2, right-aligned in the
