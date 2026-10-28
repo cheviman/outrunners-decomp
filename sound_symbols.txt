@@ -1082,7 +1082,7 @@ local  start_song                    4238,423B  hl  song_record     # the song's
 # ======== locals (batch Z80) ========
 # The values the C still named after the Z80's registers; the names of SegaSonic's sound program where the
 # code is the same (its play_midi_message, step_player, the FM patch loops).
-local  sound_init                    01B7  c  leftover_c                                  # C as init_fm_chip hands it back (the last register number of fm_operator_init); only passed on to init_voice_channels, which does not use it
+local  sound_init                    01B7  bc last_register                               # BC as init_fm_chip hands it back (the last register number of fm_operator_init); only passed on to init_voice_channels, which does not use it
 local  init_fm_chip                  01F0,01F9,01FE,020F  b  pairs_left                   # B: the register/value pairs of fm_global_init (11) and fm_operator_init (36) left (DJNZ at 01F9, 020F)
 local  write_fm_channel              0219  bc  register_and_value                         # BC handed back: the register in C, the value in B (one instruction, 0219, on both ways out: the C wrote it as two variables, bc and bc_2)
 local  init_pcm_chip                 029E,02C2  b  voices_left                            # B: the 28 entries of voice_chip_channels set up (DJNZ at 02C2)

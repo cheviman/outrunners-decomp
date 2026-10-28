@@ -3941,6 +3941,9 @@ field memory_test_result_text 04 character_3 u8
 01CDC8  table  memory_test_result_texts  memory_test_result_text
 local test_mode_memory_test_draw 01C95F r13 result_text memory_test_result_text
 local test_mode_memory_test_draw 01C965,01C96E,01C974 r13 result_text
+local test_mode_memory_test_words 01C9D1,01C9DA R12 tested_address
+local test_mode_memory_test_halfwords 01CA6E,01CA77 R12 tested_address
+local test_mode_memory_test_nibbles 01CBA0,01CBA9 R12 tested_address
 # A text's characters, closed by 0: NOW TESTING (01CD87, test_mode_memory_test_blink "movea.b
 # 1CD87[PC], R28" 01CC8C, "mov.b [R28+], R26"), the coin assignments' " COIN    CREDIT" (01E20E,
 # test_mode_coin_assignments_draw "movea.b 1E20E[PC], R13" 01DDE9, "mov.b [R13+], R1")
@@ -4494,6 +4497,7 @@ param eeprom_write_word R4 command
 param eeprom_write_word R13 lines_port
 local eeprom_write_word 0003ED,0003F3,000401 R6 word_bits            # the word turned high byte first, rotated a bit at a time
 local eeprom_write_word 00043B R0 data_out
+local eeprom_write_word 0003FD R0 data_bit             # the word's top bit, into the data line (bit 7)
 local eeprom_write_word 0003F6,000417,00041B,00042C R3 pulse_count
 local eeprom_lock 0002E1 R4 command
 local eeprom_lock 0002EA,0002ED R2 lines
@@ -5515,7 +5519,7 @@ local network_check_board_memory 00D52B,00D530 R0 count_then_faults
 local network_check_board_memory 00D535,00D53A R1 outcome
 local network_check_board_memory 00D524 R10 board_memory
 local network_check_board_memory 00D774 R19 error_texts
-param network_check_memory_test R0 count_then_faults
+param network_check_memory_test R0 count
 param network_check_memory_test R10 memory
 local network_check_memory_test 00D544 R1 byte_count
 local network_check_memory_test 00D547,00D5D9 R2 seed
@@ -5533,6 +5537,7 @@ local network_check_memory_test 00D5AC t3 read_low_15_bits
 local network_check_memory_test 00D5B3 t4 read_low_12_bits
 local network_check_memory_test 00D5BA t4 read_low_9_bits
 local network_check_memory_test 00D5C1 t4 read_low_6_bits
+local network_check_memory_test 00D54A,00D59A R0 faults            # the bits found wrong, in the low byte (what it hands back)
 param network_check_wait_board R2 board_reply
 local network_check_wait_board 00D75A R19 error_texts
 local network_check_wait_board 00D5FE t2 frames_left
@@ -5586,6 +5591,7 @@ local race_progress_update 00DB96,00DBAB,00DBBA,00DBD1,00DCCE,00DD09 R0 racers_l
 local race_progress_update 00DC1E,00DC22,00DC25,00DD91,00DD95 R0 fork_index
 local race_progress_update 00DC68,00DCC3 R0 comparisons_left
 local race_progress_update 00DCD1,00DD07 R1 place
+local race_progress_update 00DBB5 R14 counted_stages
 local race_progress_update 00DB93,00DB99,00DBB2,00DBBD R13 order_entry race_order_players
 local race_progress_update 00DBBD,00DCD4,00DD04 R2 racer
 local race_progress_update 00DBD7,00DBE3 R3 checkpoint
@@ -6181,6 +6187,7 @@ local unpack 010E14,010E1A,010E1D,010E27,010E2D R2 copy_source
 local unpack 010DF1,010E01,010E11,010E17,010E21,010E31,010E36,010E3D R3 copy_count
 local unpack 010E2A R3 length_byte                        # the match halfword's low byte: its low three bits the length
 local unpack 010E31 t2 length_bits
+local unpack_tile_pages 010F7D R12 entry_word
 param unpack_queued_step R2 copy_source                   # what it hands back: the copy source of the match it starts, else what R2 held (wait_for_frame passes it on)
 local unpack_queued_step 010E49,010E61,010E67,010E8C,010E92,010E9E,010EA4,010EAE,010EB4,010F28 R0 flags
 local unpack_queued_step 010E4E,010E5D,010E64,010E88,010E8F,010E9A,010EA1,010EAA,010EB1,010F2B R1 flags_left
@@ -7169,7 +7176,7 @@ local test_mode_memory_test_words 01CA28 t4 read_low_17_bits
 local test_mode_memory_test_words 01CA2F t4 read_low_14_bits
 local test_mode_memory_test_words 01CA36 t4 read_low_11_bits
 local test_mode_memory_test_words 01CA3D t4 read_low_8_bits
-param test_mode_memory_test_halfwords R0 failures   # comes in as the bytes to test (its low half cleared for the failed bits it hands back)
+param test_mode_memory_test_halfwords R0 size       # the bytes to test (its low half cleared for the failed bits it hands back: failures)
 param test_mode_memory_test_halfwords R10 memory_start
 local test_mode_memory_test_halfwords 01CA62 R1 halfword_count
 local test_mode_memory_test_halfwords 01CA66,01CAF0 R2 pattern   # 0101, a bit on each pass
@@ -7184,6 +7191,7 @@ local test_mode_memory_test_halfwords 01CAB2 t2 found
 local test_mode_memory_test_halfwords 01CACA t4 read_low_13_bits
 local test_mode_memory_test_halfwords 01CAD1 t4 read_low_10_bits
 local test_mode_memory_test_halfwords 01CAD8 t4 read_low_7_bits
+local test_mode_memory_test_halfwords 01CA6B,01CABA R0 failures
 # ======== locals (batch L6) ========
 # The test mode's text helpers, whose registers the pages pass on from one call to the next: R0 the
 # character (a text cell's contents: the colour in its high byte, the character in its low byte; the colour
@@ -7249,7 +7257,7 @@ local test_mode_memory_test_bytes 01CB5A t3 checked_address_low_15
 local test_mode_memory_test_bytes 01CB61 t4 checked_address_low_12
 local test_mode_memory_test_bytes 01CB68 t4 checked_address_low_9
 local test_mode_memory_test_bytes 01CB6F t4 checked_address_low_6
-param test_mode_memory_test_nibbles R0 size_then_wrong_bits
+param test_mode_memory_test_nibbles R0 size         # the bytes to test (its low half cleared for the wrong bits it hands back: wrong_bits)
 param test_mode_memory_test_nibbles R10 ram_start
 local test_mode_memory_test_nibbles 01CB94 R1 halfword_count
 local test_mode_memory_test_nibbles 01CB98,01CC78 R2 pass_pattern
@@ -7272,6 +7280,7 @@ local test_mode_memory_test_nibbles 01CC3F t3 checked_address_low_11
 local test_mode_memory_test_nibbles 01CC49 t3 checked_address_low_9
 local test_mode_memory_test_nibbles 01CC53 t3 checked_address_low_7
 local test_mode_memory_test_nibbles 01CC5D t3 checked_address_low_5
+local test_mode_memory_test_nibbles 01CB9D,01CC17 R0 wrong_bits
 local test_mode_memory_test_blink 01CC80,01CC91 R26 character   # NOW TESTING's character in palette 66, xored into its cell
 local test_mode_memory_test_blink 01CC94 t2 cell
 # The volume adjustment
@@ -8467,13 +8476,13 @@ local test_mode_bookkeeping_draw_histogram 01E956 R12 r12 text_layer_cells   # t
 # memories; test_mode_memory_test_words the work RAM, but its read of a wrong word back, -4[R12] after the last one,
 # would be element -1 of 220000, which ram() takes as 200000: both stay untyped)
 elements tested_sound_ram_bytes u8 board    # the sound RAM as test_mode_memory_test_bytes writes and reads it, a byte at a time (700000-701FFE: test_mode_memory_test passes 700000 and 1FFF bytes; "mov.b R3, [R12+]" 01CB0C, "cmp.b R3, [R12+]" 01CB48, "xor.b -1[R12], R0" 01CB50)
-local test_mode_memory_test_bytes 01CB03,01CB3F R12 r12 tested_sound_ram_bytes   # "mov.w R10, R12": the RAM's start, for the writes and then for the reads
+local test_mode_memory_test_bytes 01CB03,01CB3F R12 tested_address tested_sound_ram_bytes   # "mov.w R10, R12": the RAM's start, for the writes and then for the reads
 # The volume adjustment and the input test: the calibration (volume_ranges, 20E638: a low and a high byte each) and
 # the controls' positions (test_mode_analog_inputs, 20E710), a byte at a time through R12
-local test_mode_volume_adjustment_draw 01CEEF R12 r12 analog_calibration_bytes   # "movea.b 638[R24], R12": each control's range ("movz.bw [R12+], R0", "movz.bw [R12+], R1" 01CEF7-01CF2B)
-local test_mode_volume_adjustment_draw 01CF53 R12 r12 analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01CF5B)
-local test_mode_input_test_draw 01D165 R12 r12 analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01D177)
-local test_mode_input_test_draw 01D1C4,01D1D2,01D209,01D215 R12 r12 io   # monitor A's I/O chip (C00000), then the port of the switch in its low byte (input_test_items), 8 (port E) and A (port F)
+local test_mode_volume_adjustment_draw 01CEEF R12 calibration analog_calibration_bytes   # "movea.b 638[R24], R12": each control's range ("movz.bw [R12+], R0", "movz.bw [R12+], R1" 01CEF7-01CF2B)
+local test_mode_volume_adjustment_draw 01CF53 R12 analog_input analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01CF5B)
+local test_mode_input_test_draw 01D165 R12 analog_input analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01D177)
+local test_mode_input_test_draw 01D1C4,01D1D2,01D209,01D215 R12 port_a io   # monitor A's I/O chip (C00000), then the port of the switch in its low byte (input_test_items), 8 (port E) and A (port F)
 local test_mode_output_test_draw 01D4AC R12 r12 output_bits   # "add.w R24, R12": the output's byte in the game's variables (port_d_outputs, port_g_outputs), its bit tested ("test1 R0, [R12]" 01D4B2)
 # The game assignments: the time difficulty a byte a stage, and the settings' backup copy 3C bytes on
 elements time_difficulty_seconds u8 ram     # the seconds each stage's time gets, a byte each (time_difficulty, 20E632 on: PRE-STAGE, STAGE 1-4, FINAL STAGE), which test_mode_game_assignments_draw walks ("movz.bw [R12+], R0" 01DAD2)
@@ -8552,9 +8561,9 @@ local player_car_check_car_hits 01259C R14 r14 car_hit_box
 local player_car_drive 00A41A R12 r12 road_segment
 local player_car_drive 00A4C0 R12 r12 road_segment   # ISDN: the race_copy's segment's next
 local player_car_place_on_road 0077CE R12 r12 road_segment
-local player_car_place_view 00A696 R12 r12 road_segment   # after the view's shift (the and.h #AFFF at 00A69B goes into the read of its y)
-local player_car_place_view 00A724 R12 r12 road_segment   # twelve segments on
-local player_car_place_view 00A754 R12 r12 road_segment   # twelve segments on from the next
+local player_car_place_view 00A696 R12 view_segment road_segment   # after the view's shift (the and.h #AFFF at 00A69B goes into the read of its y)
+local player_car_place_view 00A724 R12 far_segment road_segment   # twelve segments on
+local player_car_place_view 00A754 R12 far_segment road_segment   # twelve segments on from the next
 # The race car's object in R12 (race_cars_start 0096B8 "mov.h R21, R12": the page from before, the low half the car's
 # object), which its riders and their gestures keep as their car, and whose player they take (009719, 00973D "mov.b 9[R12], B[R21]")
 local race_cars_start 0096B8 R12 r12 object.race_car

@@ -61,8 +61,8 @@ void race_background_update(void)
 		TILEMAP_PAGES(page_word_address)->pages = background_page_words[(uint32_t)OBJECT(current_object)->race_background.page_half << 3];
 		mixer_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->mixer_address;
 		mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
-		mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
-		MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | 4u);
+		mixer_bits = mixer_bits & ~0xFu;
+		MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 4u;
 		SCREEN(screen)->flags |= 4u;
 		background_inverted = SCREEN(screen)->first_stage;
 		if (background_inverted != 0u)
@@ -82,7 +82,7 @@ void race_background_update(void)
 			page_number++;
 			page_count--;
 			tile_pages += 4u;
-			r12 = r12 + 4u;
+			r12 += 4u;
 		} while (page_count != 0u);
 		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 		unpack_tile_pages(tile_page_list);
@@ -153,7 +153,7 @@ void race_background_update(void)
 				page_half++;
 				page_count--;
 				tile_pages += 4u;
-				r12 = r12 + 4u;
+				r12 += 4u;
 			} while (page_count != 0u);
 			OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 			queue_tile_pages(tile_page_list);
@@ -322,12 +322,8 @@ void race_background_update(void)
 				}
 			}
 			break;
-		default:
-			invalid_jump(race_background_change_step_jumps[OBJECT(current_object)->race_background.change_step]);
 		}
 		break;
-	default:
-		invalid_jump(race_background_state_jumps[state]);
 	}
 	scroll_x = CAR(player_car)->view_yaw;
 	if (SCREEN(screen)->background_changing == 0u)
@@ -405,7 +401,7 @@ void race_background_start_upper_animation(uint32_t animation)
 	uint32_t object = 0, tile_pages = 0;
 
 	animation = animation * 2u;
-	tile_pages = background_upper_animation_tile_pages[(animation & ~0xFFu) | (uint8_t)(animation + SCREEN(screen)->index)];
+	tile_pages = background_upper_animation_tile_pages[(uint8_t)(animation + SCREEN(screen)->index)];
 	queue_tile_pages(tile_pages);
 	object = start_object();
 	OBJECT(object)->race_background_upper_animation.delay = 3u;
@@ -502,13 +498,13 @@ void set_up_background(uint32_t background_setup)
 	send_video_registers = 0xFFu;
 	mixer_address = BACKGROUND_REGISTERS(background_registers - 0x28u)->mixer_address;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
-	mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
-	MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority);
+	mixer_bits = mixer_bits & ~0xFu;
+	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority;
 	mixer_address += 4u;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
-	mixer_bits = (mixer_bits & ~0xFFFFu) | (mixer_bits & 0xFFF0u);
+	mixer_bits = mixer_bits & ~0xFu;
 	background_setup++;
-	MIXER_VALUE_PAIRS(mixer_address)[0] = (mixer_bits & ~0xFFu) | (uint8_t)(mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority);
+	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority;
 	SCREEN(screen)->flags |= 4u;
 	background_setup++;
 	tile_pages = BACKGROUND_SETUP(background_setup - 0xCu)->tile_pages;
@@ -525,7 +521,7 @@ void race_background_start_objects(uint32_t stage)
 	uint32_t entry_count = 0;
 
 	if (SCREEN(screen)->stage_background_change != 0u)
-		stage = (stage & ~0xFFu) | (uint8_t)(stage + 0x1Fu);
+		stage = (uint8_t)(stage + 0x1Fu);
 	object_list = stage_background_object_lists[stage];
 	entry_count = OBJECT_START_LIST(object_list)->count >> 3;
 	objects_left = entry_count;
@@ -621,8 +617,6 @@ void palette_cycle_update(void)
 		break;
 	case 3:
 		break;
-	default:
-		invalid_jump(palette_cycle_state_jumps[OBJECT(current_object)->state]);
 	}
 	switch (OBJECT(current_object)->palette_cycle.running)
 	{
@@ -633,8 +627,6 @@ void palette_cycle_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(palette_cycle_running_jumps[OBJECT(current_object)->palette_cycle.running]);
 	}
 	if (SCREEN(screen)->background_fading != 0u)
 	{
@@ -695,8 +687,6 @@ void sunset_fade_start(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(sunset_fade_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (SCREEN(screen)->background_fading != 0u)
 		return;
@@ -821,8 +811,6 @@ void backdrop_far_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(backdrop_far_state_jumps[OBJECT(current_object)->state]);
 	}
 	zero = backdrop_off_screen();
 	if (zero == 0u)
@@ -890,8 +878,6 @@ void backdrop_near_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(backdrop_near_state_jumps[OBJECT(current_object)->state]);
 	}
 	zero = backdrop_off_screen();
 	if (zero)
@@ -988,8 +974,6 @@ void backdrop_landmark_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(backdrop_landmark_state_jumps[OBJECT(current_object)->state]);
 	}
 	zero = backdrop_off_screen();
 	if (zero)
@@ -1065,8 +1049,6 @@ void backdrop_flashing_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(backdrop_flashing_state_jumps[OBJECT(current_object)->state]);
 	}
 	zero = backdrop_off_screen();
 	if (zero == 0u)
@@ -1133,8 +1115,6 @@ void backdrop_translucent_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(backdrop_translucent_state_jumps[OBJECT(current_object)->state]);
 	}
 	zero = backdrop_off_screen();
 	if (zero)

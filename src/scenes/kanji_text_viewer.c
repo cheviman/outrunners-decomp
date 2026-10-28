@@ -127,8 +127,6 @@ void kanji_text_viewer_update(void)
 		return;
 	case 3:
 		return;
-	default:
-		invalid_jump(kanji_text_viewer_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -182,7 +180,7 @@ uint32_t kanji_text_viewer_draw_quarter(uint32_t rows)
 	do
 	{
 		BITMAP_LAYER_WORDS(r12)[0] = byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(rows)[0]]);
-		r12 = r12 + 0x100u;
+		r12 += 0x100u;
 		rows_left--;
 		rows++;
 	} while (rows_left != 0u);

@@ -211,8 +211,6 @@ void car_presentation_update(void)
 		return;
 	case 2:
 		break;
-	default:
-		invalid_jump(car_presentation_state_jumps[state]);
 	}
 	palette_index = OBJECT(current_object)->car_presentation.palette_step;
 	colour_list = car_presentation_palette_cycle[palette_index];
@@ -259,7 +257,7 @@ void staff_credits_code_watch(uint32_t new_controls, uint32_t control_reading)
 	next_control = OBJECT(current_object)->staff_credits_code.code_place;
 	element = STAFF_CREDITS_CODE_CONTROLS(next_control)[0];
 	next_control++;
-	if (element != (uint8_t)new_controls)
+	if (element != new_controls)
 		next_control = staff_credits_code_sequence_ADDRESS;
 	OBJECT(current_object)->staff_credits_code.code_place = next_control;
 	if (STAFF_CREDITS_CODE_CONTROLS(next_control)[0] != 0u)
@@ -313,8 +311,8 @@ void staff_credits_code_read_controls(uint32_t control_reading, uint32_t *p_new_
 {
 	uint32_t new_controls = *p_new_controls;
 	uint32_t zero = *p_zero;
-	uint8_t newly_on = 0;
-	uint32_t control_bit = 0, controls_now = 0, held_before = 0, reading = 0;
+	uint8_t controls_now = 0, newly_on = 0;
+	uint32_t control_bit = 0, held_before = 0, reading = 0;
 	uint8_t pressed_controls = 0;
 
 	held_before = (new_controls & ~0xFFu) | OBJECT(current_object)->staff_credits_code.controls_held;
@@ -351,7 +349,7 @@ void staff_credits_code_read_controls(uint32_t control_reading, uint32_t *p_new_
 /* Sets bit R3 of the controls being read (R1) when the value R2 is E0 or more, or C0 or more when the
    bit was on in the controls held before (R0): staff_credits_code_read_controls' test for the wheel
    turned right, the gas and the brake. */
-uint32_t staff_credits_code_control_bit(uint32_t held_before, uint32_t controls_now, uint8_t reading, uint32_t control_bit)
+uint8_t staff_credits_code_control_bit(uint32_t held_before, uint8_t controls_now, uint8_t reading, uint32_t control_bit)
 {
 	if ((held_before & shl32(1u, (int)(control_bit))) != 0u)
 	{
@@ -476,8 +474,6 @@ void car_name_letter_update(void)
 		}
 		OBJECT(current_object)->flags = 0u;
 		return;
-	default:
-		invalid_jump(car_name_letter_state_jumps[OBJECT(current_object)->state]);
 	}
 	frames_left = OBJECT(current_object)->car_name_letter.frames_left;
 	OBJECT(current_object)->car_name_letter.frames_left = frames_left - 1u;
@@ -506,8 +502,6 @@ void demo_captions_run(void)
 		return;
 	case 1:
 		break;
-	default:
-		invalid_jump(demo_captions_state_jumps[OBJECT(current_object)->state]);
 	}
 	OBJECT(current_object)->demo_captions.frames = (OBJECT(current_object)->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)OBJECT(current_object)->demo_captions.frames + 1u & 0xFFFFu);
 	cue = OBJECT(current_object)->demo_captions.timeline;
@@ -533,8 +527,6 @@ void demo_captions_run(void)
 		case 0x01AE6Bu:
 			demo_captions_music_select();
 			break;
-		default:
-			invalid_jump(jump_target);
 		}
 		OBJECT(current_object)->demo_captions.timeline += 8u;
 	}
@@ -625,8 +617,6 @@ void demo_caption_update(void)
 		animation_advance(0u);
 		state_routine = draw_object(state_routine);
 		return;
-	default:
-		invalid_jump(demo_caption_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	record_offset = (uint32_t)OBJECT(current_object)->demo_caption.record << 4;

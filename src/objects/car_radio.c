@@ -400,14 +400,10 @@ void car_radio_update(void)
 									case 0x0192D8u:
 										car_radio_dj_remark_2c();
 										return;
-									default:
-										invalid_jump(remark_routine);
 									}
 									break;
 								case 5:
 									return;
-								default:
-									invalid_jump(car_radio_talk_step_jumps[OBJECT(current_object)->car_radio.talk_step]);
 								}
 								break;
 							case 0x019118u:
@@ -428,8 +424,6 @@ void car_radio_update(void)
 							case 0x019180u:
 								L_019180 = true;
 								break;
-							default:
-								invalid_jump(jump_target);
 							}
 						} while (L_019118);
 					} while (L_019132);
@@ -684,8 +678,6 @@ void song_title_show(void)
 			text = OBJECT(current_object)->song_title.text;
 			draw_text_at(position, colour, text);
 			return;
-		default:
-			invalid_jump(jump_target);
 		}
 	} while (L_01938A);
 	position = (position & ~0xFFFFu) | (uint16_t)(position + OBJECT(current_object)->x);
@@ -713,7 +705,7 @@ void start_dj_message(uint8_t message)
 	uint8_t sound = 0;
 	uint32_t message_entry = 0;
 
-	message_entry = dj_messages[(uint8_t)message];
+	message_entry = dj_messages[message];
 	sound = (uint8_t)byte_swap32(message_entry);
 	SCREEN(screen)->dj_mouth_shapes = message_entry & 0xFFFFFFu;
 	request_sound(sound);

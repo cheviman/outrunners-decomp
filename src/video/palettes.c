@@ -267,8 +267,6 @@ void step_screen_fade(void)
 		break;
 	case 6:
 		break;
-	default:
-		invalid_jump(screen_fade_kind_jumps[SCREEN(screen)->fade_kind]);
 	}
 	level = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
 	SCREEN(screen)->fade_level = (uint8_t)level;
@@ -437,8 +435,8 @@ uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint3
 	OBJECT(object)->palette_fade.upload_length = 8u;
 	OBJECT(object)->palette_fade.upload_colours = object + 0x34u;
 	OBJECT(object)->palette_fade.palette_offset = r12;
-	OBJECT(object)->palette_fade.blocks = (uint8_t)blocks;
-	phase = remainder_u8(SCREEN(screen)->palette_fades_started, (uint8_t)period);
+	OBJECT(object)->palette_fade.blocks = blocks;
+	phase = remainder_u8(SCREEN(screen)->palette_fades_started, period);
 	SCREEN(screen)->palette_fades_started++;
 	OBJECT(object)->palette_fade.delay = phase + 1u;
 	OBJECT(object)->palette_fade.period = period;
@@ -466,7 +464,7 @@ void palette_fade_prepare(void)
 	from_colour = PALETTE_COLOURS(from)[0];
 	to_colour = PALETTE_COLOURS(to)[0];
 	PALETTE_FADE_COLOURS(r12)[0] = from_colour;
-	r12 = r12 + 2u;
+	r12 += 2u;
 	PALETTE_FADE_DIFFERENCES(difference_place)[0] = (from_colour & 0x1Fu) - (to_colour & 0x1Fu);
 	difference_place++;
 	from_colour = from_colour >> 5;

@@ -157,7 +157,7 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
 	{
 		io_write16(link_place, 0u);
 		link_place += 2u;
-		io_write16(link_place, (uint8_t)seat_buttons);
+		io_write16(link_place, seat_buttons);
 		wheel_input = ANALOG_VALUES(analog_place)[0];
 		analog_place++;
 		link_place += 2u;
@@ -243,11 +243,11 @@ uint32_t take_screen_inputs(void)
 		old_link_status = SCREEN(screen)->link_status;
 		SCREEN(screen)->link_status = new_status;
 		input_changes = (input_changes & ~0xFFu) | (uint8_t)~old_link_status;
-		input_changes = (input_changes & ~0xFFu) | (input_changes & new_link_status);
+		input_changes = input_changes & (new_link_status | 0xFFFFFF00u);
 		SCREEN(screen)->link_status_set = input_changes;
 		status_cleared = ~new_link_status & old_link_status;
 		SCREEN(screen)->link_status_cleared = status_cleared;
-		input_changes = (input_changes & ~0xFFu) | (uint8_t)(input_changes | status_cleared);
+		input_changes = input_changes | status_cleared;
 		SCREEN(screen)->link_status_changed = input_changes;
 		if (SCREEN(screen)->game_mode != 8u && (new_link_status & 0xCu) != 0u)
 			AS32(SCREEN(screen)->game_mode) = 8u;

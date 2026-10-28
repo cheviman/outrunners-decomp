@@ -96,8 +96,6 @@ void game_mode_isdn_connection(void)
 		if ((SCREEN(screen)->flags & 1u) == 0u)
 			AS32(SCREEN(screen)->game_mode) = 2u;
 		return;
-	default:
-		invalid_jump(isdn_connection_step_jumps[SCREEN(screen)->mode_step]);
 	}
 	link_status = SCREEN(screen)->link_status;
 	if ((link_status & 1u) != 0u)
@@ -132,8 +130,6 @@ void isdn_status_update(void)
 		break;
 	case 1:
 		return;
-	default:
-		invalid_jump(isdn_status_state_jumps[OBJECT(current_object)->state]);
 	}
 	link_status = SCREEN(screen)->link_status;
 	if ((link_status & 1u) == 0u)
@@ -421,8 +417,8 @@ void network_check_result(uint32_t machine)
 
 	RACE(RACE_1)->machine = machine;
 	RACE(RACE_2)->machine = machine;
-	machine = (machine & ~0xFFu) | (uint8_t)(machine - 1u);
-	machine = (machine & ~0xFFu) | (uint8_t)(machine * 2u);
+	machine = (uint8_t)(machine - 1u);
+	machine = (uint8_t)(machine * 2u);
 	RACE(RACE_1)->player = machine;
 	second_player = machine + 1u;
 	RACE(RACE_2)->player = second_player;
@@ -433,7 +429,7 @@ void network_check_result(uint32_t machine)
 	race = RACE_1;
 	SCREEN(SCREEN_1)->race = RACE_1;
 	SCREEN(SCREEN_2)->race = RACE_2;
-	if ((uint8_t)machine == 0u)
+	if (machine == 0u)
 	{
 		RACE(race)->master_advertise_sound = advertise_sound;
 		RACE(race)->master_steering_wheel_reaction = steering_wheel_reaction;
@@ -549,7 +545,7 @@ uint32_t network_check_board_memory(uint32_t left_caller)
 	count_then_faults = 0x7FFu;
 	count_then_faults = network_check_memory_test(count_then_faults, board_memory);
 	outcome = 2u;
-	if ((uint8_t)count_then_faults != 0u)
+	if (count_then_faults != 0u)
 		outcome = 3u;
 	if (outcome == 3u)
 	{
@@ -566,18 +562,18 @@ uint32_t network_check_board_memory(uint32_t left_caller)
    (one a halfword) from R10, reading them back and gathering the bits that differ into R0's low byte (0:
    no fault); CHECK DUALPORT RAM flips on the status line after each pass
    (network_check_toggle_memory_text). */
-uint32_t network_check_memory_test(uint32_t count_then_faults, uint32_t memory)
+uint8_t network_check_memory_test(uint32_t count, uint32_t memory)
 {
 	uint32_t carry = 0;
-	uint8_t pattern = 0, rotation = 0, seed = 0;
+	uint8_t faults = 0, pattern = 0, rotation = 0, seed = 0;
 	uint16_t address_bits = 0;
 	uint32_t byte_count = 0, bytes_left = 0, cell = 0;
 	uint8_t byte_read = 0;
 	uint16_t written_low_15_bits = 0, written_low_12_bits = 0, written_low_9_bits = 0, written_low_6_bits = 0, read_low_15_bits = 0, read_low_12_bits = 0, read_low_9_bits = 0, read_low_6_bits = 0;
 
-	byte_count = count_then_faults;
+	byte_count = count;
 	seed = 1u;
-	count_then_faults &= ~0xFFu;
+	faults = 0u;
 	do
 	{
 		cell = memory;
@@ -625,10 +621,7 @@ uint32_t network_check_memory_test(uint32_t count_then_faults, uint32_t memory)
 			byte_read = io_read8(cell);
 			cell++;
 			if (byte_read != pattern)
-			{
-				count_then_faults = (count_then_faults & ~0xFFu) | (uint8_t)(count_then_faults ^ pattern);
-				count_then_faults = (count_then_faults & ~0xFFu) | (uint8_t)(count_then_faults ^ io_read8(cell - 1u));
-			}
+				faults = faults ^ pattern ^ io_read8(cell - 1u);
 			cell++;
 			rotation = 6u;
 			read_low_15_bits = cell * 2u;
@@ -664,7 +657,7 @@ uint32_t network_check_memory_test(uint32_t count_then_faults, uint32_t memory)
 		carry = v60_rot_cy(seed, 1u, 8);
 		seed = (uint8_t)(((uint32_t)seed << 1) | (seed >> 7));
 	} while (carry == 0u);
-	return count_then_faults;
+	return faults;
 }
 
 /* Waits for the link board's flag (801002 bit 7), WAIT blinking, for up to E10 frames (two minutes,
@@ -1138,10 +1131,10 @@ void race_entries_update(void)
 					RACE(race)->entry_serial++;
 					RACE(race)->entrant = 0xFFu;
 					AS32(SCREEN(r14 - 0x300u)->accepted_players[0]) = 0u;
-					r14 = r14 + 4u;
+					r14 += 4u;
 					AS32(SCREEN(r14 - 0x304u)->accepted_players[4]) = 0u;
 					io_write8(LINK_ENTRIES_CLOSED, 1u);
-					r14 = r14 + 4u;
+					r14 += 4u;
 				}
 			}
 		}
@@ -1196,7 +1189,7 @@ void race_entries_update(void)
 	{
 		r14 = race + 0x1Fu;
 		RACE(r14 - 0x1Fu)->racer_count = SCREEN(entrant_list - 0x30Fu)->entrant_count;
-		r14 = r14 + 1u;
+		r14++;
 		entrant_list++;
 		last_four_entrants = SCREEN(entrant_list - 0x310u)->last_four_entrants;
 		race_order_long = AS32(SCREEN(entrant_list - 0x310u)->entrants);
@@ -1205,7 +1198,7 @@ void race_entries_update(void)
 		RACE(r14 - 0x20u)->race_order_2 = (uint8_t)(race_order_long >> 16u);
 		RACE(r14 - 0x20u)->race_order_3 = (uint8_t)(race_order_long >> 24u);
 		RACE(r14 - 0x20u)->race_order_4_7 = last_four_entrants;
-		r14 = r14 + 8u;
+		r14 += 8u;
 	}
 }
 
@@ -1228,7 +1221,7 @@ void race_progress_update(void)
 {
 	uint8_t branch = 0, host_pass_count = 0, pass_branch = 0, pass_count = 0, place = 0, player = 0;
 	uint16_t order = 0, pass_time = 0;
-	uint32_t ahead_player = 0, ahead_race = 0, checked_race = 0, checkpoint = 0, checkpoint_offset = 0, comparisons_left = 0, fork_index = 0, host_order = 0, host_racer_count = 0, next_player = 0, order_entry = 0, order_place = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, passing_race = 0, race = 0, racer = 0, racer_count = 0, racers_left = 0, sort_place = 0;
+	uint32_t ahead_player = 0, ahead_race = 0, checked_race = 0, checkpoint = 0, checkpoint_offset = 0, comparisons_left = 0, counted_stages = 0, fork_index = 0, host_order = 0, host_racer_count = 0, next_player = 0, order_entry = 0, order_place = 0, pass_checkpoint = 0, pass_order = 0, pass_player = 0, passing_race = 0, race = 0, race_2 = 0, racer = 0, racer_count = 0, racers_left = 0, sort_place = 0;
 	uint8_t racer_total = 0;
 	uint32_t pass_counter = 0, swapped_player = 0, player_checkpoint_count = 0, checkpoint_pass_count = 0;
 
@@ -1253,7 +1246,7 @@ void race_progress_update(void)
 		if (RACE(checked_race)->pass_seen == host_pass_count)
 		{
 			order_entry = host_order;
-			r14 = screen + 0x330u;
+			counted_stages = screen + 0x330u;
 			racers_left = host_racer_count;
 			do
 			{
@@ -1261,11 +1254,11 @@ void race_progress_update(void)
 				passing_race = race_copy_offsets[racer] + GAME_VARIABLES;
 				racers_left--;
 				order_entry++;
-			} while ((racers_left != 0u) & (SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] == RACE(passing_race)->stage_count));
-			if (SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] != RACE(passing_race)->stage_count)
+			} while ((racers_left != 0u) & (SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] == RACE(passing_race)->stage_count));
+			if (SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] != RACE(passing_race)->stage_count)
 			{
 				checkpoint = RACE(passing_race)->stage_count;
-				SCREEN(r14 - 0x330u)->counted_stages[(int32_t)racer] = checkpoint;
+				SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] = checkpoint;
 				RACE(race)->pass_player = racer;
 				checkpoint = (uint8_t)(checkpoint - 1u);
 				RACE(race)->pass_checkpoint = checkpoint;
@@ -1307,24 +1300,24 @@ void race_progress_update(void)
 				do
 				{
 					next_player = RACE_ORDER_PLAYERS(sort_place)[0];
-					r14 = race_copy_offsets[next_player] + GAME_VARIABLES;
+					race_2 = race_copy_offsets[next_player] + GAME_VARIABLES;
 					sort_place++;
 					if (RACE(ahead_race)->finished != 0u)
 					{
-						if (RACE(r14)->finished == 0u || RACE(ahead_race)->finish_time <= RACE(r14)->finish_time)
+						if (RACE(race_2)->finished == 0u || RACE(ahead_race)->finish_time <= RACE(race_2)->finish_time)
 						{
 							swapped_player = next_player;
 							next_player = ahead_player;
 							ahead_player = swapped_player;
-							ahead_race = r14;
+							ahead_race = race_2;
 						}
 					}
-					else if ((RACE(r14)->segment_fraction | ((uint32_t)RACE(r14)->segment << 16u)) <= (RACE(ahead_race)->segment_fraction | ((uint32_t)RACE(ahead_race)->segment << 16u)))
+					else if ((RACE(race_2)->segment_fraction | ((uint32_t)RACE(race_2)->segment << 16u)) <= (RACE(ahead_race)->segment_fraction | ((uint32_t)RACE(ahead_race)->segment << 16u)))
 					{
 						swapped_player = next_player;
 						next_player = ahead_player;
 						ahead_player = swapped_player;
-						ahead_race = r14;
+						ahead_race = race_2;
 					}
 					RACE_ORDER_PLAYERS(sort_place)[-2] = next_player;
 					comparisons_left--;
@@ -1431,8 +1424,6 @@ void entry_invitation_step(void)
 		SCREEN_LAMPS(lamp)->leader_all = 0u;
 		clear_lcd();
 		return;
-	default:
-		invalid_jump(entry_invitation_step_jumps[SCREEN(screen)->game_step]);
 	}
 	if ((SCREEN(screen)->flags & 1u) == 0u)
 	{

@@ -625,8 +625,6 @@ void route_map_update(void)
 										return;
 									case 0x003E1Au:
 										return;
-									default:
-										invalid_jump(jump_target);
 									}
 								} while (L_003BFC);
 							} while (L_003BFC);
@@ -743,8 +741,6 @@ void route_map_car_update(void)
 		map_depth_from_y();
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(route_map_car_state_jumps[state]);
 	}
 }
 
@@ -828,8 +824,6 @@ void route_map_sign_update(void)
 			return;
 		goal = draw_object(goal);
 		return;
-	default:
-		invalid_jump(route_map_sign_state_jumps[state]);
 	}
 }
 
@@ -897,8 +891,6 @@ void route_map_landmark_update(void)
 		animation_advance(0u);
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(route_map_landmark_state_jumps[state]);
 	}
 }
 
@@ -1008,8 +1000,6 @@ void route_map_leg_show(void)
 	case 1:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(route_map_leg_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	OBJECT(current_object)->palette = 0x2D1u;
@@ -1132,8 +1122,6 @@ void route_map_leg_show(void)
 			OBJECT(current_object)->frame = 0xBu;
 		}
 		break;
-	default:
-		invalid_jump(route_map_leg_jumps[OBJECT(current_object)->route_map_leg.leg]);
 	}
 	OBJECT(current_object)->x += route_map_direction_x_shifts[OBJECT(OBJECT(current_object)->route_map_leg.map)->route_map.first_branch];
 	OBJECT(current_object)->y += 0x6Bu;
@@ -1160,8 +1148,6 @@ void route_map_leg_car_show(void)
 	case 1:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(route_map_leg_car_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	model = CAR(player_car)->model;
@@ -1210,8 +1196,6 @@ void route_map_leg_car_show(void)
 		OBJECT(current_object)->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
 		OBJECT(current_object)->state++;
 		return;
-	default:
-		invalid_jump(route_map_leg_car_leg_jumps[OBJECT(OBJECT(current_object)->route_map_leg_car.leg)->route_map_leg.leg]);
 	}
 }
 
@@ -1267,8 +1251,6 @@ void route_map_checkpoint_show(void)
 			return;
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(route_map_checkpoint_state_jumps[state]);
 	}
 }
 
@@ -1311,8 +1293,6 @@ void route_map_direction_sign_show(void)
 		OBJECT(current_object)->palette = colour_cycle;
 		colour_cycle = draw_object(colour_cycle);
 		return;
-	default:
-		invalid_jump(route_map_direction_sign_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1384,8 +1364,6 @@ void route_map_wait_banner_show(void)
 			return;
 		}
 		return;
-	default:
-		invalid_jump(route_map_wait_banner_state_jumps[state]);
 	}
 }
 
@@ -1419,8 +1397,6 @@ void game_over_banner_show(void)
 	case 2:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(game_over_banner_state_jumps[state]);
 	}
 	timer = OBJECT(current_object)->game_over_banner.timer;
 	OBJECT(current_object)->game_over_banner.timer = timer - 1u;

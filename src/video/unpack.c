@@ -291,16 +291,16 @@ uint32_t unpack_queued_step(uint32_t copy_source)
    unpack_tile_pages does the same for a list of tile pages. */
 void unpack_list(uint32_t block_list)
 {
-	uint32_t destination = 0, source = 0;
+	uint32_t destination = 0, source = 0, source_2 = 0;
 	uint32_t next_entry = 0;
 
 	do
 	{
-		r12 = PACKED_BLOCK_ENTRY(block_list)->source;
+		source_2 = PACKED_BLOCK_ENTRY(block_list)->source;
 		block_list += 4u;
 		destination = PACKED_BLOCK_ENTRY(block_list - 0x4u)->destination;
 		next_entry = block_list + 4u;
-		source = r12;
+		source = source_2;
 		r12 = next_entry;
 		unpack(source, destination);
 		block_list = r12;
@@ -312,17 +312,17 @@ void unpack_list(uint32_t block_list)
    negative entry; the list format of queue_tile_pages. */
 void unpack_tile_pages(uint32_t page_list)
 {
-	uint32_t destination = 0, page_bits = 0, source = 0;
+	uint32_t destination = 0, entry_word = 0, page_bits = 0, source = 0;
 	uint32_t next_entry = 0;
 
 	while ((int32_t)mem_read32(page_list) >= 0)
 	{
 		page_bits = mem_read32(page_list);
-		r12 = page_bits;
+		entry_word = page_bits;
 		page_bits &= ~0xFFFFFFu;
 		destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
 		next_entry = page_list + 4u;
-		source = r12 ^ page_bits;
+		source = entry_word ^ page_bits;
 		r12 = next_entry;
 		unpack(source, destination);
 		page_list = r12;

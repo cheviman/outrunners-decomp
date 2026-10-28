@@ -130,8 +130,6 @@ void player_car_extend_course(void)
 			CAR(player_car)->heading_angle = 0u;
 			CAR(player_car)->course = course_place + 4u;
 			continue;
-		default:
-			invalid_jump(course_command_jumps[0u - run_length]);
 		}
 	}
 	CAR(player_car)->run_left = run_length;
@@ -217,8 +215,6 @@ void player_car_build_segment(uint16_t ring_mask)
 				CAR(player_car)->heading_angle = 0u;
 				CAR(player_car)->course = course_place + 4u;
 				continue;
-			default:
-				invalid_jump(course_command_jumps[0u - run_length]);
 			}
 		}
 		CAR(player_car)->run_left = run_length;
@@ -361,7 +357,7 @@ void player_car_project_road(void)
 	projection_pattern = segment_projection_pattern_ADDRESS;
 	for (;;)
 	{
-		ring_segment = ((ring_segment + 0x20u) & ~0xFFFFu) | ((ring_segment + 0x20u) & 0xAFFFu);
+		ring_segment = (ring_segment + 0x20u) & ~0x5000u;
 		projected = ROAD_PROJECTION_PATTERN(projection_pattern)[0];
 		projection_pattern++;
 		projected_segment += 0x10u;

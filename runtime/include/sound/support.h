@@ -62,6 +62,10 @@ extern const size_t sound_table_count;
 #define sound_rom_at(address) ((const void *)s32_sound_rom_at(address))
 
 /* A part of a variable or field read on its own: the variable's first bytes, or bytes further in */
+/* a pointer moved to another place of its 256-byte page: the low byte replaced (the MIDI queue's next
+   byte, a field of the page's sequence player) */
+#define IN_PAGE(pointer, low) ((uint16_t)(((pointer) & 0xFF00u) | (low)))
+
 #define AS8(variable)  (*(uint8_t *)&(variable))
 #define AS16(variable) (*(uint16_t *)&(variable))
 #define AT8(variable, offset)  (*(uint8_t *)((uint8_t *)&(variable) + (offset)))

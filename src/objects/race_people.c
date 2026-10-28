@@ -49,8 +49,6 @@ void race_car_occupant_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(race_car_occupant_state_jumps[OBJECT(current_object)->state]);
 	}
 	object = LINKED(screen, OBJECT(current_object)->race_car_occupant.car);
 	OBJECT(object)->race_car.spray_2_frame = 0u;
@@ -172,8 +170,6 @@ void rider_gesture_update(void)
 			return;
 		}
 		return;
-	default:
-		invalid_jump(rider_gesture_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -257,8 +253,6 @@ void race_opening_update(void)
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
-	default:
-		invalid_jump(race_opening_state_jumps[OBJECT(current_object)->state]);
 	}
 	switch (OBJECT(current_object)->race_opening.sound_step)
 	{
@@ -271,8 +265,6 @@ void race_opening_update(void)
 	case 2:
 		race_opening_sounds_done();
 		break;
-	default:
-		invalid_jump(race_opening_sound_step_jumps[OBJECT(current_object)->race_opening.sound_step]);
 	}
 	switch (OBJECT(current_object)->race_opening.camera_step)
 	{
@@ -290,8 +282,6 @@ void race_opening_update(void)
 		return;
 	case 2:
 		return;
-	default:
-		invalid_jump(race_opening_camera_step_jumps[OBJECT(current_object)->race_opening.camera_step]);
 	}
 }
 
@@ -389,8 +379,6 @@ void stage_end_sounds_update(void)
 		OBJECT(current_object)->flags_high = 0u;
 		request_sound(end_sound);
 		return;
-	default:
-		invalid_jump(stage_end_sounds_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -441,8 +429,6 @@ void fork_camera_update(void)
 		break;
 	case 3:
 		break;
-	default:
-		invalid_jump(fork_camera_state_jumps[OBJECT(current_object)->state]);
 	}
 	lift_step = OBJECT(current_object)->fork_camera.lift_step;
 	view_pitch_lift = CAR(player_car)->view_pitch_lift;
@@ -516,8 +502,6 @@ void race_car_start_ending(void)
 			return;
 		}
 		break;
-	default:
-		invalid_jump(race_car_ending_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -817,8 +801,6 @@ void goal_actor_run(void)
 			return;
 		case 5:
 			break;
-		default:
-			invalid_jump(goal_actor_command_jumps[command]);
 		}
 		OBJECT(current_object)->goal_actor.counter++;
 		step_value = (uint16_t)(GOAL_ACTOR_SCRIPT_WORDS(script_word)[0] + ((uint32_t)goal_actor_place_waits[SCREEN(screen)->places[SCREEN(screen)->player]] << 3));

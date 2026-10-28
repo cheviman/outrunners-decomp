@@ -151,7 +151,7 @@ void boot(void)
    register that starts at DEBDEB00, each byte entering its low byte, with eight more shifts after the
    last. Used for the EEPROM's settings (load_settings, eeprom_write_settings) and the program's
    signature (signature_checksum). */
-uint32_t crc16(uint32_t bytes, uint32_t byte_count)
+uint16_t crc16(uint32_t bytes, uint32_t byte_count)
 {
 	uint32_t carry = 0;
 	uint32_t bit_count = 0, crc = 0, polynomial = 0;
@@ -189,7 +189,7 @@ uint32_t crc16(uint32_t bytes, uint32_t byte_count)
 /* Returns the crc16 of the program's 48-byte signature text at 00010C (OUTRUNNERS EUROPA and its build
    date, 93.4.21), which the EEPROM keeps in settings_signature so that a new program is noticed
    (load_settings). */
-uint32_t signature_checksum(void)
+uint16_t signature_checksum(void)
 {
 	uint32_t signature_length = 0, signature_text = 0;
 
@@ -299,8 +299,6 @@ void second_task(uint32_t entry_point)
 					case 8:
 						game_mode_isdn_connection();
 						break;
-					default:
-						invalid_jump(game_mode_jumps[mode]);
 					}
 					run_objects();
 					lcd_update();
@@ -308,8 +306,6 @@ void second_task(uint32_t entry_point)
 				if (L_00077F)
 					break;
 				break;
-			default:
-				invalid_jump(jump_target);
 			}
 			if (L_00077F)
 				break;
@@ -361,8 +357,6 @@ void second_task(uint32_t entry_point)
 				case 8:
 					game_mode_isdn_connection();
 					break;
-				default:
-					invalid_jump(game_mode_jumps[mode]);
 				}
 				run_objects();
 				lcd_update();
@@ -435,7 +429,7 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 	uint32_t index = 0, play_mode = 0;
 	uint32_t seat_outputs = 0;
 
-	if (mode == 0u || (uint8_t)mode == 6u)
+	if (mode == 0u || mode == 6u)
 		return mode;
 	index = SCREEN(screen)->index;
 	if (free_play != 0u)

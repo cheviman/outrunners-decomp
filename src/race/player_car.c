@@ -38,8 +38,8 @@ void player_car_update(void)
 	bool L_0071FB = false, L_007E41 = false, L_007F31 = false;
 	uint32_t overflow = 0;
 	uint8_t crash_hit_sound = 0, dj_message = 0, frame_time = 0, landing_sound = 0, tyre_noise = 0;
-	uint16_t grid_segment = 0;
-	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, crash_entry = 0, crash_sound = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, gravity = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_object = 0, hit_side = 0, ignored = 0, impact = 0, model = 0, new_bounce_speed = 0, new_height = 0, object = 0, old_height = 0, other_record = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0, view_height_offset = 0;
+	uint16_t grid_segment = 0, view_height_offset = 0;
+	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, crash_entry = 0, crash_sound = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, gravity = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_object = 0, hit_side = 0, ignored = 0, impact = 0, model = 0, new_bounce_speed = 0, new_height = 0, object = 0, old_height = 0, other_record = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0;
 	uint8_t hit_guard = 0, crash_sound_delay = 0;
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
 	uint32_t jump_target = 0, stage_count_place = 0;
@@ -180,7 +180,7 @@ void player_car_update(void)
 								impact = (impact >> 7) + crash_place_offsets[SCREEN(screen)->places[SCREEN(screen)->player]];
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
-								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
+								crash_entry += impact & ~0xFE0Fu;
 								OBJECT(current_object)->player_car.speed_change = (int32_t)(speed_loss * CRASH_ENTRY(crash_entry)->speed_factor) >> 8;
 								hit_side = (uint16_t)CAR(player_car)->road_x;
 								hit_side = hit_side >> 15;
@@ -212,8 +212,6 @@ void player_car_update(void)
 								other_weight = car_weights[RACE(other_record)->model];
 								L_007E41 = true;
 								break;
-							default:
-								invalid_jump(player_car_hit_kind_jumps[OBJECT(current_object)->player_car.hit_kind]);
 							}
 							if (L_007E41)
 							{
@@ -227,7 +225,7 @@ void player_car_update(void)
 								impact = divide_s32((impact >> 8) * other_weight, own_weight) + crash_place_offsets[SCREEN(screen)->places[SCREEN(screen)->player]];
 								if (impact >= 0x1F0u)
 									impact = 0x1F0u;
-								crash_entry += (impact & ~0xFFFFu) | (impact & 0x1F0u);
+								crash_entry += impact & ~0xFE0Fu;
 								OBJECT(current_object)->player_car.speed_change = (int32_t)(((int32_t)(speed_difference * CRASH_ENTRY(crash_entry)->car_speed_factor) >> 8) * other_weight) >> 8;
 								side_gap = side_gap - other_x + ((other_slide - own_slide) << 1);
 								hit_side = (0u - side_gap) >> 31;
@@ -411,8 +409,6 @@ void player_car_update(void)
 							return;
 						case 3:
 							break;
-						default:
-							invalid_jump(player_car_time_up_step_jumps[OBJECT(current_object)->player_car.step]);
 						}
 						player_car_move();
 						model = CAR(player_car)->model;
@@ -550,15 +546,11 @@ void player_car_update(void)
 					player_car_engine_sound();
 					ignored = animation_advance(0u);
 					return;
-				default:
-					invalid_jump(player_car_goal_step_jumps[OBJECT(current_object)->player_car.step]);
 				}
 				break;
 			case 0x007F31u:
 				L_007F31 = true;
 				break;
-			default:
-				invalid_jump(jump_target);
 			}
 		} while (L_0071FB);
 	} while (L_007F31);
@@ -892,7 +884,7 @@ void player_car_place_on_road(void)
 	road_x = (uint16_t)CAR(player_car)->road_x;
 	segment_length = 0x80u;
 	segment_fraction = CAR(player_car)->segment_fraction;
-	r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
+	r12 = (segment_record + 0x20u) & ~0x5000u;
 	player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
 	player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
 }
@@ -920,7 +912,8 @@ void player_car_clear_hit(void)
 void player_car_animate(void)
 {
 	uint8_t frame_time = 0, slide = 0;
-	uint32_t ignored = 0, model_then_animation = 0, view_height = 0;
+	uint16_t view_height = 0;
+	uint32_t ignored = 0, model_then_animation = 0;
 
 	model_then_animation = CAR(player_car)->model;
 	if ((OBJECT(current_object)->flags & 4u) != 0u)
@@ -982,8 +975,7 @@ void player_car_animate(void)
 void player_car_steer_frame(uint32_t model)
 {
 	uint8_t steer_frame = 0, target_frame = 0;
-	uint16_t animation = 0;
-	uint32_t view_height = 0;
+	uint16_t animation = 0, view_height = 0;
 
 	animation = player_car_steer_animations[model];
 	view_height = player_car_view_height();
@@ -1007,10 +999,9 @@ void player_car_steer_frame(uint32_t model)
 /* The row of the car's animations for how steeply the view looks down on it: the view's pitch (car
    view_pitch) less B0 and less the road's pitch under the car (race_copy segment_pitch), in steps of 30,
    0 to 5 (view_height). */
-uint32_t player_car_view_height(void)
+uint16_t player_car_view_height(void)
 {
-	uint16_t highest = 0, tilt = 0;
-	uint32_t view_height = 0;
+	uint16_t highest = 0, tilt = 0, view_height = 0;
 	uint16_t pitch_over_road = 0;
 
 	view_height = 0u;
@@ -1021,9 +1012,9 @@ uint32_t player_car_view_height(void)
 	{
 		view_height = tilt / 0x300u;
 		if (highest <= view_height)
-			view_height = highest;
+			view_height = (uint16_t)highest;
 	}
-	OBJECT(current_object)->player_car.view_height = view_height;
+	OBJECT(current_object)->player_car.view_height = (uint8_t)view_height;
 	return view_height;
 }
 
@@ -1110,8 +1101,6 @@ void player_car_move_view(void)
 			case 0x007AFAu:
 				L_007AFA = true;
 				break;
-			default:
-				invalid_jump(jump_target);
 			}
 		} while (L_007AD1);
 	} while (L_007AFA);
@@ -1387,8 +1376,6 @@ void rival_warning_update(void)
 			OBJECT(current_object)->rival_warning.frames = 0xCu;
 		}
 		return;
-	default:
-		invalid_jump(rival_warning_state_jumps[OBJECT(current_object)->state]);
 	}
 	on_frames = OBJECT(current_object)->rival_warning.frames;
 	OBJECT(current_object)->rival_warning.frames = on_frames - 1u;
@@ -1442,8 +1429,6 @@ void rival_alarm_update(void)
 			OBJECT(current_object)->flags_high = 0u;
 		}
 		return;
-	default:
-		invalid_jump(rival_alarm_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 

@@ -137,8 +137,6 @@ void title_screen_update(void)
 		} while (objects_left != 0u);
 		OBJECT(current_object)->title_screen.wave_times += 2u;
 		return;
-	default:
-		invalid_jump(title_screen_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -192,8 +190,6 @@ void title_car_drive(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(title_car_state_jumps[state]);
 	}
 	OBJECT(current_object)->title_car.position += OBJECT(current_object)->title_car.speed;
 	if (OBJECT(current_object)->title_car.position >= 0x1000)
@@ -236,8 +232,6 @@ void title_car_driver_update(void)
 	case 1:
 		title_rider_draw();
 		return;
-	default:
-		invalid_jump(title_car_driver_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -256,8 +250,6 @@ void title_car_passenger_update(void)
 	case 1:
 		title_rider_draw();
 		return;
-	default:
-		invalid_jump(title_car_passenger_state_jumps[OBJECT(current_object)->state]);
 	}
 	model = OBJECT(current_object)->title_car_passenger.model;
 	OBJECT(current_object)->palette = title_passenger_palettes[model];
@@ -347,8 +339,6 @@ void title_palm_tree_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(title_palm_tree_state_jumps[state]);
 	}
 	if ((int16_t)OBJECT(current_object)->x <= -0x30)
 	{
@@ -419,8 +409,6 @@ void title_logo_update(void)
 		animation_advance(0u);
 		object_index = draw_object(object_index);
 		return;
-	default:
-		invalid_jump(title_logo_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo.frames;
 	OBJECT(current_object)->title_logo.frames = frames_2 - 1u;
@@ -496,8 +484,6 @@ void title_logo_copy_update(void)
 		OBJECT(current_object)->title_logo_copy.palette_list = palette_list + 2u;
 		state_routine = draw_object(state_routine);
 		return;
-	default:
-		invalid_jump(title_logo_copy_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo_copy.frames;
 	OBJECT(current_object)->title_logo_copy.frames = frames_2 - 1u;
@@ -590,8 +576,6 @@ void title_logo_car_update(void)
 		SCREEN(screen)->title_logo_shine = 0u;
 		OBJECT(current_object)->flags = 0u;
 		return;
-	default:
-		invalid_jump(title_logo_car_state_jumps[state]);
 	}
 }
 
@@ -637,8 +621,6 @@ void title_logo_stripe_update(void)
 		animation_advance(0u);
 		place_offset = draw_object(place_offset);
 		return;
-	default:
-		invalid_jump(title_logo_stripe_state_jumps[state]);
 	}
 	frames_2 = OBJECT(current_object)->title_logo_stripe.frames;
 	OBJECT(current_object)->title_logo_stripe.frames = frames_2 - 1u;
@@ -705,8 +687,6 @@ void title_board_palms_update(void)
 		animation_advance(0u);
 		state_routine = draw_object(state_routine);
 		return;
-	default:
-		invalid_jump(title_board_palms_state_jumps[state]);
 	}
 	frames = OBJECT(current_object)->title_board_palms.frames;
 	OBJECT(current_object)->title_board_palms.frames = frames - 1u;
@@ -811,8 +791,6 @@ void title_seagull_fly(void)
 		animation_advance(0u);
 		x_angle = draw_object(x_angle);
 		return;
-	default:
-		invalid_jump(title_seagull_state_jumps[state]);
 	}
 }
 
@@ -833,8 +811,6 @@ void title_picture_draw(void)
 		return;
 	case 0:
 		break;
-	default:
-		invalid_jump(title_picture_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	picture_offset = (uint32_t)OBJECT(current_object)->title_picture.index << 4;

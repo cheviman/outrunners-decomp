@@ -170,7 +170,7 @@ uint32_t player_car_write_hit_box(uint16_t segment, uint32_t model, uint32_t hit
 	CAR_HIT_BOX(hit_box - 0x6u)->first_segment = segment;
 	hit_box += 2u;
 	CAR_HIT_BOX(hit_box - 0x8u)->last_segment = segment + 4u;
-	box_size = car_hit_box_sizes_ADDRESS + ((model & ~0xFFu) | (uint8_t)(model * 2u)) * 4u;
+	box_size = car_hit_box_sizes_ADDRESS + (uint8_t)(model * 2u) * 4u;
 	along_start = ITEM_HIT_BOX(box_size)->along_start;
 	box_size += 2u;
 	hit_box += 2u;
@@ -456,38 +456,38 @@ void player_car_check_car_hits(void)
 	car_across_start = CAR_HIT_BOX(car_hit_box - 0xEu)->across_start;
 	car_across_end = CAR_HIT_BOX(car_hit_box - 0xEu)->across_end;
 	boxes_left = SCREEN(r14 - 0x510u)->hit_box_count;
-	r14 = r14 + 4u;
+	r14 += 4u;
 	if ((uint8_t)boxes_left < 2u)
 		return;
 	for (;;)
 	{
 		other_player = CAR_HIT_BOX(r14)->player;
-		r14 = r14 + 2u;
+		r14 += 2u;
 		if (own_player == other_player)
 		{
-			r14 = r14 + 0x10u;
+			r14 += 0x10u;
 			boxes_left--;
 			if (boxes_left == 0u)
 				return;
 			continue;
 		}
 		other_record = CAR_HIT_BOX(r14 - 0x2u)->record;
-		r14 = r14 + 4u;
+		r14 += 4u;
 		if ((RACE(other_record)->car_flags & 8u) != 0u)
 		{
-			r14 = r14 + 0xCu;
+			r14 += 0xCu;
 			boxes_left--;
 			if (boxes_left == 0u)
 				return;
 			continue;
 		}
 		other_along_start = CAR_HIT_BOX(r14 - 0x6u)->first_segment;
-		r14 = r14 + 2u;
+		r14 += 2u;
 		segment_gap = (uint16_t)(r12 - CAR_HIT_BOX(r14 - 0x8u)->last_segment);
-		r14 = r14 + 2u;
+		r14 += 2u;
 		if ((int16_t)((car_last_segment - other_along_start) ^ segment_gap) >= 0)
 		{
-			r14 = r14 + 8u;
+			r14 += 8u;
 			boxes_left--;
 			if (boxes_left == 0u)
 				break;
@@ -496,13 +496,13 @@ void player_car_check_car_hits(void)
 		other_along_start = (uint16_t)((other_along_start - r12) << 7);
 		other_along_end = (uint16_t)other_along_start;
 		other_along_start += CAR_HIT_BOX(r14 - 0xAu)->along_start;
-		r14 = r14 + 2u;
+		r14 += 2u;
 		other_along_end += CAR_HIT_BOX(r14 - 0xCu)->along_end;
-		r14 = r14 + 2u;
+		r14 += 2u;
 		other_across = CAR_HIT_BOX(r14 - 0xEu)->across_start;
-		r14 = r14 + 2u;
+		r14 += 2u;
 		other_across = (uint16_t)((other_across - car_across_end) ^ (CAR_HIT_BOX(r14 - 0x10u)->across_end - car_across_start));
-		r14 = r14 + 2u;
+		r14 += 2u;
 		if ((int16_t)(other_across & ((other_along_start - car_along_end) ^ (other_along_end - car_along_start))) < 0)
 		{
 			object = CAR(player_car)->object;

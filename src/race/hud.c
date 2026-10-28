@@ -28,8 +28,6 @@ void rev_meter_update(void)
 		OBJECT(current_object)->frame = CAR(player_car)->revs >> 11;
 		state_code = draw_object(state_code);
 		return;
-	default:
-		invalid_jump(rev_meter_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
 	animation = REV_METER;
@@ -93,8 +91,6 @@ void speedometer_update(void)
 			OBJECT(current_object)->x -= 8u;
 		} while ((uint16_t)speed_kmh != 0u);
 		return;
-	default:
-		invalid_jump(speedometer_state_jumps[state]);
 	}
 }
 
@@ -113,8 +109,6 @@ void speed_unit_update(void)
 	case 1:
 		state_code = draw_object(state_code);
 		return;
-	default:
-		invalid_jump(speed_unit_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
 	animation = SPEED_UNIT_KMH;
@@ -207,8 +201,6 @@ void gear_indicator_update(void)
 	case 2:
 		state_code = draw_object(state_code);
 		return;
-	default:
-		invalid_jump(gear_indicator_state_jumps[state]);
 	}
 }
 
@@ -251,8 +243,6 @@ void shift_up_hint_update(void)
 			return;
 		blink = draw_object(blink);
 		return;
-	default:
-		invalid_jump(shift_up_hint_state_jumps[state]);
 	}
 }
 
@@ -283,8 +273,6 @@ void place_count_update(void)
 		}
 		initial_place = draw_object(initial_place);
 		return;
-	default:
-		invalid_jump(place_count_state_jumps[state]);
 	}
 	count_frame = (place & ~0xFFu) | RACE(SCREEN(screen)->host_record)->racer_count;
 	racer_count = count_frame;
@@ -384,8 +372,6 @@ void place_number_update(void)
 	case 5:
 		new_palette = draw_object(new_palette);
 		return;
-	default:
-		invalid_jump(place_number_state_jumps[state]);
 	}
 	blink_timer = OBJECT(current_object)->place_number.blink_timer;
 	OBJECT(current_object)->place_number.blink_timer = blink_timer - 1u;
@@ -517,8 +503,6 @@ void lap_timer_update(void)
 			draw_text(text);
 			checkpoint_signal = draw_object(checkpoint_signal);
 			return;
-		default:
-			invalid_jump(jump_target);
 		}
 	} while (L_00C4B3);
 }
@@ -619,8 +603,6 @@ void start_message_update(void)
 		}
 		dj_message = draw_object(dj_message);
 		return;
-	default:
-		invalid_jump(start_message_state_jumps[state]);
 	}
 	if (OBJECT(CAR(player_car)->object)->player_car.timer != 0u)
 	{
@@ -693,8 +675,6 @@ void time_left_display_update(void)
 		shown_time = binary_to_bcd(shown_time);
 		time_digits_draw(shown_time);
 		return;
-	default:
-		invalid_jump(time_left_display_state_jumps[OBJECT(current_object)->state]);
 	}
 	shown_time = CAR(player_car)->time_left;
 	if (shown_time == 0u)
@@ -967,8 +947,6 @@ void stage_entry_update(void)
 	{
 	case 0:
 		break;
-	default:
-		invalid_jump(stage_entry_state_jumps[OBJECT(current_object)->state]);
 	}
 	if ((SCREEN(screen)->demo_flags & 0x100u) != 0u)
 	{
@@ -1086,8 +1064,6 @@ void goal_update(void)
 		}
 		OBJECT(current_object)->flags = 0u;
 		return;
-	default:
-		invalid_jump(goal_state_jumps[state]);
 	}
 	show_timer = OBJECT(current_object)->goal.timer;
 	OBJECT(current_object)->goal.timer = show_timer - 1u;
@@ -1280,8 +1256,6 @@ void branch_arrow_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(branch_arrow_state_jumps[OBJECT(current_object)->state]);
 	}
 	new_y = (uint16_t)(OBJECT(current_object)->y + 3u);
 	if ((int16_t)new_y > 0x140)
@@ -1361,8 +1335,6 @@ void checkpoint_board_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(checkpoint_board_state_jumps[OBJECT(current_object)->state]);
 	}
 	checkpoint = OBJECT(current_object)->checkpoint_board.checkpoint;
 	OBJECT(current_object)->checkpoint_board.row = 0u;
@@ -1490,8 +1462,6 @@ void checkpoint_board_update(void)
 					break;
 				case 0x00CD55u:
 					break;
-				default:
-					invalid_jump(jump_target);
 				}
 			} while (L_00CCFC);
 		} while (L_00CCFC);
@@ -1529,7 +1499,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	row_x = (uint16_t)(CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player]);
 	OBJECT(current_object)->x = row_x;
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
-	animation = checkpoint_board_number_animations[mem_read8(car_numbers_ADDRESS + player)];
+	animation = checkpoint_board_number_animations[car_numbers[player]];
 	OBJECT(current_object)->palette = 0x27u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 8u;

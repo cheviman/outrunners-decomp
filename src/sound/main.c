@@ -158,14 +158,13 @@ void drum_timeout_tick(void)
    register 27 = 15: timer A loaded and its interrupt on. */
 void sound_init(void)
 {
-	uint8_t fm_register = 0, leftover_c = 0, unused_c = 0, value = 0;
+	uint8_t fm_register = 0, value = 0;
 	uint16_t last_register = 0;
 
 	z80_block(17, 1);
 	init_pcm_chip();
 	z80_block(17, 1);
 	last_register = init_fm_chip();
-	leftover_c = (uint8_t)last_register;
 	z80_block(172, 15);
 	screen_1_midi_write = 0u;
 	screen_1_midi_read = 0xFFu;
@@ -175,8 +174,7 @@ void sound_init(void)
 	AS16(drum_timeout_wait) = 0x8Cu;
 	screen_1_music_volume = 0xFFu;
 	screen_2_music_volume = 0xFFu;
-	unused_c = leftover_c;
-	init_voice_channels(unused_c);
+	init_voice_channels(last_register);
 	z80_block(17, 1);
 	init_parts();
 	z80_block(31, 3);

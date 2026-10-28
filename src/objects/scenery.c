@@ -47,8 +47,6 @@ void road_object_stream_read(void)
 		OBJECT(current_object)->state -= 2u;
 		OBJECT(current_object)->road_object_stream.stream = DATA32(OBJECT(current_object)->road_object_stream.stream + CAR(player_car)->branch * 4u);
 		break;
-	default:
-		invalid_jump(road_object_stream_state_jumps[OBJECT(current_object)->state]);
 	}
 	entry = OBJECT(current_object)->road_object_stream.stream;
 	for (;;)
@@ -74,8 +72,6 @@ void road_object_stream_read(void)
 		case 0x012786u:
 			left_caller = road_object_stream_fork(entry);
 			break;
-		default:
-			invalid_jump(command_routine);
 		}
 		if (left_caller != 0u)
 			return;
@@ -160,8 +156,6 @@ void crest_clip_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(crest_clip_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (SCREEN(screen)->crest_count == 0u)
 		return;
@@ -201,8 +195,6 @@ void scenery_update(void)
 	case 2:
 		road_row_draw(0u, 0u);
 		return;
-	default:
-		invalid_jump(scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -322,8 +314,6 @@ void flashing_scenery_update(void)
 		OBJECT(current_object)->flashing_scenery.palette_cycle = palettes;
 		road_row_draw(along_distance, next_hit_box);
 		return;
-	default:
-		invalid_jump(flashing_scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -344,8 +334,6 @@ void scenery_pair_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(scenery_pair_state_jumps[OBJECT(current_object)->state]);
 	}
 	road_row_pair_draw(along_distance, next_hit_box);
 }
@@ -369,8 +357,6 @@ void overhead_scenery_update(void)
 		animation_order = animation_advance(0u);
 		road_row_draw(animation_order, 0u);
 		return;
-	default:
-		invalid_jump(overhead_scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -430,8 +416,6 @@ void aurora_update(void)
 		return;
 	case 2:
 		break;
-	default:
-		invalid_jump(aurora_state_jumps[state]);
 	}
 	aurora_count_down();
 	countdown = (uint16_t)((routine & ~0xFFu) | OBJECT(current_object)->aurora.countdown);
@@ -497,8 +481,6 @@ void fork_sign_update(void)
 		fork_sign_hit_check(&along_distance, &next_hit_box);
 		road_row_draw(along_distance, next_hit_box);
 		return;
-	default:
-		invalid_jump(fork_sign_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -518,8 +500,6 @@ void animated_scenery_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(animated_scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 	along_distance = animation_advance(along_distance);
 	road_row_draw(along_distance, next_hit_box);
@@ -581,8 +561,6 @@ void animated_scenery_pair_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(animated_scenery_pair_state_jumps[OBJECT(current_object)->state]);
 	}
 	along_distance = animation_advance(along_distance);
 	road_row_pair_draw(along_distance, next_hit_box);
@@ -704,8 +682,6 @@ void road_crosser_update(void)
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
-	default:
-		invalid_jump(road_crosser_state_jumps[state]);
 	}
 }
 
@@ -880,8 +856,6 @@ void kangaroo_update(void)
 			return;
 		}
 		return;
-	default:
-		invalid_jump(kangaroo_state_jumps[state]);
 	}
 }
 
@@ -973,8 +947,6 @@ void moving_scenery_update(void)
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
-	default:
-		invalid_jump(moving_scenery_state_jumps[state]);
 	}
 }
 
@@ -1102,8 +1074,6 @@ void swooping_helicopter_update(void)
 		OBJECT(current_object)->flags = 0u;
 		OBJECT(current_object)->flags_high = 0u;
 		return;
-	default:
-		invalid_jump(swooping_helicopter_state_jumps[state]);
 	}
 }
 
@@ -1172,8 +1142,6 @@ void start_gate_update(void)
 	case 3:
 		seconds_left = draw_object(seconds_left);
 		return;
-	default:
-		invalid_jump(start_gate_state_jumps[state]);
 	}
 }
 
@@ -1237,8 +1205,6 @@ void start_flagman_update(void)
 		animation_advance(0u);
 		draw_object(frames_to_start);
 		return;
-	default:
-		invalid_jump(start_flagman_state_jumps[state]);
 	}
 }
 
@@ -1305,8 +1271,6 @@ void flagman_update(void)
 		animation_advance(0u);
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(flagman_state_jumps[state]);
 	}
 }
 
@@ -1367,8 +1331,6 @@ void start_balloon_update(void)
 		OBJECT(current_object)->x_offset += 8u;
 		rise_speed = draw_object(rise_speed);
 		return;
-	default:
-		invalid_jump(start_balloon_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1396,8 +1358,6 @@ void ambient_sound_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(ambient_sound_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (OBJECT(current_object)->ambient_sound.end_position <= (int16_t)CAR(player_car)->segment)
 	{
@@ -1502,8 +1462,6 @@ void west_east_panel_update(void)
 		OBJECT(current_object)->palette = palette;
 		palette = draw_object(palette);
 		return;
-	default:
-		invalid_jump(west_east_panel_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1613,8 +1571,6 @@ void santa_sleigh_update(void)
 		}
 		sound = draw_object(sound);
 		return;
-	default:
-		invalid_jump(santa_sleigh_state_jumps[state]);
 	}
 }
 
@@ -1712,8 +1668,6 @@ void goal_parade_rightward_update(void)
 		}
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(goal_parade_rightward_state_jumps[state]);
 	}
 }
 
@@ -1781,8 +1735,6 @@ void sounding_scenery_update(void)
 		animation_order = animation_advance(0u);
 		road_row_draw(animation_order, 0u);
 		return;
-	default:
-		invalid_jump(sounding_scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1877,8 +1829,6 @@ void goal_parade_leftward_update(void)
 		}
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(goal_parade_leftward_state_jumps[state]);
 	}
 }
 
@@ -2030,8 +1980,6 @@ void goal_parade_dragon_update(void)
 		animation_advance(0u);
 		sound = draw_object(sound);
 		return;
-	default:
-		invalid_jump(goal_parade_dragon_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -2076,8 +2024,6 @@ void fork_branch_draw(void)
 		return;
 	case 1:
 		break;
-	default:
-		invalid_jump(fork_branch_state_jumps[OBJECT(current_object)->state]);
 	}
 	window_segment = RACE(SCREEN(screen)->race_copy)->window_segment;
 	start_position = (uint16_t)OBJECT(current_object)->fork_branch.start_position;

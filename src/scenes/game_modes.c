@@ -65,8 +65,6 @@ void game_mode_title(void)
 		if ((SCREEN(screen)->flags & 1u) == 0u)
 			AS32(SCREEN(screen)->game_mode) = 3u;
 		return;
-	default:
-		invalid_jump(title_step_jumps[SCREEN(screen)->mode_step]);
 	}
 }
 
@@ -125,8 +123,6 @@ void game_mode_car_presentation(void)
 			AS32(SCREEN(screen)->game_mode) = 4u;
 		}
 		return;
-	default:
-		invalid_jump(car_presentation_step_jumps[SCREEN(screen)->mode_step]);
 	}
 	clear_objects();
 	reset_tile_layers();
@@ -170,8 +166,6 @@ void game_mode_demo_race(void)
 	case 4:
 		left_caller = demo_race_end(left_caller);
 		break;
-	default:
-		invalid_jump(demo_race_step_jumps[SCREEN(screen)->mode_step]);
 	}
 	if (left_caller != 0u)
 		return;
@@ -283,8 +277,6 @@ void game_mode_ranking(void)
 		if ((SCREEN(screen)->flags & 1u) == 0u)
 			AS32(SCREEN(screen)->game_mode) = 1u;
 		return;
-	default:
-		invalid_jump(ranking_step_jumps[SCREEN(screen)->mode_step]);
 	}
 	SCREEN(screen)->demo_flags &= ~0x100u;
 	wheel_motor[SCREEN(screen)->index] = 0u;
@@ -677,8 +669,6 @@ void game_mode_play(void)
 	case 28:
 		AS32(SCREEN(screen)->game_mode) = 5u;
 		return;
-	default:
-		invalid_jump(game_step_jumps[SCREEN(screen)->game_step]);
 	}
 }
 

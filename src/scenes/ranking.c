@@ -30,20 +30,20 @@ void load_course_records(void)
 		{
 			COURSE_RECORD_COPY(r12)->model = BACKUP_COURSE_RECORD(backup_record)->model;
 			model_place = r12;
-			r12 = r12 + 1u;
+			r12++;
 			COURSE_RECORD_COPY(model_place)->model &= 7u;
 			backup_record++;
 			COURSE_RECORD_COPY(r12 - 0x1u)->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
-			r12 = r12 + 1u;
+			r12++;
 			backup_record++;
 			COURSE_RECORD_COPY(r12 - 0x2u)->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
-			r12 = r12 + 1u;
+			r12++;
 			backup_record++;
 			COURSE_RECORD_COPY(r12 - 0x3u)->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
-			r12 = r12 + 1u;
+			r12++;
 			backup_record++;
 			COURSE_RECORD_COPY(r12 - 0x4u)->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
-			r12 = r12 + 2u;
+			r12 += 2u;
 			course_record += 6u;
 			courses_left--;
 			backup_record += 2u;
@@ -52,10 +52,10 @@ void load_course_records(void)
 			continue;
 		}
 		COURSE_RECORD_COPY(r12)->model_and_name = COURSE_RECORD(course_record)->model_and_name;
-		r12 = r12 + 4u;
+		r12 += 4u;
 		course_record += 4u;
 		COURSE_RECORD_COPY(r12 - 0x4u)->time = COURSE_RECORD(course_record - 0x4u)->time;
-		r12 = r12 + 2u;
+		r12 += 2u;
 		backup_record += 6u;
 		courses_left--;
 		course_record += 2u;
@@ -127,8 +127,6 @@ void ranking_update(void)
 		SCREEN(screen)->record_course = next_course;
 		OBJECT(current_object)->state--;
 		return;
-	default:
-		invalid_jump(ranking_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -226,8 +224,6 @@ void ranking_background_update(void)
 			return;
 		case 4:
 			break;
-		default:
-			invalid_jump(ranking_background_state_jumps[OBJECT(current_object)->state]);
 		}
 	}
 	scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
@@ -260,8 +256,6 @@ void ranking_title_left_update(void)
 	case 2:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(ranking_title_left_state_jumps[state]);
 	}
 	routine = draw_object(routine);
 }
@@ -292,8 +286,6 @@ void ranking_title_right_update(void)
 	case 2:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(ranking_title_right_state_jumps[state]);
 	}
 	routine = draw_object(routine);
 }
@@ -325,8 +317,6 @@ void ranking_course_banner_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(ranking_course_banner_state_jumps[state]);
 	}
 	frames_left = OBJECT(current_object)->ranking_course_banner.frames_left;
 	OBJECT(current_object)->ranking_course_banner.frames_left = frames_left - 1u;
@@ -479,8 +469,6 @@ void ranking_record_character_update(void)
 		}
 		OBJECT(current_object)->flags = 0u;
 		return;
-	default:
-		invalid_jump(ranking_record_character_state_jumps[state]);
 	}
 	frames_left = OBJECT(current_object)->ranking_record_character.frames_left;
 	OBJECT(current_object)->ranking_record_character.frames_left = frames_left - 1u;
@@ -600,8 +588,6 @@ void ranking_record_car_update(void)
 	case 5:
 		car_model = draw_object(car_model);
 		return;
-	default:
-		invalid_jump(ranking_record_car_state_jumps[state]);
 	}
 }
 
@@ -651,8 +637,6 @@ void passing_traffic_update(void)
 		if (wait == 1u)
 			OBJECT(current_object)->state--;
 		return;
-	default:
-		invalid_jump(passing_traffic_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -765,8 +749,6 @@ void passing_car_update(void)
 		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 		mirrored_x = draw_object(mirrored_x);
 		return;
-	default:
-		invalid_jump(passing_car_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -844,10 +826,10 @@ void ranking_background_load(void)
 	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.scroll_y_address)[0] = 0x60u;
 	mixer_place = ranking_mixer_addresses[index];
 	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
-	mixer_priority = (mixer_priority & ~0xFFFFu) | (mixer_priority & 0xFFF0u);
-	MIXER_VALUE_PAIRS(mixer_place)[0] = (mixer_priority & ~0xFFu) | (uint8_t)(mixer_priority | 1u);
+	mixer_priority = mixer_priority & ~0xFu;
+	MIXER_VALUE_PAIRS(mixer_place)[0] = mixer_priority | 1u;
 	mixer_place += 4u;
 	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
-	MIXER_VALUE_PAIRS(mixer_place)[0] = (mixer_priority & ~0xFFFFu) | (mixer_priority & 0xFFF0u);
+	MIXER_VALUE_PAIRS(mixer_place)[0] = mixer_priority & ~0xFu;
 	SCREEN(screen)->flags |= 4u;
 }

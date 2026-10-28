@@ -314,8 +314,6 @@ void name_entry_update(void)
 									if (L_0020FB)
 										break;
 									break;
-								default:
-									invalid_jump(jump_target_2);
 								}
 								if (L_002133)
 									break;
@@ -352,8 +350,6 @@ void name_entry_update(void)
 			case 0x00209Du:
 				L_00209D = true;
 				break;
-			default:
-				invalid_jump(jump_target);
 			}
 		} while (L_00209D);
 		OBJECT(current_object)->name_entry.open = 0u;
@@ -417,8 +413,6 @@ void name_entry_update(void)
 		return;
 	case 4:
 		break;
-	default:
-		invalid_jump(name_entry_state_jumps[OBJECT(current_object)->state]);
 	}
 	text_record = current_object + 0xA4u;
 	draw_text(text_record);
@@ -476,8 +470,6 @@ void name_entry_letter_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(name_entry_letter_state_jumps[OBJECT(current_object)->state]);
 	}
 	letter_angle = OBJECT(current_object)->name_entry_letter.angle;
 	letter_angle = (uint16_t)(letter_angle - OBJECT(object)->name_entry.wheel_angle);
@@ -553,8 +545,6 @@ void name_entry_lcd_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(name_entry_lcd_state_jumps[OBJECT(current_object)->state]);
 	}
 	object = OBJECT(current_object)->name_entry_lcd.name_entry;
 	name_place = object + 0xA0u;
@@ -605,8 +595,6 @@ void name_entry_car_update(void)
 	case 1:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(name_entry_car_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
 	OBJECT(current_object)->draw_mode = 0xAu;
@@ -639,8 +627,6 @@ void name_entry_drivers_update(void)
 	case 1:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(name_entry_drivers_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
 	OBJECT(current_object)->draw_mode = 0xAu;
@@ -672,8 +658,6 @@ void name_entry_course_name_update(void)
 	case 1:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(name_entry_course_name_state_jumps[state]);
 	}
 	OBJECT(current_object)->state++;
 	course_number = SCREEN(screen)->built_stage;

@@ -94,7 +94,7 @@ void car_select_run(void)
 			LINE_SELECTS(first_rowselect)[0] = row_number;
 			LINE_SELECTS(second_rowselect)[0] = row_number;
 			LINE_SELECTS(r12)[0] = row_number;
-			r12 = r12 + 2u;
+			r12 += 2u;
 			LINE_SELECTS(fourth_rowselect)[0] = row_number;
 			fourth_rowselect += 2u;
 			row_number++;
@@ -431,8 +431,6 @@ void car_select_run(void)
 		car_select_turn_to_choice();
 		car_select_update_rowscroll();
 		return;
-	default:
-		invalid_jump(car_select_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -495,8 +493,6 @@ void car_select_turn_to_choice(void)
 		return;
 	case 2:
 		return;
-	default:
-		invalid_jump(car_select_choice_turn_jumps[OBJECT(current_object)->car_select.choice_turn]);
 	}
 }
 
@@ -522,7 +518,7 @@ void car_select_update_rowscroll(void)
 	{
 		LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
 		LINE_SCROLL_VALUES(r12)[0] = line_scroll;
-		r12 = r12 + 2u;
+		r12 += 2u;
 		lines_left--;
 		near_scroll_place += 2u;
 	} while (lines_left != 0u);
@@ -539,7 +535,7 @@ void car_select_update_rowscroll(void)
 			LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
 			near_scroll_place += 2u;
 			LINE_SCROLL_VALUES(r12)[0] = line_scroll;
-			r12 = r12 + 2u;
+			r12 += 2u;
 			lines_left--;
 			line_offsets += 2u;
 		} while (lines_left != 0u);
@@ -550,8 +546,6 @@ void car_select_update_rowscroll(void)
 		return;
 	case 0:
 		break;
-	default:
-		invalid_jump(car_select_rowscroll_copies_jumps[OBJECT(current_object)->car_select.rowscroll_copies]);
 	}
 }
 
@@ -602,7 +596,7 @@ void car_select_skew_floor(uint16_t skew_step)
 		LINE_SCROLL_VALUES(near_scroll_place)[0] = shift_by(near_offset, (uint8_t)fraction_shift, 16);
 		near_scroll_place += 2u;
 		LINE_SCROLL_VALUES(r12)[0] = shift_by(far_offset, (uint8_t)fraction_shift, 16);
-		r12 = r12 + 2u;
+		r12 += 2u;
 		lines_left--;
 		line_offsets += 2u;
 	} while (lines_left != 0u);
@@ -747,8 +741,6 @@ void car_attendant_run(void)
 		turntable_draw(across, down, point_depth);
 		ignored = animation_advance(0u);
 		return;
-	default:
-		invalid_jump(car_attendant_state_jumps[OBJECT(current_object)->state]);
 	}
 	attendant_angle = (uint16_t)OBJECT(current_object)->car_attendant.side_offset;
 	target_side = (uint16_t)((uint32_t)CAR(player_car)->transmission << 7);
@@ -866,8 +858,6 @@ void turntable_car_show(void)
 	case 2:
 		routine = draw_object(routine);
 		return;
-	default:
-		invalid_jump(turntable_car_state_jumps[state]);
 	}
 	car_angle = OBJECT(current_object)->turntable_car.car;
 	car_angle = (uint16_t)(car_angle << 9);
@@ -919,8 +909,6 @@ void turntable_scenery_show(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(turntable_scenery_state_jumps[OBJECT(current_object)->state]);
 	}
 	item_place = OBJECT(current_object)->turntable_scenery.item_list;
 	saved_place = current_object + 0x80u;
@@ -958,7 +946,7 @@ void turntable_scenery_show(void)
 		ITEM_PLACE_WORDS(saved_place)[0] = (uint16_t)OBJECT(current_object)->turntable_scenery.previous_place;
 		item_flags = (uint16_t)((leftover & ~0xFFu) | OBJECT(current_object)->flags);
 		saved_place += 2u;
-		ITEM_PLACE_WORDS(saved_place)[0] = (item_flags & ~0xFFu) | (item_flags & 0x20u);
+		ITEM_PLACE_WORDS(saved_place)[0] = item_flags & ~0xDFu;
 		saved_place += 2u;
 	}
 	ignored = animation_advance(0u);
@@ -1024,8 +1012,6 @@ void welcome_letter_show(void)
 		draw_object(letter_index);
 		step_palette();
 		return;
-	default:
-		invalid_jump(welcome_letter_state_jumps[state]);
 	}
 	OBJECT(current_object)->welcome_letter.frames_left--;
 	delay_left = OBJECT(current_object)->welcome_letter.delay - 1u;
@@ -1125,8 +1111,6 @@ void select_car_heading_show(void)
 			OBJECT(current_object)->state--;
 		}
 		return;
-	default:
-		invalid_jump(select_car_heading_state_jumps[state]);
 	}
 }
 
@@ -1198,8 +1182,6 @@ void select_instruction_show(void)
 		draw_object(routine);
 		ignored = animation_advance(0u);
 		return;
-	default:
-		invalid_jump(select_instruction_state_jumps[state]);
 	}
 	OBJECT(current_object)->y -= 2u;
 	timer = OBJECT(current_object)->select_instruction.timer;
@@ -1311,8 +1293,6 @@ void transmission_choice_run(void)
 		break;
 	case 4:
 		break;
-	default:
-		invalid_jump(transmission_choice_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (CAR(player_car)->transmission == 0u)
 	{
@@ -1370,8 +1350,6 @@ void automatic_panel_show(void)
 		OBJECT(current_object)->y = panel_y;
 		panel_y = draw_object(panel_y);
 		return;
-	default:
-		invalid_jump(automatic_panel_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (CAR(player_car)->transmission != 0u)
 	{
@@ -1426,8 +1404,6 @@ void manual_panel_show(void)
 		OBJECT(current_object)->y = panel_y;
 		panel_y = draw_object(panel_y);
 		return;
-	default:
-		invalid_jump(manual_panel_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (CAR(player_car)->transmission == 0u)
 	{
@@ -1615,8 +1591,6 @@ void car_caption_show(void)
 		OBJECT(current_object)->car_caption.timer = 0xAu;
 		OBJECT(current_object)->state--;
 		return;
-	default:
-		invalid_jump(car_caption_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1708,8 +1682,6 @@ void car_gears_caption_show(void)
 		OBJECT(current_object)->car_gears_caption.timer = 0xAu;
 		OBJECT(current_object)->state--;
 		return;
-	default:
-		invalid_jump(car_gears_caption_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -1813,8 +1785,6 @@ void waiting_banner_show(void)
 			OBJECT(current_object)->state--;
 		}
 		return;
-	default:
-		invalid_jump(waiting_banner_state_jumps[state]);
 	}
 }
 
@@ -1873,8 +1843,6 @@ void car_select_entries_run(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(car_select_entries_state_jumps[OBJECT(current_object)->state]);
 	}
 	blink_timer = OBJECT(current_object)->car_select_entries.blink_timer;
 	OBJECT(current_object)->car_select_entries.blink_timer = blink_timer - 1u;
@@ -2197,8 +2165,6 @@ uint32_t car_select_wait_confirm(void)
 		}
 		zero = 0u == 0u;
 		return zero;
-	default:
-		invalid_jump(car_select_gas_down_jumps[OBJECT(current_object)->car_select.gas_down]);
 	}
 }
 
@@ -2408,8 +2374,6 @@ void entry_traffic_run(void)
 		if (delay == 1u)
 			OBJECT(current_object)->state--;
 		return;
-	default:
-		invalid_jump(entry_traffic_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -2590,8 +2554,6 @@ void entry_traffic_car_drive(void)
 		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 		mirrored_x = draw_object(mirrored_x);
 		return;
-	default:
-		invalid_jump(entry_traffic_car_state_jumps[OBJECT(current_object)->state]);
 	}
 	traffic_car = random_number();
 	random_swapped = byte_swap32(traffic_car);

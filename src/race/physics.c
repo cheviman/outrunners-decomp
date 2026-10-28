@@ -50,9 +50,9 @@ void player_car_build_torque_curves(void)
 			speed = (uint16_t)TORQUE_POINT(torque_point)->speed;
 			torque_point += 2u;
 			next_speed = TORQUE_POINT(r12)->speed;
-			r12 = r12 + 2u;
+			r12 += 2u;
 			next_force = TORQUE_POINT(r12 - 0x2u)->force;
-			r12 = r12 + 2u;
+			r12 += 2u;
 			curve_force = (uint32_t)TORQUE_POINT(torque_point - 0x2u)->force << 16;
 			steps_left = next_speed - speed;
 			force_step = divide_s32(((uint32_t)next_force << 16) - curve_force, steps_left);
@@ -358,7 +358,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		segment_then_offset = (segment_then_offset * 0x20u) & 0xFFFu;
 		CAR(player_car)->segment_offset = segment_then_offset;
 		segment_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + segment_then_offset);
-		r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
+		r12 = (segment_record + 0x20u) & ~0x5000u;
 		segment_length = ROAD_SEGMENT(segment_record)->heading;
 		segment_length = (uint16_t)(segment_length - ROAD_SEGMENT(r12)->heading);
 		segment_length = sine_table[segment_length & 0xFFFu] * road_x;
@@ -374,7 +374,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		CAR(player_car)->road_x = road_x;
 		for (;;)
 		{
-			r12 = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
+			r12 = (segment_record + 0x20u) & ~0x5000u;
 			segment_length = ROAD_SEGMENT(segment_record)->heading;
 			segment_length = (uint16_t)(segment_length - ROAD_SEGMENT(r12)->heading);
 			segment_length = sine_table[segment_length & 0xFFFu] * road_x;
@@ -504,7 +504,7 @@ void player_car_world_position(uint32_t segment_record, uint32_t road_x, uint32_
 void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length)
 {
 	uint16_t pitch_here = 0, tilt = 0;
-	uint32_t eye_distance = 0, eye_x = 0, eye_y = 0, eye_z = 0, far_z = 0, near_x = 0, near_y = 0, near_z = 0, offset_x = 0, offset_y = 0, offset_z = 0, pitch = 0, quadrant_yaw = 0, segment_heading = 0, segment_pitch = 0, segment_remaining = 0, shift_offset = 0, view_shift = 0, yaw = 0, yaw_here = 0;
+	uint32_t eye_distance = 0, eye_x = 0, eye_y = 0, eye_z = 0, far_segment = 0, far_z = 0, near_x = 0, near_y = 0, near_z = 0, offset_x = 0, offset_y = 0, offset_z = 0, pitch = 0, quadrant_yaw = 0, segment_heading = 0, segment_pitch = 0, segment_remaining = 0, shift_offset = 0, view_shift = 0, yaw = 0, yaw_here = 0;
 
 	view_shift = (uint32_t)(int16_t)CAR(player_car)->view_shift_rival + (int16_t)CAR(player_car)->view_shift_lift;
 	if ((int32_t)view_shift >= 0x30)
@@ -516,7 +516,7 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	segment_record += shift_offset;
 	segment_record = LINKED(segment_record, (uint16_t)(segment_record | 0x2000u));
 	segment_record = LINKED(segment_record, segment_record & 0xAFFFu);
-	r12 = r12 + shift_offset;
+	r12 += shift_offset;
 	r12 = LINKED(r12, (uint16_t)(r12 | 0x2000u));
 	segment_fraction += view_shift & 0x7Fu;
 	offset_y = 0u;
@@ -529,16 +529,16 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 	OBJECT(current_object)->player_car.view_target_z = ((int32_t)(offset_z * 2u) >> 8) + ROAD_SEGMENT(segment_record)->z;
 	segment_remaining = segment_length - segment_fraction;
 	OBJECT(current_object)->player_car.view_target_y = divide_s32(ROAD_SEGMENT(LINKED(r12, r12 & 0xAFFFu))->y * segment_fraction + ROAD_SEGMENT(segment_record)->y * segment_remaining, segment_length) + (int16_t)CAR(player_car)->view_rise;
-	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
-	pitch = ROAD_SEGMENT(r12)->x;
-	yaw = ROAD_SEGMENT(r12)->y;
-	far_z = ROAD_SEGMENT(r12)->z;
+	far_segment = (segment_record + 0x180u) & ~0x5000u;
+	pitch = ROAD_SEGMENT(far_segment)->x;
+	yaw = ROAD_SEGMENT(far_segment)->y;
+	far_z = ROAD_SEGMENT(far_segment)->z;
 	near_x = ROAD_SEGMENT(segment_record)->x;
 	near_y = ROAD_SEGMENT(segment_record)->y;
 	near_z = ROAD_SEGMENT(segment_record)->z;
 	vector_angles(far_z, near_x, near_y, near_z, &pitch, &yaw);
-	segment_record = ((segment_record + 0x20u) & ~0xFFFFu) | ((segment_record + 0x20u) & 0xAFFFu);
-	r12 = ((segment_record + 0x180u) & ~0xFFFFu) | ((segment_record + 0x180u) & 0xAFFFu);
+	segment_record = (segment_record + 0x20u) & ~0x5000u;
+	r12 = (segment_record + 0x180u) & ~0x5000u;
 	pitch_here = (uint16_t)pitch;
 	yaw_here = yaw;
 	pitch = ROAD_SEGMENT(r12)->x;
@@ -876,7 +876,7 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 	}
 	if ((uint16_t)ROADSIDE_SURFACE(r14)->end + surface_start <= segment)
 	{
-		r14 = r14 + 8u;
+		r14 += 8u;
 		CAR(player_car)->surface_entry_2 = r14;
 	}
 	if (CAR(player_car)->slowed_frames != 0u)
@@ -970,8 +970,6 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 	case 27:
 		wheel_effect_2_surface_1_inner(roadside_surface);
 		break;
-	default:
-		invalid_jump(wheel_effect_1_jumps[(uint8_t)(surface_bits + empty_bits + carry)]);
 	}
 	beyond_edge = (uint16_t)(low_side - road_half_width);
 	low_side += road_half_width;
@@ -1013,8 +1011,6 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 	case 3:
 		wheel_effect_2_surface_2_outer();
 		return drag;
-	default:
-		invalid_jump(wheel_effect_2_jumps[(uint8_t)(surface_bits + empty_bits + carry)]);
 	}
 }
 

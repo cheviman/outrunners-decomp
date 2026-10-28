@@ -134,7 +134,7 @@ uint32_t reserve_object_slot(void)
 		return object;
 	}
 	mem_write8(free_flag, 0xFFu);
-	object = (free_flag & ~0xFFFFu) | (uint16_t)(free_flag << 8);
+	object = LINKED(free_flag, (uint16_t)(free_flag << 8));
 	move_halfwords(object, zero_block_ADDRESS, 0x80u);
 	return object;
 }

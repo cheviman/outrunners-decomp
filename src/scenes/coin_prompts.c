@@ -49,8 +49,6 @@ void coin_prompt_update(void)
 			return;
 		}
 		break;
-	default:
-		invalid_jump(coin_prompt_state_jumps[OBJECT(current_object)->state]);
 	}
 	OBJECT(current_object)->coin_prompt.round_frames = 0x1Eu;
 	OBJECT(current_object)->coin_prompt.car = OBJECT(current_object)->coin_prompt.next_car;
@@ -79,8 +77,6 @@ void coin_prompt_update(void)
 			credits = seat2_credits;
 			coin_units = seat2_coin_units;
 			break;
-		default:
-			invalid_jump(coin_prompt_screen_jumps[SCREEN(screen)->index]);
 		}
 		if (credits != 0u)
 		{
@@ -137,8 +133,6 @@ void coin_prompt_car_drive(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(coin_prompt_car_state_jumps[state]);
 	}
 	x = OBJECT(current_object)->x - 0xEu;
 	OBJECT(current_object)->x = x;
@@ -215,8 +209,6 @@ void coin_prompt_message_update(void)
 		}
 		OBJECT(current_object)->flags = 0u;
 		return;
-	default:
-		invalid_jump(coin_prompt_message_state_jumps[state]);
 	}
 	animation_advance(0u);
 	frames_3 = OBJECT(current_object)->coin_prompt_message.frames;
@@ -283,8 +275,6 @@ void ignition_key_prompt_update(void)
 		animation_advance(0u);
 		state_routine = draw_object(state_routine);
 		return;
-	default:
-		invalid_jump(ignition_key_prompt_state_jumps[state]);
 	}
 	OBJECT(current_object)->draw_mode = 0u;
 	piece_offset = (uint32_t)OBJECT(current_object)->ignition_key_prompt.piece << 4;
@@ -344,8 +334,6 @@ void credit_display_update(void)
 		return;
 	case 2:
 		break;
-	default:
-		invalid_jump(credit_display_state_jumps[OBJECT(current_object)->state]);
 	}
 	switch (SCREEN(screen)->index)
 	{
@@ -357,8 +345,6 @@ void credit_display_update(void)
 		credits = seat2_credits;
 		coin_units = seat2_coin_units;
 		break;
-	default:
-		invalid_jump(credit_display_screen_jumps[SCREEN(screen)->index]);
 	}
 	if (credits < 2u)
 		text = credit_singular_text_ADDRESS;
@@ -369,7 +355,7 @@ void credit_display_update(void)
 	draw_text(text);
 	coin_units_shown = (uint8_t)coin_units_kept;
 	units = (uint8_t)credits_kept;
-	r12 = r12 & ~0xFFu;
+	r12 &= ~0xFFu;
 	OBJECT(current_object)->y = 0xCFu;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	while ((int8_t)units >= 0xA)

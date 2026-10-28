@@ -114,8 +114,6 @@ void traffic_spawner_update(void)
 		STRETCH_ENDS(stretches)[0] = stretch_top;
 		SCREEN(screen)->visible_stretch_count = stretch_count;
 		return;
-	default:
-		invalid_jump(traffic_spawner_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 
@@ -174,8 +172,6 @@ void traffic_car_update(uint32_t follower_position)
 		return;
 	case 1:
 		break;
-	default:
-		invalid_jump(traffic_car_state_jumps[state]);
 	}
 	if (CAR(player_car)->at_goal == 0u)
 	{
@@ -418,8 +414,6 @@ void traffic_stopping_car_update(void)
 		return;
 	case 1:
 		break;
-	default:
-		invalid_jump(traffic_stopping_car_state_jumps[state]);
 	}
 	if (CAR(player_car)->at_goal != 0u)
 	{
@@ -617,8 +611,6 @@ void traffic_figure_update(void)
 		draw_object(position);
 		ignored = animation_advance(0u);
 		return;
-	default:
-		invalid_jump(traffic_figure_state_jumps[OBJECT(current_object)->state]);
 	}
 }
 

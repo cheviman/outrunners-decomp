@@ -215,7 +215,7 @@ void print_hex_digits(uint32_t number, uint16_t cell, uint32_t digit_count, uint
 	do
 	{
 		cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)number);
-		cell = (uint16_t)((cell & ~0xFFu) | (cell & 0xFu));
+		cell = (uint16_t)(cell & ~0xF0u);
 		if ((uint8_t)cell >= 0xAu)
 			cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 7u));
 		cell = (uint16_t)((cell & ~0xFFu) | (uint8_t)(cell + 0x30u));

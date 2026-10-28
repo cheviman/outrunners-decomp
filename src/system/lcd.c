@@ -504,8 +504,6 @@ void lcd_update(void)
 		return;
 	case 3:
 		break;
-	default:
-		invalid_jump(lcd_scroll_step_jumps[SCREEN(screen)->lcd_scroll_step]);
 	}
 	lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
 	SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
@@ -604,8 +602,6 @@ void lcd_race_info_update(void)
 		break;
 	case 2:
 		break;
-	default:
-		invalid_jump(lcd_race_info_state_jumps[OBJECT(current_object)->state]);
 	}
 	page_frames = OBJECT(current_object)->lcd_race_info.page_frames;
 	OBJECT(current_object)->lcd_race_info.page_frames = page_frames - 1u;
@@ -629,8 +625,6 @@ void lcd_race_info_update(void)
 		case 1:
 			lcd_race_info_time();
 			return;
-		default:
-			invalid_jump(lcd_race_info_time_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
 	case 1:
@@ -644,8 +638,6 @@ void lcd_race_info_update(void)
 			break;
 		case 1:
 			break;
-		default:
-			invalid_jump(lcd_race_info_speed_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		text_place = screen + 0xF1Cu;
 		shown_speed = SCREEN(screen)->shown_speed;
@@ -660,8 +652,6 @@ void lcd_race_info_update(void)
 			break;
 		case 1:
 			break;
-		default:
-			invalid_jump(lcd_race_info_maximum_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		text_place = screen + 0xF1Cu;
 		maximum_speed = (uint16_t)SCREEN(screen)->maximum_speed;
@@ -676,12 +666,8 @@ void lcd_race_info_update(void)
 		case 1:
 			lcd_race_info_average();
 			return;
-		default:
-			invalid_jump(lcd_race_info_average_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 		}
 		break;
-	default:
-		invalid_jump(lcd_race_info_page_jumps[OBJECT(current_object)->lcd_race_info.page]);
 	}
 	switch (OBJECT(current_object)->lcd_race_info.page_step)
 	{
@@ -697,8 +683,6 @@ void lcd_race_info_update(void)
 				break;
 			case 1:
 				break;
-			default:
-				invalid_jump(lcd_race_info_speed_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 			}
 			text_place = screen + 0xF1Cu;
 			shown_speed = SCREEN(screen)->shown_speed;
@@ -711,8 +695,6 @@ void lcd_race_info_update(void)
 		break;
 	case 1:
 		break;
-	default:
-		invalid_jump(lcd_race_info_order_step_jumps[OBJECT(current_object)->lcd_race_info.page_step]);
 	}
 	text_place = screen + 0xF18u;
 	order_list = OBJECT(current_object)->lcd_race_info.order_list;
@@ -875,8 +857,6 @@ void lcd_race_info_finish(void)
 		OBJECT(current_object)->flags = 0u;
 		lcd_race_info_time_page();
 		return;
-	default:
-		invalid_jump(lcd_race_info_finish_state_jumps[OBJECT(current_object)->state]);
 	}
 	if (SCREEN(screen)->lcd_scroll != 0u)
 		return;

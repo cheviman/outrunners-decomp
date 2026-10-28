@@ -42,7 +42,8 @@ void init_coins(void)
 void update_coins(uint32_t calibration)
 {
 	uint8_t meter_bit = 0, sound = 0;
-	uint32_t chute_entry = 0, coin_meter = 0, counter = 0, credits_given = 0, pressed_switches = 0, released_switches = 0, seat_credits = 0, service_sounds = 0;
+	uint16_t credits_given = 0;
+	uint32_t chute_entry = 0, coin_meter = 0, counter = 0, pressed_switches = 0, released_switches = 0, seat_credits = 0, service_sounds = 0;
 	uint32_t saved_screen = 0;
 	uint8_t released_chutes = 0;
 
@@ -87,7 +88,7 @@ void update_coins(uint32_t calibration)
 		r12 = SCREEN_1;
 		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
 		counter = SOUND_RAM + 0x1F04u;
-		bookkeeping_add16(counter, (uint16_t)credits_given);
+		bookkeeping_add16(counter, credits_given);
 	}
 	credits_given = 0u;
 	if ((pressed_switches & 2u) != 0u)
@@ -97,7 +98,7 @@ void update_coins(uint32_t calibration)
 		r12 = SCREEN_2;
 		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
 		counter = SOUND_RAM + 0x1F04u;
-		bookkeeping_add16(counter, (uint16_t)credits_given);
+		bookkeeping_add16(counter, credits_given);
 	}
 	released_switches = (pressed_switches & ~0xFFu) | switches_released;
 	released_chutes = released_switches & 0x3Cu;
@@ -116,7 +117,7 @@ void update_coins(uint32_t calibration)
 		chute_entry = seat2_second_chute_entry_ADDRESS;
 		credits_given = insert_coin(released_switches, credits_given, chute_entry);
 		counter = SOUND_RAM + 0x1F02u;
-		bookkeeping_add16(counter, (uint16_t)credits_given);
+		bookkeeping_add16(counter, credits_given);
 	}
 	if (chute_entry_offset == 0u)
 	{
@@ -158,7 +159,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		if (COIN_METER(coin_meter - 0x2u)->pulses_owed != 0u)
 		{
 			COIN_METER(coin_meter - 0x2u)->pulses_owed--;
-			PORT_OUTPUT_BITS(r12)[0] |= shift_by(1u, (uint8_t)meter_bit, 8);
+			PORT_OUTPUT_BITS(r12)[0] |= shift_by(1u, meter_bit, 8);
 			COIN_METER(coin_meter - 0x2u)->frames = 0x606u;
 		}
 		r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
@@ -190,7 +191,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 		write_bookkeeping_credits();
 		return;
 	}
-	PORT_OUTPUT_BITS(r12)[0] &= rotate_by(0xFEu, (uint8_t)meter_bit, 8);
+	PORT_OUTPUT_BITS(r12)[0] &= rotate_by(0xFEu, meter_bit, 8);
 	r12 = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 	write_bookkeeping_credits();
 	bookkeeping_update_checksum(meter_frames);
@@ -203,20 +204,20 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter)
 void write_bookkeeping_credits(void)
 {
 	BOOKKEEPING_HALFWORDS(r12)[0] = (seat1_credits | ((uint32_t)seat1_coin_units << 8u));
-	r12 = r12 + 2u;
+	r12 += 2u;
 	BOOKKEEPING_HALFWORDS(r12)[0] = AS16(seat1_bookkeeping_byte);
-	r12 = r12 + 2u;
+	r12 += 2u;
 	BOOKKEEPING_HALFWORDS(r12)[0] = (seat2_credits | ((uint32_t)seat2_coin_units << 8u));
-	r12 = r12 + 2u;
+	r12 += 2u;
 	BOOKKEEPING_HALFWORDS(r12)[0] = AS16(seat2_bookkeeping_byte);
-	r12 = r12 + 2u;
+	r12 += 2u;
 }
 
 /* A service credit for the seat whose credits are at R10 (seat1_credits or seat2_credits): one credit
    more, up to 9 (at 9 its coin units are cleared; beyond, nothing); a credit given brings the screen R12
    to the title from the attract mode (show_title_on_credit), asks for the seat's service sound (R11) and
    counts one in R9, which it returns. Not run in the scenarios. */
-uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint32_t service_sounds)
+uint16_t add_service_credit(uint16_t credits_given, uint32_t seat_credits, uint32_t service_sounds)
 {
 	uint32_t zero = 0;
 	uint8_t credits = 0;
@@ -236,7 +237,7 @@ uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint3
 	}
 	show_title_on_credit();
 	SEAT_SOUND_COUNTS(service_sounds)[0] = 1u;
-	credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
+	credits_given = (uint8_t)(credits_given + 1u);
 	return credits_given;
 }
 
@@ -248,7 +249,7 @@ uint32_t add_service_credit(uint32_t credits_given, uint32_t seat_credits, uint3
    credit record's third byte; one more unit each bonus_adder, when set) and toward a credit (its second
    byte, seat1_coin_units: a credit each coins_per_credit, up to 9, show_title_on_credit). Returns R9
    plus the credits given. */
-uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_t chute_entry)
+uint16_t insert_coin(uint32_t released_switches, uint16_t credits_given, uint32_t chute_entry)
 {
 	uint8_t bonus_units = 0, chute_units = 0, credit_units = 0, units_per_credit = 0;
 	uint32_t coin_sounds = 0, counter = 0, seat_credits = 0, units_per_bonus = 0;
@@ -292,7 +293,7 @@ uint32_t insert_coin(uint32_t released_switches, uint32_t credits_given, uint32_
 		}
 		SEAT_CREDITS(seat_credits)->credits++;
 		show_title_on_credit();
-		credits_given = (credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u);
+		credits_given = (uint16_t)((credits_given & ~0xFFu) | (uint8_t)(credits_given + 1u));
 		credit_units -= units_per_credit;
 	} while (SEAT_CREDITS(seat_credits)->credits < 9u);
 	credit_units = 0u;
@@ -447,7 +448,7 @@ void bookkeeping_check(void)
 	stored_checksum = BOOKKEEPING_CHECKSUM;
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
-	if ((uint16_t)checksum == stored_checksum)
+	if (checksum == stored_checksum)
 	{
 		source = SOUND_RAM + 0x1F02u;
 		destination = SOUND_RAM + 0x1F7Eu;
@@ -456,7 +457,7 @@ void bookkeeping_check(void)
 	}
 	block = SOUND_RAM + 0x1F7Eu;
 	checksum = bookkeeping_checksum(checksum, block);
-	if ((uint16_t)checksum == stored_checksum)
+	if (checksum == stored_checksum)
 	{
 		destination = SOUND_RAM + 0x1F02u;
 		source = SOUND_RAM + 0x1F7Eu;
@@ -508,7 +509,7 @@ void bookkeeping_check_block(void)
 
 	block = SOUND_RAM + 0x1F02u;
 	checksum = bookkeeping_checksum(0u, block);
-	if (BOOKKEEPING_CHECKSUM != (uint16_t)checksum)
+	if (BOOKKEEPING_CHECKSUM != checksum)
 	{
 		checksum = bookkeeping_reset(checksum);
 		return;
@@ -517,21 +518,22 @@ void bookkeeping_check_block(void)
 
 /* Returns the checksum of the 3E halfwords at R2 (the bookkeeping or its backup): from 1, each halfword
    XORed in, then a shift right by one, with 8810 XORed in when the bit shifted out was 1. */
-uint32_t bookkeeping_checksum(uint32_t checksum, uint32_t block)
+uint16_t bookkeeping_checksum(uint32_t checksum, uint32_t block)
 {
 	uint32_t carry = 0;
-	uint32_t halfwords_left = 0, sum = 0;
+	uint16_t sum = 0;
+	uint32_t halfwords_left = 0;
 
-	sum = (checksum & ~0xFFFFu) | 1u;
+	sum = 1u;
 	halfwords_left = 0x3Eu;
 	do
 	{
-		sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ BOOKKEEPING_HALFWORDS(block)[0]);
+		sum ^= BOOKKEEPING_HALFWORDS(block)[0];
 		carry = sum & 1u;
-		sum = (sum & ~0xFFFFu) | ((uint16_t)sum >> 1);
+		sum = sum >> 1;
 		block += 2u;
 		if (carry)
-			sum = (sum & ~0xFFFFu) | (uint16_t)(sum ^ 0x8810u);
+			sum ^= 0x8810u;
 		halfwords_left--;
 	} while (halfwords_left != 0u);
 	return sum;

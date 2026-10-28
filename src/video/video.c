@@ -56,7 +56,7 @@ uint32_t init_screen(void)
 			for (;;)
 			{
 				section_length = COURSE_ENTRY(r12)->length;
-				r12 = r12 + 6u;
+				r12 += 6u;
 				if ((int16_t)section_length >= 0)
 					break;
 				command = (uint16_t)~section_length;
@@ -70,14 +70,12 @@ uint32_t init_screen(void)
 					r12 = COURSE_ENTRY(r12)[-1].jump;
 					continue;
 				case 3:
-					r12 = r12 - 2u;
+					r12 -= 2u;
 					continue;
 				case 1:
 				case 5:
 					L_013DB6 = true;
 					break;
-				default:
-					invalid_jump(course_length_command_jumps[command]);
 				}
 				if (L_013DB6)
 					break;
@@ -115,7 +113,7 @@ void clear_screen_ram(void)
    register 31FF00 (0800; 0A00 flipped, flip_screen) and the registers 31FF02-31FF8F from 010B12, with
    their copy at video_registers, the four tile layers' scroll targets (scroll_targets-20E2AF) cleared,
    then reset_tile_layers. */
-uint32_t init_video(void)
+uint16_t init_video(void)
 {
 	clear_video_ram();
 	load_text_font();
@@ -136,7 +134,7 @@ uint32_t init_video(void)
    page 0 and scroll 0: their page selects (video_registers[32], video_registers[36]) and scroll targets
    (scroll_targets, scroll_targets[4]) cleared, and bits 12-15 of the video control register (31FF00,
    video_registers) cleared. Used as the game modes start. */
-uint32_t reset_tile_layers(void)
+uint16_t reset_tile_layers(void)
 {
 	uint32_t index = 0;
 	uint32_t first_scroll_target = 0, second_scroll_target = 0;
@@ -209,7 +207,7 @@ void clear_tile_pages(uint16_t last_page)
    halfwords copied from the zeros at 100800). */
 void clear_tile_page(uint16_t page)
 {
-	move_halfwords(0x300000u | (uint16_t)page, zero_block_ADDRESS, 0x200u);
+	move_halfwords(0x300000u | page, zero_block_ADDRESS, 0x200u);
 }
 
 /* Sets up the sprite chip at boot: its control registers 500000-50000C from 010B0A-010B0F (rendering
@@ -337,8 +335,6 @@ void unrolled_copy(uint16_t byte_count, uint32_t source, uint32_t destination)
 	{
 	case 0x0u:
 		break;
-	default:
-		invalid_jump(0x109B4u + (0u - (((byte_count & 0x3F8u) >> 1) - 0x200u)));
 	}
 	for (uint32_t repeat = 0; repeat < 63u; repeat++)
 	{

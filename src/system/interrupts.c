@@ -76,8 +76,6 @@ void int_vector_40(void)
 		case 1:
 			tile_bank_bits = queue_seat_inputs();
 			break;
-		default:
-			invalid_jump(vblank_seat_inputs_jumps[SCREEN(screen)->index]);
 		}
 		check_test_button(tile_bank_bits);
 		if (free_play == 0u)
@@ -239,8 +237,6 @@ void int_vector_44(void)
 		case 1:
 		case 2:
 			break;
-		default:
-			invalid_jump(link_message_kind_jumps[message_kind]);
 		}
 	}
 	io_write16(IRQ_TIMER_1, timer_period);

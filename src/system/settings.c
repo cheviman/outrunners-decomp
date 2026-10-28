@@ -20,7 +20,7 @@
    resets the backup RAM's data (bookkeeping_reset); each one saves the result (eeprom_write_settings). */
 void load_settings(uint32_t checksum)
 {
-	uint16_t write_count = 0;
+	uint16_t new_checksum_2 = 0, write_count = 0;
 	uint32_t new_checksum = 0, settings = 0, settings_length = 0;
 
 	eeprom_read_settings(checksum);
@@ -30,13 +30,13 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		eeprom_write_count = 0x64u;
 		backup_eeprom_write_count = 0x64u;
-		new_checksum = signature_checksum();
-		settings_signature = new_checksum;
+		new_checksum_2 = signature_checksum();
+		settings_signature = new_checksum_2;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
-		settings_checksum = new_checksum;
-		backup_settings_checksum = new_checksum;
+		new_checksum_2 = crc16(settings, settings_length);
+		settings_checksum = new_checksum_2;
+		backup_settings_checksum = new_checksum_2;
 		eeprom_write_settings();
 		return;
 	}
@@ -44,38 +44,38 @@ void load_settings(uint32_t checksum)
 	{
 		bookkeeping_reset(checksum);
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		new_checksum = signature_checksum();
-		settings_signature = new_checksum;
+		new_checksum_2 = signature_checksum();
+		settings_signature = new_checksum_2;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
-		settings_checksum = new_checksum;
-		backup_settings_checksum = new_checksum;
+		new_checksum_2 = crc16(settings, settings_length);
+		settings_checksum = new_checksum_2;
+		backup_settings_checksum = new_checksum_2;
 		eeprom_write_settings();
 		return;
 	}
 	new_checksum = signature_checksum();
-	if (settings_signature != (uint16_t)new_checksum || settings_signature != (uint16_t)new_checksum)
+	if (settings_signature != new_checksum || settings_signature != new_checksum)
 	{
 		settings_signature = new_checksum;
 		bookkeeping_reset(new_checksum);
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
+		new_checksum_2 = crc16(settings, settings_length);
 		settings = settings_checksum_ADDRESS;
-		if (settings_checksum == (uint16_t)new_checksum)
+		if (settings_checksum == new_checksum_2)
 		{
 			write_count = SETTINGS_COPY(settings)->write_count;
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 			eeprom_write_count = write_count;
 			backup_eeprom_write_count = write_count;
-			new_checksum = signature_checksum();
-			settings_signature = new_checksum;
+			new_checksum_2 = signature_checksum();
+			settings_signature = new_checksum_2;
 			settings = eeprom_write_count_ADDRESS;
 			settings_length = 0x3Au;
-			new_checksum = crc16(settings, settings_length);
-			settings_checksum = new_checksum;
-			backup_settings_checksum = new_checksum;
+			new_checksum_2 = crc16(settings, settings_length);
+			settings_checksum = new_checksum_2;
+			backup_settings_checksum = new_checksum_2;
 			eeprom_write_settings();
 			return;
 		}
@@ -83,17 +83,17 @@ void load_settings(uint32_t checksum)
 		settings_length = 0x3Au;
 		checksum = crc16(settings, settings_length);
 		settings = backup_settings_checksum_ADDRESS;
-		if (backup_settings_checksum != (uint16_t)checksum)
+		if (backup_settings_checksum != checksum)
 		{
 			bookkeeping_reset(checksum);
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-			new_checksum = signature_checksum();
-			settings_signature = new_checksum;
+			new_checksum_2 = signature_checksum();
+			settings_signature = new_checksum_2;
 			settings = eeprom_write_count_ADDRESS;
 			settings_length = 0x3Au;
-			new_checksum = crc16(settings, settings_length);
-			settings_checksum = new_checksum;
-			backup_settings_checksum = new_checksum;
+			new_checksum_2 = crc16(settings, settings_length);
+			settings_checksum = new_checksum_2;
+			backup_settings_checksum = new_checksum_2;
 			eeprom_write_settings();
 			return;
 		}
@@ -101,25 +101,25 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		eeprom_write_count = write_count;
 		backup_eeprom_write_count = write_count;
-		new_checksum = signature_checksum();
-		settings_signature = new_checksum;
+		new_checksum_2 = signature_checksum();
+		settings_signature = new_checksum_2;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
-		settings_checksum = new_checksum;
-		backup_settings_checksum = new_checksum;
+		new_checksum_2 = crc16(settings, settings_length);
+		settings_checksum = new_checksum_2;
+		backup_settings_checksum = new_checksum_2;
 		eeprom_write_settings();
 		return;
 	}
 	settings = eeprom_write_count_ADDRESS;
 	settings_length = 0x3Au;
-	new_checksum = crc16(settings, settings_length);
-	if (settings_checksum != (uint16_t)new_checksum)
+	new_checksum_2 = crc16(settings, settings_length);
+	if (settings_checksum != new_checksum_2)
 	{
 		settings = backup_eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
 		checksum = crc16(settings, settings_length);
-		if (backup_settings_checksum == (uint16_t)checksum)
+		if (backup_settings_checksum == checksum)
 		{
 			move_halfwords(settings_checksum_ADDRESS, backup_settings_checksum_ADDRESS, 0x1Eu);
 			eeprom_write_settings();
@@ -127,20 +127,20 @@ void load_settings(uint32_t checksum)
 		}
 		bookkeeping_reset(checksum);
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		new_checksum = signature_checksum();
-		settings_signature = new_checksum;
+		new_checksum_2 = signature_checksum();
+		settings_signature = new_checksum_2;
 		settings = eeprom_write_count_ADDRESS;
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
-		settings_checksum = new_checksum;
-		backup_settings_checksum = new_checksum;
+		new_checksum_2 = crc16(settings, settings_length);
+		settings_checksum = new_checksum_2;
+		backup_settings_checksum = new_checksum_2;
 		eeprom_write_settings();
 		return;
 	}
 	settings = backup_eeprom_write_count_ADDRESS;
 	settings_length = 0x3Au;
-	new_checksum = crc16(settings, settings_length);
-	if (settings_checksum != (uint16_t)new_checksum || backup_settings_checksum != (uint16_t)new_checksum)
+	new_checksum_2 = crc16(settings, settings_length);
+	if (settings_checksum != new_checksum_2 || backup_settings_checksum != new_checksum_2)
 	{
 		move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 		eeprom_write_settings();
@@ -166,7 +166,7 @@ void eeprom_lock(void)
 
 	command = 0u;
 	eeprom_begin(&lines, &lines_port);
-	eeprom_send_command(lines, command, lines_port);
+	eeprom_send_command((uint8_t)lines, command, lines_port);
 	interrupts_on();
 }
 
@@ -219,7 +219,7 @@ void eeprom_write_one_word(uint16_t eeprom_word, uint8_t command)
 
 	command |= 0x40u;
 	eeprom_begin(&lines, &lines_port);
-	eeprom_write_word(eeprom_word, lines, command, lines_port);
+	eeprom_write_word(eeprom_word, (uint8_t)lines, command, lines_port);
 	interrupts_on();
 }
 
@@ -245,8 +245,8 @@ void eeprom_write_settings_counted(void)
 void eeprom_write_settings(void)
 {
 	uint8_t command = 0;
-	uint16_t eeprom_word = 0;
-	uint32_t checksum = 0, lines = 0, lines_port = 0, settings = 0, settings_length = 0, word_count = 0;
+	uint16_t checksum = 0, eeprom_word = 0;
+	uint32_t lines = 0, lines_port = 0, settings = 0, settings_length = 0, word_count = 0;
 
 	settings = eeprom_write_count_ADDRESS;
 	settings_length = 0x3Au;
@@ -255,7 +255,7 @@ void eeprom_write_settings(void)
 	move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 	command = 0x30u;
 	eeprom_begin(&lines, &lines_port);
-	eeprom_send_command(lines, command, lines_port);
+	eeprom_send_command((uint8_t)lines, command, lines_port);
 	settings = settings_magic_ADDRESS;
 	command = 0x40u;
 	word_count = 0x40u;
@@ -264,7 +264,7 @@ void eeprom_write_settings(void)
 	{
 		eeprom_word = SETTINGS_WORDS(settings)[0];
 		settings += 2u;
-		lines = eeprom_write_word(eeprom_word, lines, command, lines_port);
+		lines = eeprom_write_word(eeprom_word, (uint8_t)lines, command, lines_port);
 		command++;
 		word_count--;
 	} while (word_count != 0u);
@@ -275,7 +275,7 @@ void eeprom_write_settings(void)
 void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_word, uint32_t *p_lines)
 {
 	uint32_t eeprom_word = *p_eeprom_word;
-	uint32_t lines = *p_lines;
+	uint8_t lines = (uint8_t)*p_lines;
 	uint32_t pulse_count = 0;
 
 	lines = eeprom_send_command(lines, command, lines_port);
@@ -285,24 +285,24 @@ void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_w
 	{
 		lines = eeprom_set_lines(lines, lines_port);
 		eeprom_word = ((eeprom_word & ~0xFFu) | io_read8(r12)) * 2u;
-		lines = (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
-		lines = (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		pulse_count--;
 	} while (pulse_count != 0u);
-	lines = lines & 0x1Fu;
+	lines &= 0x1Fu;
 	lines = eeprom_set_lines(lines, lines_port);
 	eeprom_word = eeprom_word >> 9;
 	*p_eeprom_word = eeprom_word;
-	*p_lines = (*p_lines & 0xFFFFFF00u) | (lines & 0xFFu);
+	*p_lines = (*p_lines & 0xFFFFFF00u) | lines;
 }
 
 /* Writes R0 into the EEPROM word of write command R4 (eeprom_send_command): its 16 bits high first, chip
    select dropped to start the write, then waits, clocking, until the data out (bit 7 of R12) says it is
    done. */
-uint32_t eeprom_write_word(uint32_t eeprom_word, uint32_t lines, uint8_t command, uint32_t lines_port)
+uint8_t eeprom_write_word(uint16_t eeprom_word, uint8_t lines, uint8_t command, uint32_t lines_port)
 {
-	uint8_t data_out = 0;
+	uint8_t data_bit = 0, data_out = 0;
 	uint16_t word_bits = 0;
 	uint32_t pulse_count = 0;
 
@@ -312,34 +312,33 @@ uint32_t eeprom_write_word(uint32_t eeprom_word, uint32_t lines, uint8_t command
 	pulse_count = 0x10u;
 	do
 	{
-		eeprom_word = (eeprom_word & ~0xFFu) | (uint8_t)word_bits;
-		eeprom_word = (eeprom_word & ~0xFFu) | (eeprom_word & 0x80u);
+		data_bit = word_bits & 0x80u;
 		word_bits = (uint16_t)(((uint32_t)word_bits << 1) | (word_bits >> 15));
-		lines = ((lines & ~0xFFu) | (lines & 0x1Fu)) + 0x20u + eeprom_word;
+		lines = (uint8_t)((lines & 0x1Fu) + 0x20u + data_bit);
 		lines = eeprom_set_lines(lines, lines_port);
-		lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 		pulse_count--;
 	} while (pulse_count != 0u);
 	pulse_count = 2u;
 	do
 	{
-		lines = (lines & ~0xFFu) | (lines & 0x1Fu);
+		lines &= 0x1Fu;
 		lines = eeprom_set_lines(lines, lines_port);
-		lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 		pulse_count--;
 	} while (pulse_count != 0u);
-	lines = (lines & ~0xFFu) | (lines & 0x1Fu);
+	lines &= 0x1Fu;
 	do
 	{
-		lines = (lines & ~0xFFu) | (uint8_t)(lines | 0x20u);
+		lines |= 0x20u;
 		lines = eeprom_set_lines(lines, lines_port);
 		data_out = io_read8(r12);
-		lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 	} while ((int8_t)data_out >= 0);
-	lines = (lines & ~0xFFu) | (lines & 0x1Fu);
+	lines &= 0x1Fu;
 	lines = eeprom_set_lines(lines, lines_port);
 	return lines;
 }
@@ -348,33 +347,32 @@ uint32_t eeprom_write_word(uint32_t eeprom_word, uint32_t lines, uint8_t command
    5 chip select): chip select, a start bit, then the 8 bits of R4 high first (two of opcode: 2 read, 1
    write, 0 with the address's top bits 3 write enable or 0 write disable; six of address), each with a
    clock pulse. */
-uint32_t eeprom_send_command(uint32_t lines, uint8_t command, uint32_t lines_port)
+uint8_t eeprom_send_command(uint8_t lines, uint8_t command, uint32_t lines_port)
 {
 	uint8_t command_bits = 0, sent_bits = 0;
 	uint32_t pulse_count = 0;
 
 	command_bits = (uint8_t)command;
-	lines = (lines & ~0xFFu) | (lines & 0x1Fu);
+	lines &= 0x1Fu;
 	lines = eeprom_set_lines(lines, lines_port);
-	lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+	lines ^= 0x40u;
 	lines = eeprom_set_lines(lines, lines_port);
-	lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x60u);
+	lines ^= 0x60u;
 	lines = eeprom_set_lines(lines, lines_port);
-	lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+	lines ^= 0x40u;
 	lines = eeprom_set_lines(lines, lines_port);
-	lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0xC0u);
+	lines ^= 0xC0u;
 	lines = eeprom_set_lines(lines, lines_port);
-	lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+	lines ^= 0x40u;
 	lines = eeprom_set_lines(lines, lines_port);
 	pulse_count = 8u;
 	do
 	{
 		sent_bits = (uint8_t)command_bits;
 		command_bits = (uint8_t)(command_bits * 2u);
-		lines = (lines & ~0xFFu) | (lines & 0x3Fu);
-		lines = (lines & ~0xFFu) | (uint8_t)(lines | (sent_bits & 0x80u));
+		lines = (lines & 0x3Fu) | (sent_bits & 0x80u);
 		lines = eeprom_set_lines(lines, lines_port);
-		lines = (lines & ~0xFFu) | (uint8_t)(lines ^ 0x40u);
+		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 		pulse_count--;
 	} while (pulse_count != 0u);
@@ -395,9 +393,9 @@ void eeprom_begin(uint32_t *p_lines, uint32_t *p_lines_port)
 }
 
 /* Writes R2 to the EEPROM's lines (R13), with bit 4 set too. */
-uint32_t eeprom_set_lines(uint32_t lines, uint32_t lines_port)
+uint8_t eeprom_set_lines(uint8_t lines, uint32_t lines_port)
 {
-	lines = (lines & ~0xFFu) | (uint8_t)(lines | 0x10u);
+	lines |= 0x10u;
 	io_write8(lines_port, lines);
 	return lines;
 }

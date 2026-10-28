@@ -137,7 +137,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 {
 	bool cut_open_hi_hat_screen_1 = false, release_note_screen_1 = false, start_voice_screen_1 = false, take_voice_screen_1 = false;
 	uint32_t carry = 0;
-	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_byte = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
+	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
 	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, new_voice_field = 0, note_index = 0, pitch = 0, pitch_bends = 0, pitch_entry = 0, pitch_table_entry = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, tune = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
 	uint8_t saved_channel = 0, saved_parts_left = 0;
 	uint16_t pushed_voice = 0, saved_voice_field = 0;
@@ -1340,8 +1340,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			return;
 		}
 	}
-	first_byte = first_data_byte;
-	skip_midi_data_screen_1(first_byte);
+	skip_midi_data_screen_1(message_byte);
 }
 
 /* Retunes a sounding voice after a pitch bend of screen 1: an FM voice through retune_fm_voice; a
@@ -1752,7 +1751,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 {
 	bool cut_open_hi_hat_screen_2 = false, release_note_screen_2 = false, start_voice_screen_2 = false, take_voice_screen_2 = false;
 	uint32_t carry = 0;
-	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_byte = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
+	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
 	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, new_voice_field = 0, note_index = 0, pitch = 0, pitch_bends = 0, pitch_entry = 0, pitch_table_entry = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, tune = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
 	uint8_t saved_channel = 0, saved_parts_left = 0;
 	uint16_t pushed_voice = 0, saved_voice_field = 0;
@@ -2955,8 +2954,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			return;
 		}
 	}
-	first_byte = first_data_byte;
-	skip_midi_data_screen_2(first_byte);
+	skip_midi_data_screen_2(message_byte);
 }
 
 /* The same code as retune_voice_screen_1, for screen 2's pitch bend. */
