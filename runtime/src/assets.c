@@ -4,7 +4,7 @@
  *                 reaches (game/assets.h)
  *    Version:     0.1.0
  *    Created:     27-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -949,8 +949,14 @@ const char *assets_load(const char *folder)
 	for (size_t index = 0; index < game_table_count; index++)
 	{
 		const uint8_t *found = find(&program, folded(game_tables[index].address));
+		named_address key;
+		const named_address *named;
 
-		if (!found)
+		/* (assets that name the table at another address are cut another way: the table the C reads is not
+		   whole there) */
+		key.name = (char *)game_tables[index].name;
+		named = bsearch(&key, program.names, program.name_count, sizeof(*program.names), by_name);
+		if (!found || (named && folded(named->address) != folded(game_tables[index].address)))
 		{
 			snprintf(assets_problem, ASSETS_PROBLEM_SIZE, "the assets have no table %s", game_tables[index].name);
 			return assets_problem;

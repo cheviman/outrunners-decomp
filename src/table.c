@@ -511,6 +511,7 @@ const void *car_crash_physics_data;
 const void *grid_road_place_lists_data;
 const void *grid_segment_lists_data;
 const void *player_car_steer_animations_data;
+const void *steer_frames_by_steering_data;
 const void *player_car_wheelspin_animations_data;
 const void *player_car_skid_animations_wheel_high_data;
 const void *player_car_skid_animations_wheel_low_data;
@@ -1057,6 +1058,7 @@ const game_table game_tables[] =
 	{ "grid_road_place_lists", 0x0090ACu, &grid_road_place_lists_data },
 	{ "grid_segment_lists", 0x0091CCu, &grid_segment_lists_data },
 	{ "player_car_steer_animations", 0x00926Cu, &player_car_steer_animations_data },
+	{ "steer_frames_by_steering", 0x00927Cu, &steer_frames_by_steering_data },
 	{ "player_car_wheelspin_animations", 0x009300u, &player_car_wheelspin_animations_data },
 	{ "player_car_skid_animations_wheel_high", 0x009310u, &player_car_skid_animations_wheel_high_data },
 	{ "player_car_skid_animations_wheel_low", 0x009410u, &player_car_skid_animations_wheel_low_data },
@@ -1429,7 +1431,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 542;
+const size_t game_table_count = 543;
 
 /* the code at the reset vector */
 void game_entry(void)

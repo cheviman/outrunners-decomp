@@ -1731,7 +1731,7 @@ void car_select_entries_run(void)
 		players_left = player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[mem_read8(0x20E02Fu + players_left)] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];
@@ -1747,7 +1747,7 @@ void car_select_entries_run(void)
 		players_left = player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[mem_read8(0x20E02Fu + players_left)] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
 		own_car_number = car_numbers[SCREEN(screen)->player];

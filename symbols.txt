@@ -1428,6 +1428,7 @@ local player_car_next_surfaces 00B51A R7 stage_then_surfaces stage_roadside_surf
 008026  table crash_place_offsets u16   # player_car_update 007D70, 007E76 "movz.hw 8026[PC](R8), R8" by the car's place in the race: added to the crash's speed step before it picks the crash table's record (60 50 40 30 20 10 0 0)
 008038  table car_weights u16   # player_car_update 007E39, 007E45 "movz.hw 8038[PC](R6/R7)" by the model of the car hit and the car's own: the weights of a car-to-car crash (110 100 F0 F0 120 180 A0 100)
 00926C  table player_car_steer_animations u16   # player_car_steer_frame 007829 "mov.h 926C[PC](R9), R0" by the model: its body's animation as it steers (3AC 420 ... 6D8, 74 apart)
+00927C  table steer_frames_by_steering[129] u8   # player_car_steer_frame 007840 "mov.b 92BC[PC](R0), R0" by the steering, signed (-64 to 64) from the middle (0092BC): the body's frame for it, 0 full left to 8 full right, 4 straight on
 009300  table player_car_wheelspin_animations u16   # player_car_animate 007864 "movz.hw 9300[PC](R9), R9" by the model: its wheelspin (3B2 426 ... 6DE)
 009310  table player_car_skid_animations_wheel_high u16   # player_car_animate 007886 "movz.hw 9310[PC](R9), R9" by model * 16 + the slide, with the wheel 80 or more: the skids (3CA 3CA 3D0 3D0 3D6...)
 009410  table player_car_skid_animations_wheel_low u16   # player_car_animate 00789D "movz.hw 9410[PC](R9), R9" the same with the wheel under 80 and the slide's sign turned (3B8 3B8 3BE 3BE 3C4...)
@@ -1732,7 +1733,7 @@ comment player_car_set_horizon Works out the horizon's line on the screen (scree
 comment player_car_place_on_road Puts the car on its starting segment at the start: no way into the segment, road_x from the grid's place, its world position (player_car_world_position) and the view behind it (player_car_place_view).
 comment player_car_clear_hit Ends what a hit was doing to the car: no sideways_push, speed_change, bounce, no hit pending (flags bit 2), and the car no longer skidding (car skidding) or slipping (wheel_slip).
 comment player_car_animate Picks the car's animation: while a hit is pending, the one it has goes on; skidding (car skidding), a skid by how far it slides (slide) toward the side the wheel is turned (player_car_skid_animations_wheel_high, player_car_skid_animations_wheel_low by model); spinning its wheels while it speeds up (car wheel_slip, acceleration above 0), the model's wheelspin (player_car_wheelspin_animations); else its body turned by the steering (player_car_steer_frame). Each one in the row of the view's height (player_car_view_height); a new one starts at frame 0.
-comment player_car_steer_frame The car's body as it steers: the model's animation (player_car_steer_animations) in the row of the view's height, its frame (steer_frame) one step a frame toward the one of the steering (the bytes around 0092BC: 0-8, 4 straight on).
+comment player_car_steer_frame The car's body as it steers: the model's animation (player_car_steer_animations) in the row of the view's height, its frame (steer_frame) one step a frame toward the one of the steering (steer_frames_by_steering, from its middle: 0 full left to 8 full right, 4 straight on).
 comment player_car_view_height The row of the car's animations for how steeply the view looks down on it: the view's pitch (car view_pitch) less B0 and less the road's pitch under the car (race_copy segment_pitch), in steps of 30, 0 to 5 (view_height).
 comment player_car_move_view Moves the view with what the car does: when a rival comes close (player_car_check_rivals, rival_step) it starts the RIVAL SEKKIN warning (rival_warning) and pulls the view back and up (car view_shift_rival to -256, view_pitch_rival +8 a step) until the rival has gone, then lets it back; a speed gain of more than A0 in a frame without wheelspin sets car hard_acceleration (hard acceleration); the view nods (nod, car view_shift_nod and view_pitch_nod) one way with that hard acceleration and the other with hard braking (more than 120 a frame with the brake down), easing back; and it lags the car's rises and drops (car view_rise).
 comment player_car_check_rivals Whether a rival is close (rival_near): at speed 6000 or more (5000 to stay on), the car just ahead (screen ahead_record) a little slower and within reach, or the car just behind (unk_6C) a little faster and close; once on it stays for 30 frames (rival_hold) after the rival has gone.
@@ -2946,7 +2947,7 @@ scoped object road_surface 12 event u8
 scoped object road_surface 13 last_event u8
 scoped object road_surface 14 segment u16
 scoped object road_surface 16 last_segment u16
-scoped object road_surface 18 page_table u8
+scoped object road_surface 18 page_table u32[F]   # five page words (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_page_words, copied in by road_surface_start
 scoped object road_surface 54 page_register u32 page_select
 scoped object road_surface 58 line_scroll_table u32
 scoped object road_surface 5C line_select_table u32
@@ -5107,7 +5108,6 @@ constant boot 16000 BOARD_OFF_LOOPS                    # the busy wait after the
 # the player's car's physics and course, the race's display, the race's logic and the link between cabinets:
 # their parameters, locals and values worked out once by name, and the ROM addresses they use as numbers
 007CDB  data  rival_warning_text            # RIVAL SEKKIN !! (rival_warning_update 007C71 "movea.b 7CDB, R19", draw_text)
-0092BC  data  steer_frames_by_steering      # player_car_steer_frame 007840 "mov.b 92BC[PC](R0), R0" by the steering, signed: the body's frame for it, 0-8 (4 straight on), read around here (927C-92FC)
 122B74  data  sprite_size_steps             # the sprites' size steps (struct sprite_size_step, 12 bytes): a piece's first at 122B74 + 4 * its sprite (race_car_put_sprite 009CC4, race_car_put_flat_sprite 009D71 "movea.w 122B74(R14), R14"; put_object_sprites, draw_object_one_piece, draw_object_smoothed, fork_branch_sprite, road_row_draw, road_row_pair_draw)
 local player_car_steer_to_stop 0073A3,0073CA R0 speed
 local player_car_steer_to_stop 0073AC R1 speed_gap

@@ -218,7 +218,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 				z80_block(112, 15);
 				note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
 				channel_offset = voice_channel;
-				voice_modulation = (z80_read8((uint16_t)(screen_1_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x40u;
+				voice_modulation = (screen_1_channel_controls[channel_offset] & 0xFu) | 0x40u;
 				pitch_bends = screen_1_pitch_bends_ADDRESS;
 				note = voice_note;
 				start_fm_note(note, channel_offset, pitch_bends);
@@ -1851,7 +1851,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 				z80_block(122, 16);
 				note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
 				channel_offset = voice_channel;
-				voice_modulation = (z80_read8((uint16_t)(screen_2_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x80u;
+				voice_modulation = (screen_2_channel_controls[channel_offset] & 0xFu) | 0x80u;
 				pitch_bends = screen_2_pitch_bends_ADDRESS;
 				note = voice_note;
 				start_fm_note(note, channel_offset, pitch_bends);

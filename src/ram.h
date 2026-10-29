@@ -841,6 +841,9 @@ extern const void *grid_segment_lists_data;
 #define player_car_steer_animations_ADDRESS 0x00926Cu
 extern const void *player_car_steer_animations_data;
 #define player_car_steer_animations ((const uint16_t *)player_car_steer_animations_data)
+#define steer_frames_by_steering_ADDRESS 0x00927Cu
+extern const void *steer_frames_by_steering_data;
+#define steer_frames_by_steering ((const uint8_t *)steer_frames_by_steering_data)
 #define player_car_wheelspin_animations_ADDRESS 0x009300u
 extern const void *player_car_wheelspin_animations_data;
 #define player_car_wheelspin_animations ((const uint16_t *)player_car_wheelspin_animations_data)
@@ -2008,7 +2011,6 @@ extern const void *kanji_font_data;
 #define entry_lcd_text_ADDRESS 0x006EB0u
 #define mega_driver_title_ADDRESS 0x006EB6u
 #define rival_warning_text_ADDRESS 0x007CDBu
-#define steer_frames_by_steering_ADDRESS 0x0092BCu
 #define distance_offset_functions_ADDRESS 0x00AB04u
 #define check_point_lcd_text_branch_0_ADDRESS 0x00CB98u
 #define check_point_lcd_text_branch_1_ADDRESS 0x00CBACu
@@ -3343,8 +3345,7 @@ struct object
 			uint8_t last_event;
 			uint16_t segment;
 			uint16_t last_segment;
-			uint8_t page_table;
-			uint8_t pad_19[0x3B];
+			uint32_t page_table[0xF];
 			uint32_t page_register;
 			uint32_t line_scroll_table;
 			uint32_t line_select_table;

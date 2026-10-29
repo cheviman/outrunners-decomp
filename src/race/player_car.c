@@ -889,8 +889,8 @@ void player_car_animate(void)
 }
 
 /* The car's body as it steers: the model's animation (player_car_steer_animations) in the row of the
-   view's height, its frame (steer_frame) one step a frame toward the one of the steering (the bytes
-   around 0092BC: 0-8, 4 straight on). */
+   view's height, its frame (steer_frame) one step a frame toward the one of the steering
+   (steer_frames_by_steering, from its middle: 0 full left to 8 full right, 4 straight on). */
 void player_car_steer_frame(uint32_t model)
 {
 	uint8_t steer_frame = 0, target_frame = 0;
@@ -899,7 +899,7 @@ void player_car_steer_frame(uint32_t model)
 	animation = player_car_steer_animations[model];
 	view_height = player_car_view_height();
 	OBJECT(current_object)->animation = animation + view_height;
-	target_frame = mem_read8(steer_frames_by_steering_ADDRESS + OBJECT(current_object)->player_car.steering);
+	target_frame = steer_frames_by_steering[64 + OBJECT(current_object)->player_car.steering];
 	steer_frame = OBJECT(current_object)->player_car.steer_frame;
 	if (target_frame == steer_frame)
 	{

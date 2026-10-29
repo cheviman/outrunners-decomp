@@ -70,7 +70,7 @@ void road_surface_update(void)
 	}
 	near_scroll = OBJECT(current_object)->road_surface.near_scroll;
 	near_scroll = (uint16_t)(near_scroll + 0x4FFu);
-	PAGE_SELECT(OBJECT(current_object)->road_surface.page_register)[0] = mem_read32(current_object - 0x24u + ((near_scroll >> 9) + OBJECT(current_object)->road_surface.page_set * 5u) * 4u);
+	PAGE_SELECT(OBJECT(current_object)->road_surface.page_register)[0] = OBJECT(current_object)->road_surface.page_table[(int32_t)((near_scroll >> 9) + (OBJECT(current_object)->road_surface.page_set - 3u) * 5u)];
 	if (OBJECT(current_object)->road_surface.segment <= OBJECT(current_object)->road_surface.last_segment)
 		return;
 	OBJECT(current_object)->road_surface.last_segment = OBJECT(current_object)->road_surface.segment;

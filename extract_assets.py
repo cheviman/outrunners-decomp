@@ -5,7 +5,7 @@ Description: extracts the game's assets from the user's own ROM set, driven by a
              n64decomp/sm64)
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    26-10-2026
+Modified:    29-10-2026
 Author:      Sebastian Toyos
 
 Usage:
@@ -252,9 +252,10 @@ def rom_tables(start, end):
 
 def subjects_of(places, symbols_path, sources, folder, code_size):
     """The file of each data piece by its subject, as the C has the code (symbols_path's file lines): a
-    piece the C names takes the subject of the C file that names it the most; another one inside the code's
-    chip (below code_size), the subject of the stretch of code it lies in (the original's linker laid the
-    tables out beside the code that reads them); the rest go with the piece before them
+    piece the C names takes the subject of the C file that names it the most (the loaders' lists, src/table.c
+    and src/sound/tables.c, name every table once and read none: they are not among 'sources'); another one
+    inside the code's chip (below code_size), the subject of the stretch of code it lies in (the original's
+    linker laid the tables out beside the code that reads them); the rest go with the piece before them
     (data_formats.export). 'folder' is the C's folder the subjects are in (src/, src/sound/). Returns an
     address -> file name function for export's default_group."""
     stretches = sorted((int(address, 16), path) for address, path in
@@ -303,7 +304,8 @@ def extract(asset, data, region_of):
         code = data_formats.v60_code(region_of("program"), ROOT / "symbols.txt", start, end)
         # the chips' mirrors are no data of their own: kept, as the code is
         mirrors = [tuple(int(value, 0) for value in pair) for pair in asset.get("mirrors", [])]
-        game_c = sorted(source for source in (ROOT / "src").rglob("*.c") if "sound" not in source.parts)
+        game_c = sorted(source for source in (ROOT / "src").rglob("*.c")
+                        if "sound" not in source.parts and source.name != "table.c")
         files = data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),
                                     default_group=subjects_of(places, ROOT / "symbols.txt", game_c, ROOT / "src",
                                                               0x40000),
@@ -316,7 +318,7 @@ def extract(asset, data, region_of):
     if kind == "sound_data":
         symbols = ROOT / asset["symbols"]
         places = data_formats.sound_pieces(symbols, asset["size"])
-        sound_c = sorted((ROOT / "src" / "sound").glob("*.c"))
+        sound_c = sorted(source for source in (ROOT / "src" / "sound").glob("*.c") if source.name != "tables.c")
         files = data_formats.export(data, asset["offset"], places, ROOT / asset["formats"], path,
                                     data_formats.z80_code(data, symbols),
                                     default_group=subjects_of(places, symbols, sound_c, ROOT / "src" / "sound",

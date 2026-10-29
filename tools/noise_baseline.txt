@@ -10,7 +10,7 @@ temp_names 0
 stack_names 0
 context_registers 720
 var_fields 0
-mem_access 25
+mem_access 21
 wide_access 204
 copy_backs 0
 invalid_jump 0
@@ -21,12 +21,12 @@ rom_reads 0
 rom_table_reads 0
 board_replaced 1
 functions 762
-lines 39577
-casts 2703
+lines 39579
+casts 2702
 partial_writes 148
 mixed_partial_writes 0
 board_registers 377
-clean_functions 772
+clean_functions 776
 clean_lines 962
-faithful_functions 996
-faithful_lines 999
+faithful_functions 1000
+faithful_lines 1000
