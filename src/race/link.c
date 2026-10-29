@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -337,7 +337,7 @@ void network_check_join(void)
 	count = (uint8_t)(count * 2u);
 	player_count = count;
 	machine = io_read8(r12 + 2u);
-	mem_write8(r12 + 0x1002u, 1u);
+	io_write8(r12 + 0x1002u, 1u);
 	if (isdn_mode == 0u && count < 2u)
 	{
 		network_check_stand_alone();

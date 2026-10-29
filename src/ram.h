@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -4445,6 +4445,16 @@ struct object_list
 	uint16_t objects[0x7F];
 };
 
+struct object_list_block
+{
+	union
+	{
+		uint32_t low;
+		uint16_t count;
+	};
+	uint32_t high;
+};
+
 struct road_row_record
 {
 	uint16_t animation;
@@ -5486,11 +5496,6 @@ struct road_palette_record
 	uint32_t road_fades;
 };
 
-struct text_cell_entry
-{
-	uint16_t contents;
-};
-
 struct backup_course_record
 {
 	uint8_t model;
@@ -5613,6 +5618,7 @@ _Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of t
 _Static_assert(sizeof(struct object_area) == 0x8000, "struct object_area has the size of the game's blocks");
 _Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
 _Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the size of the game's blocks");
+_Static_assert(sizeof(struct object_list_block) == 0x8, "struct object_list_block has the size of the game's blocks");
 _Static_assert(sizeof(struct road_row_record) == 0x18, "struct road_row_record has the size of the program ROM's records");
 _Static_assert(sizeof(struct road_object_stream_entry) == 0xC, "struct road_object_stream_entry has the size of the program ROM's records");
 _Static_assert(sizeof(struct flashing_scenery_record) == 0x1A, "struct flashing_scenery_record has the size of the program ROM's records");
@@ -5721,7 +5727,6 @@ _Static_assert(sizeof(struct object_start_list) == 0x4, "struct object_start_lis
 _Static_assert(sizeof(struct tilemap_pages) == 0xC, "struct tilemap_pages has the size of the game's blocks");
 _Static_assert(sizeof(struct tilemap_banks) == 0x3, "struct tilemap_banks has the size of the game's blocks");
 _Static_assert(sizeof(struct road_palette_record) == 0x4, "struct road_palette_record has the size of the program ROM's records");
-_Static_assert(sizeof(struct text_cell_entry) == 0x2, "struct text_cell_entry has the size of the board's memory");
 _Static_assert(sizeof(struct backup_course_record) == 0x6, "struct backup_course_record has the size of the board's memory");
 _Static_assert(sizeof(struct race_car_rider) == 0x10, "struct race_car_rider has the size of the game's blocks");
 _Static_assert(sizeof(struct race_car_spray) == 0x10, "struct race_car_spray has the size of the game's blocks");
@@ -5741,6 +5746,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define OBJECT_AREA(address) ((struct object_area *)ram(address))
 #define RACE(address) ((struct race *)ram(address))
 #define OBJECT_LIST(address) ((struct object_list *)ram(address))
+#define OBJECT_LIST_BLOCK(address) ((struct object_list_block *)ram(address))
 #define ROAD_ROW_RECORD(address) ((const struct road_row_record *)data_at(address))
 #define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)data_at(address))
 #define ROAD_OBJECT_STREAM_FORKS(address) ((const uint32_t *)data_at(address))
@@ -5924,7 +5930,6 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define FADE_OBJECTS(address) ((uint32_t *)ram(address))
 #define STRETCH_ENDS(address) ((uint16_t *)ram(address))
 #define LINE_SELECTS(address) ((uint16_t *)board(address))
-#define TEXT_CELL_ENTRY(address) ((struct text_cell_entry *)board(address))
 #define CHIP_TEST_RESULTS(address) ((uint8_t *)ram(address))
 #define PROGRAM_HALFWORDS(address) ((const uint16_t *)data_at(address))
 #define ANALOG_POSITIONS(address) ((uint8_t *)ram(address))

@@ -73,13 +73,21 @@ GAME_NORETURN void data_outside(uint32_t address);
 
 /* The board's memories the code uses as plain memory (symbols.txt "struct NAME SIZE board", "elements NAME TYPE
    board"), as the bus has them: the video RAM (0x300000), the sprite RAM (0x400000) and the RAM the sound
-   program shares (0x700000). A structure of the board's anywhere else stops the program */
+   program shares (0x700000); a pointer into one of them that the game points at the work RAM or the
+   program's chips instead reads those, as the bus does (the road rows' last sprites: the sprite list,
+   the one being put together in the work RAM, or 0x100000 when there are none). A structure of the
+   board's anywhere else stops the program */
 GAME_NORETURN void board_outside(uint32_t address);
 
 static inline uint8_t *board(uint32_t address)
 {
 	switch ((address >> 20) & 0xf)
 	{
+	case 0x0:
+	case 0x1:
+		return (uint8_t *)data_at(address);
+	case 0x2:
+		return ram(address);
 	case 0x3:
 		return &s32_board.video_ram[address & (S32_VIDEO_RAM_SIZE - 1)];
 	case 0x4:
@@ -123,6 +131,10 @@ static inline uint8_t *board(uint32_t address)
 /* The game links its objects by the low halfword of their addresses: the object 'link' names, in the
    page of work RAM 'base' points into */
 #define LINKED(base, link) (((base) & 0xFFFF0000u) | (link))
+
+/* A place in the 256-byte page 'base' points into, 'low' bytes from its start (another port of the I/O chip
+   'base' points at) */
+#define IN_PAGE(base, low) (((base) & ~0xFFu) | (low))
 
 /* the board's memories (addresses the code computes into them) */
 #define WORK_RAM          0x200000u

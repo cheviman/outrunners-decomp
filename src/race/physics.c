@@ -3,7 +3,7 @@
  *    Description: the car's physics: the gears and torque curves, the controls, driving along the road, the engine, the road's drag and its edges, the wheels' effects
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -402,22 +402,20 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		min_road_x = (uint16_t)(0u - max_road_x);
 		max_road_x += 0x60u;
 		min_road_x -= 0x60u;
-		if ((int16_t)max_road_x <= (int16_t)road_x)
+		if ((int16_t)road_x < (int16_t)max_road_x)
 		{
-			road_x = (road_x & ~0xFFFFu) | max_road_x;
-			CAR(player_car)->road_x = road_x;
-			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
-			*p_segment_record = segment_record;
-			*p_road_x = road_x;
-			*p_segment_fraction = segment_fraction;
-			*p_segment_length = segment_length;
-			return;
+			if ((int16_t)min_road_x < (int16_t)road_x)
+				player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
+			else
+			{
+				road_x = (road_x & ~0xFFFFu) | min_road_x;
+				CAR(player_car)->road_x = road_x;
+				player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
+			}
 		}
-		if ((int16_t)min_road_x < (int16_t)road_x)
-			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
 		else
 		{
-			road_x = (road_x & ~0xFFFFu) | min_road_x;
+			road_x = (road_x & ~0xFFFFu) | max_road_x;
 			CAR(player_car)->road_x = road_x;
 			player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
 		}

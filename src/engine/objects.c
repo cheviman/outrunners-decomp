@@ -3,7 +3,7 @@
  *    Description: the objects: the object loop, starting and freeing objects and their lists, the random numbers
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -39,7 +39,7 @@ void clear_objects(void)
    and the two lists swap. */
 void run_objects(void)
 {
-	uint32_t blocks_left = 0, count = 0, list_entry = 0, object_list = 0, zero_high = 0, zero_low = 0;
+	uint32_t blocks_left = 0, count = 0, list_block = 0, list_entry = 0, zero_high = 0, zero_low = 0;
 	uint32_t next_list = 0;
 
 	current_object = screen;
@@ -61,18 +61,18 @@ void run_objects(void)
 		}
 		OBJECT_AREA(screen - 0x8000u)->slots[OBJECT(current_object)->slot] = 0u;
 	}
-	object_list = OBJECT_AREA(screen - 0x8000u)->list;
-	blocks_left = OBJECT_LIST(object_list)->count;
+	list_block = OBJECT_AREA(screen - 0x8000u)->list;
+	blocks_left = OBJECT_LIST_BLOCK(list_block)->count;
 	blocks_left = (uint16_t)(blocks_left + 4u);
 	blocks_left = blocks_left >> 2;
 	zero_low = 0u;
 	zero_high = 0u;
 	do
 	{
-		mem_write32(object_list, zero_low);
-		mem_write32(object_list + 4u, zero_high);
+		OBJECT_LIST_BLOCK(list_block)->low = zero_low;
+		OBJECT_LIST_BLOCK(list_block)->high = zero_high;
 		blocks_left--;
-		object_list += 8u;
+		list_block += 8u;
 	} while (blocks_left != 0u);
 	OBJECT_AREA(screen - 0x8000u)->list ^= 0x100u;
 	OBJECT_AREA(screen - 0x8000u)->next_list ^= 0x100u;

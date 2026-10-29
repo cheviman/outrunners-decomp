@@ -3,7 +3,7 @@
  *    Description: unpacking the tile pages and the lists of packed blocks, a step each frame
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,7 +20,7 @@ void unpack(uint32_t source, uint32_t destination)
 {
 	uint32_t carry = 0;
 	uint8_t flags = 0, length_byte = 0;
-	uint32_t back_offset = 0, copy_count = 0, copy_source = 0, flags_left = 0;
+	uint32_t copy_count = 0, copy_source = 0, flags_left = 0;
 	uint32_t length_bits = 0;
 
 	flags = PACKED_BYTES(source)[0];
@@ -40,11 +40,10 @@ void unpack(uint32_t source, uint32_t destination)
 		if (carry)
 		{
 			UNPACKED_BYTES(destination)[0] = PACKED_BYTES(source)[0];
-			destination++;
 			source++;
+			destination++;
 			continue;
 		}
-		back_offset = 0xFFFFFFFFu;
 		flags_left--;
 		if (flags_left == 0u)
 		{
@@ -56,7 +55,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			copy_source = (back_offset & ~0xFFFFu) | AS16(PACKED_BYTES(source)[0]);
+			copy_source = 0xFFFF0000u | AS16(PACKED_BYTES(source)[0]);
 			length_byte = (uint8_t)copy_source;
 			copy_source = (int32_t)copy_source >> 3;
 			length_bits = length_byte & 7u;
@@ -96,7 +95,7 @@ void unpack(uint32_t source, uint32_t destination)
 			carry = (uint8_t)(flags * 2u) < flags;
 			flags = (uint8_t)(flags * 2u);
 			copy_count = copy_count * 2u + carry;
-			copy_source = (back_offset & ~0xFFu) | PACKED_BYTES(source)[0];
+			copy_source = 0xFFFFFF00u | PACKED_BYTES(source)[0];
 			source++;
 			copy_count += 2u;
 		}
@@ -104,9 +103,9 @@ void unpack(uint32_t source, uint32_t destination)
 		do
 		{
 			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
-			destination++;
 			copy_count--;
 			copy_source++;
+			destination++;
 		} while (copy_count != 0u);
 	}
 }
@@ -121,7 +120,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 {
 	uint32_t carry = 0;
 	uint8_t copy_count = 0, flags = 0, length_byte = 0;
-	uint32_t back_offset = 0, destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
+	uint32_t destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
 	uint8_t unpack_copy_count = 0;
 	uint32_t length_bits = 0;
 
@@ -185,7 +184,6 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			SCREEN(screen)->unpack_destination = destination + 1u;
 			return copy_source;
 		}
-		back_offset = 0xFFFFFFFFu;
 		flags_left--;
 		if (flags_left == 0u)
 		{
@@ -197,7 +195,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 		flags = (uint8_t)(flags * 2u);
 		if (carry == 0u)
 			break;
-		copy_source = (back_offset & ~0xFFFFu) | AS16(PACKED_BYTES(source)[0]);
+		copy_source = 0xFFFF0000u | AS16(PACKED_BYTES(source)[0]);
 		length_byte = (uint8_t)copy_source;
 		copy_source = (int32_t)copy_source >> 3;
 		length_bits = length_byte & 7u;
@@ -270,7 +268,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 	carry = (uint8_t)(flags * 2u) < flags;
 	flags = (uint8_t)(flags * 2u);
 	copy_count = (uint8_t)(copy_count * 2u + carry);
-	copy_source = (back_offset & ~0xFFu) | PACKED_BYTES(source)[0];
+	copy_source = 0xFFFFFF00u | PACKED_BYTES(source)[0];
 	source++;
 	copy_count++;
 	copy_source += destination;

@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1314,26 +1314,26 @@ uint16_t test_mode_input_test_draw(uint16_t character)
 	port_b = 0xC80000u;
 	do
 	{
-		port_a = (port_a & ~0xFFu) | INPUT_TEST_BYTES(item)[0];
+		port_a = IN_PAGE(port_a, INPUT_TEST_BYTES(item)[0]);
 		item++;
 		bit = INPUT_TEST_BYTES(item)[0];
 		carry = (io_read32(port_a) & shl32(1u, (int)(bit))) != 0u;
 		item++;
 		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
-		port_b = (port_b & ~0xFFu) | (uint8_t)port_a;
+		port_b = IN_PAGE(port_b, (uint8_t)port_a);
 		carry = (io_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
 		item += 2u;
 		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
 		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
 		item += 2u;
 	} while ((int16_t)AS16(INPUT_TEST_BYTES(item)[0]) >= 0);
-	port_a = (port_a & ~0xFFu) | 8u;
-	port_b = (port_b & ~0xFFu) | (uint8_t)port_a;
+	port_a = IN_PAGE(port_a, 8u);
+	port_b = IN_PAGE(port_b, (uint8_t)port_a);
 	test_switches = io_read8(port_a);
-	r12 = (port_a & ~0xFFu) | 0xAu;
+	r12 = IN_PAGE(port_a, 0xAu);
 	test_switches = test_switches & (io_read8(r12) >> 4);
-	test_switches_b = io_read8(port_b) & (mem_read8((port_b & ~0xFFu) | (uint8_t)r12) >> 4);
+	test_switches_b = io_read8(port_b) & (io_read8(IN_PAGE(port_b, (uint8_t)r12)) >> 4);
 	carry = (test_switches & 1u) != 0u;
 	item += 2u;
 	cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
@@ -2014,7 +2014,7 @@ uint16_t test_mode_game_assignments_draw(void)
 			sign_character = 0x642Bu;
 			if ((int8_t)seconds < 0)
 			{
-				sign_character = (uint16_t)((sign_character & ~0xFFu) | 0x2Du);
+				sign_character = 0x642Du;
 				seconds = (uint8_t)(0u - seconds);
 			}
 			TEXT_LAYER_CELLS(cell)[0] = sign_character;
@@ -2095,7 +2095,7 @@ void test_mode_game_assignments_exit(void)
 	current_object = settings_magic_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
@@ -2581,7 +2581,7 @@ void test_mode_coin_assignments_exit(void)
 	setting_places = coin_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
@@ -2784,7 +2784,7 @@ void test_mode_network_assignments_exit(void)
 	setting_places = network_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = (current_object & ~0xFFu) | TEST_MODE_SETTING_PLACES(setting_places)[0];
+		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
@@ -3471,7 +3471,7 @@ void test_mode_draw_count(uint32_t number, uint32_t digit_count, uint32_t plural
 	colours = colours << 8;
 	if (number > 1u)
 		colours |= 0x53u;
-	mem_write16(*p_cell + plural_offset * 2u, colours);
+	TEXT_LAYER_CELLS(*p_cell)[(int32_t)plural_offset] = colours;
 	colours = byte_swap32(colours << 8);
 	*p_colours = colours;
 	test_mode_draw_number(digit_count, &number, p_colours, p_cell);

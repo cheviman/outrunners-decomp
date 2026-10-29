@@ -3,7 +3,7 @@
  *    Description: the sequence players and the playlist: their tick, their events into the MIDI queues, the sound commands, the music's fade
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -180,7 +180,7 @@ void playlist_command(uint16_t queue_pointer, uint16_t player, uint16_t page, ui
 		saved_player = player;
 		cleared_player = saved_player;
 		playlist_byte = 0u;
-		z80_write8(cleared_player, 0u);
+		SEQUENCE_PLAYER(cleared_player)->flags = 0u;
 		move_block(cleared_player, (uint16_t)(cleared_player + 1u), 0x30u, 1u);
 		playlist = saved_playlist;
 		break;
@@ -793,7 +793,7 @@ void start_sequence(uint16_t header, uint16_t player)
 
 	z80_block(127, 18);
 	header++;
-	sequence_player = (player & ~0xFFu) | 0x1Bu;
+	sequence_player = IN_PAGE(player, 0x1Bu);
 	bank = z80_read8(header);
 	header++;
 	SEQUENCE_PLAYER(sequence_player - 0x1Bu)->bank = bank;
@@ -848,7 +848,7 @@ uint16_t fade_music_volume(uint16_t queue_pointer, uint16_t player, uint16_t pag
 
 	write_index = (uint8_t)queue_pointer;
 	z80_block(23, 4);
-	sequence_player = (player & ~0xFFu) | 0x18u;
+	sequence_player = IN_PAGE(player, 0x18u);
 	if (SEQUENCE_PLAYER(sequence_player - 0x18u)->fade_speed == 0u)
 	{
 		z80_cycles(6);
@@ -914,7 +914,7 @@ uint16_t fade_player_volume(uint16_t queue_pointer, uint16_t player, uint16_t pa
 
 	write_index = (uint8_t)queue_pointer;
 	z80_block(23, 4);
-	sequence_player = (player & ~0xFFu) | 0x18u;
+	sequence_player = IN_PAGE(player, 0x18u);
 	if (SEQUENCE_PLAYER(sequence_player - 0x18u)->fade_speed == 0u)
 	{
 		z80_cycles(6);

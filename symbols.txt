@@ -71,6 +71,10 @@ struct race 80
 # frame), the used slots (7C bytes at 10, FF used), a spare object at 100 and the 124 objects from 400
 struct object_area 8000
 struct object_list 100
+struct object_list_block 8   # an object list as run_objects clears it, eight bytes at a time (its first halfword the count)
+field object_list_block 00 low u32
+field object_list_block 00 count u16   # the list's count of objects, read before it is cleared
+field object_list_block 04 high u32
 field object_area 00 list u32 object_list            # this frame's list, which run_objects walks
 field object_area 04 list_first u32 object_list      # its first object's place (nothing reads it)
 field object_area 08 next_list u32 object_list       # the next frame's list, where run_objects puts the live ones
@@ -1280,6 +1284,7 @@ scoped object backdrop_translucent 80 data u32 backdrop_record
 
 # ======== the player's car and the race display (naming batch D) ========
 006EF0  func  player_car_update
+007F31  func  player_car_crash_step   # state 5 of player_car_update, which a hit runs into the frame it starts the crash
 0070EC  func  player_car_move
 007396  func  player_car_steer_to_stop
 007443  func  player_car_check_place
@@ -1702,7 +1707,8 @@ local network_check_toggle_memory_text 00D739 R28 memory_text text_characters
 01440E  table race_car_occupant_animations  u16   # race_car_occupant_update "movz.hw 1440E[PC](R0), R9" (01412C) by occupant (the car's model for its driver, model + 8 for its passenger: race_cars_start), for animation_start; census ROM 01440E-01442D (0DC6-0DD5, one a rider)
 01442E  table race_car_rider_palettes  u16   # the riders' palettes, by occupant or rider (model, model + 8): race_car_occupant_update (014134) and rider_gesture_update (014229) "mov.h 1442E[PC](R0), 3A[R20]"; census ROM 01442E-01444D (00A6-00B5)
 014694  func  race_car_start_ending
-comment player_car_update The screen's car, each frame: player_car_check_place, player_car_read_controls, player_car_build_hit_boxes, then by state: 0 sets up the race (the view's constants in screen eye_distance-18, the course, the car on its grid place: segment 16 + grid_segment_lists by players and place, road_x from grid_road_place_lists, its world position; the palette of its model, player_car_palettes; timer 8 frames in the demo, 149 in a race with the intro view car view_shift_intro/view_pitch_intro; the gears, torque curves, crash physics, with screen is_host the race's time left (race time_left: 40 seconds plus master_time_difficulty), the engine sound); 1 the countdown to the start: brake full and the wheel centred until timer runs out (others read it as the frames to the start), then car moving and race started; 2 driving (player_car_move): goes to 3 when the time is up (car time_up), to 4 at the goal (car at_goal); counts hit_guard down; on a hit (flags bit 2, by hit_kind): 3 a fork sign slows it for 15 frames (car slowed_frames), 0 scenery, 1 a road object (hit_other), 2 the other player's car (hit_other): a speed change, a push and a bounce from the model's crash table (car crash_table, by impact_speed or the cars' speeds and places), the hit's sounds, a crash animation, the CRASH text (car crash_text), immune (flags bit 3), state 5; 5 the crash plays out: no controls, the push and the speed change die away, it bounces under gravity (sound 31 on landing), back to 2 when the animation ends with 15 frames of hit_guard; 3 time up: gas off and the model's brake (player_car_time_up_brakes), 180 frames, then the race is over (car race_over), GAME OVER (004771) with one player or race_result_start with two, 60 frames, screen flags bit 4 and DJ message 36 or 37; 4 the goal: finished, the race's stage count up, waits for the screen's finish time (screen 410) into race finish_time and the race time, race finished, then drives itself (player_car_steer_to_stop) to its stop_position by its place (goal_stops), plays the model's arrival animation (player_car_arrival_animations), brakes to a stop, 90 frames, screen flags bit 4.
+comment player_car_update The screen's car, each frame: player_car_check_place, player_car_read_controls, player_car_build_hit_boxes, then by state: 0 sets up the race (the view's constants in screen eye_distance-18, the course, the car on its grid place: segment 16 + grid_segment_lists by players and place, road_x from grid_road_place_lists, its world position; the palette of its model, player_car_palettes; timer 8 frames in the demo, 149 in a race with the intro view car view_shift_intro/view_pitch_intro; the gears, torque curves, crash physics, with screen is_host the race's time left (race time_left: 40 seconds plus master_time_difficulty), the engine sound); 1 the countdown to the start: brake full and the wheel centred until timer runs out (others read it as the frames to the start), then car moving and race started; 2 driving (player_car_move): goes to 3 when the time is up (car time_up), to 4 at the goal (car at_goal); counts hit_guard down; on a hit (flags bit 2, by hit_kind): 3 a fork sign slows it for 15 frames (car slowed_frames), 0 scenery, 1 a road object (hit_other), 2 the other player's car (hit_other): a speed change, a push and a bounce from the model's crash table (car crash_table, by impact_speed or the cars' speeds and places), the hit's sounds, a crash animation, the CRASH text (car crash_text), immune (flags bit 3), state 5 and its first frame; 5 the crash plays out (player_car_crash_step); 3 time up: gas off and the model's brake (player_car_time_up_brakes), 180 frames, then the race is over (car race_over), GAME OVER (004771) with one player or race_result_start with two, 60 frames, screen flags bit 4 and DJ message 36 or 37; 4 the goal: finished, the race's stage count up, waits for the screen's finish time (screen 410) into race finish_time and the race time, race finished, then drives itself (player_car_steer_to_stop) to its stop_position by its place (goal_stops), plays the model's arrival animation (player_car_arrival_animations), brakes to a stop, 90 frames, screen flags bit 4.
+comment player_car_crash_step The crash playing out, each frame of player_car_update's state 5 and the frame a hit starts it: at the goal (car at_goal) back to 2 at once; else the wheel motor at 10, the hit's sound once its delay (car crash_sound_delay) runs out, no controls, the push and the speed change dying away (car push_decay, speed_change_decay), a bounce under gravity (car gravity, bounce_damping; sound 31 on landing), and back to 2 with 15 frames of hit_guard when the crash animation ends (frame_time 0).
 0146A0  table race_car_ending_state_jumps  u32   # race_car_start_ending (01469D "jmp [R0]") jumps through it by state: 0146B0 01470D 01470E 01470D
 comment player_car_move One frame of the car on the road: player_car_drive, player_car_place_view, player_car_move_view, player_car_set_horizon, player_car_publish, player_car_extend_course, player_car_project_road, player_car_engine_sound and player_car_animate; no wheel effects while it crashes (state 5).
 comment player_car_steer_to_stop Drives the car by itself after the goal: gas 40, no brake, the speed (car speed) a 16th of the way to stop_speed each frame, and the wheel turned step by step toward stop_x across the road (centred within 8 of it; stop_wheel keeps it).
@@ -5038,6 +5044,7 @@ local player_car_update 007DF6,007E39 R6 other_weight
 local player_car_update 007E45 R7 own_weight
 local player_car_update 007DFA,007E15,007EB9 R0 side_gap
 local player_car_update 007ED1 R0 side_gap                               # then the sideways push it gives
+local player_car_update 007DC9 R11 car_segment_record road_segment   # the car's segment of the ring (its offset, car segment_offset): the road's half width there
 local player_car_update 007DFD,007E19 R1 other_x
 local player_car_update 007E00,007E1D R2 own_slide
 local player_car_update 007E03,007E21 R3 other_slide
@@ -6413,6 +6420,7 @@ local draw_text_sprites 011AA3 t1 next_character
 # Objects, random numbers, sounds
 local clear_objects 011C93,011C98,011CA6,011CAB R0 halfword_count
 local run_objects 011CC3,011CE4 R22 list_entry object_links
+local run_objects 011CFE R1 list_block object_list_block   # this frame's list (object_area list) once walked, cleared eight bytes at a time
 local run_objects 011D03,011D06,011D09,011D16 R0 blocks_left
 local run_objects 011D0D R2 zero_low
 local run_objects 011D10 R3 zero_high
@@ -7091,6 +7099,7 @@ local demo_caption_update 01AE91,01AEF9 R0 state_routine
 local demo_caption_update 01AEA9,01AEE7 R0 record_offset
 local kanji_text_viewer_update 01B149 R4 text_number
 local kanji_text_viewer_update 01B151 R3 cell
+local kanji_text_viewer_update 01B172 R10 cursor_cell text_layer_cells   # the cursor: row 10's cell at the object's x (the digit being chosen), 2A on palette 60 every fourth frame
 local kanji_text_viewer_update 01B185,01B1A7 R4 text_ended   # -1 from kanji_text_viewer_draw_line at the text's end
 local kanji_text_viewer_update 01B188,01B1AA R5 line
 local kanji_text_viewer_update 01B18B,01B1A7 R10 text
@@ -7238,7 +7247,7 @@ param test_mode_draw_count R0 number
 param test_mode_draw_count R1 colours                      # the S's colour (the word's) in its low byte and the digits' in its second
 param test_mode_draw_count R2 digit_count
 param test_mode_draw_count R3 plural_offset                # how many cells from R10 the S of COIN(S), CREDIT(S), GAME(S) goes
-param test_mode_draw_count R10 cell text_cell_entry
+param test_mode_draw_count R10 cell text_layer_cells
 # The pages' blinking cursor: the menu loops' tail at 01F0AD, which every page's loop (and test_mode_menu_run) takes in; local lines are by the instruction, so these name it in all of them
 local test_mode_volume_adjustment_select 01F0AD t3 blink_timer
 local test_mode_volume_adjustment_select 01F0B9 t3 cursor_character
@@ -8157,10 +8166,10 @@ local draw_object_smoothed 00F15C,00F189,00F18C,00F21C,00F308 R28 previous_place
 local draw_object_smoothed 00F227,00F2FF R27 entry_word     # the halfword that goes into the sprite entry and its copy: the piece's attributes, then the palette
 local road_row_draw 00F625,00F8CD,00F8D7 R27 sprite_place
 local road_row_draw 00F8F0,00F8F6,00F8FC R27 sprite_place sprite_place_words   # the blank places after the last item, a word at a time
-local road_row_draw 00F61E,00F635,00F644,00F647,00F8D2,00F8DA R28 previous_sprites   # (untyped: the sprite list, or 100000 in the program ROM when there is none to step from)
+local road_row_draw 00F61E,00F635,00F644,00F647,00F8D2,00F8DA R28 previous_sprites sprite_words   # the sprite list (in the sprite RAM, or the one being put together in the work RAM), or 100000 in the program ROM when there is none to step from (board() reads those as the bus does)
 local road_row_pair_draw 00F973,00FC7E,00FC88 R27 sprite_place
 local road_row_pair_draw 00FCA1,00FCA7,00FCAD R27 sprite_place sprite_place_words
-local road_row_pair_draw 00F96C,00F983,00F992,00F995,00FC83,00FC8B R28 previous_sprites
+local road_row_pair_draw 00F96C,00F983,00F992,00F995,00FC83,00FC8B R28 previous_sprites sprite_words
 local player_car_project_road 01015F,0101A1,0101CE,0101DC,0101FB R27 segment_y
 local player_car_project_road 010166,010185,010202 R28 segment_depth
 local player_car_project_road 01023D R27 crest_y
@@ -8360,8 +8369,6 @@ elements line_selects u16 board   # the tilemap row a line shows (car_select_run
 # test_mode_draw_count's cell (R10) as a record of one cell, so that its write R3 cells on stays an address: as text_layer_cells
 # (which its callers' cells would give it) the C indexed TEXT_CELLS(*p_cell)[plural_offset] with plural_offset FFFFFFFE or
 # FFFFFFFD (the bookkeeping's TOTAL lines: the S two or three cells back), 4G cells on in C
-struct text_cell_entry 2 board
-field text_cell_entry 00 contents u16
 # test_mode_blink_address holds the cursor's cell (test_mode_set_cursor) on the pages with a cursor, and the prompt's text
 # record (test_mode_show_exit_prompt, test_mode_show_continue_prompt) on those with a prompt, which test_mode_blink_prompt reads
 # The rest of the test mode's memories: its texts, the memory test, the volume adjustment, the output test, the bookkeeping

@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1048,23 +1048,23 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 			AS32(SPRITE_WORDS(sprite_entry)[0]) = attributes_and_size;
 			SPRITE_PLACE(sprite_place)->rom_offset = rom_offset_and_palette;
 			sprite_entry += 4u;
-			if (mem_read16(previous_sprites + 8u) == (uint16_t)rom_offset_and_palette)
+			if (SPRITE_WORDS(previous_sprites)[4] == (uint16_t)rom_offset_and_palette)
 			{
-				previous_word = mem_read16(previous_sprites);
+				previous_word = SPRITE_WORDS(previous_sprites)[0];
 				SPRITE_PLACE(sprite_place)->height = size;
 				SPRITE_WORDS(sprite_entry)[6144] = ((uint16_t)(previous_word + size) >> 1) | sprite_then_height_bits;
 				SPRITE_WORDS(sprite_entry)[0] = size | sprite_then_height_bits;
-				previous_word = mem_read16(previous_sprites + 2u);
+				previous_word = SPRITE_WORDS(previous_sprites)[1];
 				SPRITE_PLACE(sprite_place)->width = sprite_width;
 				sprite_entry += 2u;
 				SPRITE_WORDS(sprite_entry)[6144] = ((uint16_t)(previous_word + sprite_width) >> 1) | window_then_width_bits;
 				SPRITE_WORDS(sprite_entry)[0] = sprite_width | window_then_width_bits;
-				previous_word = mem_read16(previous_sprites + 4u);
+				previous_word = SPRITE_WORDS(previous_sprites)[2];
 				SPRITE_PLACE(sprite_place)->y = y;
 				sprite_entry += 2u;
 				SPRITE_WORDS(sprite_entry)[6144] = (int16_t)(previous_word + y) >> 1;
 				SPRITE_WORDS(sprite_entry)[0] = y;
-				previous_word = mem_read16(previous_sprites + 6u);
+				previous_word = SPRITE_WORDS(previous_sprites)[3];
 				SPRITE_PLACE(sprite_place)->x = x;
 				sprite_entry += 2u;
 				SPRITE_WORDS(sprite_entry)[6144] = (int16_t)(previous_word + x) >> 1;
@@ -1254,9 +1254,9 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 			AS32(SPRITE_WORDS(sprite_entry)[0]) = attributes_and_size;
 			SPRITE_PLACE(sprite_place)->rom_offset = rom_offset_and_palette;
 			sprite_entry += 4u;
-			if (mem_read16(previous_sprites + 8u) == (uint16_t)rom_offset_and_palette)
+			if (SPRITE_WORDS(previous_sprites)[4] == (uint16_t)rom_offset_and_palette)
 			{
-				halfway_word = mem_read16(previous_sprites);
+				halfway_word = SPRITE_WORDS(previous_sprites)[0];
 				SPRITE_PLACE(sprite_place)->height = size;
 				halfway_word = ((uint16_t)(halfway_word + size) >> 1) | sprite_then_height_bits;
 				size = size | sprite_then_height_bits;
@@ -1264,7 +1264,7 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 				SPRITE_WORDS(sprite_entry)[8] = size;
 				SPRITE_WORDS(sprite_entry)[6144] = halfway_word;
 				SPRITE_WORDS(sprite_entry)[0] = size;
-				halfway_word = mem_read16(previous_sprites + 2u);
+				halfway_word = SPRITE_WORDS(previous_sprites)[1];
 				SPRITE_PLACE(sprite_place)->width = sprite_width;
 				halfway_word = ((uint16_t)(halfway_word + sprite_width) >> 1) | window_then_width_bits;
 				sprite_width |= window_then_width_bits;
@@ -1273,7 +1273,7 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 				SPRITE_WORDS(sprite_entry)[8] = sprite_width;
 				SPRITE_WORDS(sprite_entry)[6144] = halfway_word;
 				SPRITE_WORDS(sprite_entry)[0] = sprite_width;
-				halfway_word = mem_read16(previous_sprites + 4u);
+				halfway_word = SPRITE_WORDS(previous_sprites)[2];
 				SPRITE_PLACE(sprite_place)->y = y;
 				halfway_word = (uint16_t)((int16_t)(halfway_word + y) >> 1);
 				sprite_entry += 2u;
@@ -1281,13 +1281,13 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 				SPRITE_WORDS(sprite_entry)[8] = y;
 				SPRITE_WORDS(sprite_entry)[6144] = halfway_word;
 				SPRITE_WORDS(sprite_entry)[0] = y;
-				halfway_word = mem_read16(previous_sprites + 0xAu);
+				halfway_word = SPRITE_WORDS(previous_sprites)[5];
 				SPRITE_PLACE(sprite_place)->mirror_x = pair_x;
 				sprite_entry += 2u;
 				SPRITE_WORDS(sprite_entry)[6152] = (int16_t)(halfway_word + pair_x) >> 1;
 				SPRITE_WORDS(sprite_entry)[8] = pair_x;
 				pair_x = (pair_x << 16) | (pair_x >> 16);
-				halfway_word = mem_read16(previous_sprites + 6u);
+				halfway_word = SPRITE_WORDS(previous_sprites)[3];
 				SPRITE_PLACE(sprite_place)->x = pair_x;
 				SPRITE_WORDS(sprite_entry)[6144] = (int16_t)(halfway_word + pair_x) >> 1;
 				SPRITE_WORDS(sprite_entry)[0] = pair_x;

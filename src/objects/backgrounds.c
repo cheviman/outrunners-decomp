@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -32,7 +32,6 @@
    background_scroll_y). */
 void race_background_update(void)
 {
-	bool L_017685 = false;
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
@@ -117,51 +116,53 @@ void race_background_update(void)
 			}
 		}
 	case 1:
-		if (SCREEN(screen)->stage_background_change != 0u)
-			L_017685 = true;
-		else if (CAR(player_car)->new_branch != 0u)
+		if (SCREEN(screen)->stage_background_change == 0u)
 		{
+			if (CAR(player_car)->new_branch == 0u)
+				break;
 			CAR(player_car)->new_branch = 0u;
-			L_017685 = true;
 		}
-		if (L_017685)
+		SCREEN(screen)->background_changing = 0xFFu;
+		new_background = SCREEN(screen)->built_stage;
+		if (SCREEN(screen)->stage_background_change == 0u)
 		{
-			SCREEN(screen)->background_changing = 0xFFu;
-			new_background = SCREEN(screen)->built_stage;
-			if (SCREEN(screen)->stage_background_change == 0u)
-			{
-				new_background = new_background * 2u;
-				new_background = (new_background & ~0xFFu) | (uint8_t)(new_background + CAR(player_car)->branch);
-			}
-			else
-				new_background = (uint8_t)(new_background + 0x2Au);
-			OBJECT(current_object)->race_background.background = new_background;
-			tile_page_list = current_object + 0x2Cu;
-			tile_pages = background_tile_page_lists[new_background];
-			r12 = tile_page_list;
-			page_half = OBJECT(current_object)->race_background.page_half;
-			page_half = page_half ^ 2u;
-			OBJECT(current_object)->race_background.page_half = page_half;
-			page_half = page_half * 5u * 2u + 1u;
-			page_count = 9u;
-			do
-			{
-				OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0];
-				r12 += 4u;
-				page_half++;
-				page_count--;
-				tile_pages += 4u;
-			} while (page_count != 0u);
-			OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
-			queue_tile_pages(tile_page_list);
-			page_word_set = OBJECT(current_object)->race_background.page_half * 2u;
-			branch = SCREEN(screen)->stage_background_branch;
-			if (SCREEN(screen)->stage_background_change == 0u)
-				branch = CAR(player_car)->branch;
+			new_background = new_background * 2u;
+			new_background = (new_background & ~0xFFu) | (uint8_t)(new_background + CAR(player_car)->branch);
+		}
+		else
+			new_background = (uint8_t)(new_background + 0x2Au);
+		OBJECT(current_object)->race_background.background = new_background;
+		tile_page_list = current_object + 0x2Cu;
+		tile_pages = background_tile_page_lists[new_background];
+		r12 = tile_page_list;
+		page_half = OBJECT(current_object)->race_background.page_half;
+		page_half = page_half ^ 2u;
+		OBJECT(current_object)->race_background.page_half = page_half;
+		page_half = page_half * 5u * 2u + 1u;
+		page_count = 9u;
+		do
+		{
+			OBJECT_TILE_PAGES(r12)[0] = byte_swap32(page_half) | TILE_PAGE_ENTRIES(tile_pages)[0];
+			r12 += 4u;
+			page_half++;
+			page_count--;
+			tile_pages += 4u;
+		} while (page_count != 0u);
+		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
+		queue_tile_pages(tile_page_list);
+		page_word_set = OBJECT(current_object)->race_background.page_half * 2u;
+		branch = SCREEN(screen)->stage_background_branch;
+		if (SCREEN(screen)->stage_background_change != 0u)
+		{
 			OBJECT(current_object)->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
 			OBJECT(current_object)->state++;
 			OBJECT(current_object)->race_background.change_step = 0u;
+			break;
 		}
+		branch = CAR(player_car)->branch;
+		OBJECT(current_object)->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
+		OBJECT(current_object)->state++;
+		OBJECT(current_object)->race_background.change_step = 0u;
 		break;
 	case 2:
 		signed_turn = (int16_t)((uint32_t)CAR(player_car)->view_yaw << 4) >> 4;
@@ -176,44 +177,40 @@ void race_background_update(void)
 		switch (OBJECT(current_object)->race_background.change_step)
 		{
 		case 0:
-			if (zero == 0u)
+			if (zero)
+				break;
+			SCREEN(screen)->background_fading = 0xFFu;
+			background = OBJECT(current_object)->race_background.background;
+			palettes = background_palettes[background];
+			queue_palette_list(palettes);
+			TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
+			next_page_words = OBJECT(current_object)->race_background.next_page_words;
+			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
+			OBJECT(current_object)->race_background.change_step++;
+			break;
+		case 1:
+			if ((int16_t)view_turn < 0x2A0)
+				break;
+			SCREEN(screen)->backdrops_leaving = 0xFFu;
+			fades = background_leaving_fades[OBJECT(current_object)->race_background.background];
+			start_palette_fades(fades);
+			fades = background_road_palettes[OBJECT(current_object)->race_background.background];
+			if (fades == 0u)
 			{
-				SCREEN(screen)->background_fading = 0xFFu;
-				background = OBJECT(current_object)->race_background.background;
-				palettes = background_palettes[background];
-				queue_palette_list(palettes);
-				TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
 				next_page_words = OBJECT(current_object)->race_background.next_page_words;
 				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
 				OBJECT(current_object)->race_background.change_step++;
+				break;
 			}
-			break;
-		case 1:
-			if ((int16_t)view_turn >= 0x2A0)
-			{
-				SCREEN(screen)->backdrops_leaving = 0xFFu;
-				fades = background_leaving_fades[OBJECT(current_object)->race_background.background];
-				start_palette_fades(fades);
-				fades = background_road_palettes[OBJECT(current_object)->race_background.background];
-				if (fades == 0u)
-				{
-					next_page_words = OBJECT(current_object)->race_background.next_page_words;
-					TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-					OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-					OBJECT(current_object)->race_background.change_step++;
-				}
-				else
-				{
-					SCREEN(screen)->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
-					fades += 4u;
-					start_palette_fades(fades);
-					next_page_words = OBJECT(current_object)->race_background.next_page_words;
-					TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-					OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-					OBJECT(current_object)->race_background.change_step++;
-				}
-			}
+			SCREEN(screen)->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
+			fades += 4u;
+			start_palette_fades(fades);
+			next_page_words = OBJECT(current_object)->race_background.next_page_words;
+			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
+			OBJECT(current_object)->race_background.change_step++;
 			break;
 		case 2:
 			view_turn_kept = view_turn;
@@ -223,99 +220,52 @@ void race_background_update(void)
 			race_background_start_objects(route_stage);
 			view_turn = (uint16_t)view_turn_kept;
 			OBJECT(current_object)->race_background.change_step++;
-			if ((int16_t)view_turn <= 0x160)
-			{
-				fades = background_palette_fades[OBJECT(current_object)->race_background.background];
-				race_background_fade_palettes(fades);
-				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-				OBJECT(current_object)->race_background.change_step++;
-			}
-			break;
 		case 3:
-			if ((int16_t)view_turn <= 0x160)
-			{
-				fades = background_palette_fades[OBJECT(current_object)->race_background.background];
-				race_background_fade_palettes(fades);
-				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-				OBJECT(current_object)->race_background.change_step++;
-			}
+			if ((int16_t)view_turn > 0x160)
+				break;
+			fades = background_palette_fades[OBJECT(current_object)->race_background.background];
+			race_background_fade_palettes(fades);
+			next_page_words = OBJECT(current_object)->race_background.next_page_words;
+			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
+			OBJECT(current_object)->race_background.change_step++;
 			break;
 		case 4:
-			if ((int16_t)view_turn <= 0x60)
-			{
-				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-				OBJECT(current_object)->race_background.change_step++;
-			}
+			if ((int16_t)view_turn > 0x60)
+				break;
+			next_page_words = OBJECT(current_object)->race_background.next_page_words;
+			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
+			OBJECT(current_object)->race_background.change_step++;
 			break;
 		case 5:
-			if (zero)
+			if (zero == 0u)
+				break;
+			SCREEN(screen)->background_changing = 0u;
+			SCREEN(screen)->stage_background_change = 0u;
+			OBJECT(current_object)->state--;
+			background_2 = OBJECT(current_object)->race_background.background;
+			if (background_2 == 5u)
 			{
-				SCREEN(screen)->background_changing = 0u;
-				SCREEN(screen)->stage_background_change = 0u;
-				OBJECT(current_object)->state--;
-				background_2 = OBJECT(current_object)->race_background.background;
-				if (background_2 == 5u)
-					race_background_start_lower_animation();
-				else
-				{
-					animation = 0u;
-					if (background_2 == 7u || background_2 == 8u)
-						race_background_start_upper_animation(animation);
-					else
-					{
-						animation = 2u;
-						if (background_2 == 0x25u)
-						{
-							race_background_start_upper_animation(animation);
-							scroll_x = CAR(player_car)->view_yaw;
-							if (SCREEN(screen)->background_changing == 0u)
-								scroll_x = scroll_x >> 2;
-							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
-							slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
-							scroll_y = slope_scroll_y;
-							if ((int16_t)slope_scroll_y >= 0)
-							{
-								scroll_y_limit = (uint16_t)(0u - SCREEN(screen)->road_top_line + 0x180u);
-								if ((int16_t)scroll_y_limit < (int16_t)scroll_y)
-									scroll_y = (uint16_t)scroll_y_limit;
-							}
-							else
-								scroll_y = 0u;
-							SCREEN(screen)->background_scroll_y = scroll_y;
-							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
-							return;
-						}
-						animation = 1u;
-						if (background_2 == 0x26u)
-						{
-							race_background_start_upper_animation(animation);
-							scroll_x = CAR(player_car)->view_yaw;
-							if (SCREEN(screen)->background_changing == 0u)
-								scroll_x = scroll_x >> 2;
-							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
-							slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
-							scroll_y = slope_scroll_y;
-							if ((int16_t)slope_scroll_y >= 0)
-							{
-								scroll_y_limit = (uint16_t)(0u - SCREEN(screen)->road_top_line + 0x180u);
-								if ((int16_t)scroll_y_limit < (int16_t)scroll_y)
-									scroll_y = (uint16_t)scroll_y_limit;
-							}
-							else
-								scroll_y = 0u;
-							SCREEN(screen)->background_scroll_y = scroll_y;
-							VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
-							return;
-						}
-					}
-				}
+				race_background_start_lower_animation();
+				break;
 			}
+			animation = 0u;
+			if (background_2 == 7u || background_2 == 8u)
+			{
+				race_background_start_upper_animation(animation);
+				break;
+			}
+			animation = 2u;
+			if (background_2 == 0x25u)
+			{
+				race_background_start_upper_animation(animation);
+				break;
+			}
+			animation = 1u;
+			if (background_2 != 0x26u)
+				break;
+			race_background_start_upper_animation(animation);
 			break;
 		}
 		break;

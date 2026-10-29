@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -351,39 +351,27 @@ void name_entry_update(void)
 			OBJECT(current_object)->state++;
 			OBJECT(current_object)->name_entry.timer = 0x3Cu;
 			OBJECT(current_object)->name_entry.spin_frames = 0u;
-			timer_2 = OBJECT(current_object)->name_entry.timer;
-			OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
-			if (timer_2 != 1u)
-				break;
-			SCREEN(screen)->button_lamps = 0u;
-			SCREEN(screen)->game_step = 0x15u;
-			race = SCREEN(screen)->race;
-			RACE(race)->record_serial++;
-			RACE(race)->finish_time = SCREEN(screen)->checkpoint_times_by_player[SCREEN(screen)->player + 0x28u];
-			RACE(race)->record_model = CAR(player_car)->model;
-			RACE(race)->record_name = OBJECT(current_object)->name_entry.name[0];
-			RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
-			RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
-			OBJECT(current_object)->state++;
-			break;
 		}
-		rejected_name = name_entry_rejected_names_ADDRESS;
-		while ((int32_t)REJECTED_NAMES(rejected_name)[0] >= 0)
+		else
 		{
-			element = REJECTED_NAMES(rejected_name)[0];
-			rejected_name += 4u;
-			if (entered_name == element)
+			rejected_name = name_entry_rejected_names_ADDRESS;
+			while ((int32_t)REJECTED_NAMES(rejected_name)[0] >= 0)
 			{
-				OBJECT(current_object)->name_entry.name[0] = 0x2Du;
-				OBJECT(current_object)->name_entry.name[1] = 0x2Du;
-				OBJECT(current_object)->name_entry.name[2] = 0x2Du;
-				OBJECT(current_object)->name_entry.name[3] = 0u;
-				break;
+				element = REJECTED_NAMES(rejected_name)[0];
+				rejected_name += 4u;
+				if (entered_name == element)
+				{
+					OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+					OBJECT(current_object)->name_entry.name[3] = 0u;
+					break;
+				}
 			}
+			OBJECT(current_object)->state++;
+			OBJECT(current_object)->name_entry.timer = 0x3Cu;
+			OBJECT(current_object)->name_entry.spin_frames = 0u;
 		}
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->name_entry.timer = 0x3Cu;
-		OBJECT(current_object)->name_entry.spin_frames = 0u;
 	case 3:
 		timer_2 = OBJECT(current_object)->name_entry.timer;
 		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;

@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by

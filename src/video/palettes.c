@@ -3,7 +3,7 @@
  *    Description: the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by

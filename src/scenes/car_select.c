@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -78,7 +78,7 @@ void car_select_run(void)
 		background = CAR_SELECT_TILEMAP_SETUP(setup - 0x18u)->background;
 		setup_bits = setup + 4u;
 		set_up_background(background);
-		video_registers[2] |= mem_read16(setup_bits);
+		video_registers[2] |= CAR_SELECT_TILEMAP_SETUP(setup_bits - 0x1Cu)->video_register_bits;
 		VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.second_scroll_y_address)[0] = 0xE0u;
 		object = start_object();
 		OBJECT(object)->handler = welcome_letter_start_ADDRESS;
@@ -2301,39 +2301,31 @@ void entry_traffic_car_drive(void)
 	switch (OBJECT(current_object)->state)
 	{
 	case 3:
-		if (OBJECT(current_object)->entry_traffic_car.spin_delay != 0u)
+		if (OBJECT(current_object)->entry_traffic_car.spin_delay == 0u)
+		{
+			animation_advance(0u);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			tyre_noise = 4u;
+			set_tyre_noise(tyre_noise);
+		}
+		else
 		{
 			spin_delay = OBJECT(current_object)->entry_traffic_car.spin_delay;
 			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay - 1u;
-			if (spin_delay != 1u)
+			if (spin_delay == 1u)
 			{
-				path_step = OBJECT(current_object)->entry_traffic_car.path_step;
-				OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
-				traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-				path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-				traffic_path_step += 2u;
-				if (path_size != 0u)
-				{
-					OBJECT(current_object)->width_scale = path_size;
-					OBJECT(current_object)->height_scale = path_size;
-					OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-					OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-					draw_object(path_size);
-					return;
-				}
-				pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-				request_sound(pass_sound);
-				OBJECT(current_object)->flags = 0u;
-				return;
+				animation_advance(0u);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				tyre_noise = 4u;
+				set_tyre_noise(tyre_noise);
 			}
 		}
-		animation_advance(0u);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		tyre_noise = 4u;
-		set_tyre_noise(tyre_noise);
 	case 1:
 		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
@@ -2354,39 +2346,31 @@ void entry_traffic_car_drive(void)
 		OBJECT(current_object)->flags = 0u;
 		return;
 	case 4:
-		if (OBJECT(current_object)->entry_traffic_car.spin_delay != 0u)
+		if (OBJECT(current_object)->entry_traffic_car.spin_delay == 0u)
+		{
+			animation_advance(0u);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			animation_advance(ignored);
+			pass_sound = 4u;
+			set_tyre_noise(pass_sound);
+		}
+		else
 		{
 			spin_delay_2 = OBJECT(current_object)->entry_traffic_car.spin_delay;
 			OBJECT(current_object)->entry_traffic_car.spin_delay = spin_delay_2 - 1u;
-			if (spin_delay_2 != 1u)
+			if (spin_delay_2 == 1u)
 			{
-				path_step = OBJECT(current_object)->entry_traffic_car.path_step;
-				OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
-				traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-				mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-				traffic_path_step += 2u;
-				if (mirrored_x != 0u)
-				{
-					OBJECT(current_object)->width_scale = mirrored_x;
-					OBJECT(current_object)->height_scale = mirrored_x;
-					OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-					OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
-					draw_object(mirrored_x);
-					return;
-				}
-				pass_sound = car_pass_sounds[OBJECT(current_object)->entry_traffic_car.car];
-				request_sound(pass_sound);
-				OBJECT(current_object)->flags = 0u;
-				return;
+				animation_advance(0u);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				animation_advance(ignored);
+				pass_sound = 4u;
+				set_tyre_noise(pass_sound);
 			}
 		}
-		animation_advance(0u);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		animation_advance(ignored);
-		pass_sound = 4u;
-		set_tyre_noise(pass_sound);
 		path_step = OBJECT(current_object)->entry_traffic_car.path_step;
 		OBJECT(current_object)->entry_traffic_car.path_step = path_step + 1u;
 		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;

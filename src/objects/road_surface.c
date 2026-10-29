@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -353,7 +353,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 											SCREEN(screen)->road_top_line = point_line;
 											ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 											road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-											OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
+											OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
 											*p_stripe_count = segment;
 											*p_fraction_shift = fraction_shift;
 											*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
@@ -475,7 +475,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		SCREEN(screen)->road_top_line = point_line;
 		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 		road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-		OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
+		OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
 		*p_stripe_count = segment;
 		*p_fraction_shift = fraction_shift;
 		*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
@@ -488,7 +488,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		SCREEN(screen)->road_top_line = point_line;
 		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 		road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-		OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
+		OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
 		*p_stripe_count = segment;
 		*p_fraction_shift = fraction_shift;
 		*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
@@ -506,7 +506,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	SCREEN(screen)->road_top_line = point_line;
 	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 	road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-	OBJECT(current_object)->road_surface.near_scroll = mem_read16(scroll_bottom - 2u);
+	OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
 	*p_stripe_count = segment;
 	*p_fraction_shift = fraction_shift;
 	*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
