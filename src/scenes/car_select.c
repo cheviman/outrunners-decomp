@@ -2078,6 +2078,7 @@ uint32_t car_select_wait_confirm(void)
 		zero = 0u == 0u;
 		return zero;
 	}
+	unreachable();
 }
 
 /* Sets up the invitation to join, on a seat with no player while the entry time of a game runs: the

@@ -4,7 +4,7 @@
  *                 and the sound board's timing model
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -133,5 +133,15 @@ static inline uint32_t z80_overflow_sub16(uint32_t a, uint32_t b, uint32_t c)
 	const uint32_t result = a - b - c;
 	return ((a ^ b) & (a ^ result)) >> 15 & 1u;
 }
+
+/* where the C never goes: past a switch whose every case returns, on an index the original's table does not
+   have, which it never gives (C23's unreachable()) */
+#ifndef unreachable
+#if defined(_MSC_VER)
+#define unreachable() __assume(0)
+#else
+#define unreachable() __builtin_unreachable()
+#endif
+#endif
 
 #endif

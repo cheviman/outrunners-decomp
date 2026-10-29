@@ -50,7 +50,7 @@ void player_car_extend_course(void)
 	if (CAR(player_car)->at_fork == 0u)
 	{
 		window_offset = CAR(player_car)->window_offset;
-		CAR(player_car)->window_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + window_offset);
+		CAR(player_car)->window_record = PAGE_ADD(screen + 0x2000u, window_offset);
 		CAR(player_car)->build_end_offset = (window_offset + 0xD00u) & 0xFFFu;
 		if (CAR(player_car)->build_offset != CAR(player_car)->build_end_offset)
 		{
@@ -271,7 +271,7 @@ void player_car_build_segment(uint16_t ring_mask)
 	CAR(player_car)->next_y = (int32_t)CAR(player_car)->next_y >> 8;
 	CAR(player_car)->next_z = CAR(player_car)->next_z_fine;
 	CAR(player_car)->next_z = (int32_t)CAR(player_car)->next_z >> 8;
-	ring_segment = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + CAR(player_car)->build_offset);
+	ring_segment = PAGE_ADD(screen + 0x2000u, CAR(player_car)->build_offset);
 	ROAD_SEGMENT(ring_segment)->heading = (uint16_t)(CAR(player_car)->heading_angle >> 16u);
 	ROAD_SEGMENT(ring_segment)->pitch = (uint16_t)(CAR(player_car)->pitch_angle >> 16u);
 	ROAD_SEGMENT(ring_segment)->x = CAR(player_car)->next_x;

@@ -357,7 +357,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_road_x, uint32_t *
 		CAR(player_car)->segment = segment_then_offset;
 		segment_then_offset = (segment_then_offset * 0x20u) & 0xFFFu;
 		CAR(player_car)->segment_offset = segment_then_offset;
-		segment_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + segment_then_offset);
+		segment_record = PAGE_ADD(screen + 0x2000u, segment_then_offset);
 		r12 = (segment_record + 0x20u) & ~0x5000u;
 		segment_length = ROAD_SEGMENT(segment_record)->heading;
 		segment_length = (uint16_t)(segment_length - ROAD_SEGMENT(r12)->heading);
@@ -1040,6 +1040,7 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 		wheel_effect_2_surface_2_outer();
 		return drag;
 	}
+	unreachable();
 }
 
 /* The wheel at road_x plus the model's half track (handling +1A) is within the bounds of both surface

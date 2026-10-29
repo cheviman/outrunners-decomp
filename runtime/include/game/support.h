@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    29-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -131,6 +131,9 @@ static inline uint8_t *board(uint32_t address)
 /* The game links its objects by the low halfword of their addresses: the object 'link' names, in the
    page of work RAM 'base' points into */
 #define LINKED(base, link) (((base) & 0xFFFF0000u) | (link))
+/* a place 'offset' bytes on from 'base' in its 64 KB page: the original adds them in 16 bits, which wrap
+   there (the ring of the road's segments at screen + 0x2000u) */
+#define PAGE_ADD(base, offset) (((base) & 0xFFFF0000u) | (uint16_t)((base) + (offset)))
 
 /* A place in the 256-byte page 'base' points into, 'low' bytes from its start (another port of the I/O chip
    'base' points at) */
@@ -291,6 +294,16 @@ void divux_pair(uint32_t divisor, uint32_t *low, uint32_t *high);
 
 #ifdef __cplusplus
 }
+#endif
+
+/* where the C never goes: past a switch whose every case returns, on an index the original's table does not
+   have, which it never gives (C23's unreachable()) */
+#ifndef unreachable
+#if defined(_MSC_VER)
+#define unreachable() __assume(0)
+#else
+#define unreachable() __builtin_unreachable()
+#endif
 #endif
 
 #endif

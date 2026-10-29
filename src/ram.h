@@ -21,42 +21,6 @@
 #define RACE_COPY_1 0x20FC00u
 #define RACE_COPY_2 0x20FC80u
 #define SCREEN_2 0x218000u
-#define unk_208001_ADDRESS 0x208001u
-#define unk_208001 RAM8(unk_208001_ADDRESS)
-#define unk_208002_ADDRESS 0x208002u
-#define unk_208002 RAM8(unk_208002_ADDRESS)
-#define unk_208020_ADDRESS 0x208020u
-#define unk_208020 RAM32(unk_208020_ADDRESS)
-#define unk_208024_ADDRESS 0x208024u
-#define unk_208024 RAM32(unk_208024_ADDRESS)
-#define unk_208080_ADDRESS 0x208080u
-#define unk_208080 RAM16(unk_208080_ADDRESS)
-#define unk_208090_ADDRESS 0x208090u
-#define unk_208090 RAM32(unk_208090_ADDRESS)
-#define unk_208094_ADDRESS 0x208094u
-#define unk_208094 RAM32(unk_208094_ADDRESS)
-#define unk_20809E_ADDRESS 0x20809Eu
-#define unk_20809E RAM8(unk_20809E_ADDRESS)
-#define unk_2080B0_ADDRESS 0x2080B0u
-#define unk_2080B0 RAM8(unk_2080B0_ADDRESS)
-#define unk_2080B4_ADDRESS 0x2080B4u
-#define unk_2080B4 RAM32(unk_2080B4_ADDRESS)
-#define unk_2080C0_ADDRESS 0x2080C0u
-#define unk_2080C0 RAM32(unk_2080C0_ADDRESS)
-#define unk_208153_ADDRESS 0x208153u
-#define unk_208153 RAM8(unk_208153_ADDRESS)
-#define unk_208B00_ADDRESS 0x208B00u
-#define unk_208B00 RAM32(unk_208B00_ADDRESS)
-#define unk_208F10_ADDRESS 0x208F10u
-#define unk_208F10 RAM32(unk_208F10_ADDRESS)
-#define unk_208F14_ADDRESS 0x208F14u
-#define unk_208F14 RAM32(unk_208F14_ADDRESS)
-#define unk_208F18_ADDRESS 0x208F18u
-#define unk_208F18 RAM32(unk_208F18_ADDRESS)
-#define unk_208F1C_ADDRESS 0x208F1Cu
-#define unk_208F1C RAM32(unk_208F1C_ADDRESS)
-#define unk_208F20_ADDRESS 0x208F20u
-#define unk_208F20 RAM16(unk_208F20_ADDRESS)
 #define waiting_task_frame_ADDRESS 0x20E000u
 #define waiting_task_frame RAM32(waiting_task_frame_ADDRESS)
 #define waiting_task_stack_ADDRESS 0x20E004u
@@ -329,60 +293,10 @@
 #define test_mode_sound_queue ((uint16_t *)ram(test_mode_sound_queue_ADDRESS))
 #define test_mode_privilege_mode_ADDRESS 0x20E754u
 #define test_mode_privilege_mode RAM8(test_mode_privilege_mode_ADDRESS)
-#define unk_20FB00_ADDRESS 0x20FB00u
-#define unk_20FB00 RAM8(unk_20FB00_ADDRESS)
-#define unk_20FB01_ADDRESS 0x20FB01u
-#define unk_20FB01 RAM8(unk_20FB01_ADDRESS)
-#define unk_20FB02_ADDRESS 0x20FB02u
-#define unk_20FB02 RAM8(unk_20FB02_ADDRESS)
-#define unk_20FB80_ADDRESS 0x20FB80u
-#define unk_20FB80 RAM8(unk_20FB80_ADDRESS)
-#define unk_20FB81_ADDRESS 0x20FB81u
-#define unk_20FB81 RAM8(unk_20FB81_ADDRESS)
-#define unk_20FB82_ADDRESS 0x20FB82u
-#define unk_20FB82 RAM8(unk_20FB82_ADDRESS)
-#define unk_20FC08_ADDRESS 0x20FC08u
-#define unk_20FC08 RAM8(unk_20FC08_ADDRESS)
 #define master_time_difficulty_ADDRESS 0x20FC0Bu
 #define master_time_difficulty ((int8_t *)ram(master_time_difficulty_ADDRESS))
-#define unk_20FC1A_ADDRESS 0x20FC1Au
-#define unk_20FC1A RAM16(unk_20FC1A_ADDRESS)
 #define race_copy_window_segments_ADDRESS 0x20FC46u
 #define race_copy_window_segments ((uint16_t *)ram(race_copy_window_segments_ADDRESS))
-#define unk_218001_ADDRESS 0x218001u
-#define unk_218001 RAM8(unk_218001_ADDRESS)
-#define unk_218002_ADDRESS 0x218002u
-#define unk_218002 RAM8(unk_218002_ADDRESS)
-#define unk_218020_ADDRESS 0x218020u
-#define unk_218020 RAM32(unk_218020_ADDRESS)
-#define unk_218024_ADDRESS 0x218024u
-#define unk_218024 RAM32(unk_218024_ADDRESS)
-#define unk_218080_ADDRESS 0x218080u
-#define unk_218080 RAM16(unk_218080_ADDRESS)
-#define unk_218090_ADDRESS 0x218090u
-#define unk_218090 RAM32(unk_218090_ADDRESS)
-#define unk_218094_ADDRESS 0x218094u
-#define unk_218094 RAM32(unk_218094_ADDRESS)
-#define unk_21809E_ADDRESS 0x21809Eu
-#define unk_21809E RAM8(unk_21809E_ADDRESS)
-#define unk_2180B0_ADDRESS 0x2180B0u
-#define unk_2180B0 RAM8(unk_2180B0_ADDRESS)
-#define unk_2180B4_ADDRESS 0x2180B4u
-#define unk_2180B4 RAM32(unk_2180B4_ADDRESS)
-#define unk_2180C0_ADDRESS 0x2180C0u
-#define unk_2180C0 RAM32(unk_2180C0_ADDRESS)
-#define unk_218153_ADDRESS 0x218153u
-#define unk_218153 RAM8(unk_218153_ADDRESS)
-#define unk_218B00_ADDRESS 0x218B00u
-#define unk_218B00 RAM32(unk_218B00_ADDRESS)
-#define unk_218F10_ADDRESS 0x218F10u
-#define unk_218F10 RAM32(unk_218F10_ADDRESS)
-#define unk_218F14_ADDRESS 0x218F14u
-#define unk_218F14 RAM32(unk_218F14_ADDRESS)
-#define unk_218F18_ADDRESS 0x218F18u
-#define unk_218F18 RAM32(unk_218F18_ADDRESS)
-#define unk_218F1C_ADDRESS 0x218F1Cu
-#define unk_218F1C RAM32(unk_218F1C_ADDRESS)
 #define unk_218F20_ADDRESS 0x218F20u
 #define unk_218F20 RAM16(unk_218F20_ADDRESS)
 
@@ -391,12 +305,6 @@
 #define test_mode_prompt_text RAM32(test_mode_prompt_text_ADDRESS)
 
 /* data in the program ROM the code reads */
-#define rom_000001_ADDRESS 0x000001u
-extern const void *rom_000001_data;
-#define rom_000001 ((const uint8_t *)rom_000001_data)
-#define rom_000002_ADDRESS 0x000002u
-extern const void *rom_000002_data;
-#define rom_000002 ((const uint16_t *)rom_000002_data)
 #define boot_e80000_bytes_ADDRESS 0x0000B4u
 extern const void *boot_e80000_bytes_data;
 #define boot_e80000_bytes (*(const uint32_t *)boot_e80000_bytes_data)

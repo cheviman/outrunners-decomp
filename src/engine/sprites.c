@@ -751,6 +751,7 @@ uint32_t animation_advance(uint32_t leftover)
 		OBJECT(current_object)->frame = 0u;
 		return order_routine;
 	}
+	unreachable();
 }
 
 /* Starts animation R9 (sprite_animations[R9] is its record) at its first frame: frame_time and

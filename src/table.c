@@ -339,8 +339,6 @@ const game_code_entry game_code[] =
 
 const size_t game_code_count = 244;
 
-const void *rom_000001_data;
-const void *rom_000002_data;
 const void *boot_e80000_bytes_data;
 const void *seat_credits_addresses_data;
 const void *game_mode_jumps_data;
@@ -886,8 +884,6 @@ const void *kanji_font_data;
 /* the tables the game loads from its assets: their names, addresses and pointers */
 const game_table game_tables[] =
 {
-	{ "rom_000001", 0x000001u, &rom_000001_data },
-	{ "rom_000002", 0x000002u, &rom_000002_data },
 	{ "boot_e80000_bytes", 0x0000B4u, &boot_e80000_bytes_data },
 	{ "seat_credits_addresses", 0x0008C4u, &seat_credits_addresses_data },
 	{ "game_mode_jumps", 0x0008CCu, &game_mode_jumps_data },
@@ -1431,7 +1427,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 543;
+const size_t game_table_count = 541;
 
 /* the code at the reset vector */
 void game_entry(void)
