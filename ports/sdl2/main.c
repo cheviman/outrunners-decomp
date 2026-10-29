@@ -4,7 +4,7 @@
  *                 keeps the pace, around the same game and board the headless runs check
  *    Version:     0.1.0
  *    Created:     21-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    28-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -15,16 +15,19 @@
  *    has its hooks, the port does its part: when VBLANK starts the video draws both screens and the port
  *    puts them in the window, the left screen beside the right; when the board reads the controls the port
  *    hands it the keyboard and the game controllers; when the game finishes a frame the port queues the
- *    frame's sound and waits for the frame's time (60 a second) to pass. The EEPROM (the game's settings,
- *    bookkeeping) is kept in orunners.eeprom, beside the executable on Windows and in the user's folder for
- *    the game elsewhere (saves_folder).
+ *    frame's sound and waits for the frame's time (60 a second) to pass. What the board keeps with the power
+ *    off is kept in two files, beside the executable on Windows and in the user's folder for the game
+ *    elsewhere (saves_folder): orunners.eeprom the EEPROM (the settings and their copy), orunners.bookkeeping
+ *    the part of the sound board's RAM the game keeps on the battery (the bookkeeping, the ten course records
+ *    and the credits among it, its checksum and its copy).
  *
  *    The game's data is its assets (game/assets.h), the files extract_assets.py writes from the player's
  *    ROM set: --assets, or the folder 'assets' beside the executable, beside the .app on macOS, in the
  *    folder of what the game keeps, or in the current folder.
  *
  *    --script plays a control script (runtime/include/s32/script.h) instead of the keyboard, to its end,
- *    from a blank EEPROM that it does not keep; --fast runs it without waiting for the frames' time.
+ *    from a blank EEPROM and sound RAM that it does not keep; --fast runs it without waiting for the frames'
+ *    time.
  *    --hashes, --video-hashes and --sound-hashes write for each frame the hashes ports/headless and
  *    tools/core/system32/reference/s32ref write, so a script run in the window compares with the reference
  *    frame by frame.
@@ -52,7 +55,6 @@
 #include <SDL.h>
 
 #include <inttypes.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,11 +71,12 @@
 #define PEDAL_PRESS         0x20       /* a frame, while a key holds it */
 #define PEDAL_LIFT          0x30
 #define STICK_DEAD_ZONE     4000
+#define BACKUP_RAM_START    0x1f00     /* what the game keeps of the sound board's RAM: 701F00-701FF9 */
+#define BACKUP_RAM_SIZE     0xfa
 
 #define USAGE "Usage: orunners [--script FILE [--fast]] [--hashes FILE] [--video-hashes FILE] [--sound-hashes FILE]" \
 	" [--assets FILE]"
 
-static jmp_buf finished;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
@@ -82,6 +85,8 @@ static SDL_GameController *controllers[PLAYERS];
 static bool smooth;
 static uint64_t next_frame;           /* performance counter value the next frame waits for */
 static char eeprom_path[1024];
+static char backup_ram_path[1024];
+static uint8_t backup_ram_saved[BACKUP_RAM_SIZE];    /* as the file has it */
 static s32_script *script;
 static bool fast;
 static FILE *hashes;
@@ -118,6 +123,40 @@ static void load_eeprom(void)
 		return;
 	if (fread(data, 1, sizeof(data), input) == sizeof(data))
 		memcpy(s32_board.eeprom.data, data, sizeof(data));
+	fclose(input);
+}
+
+/* The sound board's 8 KB RAM is on the board's battery. The game keeps its bookkeeping in it (the checksum
+   at 701F00, the block from 701F02 with the course records at 701F32 and the credits at 701F74, its copy
+   from 701F7E: bookkeeping_check, load_course_records); the rest is the sound program's, which clears
+   E000-FDFF (700000-701DFF) when it starts, and the game clears 701FFF. MAME keeps none of it */
+static void save_backup_ram(void)
+{
+	const uint8_t *kept = &s32_board.shared_ram[BACKUP_RAM_START];
+	FILE *output;
+
+	if (script || memcmp(kept, backup_ram_saved, BACKUP_RAM_SIZE) == 0)    /* (a script's stays apart too) */
+		return;
+	output = fopen(backup_ram_path, "wb");
+	if (!output)
+		return;
+	if (fwrite(kept, 1, BACKUP_RAM_SIZE, output) == BACKUP_RAM_SIZE)
+		memcpy(backup_ram_saved, kept, BACKUP_RAM_SIZE);
+	fclose(output);
+}
+
+static void load_backup_ram(void)
+{
+	FILE *input = fopen(backup_ram_path, "rb");
+	uint8_t data[BACKUP_RAM_SIZE];
+
+	if (!input)
+		return;
+	if (fread(data, 1, sizeof(data), input) == sizeof(data))
+	{
+		memcpy(&s32_board.shared_ram[BACKUP_RAM_START], data, sizeof(data));
+		memcpy(backup_ram_saved, data, sizeof(data));
+	}
 	fclose(input);
 }
 
@@ -182,12 +221,17 @@ static void read_events(void)
 		switch (event.type)
 		{
 			case SDL_QUIT:
-				longjmp(finished, 1);
+				program_stop();    /* (back to main, which saves: the game runs on a task's stack, which a
+				                      longjmp to main's does not leave on Windows) */
+				return;
 			case SDL_KEYDOWN:
 				if (event.key.repeat)
 					break;
 				if (event.key.keysym.sym == SDLK_ESCAPE)
-					longjmp(finished, 1);
+				{
+					program_stop();
+					return;
+				}
 				if (event.key.keysym.sym == SDLK_F11
 					|| (event.key.keysym.sym == SDLK_RETURN && (event.key.keysym.mod & KMOD_ALT)))
 					toggle_full_screen();
@@ -366,7 +410,10 @@ static void on_frame_done(void)
 		program_stop();
 
 	if (program_frames() % 600 == 0)
+	{
 		save_eeprom();
+		save_backup_ram();
+	}
 	if (!fast)
 		wait_for_frame();
 }
@@ -397,7 +444,7 @@ static FILE *open_hashes(const char *path)
 	return path ? fopen(path, "w") : NULL;
 }
 
-/* Where the game keeps what it writes (the EEPROM): beside the executable on
+/* Where the game keeps what it writes (the EEPROM, the sound RAM's bookkeeping): beside the executable on
    Windows; elsewhere the user's own folder for the game (SDL_GetPrefPath: ~/.local/share/OutRunners,
    ~/Library/Application Support/OutRunners), as the executable's may not be written (an .app, /usr/bin).
    The caller frees it (SDL_free) */
@@ -480,6 +527,7 @@ int main(int argc, char **argv)
 	base = SDL_GetBasePath();
 	saves = saves_folder();
 	snprintf(eeprom_path, sizeof(eeprom_path), "%sorunners.eeprom", saves ? saves : "");
+	snprintf(backup_ram_path, sizeof(backup_ram_path), "%sorunners.bookkeeping", saves ? saves : "");
 	{
 		/* the folder of the game's assets: --assets, else beside the executable, beside the .app on macOS, in
 		   the folder of what the game keeps, or in the current folder */
@@ -551,15 +599,18 @@ int main(int argc, char **argv)
 	sound_chips_attach();
 	sound_cpu_attach();
 	if (!script)
+	{
 		load_eeprom();
+		load_backup_ram();
+	}
 	program_reset();
 	program_frame_done = on_frame_done;
 	next_frame = SDL_GetPerformanceCounter();
 
-	if (!setjmp(finished))
-		program_run();
+	program_run();
 
 	save_eeprom();
+	save_backup_ram();
 	if (hashes)
 		fclose(hashes);
 	if (video_hashes)

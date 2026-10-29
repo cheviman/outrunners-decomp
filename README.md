@@ -366,8 +366,9 @@ git clone --recursive https://github.com/cheviman/outrunners-decomp
    from a blank EEPROM it does not keep (`--fast` without waiting for the frames' time), and `--hashes`,
    `--video-hashes` and `--sound-hashes` write the same hashes as the reference.
 
-   The game keeps its EEPROM (the settings and the bookkeeping, `orunners.eeprom`) beside the executable
-   on Windows, and on Linux and macOS in the user's folder for it (`~/.local/share/OutRunners`,
+   The game keeps its EEPROM (the settings, `orunners.eeprom`) and the part of the sound board's RAM it
+   keeps on the battery (the bookkeeping and the ten course records, `orunners.bookkeeping`) beside the
+   executable on Windows, and on Linux and macOS in the user's folder for it (`~/.local/share/OutRunners`,
    `~/Library/Application Support/OutRunners`), as the executable's may not be written. It loads its
    assets from the folder `assets` beside the executable (beside the .app on macOS), in that folder of the
    user's, or in the current one (`--assets FOLDER` picks another). The packages the CI makes hold the
