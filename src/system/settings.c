@@ -284,7 +284,8 @@ void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_w
 	do
 	{
 		lines = eeprom_set_lines(lines, lines_port);
-		eeprom_word = ((eeprom_word & ~0xFFu) | io_read8(r12)) * 2u;
+		eeprom_word = (eeprom_word & ~0xFFu) | io_read8(r12);
+		eeprom_word = eeprom_word * 2u;
 		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 		lines ^= 0x40u;

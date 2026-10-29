@@ -1,6 +1,6 @@
 # KIND COUNT: tools/noise_report.py --save writes it
 goto 0
-control_variables 8
+control_variables 0
 sub_functions 0
 unk_names 0
 rom_names 0
@@ -8,11 +8,11 @@ unk_fields 0
 register_names 0
 temp_names 0
 stack_names 0
-context_registers 715
+context_registers 720
 var_fields 0
 mem_access 25
-wide_access 206
-copy_backs 9
+wide_access 204
+copy_backs 0
 invalid_jump 0
 unknown_code 0
 raw_rom_addresses 0
@@ -20,13 +20,13 @@ uncommented 0
 rom_reads 0
 rom_table_reads 0
 board_replaced 1
-functions 745
-lines 39499
-casts 2707
-partial_writes 158
-mixed_partial_writes 28
-board_registers 373
-clean_functions 762
+functions 762
+lines 39577
+casts 2703
+partial_writes 148
+mixed_partial_writes 0
+board_registers 377
+clean_functions 772
 clean_lines 962
-faithful_functions 965
-faithful_lines 998
+faithful_functions 996
+faithful_lines 999

@@ -45,29 +45,18 @@ uint32_t course_record_beaten(void)
    name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames,
    wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of
    the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40
-   frames, spin_frames; a letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a
-   time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way),
-   sooner the further it leans (turn_delay counts down by name_entry_turn_rates by the wheel), and << and
-   >> a letter each time; the letter in front is letter, and shows blinking at the name's next place; the
-   gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a
-   sound (name_entry_place_sounds by place): the left arrow takes the last letter back, the right arrow
-   enters a space, ED or the third letter ends the entry, as does the timer running out (the seconds left
-   show as the countdown number, time_digits_draw); then open 0, an empty name or one of the names of
-   name_entry_rejected_names (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the
-   record into the race record (record_serial + 1, finish_time the time, unk_12 the car's model,
-   unk_13-15 the name, record_course the course, screen built_stage - 15), turns the lamps off and sets
-   the game's next step (screen game_mode byte 2 = 0x15 (step 21)); 4 nothing. Every frame it draws the
-   time and the name (draw_text). */
+   frames, spin_frames; a letter is 80 of the turn's 1000), with the seconds left (name_entry_draw_time);
+   2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns
+   back if the wheel goes the other way), name_entry_read_wheel takes the next turn when none is under
+   way and name_entry_choose the letter in front, the entry and the time; 3 name_entry_store_record; 4
+   nothing. Every frame it draws the time and the name (draw_text). */
 void name_entry_update(void)
 {
-	bool L_00200F = false, L_0020B6 = false, L_0020FB = false, L_002133 = false;
-	uint8_t letter_character = 0, letter_index = 0, new_steps = 0, sound_code = 0, steps = 0, turn_rate = 0;
-	uint16_t buttons_pressed = 0, new_angle = 0, turn_buttons = 0;
-	uint32_t background_setup = 0, entered_name = 0, handler_list = 0, letter = 0, name_place = 0, object = 0, palette_fades = 0, player_time = 0, race = 0, rejected_name = 0, remaining_time = 0, saved_letter = 0, text_field = 0, text_record = 0, wheel_position = 0;
-	uint32_t kept_letter = 0, kept_place = 0;
-	uint8_t letters_left = 0, turn_delay = 0, entered_letter = 0;
-	uint16_t spin_frames = 0, timer = 0, timer_2 = 0;
-	uint32_t jump_target = 0, jump_target_2 = 0, element = 0;
+	uint8_t letter_index = 0, steps = 0;
+	uint16_t new_angle = 0;
+	uint32_t background_setup = 0, handler_list = 0, object = 0, palette_fades = 0, player_time = 0, text_field = 0, text_record = 0;
+	uint8_t letters_left = 0;
+	uint16_t spin_frames = 0;
 
 	switch (OBJECT(current_object)->state)
 	{
@@ -114,269 +103,339 @@ void name_entry_update(void)
 		text_field += 2u;
 		time_to_text(player_time, text_field);
 		OBJECT(current_object)->state++;
+		OBJECT(current_object)->name_entry.wheel_angle += 0x20u;
+		spin_frames = OBJECT(current_object)->name_entry.spin_frames;
+		OBJECT(current_object)->name_entry.spin_frames = spin_frames - 1u;
+		if (spin_frames != 1u)
+		{
+			name_entry_draw_time();
+			return;
+		}
+		OBJECT(current_object)->state++;
+		break;
 	case 1:
 		OBJECT(current_object)->name_entry.wheel_angle += 0x20u;
 		spin_frames = OBJECT(current_object)->name_entry.spin_frames;
 		OBJECT(current_object)->name_entry.spin_frames = spin_frames - 1u;
 		if (spin_frames != 1u)
 		{
-			remaining_time = OBJECT(current_object)->name_entry.timer;
-			remaining_time = remaining_time / 0x1Eu;
-			remaining_time = binary_to_bcd(remaining_time);
-			time_digits_draw(remaining_time);
-			break;
+			name_entry_draw_time();
+			return;
 		}
 		OBJECT(current_object)->state++;
+		break;
 	case 2:
-		steps = (uint8_t)OBJECT(current_object)->name_entry.turn_steps;
-		L_00200F = steps == 0u;
-		if (!L_00200F)
+		break;
+	case 3:
+		name_entry_store_record();
+		return;
+	case 4:
+		text_record = current_object + 0xA4u;
+		draw_text(text_record);
+		text_record = current_object + 0x9Au;
+		draw_text(text_record);
+		return;
+	}
+	steps = (uint8_t)OBJECT(current_object)->name_entry.turn_steps;
+	if (steps == 0u)
+	{
+		name_entry_read_wheel();
+		return;
+	}
+	if ((int8_t)steps >= 0)
+	{
+		if (SCREEN(screen)->wheel < 0xA0u)
 		{
-			if ((int8_t)steps < 0)
-			{
-				if (SCREEN(screen)->wheel >= 0x60u)
-				{
-					OBJECT(current_object)->name_entry.turn_steps = steps + 1u;
-					new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle - 0x20u);
-				}
-				else
-				{
-					steps += 4u;
-					OBJECT(current_object)->name_entry.turn_steps = steps - 1u;
-					new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
-				}
-			}
-			else if (SCREEN(screen)->wheel < 0xA0u)
-			{
-				OBJECT(current_object)->name_entry.turn_steps = steps - 1u;
-				new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
-			}
-			else
-			{
-				steps -= 4u;
-				OBJECT(current_object)->name_entry.turn_steps = steps + 1u;
-				new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle - 0x20u);
-			}
+			OBJECT(current_object)->name_entry.turn_steps = steps - 1u;
+			new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
 			OBJECT(current_object)->name_entry.wheel_angle = new_angle;
-			L_00200F = (uint8_t)OBJECT(current_object)->name_entry.turn_steps == 0u;
-		}
-		if (L_00200F)
-		{
-			wheel_position = SCREEN(screen)->wheel;
-			wheel_position = wheel_position >> 4;
-			turn_rate = name_entry_turn_rates[wheel_position];
-			if (turn_rate != 0u)
+			if ((uint8_t)OBJECT(current_object)->name_entry.turn_steps != 0u)
 			{
-				turn_delay = OBJECT(current_object)->name_entry.turn_delay;
-				OBJECT(current_object)->name_entry.turn_delay = turn_delay - turn_rate;
-				if ((int8_t)turn_delay <= (int8_t)turn_rate)
-				{
-					OBJECT(current_object)->name_entry.turn_delay = 0xF;
-					new_steps = 4u;
-					if (wheel_position >> 2 == 0u)
-						OBJECT(current_object)->name_entry.turn_steps = new_steps;
-					else
-					{
-						new_steps = (uint8_t)(0u - new_steps);
-						OBJECT(current_object)->name_entry.turn_steps = new_steps;
-					}
-				}
+				name_entry_choose();
+				return;
 			}
-			else
-			{
-				turn_buttons = (uint16_t)SCREEN(screen)->buttons_pressed;
-				if ((turn_buttons & 0x200u) != 0u)
-				{
-					if ((turn_buttons & 0x400u) == 0u)
-					{
-						wheel_position = 0xFFu;
-						turn_rate = 0xFu;
-						turn_delay = OBJECT(current_object)->name_entry.turn_delay;
-						OBJECT(current_object)->name_entry.turn_delay = turn_delay - turn_rate;
-						if ((int8_t)turn_delay <= (int8_t)turn_rate)
-						{
-							OBJECT(current_object)->name_entry.turn_delay = 0xF;
-							new_steps = 4u;
-							if (wheel_position >> 2 == 0u)
-								OBJECT(current_object)->name_entry.turn_steps = new_steps;
-							else
-							{
-								new_steps = (uint8_t)(0u - new_steps);
-								OBJECT(current_object)->name_entry.turn_steps = new_steps;
-							}
-						}
-					}
-				}
-				else if ((turn_buttons & 0x400u) != 0u)
-				{
-					wheel_position = 0u;
-					turn_rate = 0xFu;
-					turn_delay = OBJECT(current_object)->name_entry.turn_delay;
-					OBJECT(current_object)->name_entry.turn_delay = turn_delay - turn_rate;
-					if ((int8_t)turn_delay <= (int8_t)turn_rate)
-					{
-						OBJECT(current_object)->name_entry.turn_delay = 0xF;
-						new_steps = 4u;
-						if (wheel_position >> 2 == 0u)
-							OBJECT(current_object)->name_entry.turn_steps = new_steps;
-						else
-						{
-							new_steps = (uint8_t)(0u - new_steps);
-							OBJECT(current_object)->name_entry.turn_steps = new_steps;
-						}
-					}
-				}
-				else
-					OBJECT(current_object)->name_entry.turn_delay = 1;
-			}
+			name_entry_read_wheel();
+			return;
 		}
-		OBJECT(current_object)->name_entry.letter = ((OBJECT(current_object)->name_entry.wheel_angle + 0x40u) & 0xFFFu) >> 7;
-		do
+		steps -= 4u;
+		OBJECT(current_object)->name_entry.turn_steps = steps + 1u;
+		new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle - 0x20u);
+		OBJECT(current_object)->name_entry.wheel_angle = new_angle;
+		if ((uint8_t)OBJECT(current_object)->name_entry.turn_steps != 0u)
 		{
-			do
+			name_entry_choose();
+			return;
+		}
+		name_entry_read_wheel();
+		return;
+	}
+	if (SCREEN(screen)->wheel >= 0x60u)
+	{
+		OBJECT(current_object)->name_entry.turn_steps = steps + 1u;
+		new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle - 0x20u);
+		OBJECT(current_object)->name_entry.wheel_angle = new_angle;
+		if ((uint8_t)OBJECT(current_object)->name_entry.turn_steps != 0u)
+		{
+			name_entry_choose();
+			return;
+		}
+		name_entry_read_wheel();
+		return;
+	}
+	steps += 4u;
+	OBJECT(current_object)->name_entry.turn_steps = steps - 1u;
+	new_angle = (uint16_t)(OBJECT(current_object)->name_entry.wheel_angle + 0x20u);
+	OBJECT(current_object)->name_entry.wheel_angle = new_angle;
+	if ((uint8_t)OBJECT(current_object)->name_entry.turn_steps != 0u)
+	{
+		name_entry_choose();
+		return;
+	}
+	name_entry_read_wheel();
+}
+
+/* State 2's reading of the wheel for the drum's next turn (name_entry_update goes on to it when no turn
+   is under way, or when one has just ended): the wheel in sixteenths gives a turn rate
+   (name_entry_turn_rates: none in the middle, where << and >> turn it at rate F, one way or the other,
+   and with neither turn_delay goes to 1); turn_delay counts down by it, and when it runs out (back to F)
+   a turn of 4 steps starts (turn_steps 4, or -4 the other way). Then name_entry_choose. */
+void name_entry_read_wheel(void)
+{
+	uint8_t new_steps = 0, turn_rate = 0;
+	uint16_t turn_buttons = 0;
+	uint32_t wheel_position = 0;
+	uint8_t turn_delay = 0;
+
+	wheel_position = SCREEN(screen)->wheel;
+	wheel_position = wheel_position >> 4;
+	turn_rate = name_entry_turn_rates[wheel_position];
+	if (turn_rate == 0u)
+	{
+		turn_buttons = (uint16_t)SCREEN(screen)->buttons_pressed;
+		if ((turn_buttons & 0x200u) != 0u)
+		{
+			if ((turn_buttons & 0x400u) != 0u)
 			{
-				do
-				{
-					jump_target = L_002133 ? 0x2090u : L_002133 ? 0x2090u : L_002133 ? 0x2090u : name_entry_gas_step_jumps[OBJECT(current_object)->name_entry.gas_step];
-					switch (jump_target)
-					{
-					case 0x002090u:
-						if (L_002133 || L_002133 || L_002133 || SCREEN(screen)->gas >= 0x40u)
-						{
-							L_002133 = false;
-							name_place = OBJECT(current_object)->name_entry.place;
-							letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
-							if ((game_frame_count & 4u) == 0u)
-								letter_character = 0u;
-							OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
-							timer = OBJECT(current_object)->name_entry.timer;
-							OBJECT(current_object)->name_entry.timer = timer - 1u;
-							if (timer == 1u)
-								break;
-							remaining_time = OBJECT(current_object)->name_entry.timer;
-							remaining_time = remaining_time / 0x1Eu;
-							remaining_time = binary_to_bcd(remaining_time);
-							time_digits_draw(remaining_time);
-							text_record = current_object + 0xA4u;
-							draw_text(text_record);
-							text_record = current_object + 0x9Au;
-							draw_text(text_record);
-							return;
-						}
-						OBJECT(current_object)->name_entry.gas_step++;
-					case 0x00209Du:
-						if (SCREEN(screen)->gas < 0xC0u)
-						{
-							buttons_pressed = (uint16_t)SCREEN(screen)->buttons_pressed;
-							L_0020B6 = (buttons_pressed & 0x100u) != 0u || (buttons_pressed & 0x40u) != 0u;
-							if (!L_0020B6)
-								L_002133 = true;
-						}
-						if (!L_0020B6)
-						{
-							if (L_002133)
-								break;
-						}
-						L_0020B6 = false;
-						letter = OBJECT(current_object)->name_entry.letter;
-						name_place = OBJECT(current_object)->name_entry.place;
-						do
-						{
-							jump_target_2 = L_0020FB ? 0x20D4u : name_entry_place_jumps[name_place];
-							switch (jump_target_2)
-							{
-							case 0x0020D4u:
-								if (L_0020FB || letter != 0x1Eu)
-								{
-									if (!L_0020FB)
-									{
-										if (letter == 0x1Fu)
-											break;
-									}
-									L_0020FB = false;
-									kept_letter = letter;
-									kept_place = name_place;
-									sound_code = name_entry_place_sounds[name_place];
-									request_sound(sound_code);
-									name_place = kept_place;
-									saved_letter = kept_letter;
-									entered_letter = saved_letter;
-									letter_character = name_entry_letters[saved_letter];
-									if (entered_letter == 0x1Du)
-										letter_character = 0x20u;
-									OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
-									name_place = (uint8_t)(name_place + 1u);
-									if (name_place == 3u)
-										break;
-									OBJECT(current_object)->name_entry.place = name_place;
-								}
-								OBJECT(current_object)->name_entry.gas_step--;
-								L_002133 = true;
-								break;
-							case 0x0020E2u:
-								if (letter == 0x1Eu)
-								{
-									OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
-									name_place = (uint8_t)(name_place - 1u);
-									OBJECT(current_object)->name_entry.place = name_place;
-									OBJECT(current_object)->name_entry.gas_step--;
-									L_002133 = true;
-								}
-								if (L_002133)
-									break;
-								if (letter == 0x1Fu)
-									break;
-								L_0020FB = true;
-								break;
-							}
-							if (L_002133)
-								break;
-						} while (L_0020FB);
-						if (L_002133)
-							break;
-						break;
-					}
-				} while (L_002133);
-			} while (L_002133);
-		} while (L_002133);
-		OBJECT(current_object)->name_entry.open = 0u;
-		OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
-		entered_name = (OBJECT(current_object)->name_entry.name[0] | ((uint32_t)OBJECT(current_object)->name_entry.name[1] << 8u) | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 16u) | ((uint32_t)OBJECT(current_object)->name_entry.name[3] << 24u));
-		if (entered_name == 0u)
-		{
-			OBJECT(current_object)->name_entry.name[0] = 0x2Du;
-			OBJECT(current_object)->name_entry.name[1] = 0x2Du;
-			OBJECT(current_object)->name_entry.name[2] = 0x2Du;
-			OBJECT(current_object)->name_entry.name[3] = 0u;
-			OBJECT(current_object)->state++;
-			OBJECT(current_object)->name_entry.timer = 0x3Cu;
-			OBJECT(current_object)->name_entry.spin_frames = 0u;
+				name_entry_choose();
+				return;
+			}
+			wheel_position = 0xFFu;
 		}
 		else
 		{
-			rejected_name = name_entry_rejected_names_ADDRESS;
-			while ((int32_t)REJECTED_NAMES(rejected_name)[0] >= 0)
+			if ((turn_buttons & 0x400u) == 0u)
 			{
-				element = REJECTED_NAMES(rejected_name)[0];
-				rejected_name += 4u;
-				if (entered_name == element)
-				{
-					OBJECT(current_object)->name_entry.name[0] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[1] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[2] = 0x2Du;
-					OBJECT(current_object)->name_entry.name[3] = 0u;
-					break;
-				}
+				OBJECT(current_object)->name_entry.turn_delay = 1;
+				name_entry_choose();
+				return;
 			}
+			wheel_position = 0u;
+		}
+		turn_rate = 0xFu;
+	}
+	turn_delay = OBJECT(current_object)->name_entry.turn_delay;
+	OBJECT(current_object)->name_entry.turn_delay = turn_delay - turn_rate;
+	if ((int8_t)turn_rate < (int8_t)turn_delay)
+	{
+		name_entry_choose();
+		return;
+	}
+	OBJECT(current_object)->name_entry.turn_delay = 0xF;
+	new_steps = 4u;
+	if (wheel_position >> 2 != 0u)
+		new_steps = (uint8_t)(0u - new_steps);
+	OBJECT(current_object)->name_entry.turn_steps = new_steps;
+	name_entry_choose();
+}
+
+/* The rest of state 2 (name_entry_update and name_entry_read_wheel go on to it): the letter in front of
+   the pointer (letter, from wheel_angle); the gas pedal let up (under 40) then pressed (C0 or more),
+   START or the music button enters it with a sound (name_entry_place_sounds by place): the left arrow
+   takes the last letter back, the right arrow enters a space, ED or a third letter ends the name
+   (name_entry_finish); the letter in front blinks at the name's next place; the timer counts down, the
+   name ends when it runs out (name_entry_finish), and the seconds left show (name_entry_draw_time). */
+void name_entry_choose(void)
+{
+	uint8_t letter_character = 0, sound_code = 0;
+	uint16_t buttons_pressed = 0;
+	uint32_t letter = 0, name_place = 0, saved_letter = 0;
+	uint32_t kept_letter = 0, kept_place = 0;
+	uint8_t entered_letter = 0;
+	uint16_t timer = 0;
+
+	OBJECT(current_object)->name_entry.letter = ((OBJECT(current_object)->name_entry.wheel_angle + 0x40u) & 0xFFFu) >> 7;
+	switch (OBJECT(current_object)->name_entry.gas_step)
+	{
+	case 0:
+		if (SCREEN(screen)->gas >= 0x40u)
+			break;
+		OBJECT(current_object)->name_entry.gas_step++;
+	case 1:
+		if (SCREEN(screen)->gas < 0xC0u)
+		{
+			buttons_pressed = (uint16_t)SCREEN(screen)->buttons_pressed;
+			if ((buttons_pressed & 0x100u) == 0u && (buttons_pressed & 0x40u) == 0u)
+				break;
+		}
+		letter = OBJECT(current_object)->name_entry.letter;
+		name_place = OBJECT(current_object)->name_entry.place;
+		switch (name_place)
+		{
+		case 0:
+			if (letter == 0x1Eu)
+			{
+				OBJECT(current_object)->name_entry.gas_step--;
+				name_place = OBJECT(current_object)->name_entry.place;
+				letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
+				if ((game_frame_count & 4u) == 0u)
+					letter_character = 0u;
+				OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+				timer = OBJECT(current_object)->name_entry.timer;
+				OBJECT(current_object)->name_entry.timer = timer - 1u;
+				if (timer != 1u)
+				{
+					name_entry_draw_time();
+					return;
+				}
+				name_entry_finish(name_place);
+				return;
+			}
+			if (letter == 0x1Fu)
+			{
+				name_entry_finish(name_place);
+				return;
+			}
+			kept_letter = letter;
+			kept_place = name_place;
+			sound_code = name_entry_place_sounds[name_place];
+			request_sound(sound_code);
+			name_place = kept_place;
+			saved_letter = kept_letter;
+			entered_letter = saved_letter;
+			letter_character = name_entry_letters[saved_letter];
+			if (entered_letter == 0x1Du)
+				letter_character = 0x20u;
+			OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+			name_place = (uint8_t)(name_place + 1u);
+			if (name_place == 3u)
+			{
+				name_entry_finish(name_place);
+				return;
+			}
+			break;
+		case 1:
+		case 2:
+			if (letter == 0x1Eu)
+			{
+				OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
+				name_place = (uint8_t)(name_place - 1u);
+				break;
+			}
+			if (letter == 0x1Fu)
+			{
+				name_entry_finish(name_place);
+				return;
+			}
+			kept_letter = letter;
+			kept_place = name_place;
+			sound_code = name_entry_place_sounds[name_place];
+			request_sound(sound_code);
+			name_place = kept_place;
+			saved_letter = kept_letter;
+			entered_letter = saved_letter;
+			letter_character = name_entry_letters[saved_letter];
+			if (entered_letter == 0x1Du)
+				letter_character = 0x20u;
+			OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+			name_place = (uint8_t)(name_place + 1u);
+			if (name_place == 3u)
+			{
+				name_entry_finish(name_place);
+				return;
+			}
+			break;
+		}
+		OBJECT(current_object)->name_entry.place = name_place;
+		OBJECT(current_object)->name_entry.gas_step--;
+		break;
+	}
+	name_place = OBJECT(current_object)->name_entry.place;
+	letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
+	if ((game_frame_count & 4u) == 0u)
+		letter_character = 0u;
+	OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
+	timer = OBJECT(current_object)->name_entry.timer;
+	OBJECT(current_object)->name_entry.timer = timer - 1u;
+	if (timer != 1u)
+	{
+		name_entry_draw_time();
+		return;
+	}
+	name_entry_finish(name_place);
+}
+
+/* The end of the name (name_entry_choose goes on to it: ED, the third letter, or the time up): open 0,
+   the name closed at its place; an empty name, or one of name_entry_rejected_names (SEX, XXX, XX and X's
+   with spaces), becomes ---; state 3 with 60 frames (timer), and its first frame
+   (name_entry_store_record). */
+void name_entry_finish(uint32_t name_place)
+{
+	uint32_t entered_name = 0, rejected_name = 0;
+	uint32_t element = 0;
+
+	OBJECT(current_object)->name_entry.open = 0u;
+	OBJECT(current_object)->name_entry.name[(int32_t)name_place] = 0u;
+	entered_name = (OBJECT(current_object)->name_entry.name[0] | ((uint32_t)OBJECT(current_object)->name_entry.name[1] << 8u) | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 16u) | ((uint32_t)OBJECT(current_object)->name_entry.name[3] << 24u));
+	if (entered_name == 0u)
+	{
+		OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+		OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+		OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+		OBJECT(current_object)->name_entry.name[3] = 0u;
+		OBJECT(current_object)->state++;
+		OBJECT(current_object)->name_entry.timer = 0x3Cu;
+		OBJECT(current_object)->name_entry.spin_frames = 0u;
+		name_entry_store_record();
+		return;
+	}
+	rejected_name = name_entry_rejected_names_ADDRESS;
+	do
+	{
+		if ((int32_t)REJECTED_NAMES(rejected_name)[0] < 0)
+		{
 			OBJECT(current_object)->state++;
 			OBJECT(current_object)->name_entry.timer = 0x3Cu;
 			OBJECT(current_object)->name_entry.spin_frames = 0u;
+			name_entry_store_record();
+			return;
 		}
-	case 3:
-		timer_2 = OBJECT(current_object)->name_entry.timer;
-		OBJECT(current_object)->name_entry.timer = timer_2 - 1u;
-		if (timer_2 != 1u)
-			break;
+		element = REJECTED_NAMES(rejected_name)[0];
+		rejected_name += 4u;
+	} while (entered_name != element);
+	OBJECT(current_object)->name_entry.name[0] = 0x2Du;
+	OBJECT(current_object)->name_entry.name[1] = 0x2Du;
+	OBJECT(current_object)->name_entry.name[2] = 0x2Du;
+	OBJECT(current_object)->name_entry.name[3] = 0u;
+	OBJECT(current_object)->state++;
+	OBJECT(current_object)->name_entry.timer = 0x3Cu;
+	OBJECT(current_object)->name_entry.spin_frames = 0u;
+	name_entry_store_record();
+}
+
+/* State 3 of name_entry_update (and the frame name_entry_finish ends the name): after 60 frames (timer)
+   writes the record into the race record (record_serial + 1, finish_time the player's time, record_model
+   the car's model, record_name and record_name_rest the name, record_course the course: screen
+   built_stage - 15), turns the lamps off (button_lamps), sets the game's next step (game_step 21) and
+   state 4; every frame it draws the time and the name (draw_text). */
+void name_entry_store_record(void)
+{
+	uint32_t race = 0, text_record = 0;
+	uint16_t timer = 0;
+
+	timer = OBJECT(current_object)->name_entry.timer;
+	OBJECT(current_object)->name_entry.timer = timer - 1u;
+	if (timer == 1u)
+	{
 		SCREEN(screen)->button_lamps = 0u;
 		SCREEN(screen)->game_step = 0x15u;
 		race = SCREEN(screen)->race;
@@ -387,10 +446,23 @@ void name_entry_update(void)
 		RACE(race)->record_name_rest = (OBJECT(current_object)->name_entry.name[1] | ((uint32_t)OBJECT(current_object)->name_entry.name[2] << 8u));
 		RACE(race)->record_course = SCREEN(screen)->built_stage - 0x15u;
 		OBJECT(current_object)->state++;
-		break;
-	case 4:
-		break;
 	}
+	text_record = current_object + 0xA4u;
+	draw_text(text_record);
+	text_record = current_object + 0x9Au;
+	draw_text(text_record);
+}
+
+/* The seconds left as the countdown number (timer frames / 30 in BCD, time_digits_draw), then the time
+   and the name (draw_text): each frame of states 1 and 2. */
+void name_entry_draw_time(void)
+{
+	uint32_t remaining_time = 0, text_record = 0;
+
+	remaining_time = OBJECT(current_object)->name_entry.timer;
+	remaining_time = remaining_time / 0x1Eu;
+	remaining_time = binary_to_bcd(remaining_time);
+	time_digits_draw(remaining_time);
 	text_record = current_object + 0xA4u;
 	draw_text(text_record);
 	text_record = current_object + 0x9Au;

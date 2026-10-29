@@ -174,17 +174,17 @@ uint32_t start_object_list(uint32_t handler_list)
 /* Returns the next pseudo-random number of the screen's sequence (kept in random_state). */
 uint32_t random_number(void)
 {
-	uint32_t next_state = 0, number = 0, old_state = 0, state = 0;
+	uint32_t number = 0, state = 0;
 
 	state = SCREEN(screen)->random_state;
 	if ((uint16_t)state == 0u)
 		state ^= 0x2A6D365Bu;
-	old_state = state;
-	state = (state * 2u * 2u + old_state) * 2u * 2u * 2u + old_state;
-	number = (old_state & ~0xFFFFu) | (uint16_t)state;
+	number = state;
+	state = (state * 2u * 2u + number) * 2u * 2u * 2u + number;
+	number = (number & ~0xFFFFu) | (uint16_t)state;
 	state = (state << 16) | (state >> 16);
 	number = (number & ~0xFFFFu) | (uint16_t)(number + state);
-	next_state = (state & ~0xFFFFu) | (uint16_t)number;
-	SCREEN(screen)->random_state = (next_state << 16) | (next_state >> 16);
+	state = (state & ~0xFFFFu) | (uint16_t)number;
+	SCREEN(screen)->random_state = (state << 16) | (state >> 16);
 	return number;
 }

@@ -202,176 +202,111 @@ uint16_t signature_checksum(void)
    which runs screen 1; second_task(1) the boot task after boot (from 000637), which first sets up the
    link's race (link_take_master_settings), the interrupt controller's timer (D00008, D0000A),
    task_swapping, each screen's first attract car (screen next_attract_car from first_attract_car_lists
-   by machine_count and the screen's car number) and the screens on (C0001C, C8001C), then runs screen 2.
-   A frame of either: wait_for_frame (the VBLANK swaps the tasks meanwhile; the second task calls
-   link_send_records before it with second_task_waiting set, and the boot task calls link_send_records
-   and link_receive_records only while that is clear), the test mode when test_mode_on is set,
-   link_receive_records, race_entries_update, race_progress_update and course_records_update (the link
-   and the race records), game_frame_count + 1 (screen 1's loop), take_screen_inputs, check_game_start,
-   the game mode's code (game_mode_jumps by game_mode: game_mode_power_on, game_mode_restart,
-   game_mode_title, game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_play,
-   entry_invitation_step (the entry countdown on a seat without a player), game_mode_isdn_connection),
-   run_objects and lcd_update; with single_task set it goes on with the other screen's frame instead of
-   waiting. The test mode: task_swapping off, test_mode_start, then test_mode_frame each frame while
-   test_mode_on lasts; then the screens off, the variables cleared, the second task's frame written
-   again, initialise_game, lcd_reset, both screens in game mode 1 with a fade in (fade 1),
-   network_check_again, and the boot task's part again. */
+   by machine_count and the screen's car number) and the screens on (C0001C, C8001C), then runs screen 2
+   (second_task_frames, which comes back when the test mode starts). A frame of either: wait_for_frame
+   (the VBLANK swaps the tasks meanwhile; the second task calls link_send_records before it with
+   second_task_waiting set, and the boot task calls link_send_records and link_receive_records only while
+   that is clear), the test mode when test_mode_on is set, link_receive_records, race_entries_update,
+   race_progress_update and course_records_update (the link and the race records), game_frame_count + 1
+   (screen 1's loop), take_screen_inputs, check_game_start, the game mode's code (game_mode_jumps by
+   game_mode: game_mode_power_on, game_mode_restart, game_mode_title, game_mode_car_presentation,
+   game_mode_demo_race, game_mode_ranking, game_mode_play, entry_invitation_step (the entry countdown on
+   a seat without a player), game_mode_isdn_connection), run_objects and lcd_update; with single_task set
+   it goes on with the other screen's frame instead of waiting. The test mode: task_swapping off,
+   test_mode_start, then test_mode_frame each frame while test_mode_on lasts; then the screens off, the
+   variables cleared, the second task's frame written again, initialise_game, lcd_reset, both screens in
+   game mode 1 with a fade in (fade 1), network_check_again, and the boot task's part again. */
 void second_task(uint32_t entry_point)
 {
-	bool L_000637 = false, L_000719 = false, L_00077F = false;
 	uint32_t attract_car_list = 0, block_count = 0, clear_address = 0, fill = 0, fill_high = 0, input_changes = 0, mode = 0;
-	uint32_t jump_target = 0;
 
-	for (;;)
+	switch (entry_point)
 	{
+	case 0:
 		for (;;)
 		{
-			jump_target = L_000719 ? 1u : L_000637 ? 1u : entry_point;
-			switch (jump_target)
-			{
-			case 0x000000u:
+			second_task_waiting = 0xFFu;
+			link_send_records();
+			wait_for_frame();
+			second_task_waiting = 0u;
+			if (test_mode_on != 0u)
 				break;
-			case 0x000001u:
-				if (!L_000719)
-				{
-					L_000637 = false;
-					link_take_master_settings();
-					io_write16(IRQ_TIMER_0, 0x39u);
-					io_write16(IRQ_TIMER_1, 1u);
-					screen_2_vblanks_high = 0u;
-					screen_2_vblanks = 0u;
-					screen_1_vblanks_high = 0u;
-					screen_1_vblanks = 0u;
-					vblanks_since_start = 0u;
-					task_swapping = 0xFFu;
-					attract_car_list = first_attract_car_lists[machine_count];
-					input_changes = SCREEN(SCREEN_2)->car_number;
-					SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
-					SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
-					io_write8(IO_1_CNT, 6u);
-					io_write8(IO_2_CNT, 0x86u);
-				}
-				do
-				{
-					L_000719 = false;
-					if (second_task_waiting == 0u)
-						link_send_records();
-					wait_for_frame(input_changes);
-					L_00077F = test_mode_on != 0u;
-					if (L_00077F)
-						break;
-					if (second_task_waiting == 0u)
-						link_receive_records();
-					race_entries_update();
-					race_progress_update();
-					course_records_update();
-					screen = SCREEN_2;
-					input_changes = take_screen_inputs();
-					mode = SCREEN(screen)->game_mode;
-					player_car = screen + 0x1000u;
-					mode = check_game_start(mode, input_changes);
-					switch (mode)
-					{
-					case 0:
-						game_mode_power_on();
-						break;
-					case 1:
-						game_mode_restart();
-						break;
-					case 2:
-						game_mode_title();
-						break;
-					case 3:
-						game_mode_car_presentation();
-						break;
-					case 4:
-						game_mode_demo_race();
-						break;
-					case 5:
-						game_mode_ranking();
-						break;
-					case 6:
-						game_mode_play();
-						break;
-					case 7:
-						entry_invitation_step();
-						break;
-					case 8:
-						game_mode_isdn_connection();
-						break;
-					}
-					run_objects();
-					lcd_update();
-				} while (single_task == 0u);
-				if (L_00077F)
-					break;
+			link_receive_records();
+			race_entries_update();
+			race_progress_update();
+			course_records_update();
+			game_frame_count++;
+			screen = SCREEN_1;
+			input_changes = take_screen_inputs();
+			mode = SCREEN(screen)->game_mode;
+			player_car = screen + 0x1000u;
+			mode = check_game_start(mode, input_changes);
+			switch (mode)
+			{
+			case 0:
+				game_mode_power_on();
+				break;
+			case 1:
+				game_mode_restart();
+				break;
+			case 2:
+				game_mode_title();
+				break;
+			case 3:
+				game_mode_car_presentation();
+				break;
+			case 4:
+				game_mode_demo_race();
+				break;
+			case 5:
+				game_mode_ranking();
+				break;
+			case 6:
+				game_mode_play();
+				break;
+			case 7:
+				entry_invitation_step();
+				break;
+			case 8:
+				game_mode_isdn_connection();
 				break;
 			}
-			if (L_00077F)
-				break;
-			do
+			run_objects();
+			lcd_update();
+			if (single_task != 0u)
 			{
-				second_task_waiting = 0xFFu;
-				link_send_records();
-				wait_for_frame(input_changes);
-				second_task_waiting = 0u;
-				L_00077F = test_mode_on != 0u;
-				if (L_00077F)
-					break;
-				link_receive_records();
-				race_entries_update();
-				race_progress_update();
-				course_records_update();
-				game_frame_count++;
-				screen = SCREEN_1;
-				input_changes = take_screen_inputs();
-				mode = SCREEN(screen)->game_mode;
-				player_car = screen + 0x1000u;
-				mode = check_game_start(mode, input_changes);
-				switch (mode)
-				{
-				case 0:
-					game_mode_power_on();
-					break;
-				case 1:
-					game_mode_restart();
-					break;
-				case 2:
-					game_mode_title();
-					break;
-				case 3:
-					game_mode_car_presentation();
-					break;
-				case 4:
-					game_mode_demo_race();
-					break;
-				case 5:
-					game_mode_ranking();
-					break;
-				case 6:
-					game_mode_play();
-					break;
-				case 7:
-					entry_invitation_step();
-					break;
-				case 8:
-					game_mode_isdn_connection();
-					break;
-				}
-				run_objects();
-				lcd_update();
-			} while (single_task == 0u);
-			if (L_00077F)
+				second_task_frames();
 				break;
-			L_000719 = true;
+			}
 		}
-		L_00077F = false;
+		break;
+	case 1:
+		link_take_master_settings();
+		io_write16(IRQ_TIMER_0, 0x39u);
+		io_write16(IRQ_TIMER_1, 1u);
+		screen_2_vblanks_high = 0u;
+		screen_2_vblanks = 0u;
+		screen_1_vblanks_high = 0u;
+		screen_1_vblanks = 0u;
+		vblanks_since_start = 0u;
+		task_swapping = 0xFFu;
+		attract_car_list = first_attract_car_lists[machine_count];
+		input_changes = SCREEN(SCREEN_2)->car_number;
+		SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
+		SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
+		io_write8(IO_1_CNT, 6u);
+		io_write8(IO_2_CNT, 0x86u);
+		second_task_frames();
+		break;
+	}
+	for (;;)
+	{
 		task_swapping = 0u;
-		wait_for_frame(input_changes);
+		wait_for_frame();
 		test_mode_start();
 		do
 		{
-			wait_for_frame(input_changes);
+			wait_for_frame();
 			test_mode_frame();
 		} while (test_mode_on != 0u);
 		interrupts_off();
@@ -413,7 +348,136 @@ void second_task(uint32_t entry_point)
 		SCREEN(SCREEN_2)->flags |= 1u;
 		interrupts_on();
 		network_check_again();
-		L_000637 = true;
+		link_take_master_settings();
+		io_write16(IRQ_TIMER_0, 0x39u);
+		io_write16(IRQ_TIMER_1, 1u);
+		screen_2_vblanks_high = 0u;
+		screen_2_vblanks = 0u;
+		screen_1_vblanks_high = 0u;
+		screen_1_vblanks = 0u;
+		vblanks_since_start = 0u;
+		task_swapping = 0xFFu;
+		attract_car_list = first_attract_car_lists[machine_count];
+		input_changes = SCREEN(SCREEN_2)->car_number;
+		SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
+		SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
+		io_write8(IO_1_CNT, 6u);
+		io_write8(IO_2_CNT, 0x86u);
+		second_task_frames();
+	}
+}
+
+/* Both screens' frames from screen 2's on, until the test button (test_mode_on) ends them: then back to
+   second_task, for the test mode. Screen 2's frame (as second_task's, without game_frame_count) over and
+   over; with single_task set, screen 1's frame after it (second_task_waiting set around its
+   link_send_records and wait_for_frame, game_frame_count + 1), which goes on over and over while
+   single_task is clear, and back to screen 2's when it is set. */
+void second_task_frames(void)
+{
+	uint32_t input_changes = 0, mode = 0;
+
+	for (;;)
+	{
+		if (second_task_waiting == 0u)
+			link_send_records();
+		wait_for_frame();
+		if (test_mode_on != 0u)
+			break;
+		if (second_task_waiting == 0u)
+			link_receive_records();
+		race_entries_update();
+		race_progress_update();
+		course_records_update();
+		screen = SCREEN_2;
+		input_changes = take_screen_inputs();
+		mode = SCREEN(screen)->game_mode;
+		player_car = screen + 0x1000u;
+		mode = check_game_start(mode, input_changes);
+		switch (mode)
+		{
+		case 0:
+			game_mode_power_on();
+			break;
+		case 1:
+			game_mode_restart();
+			break;
+		case 2:
+			game_mode_title();
+			break;
+		case 3:
+			game_mode_car_presentation();
+			break;
+		case 4:
+			game_mode_demo_race();
+			break;
+		case 5:
+			game_mode_ranking();
+			break;
+		case 6:
+			game_mode_play();
+			break;
+		case 7:
+			entry_invitation_step();
+			break;
+		case 8:
+			game_mode_isdn_connection();
+			break;
+		}
+		run_objects();
+		lcd_update();
+		if (single_task == 0u)
+			continue;
+		do
+		{
+			second_task_waiting = 0xFFu;
+			link_send_records();
+			wait_for_frame();
+			second_task_waiting = 0u;
+			if (test_mode_on != 0u)
+				return;
+			link_receive_records();
+			race_entries_update();
+			race_progress_update();
+			course_records_update();
+			game_frame_count++;
+			screen = SCREEN_1;
+			input_changes = take_screen_inputs();
+			mode = SCREEN(screen)->game_mode;
+			player_car = screen + 0x1000u;
+			mode = check_game_start(mode, input_changes);
+			switch (mode)
+			{
+			case 0:
+				game_mode_power_on();
+				break;
+			case 1:
+				game_mode_restart();
+				break;
+			case 2:
+				game_mode_title();
+				break;
+			case 3:
+				game_mode_car_presentation();
+				break;
+			case 4:
+				game_mode_demo_race();
+				break;
+			case 5:
+				game_mode_ranking();
+				break;
+			case 6:
+				game_mode_play();
+				break;
+			case 7:
+				entry_invitation_step();
+				break;
+			case 8:
+				game_mode_isdn_connection();
+				break;
+			}
+			run_objects();
+			lcd_update();
+		} while (single_task == 0u);
 	}
 }
 
@@ -478,7 +542,7 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 /* Waits for the next frame: polls frame_ready (set by the VBLANK, which also swaps the tasks) and clears
    it; while the screen has tile pages to unpack (screen unpack_state) it unpacks them a piece at a time
    (unpack_queued_step) between the polls. */
-uint32_t wait_for_frame(uint32_t copy_source)
+void wait_for_frame(void)
 {
 	for (;;)
 	{
@@ -493,14 +557,13 @@ uint32_t wait_for_frame(uint32_t copy_source)
 			frame_ready = 0u;
 			break;
 		}
-		copy_source = unpack_queued_step(copy_source);
+		unpack_queued_step();
 		if (frame_ready != 0u)
 		{
 			frame_ready = 0u;
 			break;
 		}
 	}
-	return copy_source;
 }
 
 /* Sets the game up, at start-up and after the test mode: 13, 0, 0, 1F to C00074 (which the board does

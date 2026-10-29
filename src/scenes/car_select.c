@@ -831,7 +831,7 @@ void turntable_car_show(void)
    halfway copy; then animation_advance. */
 void turntable_scenery_show(void)
 {
-	uint16_t item_flags = 0, leftover = 0, size = 0;
+	uint16_t leftover = 0, size = 0;
 	uint32_t across = 0, animation = 0, down = 0, group = 0, item_angle = 0, item_place = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
 	uint32_t kept_saved_place = 0, kept_item_place = 0;
 
@@ -888,9 +888,9 @@ void turntable_scenery_show(void)
 		item_place = kept_item_place;
 		saved_place = kept_saved_place;
 		ITEM_PLACE_WORDS(saved_place)[0] = (uint16_t)OBJECT(current_object)->turntable_scenery.previous_place;
-		item_flags = (uint16_t)((leftover & ~0xFFu) | OBJECT(current_object)->flags);
+		leftover = (uint16_t)((leftover & ~0xFFu) | OBJECT(current_object)->flags);
 		saved_place += 2u;
-		ITEM_PLACE_WORDS(saved_place)[0] = item_flags & ~0xDFu;
+		ITEM_PLACE_WORDS(saved_place)[0] = leftover & ~0xDFu;
 		saved_place += 2u;
 	}
 	animation_advance(0u);

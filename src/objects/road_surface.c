@@ -195,11 +195,13 @@ void road_surface_start(void)
    line's scroll into near_scroll. */
 void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint32_t *p_previous_depth, uint32_t *p_stripe_count, uint32_t *p_fraction_shift, uint32_t *p_rounding, uint32_t *p_max_depth)
 {
-	bool L_016E09 = false, L_016E73 = false, leave_loop = false, leave_loop_2 = false, leave_loop_3 = false, leave_loop_4 = false, leave_loop_5 = false, next_round = false;
+	uint32_t previous_line = *p_previous_line;
+	uint32_t previous_x = *p_previous_x;
+	uint32_t previous_depth = *p_previous_depth;
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint8_t fraction_shift = 0;
 	uint16_t line_select = 0, max_depth = 0;
-	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, line = 0, line_count = 0, point_depth = 0, point_entry = 0, point_line = 0, point_x = 0, scroll_place = 0, segment = 0, skip_state = 0, sprite_origin_y = 0, table_offset = 0, view_segment = 0, x_step = 0;
+	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, line = 0, line_count = 0, point_depth = 0, point_entry = 0, point_line = 0, point_x = 0, rounding = 0, scroll_place = 0, segment = 0, skip_state = 0, sprite_origin_y = 0, table_offset = 0, view_segment = 0, x_step = 0;
 	uint32_t scroll_bottom = 0;
 	uint16_t segment_scale = 0, remaining_scale = 0;
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
@@ -214,7 +216,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	segment = RACE(SCREEN(screen)->race_copy)->window_segment;
 	r14 &= ~0xFFFFu;
 	fraction_shift = 0xF4u;
-	*p_rounding = 0x800u;
+	rounding = 0x800u;
 	sprite_origin_y = (int16_t)SCREEN(screen)->sprite_origin_y;
 	max_depth = 0xFFu;
 	skip_state = 1u;
@@ -244,225 +246,175 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	{
 		segment_scale = PROJECTED_SEGMENT(view_segment)->scale;
 		view_segment += 2u;
-		if (segment_scale == 0u)
-			break;
-		point_depth = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
-		ROAD_POINTS(point_entry)[0] = point_depth;
-		point_entry += 2u;
-		view_segment += 2u;
-		point_x = 0u - (int16_t)PROJECTED_SEGMENT(view_segment - 0x4u)->x;
-		ROAD_POINTS(point_entry)[0] = point_x;
-		point_entry += 2u;
-		view_segment += 2u;
-		point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
-		ROAD_POINTS(point_entry)[0] = point_line;
-		point_entry += 2u;
-		view_segment += 0xAu;
-		next_round = false;
-		for (;;)
+		if (segment_scale != 0u)
 		{
-			leave_loop = false;
-			do
+			point_depth = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
+			ROAD_POINTS(point_entry)[0] = point_depth;
+			point_entry += 2u;
+			view_segment += 2u;
+			point_x = 0u - (int16_t)PROJECTED_SEGMENT(view_segment - 0x4u)->x;
+			ROAD_POINTS(point_entry)[0] = point_x;
+			point_entry += 2u;
+			view_segment += 2u;
+			point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+			ROAD_POINTS(point_entry)[0] = point_line;
+			point_entry += 2u;
+			view_segment += 0xAu;
+			if (skip_state == 0u)
 			{
-				leave_loop_2 = false;
-				do
+				line_reached = line;
+				line_count = line_reached - point_line;
+				if ((int32_t)line_reached <= (int32_t)point_line)
 				{
-					leave_loop_3 = false;
-					do
+					previous_line = point_line;
+					previous_x = point_x;
+					previous_depth = point_depth;
+					segment--;
+					if (segment != 0u)
+						continue;
+					segment = 2u;
+					r14 = r14 ^ 0x100u;
+					continue;
+				}
+				if (line_count != 1u)
+				{
+					road_surface_fill_lines(line, point_line, point_x, point_depth, fraction_shift, rounding, max_depth, &previous_line, &previous_x, &previous_depth, &ignored, &ignored_2, &scroll_place, &zero);
+					if (zero == 0u)
 					{
-						if (L_016E09 || L_016E73 || L_016E09 || L_016E09 || skip_state == 0u)
+						for (;;)
 						{
-							if (!L_016E09)
-							{
-								if (!L_016E73)
-								{
-									if (!L_016E09)
-									{
-										if (!L_016E09)
-										{
-											line_reached = line;
-											line_count = line_reached - point_line;
-											if ((int32_t)line_reached <= (int32_t)point_line)
-											{
-												*p_previous_line = point_line;
-												*p_previous_x = point_x;
-												*p_previous_depth = point_depth;
-												segment--;
-												if (segment != 0u)
-												{
-													next_round = true;
-													leave_loop = true;
-													leave_loop_2 = true;
-													leave_loop_3 = true;
-													break;
-												}
-												segment = 2u;
-												r14 = r14 ^ 0x100u;
-												next_round = true;
-												leave_loop = true;
-												leave_loop_2 = true;
-												leave_loop_3 = true;
-												break;
-											}
-										}
-									}
-								}
-							}
-							leave_loop_4 = false;
+							remaining_scale = PROJECTED_SEGMENT(view_segment)->scale;
+							view_segment += 2u;
+							if (remaining_scale == 0u)
+								break;
+							ROAD_POINTS(point_entry)[0] = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
+							point_entry += 2u;
+							view_segment += 2u;
+							ROAD_POINTS(point_entry)[0] = 0u - PROJECTED_SEGMENT(view_segment - 0x4u)->x;
+							point_entry += 2u;
+							view_segment += 2u;
+							point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+							ROAD_POINTS(point_entry)[0] = point_line;
+							point_entry += 2u;
+							view_segment += 0xAu;
+						}
+						break;
+					}
+				}
+			}
+			else
+			{
+				line_reached_first = line;
+				line_count = line_reached_first - point_line;
+				if ((int32_t)line_reached_first <= (int32_t)point_line)
+				{
+					skip_state = 0u;
+					OBJECT(current_object)->road_surface.skipped_line = 0u;
+					previous_line = point_line;
+					previous_x = point_x;
+					previous_depth = point_depth;
+					segment--;
+					if (segment != 0u)
+						continue;
+					segment = 2u;
+					r14 = r14 ^ 0x100u;
+					continue;
+				}
+				if ((int32_t)skip_state < 0)
+				{
+					if (line_count != 1u)
+					{
+						OBJECT(current_object)->road_surface.skipped_x = previous_x;
+						OBJECT(current_object)->road_surface.skipped_depth = previous_depth;
+						road_surface_fill_lines(line, point_line, point_x, point_depth, fraction_shift, rounding, max_depth, &previous_line, &previous_x, &previous_depth, &x_step, &depth_step, &scroll_place, &zero);
+						OBJECT(current_object)->road_surface.skipped_x_step = x_step;
+						OBJECT(current_object)->road_surface.skipped_depth_step = depth_step;
+						skip_state = 0u;
+						if (zero == 0u)
+						{
 							for (;;)
 							{
-								leave_loop_5 = false;
-								do
-								{
-									if (L_016E73 || L_016E09 || L_016E09 || L_016E73 || L_016E09 || L_016E09 || line_count == 1u)
-									{
-										if (!L_016E73)
-										{
-											if (L_016E09 || L_016E09 || !L_016E73)
-											{
-												L_016E09 = false;
-												scroll_place -= 2u;
-												LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
-												line_select = (uint16_t)point_depth;
-												if ((int16_t)max_depth < (int16_t)line_select)
-													line_select = (uint16_t)max_depth;
-												r12 -= 2u;
-												LINE_SELECTS(r12)[0] = line_select + r14;
-												line = point_line;
-											}
-										}
-										if (L_016E73 || L_016E73 || line == 0u)
-										{
-											for (;;)
-											{
-												remaining_scale = PROJECTED_SEGMENT(view_segment)->scale;
-												view_segment += 2u;
-												if (remaining_scale == 0u)
-													break;
-												ROAD_POINTS(point_entry)[0] = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
-												point_entry += 2u;
-												view_segment += 2u;
-												ROAD_POINTS(point_entry)[0] = 0u - PROJECTED_SEGMENT(view_segment - 0x4u)->x;
-												point_entry += 2u;
-												view_segment += 2u;
-												point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
-												ROAD_POINTS(point_entry)[0] = point_line;
-												point_entry += 2u;
-												view_segment += 0xAu;
-											}
-											SCREEN(screen)->road_top_line = point_line;
-											ROAD_POINTS(point_entry)[0] = 0xFFFFu;
-											road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-											OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
-											*p_stripe_count = segment;
-											*p_fraction_shift = fraction_shift;
-											*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
-											return;
-										}
-										*p_previous_line = point_line;
-										*p_previous_x = point_x;
-										*p_previous_depth = point_depth;
-										segment--;
-										if (segment != 0u)
-										{
-											next_round = true;
-											leave_loop = true;
-											leave_loop_2 = true;
-											leave_loop_3 = true;
-											leave_loop_4 = true;
-											leave_loop_5 = true;
-											break;
-										}
-										segment = 2u;
-										r14 = r14 ^ 0x100u;
-										next_round = true;
-										leave_loop = true;
-										leave_loop_2 = true;
-										leave_loop_3 = true;
-										leave_loop_4 = true;
-										leave_loop_5 = true;
-										break;
-									}
-									road_surface_fill_lines(line, point_line, point_x, point_depth, fraction_shift, *p_rounding, max_depth, p_previous_line, p_previous_x, p_previous_depth, &ignored, &ignored_2, &scroll_place, &zero);
-									L_016E73 = zero == 0u;
-								} while (L_016E73);
-								if (leave_loop_5)
+								remaining_scale = PROJECTED_SEGMENT(view_segment)->scale;
+								view_segment += 2u;
+								if (remaining_scale == 0u)
 									break;
-								L_016E09 = true;
+								ROAD_POINTS(point_entry)[0] = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
+								point_entry += 2u;
+								view_segment += 2u;
+								ROAD_POINTS(point_entry)[0] = 0u - PROJECTED_SEGMENT(view_segment - 0x4u)->x;
+								point_entry += 2u;
+								view_segment += 2u;
+								point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+								ROAD_POINTS(point_entry)[0] = point_line;
+								point_entry += 2u;
+								view_segment += 0xAu;
 							}
-							if (leave_loop_4)
-								break;
-						}
-						line_reached_first = line;
-						line_count = line_reached_first - point_line;
-						if ((int32_t)line_reached_first <= (int32_t)point_line)
-						{
-							skip_state = 0u;
-							OBJECT(current_object)->road_surface.skipped_line = 0u;
-							*p_previous_line = point_line;
-							*p_previous_x = point_x;
-							*p_previous_depth = point_depth;
-							segment--;
-							if (segment != 0u)
-							{
-								next_round = true;
-								leave_loop = true;
-								leave_loop_2 = true;
-								leave_loop_3 = true;
-								break;
-							}
-							segment = 2u;
-							r14 = r14 ^ 0x100u;
-							next_round = true;
-							leave_loop = true;
-							leave_loop_2 = true;
-							leave_loop_3 = true;
 							break;
 						}
-						if ((int32_t)skip_state < 0)
-						{
-							L_016E09 = line_count == 1u;
-							if (!L_016E09)
-							{
-								OBJECT(current_object)->road_surface.skipped_x = *p_previous_x;
-								OBJECT(current_object)->road_surface.skipped_depth = *p_previous_depth;
-								road_surface_fill_lines(line, point_line, point_x, point_depth, fraction_shift, *p_rounding, max_depth, p_previous_line, p_previous_x, p_previous_depth, &x_step, &depth_step, &scroll_place, &zero);
-								OBJECT(current_object)->road_surface.skipped_x_step = x_step;
-								OBJECT(current_object)->road_surface.skipped_depth_step = depth_step;
-								skip_state = 0u;
-								L_016E73 = zero == 0u;
-								if (!L_016E73)
-									L_016E09 = true;
-							}
-						}
-					} while (L_016E09);
-					if (leave_loop_3)
+					}
+				}
+				else
+				{
+					line_count = (line_count - 1u) * 2u;
+					scroll_place -= line_count;
+					r12 -= line_count;
+					OBJECT(current_object)->road_surface.skipped_line = point_line;
+					OBJECT(current_object)->road_surface.skipped_scroll_place = scroll_place;
+					OBJECT(current_object)->road_surface.skipped_select_place = r12;
+					OBJECT(current_object)->road_surface.skipped_stripe = r14;
+					skip_state = 0xFFFFFFFFu;
+				}
+			}
+			scroll_place -= 2u;
+			LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
+			line_select = (uint16_t)point_depth;
+			if ((int16_t)max_depth < (int16_t)line_select)
+				line_select = (uint16_t)max_depth;
+			r12 -= 2u;
+			LINE_SELECTS(r12)[0] = line_select + r14;
+			line = point_line;
+			if (line == 0u)
+			{
+				for (;;)
+				{
+					remaining_scale = PROJECTED_SEGMENT(view_segment)->scale;
+					view_segment += 2u;
+					if (remaining_scale == 0u)
 						break;
-				} while (L_016E73);
-				if (leave_loop_2)
-					break;
-			} while (L_016E09);
-			if (leave_loop)
+					ROAD_POINTS(point_entry)[0] = PROJECTED_SEGMENT(view_segment - 0x2u)->width >> 2;
+					point_entry += 2u;
+					view_segment += 2u;
+					ROAD_POINTS(point_entry)[0] = 0u - PROJECTED_SEGMENT(view_segment - 0x4u)->x;
+					point_entry += 2u;
+					view_segment += 2u;
+					point_line = (int16_t)PROJECTED_SEGMENT(view_segment - 0x6u)->y + sprite_origin_y;
+					ROAD_POINTS(point_entry)[0] = point_line;
+					point_entry += 2u;
+					view_segment += 0xAu;
+				}
 				break;
-			line_count = (line_count - 1u) * 2u;
-			scroll_place -= line_count;
-			r12 -= line_count;
-			OBJECT(current_object)->road_surface.skipped_line = point_line;
-			OBJECT(current_object)->road_surface.skipped_scroll_place = scroll_place;
-			OBJECT(current_object)->road_surface.skipped_select_place = r12;
-			OBJECT(current_object)->road_surface.skipped_stripe = r14;
-			skip_state = 0xFFFFFFFFu;
-			L_016E09 = true;
-		}
-		if (next_round)
+			}
+			previous_line = point_line;
+			previous_x = point_x;
+			previous_depth = point_depth;
+			segment--;
+			if (segment != 0u)
+				continue;
+			segment = 2u;
+			r14 = r14 ^ 0x100u;
 			continue;
-	}
-	pairs_left = shift_by(line, max_depth, 32);
-	carry = v60_shl_cy(line, max_depth, 32);
-	zero = pairs_left == 0u;
-	line = pairs_left;
-	if (carry == 0u)
-	{
+		}
+		pairs_left = shift_by(line, max_depth, 32);
+		carry = v60_shl_cy(line, max_depth, 32);
+		zero = pairs_left == 0u;
+		line = pairs_left;
+		if (carry)
+		{
+			r12 -= 2u;
+			LINE_SELECTS(r12)[0] = 0u;
+			if (zero)
+				break;
+		}
 		line++;
 		for (;;)
 		{
@@ -472,43 +424,18 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 				break;
 			LINE_SELECT_PAIRS(r12)[0] = 0u;
 		}
-		SCREEN(screen)->road_top_line = point_line;
-		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
-		road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-		OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
-		*p_stripe_count = segment;
-		*p_fraction_shift = fraction_shift;
-		*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
-		return;
-	}
-	r12 -= 2u;
-	LINE_SELECTS(r12)[0] = 0u;
-	if (zero)
-	{
-		SCREEN(screen)->road_top_line = point_line;
-		ROAD_POINTS(point_entry)[0] = 0xFFFFu;
-		road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
-		OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
-		*p_stripe_count = segment;
-		*p_fraction_shift = fraction_shift;
-		*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
-		return;
-	}
-	line++;
-	for (;;)
-	{
-		r12 -= 4u;
-		line--;
-		if (((line != 0u) & (LINE_SELECT_PAIRS(r12)[0] != 0u)) == 0u)
-			break;
-		LINE_SELECT_PAIRS(r12)[0] = 0u;
+		break;
 	}
 	SCREEN(screen)->road_top_line = point_line;
 	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
-	road_surface_fill_skipped_lines(fraction_shift, *p_rounding, max_depth, p_previous_x, p_previous_depth);
+	road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth);
 	OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
+	*p_previous_line = previous_line;
+	*p_previous_x = previous_x;
+	*p_previous_depth = previous_depth;
 	*p_stripe_count = segment;
 	*p_fraction_shift = fraction_shift;
+	*p_rounding = rounding;
 	*p_max_depth = (*p_max_depth & 0xFFFF0000u) | max_depth;
 }
 
@@ -519,7 +446,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 {
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint16_t line_select = 0, segment = 0;
-	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, last_frame_points = 0, last_segment = 0, line = 0, line_count = 0, point_depth = 0, point_line = 0, point_x = 0, points = 0, scroll_place = 0, skip_state = 0, table_offset = 0, x_step = 0;
+	uint32_t depth_step = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, last_frame_points = 0, line = 0, line_count = 0, point_depth = 0, point_line = 0, point_x = 0, points = 0, scroll_place = 0, skip_state = 0, table_offset = 0, x_step = 0;
 	uint16_t last_frame_segment = 0, last_depth = 0, last_x = 0, last_line = 0;
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
 
@@ -539,17 +466,17 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	segment = ROAD_POINTS(points)[0];
 	last_frame_segment = ROAD_POINTS(last_frame_points)[0];
 	last_frame_points += 2u;
-	last_segment = (stripe_count & ~0xFFFFu) | last_frame_segment;
+	stripe_count = (stripe_count & ~0xFFFFu) | last_frame_segment;
 	points += 2u;
-	if ((uint16_t)last_segment != segment)
+	if ((uint16_t)stripe_count != segment)
 	{
-		if ((uint16_t)last_segment < segment)
+		if ((uint16_t)stripe_count < segment)
 		{
 			do
 			{
 				last_frame_points += 6u;
-				last_segment = (last_segment & ~0xFFFFu) | (uint16_t)(last_segment + 1u);
-			} while ((uint16_t)last_segment < segment);
+				stripe_count = (stripe_count & ~0xFFFFu) | (uint16_t)(stripe_count + 1u);
+			} while ((uint16_t)stripe_count < segment);
 		}
 		else
 		{
@@ -557,17 +484,17 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 			{
 				points += 6u;
 				segment++;
-			} while (segment < (uint16_t)last_segment);
+			} while (segment < (uint16_t)stripe_count);
 		}
 	}
-	last_segment = 0u - (last_segment & ~0xFFFCu);
-	overflow = v60_overflow_add32(last_segment, 2u, 0u);
-	zero = last_segment + 2u == 0u;
-	negative = (last_segment + 2u) >> 31;
-	last_segment += 2u;
+	stripe_count = 0u - (stripe_count & ~0xFFFCu);
+	overflow = v60_overflow_add32(stripe_count, 2u, 0u);
+	zero = stripe_count + 2u == 0u;
+	negative = (stripe_count + 2u) >> 31;
+	stripe_count += 2u;
 	if ((negative ^ overflow) | zero)
 	{
-		last_segment += 2u;
+		stripe_count += 2u;
 		r14 |= 0x100u;
 	}
 	while ((int16_t)(ROAD_POINTS(points)[0] | ROAD_POINTS(last_frame_points)[0]) >= 0)
@@ -700,10 +627,10 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 		previous_line = point_line;
 		previous_x = point_x;
 		previous_depth = point_depth;
-		last_segment--;
-		if (last_segment != 0u)
+		stripe_count--;
+		if (stripe_count != 0u)
 			continue;
-		last_segment = 2u;
+		stripe_count = 2u;
 		r14 = r14 ^ 0x100u;
 	}
 	pairs_left = shift_by(line, max_depth, 32);

@@ -27,7 +27,7 @@
 void int_vector_40(void)
 {
 	uint8_t tile_bank_bits = 0;
-	uint32_t calibration = 0, screen_vblank_counter = 0;
+	uint32_t screen_vblank_counter = 0;
 	uint32_t saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
 
 	saved_screen = screen;
@@ -68,7 +68,7 @@ void int_vector_40(void)
 	SCREEN(screen)->skip_scroll_update = 0u;
 	if (test_mode_on == 0u)
 	{
-		calibration = read_switches_and_analog();
+		read_switches_and_analog();
 		switch (SCREEN(screen)->index)
 		{
 		case 0:
@@ -80,7 +80,7 @@ void int_vector_40(void)
 		}
 		check_test_button();
 		if (free_play == 0u)
-			update_coins(calibration);
+			update_coins();
 	}
 	update_lamps();
 	lcd_refresh();

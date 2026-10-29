@@ -90,6 +90,9 @@ comment skip_midi_data_screen_1 Moves screen_1_midi_read to the last byte of the
 
 03D3  func  play_midi_message_screen_1
 comment play_midi_message_screen_1 Plays one MIDI message of screen 1's queue for part, by screen_1_midi_status: 90 note on (velocity 0: note off): note_number (+ transpose) and its note_code, note_level from the velocity; a drum kit (program F0 on, drum_kits) gives drum_pitch, the drum_timeout and the sample (FF: no sound), and on channel 15 notes 2A and 2C (closed and pedal hi-hat) stop screen 1's open hi-hat (note code CA); an FM instrument (instruments' flags bit 1) takes a free FM voice for start_fm_note; else the instrument's key split for note_number gives sample_or_patch, split_tune and split_octave; the MultiPCM voice is the next free one from next_voice, or the oldest (allocation_order 0) taken over; its record (flags 40, + 10 for a drum note), then the pitch, the sample, the level (x the part's effective_volume), pan 70 (right) and key on. 80 note off: drum notes ignore it; the sounding voice of the note on the channel gets the stop flag (an FM one is freed and keyed off), or is held (flags bit 1) while the sustain pedal is down. E0 pitch bend: through bend_range_tables[bend_range] into pitch_bend and screen_1_pitch_bends, the channel's sounding voices retuned. B0 control change: 1 modulation (set_voice_modulation_screen_1), 7 the part's volume, 10 screen_1_music_volume for the 8 music parts, 40 sustain pedal, 7B all notes off, 50 stops all of the screen's MultiPCM voices (7E: all but drum notes on channels other than 15) and clears its channels' controls and half of their pitch bends, 20 a sound set (part_templates: the 8 music parts and screen 1's sample bank), 51 stops one note; a new volume reaches the sounding voices at once. C0 program change. A0 and D0 skipped.
+comment cut_open_hi_hat_screen_1 A closed or pedal hi-hat (notes 2A and 2C on channel 15) stops screen 1's open hi-hat: each MultiPCM voice of screen 1 (flags bit 6, not bit 3) on channel 15 playing note code CA gets the stop flag (bit 0); then take_voice_screen_1 for the new note.
+comment take_voice_screen_1 A MultiPCM voice for a note of screen 1 (play_midi_message_screen_1 and cut_open_hi_hat_screen_1 go on to it): the next free one from next_voice (reset_next_voice past the last), or else the oldest (allocation_order 0) taken over, the others' orders one down (none: no note); its record (flags 40, + 10 and the drum_timeout for a drum note), then the pitch (an instrument's through pcm_pitch_tables, with its channel's pitch bend, split_tune and split_octave; a drum's drum_pitch), the sample, the level (x the part's effective_volume), pan 70 (right) and key on.
+comment release_note_screen_1 Releases a note of screen 1 (note off, or a note on at velocity 0: play_midi_message_screen_1 goes on to it): drum notes (program F0 on) ignore it; the voice playing the note on its channel (an FM voice for an FM instrument, else a MultiPCM one; screen 1's, sounding, not held) is held (flags bit 1) while the channel's sustain pedal is down, else the MultiPCM voice gets the stop flag (bit 0) and the FM voice is freed and keyed off.
 
 06E3  func  retune_voice_screen_1
 comment retune_voice_screen_1 Retunes a sounding voice after a pitch bend of screen 1: an FM voice through retune_fm_voice; a MultiPCM voice gets its note's pitch again from pcm_pitch_tables[semitone] at pitch_bend + its tune, its octave + octave_shift (registers 3 and 2). The same code as retune_voice_screen_2.
@@ -117,6 +120,9 @@ comment skip_midi_data_screen_2 As skip_midi_data_screen_1 on screen_2_midi_read
 
 0C0E  func  play_midi_message_screen_2
 comment play_midi_message_screen_2 As play_midi_message_screen_1 for screen 2's queue and parts: its voices get flags bit 3 (48), and it only touches voices with that bit (screen 1's only those without); its notes play the samples from 100 on (MultiPCM register 2 bit 0) on the left (pan 90; FM B4 80); its channels' state is screen_2_channel_controls and screen_2_pitch_bends; CC 10 sets screen_2_music_volume and CC 20 screen 2's sample bank (pcm_banks bits 3-5).
+comment cut_open_hi_hat_screen_2 As cut_open_hi_hat_screen_1 for screen 2's voices (flags bit 3); then take_voice_screen_2.
+comment take_voice_screen_2 As take_voice_screen_1 for a note of screen 2 (play_midi_message_screen_2 and cut_open_hi_hat_screen_2 go on to it): its voice gets flags bit 3 (48), plays the samples from 100 on and pans left (90).
+comment release_note_screen_2 As release_note_screen_1 for screen 2's voices (flags bit 3) (play_midi_message_screen_2 goes on to it).
 
 0F20  func  retune_voice_screen_2
 comment retune_voice_screen_2 The same code as retune_voice_screen_1, for screen 2's pitch bend.
@@ -228,15 +234,15 @@ comment sound_main_loop One pass of the main loop: waits, interrupts off, while 
 
 017B  code  drum_timeout_step
 03FC  code  note_on_screen_1
-0461  code  cut_open_hi_hat_screen_1
+0461  func  cut_open_hi_hat_screen_1
 0493  code  find_key_split_screen_1
-04B7  code  take_voice_screen_1
+04B7  func  take_voice_screen_1
 04D9  code  steal_oldest_voice_screen_1
 04FD  code  start_voice_screen_1
 054A  code  start_instrument_voice_screen_1
 05AD  code  write_note_registers_screen_1
 05E1  code  note_off_screen_1
-05FC  code  release_note_screen_1
+05FC  func  release_note_screen_1
 065C  code  pitch_bend_screen_1
 0730  code  program_change_screen_1
 073C  code  control_change_screen_1
@@ -251,15 +257,15 @@ comment sound_main_loop One pass of the main loop: waits, interrupts off, while 
 0A0C  code  all_notes_off_screen_1
 0A7D  code  renumber_voice_orders
 0C37  code  note_on_screen_2
-0C9C  code  cut_open_hi_hat_screen_2
+0C9C  func  cut_open_hi_hat_screen_2
 0CCE  code  find_key_split_screen_2
-0CF2  code  take_voice_screen_2
+0CF2  func  take_voice_screen_2
 0D14  code  steal_oldest_voice_screen_2
 0D38  code  start_voice_screen_2
 0D85  code  start_instrument_voice_screen_2
 0DE8  code  write_note_registers_screen_2
 0E1E  code  note_off_screen_2
-0E39  code  release_note_screen_2
+0E39  func  release_note_screen_2
 0E99  code  pitch_bend_screen_2
 0F6C  code  program_change_screen_2
 0F78  code  control_change_screen_2
@@ -895,7 +901,7 @@ field  tyre_noise  03  duration            u8
 
 # ======== parameters ========
 
-param  write_fm_channel          bc  fm_register
+param  write_fm_channel          bc  fm_register     # C: the register; handed back with the value in B (0219, on both ways out)
 param  write_fm_channel          a   value
 param  write_fm                  bc  fm_register
 param  write_fm                  a   value
@@ -908,9 +914,15 @@ param  read_table_word           a   entry
 param  skip_midi_data_screen_1   bc  first_byte
 param  play_midi_message_screen_1  bc  message_byte
 param  play_midi_message_screen_1  ix  part  midi_part
+param  cut_open_hi_hat_screen_1  bc  velocity_then_timeout
+param  cut_open_hi_hat_screen_1  ix  part  midi_part
+param  take_voice_screen_1  bc  velocity_then_timeout   # the drum_timeout of a drum note
+param  take_voice_screen_1  ix  part  midi_part
+local  take_voice_screen_1    04B7  c  drum_timeout           # C: what play_midi_message_screen_1 hands on in it, a drum note's timeout
+param  release_note_screen_1  ix  part  midi_part
 param  retune_voice_screen_1     iy  voice  voice
 param  set_voice_modulation_screen_1  ix  part  midi_part
-param  set_voice_modulation_screen_1  bc  voices_left
+param  set_voice_modulation_screen_1  bc  voices_left     # B: the caller's count of voices left; C then the register for write_fm_channel (pan_register) or write_pcm_register (6), and write_fm_channel hands its value back in B
 param  set_voice_modulation_screen_1  hl  voice
 param  read_midi_byte_screen_1   a   midi_byte
 param  read_midi_byte_screen_1   bc  midi_byte_copy
@@ -920,9 +932,15 @@ param  reset_next_voice          hl  first_voice
 param  skip_midi_data_screen_2   bc  first_byte
 param  play_midi_message_screen_2  bc  message_byte
 param  play_midi_message_screen_2  ix  part  midi_part
+param  cut_open_hi_hat_screen_2  bc  velocity_then_timeout
+param  cut_open_hi_hat_screen_2  ix  part  midi_part
+param  take_voice_screen_2  bc  velocity_then_timeout   # the drum_timeout of a drum note
+param  take_voice_screen_2  ix  part  midi_part
+local  take_voice_screen_2    0CF2  c  drum_timeout
+param  release_note_screen_2  ix  part  midi_part
 param  retune_voice_screen_2     iy  voice  voice
 param  set_voice_modulation_screen_2  ix  part  midi_part
-param  set_voice_modulation_screen_2  bc  voices_left
+param  set_voice_modulation_screen_2  bc  voices_left     # as screen 1's
 param  set_voice_modulation_screen_2  hl  voice
 param  read_midi_byte_screen_2   a   midi_byte
 param  read_midi_byte_screen_2   bc  midi_byte_copy
@@ -989,18 +1007,18 @@ param  next_sequence_byte        ix  player  sequence_player
 local  handle_midi_message_screen_1  0393,03B3  ix  part  midi_part
 local  handle_midi_message_screen_2  0BCE,0BEE  ix  part  midi_part
 local  init_parts                    033C,0361  iy  part  midi_part
-local  play_midi_message_screen_1    060D,063E  iy  voice  voice
+local  release_note_screen_1    060D,063E  iy  voice  voice
 local  play_midi_message_screen_1    06BB,06DE  iy  voice  voice
 local  play_midi_message_screen_1    07F0,0825  iy  voice  voice
 local  play_midi_message_screen_1    0841,08B6  iy  music_part  midi_part
 local  play_midi_message_screen_1    09A7,09CC  iy  music_part  midi_part
-local  play_midi_message_screen_1    137D,13AE  iy  voice  voice
-local  play_midi_message_screen_2    0E4A,0E7B  iy  voice  voice
+local  release_note_screen_1    137D,13AE  iy  voice  voice
+local  release_note_screen_2    0E4A,0E7B  iy  voice  voice
 local  play_midi_message_screen_2    0EF8,0F1B  iy  voice  voice
 local  play_midi_message_screen_2    102C,1061  iy  voice  voice
 local  play_midi_message_screen_2    107D,10F2  iy  music_part  midi_part
 local  play_midi_message_screen_2    11E9,120E  iy  music_part  midi_part
-local  play_midi_message_screen_2    17D7,1808  iy  voice  voice
+local  release_note_screen_2    17D7,1808  iy  voice  voice
 local  update_tyre_noise_screen_1    3E06,3E10  iy  noise  tyre_noise
 local  update_tyre_noise_screen_1    3DED,3E02  ix  page  screen_page
 local  update_tyre_noise_screen_2    3E56,3E60  iy  noise  tyre_noise
@@ -1024,8 +1042,8 @@ local  init_fm_chip                  01ED,01F3,01F5,01FB,0201,0203  hl  init_ent
 local  init_pcm_chip                 029B,02A1  hl  code_entry
 local  init_pcm_chip                 02A0  c  chip_code
 local  init_voice_channels           0305,030D  de  code_entry
-local  play_midi_message_screen_1    059F  hl  pitch_entry  pcm_pitch_steps
-local  play_midi_message_screen_2    0DDA  hl  pitch_entry  pcm_pitch_steps
+local  take_voice_screen_1    059F  hl  pitch_entry  pcm_pitch_steps
+local  take_voice_screen_2    0DDA  hl  pitch_entry  pcm_pitch_steps
 local  retune_voice_screen_1         0715  hl  pitch_entry  pcm_pitch_steps
 local  retune_voice_screen_2         0F52  hl  pitch_entry  pcm_pitch_steps
 local  start_fm_note                 12F8  hl  fnum_entry  fm_fnumbers
@@ -1081,7 +1099,6 @@ local  start_song                    4238,423B  hl  song_record     # the song's
 # The values the C still named after the Z80's registers; the names of SegaSonic's sound program where the
 # code is the same (its play_midi_message, step_player, the FM patch loops).
 local  init_fm_chip                  01F0,01F9,01FE,020F  b  pairs_left                   # B: the register/value pairs of fm_global_init (11) and fm_operator_init (36) left (DJNZ at 01F9, 020F)
-local  write_fm_channel              0219  bc  register_and_value                         # BC handed back: the register in C, the value in B (one instruction, 0219, on both ways out: the C wrote it as two variables, bc and bc_2)
 local  init_pcm_chip                 029E,02C2  b  voices_left                            # B: the 28 entries of voice_chip_channels set up (DJNZ at 02C2)
 local  init_voice_channels           0308,0313  b  voices_left                            # B: the 30 voices whose chip_channel is set (DJNZ at 0313)
 local  init_parts                    0318,031B  hl  part_template                         # part_templates[0]: sound set 0's parts, copied to both screens'
@@ -1101,29 +1118,46 @@ local  play_midi_message_screen_1    0401,05E6,0661,0735,0741,03D3  c  first_dat
 local  play_midi_message_screen_1    0404  b  midi_note                                   # B: the note on's note number (before transpose): the drum kit entry index
 local  play_midi_message_screen_1    0408  a  transposed_note                             # the note number + the part's transpose: note_number, and note_codes' index
 local  play_midi_message_screen_1    0417,0443  c  velocity_then_timeout                  # C: the velocity read_midi_byte leaves; for a drum note then the kit's byte 1, the voice's drum_timeout
+local  play_midi_message_screen_1    0417  bc  velocity_copy        # BC: the velocity read_midi_byte_screen_1 leaves (in C), which take_voice_screen_1 takes
 local  play_midi_message_screen_1    0422  de  velocity_index                             # DE = velocity: velocity_levels' index
 local  play_midi_message_screen_1    0429,0431  a  part_program                           # the part's program, then program + 10 (F0 on: drum_kits' index)
 local  play_midi_message_screen_1    0433,0436,043C,0441  hl  kit_note                    # drum_kits[program - F0] + note * 3: the note's 3 bytes
 local  play_midi_message_screen_1    0439  de  note_index                                 # DE = the note number: 3 bytes each in the drum kit
 local  play_midi_message_screen_1    0445  a  sample                                      # drum kit byte 2 (FF: the note has no sample)
 local  play_midi_message_screen_1    0456  a  drum_note                                   # the note number on channel 15: 2A and 2C (closed and pedal hi-hat) cut the open hi-hat
-local  play_midi_message_screen_1    0464,04BA,0611,07F4,0938,0964,0A14,1292,1381  de  voice_size  # 9, a voice's size
-local  play_midi_message_screen_1    0467,0488,04BD,04CB,04DC,04E3,04EE,04F2,0614,0640,06BF,06E0,0797,07AE,07B9,07F7,0827,0867,08B0,08E1,092C,093B,094A,0967,0987,09DD,0A09,0A17,0A36,1295,129D,1384,13B0  b  voices_left  # B: the voices left in a walk over the voices (DJNZ)
-local  play_midi_message_screen_1    048F,0493,0496,049E,04A8,04AD,0602,0605  hl  instrument  # instruments[program]: its flags, then its key splits (note, sample, tune, octave)
-local  play_midi_message_screen_1    04C5  a  oldest_order                                # 0: compared with each voice's flags first (a free voice), then the allocation_order of the oldest voice, the one taken over
-local  play_midi_message_screen_1    04D5,04FC,0510,0515,051A,0521,0524,0529,0551,0556,055C,0565,056A,0573  hl  new_voice_field  # the voice the note takes (free or taken over), its fields one after another
-local  play_midi_message_screen_1    053A,056B  a  order                                  # pcm_voices_used: the new voice's allocation_order
-local  play_midi_message_screen_1    0545,05A3,05A8  hl  pitch                            # the MultiPCM pitch of the run, then with the octave in its high byte (0 for a drum note)
-local  play_midi_message_screen_1    0557,12AB  a  stored_note                            # note_code, stored in the new voice's note
-local  play_midi_message_screen_1    055B,12AF  c  voice_note                             # C: the note code just stored: its low nibble picks the pitch table, its high one the octave
-local  play_midi_message_screen_1    0560,0619,063D,06C4,06DA,079C,07B4,07FC,0824,0A0F,12B4,1389,13AD  a  channel  # the MIDI status & 0F
-local  play_midi_message_screen_1    0563,12B7  b  voice_channel                          # B: the new voice's MIDI channel: the pitch bends' index (channel_controls' for an FM voice)
-local  play_midi_message_screen_1    0583,12D2  de  channel_offset                        # DE = the MIDI channel (x 2 for the pitch bends): the index of the pitch bends, or for an FM note of channel_controls (and start_fm_note's midi_channel)
-local  play_midi_message_screen_1    0585,06B7,0956,095D  hl  bend_entry                  # &screen_N_pitch_bends[channel] (CC 50: walks them)
-local  play_midi_message_screen_1    058D  de  tune                                       # split_tune
-local  play_midi_message_screen_1    0598  hl  pitch_table_entry                          # &pcm_pitch_tables[semitone]
-local  play_midi_message_screen_1    05C3,05C7,12BE,12C2  hl  level_product               # H: note_level, then times the part's effective_volume
-local  play_midi_message_screen_1    0621,0804,1391  hl  channel_index                    # L: the channel, kept while the note is compared
+local  cut_open_hi_hat_screen_1    0464  de  voice_size  # 9, a voice's size
+local  take_voice_screen_1    04BA  de  voice_size
+local  release_note_screen_1    0611,1381  de  voice_size
+local  play_midi_message_screen_1    07F4,0938,0964,0A14,1292  de  voice_size
+local  cut_open_hi_hat_screen_1    0467,0488  b  voices_left  # B: the voices left in a walk over the voices (DJNZ)
+local  take_voice_screen_1    04BD,04CB,04DC,04E3,04EE,04F2  b  voices_left
+local  release_note_screen_1    0614,0640,1384,13B0  b  voices_left
+local  play_midi_message_screen_1    06BF,06E0,0797,07AE,07B9,07F7,0827,0867,08B0,08E1,092C,093B,094A,0967,0987,09DD,0A09,0A17,0A36,1295,129D  b  voices_left
+local  play_midi_message_screen_1    048F,0493,0496,049E,04A8,04AD  hl  instrument  # instruments[program]: its flags, then its key splits (note, sample, tune, octave)
+local  release_note_screen_1    0602,0605  hl  instrument
+local  take_voice_screen_1    04C5  a  oldest_order                                # 0: compared with each voice's flags first (a free voice), then the allocation_order of the oldest voice, the one taken over
+local  take_voice_screen_1    04D5,04FC,0510,0515,051A,0521,0524,0529,0551,0556,055C,0565,056A,0573  hl  new_voice_field  # the voice the note takes (free or taken over), its fields one after another
+local  take_voice_screen_1    053A,056B  a  order                                  # pcm_voices_used: the new voice's allocation_order
+local  take_voice_screen_1    0545,05A3,05A8  hl  pitch                            # the MultiPCM pitch of the run, then with the octave in its high byte (0 for a drum note)
+local  take_voice_screen_1    0557  a  stored_note                            # note_code, stored in the new voice's note
+local  play_midi_message_screen_1    12AB  a  stored_note
+local  take_voice_screen_1    055B  c  voice_note                             # C: the note code just stored: its low nibble picks the pitch table, its high one the octave
+local  play_midi_message_screen_1    12AF  c  voice_note
+local  take_voice_screen_1    0560  a  channel  # the MIDI status & 0F
+local  release_note_screen_1    0619,063D,1389,13AD  a  channel
+local  play_midi_message_screen_1    06C4,06DA,079C,07B4,07FC,0824,0A0F,12B4  a  channel
+local  take_voice_screen_1    0563  b  voice_channel                          # B: the new voice's MIDI channel: the pitch bends' index (channel_controls' for an FM voice)
+local  play_midi_message_screen_1    12B7  b  voice_channel
+local  take_voice_screen_1    0583  de  channel_offset                        # DE = the MIDI channel (x 2 for the pitch bends): the index of the pitch bends, or for an FM note of channel_controls (and start_fm_note's midi_channel)
+local  play_midi_message_screen_1    12D2  de  channel_offset
+local  take_voice_screen_1    0585  hl  bend_entry                  # &screen_N_pitch_bends[channel] (CC 50: walks them)
+local  play_midi_message_screen_1    06B7,0956,095D  hl  bend_entry
+local  take_voice_screen_1    058D  de  tune                                       # split_tune
+local  take_voice_screen_1    0598  hl  pitch_table_entry                          # &pcm_pitch_tables[semitone]
+local  take_voice_screen_1    05C3,05C7  hl  level_product               # H: note_level, then times the part's effective_volume
+local  play_midi_message_screen_1    12BE,12C2  hl  level_product
+local  release_note_screen_1    0621,1391  hl  channel_index                    # L: the channel, kept while the note is compared
+local  play_midi_message_screen_1    0804  hl  channel_index
 local  play_midi_message_screen_1    0664  b  bend_low                                    # B: the bend's first data byte, its low 7 bits
 local  play_midi_message_screen_1    066A,0671,0674,0677,067A,067D,0699,069E  c  bend_sign  # C: the bend's bits above the low byte as the 14 bits shift down 5; bit 0 left is the direction (set: above the middle); then 00 up or FF down, the high byte of pitch_bend
 local  play_midi_message_screen_1    066B,066F,0673,0676,0679,067C,067F,0686,068A  a  bend  # the 14-bit bend >> 5, then its distance from the middle (0-FF)
@@ -1159,10 +1193,8 @@ local  retune_voice_screen_1         0704  hl  pitch_table_entry                
 local  retune_voice_screen_1         0709  de  bend                                       # pitch_bend
 local  retune_voice_screen_1         071A,071F  hl  pitch                                 # the MultiPCM pitch of the run, then with the octave in its high byte
 local  set_voice_modulation_screen_1 07CE  c  lfo_register                                # C: 6, the MultiPCM's LFO register
-local  set_voice_modulation_screen_1 07D6  bc  count_and_register                         # B the caller's count of voices left, C register 6
 local  set_voice_modulation_screen_1 1434  a  count_as_channel                            # B, the caller's count of voices left, taken as the FM channel (into fm_channel)
 local  set_voice_modulation_screen_1 143C  c  pan_register                                # C: B4 + the channel within the part, the YM3438 L/R and modulation register
-local  set_voice_modulation_screen_1 1444  bc  register_and_value                         # the register for write_fm_channel, then what it hands back (the value in B)
 local  stop_flagged_voices           0A43,0A5D,0A69,0A6E,0A92,0A97  hl  voice_field       # a field of the voice being looked at (9 bytes a voice)
 local  stop_flagged_voices           0A46,0A94,0A85  de  voice_size
 local  stop_flagged_voices           0A49,0A93,0A98,0A88,0A90  b  voices_left             # B: the 24 MultiPCM voices (DJNZ at 0A98)
@@ -1184,29 +1216,46 @@ local  play_midi_message_screen_2    0C11  a  event
 local  play_midi_message_screen_2    0C3F  b  midi_note
 local  play_midi_message_screen_2    0C43  a  transposed_note
 local  play_midi_message_screen_2    0C52,0C7E  c  velocity_then_timeout
+local  play_midi_message_screen_2    0C52  bc  velocity_copy
 local  play_midi_message_screen_2    0C5D  de  velocity_index
 local  play_midi_message_screen_2    0C64,0C6C  a  part_program
 local  play_midi_message_screen_2    0C6E,0C71,0C77,0C7C  hl  kit_note
 local  play_midi_message_screen_2    0C74  de  note_index
 local  play_midi_message_screen_2    0C80  a  sample
 local  play_midi_message_screen_2    0C91  a  drum_note
-local  play_midi_message_screen_2    0C9F,0CF5,0E4E,1030,1174,11A0,1256,1786,17DB  de  voice_size
-local  play_midi_message_screen_2    0CA2,0CC3,0CF8,0D06,0D17,0D1E,0D29,0D2D,0E51,0E7D,0EFC,0F1D,0FD3,0FEA,0FF5,1033,1063,10A3,10EC,111D,1168,1177,1186,11A3,11C3,121F,124B,1259,1278,1789,1791,17DE,180A  b  voices_left
-local  play_midi_message_screen_2    0CCA,0CCE,0CD1,0CD9,0CE3,0CE8,0E3F,0E42  hl  instrument
-local  play_midi_message_screen_2    0D00  a  oldest_order
-local  play_midi_message_screen_2    0D10,0D37,0D4B,0D50,0D55,0D5C,0D5F,0D64,0D8C,0D91,0D97,0DA0,0DA5,0DAE  hl  new_voice_field
-local  play_midi_message_screen_2    0D75,0DA6  a  order
-local  play_midi_message_screen_2    0D80,0DDE,0DE3  hl  pitch
-local  play_midi_message_screen_2    0D92,179F  a  stored_note
-local  play_midi_message_screen_2    0D96,17A3  c  voice_note
-local  play_midi_message_screen_2    0D9B,0E56,0E7A,0F01,0F17,0FD8,0FF0,1038,1060,1251,17A8,17E3,1807  a  channel
-local  play_midi_message_screen_2    0D9E,17AB  b  voice_channel
-local  play_midi_message_screen_2    0DBE,17C6  de  channel_offset
-local  play_midi_message_screen_2    0DC0,0EF4,1192,1199  hl  bend_entry
-local  play_midi_message_screen_2    0DC8  de  tune
-local  play_midi_message_screen_2    0DD3  hl  pitch_table_entry
-local  play_midi_message_screen_2    0E00,0E04,17B2,17B6  hl  level_product
-local  play_midi_message_screen_2    0E5E,1040,17EB  hl  channel_index
+local  cut_open_hi_hat_screen_2    0C9F  de  voice_size
+local  take_voice_screen_2    0CF5  de  voice_size
+local  release_note_screen_2    0E4E,17DB  de  voice_size
+local  play_midi_message_screen_2    1030,1174,11A0,1256,1786  de  voice_size
+local  cut_open_hi_hat_screen_2    0CA2,0CC3  b  voices_left
+local  take_voice_screen_2    0CF8,0D06,0D17,0D1E,0D29,0D2D  b  voices_left
+local  release_note_screen_2    0E51,0E7D,17DE,180A  b  voices_left
+local  play_midi_message_screen_2    0EFC,0F1D,0FD3,0FEA,0FF5,1033,1063,10A3,10EC,111D,1168,1177,1186,11A3,11C3,121F,124B,1259,1278,1789,1791  b  voices_left
+local  play_midi_message_screen_2    0CCA,0CCE,0CD1,0CD9,0CE3,0CE8  hl  instrument
+local  release_note_screen_2    0E3F,0E42  hl  instrument
+local  take_voice_screen_2    0D00  a  oldest_order
+local  take_voice_screen_2    0D10,0D37,0D4B,0D50,0D55,0D5C,0D5F,0D64,0D8C,0D91,0D97,0DA0,0DA5,0DAE  hl  new_voice_field
+local  take_voice_screen_2    0D75,0DA6  a  order
+local  take_voice_screen_2    0D80,0DDE,0DE3  hl  pitch
+local  take_voice_screen_2    0D92  a  stored_note
+local  play_midi_message_screen_2    179F  a  stored_note
+local  take_voice_screen_2    0D96  c  voice_note
+local  play_midi_message_screen_2    17A3  c  voice_note
+local  take_voice_screen_2    0D9B  a  channel
+local  release_note_screen_2    0E56,0E7A,17E3,1807  a  channel
+local  play_midi_message_screen_2    0F01,0F17,0FD8,0FF0,1038,1060,1251,17A8  a  channel
+local  take_voice_screen_2    0D9E  b  voice_channel
+local  play_midi_message_screen_2    17AB  b  voice_channel
+local  take_voice_screen_2    0DBE  de  channel_offset
+local  play_midi_message_screen_2    17C6  de  channel_offset
+local  take_voice_screen_2    0DC0  hl  bend_entry
+local  play_midi_message_screen_2    0EF4,1192,1199  hl  bend_entry
+local  take_voice_screen_2    0DC8  de  tune
+local  take_voice_screen_2    0DD3  hl  pitch_table_entry
+local  take_voice_screen_2    0E00,0E04  hl  level_product
+local  play_midi_message_screen_2    17B2,17B6  hl  level_product
+local  release_note_screen_2    0E5E,17EB  hl  channel_index
+local  play_midi_message_screen_2    1040  hl  channel_index
 local  play_midi_message_screen_2    0EA1  b  bend_low
 local  play_midi_message_screen_2    0EA7,0EAE,0EB1,0EB4,0EB7,0EBA,0ED6,0EDB  c  bend_sign
 local  play_midi_message_screen_2    0EA8,0EAC,0EB0,0EB3,0EB6,0EB9,0EBC,0EC3,0EC7  a  bend
@@ -1244,10 +1293,8 @@ local  retune_voice_screen_2         0F46  de  bend
 local  retune_voice_screen_2         0F56,0F5B  hl  pitch
 # set_voice_modulation_screen_2: the names of set_voice_modulation_screen_1's copy of the code
 local  set_voice_modulation_screen_2 100A  c  lfo_register
-local  set_voice_modulation_screen_2 1012  bc  count_and_register
 local  set_voice_modulation_screen_2 1832  a  count_as_channel
 local  set_voice_modulation_screen_2 183A  c  pan_register
-local  set_voice_modulation_screen_2 1842  bc  register_and_value
 local  start_fm_note                 12E0  c  voice_note                                  # C: the note code: low nibble the semitone, high nibble the octave
 local  start_fm_note                 12F1  hl  run_entry                                  # fm_fnum_tables' entry for the note's semitone
 local  start_fm_note                 12FC,1303  hl  fnumber                               # the F-number, then with the block (the note's octave) in bits 11-13
@@ -1262,6 +1309,7 @@ local  start_fm_note                 1352  c  level_register                    
 local  start_fm_note                 1353,135E  a  total_level                            # the patch's operator level, + note_level when its bit 7 is clear
 local  apply_fm_music_volume         145B  a  channel_code                                # chip_channel, into fm_channel
 local  apply_fm_music_volume         1461,14A3  c  part_channel                           # C: the channel within its part (chip_channel & 3); POP BC puts it back (14A3)
+local  apply_fm_music_volume         1466,146A  hl  level_product                         # H: the voice's level, then times the part's effective_volume
 local  apply_fm_music_volume         1478,147B  hl  instrument                            # instruments, then instruments[the part's program]
 local  apply_fm_music_volume         1480,1483,1489,1495  hl  patch_levels                # fm_patches, then the patch, + 15: its 4 operator levels
 local  apply_fm_music_volume         148A,14A4  b  operators_left                         # B: the 4 operators (DJNZ at 14A4)
@@ -1271,6 +1319,7 @@ local  apply_fm_music_volume         1493  c  level_register
 local  apply_fm_music_volume         1494,149F  a  total_level                            # the operator level, + note_level when its bit 7 is clear (else not written)
 local  apply_fm_channel_volume       14A9  a  channel_code
 local  apply_fm_channel_volume       14AF,14F1  c  part_channel
+local  apply_fm_channel_volume       14B4,14B8  hl  level_product
 local  apply_fm_channel_volume       14C6,14C9  hl  instrument
 local  apply_fm_channel_volume       14CE,14D1,14D7,14E3  hl  patch_levels
 local  apply_fm_channel_volume       14D8,14F2  b  operators_left
@@ -1343,11 +1392,11 @@ local  fade_music_volume             42E2,42FB,42FF,4302,431B,431F,4323,432A,432
 local  fade_player_volume            433A,4353,4357,435A,4372,4376,437A  e  write_index
 
 # ======== stack slots ========
-local play_midi_message_screen_1 0004D0,0004EA s2 pushed_voice      # PUSH HL: the voice, popped into the new voice field
-local play_midi_message_screen_1 00058F s2 bent_pitch               # the bend table's entry plus the tune
+local take_voice_screen_1 0004D0,0004EA s2 pushed_voice      # PUSH HL: the voice, popped into the new voice field
+local take_voice_screen_1 00058F s2 bent_pitch               # the bend table's entry plus the tune
 local play_midi_message_screen_1 0008E3 s2 pushed_voice_field       # PUSH HL: the voice field, popped back 9 on
-local play_midi_message_screen_2 000D0B,000D25 s2 pushed_voice
-local play_midi_message_screen_2 000DCA s2 bent_pitch
+local take_voice_screen_2 000D0B,000D25 s2 pushed_voice
+local take_voice_screen_2 000DCA s2 bent_pitch
 local play_midi_message_screen_2 00111F s2 pushed_voice_field
 local stop_flagged_voices 000A53 s5 saved_flags                     # the voice's flags, popped into voice_flags
 local start_fm_note 0012E6 s2 channel_pitch_bend                    # the channel's pitch bend (pitch_bends)

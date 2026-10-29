@@ -135,511 +135,169 @@ void skip_midi_data_screen_1(uint8_t first_byte)
    volume reaches the sounding voices at once. C0 program change. A0 and D0 skipped. */
 void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 {
-	bool cut_open_hi_hat_screen_1 = false, release_note_screen_1 = false, start_voice_screen_1 = false, take_voice_screen_1 = false;
 	uint32_t carry = 0;
-	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
-	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, new_voice_field = 0, note_index = 0, pitch = 0, pitch_bends = 0, pitch_entry = 0, pitch_table_entry = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, tune = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
+	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, velocity_then_timeout_2 = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
+	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, note_index = 0, pitch_bends = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, velocity_copy = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
 	uint8_t saved_channel = 0, saved_parts_left = 0;
-	uint16_t pushed_voice = 0, saved_voice_field = 0;
+	uint16_t pushed_voice_field = 0, saved_voice_field = 0;
 	uint8_t negated_bend = 0, negated_step = 0, modulation_wheel = 0, wheel_halved = 0, wheel_quartered = 0, part_volume = 0, music_volume = 0;
 
 	first_data_byte = (uint8_t)message_byte;
 	z80_block(37, 4);
 	event = screen_1_midi_status & ~0xFu;
-	do
+	if (event == 0x90u)
 	{
-		if (release_note_screen_1 || event == 0x90u)
+		z80_block(18, 3);
+		if (first_data_byte >> 7)
 		{
-			if (!release_note_screen_1)
+			z80_block(17, 1);
+			read_midi_byte_screen_1(&midi_byte_copy, &ignored8);
+			first_data_byte = (uint8_t)midi_byte_copy;
+		}
+		z80_block(109, 12);
+		midi_note = first_data_byte;
+		transposed_note = MIDI_PART(part)->transpose + first_data_byte;
+		note_number = transposed_note;
+		note_code = note_codes[transposed_note];
+		read_midi_byte_screen_1(&velocity_copy, &midi_byte);
+		z80_block(14, 2);
+		if (midi_byte == 0u)
+		{
+			release_note_screen_1(part);
+			return;
+		}
+		z80_block(88, 10);
+		velocity_index = midi_byte;
+		note_level = velocity_levels[velocity_index];
+		part_program = MIDI_PART(part)->program;
+		if (part_program < 0xF0u)
+		{
+			z80_block(27, 2);
+			instrument = instruments_ADDRESS;
+			instrument = read_table_word(instrument, part_program);
+			z80_block(22, 3);
+			if (((z80_read8(instrument) >> 1) & 1u) != 0u)
 			{
-				z80_block(18, 3);
-				if (first_data_byte >> 7)
-				{
-					z80_block(17, 1);
-					read_midi_byte_screen_1(&midi_byte_copy, &ignored8);
-					first_data_byte = (uint8_t)midi_byte_copy;
-				}
-				z80_block(109, 12);
-				midi_note = first_data_byte;
-				transposed_note = MIDI_PART(part)->transpose + first_data_byte;
-				note_number = transposed_note;
-				note_code = note_codes[transposed_note];
-				read_midi_byte_screen_1(&midi_byte_copy, &midi_byte);
-				velocity_then_timeout = (uint8_t)midi_byte_copy;
-				z80_block(14, 2);
-			}
-			if (release_note_screen_1 || midi_byte == 0u)
-			{
-				z80_block(31, 4);
-				program = MIDI_PART(part)->program;
-				if (program >= 0xF0u)
-				{
-					z80_cycles(6);
-					return;
-				}
-				z80_block(27, 2);
-				instrument = instruments_ADDRESS;
-				instrument = read_table_word(instrument, program);
-				z80_block(22, 3);
-				if (((z80_read8(instrument) >> 1) & 1u) != 0u)
-				{
-					z80_block(51, 6);
-					voice_2 = VOICE_ADDRESS(24);
-					voice_size = 9u;
-					voices_left = 6u;
-					channel = screen_1_midi_status & 0xFu;
-					for (;;)
-					{
-						z80_block(29, 3);
-						if (channel == VOICE(voice_2)->midi_channel)
-						{
-							z80_block(46, 5);
-							channel_index = channel;
-							if (note_code == VOICE(voice_2)->note)
-							{
-								z80_block(37, 5);
-								flags = VOICE(voice_2)->flags;
-								if (((flags >> 1) & 1u) == 0u)
-								{
-									z80_block(18, 3);
-									if (((flags >> 3) & 1u) == 0u)
-									{
-										z80_block(17, 2);
-										if ((flags & 0x7Fu) != 0u)
-											break;
-									}
-								}
-							}
-							z80_block(4, 1);
-							channel = (uint8_t)channel_index;
-						}
-						z80_block(23, 3);
-						voice_2 += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(10, 1);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(65, 9);
-					if (screen_1_channel_controls[channel_index] >> 7)
-					{
-						z80_block(33, 3);
-						VOICE(voice_2)->flags |= 2u;
-						return;
-					}
-					z80_block(85, 10);
-					VOICE(voice_2)->flags = 0u;
-					VOICE(voice_2)->midi_channel = 0u;
-					value = VOICE(voice_2)->chip_channel & 7u;
-					fm_register = 0x28u;
-					write_fm(fm_register, value);
-					return;
-				}
-				z80_block(51, 6);
-				voice_2 = VOICE_ADDRESS(0);
+				z80_block(59, 7);
+				sample_or_patch = z80_read8((uint16_t)(instrument + 2u));
+				voice = VOICE_ADDRESS(24);
 				voice_size = 9u;
-				voices_left = 0x18u;
-				channel = screen_1_midi_status & 0xFu;
-				for (;;)
-				{
-					z80_block(29, 3);
-					if (channel == VOICE(voice_2)->midi_channel)
-					{
-						z80_block(46, 5);
-						channel_index = channel;
-						if (note_code == VOICE(voice_2)->note)
-						{
-							z80_block(37, 5);
-							flags = VOICE(voice_2)->flags;
-							if (((flags >> 1) & 1u) == 0u)
-							{
-								z80_block(18, 3);
-								if (((flags >> 3) & 1u) == 0u)
-								{
-									z80_block(17, 2);
-									if ((flags & 0x7Fu) != 0u)
-										break;
-								}
-							}
-						}
-						z80_block(4, 1);
-						channel = (uint8_t)channel_index;
-					}
-					z80_block(23, 3);
-					voice_2 += voice_size;
-					voices_left--;
-					if (voices_left == 0u)
-					{
-						z80_block(10, 1);
-						return;
-					}
-					z80_cycles(5);
-				}
-				z80_block(65, 9);
-				if (screen_1_channel_controls[channel_index] >> 7 == 0u)
-				{
-					z80_block(33, 3);
-					VOICE(voice_2)->flags |= 1u;
-					return;
-				}
-				z80_block(33, 3);
-				VOICE(voice_2)->flags |= 2u;
-				return;
-			}
-			z80_block(88, 10);
-			velocity_index = midi_byte;
-			note_level = velocity_levels[velocity_index];
-			part_program = MIDI_PART(part)->program;
-			if (part_program < 0xF0u)
-			{
-				z80_block(27, 2);
-				instrument = instruments_ADDRESS;
-				instrument = read_table_word(instrument, part_program);
-				z80_block(22, 3);
-				if (((z80_read8(instrument) >> 1) & 1u) != 0u)
-				{
-					z80_block(59, 7);
-					sample_or_patch = z80_read8((uint16_t)(instrument + 2u));
-					voice = VOICE_ADDRESS(24);
-					voice_size = 9u;
-					voices_left = 6u;
-					for (;;)
-					{
-						z80_block(21, 3);
-						if (VOICE(voice)->flags == 0u)
-							break;
-						z80_block(19, 2);
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(14, 2);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(182, 22);
-					VOICE(voice)->flags = 0x40u;
-					voice++;
-					fm_channel = VOICE(voice - 0x1u)->chip_channel & 7u;
-					voice++;
-					stored_note = note_code;
-					VOICE(voice - 0x2u)->note = stored_note;
-					voice_note = stored_note;
-					voice++;
-					channel = screen_1_midi_status & 0xFu;
-					VOICE(voice - 0x3u)->midi_channel = channel;
-					voice_channel = channel;
-					voice += 2u;
-					level = note_level;
-					VOICE(voice - 0x5u)->level = level;
-					level_product = (voice & 0xFFu) | ((uint32_t)level << 8);
-					effective_volume = MIDI_PART(part)->effective_volume;
-					level_product = multiply_bytes(effective_volume, level_product);
-					z80_block(112, 15);
-					note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
-					channel_offset = voice_channel;
-					voice_modulation = (z80_read8((uint16_t)(screen_1_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x40u;
-					pitch_bends = screen_1_pitch_bends_ADDRESS;
-					note = voice_note;
-					start_fm_note(note, channel_offset, pitch_bends);
-					return;
-				}
-				for (;;)
-				{
-					z80_block(44, 6);
-					instrument++;
-					if (note_number <= z80_read8(instrument))
-						break;
-					z80_block(28, 4);
-					instrument += 3u;
-				}
-				z80_block(78, 9);
-				instrument++;
-				sample_or_patch = z80_read8(instrument);
-				instrument++;
-				split_tune = z80_read8(instrument);
-				split_octave = z80_read8((uint16_t)(instrument + 1u));
-				take_voice_screen_1 = true;
-			}
-			else
-			{
-				z80_block(34, 3);
-				part_program += 0x10u;
-				kit_note = drum_kits_ADDRESS;
-				kit_note = read_table_word(kit_note, part_program);
-				z80_block(112, 14);
-				note_index = midi_note;
-				kit_note = kit_note + note_index + note_index + note_index;
-				drum_pitch = z80_read8(kit_note);
-				kit_note++;
-				velocity_then_timeout = z80_read8(kit_note);
-				sample = z80_read8((uint16_t)(kit_note + 1u));
-				sample_or_patch = sample;
-				if (sample == 0xFFu)
-				{
-					z80_cycles(6);
-					return;
-				}
-				z80_block(37, 4);
-				take_voice_screen_1 = (screen_1_midi_status & 0xFu) != 0xFu;
-				if (!take_voice_screen_1)
-				{
-					z80_block(21, 3);
-					drum_note = midi_note;
-					if (drum_note == 0x2Cu)
-						cut_open_hi_hat_screen_1 = true;
-					else
-					{
-						z80_block(17, 2);
-						take_voice_screen_1 = drum_note != 0x2Au;
-						if (!take_voice_screen_1)
-							cut_open_hi_hat_screen_1 = true;
-					}
-					if (!take_voice_screen_1)
-					{
-						if (cut_open_hi_hat_screen_1)
-						{
-							cut_open_hi_hat_screen_1 = false;
-							z80_block(27, 3);
-							voice = voice_0_note_ADDRESS;
-							voice_size = 9u;
-							voices_left = 0x18u;
-							for (;;)
-							{
-								z80_block(24, 3);
-								if (VOICE(voice - 0x2u)->note == 0xCAu)
-								{
-									z80_block(36, 5);
-									voice++;
-									midi_channel = VOICE(voice - 0x3u)->midi_channel;
-									voice--;
-									if (midi_channel == 0xFu)
-									{
-										z80_block(34, 5);
-										voice = voice - 1u - 1u;
-										if ((VOICE(voice)->flags >> 6) & 1u)
-										{
-											z80_block(22, 3);
-											if (((VOICE(voice)->flags >> 3) & 1u) == 0u)
-											{
-												z80_block(15, 2);
-												VOICE(voice)->flags |= 1u;
-											}
-										}
-										z80_block(12, 2);
-										voice += 2u;
-									}
-								}
-								z80_block(19, 2);
-								voice += voice_size;
-								voices_left--;
-								if (voices_left == 0u)
-									break;
-								z80_cycles(5);
-							}
-							z80_block(10, 1);
-							take_voice_screen_1 = true;
-						}
-					}
-				}
-			}
-			if (take_voice_screen_1)
-			{
-				z80_block(33, 3);
-				voice = next_voice;
-				voice_size = 9u;
-				voices_left = 0x18u;
+				voices_left = 6u;
 				for (;;)
 				{
 					z80_block(21, 3);
-					if ((uint8_t)voice == 0xE8u)
-					{
-						z80_cycles(7);
-						voice = reset_next_voice();
-					}
-					z80_block(21, 3);
-					oldest_order = 0u;
-					if (0u == VOICE(voice)->flags)
-					{
-						z80_block(58, 5);
-						pushed_voice = voice;
-						next_voice = voice + voice_size;
-						new_voice_field = pushed_voice;
-						start_voice_screen_1 = true;
-					}
-					if (start_voice_screen_1)
+					if (VOICE(voice)->flags == 0u)
 						break;
 					z80_block(19, 2);
 					voice += voice_size;
 					voices_left--;
 					if (voices_left == 0u)
-						break;
+					{
+						z80_block(14, 2);
+						return;
+					}
 					z80_cycles(5);
 				}
-				if (!start_voice_screen_1)
-				{
-					z80_block(10, 1);
-					z80_block(17, 2);
-					voice = voice_0_allocation_order_ADDRESS;
-					voices_left = 0x18u;
-					for (;;)
-					{
-						z80_block(17, 2);
-						if (oldest_order == VOICE(voice - 0x6u)->allocation_order)
-							break;
-						z80_block(19, 2);
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(14, 2);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(42, 5);
-					VOICE(voice - 0x6u)->allocation_order = 0x18u;
-					pushed_voice = voice;
-					voice = voice_0_allocation_order_ADDRESS;
-					voices_left = 0x18u;
-					for (;;)
-					{
-						z80_block(30, 3);
-						VOICE(voice - 0x6u)->allocation_order--;
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-							break;
-						z80_cycles(5);
-					}
-					z80_block(52, 5);
-					pcm_voices_used--;
-					new_voice_field = pushed_voice - 6u;
-				}
-				z80_block(46, 5);
-				VOICE(new_voice_field)->flags = 0x40u;
-				if (MIDI_PART(part)->program < 0xF0u)
-				{
-					do
-					{
-						z80_block(27, 3);
-					} while (z80_read8(pcm_data) & 1u);
-					z80_block(479, 64);
-					new_voice_field++;
-					z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
-					new_voice_field++;
-					stored_note = note_code;
-					VOICE(new_voice_field - 0x2u)->note = stored_note;
-					voice_note = stored_note;
-					new_voice_field++;
-					channel = screen_1_midi_status & 0xFu;
-					VOICE(new_voice_field - 0x3u)->midi_channel = channel;
-					voice_channel = channel;
-					new_voice_field += 2u;
-					VOICE(new_voice_field - 0x5u)->level = note_level;
-					new_voice_field++;
-					order = pcm_voices_used;
-					VOICE(new_voice_field - 0x6u)->allocation_order = order;
-					pcm_voices_used = order + 1u;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x7u)->tune = split_tune;
-					VOICE(new_voice_field - 0x7u)->octave_shift = split_octave;
-					channel_offset = (uint8_t)(voice_channel * 2u);
-					bend_entry = screen_1_pitch_bends_ADDRESS + channel_offset;
-					tune = split_tune;
-					pushed_voice = z80_read16(bend_entry) + tune;
-					pitch_table_entry = pcm_pitch_tables_ADDRESS + (uint8_t)((voice_note & 0xFu) * 2u);
-					pitch_entry = PCM_PITCH_RUNS(pitch_table_entry)[0] + pushed_voice + pushed_voice;
-					pitch = PCM_PITCH_STEPS(pitch_entry)[0];
-					pitch = (pitch & 0xFFu) | ((uint32_t)(uint8_t)((voice_note & ~0xFu) + (pitch >> 8)) << 8);
-					value = split_octave + (pitch >> 8);
-				}
-				else
-				{
-					z80_block(15, 2);
-					VOICE(new_voice_field)->flags |= 0x10u;
-					do
-					{
-						z80_block(27, 3);
-					} while (z80_read8(pcm_data) & 1u);
-					z80_block(171, 21);
-					new_voice_field++;
-					z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
-					new_voice_field++;
-					VOICE(new_voice_field - 0x2u)->note = note_code;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x3u)->midi_channel = screen_1_midi_status & 0xFu;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x4u)->drum_timeout = velocity_then_timeout;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x5u)->level = note_level;
-					new_voice_field++;
-					if ((screen_1_midi_status & 0xFu) == 0xFu)
-					{
-						z80_block(37, 4);
-						order = pcm_voices_used;
-						VOICE(new_voice_field - 0x6u)->allocation_order = order;
-						pcm_voices_used = order + 1u;
-					}
-					else
-					{
-						z80_block(24, 3);
-						VOICE(new_voice_field - 0x6u)->allocation_order = 0xFFu;
-					}
-					z80_block(30, 3);
-					value = drum_pitch;
-					pitch = 0u;
-				}
-				z80_block(24, 2);
-				pcm_register = 3u;
-				write_pcm_register(pcm_register, value);
-				z80_block(28, 3);
-				value = (uint8_t)pitch;
-				pcm_register = 2u;
-				write_pcm_register(pcm_register, value);
-				z80_block(37, 3);
-				value = sample_or_patch;
-				pcm_register = 1u;
-				write_pcm_register(pcm_register, value);
-				z80_block(53, 5);
-				level_product = (pitch & 0xFFu) | ((uint32_t)note_level << 8);
+				z80_block(182, 22);
+				VOICE(voice)->flags = 0x40u;
+				voice++;
+				fm_channel = VOICE(voice - 0x1u)->chip_channel & 7u;
+				voice++;
+				stored_note = note_code;
+				VOICE(voice - 0x2u)->note = stored_note;
+				voice_note = stored_note;
+				voice++;
+				channel = screen_1_midi_status & 0xFu;
+				VOICE(voice - 0x3u)->midi_channel = channel;
+				voice_channel = channel;
+				level = note_level;
+				VOICE(voice - 0x3u)->level = level;
+				level_product = (uint32_t)level << 8;
 				effective_volume = MIDI_PART(part)->effective_volume;
 				level_product = multiply_bytes(effective_volume, level_product);
-				z80_block(39, 5);
-				value = ~(level_product >> 8) | 1u;
-				pcm_register = 5u;
-				write_pcm_register(pcm_register, value);
-				z80_block(31, 3);
-				value = 0x70u;
-				pcm_register = 0u;
-				write_pcm_register(pcm_register, value);
-				z80_block(24, 3);
-				value = 0x80u;
-				pcm_register = 4u;
-				write_pcm_register(pcm_register, value);
+				z80_block(112, 15);
+				note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
+				channel_offset = voice_channel;
+				voice_modulation = (z80_read8((uint16_t)(screen_1_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x40u;
+				pitch_bends = screen_1_pitch_bends_ADDRESS;
+				note = voice_note;
+				start_fm_note(note, channel_offset, pitch_bends);
+				return;
+			}
+			for (;;)
+			{
+				z80_block(44, 6);
+				instrument++;
+				if (note_number <= z80_read8(instrument))
+					break;
+				z80_block(28, 4);
+				instrument += 3u;
+			}
+			z80_block(78, 9);
+			instrument++;
+			sample_or_patch = z80_read8(instrument);
+			instrument++;
+			split_tune = z80_read8(instrument);
+			split_octave = z80_read8((uint16_t)(instrument + 1u));
+			take_voice_screen_1((uint8_t)velocity_copy, part);
+			return;
+		}
+		z80_block(34, 3);
+		part_program += 0x10u;
+		kit_note = drum_kits_ADDRESS;
+		kit_note = read_table_word(kit_note, part_program);
+		z80_block(112, 14);
+		note_index = midi_note;
+		kit_note = kit_note + note_index + note_index + note_index;
+		drum_pitch = z80_read8(kit_note);
+		kit_note++;
+		velocity_then_timeout = z80_read8(kit_note);
+		sample = z80_read8((uint16_t)(kit_note + 1u));
+		sample_or_patch = sample;
+		if (sample == 0xFFu)
+		{
+			z80_cycles(6);
+			return;
+		}
+		z80_block(37, 4);
+		if ((screen_1_midi_status & 0xFu) != 0xFu)
+		{
+			velocity_then_timeout_2 = velocity_then_timeout;
+			take_voice_screen_1(velocity_then_timeout_2, part);
+			return;
+		}
+		z80_block(21, 3);
+		drum_note = midi_note;
+		if (drum_note != 0x2Cu)
+		{
+			z80_block(17, 2);
+			if (drum_note != 0x2Au)
+			{
+				velocity_then_timeout_2 = velocity_then_timeout;
+				take_voice_screen_1(velocity_then_timeout_2, part);
 				return;
 			}
 		}
-		z80_block(17, 2);
-		if (event == 0x80u)
+		velocity_then_timeout_2 = velocity_then_timeout;
+		cut_open_hi_hat_screen_1(velocity_then_timeout_2, part);
+		return;
+	}
+	z80_block(17, 2);
+	if (event == 0x80u)
+	{
+		z80_block(18, 3);
+		if (first_data_byte >> 7)
 		{
-			z80_block(18, 3);
-			if (first_data_byte >> 7)
-			{
-				z80_block(17, 1);
-				read_midi_byte_screen_1(&midi_byte_copy, &ignored8);
-				first_data_byte = (uint8_t)midi_byte_copy;
-			}
-			z80_block(96, 11);
-			note_code = note_codes[(uint8_t)(MIDI_PART(part)->transpose + first_data_byte)];
-			screen_1_midi_read++;
-			release_note_screen_1 = true;
+			z80_block(17, 1);
+			read_midi_byte_screen_1(&midi_byte_copy, &ignored8);
+			first_data_byte = (uint8_t)midi_byte_copy;
 		}
-	} while (release_note_screen_1);
+		z80_block(96, 11);
+		note_code = note_codes[(uint8_t)(MIDI_PART(part)->transpose + first_data_byte)];
+		screen_1_midi_read++;
+		release_note_screen_1(part);
+		return;
+	}
 	z80_block(17, 2);
 	if (event == 0xE0u)
 	{
@@ -866,7 +524,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			for (;;)
 			{
 				z80_block(33, 4);
-				pushed_voice = voice_field;
+				pushed_voice_field = voice_field;
 				if ((VOICE(voice_field)->flags >> 6) & 1u)
 				{
 					z80_block(22, 3);
@@ -887,7 +545,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 								} while (z80_read8(pcm_data) & 1u);
 								z80_block(81, 8);
 								z80_write8(pcm_voice_select, voice_chip_channel);
-								voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+								voice_field = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 								effective_volume = MIDI_PART(part)->effective_volume;
 								voice_field = multiply_bytes(effective_volume, voice_field);
 								z80_block(39, 5);
@@ -906,7 +564,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 					}
 				}
 				z80_block(39, 4);
-				voice_field = pushed_voice + 9u;
+				voice_field = pushed_voice_field + 9u;
 				voices_left--;
 				if (voices_left == 0u)
 					break;
@@ -934,7 +592,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			{
 				z80_block(67, 7);
 				saved_parts_left = parts_left;
-				scaled_part_volume = (voice_field & 0xFFu) | ((uint32_t)MIDI_PART(music_part)->volume << 8);
+				scaled_part_volume = (uint32_t)MIDI_PART(music_part)->volume << 8;
 				volume_scale = 0xFFu;
 				if ((MIDI_PART(music_part)->flags & 1u) == 0u)
 				{
@@ -979,7 +637,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 									} while (z80_read8(pcm_data) & 1u);
 									z80_block(81, 8);
 									z80_write8(pcm_voice_select, voice_chip_channel);
-									voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+									voice_field = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 									effective_volume = MIDI_PART(music_part)->effective_volume;
 									voice_field = multiply_bytes(effective_volume, voice_field);
 									z80_block(39, 5);
@@ -1224,8 +882,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			template_then_product = read_table_word(template_then_product, entry);
 			z80_block(112, 13);
 			move_block(template_then_product, MIDI_PART_ADDRESS(0), 0x50u, 1u);
-			template_then_product += 0x50u;
-			new_banks = (pcm_banks & 0x38u) | z80_read8(template_then_product);
+			new_banks = (pcm_banks & 0x38u) | z80_read8((uint16_t)(template_then_product + 0x50u));
 			port_out(PCM_BANKS, new_banks);
 			pcm_banks = new_banks;
 			music_part = MIDI_PART_ADDRESS(0);
@@ -1233,7 +890,7 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 			for (;;)
 			{
 				z80_block(56, 6);
-				template_then_product = (template_then_product & 0xFFu) | ((uint32_t)MIDI_PART(music_part)->volume << 8);
+				template_then_product = (uint32_t)MIDI_PART(music_part)->volume << 8;
 				volume_scale = 0xFFu;
 				if ((MIDI_PART(music_part)->flags & 1u) == 0u)
 				{
@@ -1343,6 +1000,369 @@ void play_midi_message_screen_1(uint8_t message_byte, uint16_t part)
 	skip_midi_data_screen_1(message_byte);
 }
 
+/* A closed or pedal hi-hat (notes 2A and 2C on channel 15) stops screen 1's open hi-hat: each MultiPCM
+   voice of screen 1 (flags bit 6, not bit 3) on channel 15 playing note code CA gets the stop flag (bit
+   0); then take_voice_screen_1 for the new note. */
+void cut_open_hi_hat_screen_1(uint8_t velocity_then_timeout, uint16_t part)
+{
+	uint8_t midi_channel = 0, voices_left = 0;
+	uint16_t voice = 0, voice_size = 0;
+
+	z80_block(27, 3);
+	voice = voice_0_note_ADDRESS;
+	voice_size = 9u;
+	voices_left = 0x18u;
+	for (;;)
+	{
+		z80_block(24, 3);
+		if (VOICE(voice - 0x2u)->note == 0xCAu)
+		{
+			z80_block(36, 5);
+			voice++;
+			midi_channel = VOICE(voice - 0x3u)->midi_channel;
+			voice--;
+			if (midi_channel == 0xFu)
+			{
+				z80_block(34, 5);
+				voice = voice - 1u - 1u;
+				if ((VOICE(voice)->flags >> 6) & 1u)
+				{
+					z80_block(22, 3);
+					if (((VOICE(voice)->flags >> 3) & 1u) == 0u)
+					{
+						z80_block(15, 2);
+						VOICE(voice)->flags |= 1u;
+					}
+				}
+				z80_block(12, 2);
+				voice += 2u;
+			}
+		}
+		z80_block(19, 2);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left == 0u)
+			break;
+		z80_cycles(5);
+	}
+	z80_block(10, 1);
+	take_voice_screen_1(velocity_then_timeout, part);
+}
+
+/* A MultiPCM voice for a note of screen 1 (play_midi_message_screen_1 and cut_open_hi_hat_screen_1 go on
+   to it): the next free one from next_voice (reset_next_voice past the last), or else the oldest
+   (allocation_order 0) taken over, the others' orders one down (none: no note); its record (flags 40, +
+   10 and the drum_timeout for a drum note), then the pitch (an instrument's through pcm_pitch_tables,
+   with its channel's pitch bend, split_tune and split_octave; a drum's drum_pitch), the sample, the
+   level (x the part's effective_volume), pan 70 (right) and key on. */
+void take_voice_screen_1(uint8_t velocity_then_timeout, uint16_t part)
+{
+	uint8_t channel = 0, drum_timeout = 0, effective_volume = 0, oldest_order = 0, order = 0, pcm_register = 0, stored_note = 0, value = 0, voice_channel = 0, voice_note = 0, voices_left = 0;
+	uint16_t bend_entry = 0, channel_offset = 0, level_product = 0, new_voice_field = 0, pitch = 0, pitch_entry = 0, pitch_table_entry = 0, tune = 0, voice = 0, voice_size = 0;
+	uint16_t pushed_voice = 0;
+
+	drum_timeout = (uint8_t)velocity_then_timeout;
+	z80_block(33, 3);
+	voice = next_voice;
+	voice_size = 9u;
+	voices_left = 0x18u;
+	for (;;)
+	{
+		z80_block(21, 3);
+		if ((uint8_t)voice == 0xE8u)
+		{
+			z80_cycles(7);
+			voice = reset_next_voice();
+		}
+		z80_block(21, 3);
+		oldest_order = 0u;
+		if (0u == VOICE(voice)->flags)
+		{
+			z80_block(58, 5);
+			pushed_voice = voice;
+			next_voice = voice + voice_size;
+			new_voice_field = pushed_voice;
+			break;
+		}
+		z80_block(19, 2);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left != 0u)
+		{
+			z80_cycles(5);
+			continue;
+		}
+		z80_block(10, 1);
+		z80_block(17, 2);
+		voice = voice_0_allocation_order_ADDRESS;
+		voices_left = 0x18u;
+		for (;;)
+		{
+			z80_block(17, 2);
+			if (oldest_order == VOICE(voice - 0x6u)->allocation_order)
+				break;
+			z80_block(19, 2);
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+			{
+				z80_block(14, 2);
+				return;
+			}
+			z80_cycles(5);
+		}
+		z80_block(42, 5);
+		VOICE(voice - 0x6u)->allocation_order = 0x18u;
+		pushed_voice = voice;
+		voice = voice_0_allocation_order_ADDRESS;
+		voices_left = 0x18u;
+		for (;;)
+		{
+			z80_block(30, 3);
+			VOICE(voice - 0x6u)->allocation_order--;
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+				break;
+			z80_cycles(5);
+		}
+		z80_block(52, 5);
+		pcm_voices_used--;
+		new_voice_field = pushed_voice - 6u;
+		break;
+	}
+	z80_block(46, 5);
+	VOICE(new_voice_field)->flags = 0x40u;
+	if (MIDI_PART(part)->program < 0xF0u)
+	{
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(479, 64);
+		new_voice_field++;
+		z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
+		new_voice_field++;
+		stored_note = note_code;
+		VOICE(new_voice_field - 0x2u)->note = stored_note;
+		voice_note = stored_note;
+		new_voice_field++;
+		channel = screen_1_midi_status & 0xFu;
+		VOICE(new_voice_field - 0x3u)->midi_channel = channel;
+		voice_channel = channel;
+		new_voice_field += 2u;
+		VOICE(new_voice_field - 0x5u)->level = note_level;
+		new_voice_field++;
+		order = pcm_voices_used;
+		VOICE(new_voice_field - 0x6u)->allocation_order = order;
+		pcm_voices_used = order + 1u;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x7u)->tune = split_tune;
+		VOICE(new_voice_field - 0x7u)->octave_shift = split_octave;
+		channel_offset = (uint8_t)(voice_channel * 2u);
+		bend_entry = screen_1_pitch_bends_ADDRESS + channel_offset;
+		tune = split_tune;
+		pushed_voice = z80_read16(bend_entry) + tune;
+		pitch_table_entry = pcm_pitch_tables_ADDRESS + (uint8_t)((voice_note & 0xFu) * 2u);
+		pitch_entry = PCM_PITCH_RUNS(pitch_table_entry)[0] + pushed_voice + pushed_voice;
+		pitch = PCM_PITCH_STEPS(pitch_entry)[0];
+		pitch = (pitch & 0xFFu) | ((uint32_t)(uint8_t)((voice_note & ~0xFu) + (pitch >> 8)) << 8);
+		value = split_octave + (pitch >> 8);
+	}
+	else
+	{
+		z80_block(15, 2);
+		VOICE(new_voice_field)->flags |= 0x10u;
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(171, 21);
+		new_voice_field++;
+		z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
+		new_voice_field++;
+		VOICE(new_voice_field - 0x2u)->note = note_code;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x3u)->midi_channel = screen_1_midi_status & 0xFu;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x4u)->drum_timeout = drum_timeout;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x5u)->level = note_level;
+		new_voice_field++;
+		if ((screen_1_midi_status & 0xFu) == 0xFu)
+		{
+			z80_block(37, 4);
+			order = pcm_voices_used;
+			VOICE(new_voice_field - 0x6u)->allocation_order = order;
+			pcm_voices_used = order + 1u;
+		}
+		else
+		{
+			z80_block(24, 3);
+			VOICE(new_voice_field - 0x6u)->allocation_order = 0xFFu;
+		}
+		z80_block(30, 3);
+		value = drum_pitch;
+		pitch = 0u;
+	}
+	z80_block(24, 2);
+	pcm_register = 3u;
+	write_pcm_register(pcm_register, value);
+	z80_block(28, 3);
+	value = (uint8_t)pitch;
+	pcm_register = 2u;
+	write_pcm_register(pcm_register, value);
+	z80_block(37, 3);
+	value = sample_or_patch;
+	pcm_register = 1u;
+	write_pcm_register(pcm_register, value);
+	z80_block(53, 5);
+	level_product = (uint32_t)note_level << 8;
+	effective_volume = MIDI_PART(part)->effective_volume;
+	level_product = multiply_bytes(effective_volume, level_product);
+	z80_block(39, 5);
+	value = ~(level_product >> 8) | 1u;
+	pcm_register = 5u;
+	write_pcm_register(pcm_register, value);
+	z80_block(31, 3);
+	value = 0x70u;
+	pcm_register = 0u;
+	write_pcm_register(pcm_register, value);
+	z80_block(24, 3);
+	value = 0x80u;
+	pcm_register = 4u;
+	write_pcm_register(pcm_register, value);
+}
+
+/* Releases a note of screen 1 (note off, or a note on at velocity 0: play_midi_message_screen_1 goes on
+   to it): drum notes (program F0 on) ignore it; the voice playing the note on its channel (an FM voice
+   for an FM instrument, else a MultiPCM one; screen 1's, sounding, not held) is held (flags bit 1) while
+   the channel's sustain pedal is down, else the MultiPCM voice gets the stop flag (bit 0) and the FM
+   voice is freed and keyed off. */
+void release_note_screen_1(uint16_t part)
+{
+	uint8_t channel = 0, channel_index = 0, flags = 0, fm_register = 0, program = 0, value = 0, voices_left = 0;
+	uint16_t instrument = 0, voice = 0, voice_size = 0;
+
+	z80_block(31, 4);
+	program = MIDI_PART(part)->program;
+	if (program >= 0xF0u)
+	{
+		z80_cycles(6);
+		return;
+	}
+	z80_block(27, 2);
+	instrument = instruments_ADDRESS;
+	instrument = read_table_word(instrument, program);
+	z80_block(22, 3);
+	if (((z80_read8(instrument) >> 1) & 1u) != 0u)
+	{
+		z80_block(51, 6);
+		voice = VOICE_ADDRESS(24);
+		voice_size = 9u;
+		voices_left = 6u;
+		channel = screen_1_midi_status & 0xFu;
+		for (;;)
+		{
+			z80_block(29, 3);
+			if (channel == VOICE(voice)->midi_channel)
+			{
+				z80_block(46, 5);
+				channel_index = channel;
+				if (note_code == VOICE(voice)->note)
+				{
+					z80_block(37, 5);
+					flags = VOICE(voice)->flags;
+					if (((flags >> 1) & 1u) == 0u)
+					{
+						z80_block(18, 3);
+						if (((flags >> 3) & 1u) == 0u)
+						{
+							z80_block(17, 2);
+							if ((flags & 0x7Fu) != 0u)
+								break;
+						}
+					}
+				}
+				z80_block(4, 1);
+				channel = (uint8_t)channel_index;
+			}
+			z80_block(23, 3);
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+			{
+				z80_block(10, 1);
+				return;
+			}
+			z80_cycles(5);
+		}
+		z80_block(65, 9);
+		if (screen_1_channel_controls[channel_index] >> 7)
+		{
+			z80_block(33, 3);
+			VOICE(voice)->flags |= 2u;
+			return;
+		}
+		z80_block(85, 10);
+		VOICE(voice)->flags = 0u;
+		VOICE(voice)->midi_channel = 0u;
+		value = VOICE(voice)->chip_channel & 7u;
+		fm_register = 0x28u;
+		write_fm(fm_register, value);
+		return;
+	}
+	z80_block(51, 6);
+	voice = VOICE_ADDRESS(0);
+	voice_size = 9u;
+	voices_left = 0x18u;
+	channel = screen_1_midi_status & 0xFu;
+	for (;;)
+	{
+		z80_block(29, 3);
+		if (channel == VOICE(voice)->midi_channel)
+		{
+			z80_block(46, 5);
+			channel_index = channel;
+			if (note_code == VOICE(voice)->note)
+			{
+				z80_block(37, 5);
+				flags = VOICE(voice)->flags;
+				if (((flags >> 1) & 1u) == 0u)
+				{
+					z80_block(18, 3);
+					if (((flags >> 3) & 1u) == 0u)
+					{
+						z80_block(17, 2);
+						if ((flags & 0x7Fu) != 0u)
+							break;
+					}
+				}
+			}
+			z80_block(4, 1);
+			channel = (uint8_t)channel_index;
+		}
+		z80_block(23, 3);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left == 0u)
+		{
+			z80_block(10, 1);
+			return;
+		}
+		z80_cycles(5);
+	}
+	z80_block(65, 9);
+	if (screen_1_channel_controls[channel_index] >> 7 == 0u)
+	{
+		z80_block(33, 3);
+		VOICE(voice)->flags |= 1u;
+		return;
+	}
+	z80_block(33, 3);
+	VOICE(voice)->flags |= 2u;
+}
+
 /* Retunes a sounding voice after a pitch bend of screen 1: an FM voice through retune_fm_voice; a
    MultiPCM voice gets its note's pitch again from pcm_pitch_tables[semitone] at pitch_bend + its tune,
    its octave + octave_shift (registers 3 and 2). The same code as retune_voice_screen_2. */
@@ -1393,7 +1413,6 @@ void set_voice_modulation_screen_1(uint16_t part, uint16_t *p_voices_left, uint1
 	uint16_t voices_left = (uint16_t)*p_voices_left;
 	uint16_t voice = (uint16_t)*p_voice;
 	uint8_t chip_channel = 0, count_as_channel = 0, lfo_register = 0, pan_register = 0, value = 0;
-	uint16_t count_and_register = 0, register_and_value = 0;
 
 	z80_block(31, 5);
 	voice++;
@@ -1401,15 +1420,15 @@ void set_voice_modulation_screen_1(uint16_t part, uint16_t *p_voices_left, uint1
 	if (chip_channel >> 7 != 0u)
 	{
 		z80_block(79, 9);
-		count_as_channel = (uint8_t)(((voices_left & ~0xFFu) | chip_channel) >> 8);
+		count_as_channel = (uint8_t)(voices_left >> 8);
 		fm_channel = count_as_channel;
 		pan_register = (count_as_channel & 3u) - 0x4Cu;
 		value = (voice_modulation & 0x3Fu) | 0x40u;
-		register_and_value = pan_register;
-		register_and_value = write_fm_channel((uint8_t)register_and_value, value);
+		voices_left = pan_register;
+		voices_left = write_fm_channel(voices_left, value);
 		z80_block(16, 2);
 		voice--;
-		voices_left = (register_and_value & ~0xFFu) | pan_register;
+		voices_left = (voices_left & ~0xFFu) | pan_register;
 	}
 	else
 	{
@@ -1421,11 +1440,11 @@ void set_voice_modulation_screen_1(uint16_t part, uint16_t *p_voices_left, uint1
 		z80_write8(pcm_voice_select, chip_channel);
 		lfo_register = 6u;
 		value = voice_modulation | MIDI_PART(part)->lfo_frequency;
-		count_and_register = (voices_left & ~0xFFu) | 6u;
-		write_pcm_register((uint8_t)count_and_register, value);
+		voices_left = (voices_left & ~0xFFu) | 6u;
+		write_pcm_register((uint8_t)voices_left, value);
 		z80_block(16, 2);
 		voice--;
-		voices_left = (count_and_register & ~0xFFu) | lfo_register;
+		voices_left = (voices_left & ~0xFFu) | lfo_register;
 	}
 	*p_voices_left = voices_left;
 	*p_voice = voice;
@@ -1749,511 +1768,169 @@ void skip_midi_data_screen_2(uint8_t first_byte)
    2's sample bank (pcm_banks bits 3-5). */
 void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 {
-	bool cut_open_hi_hat_screen_2 = false, release_note_screen_2 = false, start_voice_screen_2 = false, take_voice_screen_2 = false;
 	uint32_t carry = 0;
-	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, fm_register = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, oldest_order = 0, order = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, program = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
-	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, new_voice_field = 0, note_index = 0, pitch = 0, pitch_bends = 0, pitch_entry = 0, pitch_table_entry = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, tune = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
+	uint8_t bend = 0, bend_low = 0, bend_range = 0, bend_sign = 0, bend_steps = 0, channel = 0, channel_index = 0, channels_left = 0, chip_channel = 0, control_value = 0, controller = 0, controller_number = 0, controls = 0, depth = 0, drum_note = 0, effective_volume = 0, entry = 0, event = 0, factor = 0, first_data_byte = 0, flags = 0, ignored8 = 0, level = 0, midi_byte = 0, midi_channel = 0, midi_note = 0, modulation_depth = 0, new_banks = 0, note = 0, note_to_mark = 0, old_controls = 0, part_program = 0, parts_left = 0, pcm_register = 0, pitch_bend_high = 0, pitch_bend_low = 0, rounded_volume = 0, sample = 0, stored_note = 0, transposed_note = 0, value = 0, velocity_then_timeout = 0, velocity_then_timeout_2 = 0, voice_channel = 0, voice_chip_channel = 0, voice_note = 0, voices_left = 0, volume = 0, volume_scale = 0;
+	uint16_t bend_entry = 0, bend_index = 0, channel_offset = 0, controls_entry = 0, ignored16 = 0, instrument = 0, kept_channel = 0, kit_note = 0, level_product = 0, midi_byte_copy = 0, music_part = 0, note_index = 0, pitch_bends = 0, scaled_part_volume = 0, step_table = 0, template_then_product = 0, velocity_copy = 0, velocity_index = 0, voice = 0, voice_2 = 0, voice_field = 0, voice_size = 0, voices_left_pair = 0;
 	uint8_t saved_channel = 0, saved_parts_left = 0;
-	uint16_t pushed_voice = 0, saved_voice_field = 0;
+	uint16_t pushed_voice_field = 0, saved_voice_field = 0;
 	uint8_t negated_bend = 0, negated_step = 0, modulation_wheel = 0, wheel_halved = 0, wheel_quartered = 0, part_volume = 0, music_volume = 0;
 
 	first_data_byte = (uint8_t)message_byte;
 	z80_block(37, 4);
 	event = screen_2_midi_status & ~0xFu;
-	do
+	if (event == 0x90u)
 	{
-		if (release_note_screen_2 || event == 0x90u)
+		z80_block(18, 3);
+		if (first_data_byte >> 7)
 		{
-			if (!release_note_screen_2)
+			z80_block(17, 1);
+			read_midi_byte_screen_2(&midi_byte_copy, &ignored8);
+			first_data_byte = (uint8_t)midi_byte_copy;
+		}
+		z80_block(109, 12);
+		midi_note = first_data_byte;
+		transposed_note = MIDI_PART(part)->transpose + first_data_byte;
+		note_number = transposed_note;
+		note_code = note_codes[transposed_note];
+		read_midi_byte_screen_2(&velocity_copy, &midi_byte);
+		z80_block(14, 2);
+		if (midi_byte == 0u)
+		{
+			release_note_screen_2(part);
+			return;
+		}
+		z80_block(88, 10);
+		velocity_index = midi_byte;
+		note_level = velocity_levels[velocity_index];
+		part_program = MIDI_PART(part)->program;
+		if (part_program < 0xF0u)
+		{
+			z80_block(27, 2);
+			instrument = instruments_ADDRESS;
+			instrument = read_table_word(instrument, part_program);
+			z80_block(22, 3);
+			if (((z80_read8(instrument) >> 1) & 1u) != 0u)
 			{
-				z80_block(18, 3);
-				if (first_data_byte >> 7)
-				{
-					z80_block(17, 1);
-					read_midi_byte_screen_2(&midi_byte_copy, &ignored8);
-					first_data_byte = (uint8_t)midi_byte_copy;
-				}
-				z80_block(109, 12);
-				midi_note = first_data_byte;
-				transposed_note = MIDI_PART(part)->transpose + first_data_byte;
-				note_number = transposed_note;
-				note_code = note_codes[transposed_note];
-				read_midi_byte_screen_2(&midi_byte_copy, &midi_byte);
-				velocity_then_timeout = (uint8_t)midi_byte_copy;
-				z80_block(14, 2);
-			}
-			if (release_note_screen_2 || midi_byte == 0u)
-			{
-				z80_block(31, 4);
-				program = MIDI_PART(part)->program;
-				if (program >= 0xF0u)
-				{
-					z80_cycles(6);
-					return;
-				}
-				z80_block(27, 2);
-				instrument = instruments_ADDRESS;
-				instrument = read_table_word(instrument, program);
-				z80_block(22, 3);
-				if (((z80_read8(instrument) >> 1) & 1u) != 0u)
-				{
-					z80_block(51, 6);
-					voice_2 = VOICE_ADDRESS(24);
-					voice_size = 9u;
-					voices_left = 6u;
-					channel = screen_2_midi_status & 0xFu;
-					for (;;)
-					{
-						z80_block(29, 3);
-						if (channel == VOICE(voice_2)->midi_channel)
-						{
-							z80_block(46, 5);
-							channel_index = channel;
-							if (note_code == VOICE(voice_2)->note)
-							{
-								z80_block(37, 5);
-								flags = VOICE(voice_2)->flags;
-								if (((flags >> 1) & 1u) == 0u)
-								{
-									z80_block(18, 3);
-									if ((flags >> 3) & 1u)
-									{
-										z80_block(17, 2);
-										if ((flags & 0x7Fu) != 0u)
-											break;
-									}
-								}
-							}
-							z80_block(4, 1);
-							channel = (uint8_t)channel_index;
-						}
-						z80_block(23, 3);
-						voice_2 += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(10, 1);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(65, 9);
-					if (screen_2_channel_controls[channel_index] >> 7)
-					{
-						z80_block(33, 3);
-						VOICE(voice_2)->flags |= 2u;
-						return;
-					}
-					z80_block(85, 10);
-					VOICE(voice_2)->flags = 0u;
-					VOICE(voice_2)->midi_channel = 0u;
-					value = VOICE(voice_2)->chip_channel & 7u;
-					fm_register = 0x28u;
-					write_fm(fm_register, value);
-					return;
-				}
-				z80_block(51, 6);
-				voice_2 = VOICE_ADDRESS(0);
+				z80_block(59, 7);
+				sample_or_patch = z80_read8((uint16_t)(instrument + 2u));
+				voice = VOICE_ADDRESS(24);
 				voice_size = 9u;
-				voices_left = 0x18u;
-				channel = screen_2_midi_status & 0xFu;
-				for (;;)
-				{
-					z80_block(29, 3);
-					if (channel == VOICE(voice_2)->midi_channel)
-					{
-						z80_block(46, 5);
-						channel_index = channel;
-						if (note_code == VOICE(voice_2)->note)
-						{
-							z80_block(37, 5);
-							flags = VOICE(voice_2)->flags;
-							if (((flags >> 1) & 1u) == 0u)
-							{
-								z80_block(18, 3);
-								if ((flags >> 3) & 1u)
-								{
-									z80_block(17, 2);
-									if ((flags & 0x7Fu) != 0u)
-										break;
-								}
-							}
-						}
-						z80_block(4, 1);
-						channel = (uint8_t)channel_index;
-					}
-					z80_block(23, 3);
-					voice_2 += voice_size;
-					voices_left--;
-					if (voices_left == 0u)
-					{
-						z80_block(10, 1);
-						return;
-					}
-					z80_cycles(5);
-				}
-				z80_block(65, 9);
-				if (screen_2_channel_controls[channel_index] >> 7 == 0u)
-				{
-					z80_block(33, 3);
-					VOICE(voice_2)->flags |= 1u;
-					return;
-				}
-				z80_block(33, 3);
-				VOICE(voice_2)->flags |= 2u;
-				return;
-			}
-			z80_block(88, 10);
-			velocity_index = midi_byte;
-			note_level = velocity_levels[velocity_index];
-			part_program = MIDI_PART(part)->program;
-			if (part_program < 0xF0u)
-			{
-				z80_block(27, 2);
-				instrument = instruments_ADDRESS;
-				instrument = read_table_word(instrument, part_program);
-				z80_block(22, 3);
-				if (((z80_read8(instrument) >> 1) & 1u) != 0u)
-				{
-					z80_block(59, 7);
-					sample_or_patch = z80_read8((uint16_t)(instrument + 2u));
-					voice = VOICE_ADDRESS(24);
-					voice_size = 9u;
-					voices_left = 6u;
-					for (;;)
-					{
-						z80_block(21, 3);
-						if (VOICE(voice)->flags == 0u)
-							break;
-						z80_block(19, 2);
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(14, 2);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(182, 22);
-					VOICE(voice)->flags = 0x48u;
-					voice++;
-					fm_channel = VOICE(voice - 0x1u)->chip_channel & 7u;
-					voice++;
-					stored_note = note_code;
-					VOICE(voice - 0x2u)->note = stored_note;
-					voice_note = stored_note;
-					voice++;
-					channel = screen_2_midi_status & 0xFu;
-					VOICE(voice - 0x3u)->midi_channel = channel;
-					voice_channel = channel;
-					voice += 2u;
-					level = note_level;
-					VOICE(voice - 0x5u)->level = level;
-					level_product = (voice & 0xFFu) | ((uint32_t)level << 8);
-					effective_volume = MIDI_PART(part)->effective_volume;
-					level_product = multiply_bytes(effective_volume, level_product);
-					z80_block(122, 16);
-					note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
-					channel_offset = voice_channel;
-					voice_modulation = (z80_read8((uint16_t)(screen_2_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x80u;
-					pitch_bends = screen_2_pitch_bends_ADDRESS;
-					note = voice_note;
-					start_fm_note(note, channel_offset, pitch_bends);
-					return;
-				}
-				for (;;)
-				{
-					z80_block(44, 6);
-					instrument++;
-					if (note_number <= z80_read8(instrument))
-						break;
-					z80_block(28, 4);
-					instrument += 3u;
-				}
-				z80_block(78, 9);
-				instrument++;
-				sample_or_patch = z80_read8(instrument);
-				instrument++;
-				split_tune = z80_read8(instrument);
-				split_octave = z80_read8((uint16_t)(instrument + 1u));
-				take_voice_screen_2 = true;
-			}
-			else
-			{
-				z80_block(34, 3);
-				part_program += 0x10u;
-				kit_note = drum_kits_ADDRESS;
-				kit_note = read_table_word(kit_note, part_program);
-				z80_block(112, 14);
-				note_index = midi_note;
-				kit_note = kit_note + note_index + note_index + note_index;
-				drum_pitch = z80_read8(kit_note);
-				kit_note++;
-				velocity_then_timeout = z80_read8(kit_note);
-				sample = z80_read8((uint16_t)(kit_note + 1u));
-				sample_or_patch = sample;
-				if (sample == 0xFFu)
-				{
-					z80_cycles(6);
-					return;
-				}
-				z80_block(37, 4);
-				take_voice_screen_2 = (screen_2_midi_status & 0xFu) != 0xFu;
-				if (!take_voice_screen_2)
-				{
-					z80_block(21, 3);
-					drum_note = midi_note;
-					if (drum_note == 0x2Cu)
-						cut_open_hi_hat_screen_2 = true;
-					else
-					{
-						z80_block(17, 2);
-						take_voice_screen_2 = drum_note != 0x2Au;
-						if (!take_voice_screen_2)
-							cut_open_hi_hat_screen_2 = true;
-					}
-					if (!take_voice_screen_2)
-					{
-						if (cut_open_hi_hat_screen_2)
-						{
-							cut_open_hi_hat_screen_2 = false;
-							z80_block(27, 3);
-							voice = voice_0_note_ADDRESS;
-							voice_size = 9u;
-							voices_left = 0x18u;
-							for (;;)
-							{
-								z80_block(24, 3);
-								if (VOICE(voice - 0x2u)->note == 0xCAu)
-								{
-									z80_block(36, 5);
-									voice++;
-									midi_channel = VOICE(voice - 0x3u)->midi_channel;
-									voice--;
-									if (midi_channel == 0xFu)
-									{
-										z80_block(34, 5);
-										voice = voice - 1u - 1u;
-										if ((VOICE(voice)->flags >> 6) & 1u)
-										{
-											z80_block(22, 3);
-											if ((VOICE(voice)->flags >> 3) & 1u)
-											{
-												z80_block(15, 2);
-												VOICE(voice)->flags |= 1u;
-											}
-										}
-										z80_block(12, 2);
-										voice += 2u;
-									}
-								}
-								z80_block(19, 2);
-								voice += voice_size;
-								voices_left--;
-								if (voices_left == 0u)
-									break;
-								z80_cycles(5);
-							}
-							z80_block(10, 1);
-							take_voice_screen_2 = true;
-						}
-					}
-				}
-			}
-			if (take_voice_screen_2)
-			{
-				z80_block(33, 3);
-				voice = next_voice;
-				voice_size = 9u;
-				voices_left = 0x18u;
+				voices_left = 6u;
 				for (;;)
 				{
 					z80_block(21, 3);
-					if ((uint8_t)voice == 0xE8u)
-					{
-						z80_cycles(7);
-						voice = reset_next_voice();
-					}
-					z80_block(21, 3);
-					oldest_order = 0u;
-					if (0u == VOICE(voice)->flags)
-					{
-						z80_block(58, 5);
-						pushed_voice = voice;
-						next_voice = voice + voice_size;
-						new_voice_field = pushed_voice;
-						start_voice_screen_2 = true;
-					}
-					if (start_voice_screen_2)
+					if (VOICE(voice)->flags == 0u)
 						break;
 					z80_block(19, 2);
 					voice += voice_size;
 					voices_left--;
 					if (voices_left == 0u)
-						break;
+					{
+						z80_block(14, 2);
+						return;
+					}
 					z80_cycles(5);
 				}
-				if (!start_voice_screen_2)
-				{
-					z80_block(10, 1);
-					z80_block(17, 2);
-					voice = voice_0_allocation_order_ADDRESS;
-					voices_left = 0x18u;
-					for (;;)
-					{
-						z80_block(17, 2);
-						if (oldest_order == VOICE(voice - 0x6u)->allocation_order)
-							break;
-						z80_block(19, 2);
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-						{
-							z80_block(14, 2);
-							return;
-						}
-						z80_cycles(5);
-					}
-					z80_block(42, 5);
-					VOICE(voice - 0x6u)->allocation_order = 0x18u;
-					pushed_voice = voice;
-					voice = voice_0_allocation_order_ADDRESS;
-					voices_left = 0x18u;
-					for (;;)
-					{
-						z80_block(30, 3);
-						VOICE(voice - 0x6u)->allocation_order--;
-						voice += voice_size;
-						voices_left--;
-						if (voices_left == 0u)
-							break;
-						z80_cycles(5);
-					}
-					z80_block(52, 5);
-					pcm_voices_used--;
-					new_voice_field = pushed_voice - 6u;
-				}
-				z80_block(46, 5);
-				VOICE(new_voice_field)->flags = 0x48u;
-				if (MIDI_PART(part)->program < 0xF0u)
-				{
-					do
-					{
-						z80_block(27, 3);
-					} while (z80_read8(pcm_data) & 1u);
-					z80_block(479, 64);
-					new_voice_field++;
-					z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
-					new_voice_field++;
-					stored_note = note_code;
-					VOICE(new_voice_field - 0x2u)->note = stored_note;
-					voice_note = stored_note;
-					new_voice_field++;
-					channel = screen_2_midi_status & 0xFu;
-					VOICE(new_voice_field - 0x3u)->midi_channel = channel;
-					voice_channel = channel;
-					new_voice_field += 2u;
-					VOICE(new_voice_field - 0x5u)->level = note_level;
-					new_voice_field++;
-					order = pcm_voices_used;
-					VOICE(new_voice_field - 0x6u)->allocation_order = order;
-					pcm_voices_used = order + 1u;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x7u)->tune = split_tune;
-					VOICE(new_voice_field - 0x7u)->octave_shift = split_octave;
-					channel_offset = (uint8_t)(voice_channel * 2u);
-					bend_entry = screen_2_pitch_bends_ADDRESS + channel_offset;
-					tune = split_tune;
-					pushed_voice = z80_read16(bend_entry) + tune;
-					pitch_table_entry = pcm_pitch_tables_ADDRESS + (uint8_t)((voice_note & 0xFu) * 2u);
-					pitch_entry = PCM_PITCH_RUNS(pitch_table_entry)[0] + pushed_voice + pushed_voice;
-					pitch = PCM_PITCH_STEPS(pitch_entry)[0];
-					pitch = (pitch & 0xFFu) | ((uint32_t)(uint8_t)((voice_note & ~0xFu) + (pitch >> 8)) << 8);
-					value = split_octave + (pitch >> 8);
-				}
-				else
-				{
-					z80_block(15, 2);
-					VOICE(new_voice_field)->flags |= 0x10u;
-					do
-					{
-						z80_block(27, 3);
-					} while (z80_read8(pcm_data) & 1u);
-					z80_block(171, 21);
-					new_voice_field++;
-					z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
-					new_voice_field++;
-					VOICE(new_voice_field - 0x2u)->note = note_code;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x3u)->midi_channel = screen_2_midi_status & 0xFu;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x4u)->drum_timeout = velocity_then_timeout;
-					new_voice_field++;
-					VOICE(new_voice_field - 0x5u)->level = note_level;
-					new_voice_field++;
-					if ((screen_2_midi_status & 0xFu) == 0xFu)
-					{
-						z80_block(37, 4);
-						order = pcm_voices_used;
-						VOICE(new_voice_field - 0x6u)->allocation_order = order;
-						pcm_voices_used = order + 1u;
-					}
-					else
-					{
-						z80_block(24, 3);
-						VOICE(new_voice_field - 0x6u)->allocation_order = 0xFFu;
-					}
-					z80_block(30, 3);
-					value = drum_pitch;
-					pitch = 0u;
-				}
-				z80_block(24, 2);
-				pcm_register = 3u;
-				write_pcm_register(pcm_register, value);
-				z80_block(36, 5);
-				value = pitch | 1u;
-				pcm_register = 2u;
-				write_pcm_register(pcm_register, value);
-				z80_block(37, 3);
-				value = sample_or_patch;
-				pcm_register = 1u;
-				write_pcm_register(pcm_register, value);
-				z80_block(53, 5);
-				level_product = (pitch & 0xFFu) | ((uint32_t)note_level << 8);
+				z80_block(182, 22);
+				VOICE(voice)->flags = 0x48u;
+				voice++;
+				fm_channel = VOICE(voice - 0x1u)->chip_channel & 7u;
+				voice++;
+				stored_note = note_code;
+				VOICE(voice - 0x2u)->note = stored_note;
+				voice_note = stored_note;
+				voice++;
+				channel = screen_2_midi_status & 0xFu;
+				VOICE(voice - 0x3u)->midi_channel = channel;
+				voice_channel = channel;
+				level = note_level;
+				VOICE(voice - 0x3u)->level = level;
+				level_product = (uint32_t)level << 8;
 				effective_volume = MIDI_PART(part)->effective_volume;
 				level_product = multiply_bytes(effective_volume, level_product);
-				z80_block(39, 5);
-				value = ~(level_product >> 8) | 1u;
-				pcm_register = 5u;
-				write_pcm_register(pcm_register, value);
-				z80_block(31, 3);
-				value = 0x90u;
-				pcm_register = 0u;
-				write_pcm_register(pcm_register, value);
-				z80_block(24, 3);
-				value = 0x80u;
-				pcm_register = 4u;
-				write_pcm_register(pcm_register, value);
+				z80_block(122, 16);
+				note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
+				channel_offset = voice_channel;
+				voice_modulation = (z80_read8((uint16_t)(screen_2_channel_controls_ADDRESS + channel_offset)) & 0xFu) | 0x80u;
+				pitch_bends = screen_2_pitch_bends_ADDRESS;
+				note = voice_note;
+				start_fm_note(note, channel_offset, pitch_bends);
+				return;
+			}
+			for (;;)
+			{
+				z80_block(44, 6);
+				instrument++;
+				if (note_number <= z80_read8(instrument))
+					break;
+				z80_block(28, 4);
+				instrument += 3u;
+			}
+			z80_block(78, 9);
+			instrument++;
+			sample_or_patch = z80_read8(instrument);
+			instrument++;
+			split_tune = z80_read8(instrument);
+			split_octave = z80_read8((uint16_t)(instrument + 1u));
+			take_voice_screen_2((uint8_t)velocity_copy, part);
+			return;
+		}
+		z80_block(34, 3);
+		part_program += 0x10u;
+		kit_note = drum_kits_ADDRESS;
+		kit_note = read_table_word(kit_note, part_program);
+		z80_block(112, 14);
+		note_index = midi_note;
+		kit_note = kit_note + note_index + note_index + note_index;
+		drum_pitch = z80_read8(kit_note);
+		kit_note++;
+		velocity_then_timeout = z80_read8(kit_note);
+		sample = z80_read8((uint16_t)(kit_note + 1u));
+		sample_or_patch = sample;
+		if (sample == 0xFFu)
+		{
+			z80_cycles(6);
+			return;
+		}
+		z80_block(37, 4);
+		if ((screen_2_midi_status & 0xFu) != 0xFu)
+		{
+			velocity_then_timeout_2 = velocity_then_timeout;
+			take_voice_screen_2(velocity_then_timeout_2, part);
+			return;
+		}
+		z80_block(21, 3);
+		drum_note = midi_note;
+		if (drum_note != 0x2Cu)
+		{
+			z80_block(17, 2);
+			if (drum_note != 0x2Au)
+			{
+				velocity_then_timeout_2 = velocity_then_timeout;
+				take_voice_screen_2(velocity_then_timeout_2, part);
 				return;
 			}
 		}
-		z80_block(17, 2);
-		if (event == 0x80u)
+		velocity_then_timeout_2 = velocity_then_timeout;
+		cut_open_hi_hat_screen_2(velocity_then_timeout_2, part);
+		return;
+	}
+	z80_block(17, 2);
+	if (event == 0x80u)
+	{
+		z80_block(18, 3);
+		if (first_data_byte >> 7)
 		{
-			z80_block(18, 3);
-			if (first_data_byte >> 7)
-			{
-				z80_block(17, 1);
-				read_midi_byte_screen_2(&midi_byte_copy, &ignored8);
-				first_data_byte = (uint8_t)midi_byte_copy;
-			}
-			z80_block(96, 11);
-			note_code = note_codes[(uint8_t)(MIDI_PART(part)->transpose + first_data_byte)];
-			screen_2_midi_read++;
-			release_note_screen_2 = true;
+			z80_block(17, 1);
+			read_midi_byte_screen_2(&midi_byte_copy, &ignored8);
+			first_data_byte = (uint8_t)midi_byte_copy;
 		}
-	} while (release_note_screen_2);
+		z80_block(96, 11);
+		note_code = note_codes[(uint8_t)(MIDI_PART(part)->transpose + first_data_byte)];
+		screen_2_midi_read++;
+		release_note_screen_2(part);
+		return;
+	}
 	z80_block(17, 2);
 	if (event == 0xE0u)
 	{
@@ -2480,7 +2157,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			for (;;)
 			{
 				z80_block(33, 4);
-				pushed_voice = voice_field;
+				pushed_voice_field = voice_field;
 				if ((VOICE(voice_field)->flags >> 6) & 1u)
 				{
 					z80_block(22, 3);
@@ -2501,7 +2178,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 								} while (z80_read8(pcm_data) & 1u);
 								z80_block(81, 8);
 								z80_write8(pcm_voice_select, voice_chip_channel);
-								voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+								voice_field = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 								effective_volume = MIDI_PART(part)->effective_volume;
 								voice_field = multiply_bytes(effective_volume, voice_field);
 								z80_block(39, 5);
@@ -2520,7 +2197,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 					}
 				}
 				z80_block(39, 4);
-				voice_field = pushed_voice + 9u;
+				voice_field = pushed_voice_field + 9u;
 				voices_left--;
 				if (voices_left == 0u)
 					break;
@@ -2548,7 +2225,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			{
 				z80_block(67, 7);
 				saved_parts_left = parts_left;
-				scaled_part_volume = (voice_field & 0xFFu) | ((uint32_t)MIDI_PART(music_part)->volume << 8);
+				scaled_part_volume = (uint32_t)MIDI_PART(music_part)->volume << 8;
 				volume_scale = 0xFFu;
 				if ((MIDI_PART(music_part)->flags & 1u) == 0u)
 				{
@@ -2593,7 +2270,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 									} while (z80_read8(pcm_data) & 1u);
 									z80_block(81, 8);
 									z80_write8(pcm_voice_select, voice_chip_channel);
-									voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+									voice_field = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 									effective_volume = MIDI_PART(music_part)->effective_volume;
 									voice_field = multiply_bytes(effective_volume, voice_field);
 									z80_block(39, 5);
@@ -2838,8 +2515,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			template_then_product = read_table_word(template_then_product, entry);
 			z80_block(136, 19);
 			move_block(template_then_product, MIDI_PART_ADDRESS(13), 0x50u, 1u);
-			template_then_product += 0x50u;
-			new_banks = (pcm_banks & 7u) | ((((uint32_t)z80_read8(template_then_product) << 1) << 1) << 1);
+			new_banks = (pcm_banks & 7u) | ((((uint32_t)z80_read8((uint16_t)(template_then_product + 0x50u)) << 1) << 1) << 1);
 			port_out(PCM_BANKS, new_banks);
 			pcm_banks = new_banks;
 			music_part = MIDI_PART_ADDRESS(13);
@@ -2847,7 +2523,7 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 			for (;;)
 			{
 				z80_block(56, 6);
-				template_then_product = (template_then_product & 0xFFu) | ((uint32_t)MIDI_PART(music_part)->volume << 8);
+				template_then_product = (uint32_t)MIDI_PART(music_part)->volume << 8;
 				volume_scale = 0xFFu;
 				if ((MIDI_PART(music_part)->flags & 1u) == 0u)
 				{
@@ -2957,6 +2633,360 @@ void play_midi_message_screen_2(uint8_t message_byte, uint16_t part)
 	skip_midi_data_screen_2(message_byte);
 }
 
+/* As cut_open_hi_hat_screen_1 for screen 2's voices (flags bit 3); then take_voice_screen_2. */
+void cut_open_hi_hat_screen_2(uint8_t velocity_then_timeout, uint16_t part)
+{
+	uint8_t midi_channel = 0, voices_left = 0;
+	uint16_t voice = 0, voice_size = 0;
+
+	z80_block(27, 3);
+	voice = voice_0_note_ADDRESS;
+	voice_size = 9u;
+	voices_left = 0x18u;
+	for (;;)
+	{
+		z80_block(24, 3);
+		if (VOICE(voice - 0x2u)->note == 0xCAu)
+		{
+			z80_block(36, 5);
+			voice++;
+			midi_channel = VOICE(voice - 0x3u)->midi_channel;
+			voice--;
+			if (midi_channel == 0xFu)
+			{
+				z80_block(34, 5);
+				voice = voice - 1u - 1u;
+				if ((VOICE(voice)->flags >> 6) & 1u)
+				{
+					z80_block(22, 3);
+					if ((VOICE(voice)->flags >> 3) & 1u)
+					{
+						z80_block(15, 2);
+						VOICE(voice)->flags |= 1u;
+					}
+				}
+				z80_block(12, 2);
+				voice += 2u;
+			}
+		}
+		z80_block(19, 2);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left == 0u)
+			break;
+		z80_cycles(5);
+	}
+	z80_block(10, 1);
+	take_voice_screen_2(velocity_then_timeout, part);
+}
+
+/* As take_voice_screen_1 for a note of screen 2 (play_midi_message_screen_2 and cut_open_hi_hat_screen_2
+   go on to it): its voice gets flags bit 3 (48), plays the samples from 100 on and pans left (90). */
+void take_voice_screen_2(uint8_t velocity_then_timeout, uint16_t part)
+{
+	uint8_t channel = 0, drum_timeout = 0, effective_volume = 0, oldest_order = 0, order = 0, pcm_register = 0, stored_note = 0, value = 0, voice_channel = 0, voice_note = 0, voices_left = 0;
+	uint16_t bend_entry = 0, channel_offset = 0, level_product = 0, new_voice_field = 0, pitch = 0, pitch_entry = 0, pitch_table_entry = 0, tune = 0, voice = 0, voice_size = 0;
+	uint16_t pushed_voice = 0;
+
+	drum_timeout = (uint8_t)velocity_then_timeout;
+	z80_block(33, 3);
+	voice = next_voice;
+	voice_size = 9u;
+	voices_left = 0x18u;
+	for (;;)
+	{
+		z80_block(21, 3);
+		if ((uint8_t)voice == 0xE8u)
+		{
+			z80_cycles(7);
+			voice = reset_next_voice();
+		}
+		z80_block(21, 3);
+		oldest_order = 0u;
+		if (0u == VOICE(voice)->flags)
+		{
+			z80_block(58, 5);
+			pushed_voice = voice;
+			next_voice = voice + voice_size;
+			new_voice_field = pushed_voice;
+			break;
+		}
+		z80_block(19, 2);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left != 0u)
+		{
+			z80_cycles(5);
+			continue;
+		}
+		z80_block(10, 1);
+		z80_block(17, 2);
+		voice = voice_0_allocation_order_ADDRESS;
+		voices_left = 0x18u;
+		for (;;)
+		{
+			z80_block(17, 2);
+			if (oldest_order == VOICE(voice - 0x6u)->allocation_order)
+				break;
+			z80_block(19, 2);
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+			{
+				z80_block(14, 2);
+				return;
+			}
+			z80_cycles(5);
+		}
+		z80_block(42, 5);
+		VOICE(voice - 0x6u)->allocation_order = 0x18u;
+		pushed_voice = voice;
+		voice = voice_0_allocation_order_ADDRESS;
+		voices_left = 0x18u;
+		for (;;)
+		{
+			z80_block(30, 3);
+			VOICE(voice - 0x6u)->allocation_order--;
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+				break;
+			z80_cycles(5);
+		}
+		z80_block(52, 5);
+		pcm_voices_used--;
+		new_voice_field = pushed_voice - 6u;
+		break;
+	}
+	z80_block(46, 5);
+	VOICE(new_voice_field)->flags = 0x48u;
+	if (MIDI_PART(part)->program < 0xF0u)
+	{
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(479, 64);
+		new_voice_field++;
+		z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
+		new_voice_field++;
+		stored_note = note_code;
+		VOICE(new_voice_field - 0x2u)->note = stored_note;
+		voice_note = stored_note;
+		new_voice_field++;
+		channel = screen_2_midi_status & 0xFu;
+		VOICE(new_voice_field - 0x3u)->midi_channel = channel;
+		voice_channel = channel;
+		new_voice_field += 2u;
+		VOICE(new_voice_field - 0x5u)->level = note_level;
+		new_voice_field++;
+		order = pcm_voices_used;
+		VOICE(new_voice_field - 0x6u)->allocation_order = order;
+		pcm_voices_used = order + 1u;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x7u)->tune = split_tune;
+		VOICE(new_voice_field - 0x7u)->octave_shift = split_octave;
+		channel_offset = (uint8_t)(voice_channel * 2u);
+		bend_entry = screen_2_pitch_bends_ADDRESS + channel_offset;
+		tune = split_tune;
+		pushed_voice = z80_read16(bend_entry) + tune;
+		pitch_table_entry = pcm_pitch_tables_ADDRESS + (uint8_t)((voice_note & 0xFu) * 2u);
+		pitch_entry = PCM_PITCH_RUNS(pitch_table_entry)[0] + pushed_voice + pushed_voice;
+		pitch = PCM_PITCH_STEPS(pitch_entry)[0];
+		pitch = (pitch & 0xFFu) | ((uint32_t)(uint8_t)((voice_note & ~0xFu) + (pitch >> 8)) << 8);
+		value = split_octave + (pitch >> 8);
+	}
+	else
+	{
+		z80_block(15, 2);
+		VOICE(new_voice_field)->flags |= 0x10u;
+		do
+		{
+			z80_block(27, 3);
+		} while (z80_read8(pcm_data) & 1u);
+		z80_block(171, 21);
+		new_voice_field++;
+		z80_write8(pcm_voice_select, VOICE(new_voice_field - 0x1u)->chip_channel);
+		new_voice_field++;
+		VOICE(new_voice_field - 0x2u)->note = note_code;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x3u)->midi_channel = screen_2_midi_status & 0xFu;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x4u)->drum_timeout = drum_timeout;
+		new_voice_field++;
+		VOICE(new_voice_field - 0x5u)->level = note_level;
+		new_voice_field++;
+		if ((screen_2_midi_status & 0xFu) == 0xFu)
+		{
+			z80_block(37, 4);
+			order = pcm_voices_used;
+			VOICE(new_voice_field - 0x6u)->allocation_order = order;
+			pcm_voices_used = order + 1u;
+		}
+		else
+		{
+			z80_block(24, 3);
+			VOICE(new_voice_field - 0x6u)->allocation_order = 0xFFu;
+		}
+		z80_block(30, 3);
+		value = drum_pitch;
+		pitch = 0u;
+	}
+	z80_block(24, 2);
+	pcm_register = 3u;
+	write_pcm_register(pcm_register, value);
+	z80_block(36, 5);
+	value = pitch | 1u;
+	pcm_register = 2u;
+	write_pcm_register(pcm_register, value);
+	z80_block(37, 3);
+	value = sample_or_patch;
+	pcm_register = 1u;
+	write_pcm_register(pcm_register, value);
+	z80_block(53, 5);
+	level_product = (uint32_t)note_level << 8;
+	effective_volume = MIDI_PART(part)->effective_volume;
+	level_product = multiply_bytes(effective_volume, level_product);
+	z80_block(39, 5);
+	value = ~(level_product >> 8) | 1u;
+	pcm_register = 5u;
+	write_pcm_register(pcm_register, value);
+	z80_block(31, 3);
+	value = 0x90u;
+	pcm_register = 0u;
+	write_pcm_register(pcm_register, value);
+	z80_block(24, 3);
+	value = 0x80u;
+	pcm_register = 4u;
+	write_pcm_register(pcm_register, value);
+}
+
+/* As release_note_screen_1 for screen 2's voices (flags bit 3) (play_midi_message_screen_2 goes on to
+   it). */
+void release_note_screen_2(uint16_t part)
+{
+	uint8_t channel = 0, channel_index = 0, flags = 0, fm_register = 0, program = 0, value = 0, voices_left = 0;
+	uint16_t instrument = 0, voice = 0, voice_size = 0;
+
+	z80_block(31, 4);
+	program = MIDI_PART(part)->program;
+	if (program >= 0xF0u)
+	{
+		z80_cycles(6);
+		return;
+	}
+	z80_block(27, 2);
+	instrument = instruments_ADDRESS;
+	instrument = read_table_word(instrument, program);
+	z80_block(22, 3);
+	if (((z80_read8(instrument) >> 1) & 1u) != 0u)
+	{
+		z80_block(51, 6);
+		voice = VOICE_ADDRESS(24);
+		voice_size = 9u;
+		voices_left = 6u;
+		channel = screen_2_midi_status & 0xFu;
+		for (;;)
+		{
+			z80_block(29, 3);
+			if (channel == VOICE(voice)->midi_channel)
+			{
+				z80_block(46, 5);
+				channel_index = channel;
+				if (note_code == VOICE(voice)->note)
+				{
+					z80_block(37, 5);
+					flags = VOICE(voice)->flags;
+					if (((flags >> 1) & 1u) == 0u)
+					{
+						z80_block(18, 3);
+						if ((flags >> 3) & 1u)
+						{
+							z80_block(17, 2);
+							if ((flags & 0x7Fu) != 0u)
+								break;
+						}
+					}
+				}
+				z80_block(4, 1);
+				channel = (uint8_t)channel_index;
+			}
+			z80_block(23, 3);
+			voice += voice_size;
+			voices_left--;
+			if (voices_left == 0u)
+			{
+				z80_block(10, 1);
+				return;
+			}
+			z80_cycles(5);
+		}
+		z80_block(65, 9);
+		if (screen_2_channel_controls[channel_index] >> 7)
+		{
+			z80_block(33, 3);
+			VOICE(voice)->flags |= 2u;
+			return;
+		}
+		z80_block(85, 10);
+		VOICE(voice)->flags = 0u;
+		VOICE(voice)->midi_channel = 0u;
+		value = VOICE(voice)->chip_channel & 7u;
+		fm_register = 0x28u;
+		write_fm(fm_register, value);
+		return;
+	}
+	z80_block(51, 6);
+	voice = VOICE_ADDRESS(0);
+	voice_size = 9u;
+	voices_left = 0x18u;
+	channel = screen_2_midi_status & 0xFu;
+	for (;;)
+	{
+		z80_block(29, 3);
+		if (channel == VOICE(voice)->midi_channel)
+		{
+			z80_block(46, 5);
+			channel_index = channel;
+			if (note_code == VOICE(voice)->note)
+			{
+				z80_block(37, 5);
+				flags = VOICE(voice)->flags;
+				if (((flags >> 1) & 1u) == 0u)
+				{
+					z80_block(18, 3);
+					if ((flags >> 3) & 1u)
+					{
+						z80_block(17, 2);
+						if ((flags & 0x7Fu) != 0u)
+							break;
+					}
+				}
+			}
+			z80_block(4, 1);
+			channel = (uint8_t)channel_index;
+		}
+		z80_block(23, 3);
+		voice += voice_size;
+		voices_left--;
+		if (voices_left == 0u)
+		{
+			z80_block(10, 1);
+			return;
+		}
+		z80_cycles(5);
+	}
+	z80_block(65, 9);
+	if (screen_2_channel_controls[channel_index] >> 7 == 0u)
+	{
+		z80_block(33, 3);
+		VOICE(voice)->flags |= 1u;
+		return;
+	}
+	z80_block(33, 3);
+	VOICE(voice)->flags |= 2u;
+}
+
 /* The same code as retune_voice_screen_1, for screen 2's pitch bend. */
 void retune_voice_screen_2(uint16_t voice)
 {
@@ -3002,7 +3032,6 @@ void set_voice_modulation_screen_2(uint16_t part, uint16_t *p_voices_left, uint1
 	uint16_t voices_left = (uint16_t)*p_voices_left;
 	uint16_t voice = (uint16_t)*p_voice;
 	uint8_t chip_channel = 0, count_as_channel = 0, lfo_register = 0, pan_register = 0, value = 0;
-	uint16_t count_and_register = 0, register_and_value = 0;
 
 	z80_block(31, 5);
 	voice++;
@@ -3010,15 +3039,15 @@ void set_voice_modulation_screen_2(uint16_t part, uint16_t *p_voices_left, uint1
 	if (chip_channel >> 7 != 0u)
 	{
 		z80_block(79, 9);
-		count_as_channel = (uint8_t)(((voices_left & ~0xFFu) | chip_channel) >> 8);
+		count_as_channel = (uint8_t)(voices_left >> 8);
 		fm_channel = count_as_channel;
 		pan_register = (count_as_channel & 3u) - 0x4Cu;
 		value = (voice_modulation & 0x3Fu) | 0x80u;
-		register_and_value = pan_register;
-		register_and_value = write_fm_channel((uint8_t)register_and_value, value);
+		voices_left = pan_register;
+		voices_left = write_fm_channel(voices_left, value);
 		z80_block(16, 2);
 		voice--;
-		voices_left = (register_and_value & ~0xFFu) | pan_register;
+		voices_left = (voices_left & ~0xFFu) | pan_register;
 	}
 	else
 	{
@@ -3030,11 +3059,11 @@ void set_voice_modulation_screen_2(uint16_t part, uint16_t *p_voices_left, uint1
 		z80_write8(pcm_voice_select, chip_channel);
 		lfo_register = 6u;
 		value = voice_modulation | MIDI_PART(part)->lfo_frequency;
-		count_and_register = (voices_left & ~0xFFu) | 6u;
-		write_pcm_register((uint8_t)count_and_register, value);
+		voices_left = (voices_left & ~0xFFu) | 6u;
+		write_pcm_register((uint8_t)voices_left, value);
 		z80_block(16, 2);
 		voice--;
-		voices_left = (count_and_register & ~0xFFu) | lfo_register;
+		voices_left = (voices_left & ~0xFFu) | lfo_register;
 	}
 	*p_voices_left = voices_left;
 	*p_voice = voice;

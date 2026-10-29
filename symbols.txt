@@ -5,6 +5,8 @@
 #   KIND: func = function entry, code = code label, data = data label
 #   A code label of a computed call or jump may say where it goes: calls=TABLE, the code of a described table
 #   register RN NAME: a register the whole program shares, a global variable of the C (its name)
+#   exit FUNCTION ADDRESS: the function (a func line in the middle of code) goes back to the code that runs
+#   it where it jumps to ADDRESS: that jump is its return, and a jump into it a call, then a jump there
 # Addresses use the copy of the program the code refers to:
 #   000000-03FFFF (ic37 + ic40, a 16-bit word of each in every 32-bit word), 100000-1FFFFF (ic36 + ic39)
 # Mirrors are accepted and folded (e.g. FFFFF0 -> 03FFF0).
@@ -329,6 +331,8 @@ field screen 24 race u32 race          # 20FB00 for screen 1, 20FB80 for screen 
 # into the other one
 0006B0  func  second_task        # where the second task's first frame returns to
 task  second_task
+000719  func  second_task_frames   # both screens' frames from screen 2's, which second_task runs until the test mode
+exit  second_task_frames  00077F   # the test mode: there second_task_frames goes back to second_task
 03F5FC  code  task_swap          # 03F5FC-03F608: the running task's stacks go to 0[R24] and 4[R24], the other one's come back
 03F60C  code  task_swap_done     # the handler goes on with the other task's interrupt frame: it returns into that task
 
@@ -1302,6 +1306,8 @@ scoped object backdrop_translucent 80 data u32 backdrop_record
 007CF1  func  player_car_load_crash_physics
 009590  func  race_cars_start
 00974C  func  race_car_draw
+009B4A  func  race_car_draw_behind   # a rival behind the screen's car, or off the screen: race_car_draw goes on to it
+009BDC  func  race_car_draw_link   # the last step of race_car_draw and race_car_draw_behind, which both go on to it
 009C1E  func  race_car_draw_spray
 009C71  func  race_car_draw_part
 009C9E  func  race_car_put_frame
@@ -1314,6 +1320,10 @@ scoped object backdrop_translucent 80 data u32 backdrop_record
 00A537  func  player_car_world_position
 00A632  func  player_car_place_view
 00A85D  func  player_car_engine
+00A914  func  player_car_engine_wheelspin   # the speed while the wheels spin or lock, which both of player_car_engine's sides go on to
+00A9E9  func  player_car_engine_grip   # the speed with grip, which both of player_car_engine's sides go on to
+00AA7B  func  player_car_engine_standing   # where player_car_engine_wheelspin and player_car_engine_grip go when the speed is 0
+00AA88  func  player_car_engine_revs   # player_car_engine_grip's last step, which player_car_engine_standing goes on to
 00AABC  func  angles_to_offset
 00B4F8  func  player_car_next_surfaces
 00B52F  func  player_car_road_drag
@@ -1476,6 +1486,10 @@ elements sprite_palette_pointer u32 sprite_palette_words
 # the race cars' sprites (race_car_draw 009967 "add.w #2, R11", race_car_put_frame 009CAB and race_car_put_flat_sprite
 # 009D60 "add.w #2, R12": past the frame's piece count, its first piece; race_car_put_sprite 009CC4 and
 # race_car_put_flat_sprite 009D71 "movea.w 122B74(R14), R14": the piece's size step)
+param race_car_draw_behind R10 sprite_entry
+param race_car_draw_behind R19 race
+param race_car_draw_link R9 depth_layer
+param race_car_draw_link R10 sprite_entry
 local race_car_draw 009967 r11 piece sprite_piece
 local race_car_put_frame 009CAB r12 piece sprite_piece
 local race_car_put_flat_sprite 009D60 r12 piece sprite_piece
@@ -1729,7 +1743,11 @@ comment player_car_read_controls Takes the controls: gas, brake and wheel from t
 comment player_car_drive Moves the car for the frame: the drag (player_car_road_drag), the slope of its segment (race segment_pitch), the brake (no gas while braking; brake lights car brake_lights) and the gas through the gear's torque curve go to player_car_engine (speed, revs); the wheel steers through the model's table (less at low speed) into steering; the road's turn under it (previous_heading less heading) pushes it out (less with catch-up, car catch_up); beyond the model's grip it skids (car skidding, slide, tyre noise 3, smoke on both sides); sideways_speed and sideways_push move it across (car road_x, within the road's half width + 60); the speed along (less its sideways angle, vector_angle) plus a catch-up bonus by the distance to the car ahead (car catch_up_target, unk_6A; not once finished) moves it along, passing segments (car window_segment, segment, segment_offset, unk_A4, segment_progress, segment_fraction); then player_car_world_position. In ISDN mode (isdn_mode) the race record the link brings in gives all this.
 comment player_car_world_position Places the car in the world from its segment: world_x and world_z from the segment's position and the car's place across and along it turned by the road's heading and pitch (rotate_offset), world_y the road's height there plus bounce_height (the old one to previous_world_y); the rest of the segment (car segment_remaining) and the road's heading under the car (heading, the old one to previous_heading).
 comment player_car_place_view Places the view behind the car: a point on the road some way back of the car (the nod, the intro, the rival and road-object pulls: car view_shift_nod, view_shift_intro, view_shift_rival, view_shift_lift) and across (view_side) and above (view_rise) it (view_target_x/y/z), looking toward the road twelve segments on (vector_angles: car view_yaw the yaw, road_pitch the road's pitch; car view_pitch the pitch with the view's tilt), the eye screen eye_distance back from the target along those angles (angles_to_offset) in car view_x-28.
-comment player_car_engine The engine and the speed: the force (brake, slope and drag, drive; acceleration) changes the speed (car speed, also impact_speed), with any speed_change from a hit, up to the top speed of the gear (its ratio, car gear_ratio); a force past the model's grip spins the wheels, and hard braking locks them (car wheel_slip: tyre noise 1 or the model's skid noise, smoke); the revs (car revs) follow the speed through the gear's ratio, or the gas when the car stands; car moving says it moves.
+comment player_car_engine The engine and the speed: the force (brake, slope and drag, drive; acceleration) changes the speed (car speed, also impact_speed), with any speed_change from a hit, up to the top speed of the gear (its ratio, car gear_ratio); a force past the model's grip spins the wheels, and hard braking locks them (car wheel_slip: tyre noise 1 or the model's skid noise, smoke; player_car_engine_wheelspin), the rest has grip (player_car_engine_grip); the revs (car revs) follow the speed through the gear's ratio, or the gas when the car stands; car moving says it moves.
+comment player_car_engine_wheelspin The speed and the revs while the wheels spin or lock (player_car_engine goes on to it from both of its sides): the speed (car speed, with any speed_change from a hit, not below 0) goes half the way toward itself plus the force (not below 0), or a thirtieth of the way down to the gear's top speed (at most FFFF), into car speed and impact_speed; standing, player_car_engine_standing; moving, car moving FF and the revs a tenth of the way toward the speed * 256 by the gear's ratio (at most FFFF).
+comment player_car_engine_grip The speed and the revs with grip (player_car_engine goes on to it from both of its sides): car wheel_slip 0, the speed as player_car_engine_wheelspin works it out; standing, player_car_engine_standing; moving, car moving FF and the revs toward the speed * 256 by the gear's ratio (player_car_engine_revs).
+comment player_car_engine_standing The car standing (speed 0): car moving 0 and the revs toward the gas * 256 (player_car_engine_revs).
+comment player_car_engine_revs Moves the revs (car revs) a third of the way toward target_revs, at most FFFF.
 comment player_car_next_surfaces Takes the roadside surfaces of the stage (screen built_stage): the two lists of stage_roadside_surface_lists for it (car surface_entry_1, surface_entry_2), from the segment where the stage starts (car surface_start) to the next one's (surface_next_start).
 comment player_car_road_drag The drag on the car: speed squared, times the model's off-road factor while slowed (car slowed_frames) or off the road (car off_road, with the off-road shake); and the roadside surfaces under its wheels (car surface_entry_1, surface_entry_2) give the effects at each side (car wheel_effect_sides: bit 0 with wheel_effect_1, bit 1 with wheel_effect_2).
 comment player_car_off_road_shake Off the road: the model's shake to the screen's bits of output port D (wheel_motor, the wheel motor's; car_model_off_road_shakes) and its off-road noise (car_model_off_road_noises).
@@ -1777,7 +1795,9 @@ comment checkpoint_board_gap_time Writes how far behind the first player R1 pass
 comment time_to_text Writes the time R0 (hundredths of a second) as M'SS"HH, closed by 0, at R10. Used by lap_timer, goal, checkpoint_board, 001EC2 and 00270C.
 comment race_cars_start Starts the race's cars: for each player of the race, a race_car with its race record and the tables of its model (body, driver_places, passenger_places, sprays, tag), the two race_car_occupant objects and two rider_gesture objects that follow it; then ends.
 comment race_car_occupant_update One of the two people in a race car (race_car_occupant_animations, race_car_rider_palettes by occupant), seen only while the car shows an animation of its own (its special_body: a crash): then drawn at the car's place and size until its animation ends, when the second one lets the car go back to its body.
-comment race_car_draw Draws a car of the race, the screen's own or a rival, from its race record (record), as the screen's view sees it: its world position less the view's through the view's matrix and scaled by its depth (off the screen, too near or too far: not drawn); its body (animation, frame, palette from the record, plus the screen's brake lights and wheel_turn), its driver and passenger (driver_places, passenger_places), the sprays at its wheels (race_car_draw_spray), five frames of animation 44 on its hard acceleration (record hard_acceleration, car hard_acceleration); over the screen's own car the CRASH (or Ouch!) text after a hit, over a rival its number tag, blinking. A rival behind the window of the road (within 256 segments) is shown small at the bottom of the screen, larger as it closes in and across as it is (with its tag). A body animation without wheels (race_car_body_wheel_kinds) sets special_body for the occupants. Once the race is over (screen flags bit 4) it becomes race_car_start_ending.
+comment race_car_draw Draws a car of the race, the screen's own or a rival, from its race record (record), as the screen's view sees it: its world position less the view's through the view's matrix and scaled by its depth (off the screen, too near or too far: not drawn); its body (animation, frame, palette from the record, plus the screen's brake lights and wheel_turn), its driver and passenger (driver_places, passenger_places), the sprays at its wheels (race_car_draw_spray), five frames of animation 44 on its hard acceleration (record hard_acceleration, car hard_acceleration); over the screen's own car the CRASH (or Ouch!) text after a hit, over a rival its number tag, blinking. A rival behind the window of the road, or off the screen, is race_car_draw_behind's. Its sprites go into the list of their depth layer (race_car_draw_link). A body animation without wheels (race_car_body_wheel_kinds) sets special_body for the occupants. Once the race is over (screen flags bit 4) it becomes race_car_start_ending.
+comment race_car_draw_behind A rival behind the screen's car, or off the screen (race_car_draw goes on to it): within 256 segments behind, small at the bottom of the screen, larger as it closes in (depth layer 191), across as it is on the road (the difference of road_x, at most 58 either way) and up by its bounce; its car and its number tag (tag_animation, tag_palette), into the list of that depth layer (race_car_draw_link), with special_body and gesture_shown cleared.
+comment race_car_draw_link Puts the sprites a car has just written (from the screen's sprite_list_last on, up to sprite_entry) at the head of the list of its depth layer (screen + 5000 + 4 * depth_layer; its tail too when the list was empty), and moves sprite_list_last on to sprite_entry.
 comment race_car_draw_spray Draws the spray at one side's wheels (dust, smoke, water...: the record's kind, from the race record's wheel effects), cycling its frames.
 comment race_car_draw_part Draws a part of the car (a wheel, a spray) at its offset from the car's place, scaled with the car.
 comment race_car_put_frame Puts the first piece of frame R14 of animation R12 with palette R13 into the sprite list, scaled by R8 at R17, R18 (race_car_put_sprite).
@@ -2007,6 +2027,11 @@ field car 182 race_over u8
 001980  func  car_name_start
 0019C0  func  car_name_letter_update
 001EC2  func  name_entry_update
+00200F  func  name_entry_read_wheel   # state 2's reading of the wheel, which name_entry_update goes on to from two places
+002067  func  name_entry_choose   # the rest of state 2, which name_entry_update and name_entry_read_wheel go on to
+002157  func  name_entry_finish   # the end of the name, which name_entry_choose goes on to from four places
+00218E  func  name_entry_store_record   # state 3, which name_entry_finish goes on to
+0021D9  func  name_entry_draw_time   # the seconds left and the texts, which states 1 and 2 both go on to
 002204  func  name_entry_letter_update
 0022F7  func  name_entry_lcd_update
 002379  func  name_entry_car_update
@@ -2071,7 +2096,12 @@ field background_setup 0C tile_pages u32          # the list of tile pages for q
 field background_setup 10 palette_list u32        # for queue_palette_list
 param set_up_background R19 background_setup background_setup
 comment car_name_letter_update A letter of the presented car's name (font 346 at size A0, its colours cycling through 001D70 with step_palette, at y 14). By state: 0 sets itself up (its character from character, x + 8); 1 hidden until delay runs out; 2 slides in from the right, 24 pixels a frame for 14 frames (slide_frames); 3 stays until 120 frames after its start (frames_left); 4 slides out to the left, 24 pixels a frame, and ends once x is negative.
-comment name_entry_update The name entry after a race won at the goal under the course's record time (game step 18, when course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (button_lamps) and clears lcd_restart_frames, starts name_entry_lcd, the background (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number (time_digits_start), name_entry_object_handlers (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's 1000); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way), sooner the further it leans (turn_delay counts down by name_entry_turn_rates by the wheel), and << and >> a letter each time; the letter in front is letter, and shows blinking at the name's next place; the gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a sound (name_entry_place_sounds by place): the left arrow takes the last letter back, the right arrow enters a space, ED or the third letter ends the entry, as does the timer running out (the seconds left show as the countdown number, time_digits_draw); then open 0, an empty name or one of the names of name_entry_rejected_names (SEX, XXX, XX and X's with spaces) becomes ---, 60 frames; 3 writes the record into the race record (record_serial + 1, finish_time the time, unk_12 the car's model, unk_13-15 the name, record_course the course, screen built_stage - 15), turns the lamps off and sets the game's next step (screen game_mode byte 2 = 0x15 (step 21)); 4 nothing. Every frame it draws the time and the name (draw_text).
+comment name_entry_update The name entry after a race won at the goal under the course's record time (game step 18, when course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (button_lamps) and clears lcd_restart_frames, starts name_entry_lcd, the background (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number (time_digits_start), name_entry_object_handlers (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's 1000), with the seconds left (name_entry_draw_time); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way), name_entry_read_wheel takes the next turn when none is under way and name_entry_choose the letter in front, the entry and the time; 3 name_entry_store_record; 4 nothing. Every frame it draws the time and the name (draw_text).
+comment name_entry_read_wheel State 2's reading of the wheel for the drum's next turn (name_entry_update goes on to it when no turn is under way, or when one has just ended): the wheel in sixteenths gives a turn rate (name_entry_turn_rates: none in the middle, where << and >> turn it at rate F, one way or the other, and with neither turn_delay goes to 1); turn_delay counts down by it, and when it runs out (back to F) a turn of 4 steps starts (turn_steps 4, or -4 the other way). Then name_entry_choose.
+comment name_entry_choose The rest of state 2 (name_entry_update and name_entry_read_wheel go on to it): the letter in front of the pointer (letter, from wheel_angle); the gas pedal let up (under 40) then pressed (C0 or more), START or the music button enters it with a sound (name_entry_place_sounds by place): the left arrow takes the last letter back, the right arrow enters a space, ED or a third letter ends the name (name_entry_finish); the letter in front blinks at the name's next place; the timer counts down, the name ends when it runs out (name_entry_finish), and the seconds left show (name_entry_draw_time).
+comment name_entry_finish The end of the name (name_entry_choose goes on to it: ED, the third letter, or the time up): open 0, the name closed at its place; an empty name, or one of name_entry_rejected_names (SEX, XXX, XX and X's with spaces), becomes ---; state 3 with 60 frames (timer), and its first frame (name_entry_store_record).
+comment name_entry_store_record State 3 of name_entry_update (and the frame name_entry_finish ends the name): after 60 frames (timer) writes the record into the race record (record_serial + 1, finish_time the player's time, record_model the car's model, record_name and record_name_rest the name, record_course the course: screen built_stage - 15), turns the lamps off (button_lamps), sets the game's next step (game_step 21) and state 4; every frame it draws the time and the name (draw_text).
+comment name_entry_draw_time The seconds left as the countdown number (timer frames / 30 in BCD, time_digits_draw), then the time and the name (draw_text): each frame of states 1 and 2.
 comment name_entry_letter_update A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow and ED, name_entry_letters); ends when the entry closes (the name entry's open is 0). By state: 0 its angle index * 80 round the drum, y_offset -5; 1 for 40 frames (spin_frames) y_offset + 1, the drum dropping into place. Every frame its place from its angle less the wheel_angle (sine_table, cosine_table): x_offset, depth, a width that narrows toward the drum's edges (width_factor), mirrored (flags bit 6) with palette 27 where it faces away (the cosine under 2000, more than 60 degrees from the front), 34 in front, 30 for the letter in front (shown 4 frames of 8: hidden, flags bit 5 cleared, when bit 2 of game_frame_count is clear); drawn in perspective (100000 / (depth + 100)) about x E0, y 40.
 comment name_entry_lcd_update Shows the name entry on the cabinet LCD: 0 clears it (clear_lcd), shows the DJ's face (screen dj_face = FF) and writes the time (7 characters of the entry's time_text) at F13; then every frame the name's three characters at F1C, in the LCD's codes (7F -> 7E and | -> 7F, its arrows; \ -> 65); ends when the entry closes. It means to write spaces after the end of the name, but tests the address (tb R10) instead of the character, so it never does.
 comment name_entry_car_update The player's car on the certificate screen (animation certificate_car_animations by the car's model, car model; palette car_model_palettes) at x 40, y C0: state 0 sets it up and runs into name_entry_drivers_update, which with state 1 draws it; then it draws itself every frame.
@@ -3022,7 +3052,8 @@ scoped object car_select_entries 40 shown_players u32  # bit n: player n's choic
 003425  func  clear_race_state
 007677  func  clear_published_car
 comment boot The reset's code (000006): SBR to the vector table, the stack 21FC00, 16 bytes from 0000A4 to E00000 and 4 from 0000B4 (boot_e80000_bytes) to E80000 (which the board does not map), the interrupt controller's registers from 0000B8, privilege level 0 with the stack 21F400 and a delay; then clears 21E000-21E3FF, turns the link board off (801000), clears 21F000-21FFFF, sets the I/O chips up (init_io_chips), clears the game's variables (20E000-20FFFF), writes the second task's first interrupt frame (000C98 to 21FF84: its PC 0006B0) and its stack pointers (waiting_task_frame, waiting_task_stack), initialise_game, lcd_start (the LCD), the interrupts on, the link's check (network_check), and goes on as the boot task's frame loop (second_task(1), screen 2's).
-comment second_task The two tasks' frame loops, one function in the C: second_task(0) is the second task (from 0006B0), which runs screen 1; second_task(1) the boot task after boot (from 000637), which first sets up the link's race (link_take_master_settings), the interrupt controller's timer (D00008, D0000A), task_swapping, each screen's first attract car (screen next_attract_car from first_attract_car_lists by machine_count and the screen's car number) and the screens on (C0001C, C8001C), then runs screen 2. A frame of either: wait_for_frame (the VBLANK swaps the tasks meanwhile; the second task calls link_send_records before it with second_task_waiting set, and the boot task calls link_send_records and link_receive_records only while that is clear), the test mode when test_mode_on is set, link_receive_records, race_entries_update, race_progress_update and course_records_update (the link and the race records), game_frame_count + 1 (screen 1's loop), take_screen_inputs, check_game_start, the game mode's code (game_mode_jumps by game_mode: game_mode_power_on, game_mode_restart, game_mode_title, game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_play, entry_invitation_step (the entry countdown on a seat without a player), game_mode_isdn_connection), run_objects and lcd_update; with single_task set it goes on with the other screen's frame instead of waiting. The test mode: task_swapping off, test_mode_start, then test_mode_frame each frame while test_mode_on lasts; then the screens off, the variables cleared, the second task's frame written again, initialise_game, lcd_reset, both screens in game mode 1 with a fade in (fade 1), network_check_again, and the boot task's part again.
+comment second_task The two tasks' frame loops, one function in the C: second_task(0) is the second task (from 0006B0), which runs screen 1; second_task(1) the boot task after boot (from 000637), which first sets up the link's race (link_take_master_settings), the interrupt controller's timer (D00008, D0000A), task_swapping, each screen's first attract car (screen next_attract_car from first_attract_car_lists by machine_count and the screen's car number) and the screens on (C0001C, C8001C), then runs screen 2 (second_task_frames, which comes back when the test mode starts). A frame of either: wait_for_frame (the VBLANK swaps the tasks meanwhile; the second task calls link_send_records before it with second_task_waiting set, and the boot task calls link_send_records and link_receive_records only while that is clear), the test mode when test_mode_on is set, link_receive_records, race_entries_update, race_progress_update and course_records_update (the link and the race records), game_frame_count + 1 (screen 1's loop), take_screen_inputs, check_game_start, the game mode's code (game_mode_jumps by game_mode: game_mode_power_on, game_mode_restart, game_mode_title, game_mode_car_presentation, game_mode_demo_race, game_mode_ranking, game_mode_play, entry_invitation_step (the entry countdown on a seat without a player), game_mode_isdn_connection), run_objects and lcd_update; with single_task set it goes on with the other screen's frame instead of waiting. The test mode: task_swapping off, test_mode_start, then test_mode_frame each frame while test_mode_on lasts; then the screens off, the variables cleared, the second task's frame written again, initialise_game, lcd_reset, both screens in game mode 1 with a fade in (fade 1), network_check_again, and the boot task's part again.
+comment second_task_frames Both screens' frames from screen 2's on, until the test button (test_mode_on) ends them: then back to second_task, for the test mode. Screen 2's frame (as second_task's, without game_frame_count) over and over; with single_task set, screen 1's frame after it (second_task_waiting set around its link_send_records and wait_for_frame, game_frame_count + 1), which goes on over and over while single_task is clear, and back to screen 2's when it is set.
 comment wait_for_frame Waits for the next frame: polls frame_ready (set by the VBLANK, which also swaps the tasks) and clears it; while the screen has tile pages to unpack (screen unpack_state) it unpacks them a piece at a time (unpack_queued_step) between the polls.
 comment initialise_game Sets the game up, at start-up and after the test mode: 13, 0, 0, 1F to C00074 (which the board does not map); for screen 2, then 1, its objects' page cleared (clear_screen_ram) and its constants (init_screen: index, its video registers, the view's, the courses' stage lengths at 700); initialise_board; then initialise_screen for screens 1 and 2.
 comment initialise_screen Sets a screen up: its sound off (reset_screen_sound), no objects (clear_objects), its tilemaps' registers and their copies (init_mixer), three palettes uploaded (upload_boot_palettes) and the courses' records (load_course_records).
@@ -4544,11 +4575,13 @@ local eeprom_write_settings 0003A6,0003B5 R5 word_count
 # the frame loops, the start of a game and the inputs
 local second_task 000675 R0 attract_car_list
 local second_task 0006EF,0006F9,000754,00075E R0 mode
+local second_task_frames 0006EF,0006F9,000754,00075E R0 mode
 local second_task 0007B5 R0 fill
 local second_task 0007B8 R1 fill_high
 local second_task 0007C2,0007C9,0007CC,0007CF,0007D2 R10 clear_address cleared_ram_words
 local second_task 0007BB,0007D5 R2 block_count
-local second_task entry,000684,0006BB,0006EC,000724,000751,000784,00078D R2 input_changes   # take_screen_inputs' (wait_for_frame hands it back; screen 2's car_number at first)
+local second_task entry,000684,0006EC,000751 R2 input_changes   # take_screen_inputs' (screen 2's car_number at first)
+local second_task_frames 0006EC,000751 R2 input_changes
 param check_game_start R0 mode
 param check_game_start R2 seat_credits seat_credits
 local check_game_start 00085B R2 seat_credits seat_credits
@@ -4648,9 +4681,7 @@ local car_presentation_update 0016F1 R0 attract_car
 local car_presentation_update 00170F,001715,001728 R0 palette_index
 local car_presentation_update 0016F6 R9 animation
 local car_presentation_update 001719,001723 R19 colour_list
-local staff_credits_code_start 001894,entry R0 new_controls
-param staff_credits_code_watch R0 new_controls
-param staff_credits_code_watch R2 control_reading
+local staff_credits_code_start 001894 R0 new_controls
 local staff_credits_code_watch 0018A4 R0 new_controls
 local staff_credits_code_watch 0018BF R0 sound_code
 local staff_credits_code_watch 0018A9,0018AD,0018B2 R10 next_control
@@ -4685,28 +4716,29 @@ local course_record_beaten 001E94 R0 course_number
 local name_entry_update 001F15 R19 palette_fades
 local name_entry_update 0021EE,0021F9 R19 text_record
 local name_entry_update 001F28 R10 handler_list
-local name_entry_update 00216C,002175 R10 rejected_name
+local name_entry_finish 00216C,002175 R10 rejected_name
 local name_entry_update 001F33,001F48 R0 letter_index
 local name_entry_update 001F48 t1 letters_left
 local name_entry_update 001F79,001F7E,001F90,001F95,001F9B,001FA1 R10 text_field
 local name_entry_update 001FC0,001FD4,001FF2 R0 steps
 local name_entry_update 001FE2,002000 R0 new_angle
 local name_entry_update 001F73 R0 player_time
-local name_entry_update 00200F,002014,002039,002043 R0 wheel_position     # the wheel in sixteenths (FF for <<, 0 for >>): its top two bits the way to turn
-local name_entry_update 002018,002046 R1 turn_rate
-local name_entry_update 002056,00205F R1 new_steps
-local name_entry_update 002022 R1 turn_buttons
-local name_entry_update 0020FF R0 sound_code
-local name_entry_update 00210D R0 saved_letter
-local name_entry_update 00210F t1 entered_letter
-local name_entry_update 002113,00211B,00213B,002148 R0 letter_character
-local name_entry_update 0020BA,0020F7,00210B,002125,002137 R1 name_place
-local name_entry_update 002163 R0 entered_name
-local name_entry_update 0021D9 R0 remaining_time                  # frames, then seconds, then their BCD digits
-local name_entry_update 0021DD R0 remaining_time
-local name_entry_update 0021E2 R0 remaining_time
-local name_entry_update 0020FB s4 kept_letter
-local name_entry_update 0020FD s8 kept_place
+local name_entry_read_wheel 00200F,002014,002039,002043 R0 wheel_position     # the wheel in sixteenths (FF for <<, 0 for >>): its top two bits the way to turn
+local name_entry_read_wheel 002018,002046 R1 turn_rate
+local name_entry_read_wheel 002056,00205F R1 new_steps
+local name_entry_read_wheel 002022 R1 turn_buttons
+local name_entry_choose 0020FF R0 sound_code
+local name_entry_choose 00210D R0 saved_letter
+local name_entry_choose 00210F t1 entered_letter
+local name_entry_choose 002113,00211B,00213B,002148 R0 letter_character
+local name_entry_choose 0020BA,0020F7,00210B,002125,002137 R1 name_place
+param name_entry_finish R1 name_place
+local name_entry_finish 002163 R0 entered_name
+local name_entry_draw_time 0021D9 R0 remaining_time                  # frames, then seconds, then their BCD digits
+local name_entry_draw_time 0021DD R0 remaining_time
+local name_entry_draw_time 0021E2 R0 remaining_time
+local name_entry_choose 0020FB s4 kept_letter
+local name_entry_choose 0020FD s8 kept_place
 local name_entry_letter_update 00222D R9 animation
 local name_entry_letter_update 00226B,00226F,002273 R0 letter_angle
 local name_entry_letter_update 002278 R1 letter_x                     # the sine, the x offset, then the place on the screen
@@ -4917,8 +4949,7 @@ local turntable_car_show 005743 R2 ring_radius
 local turntable_car_show 005756 R2 down
 local turntable_car_show 005752,00575A R3 point_depth
 local turntable_scenery_show 0057CE,0057D2,005854 R0 item_angle
-local turntable_scenery_show 005832 R0 leftover                          # what turntable_draw hands back (draw_object's leftover, or the perspective); its bits 8-15 go back with the flags
-local turntable_scenery_show 00583E R0 item_flags
+local turntable_scenery_show 005832,00583E R0 leftover                   # what turntable_draw hands back (draw_object's leftover, or the perspective); the flags go into its low byte (00583E), and the word back to item_places: its bits 8-15 with flags bit 5
 local turntable_scenery_show 005807 R1 across
 local turntable_scenery_show 0057E4,0057E9 R2 ring_radius
 local turntable_scenery_show 00580F R2 down
@@ -5228,20 +5259,32 @@ param player_car_engine R9 force
 param player_car_engine R19 gear_ratio
 local player_car_engine 00A876 R18 top_speed
 local player_car_engine 00A8B4,00A8ED R0 tyre_noise
-local player_car_engine 00A918,00A91F,00A94E,00A95A,00A984,00A9F2,00A9F9,00AA28,00AA34,00AA5E,00AA76,00AA85 R0 speed_then_revs
-local player_car_engine 00A9A3,00AA8C R0 revs_change
-local player_car_engine 00A925,00A930,00A967,00A96A,00A9FF,00AA0A,00AA41,00AA44 R1 speed_step
-local player_car_engine 00A99F,00A9BD,00A9C9,00AA88,00AAA6,00AAB2 R1 revs
-local player_car_engine 00A918 t1 spin_speed_change
-local player_car_engine 00A918 t3 spin_speed
-local player_car_engine 00A96A t2 spin_target_speed
-local player_car_engine 00A930 t2 spin_top_speed
-local player_car_engine 00A9A3 t2 spin_target_revs
-local player_car_engine 00A9F2 t1 grip_speed_change
-local player_car_engine 00A9F2 t3 grip_speed
-local player_car_engine 00AA44 t2 grip_target_speed
-local player_car_engine 00AA0A t2 grip_top_speed
-local player_car_engine 00AA8C t2 target_revs
+param player_car_engine_wheelspin R9 force
+param player_car_engine_wheelspin R18 top_speed
+param player_car_engine_wheelspin R19 gear_ratio
+local player_car_engine_wheelspin 00A918,00A91F,00A94E,00A95A,00A984 R0 speed_then_revs
+local player_car_engine_wheelspin 00A925,00A930,00A967,00A96A R1 speed_step
+local player_car_engine_wheelspin 00A9A3 R0 revs_change
+local player_car_engine_wheelspin 00A99F,00A9BD,00A9C9 R1 revs
+local player_car_engine_wheelspin 00A918 t1 spin_speed_change
+local player_car_engine_wheelspin 00A918 t3 spin_speed
+local player_car_engine_wheelspin 00A96A t2 spin_target_speed
+local player_car_engine_wheelspin 00A930 t2 spin_top_speed
+local player_car_engine_wheelspin 00A9A3 t2 spin_target_revs
+param player_car_engine_grip R9 force
+param player_car_engine_grip R18 top_speed
+param player_car_engine_grip R19 gear_ratio
+local player_car_engine_grip 00A9F2,00A9F9,00AA28,00AA34,00AA5E,00AA76 R0 speed_then_revs
+local player_car_engine_grip 00A9FF,00AA0A,00AA41,00AA44 R1 speed_step
+local player_car_engine_grip 00A9F2 t1 grip_speed_change
+local player_car_engine_grip 00A9F2 t3 grip_speed
+local player_car_engine_grip 00AA44 t2 grip_target_speed
+local player_car_engine_grip 00AA0A t2 grip_top_speed
+local player_car_engine_standing 00AA80,00AA85 R0 gas_revs
+param player_car_engine_revs R0 target_revs
+local player_car_engine_revs 00AA8C R0 revs_change
+local player_car_engine_revs 00AA88,00AAA6,00AAB2 R1 revs
+local player_car_engine_revs 00AA8C t2 wanted_revs   # target_revs, kept while the subtraction takes its register
 local angles_to_offset 00AAC4 R6 pitch_cosine
 local player_car_next_surfaces 00B4F8 R7 stage_then_surfaces
 local player_car_next_surfaces 00B508 R5 stage_length
@@ -5267,31 +5310,37 @@ local race_cars_start 0095B8 R11 record
 local race_car_draw 0098BD R0 body_attributes
 local race_car_draw 0099F9,009A0A,009A11 R0 hard_acceleration_frame
 local race_car_draw 00976D R1 far_segment
-local race_car_draw 009750,0098BD,0099B4,0099D4,0099F0,0099F6,009A29,009A2C,009A91,009AA7,009B21,009BBA,009BD9 R10 sprite_entry sprite_words
+local race_car_draw 009750,0098BD,0099B4,0099D4,0099F0,0099F6,009A29,009A2C,009A91,009AA7,009B21 R10 sprite_entry sprite_words
+local race_car_draw_behind 009BBA,009BD9 R10 sprite_entry sprite_words
 local race_car_draw 0099A9,0099C9 R11 rider_places
 local race_car_draw 0097B8 R13 relative_y
-local race_car_draw 00987D,009882,009897,00989B,0098BD,0099AD,0099CD,009A1E,009A29,009A2C,009B06,009B21,009BB2,009BBA,009BD1,009BD9 R13 palette
+local race_car_draw 00987D,009882,009897,00989B,0098BD,0099AD,0099CD,009A1E,009A29,009A2C,009B06,009B21 R13 palette
+local race_car_draw_behind 009BB2,009BBA,009BD1,009BD9 R13 palette
 local race_car_draw 0097DE,009847,009B41 R15 screen_x
 local race_car_draw 0097FC,00984F,009B44 R16 screen_y
 local race_car_draw 00981A R17 depth
-local race_car_draw 0098A7,009A23,009A78,009A99,009B14,009B80,009B8B,009B99 R17 sprite_x
-local race_car_draw 0098AA,009A26,009A89,009AA0,009BA2,009BC5 R18 sprite_y
+local race_car_draw 0098A7,009A23,009A78,009A99,009B14 R17 sprite_x
+local race_car_draw_behind 009B80,009B8B,009B99 R17 sprite_x
+local race_car_draw 0098AA,009A26,009A89,009AA0 R18 sprite_y
+local race_car_draw_behind 009BA2,009BC5 R18 sprite_y
 local race_car_draw 0098D2 R1 body_animation
 local race_car_draw 0097CC,0097EA R2 x_term
 local race_car_draw 0097CF,0097ED R3 y_term
 local race_car_draw 00996A,009978,00997D,009981,009986 R3 view
 local race_car_draw 009991 R4 view_offset
-local race_car_draw 009BDC R4 depth_list depth_list
-local race_car_draw 009BEA R5 group
-local race_car_draw 009BF1 R6 older_group
+local race_car_draw_link 009BDC R4 depth_list depth_list
+local race_car_draw_link 009BEA R5 group
+local race_car_draw_link 009BF1 R6 older_group
 local race_car_draw 009928,00993F,009943,00994B R7 second_rider_frame
-local race_car_draw 009B59,009B5D,009B61,009B69 R7 distance_behind
-local race_car_draw 009B61 t2 past_limit
-local race_car_draw 009839,009870,009B1C,009B3C,009BA6,009BAA,009BC9 R8 scale
-local race_car_draw 009831,009B37,009B6C R9 depth_layer
+local race_car_draw_behind 009B59,009B5D,009B61,009B69 R7 distance_behind
+local race_car_draw_behind 009B61 t2 past_limit
+local race_car_draw 009839,009870,009B1C,009B3C R8 scale
+local race_car_draw_behind 009BA6,009BAA,009BC9 R8 scale
+local race_car_draw 009831,009B37 R9 depth_layer
+local race_car_draw_behind 009B6C R9 depth_layer
 local race_car_draw 00991C t1 swapped_rider
 local race_car_draw 0099E9 t1 swapped_spray
-local race_car_draw 009B55 R11 own_race
+local race_car_draw_behind 009B55 R11 own_race
 local race_car_draw 0099B7 R12 gestures_shown
 local race_car_draw 0099BC t3 second_rider_gesture
 param race_car_draw_spray R4 view_offset
@@ -5510,7 +5559,6 @@ local checkpoint_board_gap_time 00CF04,00CF07,00CF10,00CF13,00CF21,00CF24,00CF2F
 local checkpoint_board_gap_time 00CEFC R2 zero_char
 local network_check_again 00D0DD,00D0E4 R1 delay
 local network_check 00D199,00D1A6,00D1B3,00D1BA,00D1C0,00D1C7,00D271,00D278 R19 text
-local network_check 00D1FA,00D205,00D20B,00D213,00D22C,00D232,00D240 R2 board_reply
 local network_check 00D1FD t1 board_flags_greeted
 local network_check 00D224 t1 board_flags_role
 local network_check 00D238 t1 board_flags_status
@@ -5552,21 +5600,18 @@ local network_check_memory_test 00D5B3 t4 read_low_12_bits
 local network_check_memory_test 00D5BA t4 read_low_9_bits
 local network_check_memory_test 00D5C1 t4 read_low_6_bits
 local network_check_memory_test 00D54A,00D59A R0 faults            # the bits found wrong, in the low byte (what it hands back)
-param network_check_wait_board R2 board_reply
 local network_check_wait_board 00D75A R19 error_texts
 local network_check_wait_board 00D5FE t2 frames_left
 local network_check_wait_board 00D604 t1 board_flags
 local network_check_wait_isdn 00D629 t1 board_machines
 local network_check_wait_isdn 00D64F t2 frames_left
 local network_check_delay 00D658,00D65F R0 delay
-param network_check_greeting R2 board_reply
 local network_check_greeting 00D67E R0 board_answer
+local network_check_greeting 00D686,00D689,00D68C,00D68F,00D692,00D695 R2 answer_letters   # the board's answer at 800010, a letter a halfword: Z80 (5A3830)
 local network_check_greeting 00D78E R19 error_texts
-param network_check_five_ics R2 board_reply
 local network_check_five_ics 00D6B6,00D828 R0 ic_count
 local network_check_five_ics 00D818 R19 error_texts
 local network_check_five_ics 00D6AD,00D825,00D82B R2 self_test
-param network_check_four_ics R2 board_reply
 local network_check_four_ics 00D6C4,00D86D R0 ic_count
 local network_check_four_ics 00D85C R19 error_texts
 local network_check_four_ics 00D6BB,00D869,00D87B R2 self_test
@@ -5582,8 +5627,6 @@ local network_check_clear_status_line 00D71D,00D728 R1 cells_left
 local network_check_toggle_memory_text 00D72D,00D73E R26 character
 local network_check_toggle_memory_text 00D741 t2 cell
 param network_check_error R19 error_texts
-param network_check_error R2 board_reply
-param network_check_halt R2 board_reply
 local link_take_master_settings 00D8F9,00D909,00D919 R0 players_left
 local link_take_master_settings 00D8FD R1 record_size
 local link_take_master_settings 00D8F0,00D906 R10 record_car_number race+2   # 20FC02: the car_number of each race_copy record, 80 apart
@@ -6199,13 +6242,13 @@ local unpack 010DF1,010E01,010E11,010E17,010E21,010E31,010E36,010E3D R3 copy_cou
 local unpack 010E2A R3 length_byte                        # the match halfword's low byte: its low three bits the length
 local unpack 010E31 t2 length_bits
 local unpack_tile_pages 010F7D R12 entry_word
-param unpack_queued_step R2 copy_source                   # what it hands back: the copy source of the match it starts, else what R2 held (wait_for_frame passes it on)
 local unpack_queued_step 010E49,010E61,010E67,010E8C,010E92,010E9E,010EA4,010EAE,010EB4,010F28 R0 flags
 local unpack_queued_step 010E4E,010E5D,010E64,010E88,010E8F,010E9A,010EA1,010EAA,010EB1,010F2B R1 flags_left
 local unpack_queued_step 010E53,010E61,010E8C,010E9E,010EAE,010EBA,010EEB,010EFA,010F22,010F28 R10 source packed_bytes
 local unpack_queued_step 010E58,010F25 R11 destination unpacked_bytes
 local unpack_queued_step 010F11 R11 request unpack_request # the request's place in the ring (screen + C00 + 8 * unpack_read_place)
-local unpack_queued_step 010E85 R2 back_offset
+local unpack_queued_step 010E85 R2 back_offset                # 010E85 "not.w #0, R2": all ones, the high bits of the offset back a match's halfword or byte goes under
+local unpack_queued_step 010EBA,010EBF,010EEB,010EF1 R2 copy_source
 local unpack_queued_step 010E97,010EA7,010EB7,010EBD,010EF5,010EFA R3 copy_count
 local unpack_queued_step 010EEE R3 length_byte
 local unpack_queued_step 010EF5 t2 length_bits
@@ -6227,7 +6270,6 @@ local queue_tile_pages 010FEC R1 page_entry
 local queue_tile_pages 010FD8 R11 request unpack_request
 # Coins and the bookkeeping
 local init_coins 011018 t1 chip_2_port_f                  # 0xC8000A, as read_switches_and_analog reads it
-param update_coins R6 calibration                         # what read_switches_and_analog leaves in R6 (int_vector_40): only its high bits go on, under the switch bits
 local update_coins 01107B,011096,0110B1,0110CC R0 sound
 local update_coins 01118D,01119D,0111B3,0111C3 R1 meter_bit
 local update_coins 0110F0,011116 R10 seat_credits
@@ -6432,10 +6474,8 @@ param start_object_list R10 handler_list object_start_list
 local start_object_list 011E2C R10 handler_list object_handlers   # past the count (011E2C "mov.w [R10+], R8"): the handlers
 local start_object_list 011E2F,011E3E R7 list_index
 local start_object_list 011E2C,011E40 R8 objects_left
-local random_number 011E47,011E50,011E6C,011E72 R1 state
-local random_number 011E57 R0 old_state
-local random_number 011E6F,011E76 R0 number
-local random_number 011E79 R1 next_state
+local random_number 011E47,011E50,011E6C,011E72,011E79 R1 state   # then turned round, its low half the number's (011E79)
+local random_number 011E57,011E6F,011E76 R0 number               # the state, its low half then worked out from both halves of the next one
 param request_sound R0 sound
 local request_sound 011EC6 R2 sound_number
 param queue_sound R0 sound
@@ -6771,7 +6811,7 @@ local road_surface_lines 016E3E t5 pairs_left
 param road_surface_halfway_lines R4 previous_line
 param road_surface_halfway_lines R5 previous_x
 param road_surface_halfway_lines R6 previous_depth
-param road_surface_halfway_lines R13 stripe_count
+param road_surface_halfway_lines R13 stripe_count   # road_surface_lines' count; its low half then the first segment of the last frame's points (matched to this frame's, 016ED2-016EFE), then the segments left before the stripe bit flips, from its two low bits and the high half it came with
 param road_surface_halfway_lines R15 fraction_shift
 param road_surface_halfway_lines R16 rounding
 param road_surface_halfway_lines R18 max_depth
@@ -6782,7 +6822,6 @@ local road_surface_halfway_lines 016F2A R1 point_line          # the average of 
 local road_surface_halfway_lines 016F1E R2 point_x
 local road_surface_halfway_lines 016F12 R3 point_depth
 local road_surface_halfway_lines 016E9A,016F4C,016F73,016F91,016F96 R11 scroll_place line_scroll_values
-local road_surface_halfway_lines 016ED2,016EEB,016EF5,016EF8,016EFE,016FBA,016FBE R13 last_segment   # the first segment of the last frame's points (matched to this frame's), then the segments left before the stripe bit flips
 local road_surface_halfway_lines 016EA7,016F39,016F62,016F7E R19 skip_state
 local road_surface_halfway_lines 016ECF,016EDF R26 segment      # the first segment of this frame's points
 local road_surface_halfway_lines 016F73 R7 x_step
@@ -7138,10 +7177,8 @@ local test_mode_menu_toggle_continue 01C5C6,01C5CF R0 heading
 local test_mode_menu_toggle_continue 01C5C9 R10 text
 local test_mode_menu_toggle_continue 01C5BD t2 mode_flags
 local test_mode_memory_test 01C5E3,01C602,01C6DA,01C6E8,01C77A,01C783,01C7B2,01C7BB,01C7EA,01C7F3,01C822,01C82D R0 cell_value   # what the drawing leaves in R0, for test_mode_memory_test_draw
-local test_mode_memory_test 01C60C,01C613,01C64A,01C651 R0 rom_check   # the bytes to sum, then the even halfwords' check
+local test_mode_memory_test 01C60C,01C613,01C64A,01C651,01C61D,01C622,01C62F,01C634,01C640,01C65B,01C660,01C66D,01C672,01C680 R0 rom_check   # the bytes to sum, then the even halfwords' check; its low byte then each chip's result (2 GOOD, 3 BAD), and the word what test_mode_memory_test_draw takes
 local test_mode_memory_test 01C68A,01C691,01C6F2,01C6F9,01C732,01C74B,01C755,01C75A,01C78D,01C792,01C7C5,01C7CA,01C7FD,01C802,01C84C,01C853,01C8A0,01C8BC,01C8D9,01C8DE,01C907 R0 failures   # a test's R0: the bytes to test in, the failed bits it hands back out
-local test_mode_memory_test 01C62F,01C634,01C640,01C66D,01C672,01C680 R0 odd_chip_result   # 2 GOOD, 3 BAD
-local test_mode_memory_test 01C61D,01C622,01C65B,01C660 R0 even_chip_result
 local test_mode_memory_test 01C613,01C651 R1 odd_check
 local test_mode_memory_test 01C605,01C643,01C683,01C6EB,01C74E,01C786,01C7BE,01C7F6,01C845,01C8D2 R10 memory_start
 local test_mode_memory_test 01C69A,01C69F,01C6AC,01C6B1,01C6BF,01C6C4,01C6CF,01C6D4,01C702,01C707,01C714,01C719,01C727,01C72C,01C737,01C75F,01C764,01C76F,01C774,01C797,01C79C,01C7A7,01C7AC,01C7CF,01C7D4,01C7DF,01C7E4,01C807,01C80C,01C817,01C81C,01C86D,01C872,01C880,01C885,01C895,01C89A,01C8A7,01C8AC,01C8F6,01C8FB R1 chip_result
@@ -7659,7 +7696,6 @@ local test_mode_set_up_colours 01F017,01F027 R9 tiles_left
 # The interrupts
 local int_vector_40 03F576,03F57C,03F582,03F588,03F5C5,entry R0 tile_bank_bits   # chip 0's port H: 2 bits for each of tile_banks-tile_banks[3]; check_test_button takes it on (what queue_seat_inputs or the interrupted code left in R0 when not written)
 local int_vector_40 03F610 R0 screen_vblank_counter vblank_count
-local int_vector_40 03F5B3 R6 calibration      # what read_switches_and_analog hands back in R6 (its place in the analog calibration), which update_coins takes on
 local vblank_update_scrolls 03F6B0 R0 running_layer   # the first tilemap of the screen whose task was running (its index * 2)
 local vblank_update_scrolls 03F6B6 R1 other_layer
 local vblank_update_scrolls 03F6C9,03F6F2,03F72B,03F754 R2 old_scroll
@@ -7695,7 +7731,6 @@ param test_mode_bookkeeping_wait R0 character
 param test_mode_bookkeeping_second_page_wait R0 character
 
 # ======== locals (the merge: functions no batch had, the fills of string moves, shared sites) ========
-param wait_for_frame R2 copy_source              # handed to unpack_queued_step (its R2) while the screen unpacks, and back
 param wheel_effect_1_surface_1_inner R13 surface # the roadside surface's record (ROADSIDE_SURFACE)
 param wheel_effect_1_surface_1_outer R13 surface
 param wheel_effect_2_surface_1_inner R13 surface

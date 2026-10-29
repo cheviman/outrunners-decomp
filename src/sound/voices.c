@@ -92,7 +92,7 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 		}
 		z80_block(17, 1);
 		fm_register_2 = level_register;
-		write_fm_channel((uint8_t)fm_register_2, total_level);
+		write_fm_channel(fm_register_2, total_level);
 		z80_block(18, 2);
 		part_channel = saved_part_channel;
 		operators_left = saved_operators_left - 1u;
@@ -103,7 +103,7 @@ void start_fm_note(uint8_t note, uint16_t midi_channel, uint16_t pitch_bends)
 	z80_block(61, 6);
 	value = voice_modulation;
 	fm_register_2 = (uint8_t)((fm_channel & 3u) - 0x4Cu);
-	write_fm_channel((uint8_t)fm_register_2, value);
+	write_fm_channel(fm_register_2, value);
 	z80_block(37, 4);
 	value = fm_channel | 0xF0u;
 	fm_register = 0x28u;
@@ -173,18 +173,18 @@ void stop_fm_voice(uint16_t voice)
 void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part)
 {
 	uint8_t channel_code = 0, effective_volume = 0, entry = 0, level_register = 0, operators_left = 0, part_channel = 0, program = 0, register_number = 0, total_level = 0;
-	uint16_t fm_register = 0, instrument = 0, patch_levels = 0, register_list = 0;
+	uint16_t fm_register = 0, instrument = 0, level_product = 0, patch_levels = 0, register_list = 0;
 	uint8_t saved_operators_left = 0, saved_part_channel = 0;
 
 	z80_block(103, 11);
 	channel_code = (uint8_t)chip_channel;
 	fm_channel = channel_code;
 	part_channel = channel_code & 3u;
-	voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+	level_product = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 	effective_volume = MIDI_PART(part)->effective_volume;
-	voice_field = multiply_bytes(effective_volume, voice_field);
+	level_product = multiply_bytes(effective_volume, level_product);
 	z80_block(78, 9);
-	note_level = 0x7Fu - ((uint16_t)((uint32_t)((voice_field >> 8) >> 1) << 8) >> 8);
+	note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
 	program = MIDI_PART(part)->program;
 	instrument = instruments_ADDRESS;
 	instrument = read_table_word(instrument, program);
@@ -211,7 +211,7 @@ void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t 
 			z80_block(38, 4);
 			total_level += note_level;
 			fm_register = level_register;
-			write_fm_channel((uint8_t)fm_register, total_level);
+			write_fm_channel(fm_register, total_level);
 		}
 		z80_block(18, 2);
 		part_channel = saved_part_channel;
@@ -227,18 +227,18 @@ void apply_fm_music_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t 
 void apply_fm_channel_volume(uint8_t chip_channel, uint16_t voice_field, uint16_t part)
 {
 	uint8_t channel_code = 0, effective_volume = 0, entry = 0, level_register = 0, operators_left = 0, part_channel = 0, program = 0, register_number = 0, total_level = 0;
-	uint16_t fm_register = 0, instrument = 0, patch_levels = 0, register_list = 0;
+	uint16_t fm_register = 0, instrument = 0, level_product = 0, patch_levels = 0, register_list = 0;
 	uint8_t saved_operators_left = 0, saved_part_channel = 0;
 
 	z80_block(103, 11);
 	channel_code = (uint8_t)chip_channel;
 	fm_channel = channel_code;
 	part_channel = channel_code & 3u;
-	voice_field = ((voice_field + 4u) & 0xFFu) | ((uint32_t)VOICE(voice_field - 0x1u)->level << 8);
+	level_product = (uint32_t)VOICE(voice_field - 0x1u)->level << 8;
 	effective_volume = MIDI_PART(part)->effective_volume;
-	voice_field = multiply_bytes(effective_volume, voice_field);
+	level_product = multiply_bytes(effective_volume, level_product);
 	z80_block(78, 9);
-	note_level = 0x7Fu - ((uint16_t)((uint32_t)((voice_field >> 8) >> 1) << 8) >> 8);
+	note_level = 0x7Fu - ((uint16_t)((uint32_t)((level_product >> 8) >> 1) << 8) >> 8);
 	program = MIDI_PART(part)->program;
 	instrument = instruments_ADDRESS;
 	instrument = read_table_word(instrument, program);
@@ -265,7 +265,7 @@ void apply_fm_channel_volume(uint8_t chip_channel, uint16_t voice_field, uint16_
 			z80_block(38, 4);
 			total_level += note_level;
 			fm_register = level_register;
-			write_fm_channel((uint8_t)fm_register, total_level);
+			write_fm_channel(fm_register, total_level);
 		}
 		z80_block(18, 2);
 		part_channel = saved_part_channel;

@@ -25,13 +25,6 @@ static void call_0006B0(void)
 	second_task(0u);
 }
 
-/* How call_code() runs staff_credits_code_watch from a slot that holds its address: with 0 for what it
-   takes, and what it hands back dropped. */
-static void call_0018A4(void)
-{
-	staff_credits_code_watch(0);
-}
-
 /* How call_code() runs draw_object from a slot that holds its address: with 0 for what it takes, and
    what it hands back dropped. */
 static void call_00EAE4(void)
@@ -105,7 +98,7 @@ const game_code_entry game_code[] =
 	{ 0x0011ABu, bar_picture_bar_draw },
 	{ 0x001687u, car_presentation_update },
 	{ 0x001894u, staff_credits_code_start },
-	{ 0x0018A4u, call_0018A4 },
+	{ 0x0018A4u, staff_credits_code_watch },
 	{ 0x0018E5u, staff_credits_code_show },
 	{ 0x0018FEu, staff_credits_code_done },
 	{ 0x001980u, car_name_start },

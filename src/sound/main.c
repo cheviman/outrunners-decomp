@@ -235,10 +235,9 @@ void init_fm_chip(void)
 
 /* Writes value to the YM3438 register fm_register on the part fm_channel's bit 2 picks (write_fm_part2
    when it is set, else write_fm); hands fm_register back with value in its high byte. */
-uint16_t write_fm_channel(uint8_t fm_register, uint8_t value)
+uint16_t write_fm_channel(uint16_t fm_register, uint8_t value)
 {
 	uint8_t saved_value = 0;
-	uint16_t register_and_value = 0;
 	uint8_t channel_code = 0;
 
 	z80_block(39, 6);
@@ -247,13 +246,13 @@ uint16_t write_fm_channel(uint8_t fm_register, uint8_t value)
 	value = saved_value;
 	if (((channel_code >> 2) & 1u) != 0u)
 	{
-		register_and_value = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
-		write_fm_part2((uint8_t)register_and_value, value);
-		return register_and_value;
+		fm_register = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
+		write_fm_part2((uint8_t)fm_register, value);
+		return fm_register;
 	}
-	register_and_value = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
-	write_fm((uint8_t)register_and_value, value);
-	return register_and_value;
+	fm_register = (fm_register & 0xFFu) | ((uint32_t)saved_value << 8);
+	write_fm((uint8_t)fm_register, value);
+	return fm_register;
 }
 
 /* Writes value to the YM3438's register fm_register on part I (FM_ADDRESS, then FM_DATA), with the
@@ -402,15 +401,13 @@ void init_parts(void)
 	move_block((uint16_t)(part_template + 0x51u), MIDI_PART_ADDRESS(8), 0x32u, 1u);
 	template_then_product = saved_part_template;
 	move_block(template_then_product, MIDI_PART_ADDRESS(13), 0x50u, 1u);
-	template_then_product += 0x51u;
-	move_block(template_then_product, MIDI_PART_ADDRESS(21), 0x32u, 1u);
-	template_then_product += 0x32u;
+	move_block((uint16_t)(template_then_product + 0x51u), MIDI_PART_ADDRESS(21), 0x32u, 1u);
 	part = MIDI_PART_ADDRESS(0);
 	parts_left = 0x1A00u;
 	for (;;)
 	{
 		z80_block(56, 6);
-		template_then_product = (template_then_product & 0xFFu) | ((uint32_t)MIDI_PART(part)->volume << 8);
+		template_then_product = (uint32_t)MIDI_PART(part)->volume << 8;
 		volume_scale = 0xFFu;
 		if ((MIDI_PART(part)->flags & 1u) == 0u)
 		{

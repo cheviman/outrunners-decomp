@@ -213,7 +213,7 @@ void network_check_again(void)
    test button (test_mode_on) gives it up at any wait (link_failed FF). */
 void network_check(void)
 {
-	uint32_t board_reply = 0, ignored = 0, left_caller = 0, text = 0;
+	uint32_t left_caller = 0, text = 0;
 	uint8_t board_status = 0;
 	uint32_t board_flags_greeted = 0, board_flags_role = 0, board_flags_status = 0;
 
@@ -249,23 +249,23 @@ void network_check(void)
 	io_write16(LINK_BOARD_FLAGS, 0u);
 	io_write16(LINK_BOARD_ON, 1u);
 	left_caller = 0u;
-	network_check_wait_board(&ignored, &left_caller);
+	left_caller = network_check_wait_board(left_caller);
 	if (left_caller != 0u)
 		return;
 	left_caller = 0u;
-	network_check_greeting(&board_reply, &left_caller);
+	left_caller = network_check_greeting(left_caller);
 	if (left_caller != 0u)
 		return;
 	board_flags_greeted = io_read32(LINK_BOARD_FLAGS);
 	io_write32(LINK_BOARD_FLAGS, board_flags_greeted | 1u);
-	board_reply = wait_for_frame(board_reply);
+	wait_for_frame();
 	left_caller = 0u;
-	network_check_wait_board(&board_reply, &left_caller);
+	left_caller = network_check_wait_board(left_caller);
 	if (left_caller != 0u)
 		return;
 	io_write8(r12 + 0xCu, 0u);
 	left_caller = 0u;
-	network_check_four_ics(&board_reply, &left_caller);
+	left_caller = network_check_four_ics(left_caller);
 	if (left_caller != 0u)
 		return;
 	if (isdn_mode != 0u)
@@ -276,20 +276,20 @@ void network_check(void)
 	io_write8(r12 + 4u, link_master);
 	board_flags_role = io_read32(LINK_BOARD_FLAGS);
 	io_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
-	board_reply = wait_for_frame(board_reply);
+	wait_for_frame();
 	left_caller = 0u;
-	network_check_wait_board(&board_reply, &left_caller);
+	left_caller = network_check_wait_board(left_caller);
 	if (left_caller != 0u)
 		return;
 	left_caller = 0u;
-	left_caller = network_check_five_ics(board_reply, left_caller);
+	left_caller = network_check_five_ics(left_caller);
 	if (left_caller != 0u)
 		return;
 	board_flags_status = io_read32(LINK_BOARD_FLAGS);
 	io_write32(LINK_BOARD_FLAGS, board_flags_status | 1u);
 	do
 	{
-		wait_for_frame(board_reply);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -412,7 +412,7 @@ void network_check_stand_alone(void)
    SUCCESS. and THIS MACHINE ID IS n (the board's 800002); the text cleared. */
 void network_check_result(uint32_t machine)
 {
-	uint32_t frames_left = 0, ignored = 0, race = 0, second_player = 0, text = 0;
+	uint32_t frames_left = 0, race = 0, second_player = 0, text = 0;
 	uint32_t saved_frames_left = 0;
 	uint8_t isdn_machine_id = 0, board_master = 0, slave_machine_id = 0, master_machine_id = 0;
 
@@ -456,7 +456,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			wait_for_frame(ignored);
+			wait_for_frame();
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -476,7 +476,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			wait_for_frame(ignored);
+			wait_for_frame();
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -490,7 +490,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			wait_for_frame(ignored);
+			wait_for_frame();
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -511,7 +511,7 @@ void network_check_result(uint32_t machine)
 		do
 		{
 			saved_frames_left = frames_left;
-			wait_for_frame(ignored);
+			wait_for_frame();
 			frames_left = saved_frames_left - 1u;
 		} while (frames_left != 0u);
 		clear_text_layer();
@@ -529,7 +529,7 @@ void network_check_result(uint32_t machine)
 	do
 	{
 		saved_frames_left = frames_left;
-		wait_for_frame(ignored);
+		wait_for_frame();
 		frames_left = saved_frames_left - 1u;
 	} while (frames_left != 0u);
 	clear_text_layer();
@@ -540,7 +540,7 @@ void network_check_result(uint32_t machine)
 uint32_t network_check_board_memory(uint32_t left_caller)
 {
 	uint8_t outcome = 0;
-	uint32_t board_memory = 0, count_then_faults = 0, error_texts = 0, ignored = 0, left_caller_2 = 0;
+	uint32_t board_memory = 0, count_then_faults = 0, error_texts = 0;
 
 	board_memory = 0x800000u;
 	count_then_faults = 0x7FFu;
@@ -553,8 +553,7 @@ uint32_t network_check_board_memory(uint32_t left_caller)
 		io_write8(IO_1_CNT, 4u);
 		io_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
-		network_check_error(error_texts, &ignored, &left_caller_2);
-		return left_caller_2;
+		return network_check_error(error_texts);
 	}
 	return left_caller;
 }
@@ -664,21 +663,21 @@ uint8_t network_check_memory_test(uint32_t count, uint32_t memory)
 /* Waits for the link board's flag (801002 bit 7), WAIT blinking, for up to E10 frames (two minutes,
    link_wait_frames): then the screens off, COMMUNICATION TIME OUT and network_check_error; the test
    button gives the check up (link_failed FF); the status line cleared after. */
-void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
+uint32_t network_check_wait_board(uint32_t left_caller)
 {
-	uint32_t error_texts = 0;
+	uint32_t error_texts = 0, left_caller_2 = 0;
 	uint16_t frames_left = 0;
 	uint32_t board_flags = 0;
 
 	link_wait_frames = 0xE10u;
-	for (;;)
+	do
 	{
-		*p_board_reply = wait_for_frame(*p_board_reply);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
-			*p_left_caller = 1u;
-			break;
+			left_caller_2 = 1u;
+			return left_caller_2;
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
@@ -689,16 +688,12 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
 			io_write8(IO_1_CNT, 4u);
 			io_write8(IO_2_CNT, 0x80u);
 			error_texts = communication_time_out_texts_ADDRESS;
-			network_check_error(error_texts, p_board_reply, p_left_caller);
-			return;
+			return network_check_error(error_texts);
 		}
 		board_flags = io_read32(LINK_BOARD_FLAGS);
-		if ((board_flags & 0x80u) != 0u)
-		{
-			network_check_clear_status_line();
-			break;
-		}
-	}
+	} while ((board_flags & 0x80u) == 0u);
+	network_check_clear_status_line();
+	return left_caller;
 }
 
 /* ISDN mode: waits, WAIT blinking, until the link board's byte 800000 (its machine count) is set, then
@@ -706,13 +701,13 @@ void network_check_wait_board(uint32_t *p_board_reply, uint32_t *p_left_caller)
    line cleared after. */
 uint32_t network_check_wait_isdn(uint32_t left_caller)
 {
-	uint32_t ignored = 0, left_caller_2 = 0;
+	uint32_t left_caller_2 = 0;
 	uint8_t board_machines = 0;
 	uint16_t frames_left = 0;
 
 	do
 	{
-		wait_for_frame(ignored);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -726,7 +721,7 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 	link_wait_frames = 0x3Cu;
 	do
 	{
-		wait_for_frame(ignored);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 		{
 			link_failed = 0xFFu;
@@ -757,31 +752,33 @@ void network_check_delay(void)
 
 /* Checks the greetings on the link board: V70 (this program's, at 800000) and Z80 (the board's answer,
    at 800010); otherwise the screens off, CONNECTION ERROR and network_check_error. */
-void network_check_greeting(uint32_t *p_board_reply, uint32_t *p_left_caller)
+uint32_t network_check_greeting(uint32_t left_caller)
 {
-	uint32_t board_answer = 0, error_texts = 0;
+	uint32_t answer_letters = 0, board_answer = 0, error_texts = 0;
 
 	board_answer = 0x10u + r12;
-	*p_board_reply = ((((uint32_t)(uint8_t)io_read16(board_answer) << 8) | (uint8_t)io_read16(board_answer + 2u)) << 8) | (uint8_t)io_read16(board_answer + 4u);
-	if ((((((uint32_t)(uint8_t)io_read16(r12) << 8) | (uint8_t)io_read16(r12 + 2u)) << 8) | (uint8_t)io_read16(r12 + 4u)) != 0x563730u || *p_board_reply != 0x5A3830u)
+	answer_letters = ((((uint32_t)(uint8_t)io_read16(board_answer) << 8) | (uint8_t)io_read16(board_answer + 2u)) << 8) | (uint8_t)io_read16(board_answer + 4u);
+	if ((((((uint32_t)(uint8_t)io_read16(r12) << 8) | (uint8_t)io_read16(r12 + 2u)) << 8) | (uint8_t)io_read16(r12 + 4u)) != 0x563730u || answer_letters != 0x5A3830u)
 	{
 		io_write8(IO_1_CNT, 4u);
 		io_write8(IO_2_CNT, 0x80u);
 		error_texts = connection_error_texts_ADDRESS;
-		network_check_error(error_texts, p_board_reply, p_left_caller);
+		return network_check_error(error_texts);
 	}
+	return left_caller;
 }
 
 /* The link board's self-test (its byte 80000C), the second time: clear, IC17, IC23, IC11, IC10 and IC9
    GOOD (network_check_show_ics); else the screens off, COMMUNICATION BOARD ERROR and
    network_check_four_ics, which, the byte still set, shows four of the ICs and halts there (the five
    after it only show if the byte clears meanwhile), then network_check_halt. */
-uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
+uint32_t network_check_five_ics(uint32_t left_caller)
 {
-	uint32_t error_texts = 0, ic_count = 0, ignored = 0, left_caller_2 = 0, self_test = 0;
+	uint8_t self_test = 0;
+	uint32_t error_texts = 0, ic_count = 0, left_caller_2 = 0;
 
-	self_test = (board_reply & ~0xFFu) | io_read8(r12 + 0xCu);
-	if ((uint8_t)self_test == 0u)
+	self_test = io_read8(r12 + 0xCu);
+	if (self_test == 0u)
 	{
 		ic_count = 5u;
 		network_check_show_ics(ic_count, self_test);
@@ -793,52 +790,48 @@ uint32_t network_check_five_ics(uint32_t board_reply, uint32_t left_caller)
 	error_texts = communication_board_error_texts_ADDRESS;
 	print_text_layer_list(error_texts);
 	left_caller_2 = 0u;
-	network_check_four_ics(&self_test, &left_caller_2);
+	left_caller_2 = network_check_four_ics(left_caller_2);
 	if (left_caller_2 != 0u)
 		return left_caller_2;
 	ic_count = 5u;
-	self_test = (self_test & ~0xFFu) | io_read8(r12 + 0xCu);
+	self_test = io_read8(r12 + 0xCu);
 	network_check_show_ics(ic_count, self_test);
 	io_write8(IO_1_CNT, 6u);
 	io_write8(IO_2_CNT, 0x86u);
-	network_check_halt(&ignored, &left_caller_2);
-	return left_caller_2;
+	return network_check_halt();
 }
 
 /* The link board's self-test (its byte 80000C), the first time: clear, IC17, IC23, IC11 and IC10 GOOD
    (network_check_show_ics); else the screens off, COMMUNICATION BOARD ERROR with each of the four GOOD
    or BAD, the screens on, and network_check_halt. */
-void network_check_four_ics(uint32_t *p_board_reply, uint32_t *p_left_caller)
+uint32_t network_check_four_ics(uint32_t left_caller)
 {
-	uint32_t board_reply = *p_board_reply;
-	uint32_t error_texts = 0, ic_count = 0, self_test = 0;
+	uint8_t self_test = 0;
+	uint32_t error_texts = 0, ic_count = 0;
 
-	self_test = (board_reply & ~0xFFu) | io_read8(r12 + 0xCu);
-	if ((uint8_t)self_test != 0u)
-	{
-		io_write8(IO_1_CNT, 4u);
-		io_write8(IO_2_CNT, 0x80u);
-		clear_text_layer();
-		error_texts = communication_board_error_texts_ADDRESS;
-		print_text_layer_list(error_texts);
-		self_test = (self_test & ~0xFFu) | io_read8(r12 + 0xCu);
-		ic_count = 4u;
-		network_check_show_ics(ic_count, self_test);
-		io_write8(IO_1_CNT, 6u);
-		io_write8(IO_2_CNT, 0x86u);
-		network_check_halt(&self_test, p_left_caller);
-	}
-	else
+	self_test = io_read8(r12 + 0xCu);
+	if (self_test == 0u)
 	{
 		ic_count = 4u;
 		network_check_show_ics(ic_count, self_test);
+		return left_caller;
 	}
-	*p_board_reply = self_test;
+	io_write8(IO_1_CNT, 4u);
+	io_write8(IO_2_CNT, 0x80u);
+	clear_text_layer();
+	error_texts = communication_board_error_texts_ADDRESS;
+	print_text_layer_list(error_texts);
+	self_test = io_read8(r12 + 0xCu);
+	ic_count = 4u;
+	network_check_show_ics(ic_count, self_test);
+	io_write8(IO_1_CNT, 6u);
+	io_write8(IO_2_CNT, 0x86u);
+	return network_check_halt();
 }
 
 /* Shows R0 of the link board's ICs (IC17, IC23, IC11, IC10, IC9), each GOOD or BAD by its bit in R2
    (link_board_ic_texts). */
-void network_check_show_ics(uint32_t ic_count, uint32_t self_test)
+void network_check_show_ics(uint32_t ic_count, uint8_t self_test)
 {
 	uint32_t ic = 0, text = 0, text_index = 0;
 
@@ -918,38 +911,44 @@ void network_check_toggle_memory_text(void)
 
 /* Shows the error R19 (a text list: CONNECTION ERROR, COMMUNICATION TIME OUT...) on a cleared text layer
    with the screens on, then halts like network_check_halt. */
-void network_check_error(uint32_t error_texts, uint32_t *p_board_reply, uint32_t *p_left_caller)
+uint32_t network_check_error(uint32_t error_texts)
 {
+	uint32_t left_caller = 0;
+
 	clear_text_layer();
 	print_text_layer_list(error_texts);
 	io_write8(IO_1_CNT, 6u);
 	io_write8(IO_2_CNT, 0x86u);
 	for (;;)
 	{
-		*p_board_reply = wait_for_frame(*p_board_reply);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 			break;
 		current_object = network_error_text_ADDRESS;
 		network_check_blink_text();
 	}
 	link_failed = 0xFFu;
-	*p_left_caller = 1u;
+	left_caller = 1u;
+	return left_caller;
 }
 
 /* Blinks NETWORK ERROR until the test button (test_mode_on) is pressed; then link_failed FF and the
    network check is given up (it returns past its caller). */
-void network_check_halt(uint32_t *p_board_reply, uint32_t *p_left_caller)
+uint32_t network_check_halt(void)
 {
+	uint32_t left_caller = 0;
+
 	for (;;)
 	{
-		*p_board_reply = wait_for_frame(*p_board_reply);
+		wait_for_frame();
 		if (test_mode_on != 0u)
 			break;
 		current_object = network_error_text_ADDRESS;
 		network_check_blink_text();
 	}
 	link_failed = 0xFFu;
-	*p_left_caller = 1u;
+	left_caller = 1u;
+	return left_caller;
 }
 
 /* After the network check (unless the test button is down): sends and receives the race records
@@ -963,21 +962,21 @@ void network_check_halt(uint32_t *p_board_reply, uint32_t *p_left_caller)
 void link_take_master_settings(void)
 {
 	uint16_t record_size = 0;
-	uint32_t car_number_slot = 0, coins_changed = 0, ignored = 0, players_left = 0, race = 0, record_car_number = 0;
+	uint32_t car_number_slot = 0, coins_changed = 0, players_left = 0, race = 0, record_car_number = 0;
 	uint8_t isdn_records_ready = 0;
 	uint32_t time_difficulty_2_long = 0;
 
 	if (test_mode_on != 0u)
 		return;
 	link_send_records();
-	wait_for_frame(0u);
-	wait_for_frame(ignored);
-	wait_for_frame(ignored);
-	wait_for_frame(ignored);
-	wait_for_frame(ignored);
+	wait_for_frame();
+	wait_for_frame();
+	wait_for_frame();
+	wait_for_frame();
+	wait_for_frame();
 	for (;;)
 	{
-		wait_for_frame(ignored);
+		wait_for_frame();
 		if (isdn_mode == 0u)
 			break;
 		isdn_records_ready = io_read8(LINK_ISDN_RECORDS_READY);

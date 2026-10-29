@@ -116,11 +116,11 @@ void unpack(uint32_t source, uint32_t destination)
    unpack_state's second byte: FF one byte of a match (unpack_copy_source, unpack_copy_count), 1 one step
    of unpack's format (unpack_flags, unpack_flags_left, unpack_source, unpack_destination): a byte, or a
    match's first byte. */
-uint32_t unpack_queued_step(uint32_t copy_source)
+void unpack_queued_step(void)
 {
 	uint32_t carry = 0;
 	uint8_t copy_count = 0, flags = 0, length_byte = 0;
-	uint32_t destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
+	uint32_t copy_source = 0, destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
 	uint8_t unpack_copy_count = 0;
 	uint32_t length_bits = 0;
 
@@ -138,15 +138,15 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			if (unpack_copy_count == 1u)
 			{
 				SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
-				return copy_source;
+				return;
 			}
-			return copy_source;
+			return;
 		}
 		unpack_read_place = SCREEN(screen)->unpack_read_place;
 		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
 		{
 			SCREEN(screen)->unpack_state = 0u;
-			return copy_source;
+			return;
 		}
 		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
@@ -182,7 +182,7 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			SCREEN(screen)->unpack_flags_left = flags_left;
 			SCREEN(screen)->unpack_source = source + 1u;
 			SCREEN(screen)->unpack_destination = destination + 1u;
-			return copy_source;
+			return;
 		}
 		flags_left--;
 		if (flags_left == 0u)
@@ -208,13 +208,12 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
-			copy_source++;
-			SCREEN(screen)->unpack_copy_source = copy_source;
+			SCREEN(screen)->unpack_copy_source = copy_source + 1u;
 			SCREEN(screen)->unpack_copy_count = copy_count;
 			SCREEN(screen)->unpack_source = source;
 			SCREEN(screen)->unpack_destination = destination + 1u;
 			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-			return copy_source;
+			return;
 		}
 		copy_count = PACKED_BYTES(source)[0];
 		source++;
@@ -224,19 +223,18 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 			SCREEN(screen)->unpack_flags = flags;
 			SCREEN(screen)->unpack_flags_left = flags_left;
-			copy_source++;
-			SCREEN(screen)->unpack_copy_source = copy_source;
+			SCREEN(screen)->unpack_copy_source = copy_source + 1u;
 			SCREEN(screen)->unpack_copy_count = copy_count;
 			SCREEN(screen)->unpack_source = source;
 			SCREEN(screen)->unpack_destination = destination + 1u;
 			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-			return copy_source;
+			return;
 		}
 		unpack_read_place = SCREEN(screen)->unpack_read_place;
 		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
 		{
 			SCREEN(screen)->unpack_state = 0u;
-			return copy_source;
+			return;
 		}
 		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
 		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
@@ -275,13 +273,11 @@ uint32_t unpack_queued_step(uint32_t copy_source)
 	UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
 	SCREEN(screen)->unpack_flags = flags;
 	SCREEN(screen)->unpack_flags_left = flags_left;
-	copy_source++;
-	SCREEN(screen)->unpack_copy_source = copy_source;
+	SCREEN(screen)->unpack_copy_source = copy_source + 1u;
 	SCREEN(screen)->unpack_copy_count = copy_count;
 	SCREEN(screen)->unpack_source = source;
 	SCREEN(screen)->unpack_destination = destination + 1u;
 	SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
-	return copy_source;
 }
 
 /* Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address

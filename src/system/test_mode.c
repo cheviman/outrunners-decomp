@@ -245,7 +245,7 @@ void test_mode_menu_toggle_continue(void)
 void test_mode_memory_test(void)
 {
 	uint8_t blank_result = 0, chip_result = 0;
-	uint16_t cell_value = 0, even_chip_result = 0, failures_2 = 0, odd_chip_result = 0;
+	uint16_t cell_value = 0, failures_2 = 0;
 	uint32_t failures = 0, memory_start = 0, odd_check = 0, rom_check = 0;
 	uint8_t video_lane_0_failures = 0, video_lane_1_failures = 0, sprite_lane_0_failures = 0, sprite_lane_1_failures = 0;
 	uint16_t low_rom_check = 0, high_rom_check = 0, video_lane_2_failures = 0, sprite_lane_2_failures = 0, sprite_lane_3_failures = 0, work_byte_1_failures = 0;
@@ -263,34 +263,34 @@ void test_mode_memory_test(void)
 	rom_check = LOW_ROM_TESTED_BYTES;
 	test_mode_memory_test_checksum(memory_start, &rom_check, &odd_check);
 	low_rom_check = rom_check;
-	even_chip_result = (uint16_t)((rom_check & ~0xFFu) | 2u);
+	rom_check = (rom_check & ~0xFFu) | 2u;
 	if (ic37_checksum != low_rom_check)
-		even_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 3u);
-	memory_test_results[0] = (uint8_t)even_chip_result;
-	odd_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 2u);
+		rom_check = (rom_check & ~0xFFu) | 3u;
+	memory_test_results[0] = rom_check;
+	rom_check = (rom_check & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic40_checksum != odd_check)
-		odd_chip_result = (uint16_t)((odd_chip_result & ~0xFFu) | 3u);
-	memory_test_results[1] = (uint8_t)odd_chip_result;
+		rom_check = (rom_check & ~0xFFu) | 3u;
+	memory_test_results[1] = rom_check;
 	current_object = current_object + 1u;
 	AS16(memory_test_results[2]) = 0x101u;
-	test_mode_memory_test_draw(odd_chip_result);
+	test_mode_memory_test_draw((uint16_t)rom_check);
 	memory_start = 0x100000u;
 	rom_check = HIGH_ROM_TESTED_BYTES;
 	test_mode_memory_test_checksum(memory_start, &rom_check, &odd_check);
 	high_rom_check = rom_check;
-	even_chip_result = (uint16_t)((rom_check & ~0xFFu) | 2u);
+	rom_check = (rom_check & ~0xFFu) | 2u;
 	if (ic36_checksum != high_rom_check)
-		even_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 3u);
-	memory_test_results[2] = (uint8_t)even_chip_result;
-	odd_chip_result = (uint16_t)((even_chip_result & ~0xFFu) | 2u);
+		rom_check = (rom_check & ~0xFFu) | 3u;
+	memory_test_results[2] = rom_check;
+	rom_check = (rom_check & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic39_checksum != odd_check)
-		odd_chip_result = (uint16_t)((odd_chip_result & ~0xFFu) | 3u);
-	memory_test_results[3] = (uint8_t)odd_chip_result;
+		rom_check = (rom_check & ~0xFFu) | 3u;
+	memory_test_results[3] = rom_check;
 	current_object = current_object + 1u;
 	AS32(memory_test_results[4]) = 0x1010101u;
-	test_mode_memory_test_draw(odd_chip_result);
+	test_mode_memory_test_draw((uint16_t)rom_check);
 	memory_start = 0x300000u;
 	failures = 0x20000u;
 	failures = test_mode_memory_test_nibbles(failures, memory_start);
@@ -1166,7 +1166,8 @@ uint16_t test_mode_volume_adjustment_draw(uint16_t character)
 		range_length = (uint8_t)(range_length + 1u);
 		range_cell_a = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
-		cell = LINKED(cell, range_cell_a) + range_start * 2u;
+		cell = LINKED(cell, range_cell_a);
+		cell += range_start * 2u;
 		range_character = 0x6403u;
 		calibration++;
 		do
@@ -1189,7 +1190,8 @@ uint16_t test_mode_volume_adjustment_draw(uint16_t character)
 		range_length = (uint8_t)(range_length + 1u);
 		range_cell_b = TEST_MODE_CELLS(bar_cells)[0];
 		bar_cells += 2u;
-		cell = LINKED(cell, range_cell_b) + range_start * 2u;
+		cell = LINKED(cell, range_cell_b);
+		cell += range_start * 2u;
 		range_character = 0x6403u;
 		calibration++;
 		do
@@ -2398,23 +2400,23 @@ void test_mode_coin_assignments_manual_run(void)
    fraction characters. */
 uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 {
-	uint32_t bonus_rest = 0, cell = 0, coins_for_bonus = 0, coins_for_credit = 0, colours = 0, counted_coins = 0, credits = 0, digit_count = 0, leftover_coins = 0, multiplier = 0, numerator = 0, plural_offset = 0, rows_left = 0, shown_bonus = 0, shown_multiplier = 0, text = 0, toward_bonus = 0;
+	uint32_t bonus_rest = 0, cell = 0, coins_for_bonus = 0, coins_for_credit = 0, counted_coins = 0, credits = 0, digit_count = 0, leftover_coins = 0, multiplier = 0, numerator = 0, plural_offset = 0, rows_left = 0, shown_bonus = 0, shown_multiplier = 0, text = 0, toward_bonus = 0;
 	uint32_t saved_leftover_coins = 0;
 
 	current_object = settings_magic_ADDRESS;
 	cell = TEXT_CELL(23, 8);
 	coins_for_credit = coins_per_credit;
-	colours = (item_count & ~0xFFFFu) | 0x6464u;
+	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
-	test_mode_draw_count(coins_for_credit, digit_count, plural_offset, &colours, &cell);
+	test_mode_draw_count(coins_for_credit, digit_count, plural_offset, &item_count, &cell);
 	shown_bonus = bonus_adder;
 	if ((int8_t)shown_bonus > 0)
 	{
 		cell = LINKED(cell, 0xF51Eu);
-		colours = 0x64u;
+		item_count = 0x64u;
 		digit_count = 1u;
-		test_mode_draw_number(digit_count, &shown_bonus, &colours, &cell);
+		test_mode_draw_number(digit_count, &shown_bonus, &item_count, &cell);
 		text = bonus_adder_text_ADDRESS;
 		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
@@ -2430,10 +2432,10 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 	}
 	cell = TEXT_CELL(32, 12);
 	shown_multiplier = first_chute_multiplier;
-	colours = (colours & ~0xFFFFu) | 0x6464u;
+	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
-	test_mode_draw_count(shown_multiplier, digit_count, plural_offset, &colours, &cell);
+	test_mode_draw_count(shown_multiplier, digit_count, plural_offset, &item_count, &cell);
 	cell = LINKED(cell, 0xF784u);
 	coins_for_credit = coins_per_credit;
 	coins_for_bonus = (int8_t)bonus_adder;
@@ -2519,16 +2521,14 @@ void test_mode_coin_assignments_step_coin_to_credit(uint32_t item_count)
    redraws (test_mode_coin_assignments_manual_draw). */
 void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t item_count)
 {
-	uint32_t setting = 0;
-
-	setting = (item_count & ~0xFFu) | RAM8(settings_magic_ADDRESS + setting_offset);
-	setting = (setting & ~0xFFu) | (uint8_t)(setting + 1u);
-	if ((uint8_t)setting >= 0xAu)
-		setting = (setting & ~0xFFu) | 1u;
-	RAM8(settings_magic_ADDRESS + setting_offset) = setting;
+	item_count = (item_count & ~0xFFu) | RAM8(settings_magic_ADDRESS + setting_offset);
+	item_count = (item_count & ~0xFFu) | (uint8_t)(item_count + 1u);
+	if ((uint8_t)item_count >= 0xAu)
+		item_count = (item_count & ~0xFFu) | 1u;
+	RAM8(settings_magic_ADDRESS + setting_offset) = item_count;
 	if (free_play == 0u)
 		coin_setting = 0x1Au;
-	test_mode_coin_assignments_manual_draw(setting);
+	test_mode_coin_assignments_manual_draw(item_count);
 }
 
 /* BONUS ADDER: steps bonus_adder through none (0), 2 to 9 and back to none; from free play (FF) it goes
@@ -3034,8 +3034,9 @@ uint16_t test_mode_bookkeeping_draw_histogram(void)
 			r12 += 2u;
 			TEXT_LAYER_CELLS(r12)[0] = character;
 			record++;
+			character = (uint16_t)((character & ~0xFFu) | BACKUP_COURSE_RECORD(record - 0x3u)->name[2]);
 			r12 += 2u;
-			TEXT_LAYER_CELLS(r12)[0] = (character & ~0xFFu) | BACKUP_COURSE_RECORD(record - 0x3u)->name[2];
+			TEXT_LAYER_CELLS(r12)[0] = character;
 			record++;
 			car_then_time = BACKUP_COURSE_RECORD(record - 0x4u)->time;
 			zero_character = 0x6430u;

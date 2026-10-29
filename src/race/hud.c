@@ -708,7 +708,7 @@ void time_digits_draw(uint32_t digits)
 	OBJECT(current_object)->x = OBJECT(current_object)->time_digits.units_x;
 	digit_record = current_object + 0x80u;
 	digits_left = 3u;
-	do
+	for (;;)
 	{
 		digit = digits & 0xFu;
 		flip = TIME_DIGIT(digit_record)->flip;
@@ -727,113 +727,65 @@ void time_digits_draw(uint32_t digits)
 				closing_width = flip_width;
 				flip_width = (uint16_t)(closing_width - 0x40u);
 				TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
-				if (closing_width != 0x40u)
-				{
-					if (digits_left == 3u || remaining_digits != 0u)
-					{
-						OBJECT(current_object)->frame = shown_digit;
-						OBJECT(current_object)->width_scale = flip_width;
-						saved_digits = digits;
-						saved_digit_record = digit_record;
-						saved_digits_left = digits_left;
-						draw_object(digits);
-						digits_left = saved_digits_left;
-						digit_record = saved_digit_record;
-						digits = saved_digits;
-					}
-				}
-				else
+				if (closing_width == 0x40u)
 				{
 					TIME_DIGIT(digit_record - 0x8u)->flip = -1;
 					TIME_DIGIT(digit_record - 0x8u)->digit = digit;
 					TIME_DIGIT(digit_record - 0x8u)->remaining = digits;
+					digits = digits >> 4;
+					OBJECT(current_object)->x -= 0x12u;
+					digits_left--;
+					if (digits_left == 0u)
+						break;
+					continue;
 				}
 			}
 			else
 			{
 				flip_width += 0x40u;
 				TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
-				if ((uint8_t)flip_width != 0u)
-				{
-					if (digits_left == 3u || remaining_digits != 0u)
-					{
-						OBJECT(current_object)->frame = shown_digit;
-						OBJECT(current_object)->width_scale = flip_width;
-						saved_digits = digits;
-						saved_digit_record = digit_record;
-						saved_digits_left = digits_left;
-						draw_object(digits);
-						digits_left = saved_digits_left;
-						digit_record = saved_digit_record;
-						digits = saved_digits;
-					}
-				}
-				else
-				{
+				if ((uint8_t)flip_width == 0u)
 					TIME_DIGIT(digit_record - 0x8u)->flip = 0;
-					if (digits_left == 3u || remaining_digits != 0u)
-					{
-						OBJECT(current_object)->frame = shown_digit;
-						OBJECT(current_object)->width_scale = flip_width;
-						saved_digits = digits;
-						saved_digit_record = digit_record;
-						saved_digits_left = digits_left;
-						draw_object(digits);
-						digits_left = saved_digits_left;
-						digit_record = saved_digit_record;
-						digits = saved_digits;
-					}
-				}
 			}
 		}
-		else if (shown_digit == digit)
-		{
-			if (digits_left == 3u || remaining_digits != 0u)
-			{
-				OBJECT(current_object)->frame = shown_digit;
-				OBJECT(current_object)->width_scale = flip_width;
-				saved_digits = digits;
-				saved_digit_record = digit_record;
-				saved_digits_left = digits_left;
-				draw_object(digits);
-				digits_left = saved_digits_left;
-				digit_record = saved_digit_record;
-				digits = saved_digits;
-			}
-		}
-		else
+		else if (shown_digit != digit)
 		{
 			TIME_DIGIT(digit_record - 0x8u)->flip = 1;
 			remaining_digits = TIME_DIGIT(digit_record - 0x8u)->remaining;
 			closing_width = flip_width;
 			flip_width = (uint16_t)(closing_width - 0x40u);
 			TIME_DIGIT(digit_record - 0x8u)->width = flip_width;
-			if (closing_width != 0x40u)
-			{
-				if (digits_left == 3u || remaining_digits != 0u)
-				{
-					OBJECT(current_object)->frame = shown_digit;
-					OBJECT(current_object)->width_scale = flip_width;
-					saved_digits = digits;
-					saved_digit_record = digit_record;
-					saved_digits_left = digits_left;
-					draw_object(digits);
-					digits_left = saved_digits_left;
-					digit_record = saved_digit_record;
-					digits = saved_digits;
-				}
-			}
-			else
+			if (closing_width == 0x40u)
 			{
 				TIME_DIGIT(digit_record - 0x8u)->flip = -1;
 				TIME_DIGIT(digit_record - 0x8u)->digit = digit;
 				TIME_DIGIT(digit_record - 0x8u)->remaining = digits;
+				digits = digits >> 4;
+				OBJECT(current_object)->x -= 0x12u;
+				digits_left--;
+				if (digits_left == 0u)
+					break;
+				continue;
 			}
+		}
+		if (digits_left == 3u || remaining_digits != 0u)
+		{
+			OBJECT(current_object)->frame = shown_digit;
+			OBJECT(current_object)->width_scale = flip_width;
+			saved_digits = digits;
+			saved_digit_record = digit_record;
+			saved_digits_left = digits_left;
+			draw_object(digits);
+			digits_left = saved_digits_left;
+			digit_record = saved_digit_record;
+			digits = saved_digits;
 		}
 		digits = digits >> 4;
 		OBJECT(current_object)->x -= 0x12u;
 		digits_left--;
-	} while (digits_left != 0u);
+		if (digits_left == 0u)
+			break;
+	}
 }
 
 /* Starts the EXTEND TIME message once for each checkpoint passed (screen forks_decided, counted in car

@@ -19,7 +19,7 @@
    converter's second bank), each raw into analog_raw on and scaled to 0-FF between its calibration (a
    low and a high byte from 20E638, in the settings) into analog_inputs on; then the converter's bank for
    the other turn (C00060). */
-uint32_t read_switches_and_analog(void)
+void read_switches_and_analog(void)
 {
 	uint8_t chip_1_port_f_on = 0, chip_2_port_f_on = 0, chip_2_switches = 0, new_switches = 0, old_switches = 0, test_switch = 0;
 	uint16_t calibration_high = 0, calibration_low = 0, reading = 0;
@@ -52,7 +52,21 @@ uint32_t read_switches_and_analog(void)
 	do
 	{
 		io_write8(converter, 0xFFu);
-		reading = (((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)((((uint16_t)(io_read8(converter) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) * 2u) & ~0xFFu) | io_read8(converter)) >> 7;
+		reading = (uint16_t)(io_read8(converter) * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = (uint16_t)(reading * 2u);
+		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
+		reading = reading >> 7;
 		ANALOG_VALUES(raw_place)[0] = (uint8_t)reading;
 		calibration_low = ANALOG_CALIBRATION_BYTES(calibration)[0];
 		calibration++;
@@ -71,7 +85,6 @@ uint32_t read_switches_and_analog(void)
 		converter += 2u;
 	} while (inputs_left != 0u);
 	io_write8(ANALOG_BANK, screen_turn ^ 1u);
-	return calibration;
 }
 
 /* Packs both seats' inputs for the coming frame (the VBLANK, on screen 1's turn) into their records: the

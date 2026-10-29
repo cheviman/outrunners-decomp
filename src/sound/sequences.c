@@ -360,8 +360,6 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 							z80_cycles(5);
 						}
 						z80_block(10, 1);
-						z80_block(33, 3);
-						SCREEN_PAGE(page)->midi_count++;
 					}
 					else
 					{
@@ -381,9 +379,9 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 								break;
 							z80_block(10, 1);
 						}
-						z80_block(33, 3);
-						SCREEN_PAGE(page)->midi_count++;
 					}
+					z80_block(33, 3);
+					SCREEN_PAGE(page)->midi_count++;
 				}
 				else
 				{
@@ -581,14 +579,14 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 			playlist_player |= playlist_player_low;
 			start_sound(playlist_player, playlist_byte);
 			z80_block(20, 2);
-			queue_pointer = ((uint32_t)queue_page << 8) | saved_write_index;
+			queue_pointer = (uint32_t)queue_page << 8;
 			write_index = saved_write_index;
 			continue;
 		}
 		z80_block(17, 1);
 		start_song(playlist_player, playlist_byte);
 		z80_block(20, 2);
-		queue_pointer = ((uint32_t)queue_page << 8) | saved_write_index;
+		queue_pointer = (uint32_t)queue_page << 8;
 		write_index = saved_write_index;
 	}
 }
@@ -764,7 +762,7 @@ void start_sound(uint16_t player_address, uint8_t command)
 	SEQUENCE_PLAYER(sequence_player - 0x20u)->playlist_low = (uint8_t)header;
 	sequence_player++;
 	SEQUENCE_PLAYER(sequence_player - 0x21u)->playlist_high = header >> 8;
-	player = sequence_player & ~0xFFu;
+	player = sequence_player;
 	start_song(player, song);
 }
 

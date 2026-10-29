@@ -581,210 +581,246 @@ void player_car_place_view(uint32_t segment_record, uint32_t road_x, uint32_t se
 /* The engine and the speed: the force (brake, slope and drag, drive; acceleration) changes the speed
    (car speed, also impact_speed), with any speed_change from a hit, up to the top speed of the gear (its
    ratio, car gear_ratio); a force past the model's grip spins the wheels, and hard braking locks them
-   (car wheel_slip: tyre noise 1 or the model's skid noise, smoke); the revs (car revs) follow the speed
-   through the gear's ratio, or the gas when the car stands; car moving says it moves. */
+   (car wheel_slip: tyre noise 1 or the model's skid noise, smoke; player_car_engine_wheelspin), the rest
+   has grip (player_car_engine_grip); the revs (car revs) follow the speed through the gear's ratio, or
+   the gas when the car stands; car moving says it moves. */
 void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, uint32_t gear_ratio)
 {
-	bool L_00A8A3 = false, L_00A8E6 = false, L_00A914 = false, L_00A9E9 = false;
-	uint32_t negative = 0, overflow = 0;
 	uint8_t tyre_noise = 0;
-	uint32_t revs = 0, revs_change = 0, speed = 0, speed_step = 0, speed_then_revs = 0, top_speed = 0;
-	uint32_t spin_speed_change = 0, spin_speed = 0, spin_target_speed = 0, spin_top_speed = 0, target_revs = 0, spin_target_revs = 0, grip_speed_change = 0, grip_speed = 0, grip_target_speed = 0, grip_top_speed = 0;
+	uint32_t top_speed = 0;
 
 	force = (int32_t)(force + road_force + drive_force) >> 6;
 	OBJECT(current_object)->player_car.acceleration = force;
 	top_speed = (gear_ratio * 0xFFFFu) >> 8;
-	do
+	if (CAR(player_car)->wheel_slip == 0u)
 	{
-		do
+		if (CAR_HANDLING(r12)->spin_start_force <= (int32_t)force)
 		{
-			do
+			CAR(player_car)->wheel_slip = 0xFFu;
+			if (CAR(player_car)->skidding == 0u)
 			{
-				do
-				{
-					do
-					{
-						if (L_00A8E6 || L_00A9E9 || L_00A914 || L_00A914 || L_00A914 || CAR(player_car)->wheel_slip == 0u)
-						{
-							if (L_00A8E6 || !L_00A9E9)
-							{
-								if (L_00A8E6 || L_00A914 || L_00A914 || L_00A914 || CAR_HANDLING(r12)->spin_start_force <= (int32_t)force)
-								{
-									if (L_00A8E6 || !L_00A914)
-									{
-										if (L_00A8E6 || !L_00A914)
-										{
-											if (L_00A8E6 || !L_00A914)
-											{
-												if (!L_00A8E6)
-													CAR(player_car)->wheel_slip = 0xFFu;
-												if (CAR(player_car)->skidding == 0u)
-												{
-													tyre_noise = 1u;
-													set_tyre_noise_on_road(tyre_noise);
-												}
-												force = CAR_HANDLING(r12)->spin_drive_force;
-												if (CAR(player_car)->wheel_effect_sides == 0u)
-												{
-													CAR(player_car)->wheel_effect_1 = 1u;
-													CAR(player_car)->wheel_effect_2 = 1u;
-													CAR(player_car)->wheel_effect_sides = 3u;
-												}
-											}
-										}
-									}
-									speed = CAR(player_car)->speed;
-									spin_speed_change = OBJECT(current_object)->player_car.speed_change;
-									spin_speed = speed + spin_speed_change;
-									overflow = v60_overflow_add32(speed, spin_speed_change, 0u);
-									negative = spin_speed >> 31;
-									speed_then_revs = spin_speed;
-									if (negative ^ overflow)
-										speed_then_revs = 0u;
-									speed_step = speed_then_revs + force;
-									if ((int32_t)speed_step <= (int32_t)top_speed)
-									{
-										if ((int32_t)speed_step < 0)
-											speed_step = 0u;
-										spin_target_speed = speed_step;
-										speed_step = spin_target_speed - speed_then_revs;
-										if (spin_target_speed != speed_then_revs)
-											speed_then_revs += (int32_t)(speed_step * 1u) / 2 + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
-									}
-									else
-									{
-										spin_top_speed = top_speed;
-										speed_step = spin_top_speed - speed_then_revs;
-										if (spin_top_speed != speed_then_revs)
-											speed_then_revs += (int32_t)(speed_step * 1u) / 0x1E + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
-										if (speed_then_revs >= 0xFFFFu)
-											speed_then_revs = 0xFFFFu;
-									}
-									CAR(player_car)->speed = speed_then_revs;
-									OBJECT(current_object)->player_car.impact_speed = speed_then_revs;
-									if (speed_then_revs == 0u)
-									{
-										CAR(player_car)->moving = 0u;
-										speed_then_revs = (uint32_t)OBJECT(current_object)->player_car.gas << 8;
-										revs = CAR(player_car)->revs;
-										target_revs = speed_then_revs;
-										revs_change = target_revs - revs;
-										if (target_revs != revs)
-											revs += (int32_t)(revs_change * 1u) / 3 + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
-										if (revs >= 0xFFFFu)
-											revs = 0xFFFFu;
-										CAR(player_car)->revs = revs;
-										return;
-									}
-									CAR(player_car)->moving = 0xFFu;
-									revs = CAR(player_car)->revs;
-									spin_target_revs = divide_u32(speed_then_revs << 8, gear_ratio);
-									revs_change = spin_target_revs - revs;
-									if (spin_target_revs != revs)
-										revs += (int32_t)(revs_change * 1u) / 0xA + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
-									if (revs >= 0xFFFFu)
-										revs = 0xFFFFu;
-									CAR(player_car)->revs = revs;
-									return;
-								}
-							}
-							if (L_00A9E9 || CAR(player_car)->speed == 0u || (int32_t)force > -0x380)
-							{
-								CAR(player_car)->wheel_slip = 0u;
-								speed = CAR(player_car)->speed;
-								grip_speed_change = OBJECT(current_object)->player_car.speed_change;
-								grip_speed = speed + grip_speed_change;
-								overflow = v60_overflow_add32(speed, grip_speed_change, 0u);
-								negative = grip_speed >> 31;
-								speed_then_revs = grip_speed;
-								if (negative ^ overflow)
-									speed_then_revs = 0u;
-								speed_step = speed_then_revs + force;
-								if ((int32_t)speed_step <= (int32_t)top_speed)
-								{
-									if ((int32_t)speed_step < 0)
-										speed_step = 0u;
-									grip_target_speed = speed_step;
-									speed_step = grip_target_speed - speed_then_revs;
-									if (grip_target_speed != speed_then_revs)
-										speed_then_revs += (int32_t)(speed_step * 1u) / 2 + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
-								}
-								else
-								{
-									grip_top_speed = top_speed;
-									speed_step = grip_top_speed - speed_then_revs;
-									if (grip_top_speed != speed_then_revs)
-										speed_then_revs += (int32_t)(speed_step * 1u) / 0x1E + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
-									if (speed_then_revs >= 0xFFFFu)
-										speed_then_revs = 0xFFFFu;
-								}
-								CAR(player_car)->speed = speed_then_revs;
-								OBJECT(current_object)->player_car.impact_speed = speed_then_revs;
-								if (speed_then_revs == 0u)
-								{
-									CAR(player_car)->moving = 0u;
-									speed_then_revs = (uint32_t)OBJECT(current_object)->player_car.gas << 8;
-									revs = CAR(player_car)->revs;
-									target_revs = speed_then_revs;
-									revs_change = target_revs - revs;
-									if (target_revs != revs)
-										revs += (int32_t)(revs_change * 1u) / 3 + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
-									if (revs >= 0xFFFFu)
-										revs = 0xFFFFu;
-									CAR(player_car)->revs = revs;
-									return;
-								}
-								CAR(player_car)->moving = 0xFFu;
-								speed_then_revs = divide_u32(speed_then_revs << 8, gear_ratio);
-								revs = CAR(player_car)->revs;
-								target_revs = speed_then_revs;
-								revs_change = target_revs - revs;
-								if (target_revs != revs)
-									revs += (int32_t)(revs_change * 1u) / 3 + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
-								if (revs >= 0xFFFFu)
-									revs = 0xFFFFu;
-								CAR(player_car)->revs = revs;
-								return;
-							}
-							CAR(player_car)->wheel_slip = 0xFFu;
-							L_00A8A3 = true;
-						}
-						else
-						{
-							L_00A8E6 = CAR_HANDLING(r12)->spin_end_force <= (int32_t)force;
-							if (!L_00A8E6)
-							{
-								L_00A9E9 = CAR(player_car)->speed == 0u || (int32_t)force > -0x480;
-								if (!L_00A9E9)
-									L_00A8A3 = true;
-							}
-						}
-					} while (L_00A8E6);
-				} while (L_00A9E9);
-				if (L_00A8A3)
-				{
-					L_00A8A3 = false;
-					L_00A914 = SCREEN(screen)->brake == 0u;
-					if (!L_00A914)
-					{
-						if (CAR(player_car)->skidding == 0u)
-						{
-							tyre_noise = car_skid_noises[CAR(player_car)->model];
-							set_tyre_noise(tyre_noise);
-						}
-						L_00A914 = CAR(player_car)->wheel_effect_sides != 0u;
-						if (!L_00A914)
-						{
-							CAR(player_car)->wheel_effect_1 = 2u;
-							CAR(player_car)->wheel_effect_2 = 2u;
-							CAR(player_car)->wheel_effect_sides = 3u;
-							L_00A914 = true;
-						}
-					}
-				}
-			} while (L_00A914);
-		} while (L_00A914);
-	} while (L_00A914);
+				tyre_noise = 1u;
+				set_tyre_noise_on_road(tyre_noise);
+			}
+			force = CAR_HANDLING(r12)->spin_drive_force;
+			if (CAR(player_car)->wheel_effect_sides != 0u)
+			{
+				player_car_engine_wheelspin(force, top_speed, gear_ratio);
+				return;
+			}
+			CAR(player_car)->wheel_effect_1 = 1u;
+			CAR(player_car)->wheel_effect_2 = 1u;
+			CAR(player_car)->wheel_effect_sides = 3u;
+			player_car_engine_wheelspin(force, top_speed, gear_ratio);
+			return;
+		}
+		if (CAR(player_car)->speed == 0u || (int32_t)force > -0x380)
+		{
+			player_car_engine_grip(force, top_speed, gear_ratio);
+			return;
+		}
+		CAR(player_car)->wheel_slip = 0xFFu;
+		if (SCREEN(screen)->brake == 0u)
+		{
+			player_car_engine_wheelspin(force, top_speed, gear_ratio);
+			return;
+		}
+		if (CAR(player_car)->skidding == 0u)
+		{
+			tyre_noise = car_skid_noises[CAR(player_car)->model];
+			set_tyre_noise(tyre_noise);
+		}
+		if (CAR(player_car)->wheel_effect_sides != 0u)
+		{
+			player_car_engine_wheelspin(force, top_speed, gear_ratio);
+			return;
+		}
+		CAR(player_car)->wheel_effect_1 = 2u;
+		CAR(player_car)->wheel_effect_2 = 2u;
+		CAR(player_car)->wheel_effect_sides = 3u;
+		player_car_engine_wheelspin(force, top_speed, gear_ratio);
+		return;
+	}
+	if (CAR_HANDLING(r12)->spin_end_force <= (int32_t)force)
+	{
+		if (CAR(player_car)->skidding == 0u)
+		{
+			tyre_noise = 1u;
+			set_tyre_noise_on_road(tyre_noise);
+		}
+		force = CAR_HANDLING(r12)->spin_drive_force;
+		if (CAR(player_car)->wheel_effect_sides != 0u)
+		{
+			player_car_engine_wheelspin(force, top_speed, gear_ratio);
+			return;
+		}
+		CAR(player_car)->wheel_effect_1 = 1u;
+		CAR(player_car)->wheel_effect_2 = 1u;
+		CAR(player_car)->wheel_effect_sides = 3u;
+		player_car_engine_wheelspin(force, top_speed, gear_ratio);
+		return;
+	}
+	if (CAR(player_car)->speed == 0u)
+	{
+		player_car_engine_grip(force, top_speed, gear_ratio);
+		return;
+	}
+	if ((int32_t)force > -0x480)
+	{
+		player_car_engine_grip(force, top_speed, gear_ratio);
+		return;
+	}
+	if (SCREEN(screen)->brake == 0u)
+	{
+		player_car_engine_wheelspin(force, top_speed, gear_ratio);
+		return;
+	}
+	if (CAR(player_car)->skidding == 0u)
+	{
+		tyre_noise = car_skid_noises[CAR(player_car)->model];
+		set_tyre_noise(tyre_noise);
+	}
+	if (CAR(player_car)->wheel_effect_sides != 0u)
+	{
+		player_car_engine_wheelspin(force, top_speed, gear_ratio);
+		return;
+	}
+	CAR(player_car)->wheel_effect_1 = 2u;
+	CAR(player_car)->wheel_effect_2 = 2u;
+	CAR(player_car)->wheel_effect_sides = 3u;
+	player_car_engine_wheelspin(force, top_speed, gear_ratio);
+}
+
+/* The speed and the revs while the wheels spin or lock (player_car_engine goes on to it from both of its
+   sides): the speed (car speed, with any speed_change from a hit, not below 0) goes half the way toward
+   itself plus the force (not below 0), or a thirtieth of the way down to the gear's top speed (at most
+   FFFF), into car speed and impact_speed; standing, player_car_engine_standing; moving, car moving FF
+   and the revs a tenth of the way toward the speed * 256 by the gear's ratio (at most FFFF). */
+void player_car_engine_wheelspin(uint32_t force, uint32_t top_speed, uint32_t gear_ratio)
+{
+	uint32_t negative = 0, overflow = 0;
+	uint32_t revs = 0, revs_change = 0, speed = 0, speed_step = 0, speed_then_revs = 0;
+	uint32_t spin_speed_change = 0, spin_speed = 0, spin_target_speed = 0, spin_top_speed = 0, spin_target_revs = 0;
+
+	speed = CAR(player_car)->speed;
+	spin_speed_change = OBJECT(current_object)->player_car.speed_change;
+	spin_speed = speed + spin_speed_change;
+	overflow = v60_overflow_add32(speed, spin_speed_change, 0u);
+	negative = spin_speed >> 31;
+	speed_then_revs = spin_speed;
+	if (negative ^ overflow)
+		speed_then_revs = 0u;
+	speed_step = speed_then_revs + force;
+	if ((int32_t)speed_step <= (int32_t)top_speed)
+	{
+		if ((int32_t)speed_step < 0)
+			speed_step = 0u;
+		spin_target_speed = speed_step;
+		speed_step = spin_target_speed - speed_then_revs;
+		if (spin_target_speed != speed_then_revs)
+			speed_then_revs += (int32_t)(speed_step * 1u) / 2 + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
+	}
+	else
+	{
+		spin_top_speed = top_speed;
+		speed_step = spin_top_speed - speed_then_revs;
+		if (spin_top_speed != speed_then_revs)
+			speed_then_revs += (int32_t)(speed_step * 1u) / 0x1E + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
+		if (speed_then_revs >= 0xFFFFu)
+			speed_then_revs = 0xFFFFu;
+	}
+	CAR(player_car)->speed = speed_then_revs;
+	OBJECT(current_object)->player_car.impact_speed = speed_then_revs;
+	if (speed_then_revs == 0u)
+	{
+		player_car_engine_standing();
+		return;
+	}
+	CAR(player_car)->moving = 0xFFu;
+	revs = CAR(player_car)->revs;
+	spin_target_revs = divide_u32(speed_then_revs << 8, gear_ratio);
+	revs_change = spin_target_revs - revs;
+	if (spin_target_revs != revs)
+		revs += (int32_t)(revs_change * 1u) / 0xA + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
+	if (revs >= 0xFFFFu)
+		revs = 0xFFFFu;
+	CAR(player_car)->revs = revs;
+}
+
+/* The speed and the revs with grip (player_car_engine goes on to it from both of its sides): car
+   wheel_slip 0, the speed as player_car_engine_wheelspin works it out; standing,
+   player_car_engine_standing; moving, car moving FF and the revs toward the speed * 256 by the gear's
+   ratio (player_car_engine_revs). */
+void player_car_engine_grip(uint32_t force, uint32_t top_speed, uint32_t gear_ratio)
+{
+	uint32_t negative = 0, overflow = 0;
+	uint32_t speed = 0, speed_step = 0, speed_then_revs = 0;
+	uint32_t grip_speed_change = 0, grip_speed = 0, grip_target_speed = 0, grip_top_speed = 0;
+
+	CAR(player_car)->wheel_slip = 0u;
+	speed = CAR(player_car)->speed;
+	grip_speed_change = OBJECT(current_object)->player_car.speed_change;
+	grip_speed = speed + grip_speed_change;
+	overflow = v60_overflow_add32(speed, grip_speed_change, 0u);
+	negative = grip_speed >> 31;
+	speed_then_revs = grip_speed;
+	if (negative ^ overflow)
+		speed_then_revs = 0u;
+	speed_step = speed_then_revs + force;
+	if ((int32_t)speed_step <= (int32_t)top_speed)
+	{
+		if ((int32_t)speed_step < 0)
+			speed_step = 0u;
+		grip_target_speed = speed_step;
+		speed_step = grip_target_speed - speed_then_revs;
+		if (grip_target_speed != speed_then_revs)
+			speed_then_revs += (int32_t)(speed_step * 1u) / 2 + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
+	}
+	else
+	{
+		grip_top_speed = top_speed;
+		speed_step = grip_top_speed - speed_then_revs;
+		if (grip_top_speed != speed_then_revs)
+			speed_then_revs += (int32_t)(speed_step * 1u) / 0x1E + (shift_signed_by(speed_step, 0xE0u, 32) * 2u + 1u);
+		if (speed_then_revs >= 0xFFFFu)
+			speed_then_revs = 0xFFFFu;
+	}
+	CAR(player_car)->speed = speed_then_revs;
+	OBJECT(current_object)->player_car.impact_speed = speed_then_revs;
+	if (speed_then_revs == 0u)
+	{
+		player_car_engine_standing();
+		return;
+	}
+	CAR(player_car)->moving = 0xFFu;
+	speed_then_revs = divide_u32(speed_then_revs << 8, gear_ratio);
+	player_car_engine_revs(speed_then_revs);
+}
+
+/* The car standing (speed 0): car moving 0 and the revs toward the gas * 256 (player_car_engine_revs). */
+void player_car_engine_standing(void)
+{
+	uint32_t gas_revs = 0;
+
+	CAR(player_car)->moving = 0u;
+	gas_revs = (uint32_t)OBJECT(current_object)->player_car.gas << 8;
+	player_car_engine_revs(gas_revs);
+}
+
+/* Moves the revs (car revs) a third of the way toward target_revs, at most FFFF. */
+void player_car_engine_revs(uint32_t target_revs)
+{
+	uint32_t revs = 0, revs_change = 0;
+	uint32_t wanted_revs = 0;
+
+	revs = CAR(player_car)->revs;
+	wanted_revs = target_revs;
+	revs_change = wanted_revs - revs;
+	if (wanted_revs != revs)
+		revs += (int32_t)(revs_change * 1u) / 3 + (shift_signed_by(revs_change, 0xE0u, 32) * 2u + 1u);
+	if (revs >= 0xFFFFu)
+		revs = 0xFFFFu;
+	CAR(player_car)->revs = revs;
 }
 
 /* Returns the offset of length R2 along pitch R0 and yaw R1 (R3, R4, R5: x, y, z). Used by

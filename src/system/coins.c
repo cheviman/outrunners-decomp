@@ -39,11 +39,11 @@ void init_coins(void)
    chutes, 4-5 seat 2's) counts its coin (insert_coin, entries at 0114D4) and the credits it gives in the
    bookkeeping (701F02); then drives the coin meters (pulse_coin_meter: each seat's first, and its second
    unless the chutes are shared, chute_entry_offset). */
-void update_coins(uint32_t calibration)
+void update_coins(void)
 {
-	uint8_t meter_bit = 0, sound = 0;
+	uint8_t meter_bit = 0, pressed_switches = 0, released_switches = 0, sound = 0;
 	uint16_t credits_given = 0;
-	uint32_t chute_entry = 0, coin_meter = 0, counter = 0, pressed_switches = 0, released_switches = 0, seat_credits = 0, service_sounds = 0;
+	uint32_t chute_entry = 0, coin_meter = 0, counter = 0, seat_credits = 0, service_sounds = 0;
 	uint32_t saved_screen = 0;
 	uint8_t released_chutes = 0;
 
@@ -79,7 +79,7 @@ void update_coins(uint32_t calibration)
 		seat2_service_sounds--;
 	}
 	screen = saved_screen;
-	pressed_switches = (calibration & ~0xFFu) | switches_pressed;
+	pressed_switches = switches_pressed;
 	credits_given = 0u;
 	if ((pressed_switches & 1u) != 0u)
 	{
@@ -100,9 +100,8 @@ void update_coins(uint32_t calibration)
 		counter = SOUND_RAM + 0x1F04u;
 		bookkeeping_add16(counter, credits_given);
 	}
-	released_switches = (pressed_switches & ~0xFFu) | switches_released;
-	released_chutes = released_switches & 0x3Cu;
-	released_switches = (released_switches & ~0xFFu) | released_chutes;
+	released_chutes = switches_released & 0x3Cu;
+	released_switches = released_chutes;
 	if (released_chutes != 0u)
 	{
 		credits_given = 0u;
@@ -249,7 +248,7 @@ uint16_t add_service_credit(uint16_t credits_given, uint32_t seat_credits, uint3
    credit record's third byte; one more unit each bonus_adder, when set) and toward a credit (its second
    byte, seat1_coin_units: a credit each coins_per_credit, up to 9, show_title_on_credit). Returns R9
    plus the credits given. */
-uint16_t insert_coin(uint32_t released_switches, uint16_t credits_given, uint32_t chute_entry)
+uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t chute_entry)
 {
 	uint8_t bonus_units = 0, chute_units = 0, credit_units = 0, units_per_credit = 0;
 	uint32_t coin_sounds = 0, counter = 0, seat_credits = 0, units_per_bonus = 0;

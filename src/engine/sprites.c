@@ -1215,7 +1215,8 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width)
 			y = (uint16_t)(((int32_t)(OBJECT(current_object)->y_offset * size) >> 12) + PROJECTED_SEGMENT(projected_segment)->y);
 			offset_x = (uint16_t)pair_x;
 			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + PROJECTED_SEGMENT(projected_segment)->x);
-			pair_x = (((pair_x << 16) | (pair_x >> 16)) & ~0xFFFFu) | (uint16_t)(0u - offset_x);
+			pair_x = (pair_x << 16) | (pair_x >> 16);
+			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(0u - offset_x);
 			pair_x = (pair_x & ~0xFFFFu) | (uint16_t)(pair_x + PROJECTED_SEGMENT(projected_segment)->x);
 			size = shift_by(size, OBJECT(current_object)->scale_shift, 32);
 			size_index = size;

@@ -228,17 +228,17 @@ void staff_credits_code_start(void)
 	staff_credits_code_read_controls(&new_controls, &zero);
 	OBJECT(current_object)->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
 	OBJECT(current_object)->handler = staff_credits_code_watch_ADDRESS;
-	staff_credits_code_watch(new_controls);
+	staff_credits_code_watch();
 }
 
 /* Watches the controls for the code (staff_credits_code_sequence: shift down twice, shift up twice, the
    wheel left, right, left, right, the brake, the gas; a wrong one starts over); when it is complete:
    sound 9, the presentation 1200 frames longer (screen mode_timer), and staff_credits_code_show. */
-void staff_credits_code_watch(uint32_t new_controls)
+void staff_credits_code_watch(void)
 {
 	uint32_t zero = 0;
 	uint8_t sound_code = 0;
-	uint32_t next_control = 0;
+	uint32_t new_controls = 0, next_control = 0;
 	uint8_t element = 0;
 	uint32_t presentation_timer = 0;
 
@@ -303,13 +303,12 @@ void staff_credits_code_done(void)
    newly on (zero set when there are none). */
 void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero)
 {
-	uint32_t new_controls = *p_new_controls;
 	uint32_t zero = *p_zero;
-	uint8_t controls_now = 0, newly_on = 0, reading = 0;
-	uint32_t control_bit = 0, held_before = 0;
+	uint8_t controls_now = 0, held_before = 0, newly_on = 0, reading = 0;
+	uint32_t control_bit = 0;
 	uint8_t pressed_controls = 0;
 
-	held_before = (new_controls & ~0xFFu) | OBJECT(current_object)->staff_credits_code.controls_held;
+	held_before = OBJECT(current_object)->staff_credits_code.controls_held;
 	controls_now = 0u;
 	reading = (uint8_t)~SCREEN(screen)->wheel;
 	if ((held_before & 8u) != 0u)
@@ -343,7 +342,7 @@ void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero
 /* Sets bit R3 of the controls being read (R1) when the value R2 is E0 or more, or C0 or more when the
    bit was on in the controls held before (R0): staff_credits_code_read_controls' test for the wheel
    turned right, the gas and the brake. */
-uint8_t staff_credits_code_control_bit(uint32_t held_before, uint8_t controls_now, uint8_t reading, uint32_t control_bit)
+uint8_t staff_credits_code_control_bit(uint8_t held_before, uint8_t controls_now, uint8_t reading, uint32_t control_bit)
 {
 	if ((held_before & shl32(1u, (int)(control_bit))) != 0u)
 	{
