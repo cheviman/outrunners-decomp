@@ -303,7 +303,7 @@ void race_opening_sounds_start(void)
 void race_opening_sounds_play(void)
 {
 	uint8_t sound = 0;
-	uint32_t sound_cue = 0;
+	const struct sound_cue *sound_cue = NULL;
 
 	current_object->race_opening.count++;
 	if (current_object->race_opening.count < current_object->race_opening.next_count)
@@ -311,14 +311,14 @@ void race_opening_sounds_play(void)
 		race_opening_sounds_done();
 		return;
 	}
-	sound_cue = current_object->race_opening.sound_list;
-	sound = SOUND_CUE(sound_cue - 0x1u)->sound;
+	sound_cue = rom_pointer(current_object->race_opening.sound_list - 1u);
+	sound = sound_cue->sound;
 	sound_cue++;
 	request_sound(sound);
-	if (SOUND_CUE(sound_cue)->time != 0u)
+	if (sound_cue->time != 0u)
 	{
-		current_object->race_opening.next_count = SOUND_CUE(sound_cue)->time;
-		current_object->race_opening.sound_list = sound_cue + 1u;
+		current_object->race_opening.next_count = sound_cue->time;
+		current_object->race_opening.sound_list = address_of(sound_cue) + 1u;
 		return;
 	}
 	current_object->state++;
@@ -339,7 +339,7 @@ void race_opening_sounds_done(void)
 void stage_end_sounds_update(void)
 {
 	uint8_t end_sound = 0, sound = 0;
-	uint32_t sound_cue = 0;
+	const struct sound_cue *sound_cue = NULL;
 	uint8_t countdown = 0;
 
 	switch (current_object->state)
@@ -347,9 +347,9 @@ void stage_end_sounds_update(void)
 	case 0:
 		current_object->state++;
 		current_object->stage_end_sounds.stage = RACE(screen->race_copy)->stage_count;
-		sound_cue = stage_end_sound_cues_ADDRESS;
-		current_object->stage_end_sounds.countdown = SOUND_CUE(sound_cue)->time;
-		current_object->stage_end_sounds.sound_list = sound_cue + 1u;
+		sound_cue = rom_pointer(stage_end_sound_cues_ADDRESS);
+		current_object->stage_end_sounds.countdown = sound_cue->time;
+		current_object->stage_end_sounds.sound_list = address_of(sound_cue) + 1u;
 		return;
 	case 1:
 		if (current_object->stage_end_sounds.stage != RACE(screen->race_copy)->stage_count)
@@ -361,14 +361,14 @@ void stage_end_sounds_update(void)
 		current_object->stage_end_sounds.countdown = countdown - 1u;
 		if (countdown != 1u)
 			return;
-		sound_cue = current_object->stage_end_sounds.sound_list;
-		sound = SOUND_CUE(sound_cue - 0x1u)->sound;
+		sound_cue = rom_pointer(current_object->stage_end_sounds.sound_list - 1u);
+		sound = sound_cue->sound;
 		sound_cue++;
 		request_sound(sound);
-		if (SOUND_CUE(sound_cue)->time != 0u)
+		if (sound_cue->time != 0u)
 		{
-			current_object->stage_end_sounds.countdown = SOUND_CUE(sound_cue)->time;
-			current_object->stage_end_sounds.sound_list = sound_cue + 1u;
+			current_object->stage_end_sounds.countdown = sound_cue->time;
+			current_object->stage_end_sounds.sound_list = address_of(sound_cue) + 1u;
 			return;
 		}
 		current_object->state++;
@@ -561,23 +561,22 @@ void goal_actor_passenger_start(void)
 void goal_actor_rider_place(struct object *scene)
 {
 	uint32_t carry = 0;
-	uint32_t animation = 0, piece = 0, view = 0, width_scale = 0, x_offset = 0, y = 0;
+	uint32_t animation = 0, view = 0, width_scale = 0, x_offset = 0, y = 0;
 	const struct car_part_place *view_offsets = NULL;
 	struct race *race = NULL;
+	const struct sprite_piece *piece = NULL;
 
 	current_object->palette = RACE_CAR_RIDER(r12)->palette;
 	current_object->depth_layer = scene->depth_layer;
 	race = pointer_to(screen->race_copy);
-	piece = SPRITE_ANIMATION(sprite_animations[race->animation])->frames[race->frame] + 2u;
-	view = SPRITE_PIECE(piece)->attributes;
-	piece += 2u;
+	piece = rom_pointer(SPRITE_ANIMATION(sprite_animations[race->animation])->frames[race->frame] + 2u);
+	view = piece->attributes;
 	view = view & 0x40u;
 	view = view >> 6;
 	view = (uint16_t)(view * 0x34u);
-	view = (uint16_t)(view + (uint16_t)(SPRITE_PIECE(piece - 0x2u)->sprite - scene->race_car.first_body_piece) / 3u);
-	piece += 2u;
-	y = (uint16_t)SPRITE_PIECE(piece - 0x4u)->y_offset;
-	x_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->x_offset;
+	view = (uint16_t)(view + (uint16_t)(piece->sprite - scene->race_car.first_body_piece) / 3u);
+	y = (uint16_t)piece->y_offset;
+	x_offset = (uint16_t)piece->x_offset;
 	view_offsets = rom_pointer(RACE_CAR_RIDER(r12)->places + (view << 4));
 	x_offset = (uint16_t)(x_offset + view_offsets->x);
 	y = (uint16_t)(y + view_offsets->y);

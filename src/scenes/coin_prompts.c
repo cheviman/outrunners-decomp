@@ -246,7 +246,8 @@ struct object *coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_
    runs out (24 or 30 frames) and ends. */
 void ignition_key_prompt_update(void)
 {
-	uint32_t animation = 0, piece = 0;
+	uint32_t animation = 0;
+	const struct picture_record *piece = NULL;
 	uint16_t frames_left = 0;
 
 	switch (current_object->state)
@@ -266,22 +267,16 @@ void ignition_key_prompt_update(void)
 		return;
 	}
 	current_object->draw_mode = 0u;
-	piece = ignition_key_prompt_pieces_ADDRESS + ((uint32_t)current_object->ignition_key_prompt.piece << 4);
-	animation = PICTURE_RECORD(piece)->animation;
-	piece += 2u;
+	piece = rom_pointer(ignition_key_prompt_pieces_ADDRESS + ((uint32_t)current_object->ignition_key_prompt.piece << 4));
+	animation = piece->animation;
 	animation_start(animation);
-	current_object->palette = PICTURE_RECORD(piece - 0x2u)->palette;
-	piece += 2u;
-	current_object->width_scale = PICTURE_RECORD(piece - 0x4u)->width_scale;
-	piece += 2u;
-	current_object->height_scale = PICTURE_RECORD(piece - 0x6u)->height_scale;
-	piece += 2u;
-	current_object->x = PICTURE_RECORD(piece - 0x8u)->x;
-	piece += 2u;
-	current_object->y = PICTURE_RECORD(piece - 0xAu)->y;
-	piece += 2u;
-	current_object->depth_layer = PICTURE_RECORD(piece - 0xCu)->depth_layer;
-	current_object->ignition_key_prompt.frames_left = PICTURE_RECORD(piece - 0xCu)->frames_left;
+	current_object->palette = piece->palette;
+	current_object->width_scale = piece->width_scale;
+	current_object->height_scale = piece->height_scale;
+	current_object->x = piece->x;
+	current_object->y = piece->y;
+	current_object->depth_layer = piece->depth_layer;
+	current_object->ignition_key_prompt.frames_left = piece->frames_left;
 	current_object->state++;
 	animation_advance(0u);
 	draw_object(0u);

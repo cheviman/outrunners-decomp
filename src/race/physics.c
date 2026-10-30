@@ -35,28 +35,27 @@ void player_car_load_gears(void)
    model's points (car torque_curves). */
 void player_car_build_torque_curves(void)
 {
-	uint32_t curve_entry = 0, curve_force = 0, force_step = 0, gears_left = 0, speed = 0, steps_left = 0, torque_point = 0, torque_point_2 = 0;
+	uint32_t curve_entry = 0, curve_force = 0, force_step = 0, gears_left = 0, speed = 0, steps_left = 0;
+	const struct torque_point *torque_point = NULL, *torque_point_2 = NULL;
 	uint16_t next_speed = 0, next_force = 0;
 
 	curve_entry = address_of(screen) + 0x1300u;
-	torque_point = player_car->torque_curves;
+	torque_point = rom_pointer(player_car->torque_curves);
 	gears_left = player_car->top_gear;
 	gears_left = (uint8_t)(gears_left + 1u);
 	do
 	{
-		torque_point_2 = torque_point + 4u;
+		torque_point_2 = torque_point + 1;
 		do
 		{
-			speed = (uint16_t)TORQUE_POINT(torque_point)->speed;
-			torque_point += 2u;
-			next_speed = TORQUE_POINT(torque_point_2)->speed;
-			torque_point_2 += 2u;
-			next_force = TORQUE_POINT(torque_point_2 - 0x2u)->force;
-			torque_point_2 += 2u;
-			curve_force = (uint32_t)TORQUE_POINT(torque_point - 0x2u)->force << 16;
+			speed = (uint16_t)torque_point->speed;
+			next_speed = torque_point_2->speed;
+			next_force = torque_point_2->force;
+			torque_point_2++;
+			curve_force = (uint32_t)torque_point->force << 16;
 			steps_left = next_speed - speed;
 			force_step = divide_s32(((uint32_t)next_force << 16) - curve_force, steps_left);
-			torque_point += 2u;
+			torque_point++;
 			do
 			{
 				TORQUE_CURVE_FORCES(curve_entry)[0] = curve_force >> 16;
@@ -64,8 +63,8 @@ void player_car_build_torque_curves(void)
 				steps_left--;
 				curve_entry += 2u;
 			} while (steps_left != 0u);
-		} while (TORQUE_POINT(torque_point_2)->speed >= 0);
-		torque_point = torque_point_2 + 4u;
+		} while (torque_point_2->speed >= 0);
+		torque_point = torque_point_2 + 1;
 		gears_left--;
 	} while (gears_left != 0u);
 }

@@ -547,7 +547,7 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	uint32_t sprite_entry = *p_sprite_entry;
 	uint32_t last_piece = *p_last_piece;
 	uint16_t height_and_bits = 0, palette_word = 0, piece_attributes = 0, piece_x = 0, piece_y = 0, sprite_rom_offset = 0, sprite_source_size = 0, width_and_bits = 0;
-	uint32_t size_step = 0;
+	const struct sprite_size_step *size_step = NULL;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, element = 0;
 
 	piece_attributes = SPRITE_PIECE(last_piece)->attributes;
@@ -555,28 +555,23 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	SPRITE_WORDS(sprite_entry)[0] = piece_attributes;
 	sprite_entry += 2u;
 	last_piece += 2u;
-	size_step = sprite_size_steps_ADDRESS + SPRITE_PIECE(last_piece - 0x2u)->sprite * 4u;
-	source_size = SPRITE_SIZE_STEP(size_step)->source_size;
-	size_step += 2u;
+	size_step = rom_pointer(sprite_size_steps_ADDRESS + SPRITE_PIECE(last_piece - 0x2u)->sprite * 4u);
+	source_size = size_step->source_size;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
 	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
-	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
-	size_step += 2u;
+	rom_offset = size_step->rom_offset;
 	sprite_rom_offset = rom_offset;
-	height = SPRITE_SIZE_STEP(size_step - 0x4u)->height;
-	size_step += 2u;
-	height_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
-	size_step += 2u;
+	height = size_step->height;
+	height_bits = size_step->height_bits;
 	height_and_bits = (((height * scale) >> 8) & 0x3FFu) | height_bits;
 	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
-	width = SPRITE_SIZE_STEP(size_step - 0x8u)->width;
-	size_step += 2u;
-	width_bits = SPRITE_SIZE_STEP(size_step - 0xAu)->width_bits;
-	size_step += 2u;
+	width = size_step->width;
+	width_bits = size_step->width_bits;
+	size_step++;
 	width_and_bits = (((width * scale) >> 8) & 0x3FFu) | width_bits | screen->sprite_screen_bit;
 	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
@@ -605,7 +600,7 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	*p_attributes = (*p_attributes & 0xFFFF0000u) | piece_attributes;
 	*p_sprite_entry = sprite_entry;
 	*p_last_piece = last_piece;
-	*p_last_size_step = size_step;
+	*p_last_size_step = address_of(size_step);
 }
 
 /* Writes the first piece of animation R12 into the sprite list at R17, R18 at its own size (the number
@@ -615,7 +610,8 @@ void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t
 	uint32_t sprite_entry = *p_sprite_entry;
 	uint32_t last_piece = *p_last_piece;
 	uint16_t attributes = 0, height_and_bits = 0, sprite_rom_offset = 0, sprite_source_size = 0, width_and_bits = 0;
-	uint32_t piece = 0, size_step = 0;
+	uint32_t piece = 0;
+	const struct sprite_size_step *size_step = NULL;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0;
 
 	piece = SPRITE_ANIMATION(sprite_animations[(int32_t)last_piece])->frames[0] + 2u;
@@ -624,28 +620,23 @@ void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t
 	SPRITE_WORDS(sprite_entry)[0] = attributes;
 	sprite_entry += 2u;
 	piece += 2u;
-	size_step = sprite_size_steps_ADDRESS + SPRITE_PIECE(piece - 0x2u)->sprite * 4u;
-	source_size = SPRITE_SIZE_STEP(size_step)->source_size;
-	size_step += 2u;
+	size_step = rom_pointer(sprite_size_steps_ADDRESS + SPRITE_PIECE(piece - 0x2u)->sprite * 4u);
+	source_size = size_step->source_size;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
 	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
-	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
-	size_step += 2u;
+	rom_offset = size_step->rom_offset;
 	sprite_rom_offset = rom_offset;
-	height = SPRITE_SIZE_STEP(size_step - 0x4u)->height;
-	size_step += 2u;
-	height_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
-	size_step += 2u;
+	height = size_step->height;
+	height_bits = size_step->height_bits;
 	height_and_bits = height | height_bits;
 	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
-	width = SPRITE_SIZE_STEP(size_step - 0x8u)->width;
-	size_step += 2u;
-	width_bits = SPRITE_SIZE_STEP(size_step - 0xAu)->width_bits;
-	size_step += 2u;
+	width = size_step->width;
+	width_bits = size_step->width_bits;
+	size_step++;
 	width_and_bits = width | width_bits | screen->sprite_screen_bit;
 	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
@@ -666,5 +657,5 @@ void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t
 	piece += 2u;
 	*p_sprite_entry = sprite_entry;
 	*p_last_piece = piece;
-	*p_last_size_step = size_step;
+	*p_last_size_step = address_of(size_step);
 }

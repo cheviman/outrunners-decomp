@@ -855,31 +855,27 @@ void route_map_sign_update(void)
    layer follows its y (map_depth_from_y). */
 void route_map_landmark_update(void)
 {
-	uint32_t animation = 0, landmark = 0;
+	uint32_t animation = 0;
+	const struct route_map_landmark_record *landmark = NULL;
 	uint8_t frame_toggle = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		landmark = route_map_landmarks_ADDRESS + (((uint32_t)current_object->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)screen->route_branches[0] << 9));
-		animation = ROUTE_MAP_LANDMARK_RECORD(landmark)->animation;
-		landmark += 2u;
+		landmark = rom_pointer(route_map_landmarks_ADDRESS + (((uint32_t)current_object->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)screen->route_branches[0] << 9)));
+		animation = landmark->animation;
 		animation_start(animation);
-		current_object->palette = ROUTE_MAP_LANDMARK_RECORD(landmark - 0x2u)->palette;
-		landmark += 2u;
-		current_object->width_scale = ROUTE_MAP_LANDMARK_RECORD(landmark - 0x4u)->width_scale;
-		landmark += 2u;
-		current_object->height_scale = ROUTE_MAP_LANDMARK_RECORD(landmark - 0x6u)->height_scale;
-		landmark += 2u;
-		current_object->route_map_landmark.x_offset = ROUTE_MAP_LANDMARK_RECORD(landmark - 0x8u)->x_offset;
-		landmark += 2u;
-		current_object->route_map_landmark.y_offset = ROUTE_MAP_LANDMARK_RECORD(landmark - 0xAu)->y_offset;
+		current_object->palette = landmark->palette;
+		current_object->width_scale = landmark->width_scale;
+		current_object->height_scale = landmark->height_scale;
+		current_object->route_map_landmark.x_offset = landmark->x_offset;
+		current_object->route_map_landmark.y_offset = landmark->y_offset;
 		current_object->x = OBJECT(current_object->route_map_landmark.route_map)->x;
 		current_object->y = OBJECT(current_object->route_map_landmark.route_map)->y;
 		current_object->x += current_object->route_map_landmark.x_offset;
 		current_object->y += current_object->route_map_landmark.y_offset;
-		current_object->route_map_landmark.index_then_half_rate = (uint8_t)ROUTE_MAP_LANDMARK_RECORD(landmark - 0xAu)->half_rate;
+		current_object->route_map_landmark.index_then_half_rate = (uint8_t)landmark->half_rate;
 		current_object->state++;
 		map_depth_from_y();
 		draw_object(0u);
@@ -1151,7 +1147,8 @@ void route_map_leg_show(void)
    stage's place), shifted like the legs; 1 draws it. */
 void route_map_leg_car_show(void)
 {
-	uint32_t animation = 0, fork_index = 0, leg_stage = 0, model = 0, place = 0;
+	uint32_t animation = 0, fork_index = 0, leg_stage = 0, model = 0;
+	const struct route_map_leg_car_place *place = NULL;
 
 	switch (current_object->state)
 	{
@@ -1172,23 +1169,21 @@ void route_map_leg_car_show(void)
 	switch (OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.leg)
 	{
 	case 0:
-		place = route_map_start_leg_car_places_ADDRESS + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3);
-		current_object->x = ROUTE_MAP_LEG_CAR_PLACE(place)->x;
-		place += 2u;
-		current_object->y = ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
+		place = rom_pointer(route_map_start_leg_car_places_ADDRESS + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3));
+		current_object->x = place->x;
+		current_object->y = place->y;
 		current_object->x += route_map_direction_x_shifts[screen->route_branches[0]];
 		current_object->y += 0x6Bu;
-		current_object->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
+		current_object->frame = (uint8_t)place->frame;
 		current_object->state++;
 		return;
 	case 1:
-		place = route_map_first_fork_leg_car_places_ADDRESS + (((uint32_t)screen->route_branches[0] << 6) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3));
-		current_object->x = ROUTE_MAP_LEG_CAR_PLACE(place)->x;
-		place += 2u;
-		current_object->y = ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
+		place = rom_pointer(route_map_first_fork_leg_car_places_ADDRESS + (((uint32_t)screen->route_branches[0] << 6) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3)));
+		current_object->x = place->x;
+		current_object->y = place->y;
 		current_object->x += route_map_direction_x_shifts[screen->route_branches[0]];
 		current_object->y += 0x6Bu;
-		current_object->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
+		current_object->frame = (uint8_t)place->frame;
 		current_object->state++;
 		return;
 	case 2:
@@ -1196,16 +1191,15 @@ void route_map_leg_car_show(void)
 	case 4:
 	case 5:
 		fork_index = OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.leg - 1u;
-		place = route_map_fork_leg_car_places_ADDRESS + (((screen->route_branches[0] * 3u) << 6) + ((screen->route_branches[(int32_t)fork_index] * 3u) << 5) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3));
+		place = rom_pointer(route_map_fork_leg_car_places_ADDRESS + (((screen->route_branches[0] * 3u) << 6) + ((screen->route_branches[(int32_t)fork_index] * 3u) << 5) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3)));
 		leg_stage = screen->route_stages[(int32_t)(fork_index - 1u)];
 		current_object->x = route_map_stage_xs[leg_stage];
 		current_object->y = route_map_stage_ys[leg_stage];
-		current_object->x += ROUTE_MAP_LEG_CAR_PLACE(place)->x;
-		place += 2u;
-		current_object->y += ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->y;
+		current_object->x += place->x;
+		current_object->y += place->y;
 		current_object->x += route_map_direction_x_shifts[screen->route_branches[0]];
 		current_object->y += 0x6Bu;
-		current_object->frame = (uint8_t)ROUTE_MAP_LEG_CAR_PLACE(place - 0x2u)->frame;
+		current_object->frame = (uint8_t)place->frame;
 		current_object->state++;
 		return;
 	}

@@ -232,21 +232,20 @@ void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_re
 uint32_t take_screen_inputs(void)
 {
 	uint8_t new_link_status = 0, old_link_status = 0, status_cleared = 0;
-	uint32_t buttons = 0, buttons_place = 0, input_changes = 0, input_read_place = 0, inputs = 0;
+	uint32_t buttons = 0, input_changes = 0, input_read_place = 0, inputs = 0;
+	struct screen *buttons_place = NULL;
 	uint8_t new_status = 0;
 
 	input_read_place = screen->input_read_place;
 	inputs = screen->input_ring[(int32_t)input_read_place];
 	screen->input_read_place = (input_read_place + 1u) & 7u;
-	buttons_place = address_of(screen) + 0x110u;
-	buttons = SCREEN(buttons_place - 0x110u)->buttons;
-	SCREEN(buttons_place - 0x110u)->buttons = inputs;
-	buttons_place += 4u;
-	SCREEN(buttons_place - 0x114u)->previous_buttons = buttons;
+	buttons_place = screen;
+	buttons = buttons_place->buttons;
+	buttons_place->buttons = inputs;
+	buttons_place->previous_buttons = buttons;
 	input_changes = ~buttons & inputs;
-	buttons_place += 4u;
-	SCREEN(buttons_place - 0x118u)->buttons_pressed = input_changes;
-	SCREEN(buttons_place - 0x118u)->buttons_released = buttons & ~inputs;
+	buttons_place->buttons_pressed = input_changes;
+	buttons_place->buttons_released = buttons & ~inputs;
 	if (game->isdn_mode != 0u)
 	{
 		new_link_status = RACE(screen->race_copy)->link_status;

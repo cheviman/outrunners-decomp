@@ -25,8 +25,9 @@
 void title_screen_update(void)
 {
 	uint8_t next_attract_car = 0, object_index = 0;
-	uint32_t background_setup = 0, objects_left = 0, title_screen_layer_setup = 0;
+	uint32_t background_setup = 0, objects_left = 0;
 	struct object *object = NULL;
+	const struct title_screen_layer_setup *title_screen_layer_setup = NULL;
 	uint8_t frames = 0;
 	uint32_t scroll_x_address = 0, scroll_x_address_2 = 0, second_scroll_x_address = 0, scroll_x_address_3 = 0, second_scroll_x_address_2 = 0;
 
@@ -35,21 +36,15 @@ void title_screen_update(void)
 	case 0:
 		screen->route_map_signals &= 0xFFFFFF00u;
 		screen->title_logo_shine = 0u;
-		title_screen_layer_setup = title_screen_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u;
-		current_object->title_screen.tile_bank_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup)->tile_bank_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.pages_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x4u)->pages_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.scroll_x_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x8u)->scroll_x_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.scroll_y_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0xCu)->scroll_y_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.second_tile_bank_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x10u)->second_tile_bank_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.second_pages_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x14u)->second_pages_address;
-		title_screen_layer_setup += 4u;
-		current_object->title_screen.second_scroll_x_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x18u)->second_scroll_x_address;
-		current_object->title_screen.second_scroll_y_address = TITLE_SCREEN_LAYER_SETUP(title_screen_layer_setup - 0x18u)->second_scroll_y_address;
+		title_screen_layer_setup = rom_pointer(title_screen_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+		current_object->title_screen.tile_bank_address = title_screen_layer_setup->tile_bank_address;
+		current_object->title_screen.pages_address = title_screen_layer_setup->pages_address;
+		current_object->title_screen.scroll_x_address = title_screen_layer_setup->scroll_x_address;
+		current_object->title_screen.scroll_y_address = title_screen_layer_setup->scroll_y_address;
+		current_object->title_screen.second_tile_bank_address = title_screen_layer_setup->second_tile_bank_address;
+		current_object->title_screen.second_pages_address = title_screen_layer_setup->second_pages_address;
+		current_object->title_screen.second_scroll_x_address = title_screen_layer_setup->second_scroll_x_address;
+		current_object->title_screen.second_scroll_y_address = title_screen_layer_setup->second_scroll_y_address;
 		background_setup = title_background_setups_ADDRESS + screen->index * 5u * 4u;
 		set_up_background(background_setup);
 		VIDEO_REGISTER_WORDS(current_object->title_screen.second_scroll_y_address)[0] = 0xFFF0u;
@@ -151,32 +146,27 @@ void title_screen_update(void)
 void title_car_drive(void)
 {
 	uint16_t bounce = 0;
-	uint32_t animation = 0, model = 0, title_car_record = 0;
+	uint32_t animation = 0, model = 0;
 	struct object *object = NULL;
+	const struct title_car_record *title_car_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		title_car_record = title_car_records_ADDRESS + ((uint32_t)current_object->title_car.index << 4);
-		model = TITLE_CAR_RECORD(title_car_record)->model;
+		title_car_record = rom_pointer(title_car_records_ADDRESS + ((uint32_t)current_object->title_car.index << 4));
+		model = title_car_record->model;
 		animation = title_car_animations[model];
-		title_car_record += 2u;
 		animation_start(animation);
-		current_object->palette = TITLE_CAR_RECORD(title_car_record - 0x2u)->palette;
-		title_car_record += 2u;
-		current_object->width_scale = TITLE_CAR_RECORD(title_car_record - 0x4u)->width_scale;
-		title_car_record += 2u;
-		current_object->height_scale = TITLE_CAR_RECORD(title_car_record - 0x6u)->height_scale;
-		title_car_record += 2u;
-		current_object->title_car.position = TITLE_CAR_RECORD(title_car_record - 0x8u)->position;
-		title_car_record += 2u;
-		current_object->y = TITLE_CAR_RECORD(title_car_record - 0xAu)->y;
-		title_car_record += 2u;
-		current_object->title_car.speed = TITLE_CAR_RECORD(title_car_record - 0xCu)->speed;
+		current_object->palette = title_car_record->palette;
+		current_object->width_scale = title_car_record->width_scale;
+		current_object->height_scale = title_car_record->height_scale;
+		current_object->title_car.position = title_car_record->position;
+		current_object->y = title_car_record->y;
+		current_object->title_car.speed = title_car_record->speed;
 		current_object->frame = 9u;
 		current_object->depth_layer = 0x18Fu;
-		current_object->depth_layer += TITLE_CAR_RECORD(title_car_record - 0xCu)->depth_layer;
+		current_object->depth_layer += title_car_record->depth_layer;
 		object = start_object();
 		object->handler = title_car_passenger_update_ADDRESS;
 		object->title_car_passenger.car = address_of(current_object);
@@ -776,7 +766,8 @@ void title_seagull_fly(void)
    behind the logo, 2 the SEGA logo. */
 void title_picture_draw(void)
 {
-	uint32_t animation = 0, picture = 0;
+	uint32_t animation = 0;
+	const struct picture_record *picture = NULL;
 
 	switch (current_object->state)
 	{
@@ -787,20 +778,15 @@ void title_picture_draw(void)
 		break;
 	}
 	current_object->draw_mode = 0u;
-	picture = title_pictures_ADDRESS + ((uint32_t)current_object->title_picture.index << 4);
-	animation = PICTURE_RECORD(picture)->animation;
-	picture += 2u;
+	picture = rom_pointer(title_pictures_ADDRESS + ((uint32_t)current_object->title_picture.index << 4));
+	animation = picture->animation;
 	animation_start(animation);
-	current_object->palette = PICTURE_RECORD(picture - 0x2u)->palette;
-	picture += 2u;
-	current_object->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
-	picture += 2u;
-	current_object->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
-	picture += 2u;
-	current_object->x = PICTURE_RECORD(picture - 0x8u)->x;
-	picture += 2u;
-	current_object->y = PICTURE_RECORD(picture - 0xAu)->y;
-	current_object->depth_layer = PICTURE_RECORD(picture - 0xAu)->depth_layer;
+	current_object->palette = picture->palette;
+	current_object->width_scale = picture->width_scale;
+	current_object->height_scale = picture->height_scale;
+	current_object->x = picture->x;
+	current_object->y = picture->y;
+	current_object->depth_layer = picture->depth_layer;
 	current_object->state++;
 	draw_object(0u);
 }

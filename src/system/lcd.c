@@ -515,15 +515,13 @@ void lcd_update(void)
    (lcd_scroll_request, lcd_scroll), the DJ's face off (dj_face). */
 void clear_lcd(void)
 {
-	uint32_t text_place = 0;
+	struct screen *text_place = NULL;
 
-	text_place = address_of(screen) + 0xF10u;
-	AS32(SCREEN(text_place - 0xF10u)->lcd_text[0]) = 0x20202020u;
-	text_place += 4u;
-	AS32(SCREEN(text_place - 0xF14u)->lcd_text[4]) = 0x20202020u;
-	text_place += 4u;
-	AS32(SCREEN(text_place - 0xF18u)->lcd_text[8]) = 0x20202020u;
-	AS32(SCREEN(text_place - 0xF18u)->lcd_text[12]) = 0x20202020u;
+	text_place = screen;
+	AS32(text_place->lcd_text[0]) = 0x20202020u;
+	AS32(text_place->lcd_text[4]) = 0x20202020u;
+	AS32(text_place->lcd_text[8]) = 0x20202020u;
+	AS32(text_place->lcd_text[12]) = 0x20202020u;
 	screen->dj_mouth_shapes = 0u;
 	screen->dj_mouth_frames = 3u;
 	screen->dj_face = 0u;

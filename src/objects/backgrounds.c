@@ -35,7 +35,8 @@ void race_background_update(void)
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
-	uint32_t animation = 0, background = 0, background_inverted = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	uint32_t animation = 0, background = 0, background_inverted = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	const struct race_background_layer_setup *race_background_layer_setup = NULL;
 	const struct road_palette_record *fades = NULL;
 	struct tilemap_pages *page_word_address = NULL;
 	uint32_t view_turn_kept = 0;
@@ -47,17 +48,14 @@ void race_background_update(void)
 	case 0:
 		index = screen->index;
 		current_object->race_background.page_half = index;
-		race_background_layer_setup = race_background_layer_setups_ADDRESS + index * 5u * 4u;
-		current_object->race_background.scroll_x_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup)->scroll_x_address;
-		race_background_layer_setup += 4u;
-		current_object->race_background.scroll_y_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x4u)->scroll_y_address;
-		race_background_layer_setup += 4u;
-		current_object->race_background.tile_bank_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x8u)->tile_bank_address;
-		race_background_layer_setup += 4u;
-		page_word_address = pointer_to(RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->page_word_address);
+		race_background_layer_setup = rom_pointer(race_background_layer_setups_ADDRESS + index * 5u * 4u);
+		current_object->race_background.scroll_x_address = race_background_layer_setup->scroll_x_address;
+		current_object->race_background.scroll_y_address = race_background_layer_setup->scroll_y_address;
+		current_object->race_background.tile_bank_address = race_background_layer_setup->tile_bank_address;
+		page_word_address = pointer_to(race_background_layer_setup->page_word_address);
 		current_object->race_background.page_word_address = address_of(page_word_address);
 		page_word_address->pages = background_page_words[(uint32_t)current_object->race_background.page_half << 3];
-		mixer_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->mixer_address;
+		mixer_address = race_background_layer_setup->mixer_address;
 		mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 		mixer_bits = mixer_bits & ~0xFu;
 		MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 4u;
@@ -406,48 +404,39 @@ void race_background_upper_animation_cycle(void)
    title_screen_update. */
 void set_up_background(uint32_t background_setup)
 {
-	uint32_t background_registers = 0, mixer_address = 0, mixer_bits = 0, palette_list = 0, tile_pages = 0;
+	uint32_t mixer_address = 0, mixer_bits = 0, palette_list = 0, tile_pages = 0;
+	const struct background_registers *background_registers = NULL;
 	struct tilemap_banks *tile_banks_address = NULL;
 	struct tilemap_pages *pages_address = NULL;
 	uint8_t tile_bank = 0, second_tile_bank = 0;
 	uint32_t pages = 0, second_pages = 0;
 
-	background_registers = background_register_lists[screen->index];
-	pages_address = pointer_to(BACKGROUND_REGISTERS(background_registers)->pages_address);
+	background_registers = rom_pointer(background_register_lists[screen->index]);
+	pages_address = pointer_to(background_registers->pages_address);
 	pages = BACKGROUND_SETUP(background_setup)->pages;
 	background_setup += 4u;
 	pages_address->pages = pages;
 	second_pages = BACKGROUND_SETUP(background_setup - 0x4u)->second_pages;
 	background_setup += 4u;
 	pages_address->second_pages = second_pages;
-	background_registers += 4u;
-	tile_banks_address = pointer_to(BACKGROUND_REGISTERS(background_registers - 0x4u)->tile_banks_address);
+	tile_banks_address = pointer_to(background_registers->tile_banks_address);
 	tile_bank = BACKGROUND_SETUP(background_setup - 0x8u)->tile_bank;
 	background_setup++;
 	tile_banks_address->tile_bank = tile_bank;
 	second_tile_bank = BACKGROUND_SETUP(background_setup - 0x9u)->second_tile_bank;
 	background_setup++;
 	tile_banks_address->second_tile_bank = second_tile_bank;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x8u)->zoom_x_address)[0] = 0x200u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0xCu)->zoom_y_address)[0] = 0x200u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x10u)->zoom_centre_x_address)[0] = 0u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x14u)->zoom_centre_y_address)[0] = 0u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x18u)->scroll_x_address)[0] = 0u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x1Cu)->scroll_y_address)[0] = 0u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x20u)->second_scroll_x_address)[0] = 0u;
-	background_registers += 4u;
-	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x24u)->second_scroll_y_address)[0] = 0u;
-	background_registers += 4u;
-	game->video_registers[2] &= BACKGROUND_REGISTERS(background_registers - 0x28u)->video_mask;
+	VIDEO_REGISTER_WORDS(background_registers->zoom_x_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(background_registers->zoom_y_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(background_registers->zoom_centre_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(background_registers->zoom_centre_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(background_registers->scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(background_registers->scroll_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(background_registers->second_scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(background_registers->second_scroll_y_address)[0] = 0u;
+	game->video_registers[2] &= background_registers->video_mask;
 	game->send_video_registers = 0xFFu;
-	mixer_address = BACKGROUND_REGISTERS(background_registers - 0x28u)->mixer_address;
+	mixer_address = background_registers->mixer_address;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = mixer_bits & ~0xFu;
 	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority;
@@ -501,19 +490,18 @@ void race_background_start_objects(uint32_t stage)
 void palette_cycle_update(void)
 {
 	uint16_t step_frames = 0;
-	uint32_t palette_cycle_record = 0, palette_list = 0, palettes = 0;
+	uint32_t palette_list = 0, palettes = 0;
+	const struct palette_cycle_record *palette_cycle_record = NULL;
 	uint16_t delay = 0, frames_left = 0, step_countdown = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
-		palette_cycle_record = current_object->palette_cycle.data;
-		current_object->palette_cycle.delay = PALETTE_CYCLE_RECORD(palette_cycle_record)->delay;
-		palette_cycle_record += 2u;
-		current_object->palette_cycle.frames_left = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x2u)->frames_left;
-		palette_cycle_record += 2u;
-		current_object->palette_cycle.palette_list = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x4u)->palette_list;
-		step_frames = (uint16_t)PALETTE_CYCLE_RECORD(palette_cycle_record - 0x4u)->step_frames;
+		palette_cycle_record = rom_pointer(current_object->palette_cycle.data);
+		current_object->palette_cycle.delay = palette_cycle_record->delay;
+		current_object->palette_cycle.frames_left = palette_cycle_record->frames_left;
+		current_object->palette_cycle.palette_list = palette_cycle_record->palette_list;
+		step_frames = (uint16_t)palette_cycle_record->step_frames;
 		current_object->palette_cycle.step_frames = step_frames;
 		current_object->palette_cycle.step_countdown = step_frames;
 		current_object->palette_cycle.running = 0u;
@@ -719,20 +707,18 @@ void sunset_fade_wait(void)
    when screen background_at_start is set); then backdrop_far_update. */
 void backdrop_far_start(void)
 {
-	uint32_t animation = 0, backdrop_record = 0;
+	uint32_t animation = 0;
+	const struct backdrop_record *backdrop_record = NULL;
 
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop.leaving = 0u;
-	backdrop_record = current_object->backdrop.data;
-	animation = BACKDROP_RECORD(backdrop_record)->animation;
-	backdrop_record += 4u;
-	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
-	backdrop_record += 2u;
-	current_object->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
-	backdrop_record += 2u;
-	current_object->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	current_object->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	backdrop_record = rom_pointer(current_object->backdrop.data);
+	animation = backdrop_record->animation;
+	current_object->palette = backdrop_record->palette;
+	current_object->backdrop.panorama_x = backdrop_record->panorama_x;
+	current_object->backdrop.height = backdrop_record->height;
+	current_object->backdrop.half_width = backdrop_record->half_width;
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);
@@ -783,20 +769,18 @@ void backdrop_far_update(void)
    background_at_start); then backdrop_near_update. */
 void backdrop_near_start(void)
 {
-	uint32_t animation = 0, backdrop_record = 0;
+	uint32_t animation = 0;
+	const struct backdrop_record *backdrop_record = NULL;
 
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop.leaving = 0u;
-	backdrop_record = current_object->backdrop.data;
-	animation = BACKDROP_RECORD(backdrop_record)->animation;
-	backdrop_record += 4u;
-	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
-	backdrop_record += 2u;
-	current_object->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
-	backdrop_record += 2u;
-	current_object->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	current_object->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	backdrop_record = rom_pointer(current_object->backdrop.data);
+	animation = backdrop_record->animation;
+	current_object->palette = backdrop_record->palette;
+	current_object->backdrop.panorama_x = backdrop_record->panorama_x;
+	current_object->backdrop.height = backdrop_record->height;
+	current_object->backdrop.half_width = backdrop_record->half_width;
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);
@@ -855,25 +839,22 @@ void backdrop_near_update(void)
    window_segment) less the distance in its data; then backdrop_landmark_update. */
 void backdrop_landmark_start(void)
 {
-	uint32_t animation = 0, backdrop_record = 0;
+	uint32_t animation = 0;
+	const struct backdrop_record *backdrop_record = NULL;
 
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_landmark.leaving = 0u;
-	backdrop_record = current_object->backdrop_landmark.data;
-	animation = BACKDROP_RECORD(backdrop_record)->animation;
-	backdrop_record += 4u;
-	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
-	backdrop_record += 2u;
-	current_object->backdrop_landmark.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
-	backdrop_record += 2u;
-	current_object->backdrop_landmark.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	backdrop_record += 2u;
-	current_object->backdrop_landmark.half_width = BACKDROP_RECORD(backdrop_record - 0xAu)->half_width;
+	backdrop_record = rom_pointer(current_object->backdrop_landmark.data);
+	animation = backdrop_record->animation;
+	current_object->palette = backdrop_record->palette;
+	current_object->backdrop_landmark.panorama_x = backdrop_record->panorama_x;
+	current_object->backdrop_landmark.height = backdrop_record->height;
+	current_object->backdrop_landmark.half_width = backdrop_record->half_width;
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 2u;
 	animation_start(animation);
-	current_object->backdrop_landmark.approach_start = 0u - BACKDROP_RECORD(backdrop_record - 0xAu)->approach_distance + player_car->window_segment;
+	current_object->backdrop_landmark.approach_start = 0u - backdrop_record->approach_distance + player_car->window_segment;
 	current_object->handler = backdrop_landmark_update_ADDRESS;
 	backdrop_landmark_update();
 }
@@ -950,20 +931,18 @@ void backdrop_landmark_update(void)
    other_palette 120; then backdrop_flashing_update. */
 void backdrop_flashing_start(void)
 {
-	uint32_t animation = 0, backdrop_record = 0;
+	uint32_t animation = 0;
+	const struct backdrop_record *backdrop_record = NULL;
 
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_flashing.leaving = 0u;
-	backdrop_record = current_object->backdrop_flashing.data;
-	animation = BACKDROP_RECORD(backdrop_record)->animation;
-	backdrop_record += 4u;
-	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
-	backdrop_record += 2u;
-	current_object->backdrop_flashing.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
-	backdrop_record += 2u;
-	current_object->backdrop_flashing.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	current_object->backdrop_flashing.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	backdrop_record = rom_pointer(current_object->backdrop_flashing.data);
+	animation = backdrop_record->animation;
+	current_object->palette = backdrop_record->palette;
+	current_object->backdrop_flashing.panorama_x = backdrop_record->panorama_x;
+	current_object->backdrop_flashing.height = backdrop_record->height;
+	current_object->backdrop_flashing.half_width = backdrop_record->half_width;
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);
@@ -1019,20 +998,18 @@ void backdrop_flashing_update(void)
    backdrop_translucent_update. */
 void backdrop_translucent_start(void)
 {
-	uint32_t animation = 0, backdrop_record = 0;
+	uint32_t animation = 0;
+	const struct backdrop_record *backdrop_record = NULL;
 
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_translucent.leaving = 0u;
-	backdrop_record = current_object->backdrop_translucent.data;
-	animation = BACKDROP_RECORD(backdrop_record)->animation;
-	backdrop_record += 4u;
-	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
-	backdrop_record += 2u;
-	current_object->backdrop_translucent.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
-	backdrop_record += 2u;
-	current_object->backdrop_translucent.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	current_object->backdrop_translucent.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	backdrop_record = rom_pointer(current_object->backdrop_translucent.data);
+	animation = backdrop_record->animation;
+	current_object->palette = backdrop_record->palette;
+	current_object->backdrop_translucent.panorama_x = backdrop_record->panorama_x;
+	current_object->backdrop_translucent.height = backdrop_record->height;
+	current_object->backdrop_translucent.half_width = backdrop_record->half_width;
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);

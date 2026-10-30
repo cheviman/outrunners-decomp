@@ -394,7 +394,8 @@ void place_number_update(void)
    time. */
 void lap_timer_update(void)
 {
-	uint32_t animation = 0, checkpoint_time = 0, checkpoints = 0, lap_time = 0, object = 0, player = 0, text = 0, time_text = 0;
+	uint32_t animation = 0, checkpoint_time = 0, checkpoints = 0, lap_time = 0, player = 0, text = 0, time_text = 0;
+	struct object *object = NULL;
 	uint16_t split_frames = 0;
 
 	switch (current_object->state)
@@ -407,11 +408,10 @@ void lap_timer_update(void)
 		current_object->x = 0xE0u;
 		current_object->y = 0x16u;
 		animation_start(animation);
-		object = address_of(current_object) + 0x80u;
-		OBJECT(object - 0x80u)->lap_timer.text_x = 0xF8u;
-		object += 2u;
-		OBJECT(object - 0x82u)->lap_timer.text_y = 0xEu;
-		OBJECT(object - 0x82u)->lap_timer.text_attribute = 0x90u;
+		object = current_object;
+		object->lap_timer.text_x = 0xF8u;
+		object->lap_timer.text_y = 0xEu;
+		object->lap_timer.text_attribute = 0x90u;
 		current_object->lap_timer.checkpoints = RACE(screen->race_copy)->stage_count;
 		current_object->state++;
 		return;
@@ -667,25 +667,22 @@ void time_left_display_update(void)
    nothing at its first value. Used by time_left_display, car_select_run and 001EC2. */
 void time_digits_start(void)
 {
-	uint32_t animation = 0, object = 0;
+	uint32_t animation = 0;
+	struct object *object = NULL;
 
-	object = address_of(current_object) + 0x80u;
-	OBJECT(object - 0x80u)->time_digits.units_flip = 1;
-	OBJECT(object - 0x80u)->time_digits.units_digit = 0u;
-	OBJECT(object - 0x80u)->time_digits.units_width = 0x40u;
-	object += 4u;
-	OBJECT(object - 0x84u)->time_digits.units_remaining = 0u;
-	object += 4u;
-	OBJECT(object - 0x88u)->time_digits.tens_flip = 1;
-	OBJECT(object - 0x88u)->time_digits.tens_digit = 0u;
-	OBJECT(object - 0x88u)->time_digits.tens_width = 0x40u;
-	object += 4u;
-	OBJECT(object - 0x8Cu)->time_digits.tens_remaining = 0u;
-	object += 4u;
-	OBJECT(object - 0x90u)->time_digits.hundreds_flip = 1;
-	OBJECT(object - 0x90u)->time_digits.hundreds_digit = 0u;
-	OBJECT(object - 0x90u)->time_digits.hundreds_width = 0x40u;
-	OBJECT(object - 0x90u)->time_digits.hundreds_remaining = 0u;
+	object = current_object;
+	object->time_digits.units_flip = 1;
+	object->time_digits.units_digit = 0u;
+	object->time_digits.units_width = 0x40u;
+	object->time_digits.units_remaining = 0u;
+	object->time_digits.tens_flip = 1;
+	object->time_digits.tens_digit = 0u;
+	object->time_digits.tens_width = 0x40u;
+	object->time_digits.tens_remaining = 0u;
+	object->time_digits.hundreds_flip = 1;
+	object->time_digits.hundreds_digit = 0u;
+	object->time_digits.hundreds_width = 0x40u;
+	object->time_digits.hundreds_remaining = 0u;
 	current_object->depth_layer = 0x19Eu;
 	current_object->draw_mode = 0u;
 	animation = TIME_DIGITS;
@@ -1203,7 +1200,8 @@ void checkpoint_board_update(void)
 {
 	uint8_t checkpoints_passed = 0;
 	uint16_t row_offset = 0;
-	uint32_t blink_on = 0, checkpoint = 0, checkpoint_count = 0, leave_segment = 0, object = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
+	uint32_t blink_on = 0, checkpoint = 0, checkpoint_count = 0, leave_segment = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
+	struct object *object = NULL;
 	uint8_t blink_timer = 0, rows_left = 0;
 	uint16_t gap = 0, offset_before = 0;
 
@@ -1366,15 +1364,15 @@ void checkpoint_board_update(void)
 		current_object->checkpoint_board.leave_segment = 0u;
 	if (current_object->checkpoint_board.rows_shown == 0u)
 	{
-		object = address_of(current_object) + 0xF0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[0] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[1] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[2] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[3] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[4] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[5] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[6] = 0u;
-		OBJECT(object - 0xF0u)->checkpoint_board.row_steps[7] = 0u;
+		object = current_object;
+		object->checkpoint_board.row_steps[0] = 0u;
+		object->checkpoint_board.row_steps[1] = 0u;
+		object->checkpoint_board.row_steps[2] = 0u;
+		object->checkpoint_board.row_steps[3] = 0u;
+		object->checkpoint_board.row_steps[4] = 0u;
+		object->checkpoint_board.row_steps[5] = 0u;
+		object->checkpoint_board.row_steps[6] = 0u;
+		object->checkpoint_board.row_steps[7] = 0u;
 		current_object->state--;
 	}
 }

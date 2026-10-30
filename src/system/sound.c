@@ -49,13 +49,13 @@ void request_sound(uint8_t sound)
    requests). */
 void queue_sound(uint8_t sound)
 {
-	uint32_t request_ring = 0, sound_queue_write = 0;
+	uint32_t sound_queue_write = 0;
+	struct screen *request_ring = NULL;
 
-	request_ring = address_of(screen) + 0x801u;
-	sound_queue_write = SCREEN(request_ring - 0x801u)->sound_queue_write;
-	request_ring++;
-	SCREEN(request_ring - 0x802u)->sound_queue[(int32_t)sound_queue_write] = sound;
-	SCREEN(request_ring - 0x802u)->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
+	request_ring = screen;
+	sound_queue_write = request_ring->sound_queue_write;
+	request_ring->sound_queue[(int32_t)sound_queue_write] = sound;
+	request_ring->sound_queue_write = (sound_queue_write + 1u) & 0x1Fu;
 }
 
 /* Unused: puts sound R0 in the screen's second ring of 32 sound requests (second_sound_queue_write, the
@@ -64,26 +64,25 @@ void queue_sound(uint8_t sound)
    (demo_second_sounds) allows, and only with advertise_sound set. */
 void request_second_sound(uint8_t sound)
 {
-	uint32_t request_ring = 0, second_sound_queue_write = 0, sound_number = 0;
+	uint32_t second_sound_queue_write = 0, sound_number = 0;
+	struct screen *request_ring = NULL;
 
 	if ((screen->demo_flags & 0x100u) == 0u)
 	{
-		request_ring = address_of(screen) + 0x841u;
-		second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
-		request_ring++;
-		SCREEN(request_ring - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
-		SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
+		request_ring = screen;
+		second_sound_queue_write = request_ring->second_sound_queue_write;
+		request_ring->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
+		request_ring->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 	}
 	else if (game->advertise_sound != 0u)
 	{
 		sound_number = (uint8_t)sound;
 		if ((demo_second_sounds[sound_number >> 5] & shl32(1u, (int)(sound_number & 0x1Fu))) != 0u)
 		{
-			request_ring = address_of(screen) + 0x841u;
-			second_sound_queue_write = SCREEN(request_ring - 0x841u)->second_sound_queue_write;
-			request_ring++;
-			SCREEN(request_ring - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
-			SCREEN(request_ring - 0x842u)->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
+			request_ring = screen;
+			second_sound_queue_write = request_ring->second_sound_queue_write;
+			request_ring->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
+			request_ring->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 			return;
 		}
 	}

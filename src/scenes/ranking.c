@@ -17,53 +17,49 @@
    low three bits. */
 uint32_t load_course_records(void)
 {
-	uint32_t backup_record = 0, course_record = 0, courses_left = 0, record_copy = 0;
+	uint32_t backup_record = 0, courses_left = 0;
+	const struct course_record *course_record = NULL;
+	struct course_record_copy *record_copy = NULL;
 	uint32_t model_place = 0;
 
 	courses_left = 0xAu;
 	backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS;
-	course_record = default_course_records_ADDRESS;
-	record_copy = course_records_ADDRESS;
+	course_record = rom_pointer(default_course_records_ADDRESS);
+	record_copy = pointer_to(course_records_ADDRESS);
 	for (;;)
 	{
 		if ((int8_t)BACKUP_COURSE_RECORD(backup_record)->model >= 0)
 		{
-			COURSE_RECORD_COPY(record_copy)->model = BACKUP_COURSE_RECORD(backup_record)->model;
-			model_place = record_copy;
-			record_copy++;
+			record_copy->model = BACKUP_COURSE_RECORD(backup_record)->model;
+			model_place = address_of(record_copy);
 			COURSE_RECORD_COPY(model_place)->model &= 7u;
 			backup_record++;
-			COURSE_RECORD_COPY(record_copy - 0x1u)->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
-			record_copy++;
+			record_copy->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
 			backup_record++;
-			COURSE_RECORD_COPY(record_copy - 0x2u)->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
-			record_copy++;
+			record_copy->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
 			backup_record++;
-			COURSE_RECORD_COPY(record_copy - 0x3u)->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
-			record_copy++;
+			record_copy->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
 			backup_record++;
-			COURSE_RECORD_COPY(record_copy - 0x4u)->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
-			record_copy += 2u;
-			course_record += 6u;
+			record_copy->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
+			record_copy++;
+			course_record++;
 			courses_left--;
 			backup_record += 2u;
 			if (courses_left == 0u)
-				return record_copy;
+				return address_of(record_copy);
 			continue;
 		}
-		COURSE_RECORD_COPY(record_copy)->model_and_name = COURSE_RECORD(course_record)->model_and_name;
-		record_copy += 4u;
-		course_record += 4u;
-		COURSE_RECORD_COPY(record_copy - 0x4u)->time = COURSE_RECORD(course_record - 0x4u)->time;
-		record_copy += 2u;
+		record_copy->model_and_name = course_record->model_and_name;
+		record_copy->time = course_record->time;
+		record_copy++;
 		backup_record += 6u;
 		courses_left--;
-		course_record += 2u;
+		course_record++;
 		if (courses_left != 0u)
 			continue;
 		break;
 	}
-	return record_copy;
+	return address_of(record_copy);
 }
 
 /* The ranking in the attract mode (game mode 5, game_mode_ranking): OutRunner of OutRunners, the record
@@ -623,7 +619,8 @@ void passing_traffic_update(void)
 void passing_car_update(void)
 {
 	uint8_t pass_sound = 0;
-	uint32_t animation = 0, car_model = 0, mirrored_x = 0, path_size = 0, random_side = 0, step = 0, step_index = 0, traffic_path_step = 0;
+	uint32_t animation = 0, car_model = 0, mirrored_x = 0, path_size = 0, random_side = 0, step = 0, step_index = 0;
+	const struct traffic_path_step *traffic_path_step = NULL;
 	uint16_t near_step = 0, far_step = 0;
 
 	switch (current_object->state)
@@ -652,13 +649,12 @@ void passing_car_update(void)
 				return;
 			}
 			current_object->passing_car.step = step_index;
-			traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
-			path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+			traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+			path_size = traffic_path_step->size;
 			current_object->width_scale = path_size;
 			current_object->height_scale = path_size;
-			traffic_path_step += 2u;
-			current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-			current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			current_object->x = traffic_path_step->x;
+			current_object->y = traffic_path_step->y;
 			draw_object(path_size);
 			return;
 		}
@@ -673,13 +669,12 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
-		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		mirrored_x = traffic_path_step->size;
 		current_object->width_scale = mirrored_x;
 		current_object->height_scale = mirrored_x;
-		traffic_path_step += 2u;
-		current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = 0x96u - traffic_path_step->x;
+		current_object->y = traffic_path_step->y;
 		draw_object(mirrored_x);
 		return;
 	case 1:
@@ -692,13 +687,12 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
-		path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		path_size = traffic_path_step->size;
 		current_object->width_scale = path_size;
 		current_object->height_scale = path_size;
-		traffic_path_step += 2u;
-		current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = traffic_path_step->x;
+		current_object->y = traffic_path_step->y;
 		draw_object(path_size);
 		return;
 	case 2:
@@ -711,13 +705,12 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
-		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		mirrored_x = traffic_path_step->size;
 		current_object->width_scale = mirrored_x;
 		current_object->height_scale = mirrored_x;
-		traffic_path_step += 2u;
-		current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = 0x96u - traffic_path_step->x;
+		current_object->y = traffic_path_step->y;
 		draw_object(mirrored_x);
 		return;
 	}
@@ -734,32 +727,23 @@ void passing_car_update(void)
    bit 2); send_video_registers = FF to send the registers. */
 void ranking_background_load(void)
 {
-	uint32_t background_number = 0, background_pages = 0, colour_list = 0, index = 0, mixer_place = 0, mixer_priority = 0, page_numbers = 0, page_place = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0, ranking_background_registers = 0;
+	uint32_t background_number = 0, background_pages = 0, colour_list = 0, index = 0, mixer_place = 0, mixer_priority = 0, page_numbers = 0, page_place = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0;
+	const struct ranking_background_registers *ranking_background_registers = NULL;
 	uint32_t saved_fades = 0;
 
-	ranking_background_registers = ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u;
-	current_object->ranking_background.tile_bank_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers)->tile_bank_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.pages_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x4u)->pages_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x8u)->scroll_x_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0xCu)->scroll_y_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.zoom_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x10u)->zoom_x_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.zoom_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x14u)->zoom_y_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.zoom_center_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x18u)->zoom_center_x_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.zoom_center_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x1Cu)->zoom_center_y_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.cleared_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x20u)->cleared_scroll_x_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.cleared_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x24u)->cleared_scroll_y_address;
-	ranking_background_registers += 4u;
-	current_object->ranking_background.second_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_x_address;
-	current_object->ranking_background.second_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_y_address;
+	ranking_background_registers = rom_pointer(ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u);
+	current_object->ranking_background.tile_bank_address = ranking_background_registers->tile_bank_address;
+	current_object->ranking_background.pages_address = ranking_background_registers->pages_address;
+	current_object->ranking_background.scroll_x_address = ranking_background_registers->scroll_x_address;
+	current_object->ranking_background.scroll_y_address = ranking_background_registers->scroll_y_address;
+	current_object->ranking_background.zoom_x_address = ranking_background_registers->zoom_x_address;
+	current_object->ranking_background.zoom_y_address = ranking_background_registers->zoom_y_address;
+	current_object->ranking_background.zoom_center_x_address = ranking_background_registers->zoom_center_x_address;
+	current_object->ranking_background.zoom_center_y_address = ranking_background_registers->zoom_center_y_address;
+	current_object->ranking_background.cleared_scroll_x_address = ranking_background_registers->cleared_scroll_x_address;
+	current_object->ranking_background.cleared_scroll_y_address = ranking_background_registers->cleared_scroll_y_address;
+	current_object->ranking_background.second_scroll_x_address = ranking_background_registers->second_scroll_x_address;
+	current_object->ranking_background.second_scroll_y_address = ranking_background_registers->second_scroll_y_address;
 	game->send_video_registers = 0xFFu;
 	background_number = course_backgrounds[screen->record_course];
 	TILE_BANK_VALUES(current_object->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];

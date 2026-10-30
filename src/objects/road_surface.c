@@ -144,30 +144,24 @@ void road_surface_update(void)
 void road_surface_start(void)
 {
 	uint16_t video_bits = 0;
-	uint32_t line_select_table = 0, mixer_address = 0, mixer_bits = 0, palettes = 0, road_surface_layer_setup = 0;
+	uint32_t line_select_table = 0, mixer_address = 0, mixer_bits = 0, palettes = 0;
+	const struct road_surface_layer_setup *road_surface_layer_setup = NULL;
 
-	road_surface_layer_setup = road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u;
-	video_bits = game->video_registers[2] & ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup)->video_mask;
-	road_surface_layer_setup += 2u;
-	game->video_registers[2] = video_bits | ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x2u)->video_bits;
-	road_surface_layer_setup += 2u;
-	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x4u)->scroll_x_address)[0] = 0x160u;
-	road_surface_layer_setup += 4u;
-	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x8u)->scroll_y_address)[0] = 0u;
+	road_surface_layer_setup = rom_pointer(road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+	video_bits = game->video_registers[2] & road_surface_layer_setup->video_mask;
+	game->video_registers[2] = video_bits | road_surface_layer_setup->video_bits;
+	VIDEO_REGISTER_WORDS(road_surface_layer_setup->scroll_x_address)[0] = 0x160u;
+	VIDEO_REGISTER_WORDS(road_surface_layer_setup->scroll_y_address)[0] = 0u;
 	game->send_video_registers = 0xFFu;
-	road_surface_layer_setup += 4u;
-	TILE_BANK_VALUES(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0xCu)->tile_bank_address)[0] = 0u;
-	road_surface_layer_setup += 4u;
-	current_object->road_surface.page_register = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x10u)->page_register;
-	road_surface_layer_setup += 4u;
-	mixer_address = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x14u)->mixer_address;
+	TILE_BANK_VALUES(road_surface_layer_setup->tile_bank_address)[0] = 0u;
+	current_object->road_surface.page_register = road_surface_layer_setup->page_register;
+	mixer_address = road_surface_layer_setup->mixer_address;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = mixer_bits & ~0xFu;
 	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 8u;
 	screen->flags |= 4u;
-	road_surface_layer_setup += 4u;
-	current_object->road_surface.line_scroll_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_scroll_table;
-	line_select_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_select_table;
+	current_object->road_surface.line_scroll_table = road_surface_layer_setup->line_scroll_table;
+	line_select_table = road_surface_layer_setup->line_select_table;
 	current_object->road_surface.line_select_table = line_select_table;
 	move_halfwords(line_select_table - 0x1C0u, zero_block_ADDRESS, 0xE0u);
 	move_halfwords(line_select_table + 0x640u, zero_block_ADDRESS, 0xE0u);

@@ -366,19 +366,17 @@ void overhead_scenery_update(void)
    odd), so it looks faint. It never ends. */
 void aurora_update(void)
 {
-	uint32_t record = 0;
+	const struct aurora_record *record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		record = current_object->aurora.animation_list;
-		current_object->aurora.animation_list = AURORA_RECORD(record)->animations;
-		record += 4u;
-		current_object->palette = AURORA_RECORD(record - 0x4u)->palette;
-		record += 2u;
-		current_object->flags |= AURORA_RECORD(record - 0x6u)->flags;
-		current_object->aurora.animation_frames = AURORA_RECORD(record - 0x6u)->animation_frames;
+		record = rom_pointer(current_object->aurora.animation_list);
+		current_object->aurora.animation_list = record->animations;
+		current_object->palette = record->palette;
+		current_object->flags |= record->flags;
+		current_object->aurora.animation_frames = record->animation_frames;
 		current_object->draw_mode = 0u;
 		current_object->x = 0xFF60u;
 		if (player_car->model != 6u)
@@ -566,33 +564,26 @@ void animated_scenery_pair_update(void)
 void road_crosser_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, crossing_animation = 0, road_crosser_record = 0;
+	uint32_t animation = 0, crossing_animation = 0;
+	const struct road_crosser_record *road_crosser_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		road_crosser_record = current_object->road_crosser.record;
-		animation = ROAD_CROSSER_RECORD(road_crosser_record)->animation;
-		road_crosser_record += 2u;
+		road_crosser_record = rom_pointer(current_object->road_crosser.record);
+		animation = road_crosser_record->animation;
 		if (animation == SWORDFISH)
 			AS32(current_object->road_crosser.y_offset) = (int16_t)0xFF00u;
-		current_object->road_crosser.crossing_animation = ROAD_CROSSER_RECORD(road_crosser_record - 0x2u)->crossing_animation;
-		road_crosser_record += 2u;
-		current_object->palette = ROAD_CROSSER_RECORD(road_crosser_record - 0x4u)->palette;
-		road_crosser_record += 2u;
-		current_object->flags |= ROAD_CROSSER_RECORD(road_crosser_record - 0x6u)->flags;
-		road_crosser_record++;
-		current_object->side = ROAD_CROSSER_RECORD(road_crosser_record - 0x7u)->side;
-		road_crosser_record++;
-		current_object->x_offset = ROAD_CROSSER_RECORD(road_crosser_record - 0x8u)->x_offset;
-		road_crosser_record += 2u;
-		current_object->road_crosser.trigger_distance = ROAD_CROSSER_RECORD(road_crosser_record - 0xAu)->trigger_distance;
-		road_crosser_record += 2u;
-		current_object->road_crosser.x_speed = ROAD_CROSSER_RECORD(road_crosser_record - 0xCu)->x_speed;
-		road_crosser_record += 2u;
-		current_object->draw_mode = ROAD_CROSSER_RECORD(road_crosser_record - 0xEu)->draw_mode;
-		current_object->scale_shift = ROAD_CROSSER_RECORD(road_crosser_record - 0xEu)->scale_shift;
+		current_object->road_crosser.crossing_animation = road_crosser_record->crossing_animation;
+		current_object->palette = road_crosser_record->palette;
+		current_object->flags |= road_crosser_record->flags;
+		current_object->side = road_crosser_record->side;
+		current_object->x_offset = road_crosser_record->x_offset;
+		current_object->road_crosser.trigger_distance = road_crosser_record->trigger_distance;
+		current_object->road_crosser.x_speed = road_crosser_record->x_speed;
+		current_object->draw_mode = road_crosser_record->draw_mode;
+		current_object->scale_shift = road_crosser_record->scale_shift;
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		current_object->road_crosser.trigger_position = position - current_object->road_crosser.trigger_distance;
@@ -682,31 +673,24 @@ void road_crosser_update(void)
 void kangaroo_update(void)
 {
 	uint16_t draw_distance = 0, position = 0, position_fraction = 0;
-	uint32_t animation = 0, hop_animation = 0, road_crosser_record = 0;
+	uint32_t animation = 0, hop_animation = 0;
+	const struct road_crosser_record *road_crosser_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		road_crosser_record = current_object->kangaroo.record;
-		animation = ROAD_CROSSER_RECORD(road_crosser_record)->animation;
-		road_crosser_record += 2u;
-		current_object->kangaroo.hop_animation = ROAD_CROSSER_RECORD(road_crosser_record - 0x2u)->crossing_animation;
-		road_crosser_record += 2u;
-		current_object->palette = ROAD_CROSSER_RECORD(road_crosser_record - 0x4u)->palette;
-		road_crosser_record += 2u;
-		current_object->flags |= ROAD_CROSSER_RECORD(road_crosser_record - 0x6u)->flags;
-		road_crosser_record++;
-		current_object->side = ROAD_CROSSER_RECORD(road_crosser_record - 0x7u)->side;
-		road_crosser_record++;
-		current_object->x_offset = ROAD_CROSSER_RECORD(road_crosser_record - 0x8u)->x_offset;
-		road_crosser_record += 2u;
-		current_object->kangaroo.trigger_distance = ROAD_CROSSER_RECORD(road_crosser_record - 0xAu)->trigger_distance;
-		road_crosser_record += 2u;
-		current_object->kangaroo.x_speed = ROAD_CROSSER_RECORD(road_crosser_record - 0xCu)->x_speed;
-		road_crosser_record += 2u;
-		current_object->draw_mode = ROAD_CROSSER_RECORD(road_crosser_record - 0xEu)->draw_mode;
-		current_object->scale_shift = ROAD_CROSSER_RECORD(road_crosser_record - 0xEu)->scale_shift;
+		road_crosser_record = rom_pointer(current_object->kangaroo.record);
+		animation = road_crosser_record->animation;
+		current_object->kangaroo.hop_animation = road_crosser_record->crossing_animation;
+		current_object->palette = road_crosser_record->palette;
+		current_object->flags |= road_crosser_record->flags;
+		current_object->side = road_crosser_record->side;
+		current_object->x_offset = road_crosser_record->x_offset;
+		current_object->kangaroo.trigger_distance = road_crosser_record->trigger_distance;
+		current_object->kangaroo.x_speed = road_crosser_record->x_speed;
+		current_object->draw_mode = road_crosser_record->draw_mode;
+		current_object->scale_shift = road_crosser_record->scale_shift;
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		current_object->kangaroo.trigger_position = position - current_object->kangaroo.trigger_distance;
@@ -852,36 +836,27 @@ void kangaroo_update(void)
 void moving_scenery_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, moving_scenery_record = 0;
+	uint32_t animation = 0;
+	const struct moving_scenery_record *moving_scenery_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		moving_scenery_record = current_object->moving_scenery.record;
-		animation = MOVING_SCENERY_RECORD(moving_scenery_record)->animation;
-		moving_scenery_record += 2u;
-		current_object->palette = MOVING_SCENERY_RECORD(moving_scenery_record - 0x2u)->palette;
-		moving_scenery_record += 2u;
-		current_object->flags |= MOVING_SCENERY_RECORD(moving_scenery_record - 0x4u)->flags;
-		moving_scenery_record++;
-		current_object->draw_mode = MOVING_SCENERY_RECORD(moving_scenery_record - 0x5u)->draw_mode;
-		moving_scenery_record++;
-		current_object->scale_shift = MOVING_SCENERY_RECORD(moving_scenery_record - 0x6u)->scale_shift;
-		moving_scenery_record++;
-		current_object->side = MOVING_SCENERY_RECORD(moving_scenery_record - 0x7u)->side;
-		moving_scenery_record++;
-		current_object->x_offset = MOVING_SCENERY_RECORD(moving_scenery_record - 0x8u)->x_offset;
-		moving_scenery_record += 2u;
-		current_object->y_offset = MOVING_SCENERY_RECORD(moving_scenery_record - 0xAu)->y_offset;
-		moving_scenery_record += 2u;
-		current_object->moving_scenery.trigger_distance = MOVING_SCENERY_RECORD(moving_scenery_record - 0xCu)->trigger_distance;
+		moving_scenery_record = rom_pointer(current_object->moving_scenery.record);
+		animation = moving_scenery_record->animation;
+		current_object->palette = moving_scenery_record->palette;
+		current_object->flags |= moving_scenery_record->flags;
+		current_object->draw_mode = moving_scenery_record->draw_mode;
+		current_object->scale_shift = moving_scenery_record->scale_shift;
+		current_object->side = moving_scenery_record->side;
+		current_object->x_offset = moving_scenery_record->x_offset;
+		current_object->y_offset = moving_scenery_record->y_offset;
+		current_object->moving_scenery.trigger_distance = moving_scenery_record->trigger_distance;
 		current_object->moving_scenery.trigger_distance += 0x10u;
-		moving_scenery_record += 2u;
-		current_object->moving_scenery.x_speed = MOVING_SCENERY_RECORD(moving_scenery_record - 0xEu)->x_speed;
-		moving_scenery_record += 2u;
-		current_object->moving_scenery.y_speed = MOVING_SCENERY_RECORD(moving_scenery_record - 0x10u)->y_speed;
-		current_object->moving_scenery.road_speed = MOVING_SCENERY_RECORD(moving_scenery_record - 0x10u)->road_speed;
+		current_object->moving_scenery.x_speed = moving_scenery_record->x_speed;
+		current_object->moving_scenery.y_speed = moving_scenery_record->y_speed;
+		current_object->moving_scenery.road_speed = moving_scenery_record->road_speed;
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		current_object->moving_scenery.trigger_position = position - current_object->moving_scenery.trigger_distance;
@@ -941,41 +916,30 @@ void moving_scenery_update(void)
 void swooping_helicopter_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, swooping_helicopter_record = 0;
+	uint32_t animation = 0;
+	const struct swooping_helicopter_record *swooping_helicopter_record = NULL;
 	uint8_t dive_countdown = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		swooping_helicopter_record = current_object->swooping_helicopter.record;
-		animation = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record)->animation;
-		swooping_helicopter_record += 2u;
-		current_object->palette = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x2u)->palette;
-		swooping_helicopter_record += 2u;
-		current_object->flags |= SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x4u)->flags;
-		swooping_helicopter_record++;
-		current_object->draw_mode = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x5u)->draw_mode;
-		swooping_helicopter_record++;
-		current_object->scale_shift = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x6u)->scale_shift;
-		swooping_helicopter_record++;
-		current_object->side = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x7u)->side;
-		swooping_helicopter_record++;
-		current_object->x_offset = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x8u)->x_offset;
-		swooping_helicopter_record += 2u;
-		current_object->y_offset = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0xAu)->y_offset;
-		swooping_helicopter_record += 2u;
-		current_object->swooping_helicopter.trigger_distance = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0xCu)->trigger_distance;
+		swooping_helicopter_record = rom_pointer(current_object->swooping_helicopter.record);
+		animation = swooping_helicopter_record->animation;
+		current_object->palette = swooping_helicopter_record->palette;
+		current_object->flags |= swooping_helicopter_record->flags;
+		current_object->draw_mode = swooping_helicopter_record->draw_mode;
+		current_object->scale_shift = swooping_helicopter_record->scale_shift;
+		current_object->side = swooping_helicopter_record->side;
+		current_object->x_offset = swooping_helicopter_record->x_offset;
+		current_object->y_offset = swooping_helicopter_record->y_offset;
+		current_object->swooping_helicopter.trigger_distance = swooping_helicopter_record->trigger_distance;
 		current_object->swooping_helicopter.trigger_distance += 0x10u;
-		swooping_helicopter_record += 2u;
-		current_object->swooping_helicopter.x_speed = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0xEu)->x_speed;
-		swooping_helicopter_record += 2u;
-		current_object->swooping_helicopter.y_speed = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x10u)->y_speed;
-		swooping_helicopter_record += 2u;
-		current_object->swooping_helicopter.road_speed = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x12u)->road_speed;
-		swooping_helicopter_record += 2u;
-		current_object->swooping_helicopter.dive_frames = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x14u)->dive_frames;
-		current_object->swooping_helicopter.dive_y_speed = SWOOPING_HELICOPTER_RECORD(swooping_helicopter_record - 0x14u)->dive_y_speed;
+		current_object->swooping_helicopter.x_speed = swooping_helicopter_record->x_speed;
+		current_object->swooping_helicopter.y_speed = swooping_helicopter_record->y_speed;
+		current_object->swooping_helicopter.road_speed = swooping_helicopter_record->road_speed;
+		current_object->swooping_helicopter.dive_frames = swooping_helicopter_record->dive_frames;
+		current_object->swooping_helicopter.dive_y_speed = swooping_helicopter_record->dive_y_speed;
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		current_object->swooping_helicopter.trigger_position = position - current_object->swooping_helicopter.trigger_distance;
@@ -1125,23 +1089,20 @@ void start_gate_update(void)
    position, else animation_advance and draw_object. */
 void start_flagman_update(void)
 {
-	uint32_t animation = 0, flagman_record = 0, go_animation = 0;
+	uint32_t animation = 0, go_animation = 0;
+	const struct flagman_record *flagman_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		flagman_record = current_object->start_flagman.record;
-		animation = FLAGMAN_RECORD(flagman_record)->animation;
-		flagman_record += 2u;
-		current_object->start_flagman.go_animation = FLAGMAN_RECORD(flagman_record - 0x2u)->waving_animation;
-		flagman_record += 2u;
-		current_object->palette = FLAGMAN_RECORD(flagman_record - 0x4u)->palette;
-		flagman_record += 2u;
-		current_object->side = FLAGMAN_RECORD(flagman_record - 0x6u)->side;
-		flagman_record++;
-		current_object->x_offset = FLAGMAN_RECORD(flagman_record - 0x7u)->x_offset;
-		current_object->y_offset = FLAGMAN_RECORD(flagman_record - 0x7u)->y_offset;
+		flagman_record = rom_pointer(current_object->start_flagman.record);
+		animation = flagman_record->animation;
+		current_object->start_flagman.go_animation = flagman_record->waving_animation;
+		current_object->palette = flagman_record->palette;
+		current_object->side = flagman_record->side;
+		current_object->x_offset = flagman_record->x_offset;
+		current_object->y_offset = flagman_record->y_offset;
 		animation_start(animation);
 		current_object->draw_mode = 9u;
 		current_object->scale_shift = 1u;
@@ -1186,22 +1147,19 @@ void start_flagman_update(void)
 void flagman_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, flagman_record = 0, in_view_animation = 0;
+	uint32_t animation = 0, in_view_animation = 0;
+	const struct flagman_record *flagman_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
-		flagman_record = current_object->flagman.record;
-		animation = FLAGMAN_RECORD(flagman_record)->animation;
-		flagman_record += 2u;
-		current_object->flagman.in_view_animation = FLAGMAN_RECORD(flagman_record - 0x2u)->waving_animation;
-		flagman_record += 2u;
-		current_object->palette = FLAGMAN_RECORD(flagman_record - 0x4u)->palette;
-		flagman_record += 2u;
-		current_object->side = FLAGMAN_RECORD(flagman_record - 0x6u)->side;
-		flagman_record++;
-		current_object->x_offset = FLAGMAN_RECORD(flagman_record - 0x7u)->x_offset;
-		current_object->y_offset = FLAGMAN_RECORD(flagman_record - 0x7u)->y_offset;
+		flagman_record = rom_pointer(current_object->flagman.record);
+		animation = flagman_record->animation;
+		current_object->flagman.in_view_animation = flagman_record->waving_animation;
+		current_object->palette = flagman_record->palette;
+		current_object->side = flagman_record->side;
+		current_object->x_offset = flagman_record->x_offset;
+		current_object->y_offset = flagman_record->y_offset;
 		animation_start(animation);
 		current_object->draw_mode = 9u;
 		current_object->scale_shift = 1u;
@@ -1247,21 +1205,19 @@ void flagman_update(void)
    ends when the car (car window_segment) reaches its position or y_offset passes -3000 (high above). */
 void start_balloon_update(void)
 {
-	uint32_t animation = 0, rise_speed = 0, start_balloon_record = 0;
+	uint32_t animation = 0, rise_speed = 0;
+	const struct start_balloon_record *start_balloon_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->state++;
-		start_balloon_record = current_object->start_balloon.record;
-		animation = START_BALLOON_RECORD(start_balloon_record)->animation;
-		start_balloon_record += 2u;
-		current_object->palette = START_BALLOON_RECORD(start_balloon_record - 0x2u)->palette;
-		start_balloon_record += 2u;
-		current_object->side = START_BALLOON_RECORD(start_balloon_record - 0x4u)->side;
-		start_balloon_record++;
-		current_object->x_offset = START_BALLOON_RECORD(start_balloon_record - 0x5u)->x_offset;
-		current_object->y_offset = START_BALLOON_RECORD(start_balloon_record - 0x5u)->y_offset;
+		start_balloon_record = rom_pointer(current_object->start_balloon.record);
+		animation = start_balloon_record->animation;
+		current_object->palette = start_balloon_record->palette;
+		current_object->side = start_balloon_record->side;
+		current_object->x_offset = start_balloon_record->x_offset;
+		current_object->y_offset = start_balloon_record->y_offset;
 		animation_start(animation);
 		current_object->draw_mode = 9u;
 		current_object->scale_shift = 1u;
@@ -1448,33 +1404,27 @@ void west_east_panel_update(void)
 void santa_sleigh_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, ignored = 0, santa_sleigh_record = 0, sound = 0;
+	uint32_t animation = 0, ignored = 0, sound = 0;
+	const struct santa_sleigh_record *santa_sleigh_record = NULL;
 	uint8_t sound_countdown = 0, sound_countdown_2 = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
-		santa_sleigh_record = current_object->santa_sleigh.record;
-		animation = SANTA_SLEIGH_RECORD(santa_sleigh_record)->animation;
-		santa_sleigh_record += 2u;
+		santa_sleigh_record = rom_pointer(current_object->santa_sleigh.record);
+		animation = santa_sleigh_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
 		if (animation == SANTA_SLEIGH)
 			current_object->y_offset = -0x100;
-		current_object->palette = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x2u)->palette;
-		santa_sleigh_record += 2u;
-		current_object->flags |= SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x4u)->flags;
-		santa_sleigh_record++;
-		current_object->side = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x5u)->side;
-		santa_sleigh_record++;
-		current_object->x_offset = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x6u)->x_offset;
-		santa_sleigh_record += 2u;
-		current_object->santa_sleigh.x_speed = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0x8u)->x_speed;
-		santa_sleigh_record += 2u;
-		current_object->santa_sleigh.sound = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0xAu)->sound;
-		santa_sleigh_record += 2u;
-		current_object->draw_mode = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0xCu)->draw_mode;
-		current_object->scale_shift = SANTA_SLEIGH_RECORD(santa_sleigh_record - 0xCu)->scale_shift;
+		current_object->palette = santa_sleigh_record->palette;
+		current_object->flags |= santa_sleigh_record->flags;
+		current_object->side = santa_sleigh_record->side;
+		current_object->x_offset = santa_sleigh_record->x_offset;
+		current_object->santa_sleigh.x_speed = santa_sleigh_record->x_speed;
+		current_object->santa_sleigh.sound = santa_sleigh_record->sound;
+		current_object->draw_mode = santa_sleigh_record->draw_mode;
+		current_object->scale_shift = santa_sleigh_record->scale_shift;
 		current_object->santa_sleigh.sound_countdown = 0xAu;
 		animation_start(animation);
 		current_object->state++;
@@ -1554,28 +1504,23 @@ void santa_sleigh_update(void)
 void goal_parade_rightward_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, ignored = 0;
+	uint32_t animation = 0, ignored = 0;
+	const struct goal_parade_record *goal_parade_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = current_object->goal_parade.record;
-		animation = GOAL_PARADE_RECORD(goal_parade_record)->animation;
-		goal_parade_record += 2u;
+		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		animation = goal_parade_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
-		current_object->palette = GOAL_PARADE_RECORD(goal_parade_record - 0x2u)->palette;
-		goal_parade_record += 2u;
-		current_object->flags |= GOAL_PARADE_RECORD(goal_parade_record - 0x4u)->flags;
-		goal_parade_record++;
-		current_object->side = GOAL_PARADE_RECORD(goal_parade_record - 0x5u)->side;
-		goal_parade_record++;
-		current_object->x_offset = GOAL_PARADE_RECORD(goal_parade_record - 0x6u)->x_offset;
-		goal_parade_record += 2u;
-		current_object->goal_parade.x_speed = GOAL_PARADE_RECORD(goal_parade_record - 0x8u)->x_speed;
-		goal_parade_record += 2u;
-		current_object->draw_mode = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->draw_mode;
-		current_object->scale_shift = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->scale_shift;
+		current_object->palette = goal_parade_record->palette;
+		current_object->flags |= goal_parade_record->flags;
+		current_object->side = goal_parade_record->side;
+		current_object->x_offset = goal_parade_record->x_offset;
+		current_object->goal_parade.x_speed = goal_parade_record->x_speed;
+		current_object->draw_mode = goal_parade_record->draw_mode;
+		current_object->scale_shift = goal_parade_record->scale_shift;
 		animation_start(animation);
 		current_object->state++;
 		position = (uint16_t)current_object->position;
@@ -1712,28 +1657,23 @@ void sounding_scenery_update(void)
 void goal_parade_leftward_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, ignored = 0;
+	uint32_t animation = 0, ignored = 0;
+	const struct goal_parade_record *goal_parade_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = current_object->goal_parade.record;
-		animation = GOAL_PARADE_RECORD(goal_parade_record)->animation;
-		goal_parade_record += 2u;
+		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		animation = goal_parade_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
-		current_object->palette = GOAL_PARADE_RECORD(goal_parade_record - 0x2u)->palette;
-		goal_parade_record += 2u;
-		current_object->flags |= GOAL_PARADE_RECORD(goal_parade_record - 0x4u)->flags;
-		goal_parade_record++;
-		current_object->side = GOAL_PARADE_RECORD(goal_parade_record - 0x5u)->side;
-		goal_parade_record++;
-		current_object->x_offset = GOAL_PARADE_RECORD(goal_parade_record - 0x6u)->x_offset;
-		goal_parade_record += 2u;
-		current_object->goal_parade.x_speed = GOAL_PARADE_RECORD(goal_parade_record - 0x8u)->x_speed;
-		goal_parade_record += 2u;
-		current_object->draw_mode = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->draw_mode;
-		current_object->scale_shift = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->scale_shift;
+		current_object->palette = goal_parade_record->palette;
+		current_object->flags |= goal_parade_record->flags;
+		current_object->side = goal_parade_record->side;
+		current_object->x_offset = goal_parade_record->x_offset;
+		current_object->goal_parade.x_speed = goal_parade_record->x_speed;
+		current_object->draw_mode = goal_parade_record->draw_mode;
+		current_object->scale_shift = goal_parade_record->scale_shift;
 		animation_start(animation);
 		current_object->state++;
 		position = (uint16_t)current_object->position;
@@ -1802,26 +1742,21 @@ void goal_parade_leftward_update(void)
 void goal_parade_dragon_update(void)
 {
 	uint16_t draw_distance = 0, position = 0;
-	uint32_t animation = 0, goal_parade_record = 0, random_bits = 0;
+	uint32_t animation = 0, random_bits = 0;
+	const struct goal_parade_record *goal_parade_record = NULL;
 
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = current_object->goal_parade.record;
-		animation = GOAL_PARADE_RECORD(goal_parade_record)->animation;
-		goal_parade_record += 2u;
-		current_object->palette = GOAL_PARADE_RECORD(goal_parade_record - 0x2u)->palette;
-		goal_parade_record += 2u;
-		current_object->flags |= GOAL_PARADE_RECORD(goal_parade_record - 0x4u)->flags;
-		goal_parade_record++;
-		current_object->side = GOAL_PARADE_RECORD(goal_parade_record - 0x5u)->side;
-		goal_parade_record++;
-		current_object->x_offset = GOAL_PARADE_RECORD(goal_parade_record - 0x6u)->x_offset;
-		goal_parade_record += 2u;
-		current_object->goal_parade.x_speed = GOAL_PARADE_RECORD(goal_parade_record - 0x8u)->x_speed;
-		goal_parade_record += 2u;
-		current_object->draw_mode = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->draw_mode;
-		current_object->scale_shift = GOAL_PARADE_RECORD(goal_parade_record - 0xAu)->scale_shift;
+		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		animation = goal_parade_record->animation;
+		current_object->palette = goal_parade_record->palette;
+		current_object->flags |= goal_parade_record->flags;
+		current_object->side = goal_parade_record->side;
+		current_object->x_offset = goal_parade_record->x_offset;
+		current_object->goal_parade.x_speed = goal_parade_record->x_speed;
+		current_object->draw_mode = goal_parade_record->draw_mode;
+		current_object->scale_shift = goal_parade_record->scale_shift;
 		animation_start(animation);
 		current_object->state++;
 		position = (uint16_t)current_object->position;
@@ -2116,18 +2051,17 @@ void fork_branch_draw(void)
 void fork_branch_sprite(uint32_t *p_size_and_attributes, uint32_t *p_height_word, uint32_t *p_width_bits, uint32_t *p_offset_palette)
 {
 	uint16_t height_word = 0, piece_attributes = 0, rom_offset = 0;
-	uint32_t size_step = 0, width_bits = 0;
+	uint32_t width_bits = 0;
 	const struct sprite_frame *frames = NULL;
+	const struct sprite_size_step *size_step = NULL;
 
 	frames = rom_pointer(SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0]);
 	piece_attributes = frames->piece_words[0];
-	size_step = sprite_size_steps_ADDRESS + frames->piece_words[1] * 4u;
-	*p_size_and_attributes = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | piece_attributes;
-	size_step += 2u;
-	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
-	size_step += 4u;
-	height_word = 1u | SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
-	width_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->width_bits;
+	size_step = rom_pointer(sprite_size_steps_ADDRESS + frames->piece_words[1] * 4u);
+	*p_size_and_attributes = ((uint32_t)size_step->source_size << 16) | piece_attributes;
+	rom_offset = size_step->rom_offset;
+	height_word = 1u | size_step->height_bits;
+	width_bits = size_step->width_bits;
 	width_bits = width_bits | screen->sprite_screen_bit;
 	*p_offset_palette = ((uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[fork_branch_stage_palettes[screen->built_stage]])[0] << 16) | rom_offset;
 	*p_height_word = (*p_height_word & 0xFFFF0000u) | height_word;

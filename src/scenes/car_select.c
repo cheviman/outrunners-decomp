@@ -981,27 +981,25 @@ void welcome_letter_show(void)
    (timer); 2 hidden 10 frames; it ends as soon as the car is chosen (car_select car_chosen). */
 void select_car_heading_show(void)
 {
-	uint32_t animation = 0, piece = 0;
+	uint32_t animation = 0;
 	struct object *object = NULL;
+	const struct select_instruction_piece *piece = NULL;
 	uint16_t timer = 0, timer_2 = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
-		piece = select_instruction_pieces_ADDRESS;
-		while (SELECT_INSTRUCTION_PIECE(piece)->animation != 0u)
+		piece = rom_pointer(select_instruction_pieces_ADDRESS);
+		while (piece->animation != 0u)
 		{
 			object = start_object();
 			object->handler = select_instruction_show_ADDRESS;
 			object->select_instruction.car_select = current_object->select_car_heading.car_select;
-			object->select_instruction.piece_animation = SELECT_INSTRUCTION_PIECE(piece)->animation;
-			piece += 2u;
-			object->palette = SELECT_INSTRUCTION_PIECE(piece - 0x2u)->palette;
-			piece += 2u;
-			object->x = SELECT_INSTRUCTION_PIECE(piece - 0x4u)->x;
-			piece += 2u;
-			object->y = SELECT_INSTRUCTION_PIECE(piece - 0x6u)->y;
-			piece += 2u;
+			object->select_instruction.piece_animation = piece->animation;
+			object->palette = piece->palette;
+			object->x = piece->x;
+			object->y = piece->y;
+			piece++;
 		}
 		current_object->draw_mode = 0u;
 		current_object->depth_layer = 0x19Eu;
@@ -2314,8 +2312,9 @@ void entry_traffic_run(void)
 void entry_traffic_car_drive(void)
 {
 	uint8_t pass_sound = 0, tyre_noise = 0;
-	uint32_t animation = 0, ignored = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, traffic_car = 0, traffic_path_step = 0;
+	uint32_t animation = 0, ignored = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, traffic_car = 0;
 	const struct animation_palette *look = NULL;
+	const struct traffic_path_step *traffic_path_step = NULL;
 	uint8_t spin_chance = 0;
 	uint16_t spin_delay = 0, spin_delay_2 = 0;
 
@@ -2350,15 +2349,14 @@ void entry_traffic_car_drive(void)
 	case 1:
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-		path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		traffic_path_step += 2u;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		path_size = traffic_path_step->size;
 		if (path_size != 0u)
 		{
 			current_object->width_scale = path_size;
 			current_object->height_scale = path_size;
-			current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-			current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			current_object->x = traffic_path_step->x;
+			current_object->y = traffic_path_step->y;
 			draw_object(path_size);
 			return;
 		}
@@ -2394,15 +2392,14 @@ void entry_traffic_car_drive(void)
 		}
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		traffic_path_step += 2u;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		mirrored_x = traffic_path_step->size;
 		if (mirrored_x != 0u)
 		{
 			current_object->width_scale = mirrored_x;
 			current_object->height_scale = mirrored_x;
-			current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-			current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			current_object->x = 0x96u - traffic_path_step->x;
+			current_object->y = traffic_path_step->y;
 			draw_object(mirrored_x);
 			return;
 		}
@@ -2434,15 +2431,14 @@ void entry_traffic_car_drive(void)
 		{
 			path_step = current_object->entry_traffic_car.path_step;
 			current_object->entry_traffic_car.path_step = path_step + 1u;
-			traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-			path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-			traffic_path_step += 2u;
+			traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+			path_size = traffic_path_step->size;
 			if (path_size != 0u)
 			{
 				current_object->width_scale = path_size;
 				current_object->height_scale = path_size;
-				current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-				current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+				current_object->x = traffic_path_step->x;
+				current_object->y = traffic_path_step->y;
 				draw_object(path_size);
 				return;
 			}
@@ -2456,15 +2452,14 @@ void entry_traffic_car_drive(void)
 	case 2:
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = traffic_path_ADDRESS + path_step * 3u * 2u;
-		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		traffic_path_step += 2u;
+		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		mirrored_x = traffic_path_step->size;
 		if (mirrored_x != 0u)
 		{
 			current_object->width_scale = mirrored_x;
 			current_object->height_scale = mirrored_x;
-			current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-			current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			current_object->x = 0x96u - traffic_path_step->x;
+			current_object->y = traffic_path_step->y;
 			draw_object(mirrored_x);
 			return;
 		}

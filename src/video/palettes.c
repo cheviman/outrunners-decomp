@@ -61,14 +61,15 @@ void queue_palette_list(uint32_t colour_list)
    palette_upload_count, the entries after it, up to 128). */
 void queue_palette_upload(uint32_t list_flag, uint32_t colour_record)
 {
-	uint32_t upload_count = 0, upload_queue = 0;
+	uint32_t upload_count = 0;
+	struct screen *upload_queue = NULL;
 
-	upload_queue = address_of(screen) + 0x900u;
-	if ((int32_t)SCREEN(upload_queue - 0x900u)->palette_upload_count < 0x80)
+	upload_queue = screen;
+	if ((int32_t)upload_queue->palette_upload_count < 0x80)
 	{
-		upload_count = SCREEN(upload_queue - 0x900u)->palette_upload_count + 1u;
-		SCREEN(upload_queue - 0x900u)->palette_uploads[(int32_t)(upload_count - 1u)] = colour_record | list_flag;
-		SCREEN(upload_queue - 0x900u)->palette_upload_count = upload_count;
+		upload_count = upload_queue->palette_upload_count + 1u;
+		upload_queue->palette_uploads[(int32_t)(upload_count - 1u)] = colour_record | list_flag;
+		upload_queue->palette_upload_count = upload_count;
 	}
 }
 
@@ -201,68 +202,57 @@ void step_screen_fade(void)
 	uint32_t carry = 0;
 	uint8_t channels = 0;
 	uint16_t level = 0;
-	uint32_t channels_left = 0, fade_start = 0, mixer_register = 0;
+	uint32_t channels_left = 0, mixer_register = 0;
+	const struct screen_fade_start *fade_start = NULL;
 
 	switch (screen->fade_kind)
 	{
 	case 0:
-		fade_start = screen_fade_starts_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_starts_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 1:
-		fade_start = screen_fade_from_black_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_from_black_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 2:
-		fade_start = screen_fade_to_white_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_to_white_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 3:
-		fade_start = screen_fade_from_white_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_from_white_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 4:
-		fade_start = screen_fade_to_red_tint_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_to_red_tint_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 5:
-		fade_start = screen_fade_from_red_tint_ADDRESS;
-		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
-		fade_start++;
-		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
-		fade_start++;
-		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		fade_start = rom_pointer(screen_fade_from_red_tint_ADDRESS);
+		screen->fade_level = fade_start->level;
+		screen->fade_step = fade_start->step;
+		screen->fade_end = fade_start->end;
+		screen->fade_channels = fade_start->channels;
 		screen->fade_kind = 6u;
 		break;
 	case 6:

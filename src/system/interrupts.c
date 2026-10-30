@@ -292,29 +292,26 @@ void check_test_button(void)
    the byte 8 after it, which the sound program never reads. */
 void send_sound_requests(void)
 {
-	uint32_t command_offset = 0, queue = 0, second_queue = 0, second_sound_queue_read = 0, sound_queue_read = 0;
+	uint32_t command_offset = 0, second_sound_queue_read = 0, sound_queue_read = 0;
+	struct screen *queue = NULL, *second_queue = NULL;
 	uint8_t sound_queue_write = 0, second_sound_queue_write = 0;
 
 	command_offset = (uint32_t)screen->index << 8;
-	queue = address_of(screen) + 0x800u;
-	sound_queue_read = SCREEN(queue - 0x800u)->sound_queue_read;
-	queue++;
-	sound_queue_write = SCREEN(queue - 0x801u)->sound_queue_write;
-	queue++;
+	queue = screen;
+	sound_queue_read = queue->sound_queue_read;
+	sound_queue_write = queue->sound_queue_write;
 	if (sound_queue_read != sound_queue_write)
 	{
-		SOUND_COMMAND_1[command_offset] = SCREEN(queue - 0x802u)->sound_queue[(int32_t)sound_queue_read];
-		SCREEN(queue - 0x802u)->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
+		SOUND_COMMAND_1[command_offset] = queue->sound_queue[(int32_t)sound_queue_read];
+		queue->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
 	}
-	second_queue = address_of(screen) + 0x840u;
-	second_sound_queue_read = SCREEN(second_queue - 0x840u)->second_sound_queue_read;
-	second_queue++;
-	second_sound_queue_write = SCREEN(second_queue - 0x841u)->second_sound_queue_write;
-	second_queue++;
+	second_queue = screen;
+	second_sound_queue_read = second_queue->second_sound_queue_read;
+	second_sound_queue_write = second_queue->second_sound_queue_write;
 	if (second_sound_queue_read != second_sound_queue_write)
 	{
-		SOUND_SECOND_COMMAND_1[command_offset] = SCREEN(second_queue - 0x842u)->second_sound_queue[(int32_t)second_sound_queue_read];
-		SCREEN(second_queue - 0x842u)->second_sound_queue_read = (second_sound_queue_read + 1u) & 0x1Fu;
+		SOUND_SECOND_COMMAND_1[command_offset] = second_queue->second_sound_queue[(int32_t)second_sound_queue_read];
+		second_queue->second_sound_queue_read = (second_sound_queue_read + 1u) & 0x1Fu;
 	}
 }
 

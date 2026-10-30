@@ -17,17 +17,18 @@
    model), notes the stage (screen route_stage), then car_radio_wait_start. */
 void car_radio_start(void)
 {
-	uint32_t object = 0, player = 0, race = 0, racers_left = 0;
+	uint32_t player = 0, race = 0, racers_left = 0;
+	struct object *object = NULL;
 
-	object = address_of(current_object) + 0x80u;
-	OBJECT(object - 0x80u)->car_radio.car_models[0] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[1] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[2] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[3] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[4] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[5] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[6] = 0xFFu;
-	OBJECT(object - 0x80u)->car_radio.car_models[7] = 0xFFu;
+	object = current_object;
+	object->car_radio.car_models[0] = 0xFFu;
+	object->car_radio.car_models[1] = 0xFFu;
+	object->car_radio.car_models[2] = 0xFFu;
+	object->car_radio.car_models[3] = 0xFFu;
+	object->car_radio.car_models[4] = 0xFFu;
+	object->car_radio.car_models[5] = 0xFFu;
+	object->car_radio.car_models[6] = 0xFFu;
+	object->car_radio.car_models[7] = 0xFFu;
 	race = screen->host_record + 0x1Fu;
 	racers_left = RACE(race - 0x1Fu)->racer_count;
 	current_object->car_radio.cars_to_introduce = racers_left;

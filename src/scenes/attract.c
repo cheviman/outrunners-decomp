@@ -488,7 +488,7 @@ void car_name_letter_update(void)
 void demo_captions_run(void)
 {
 	uint32_t zero = 0;
-	uint32_t cue = 0;
+	const struct demo_caption_cue *cue = NULL;
 	uint32_t frames_to_cue = 0, jump_target = 0;
 
 	switch (current_object->state)
@@ -502,10 +502,9 @@ void demo_captions_run(void)
 		break;
 	}
 	current_object->demo_captions.frames = (current_object->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)current_object->demo_captions.frames + 1u & 0xFFFFu);
-	cue = current_object->demo_captions.timeline;
-	frames_to_cue = DEMO_CAPTION_CUE(cue)->frame - (uint16_t)current_object->demo_captions.frames;
+	cue = rom_pointer(current_object->demo_captions.timeline);
+	frames_to_cue = cue->frame - (uint16_t)current_object->demo_captions.frames;
 	zero = frames_to_cue == 0u;
-	cue += 4u;
 	if ((int32_t)frames_to_cue < 0)
 	{
 		current_object->flags = 0u;
@@ -513,7 +512,7 @@ void demo_captions_run(void)
 	}
 	if (zero)
 	{
-		jump_target = DEMO_CAPTION_CUE(cue - 0x4u)->routine;
+		jump_target = cue->routine;
 		switch (jump_target)
 		{
 		case 0x01AE2Du:
@@ -595,7 +594,8 @@ void demo_captions_start(uint8_t first_record, uint32_t record_count)
    0-7, 240 for 8-11), animated and drawn until frames_left runs out. */
 void demo_caption_update(void)
 {
-	uint32_t animation = 0, picture = 0;
+	uint32_t animation = 0;
+	const struct picture_record *picture = NULL;
 	uint16_t frames_left = 0;
 
 	switch (current_object->state)
@@ -615,22 +615,16 @@ void demo_caption_update(void)
 		return;
 	}
 	current_object->draw_mode = 0u;
-	picture = demo_caption_pictures_ADDRESS + ((uint32_t)current_object->demo_caption.record << 4);
-	animation = PICTURE_RECORD(picture)->animation;
-	picture += 2u;
+	picture = rom_pointer(demo_caption_pictures_ADDRESS + ((uint32_t)current_object->demo_caption.record << 4));
+	animation = picture->animation;
 	animation_start(animation);
-	current_object->palette = PICTURE_RECORD(picture - 0x2u)->palette;
-	picture += 2u;
-	current_object->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
-	picture += 2u;
-	current_object->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
-	picture += 2u;
-	current_object->x = PICTURE_RECORD(picture - 0x8u)->x;
-	picture += 2u;
-	current_object->y = PICTURE_RECORD(picture - 0xAu)->y;
-	picture += 2u;
-	current_object->depth_layer = PICTURE_RECORD(picture - 0xCu)->depth_layer;
-	current_object->demo_caption.frames_left = PICTURE_RECORD(picture - 0xCu)->frames_left;
+	current_object->palette = picture->palette;
+	current_object->width_scale = picture->width_scale;
+	current_object->height_scale = picture->height_scale;
+	current_object->x = picture->x;
+	current_object->y = picture->y;
+	current_object->depth_layer = picture->depth_layer;
+	current_object->demo_caption.frames_left = picture->frames_left;
 	current_object->state++;
 	animation_advance(0u);
 	draw_object(0u);
