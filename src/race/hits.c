@@ -525,7 +525,8 @@ uint32_t traffic_hit_check(void)
 {
 	uint32_t negative = 0;
 	uint16_t first_segment = 0, object_across = 0;
-	uint32_t car_hit_box = 0, item_hit_box = 0, object_along = 0, segment_offset = 0;
+	uint32_t car_hit_box = 0, object_along = 0, segment_offset = 0;
+	const struct item_hit_box *item_hit_box = NULL;
 	struct object *object = NULL;
 	uint16_t overlap_signs = 0;
 
@@ -539,10 +540,10 @@ uint32_t traffic_hit_check(void)
 	first_segment = CAR_HIT_BOX(car_hit_box - 0x6u)->first_segment;
 	car_hit_box += 4u;
 	segment_offset = (uint16_t)(object_along << 4);
-	item_hit_box = current_object->traffic.hit_box;
+	item_hit_box = rom_pointer(current_object->traffic.hit_box);
 	object_across = (uint16_t)((uint32_t)current_object->side * ROAD_SEGMENT(address_of(screen) + 0x2000u + (segment_offset & 0x7FFu) * 2u)->half_width + current_object->x_offset);
 	object_along = (uint16_t)(((object_along - first_segment) << 7) + current_object->position_fraction);
-	overlap_signs = ((object_across + ITEM_HIT_BOX(item_hit_box)->across_start - CAR_HIT_BOX(car_hit_box - 0xAu)->across_end) ^ (object_across + ITEM_HIT_BOX(item_hit_box)->across_end - CAR_HIT_BOX(car_hit_box - 0xAu)->across_start)) & ((object_along + ITEM_HIT_BOX(item_hit_box)->along_start - CAR_HIT_BOX(car_hit_box - 0xAu)->along_end) ^ (object_along + ITEM_HIT_BOX(item_hit_box)->along_end - CAR_HIT_BOX(car_hit_box - 0xAu)->along_start));
+	overlap_signs = ((object_across + item_hit_box->across_start - CAR_HIT_BOX(car_hit_box - 0xAu)->across_end) ^ (object_across + item_hit_box->across_end - CAR_HIT_BOX(car_hit_box - 0xAu)->across_start)) & ((object_along + item_hit_box->along_start - CAR_HIT_BOX(car_hit_box - 0xAu)->along_end) ^ (object_along + item_hit_box->along_end - CAR_HIT_BOX(car_hit_box - 0xAu)->along_start));
 	negative = overlap_signs >> 15;
 	if ((int16_t)overlap_signs < 0)
 	{

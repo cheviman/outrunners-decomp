@@ -421,7 +421,7 @@ void lap_timer_update(void)
 		if (split_frames != 1u)
 		{
 			text = address_of(current_object) + 0x80u;
-			draw_text(text);
+			draw_text(rom_pointer(text));
 			draw_object(lap_time);
 			return;
 		}
@@ -453,7 +453,7 @@ void lap_timer_update(void)
 			if (split_frames != 1u)
 			{
 				text = address_of(current_object) + 0x80u;
-				draw_text(text);
+				draw_text(rom_pointer(text));
 				draw_object(lap_time);
 				return;
 			}
@@ -462,12 +462,12 @@ void lap_timer_update(void)
 		}
 		lap_time = player_car->race_time / 0xAu - player_car->checkpoint_time;
 		time_to_text(lap_time, time_text);
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		draw_object(lap_time);
 		return;
 	case 3:
 		text = address_of(current_object) + 0x80u;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		draw_object(lap_time);
 		return;
 	}
@@ -501,7 +501,7 @@ void stage_indicator_draw(void)
 	uint32_t text = 0;
 
 	text = stage_level_texts[screen->route_stage_level];
-	draw_text(text);
+	draw_text(rom_pointer(text));
 	draw_object(0u);
 }
 
@@ -959,9 +959,9 @@ void goal_update(void)
 		}
 		draw_object(sound_code);
 		text = total_time_text_ADDRESS;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		text = address_of(current_object) + 0x80u;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		return;
 	case 5:
 		result_timer = current_object->goal.timer;
@@ -969,9 +969,9 @@ void goal_update(void)
 		if (result_timer != 1u)
 		{
 			text = total_time_text_ADDRESS;
-			draw_text(text);
+			draw_text(rom_pointer(text));
 			text = address_of(current_object) + 0x80u;
-			draw_text(text);
+			draw_text(rom_pointer(text));
 			return;
 		}
 		current_object->flags = 0u;
@@ -983,9 +983,9 @@ void goal_update(void)
 	{
 		draw_object(sound_code);
 		text = total_time_text_ADDRESS;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		text = address_of(current_object) + 0x80u;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		return;
 	}
 	song_title = dream_flying_song_title_ADDRESS;
@@ -1009,9 +1009,9 @@ void goal_update(void)
 	}
 	draw_object(sound_code);
 	text = total_time_text_ADDRESS;
-	draw_text(text);
+	draw_text(rom_pointer(text));
 	text = address_of(current_object) + 0x80u;
-	draw_text(text);
+	draw_text(rom_pointer(text));
 }
 
 /* With two players, the result at the end of the race: the screen's place in big letters (animation 2F8:
@@ -1384,21 +1384,22 @@ void checkpoint_board_update(void)
 void checkpoint_board_draw_row(uint32_t player)
 {
 	uint16_t row_x = 0, text_attribute = 0;
-	uint32_t animation = 0, place = 0, row = 0, row_x_2 = 0, text_x = 0, time_text = 0;
+	uint32_t animation = 0, row = 0, row_x_2 = 0, text_x = 0, time_text = 0;
 	struct board_car_sprite *car_sprite = NULL;
+	const struct checkpoint_board_place *place = NULL;
 
-	place = checkpoint_board_number_places_ADDRESS + current_object->checkpoint_board.row * 4u;
-	current_object->x = CHECKPOINT_BOARD_PLACE(place)->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
-	current_object->y = CHECKPOINT_BOARD_PLACE(place)->y;
+	place = rom_pointer(checkpoint_board_number_places_ADDRESS + current_object->checkpoint_board.row * 4u);
+	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
+	current_object->y = place->y;
 	animation = checkpoint_board_number_animations[game->car_numbers[player]];
 	current_object->palette = 0x27u;
 	current_object->depth_layer = 0x19Eu;
 	current_object->draw_mode = 8u;
 	animation_start(animation);
 	draw_object(0u);
-	place = checkpoint_board_car_places_ADDRESS + current_object->checkpoint_board.row * 4u;
-	current_object->x = CHECKPOINT_BOARD_PLACE(place)->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
-	current_object->y = CHECKPOINT_BOARD_PLACE(place)->y;
+	place = rom_pointer(checkpoint_board_car_places_ADDRESS + current_object->checkpoint_board.row * 4u);
+	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
+	current_object->y = place->y;
 	car_sprite = pointer_to(address_of(current_object) + 0x80u + player * 4u);
 	animation = car_sprite->animation;
 	current_object->palette = car_sprite->palette;
@@ -1420,9 +1421,9 @@ void checkpoint_board_draw_row(uint32_t player)
 	row_x_2 = current_object->checkpoint_board.row;
 	if (row_x_2 == 0u)
 		return;
-	place = checkpoint_board_behind_places_ADDRESS + row_x_2 * 4u;
-	current_object->x = CHECKPOINT_BOARD_PLACE(place)->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
-	current_object->y = CHECKPOINT_BOARD_PLACE(place)->y;
+	place = rom_pointer(checkpoint_board_behind_places_ADDRESS + row_x_2 * 4u);
+	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
+	current_object->y = place->y;
 	animation = CHECKPOINT_BOARD_ROW;
 	current_object->palette = 0x4Au;
 	current_object->depth_layer = 0x19Eu;

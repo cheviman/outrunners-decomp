@@ -52,6 +52,10 @@ const uint8_t *data_at(uint32_t address);
    of the ROM ram_outside makes, for a pointer the C keeps that may hold an address nothing reads through) */
 const uint8_t *data_if_any(uint32_t address);
 
+/* The address of the program's data a pointer into one of its pieces stands for (1), or 0 where it points
+   into none: the address the original holds for what a pointer the C keeps into the ROM points at */
+int program_data_address(const void *pointer, uint32_t *address);
+
 /* The sound program's data at an offset of its chip (512 KB: the Z80 sees the start at 0000-9FFF and the
    rest through its bank's window at A000-BFFF): the piece's bytes there, NULL where no piece is (its code:
    the C replaces it). For the board's sound: s32_board.sound_at */

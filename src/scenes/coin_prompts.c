@@ -311,14 +311,14 @@ void credit_display_update(void)
 		{
 			current_object->state++;
 			text = credit_free_play_text_ADDRESS;
-			draw_text(text);
+			draw_text(rom_pointer(text));
 			return;
 		}
 		current_object->state += 2u;
 		break;
 	case 1:
 		text = credit_free_play_text_ADDRESS;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		return;
 	case 2:
 		break;
@@ -340,7 +340,7 @@ void credit_display_update(void)
 		text = credit_plural_text_ADDRESS;
 	credits_kept = credits;
 	coin_units_kept = coin_units;
-	draw_text(text);
+	draw_text(rom_pointer(text));
 	coin_units_shown = (uint8_t)coin_units_kept;
 	units = (uint8_t)credits_kept;
 	r12 &= ~0xFFu;

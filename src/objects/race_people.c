@@ -225,7 +225,8 @@ uint32_t rider_gesture_check_place(uint8_t visible_mask, struct object *car)
 void rider_gesture_place(uint16_t scale, struct object *car)
 {
 	uint16_t x_offset = 0, y = 0, y_offset = 0;
-	uint32_t model = 0, rider = 0, seat_place = 0, view = 0;
+	uint32_t model = 0, rider = 0, view = 0;
+	const struct car_part_place *seat_place = NULL;
 
 	rider = current_object->rider_gesture.rider;
 	x_offset = rider_gesture_x_offsets[rider];
@@ -233,9 +234,9 @@ void rider_gesture_place(uint16_t scale, struct object *car)
 	model = current_object->rider_gesture.model;
 	view = car->race_car.view;
 	rider = (uint8_t)(rider - model);
-	seat_place = race_car_rider_places[model] + (uint16_t)(view << 4) + (rider >> 1);
-	y = (uint16_t)(car->y + screen->sprite_origin_y + ((int16_t)((uint32_t)(y_offset + CAR_PART_PLACE(seat_place)->y) * scale) >> 8));
-	current_object->x = car->x + screen->sprite_origin_x + ((int16_t)((uint32_t)(x_offset + CAR_PART_PLACE(seat_place)->x) * scale) >> 8);
+	seat_place = rom_pointer(race_car_rider_places[model] + (uint16_t)(view << 4) + (rider >> 1));
+	y = (uint16_t)(car->y + screen->sprite_origin_y + ((int16_t)((uint32_t)(y_offset + seat_place->y) * scale) >> 8));
+	current_object->x = car->x + screen->sprite_origin_x + ((int16_t)((uint32_t)(x_offset + seat_place->x) * scale) >> 8);
 	current_object->y = y;
 }
 
@@ -560,7 +561,8 @@ void goal_actor_passenger_start(void)
 void goal_actor_rider_place(struct object *scene)
 {
 	uint32_t carry = 0;
-	uint32_t animation = 0, piece = 0, view = 0, view_offsets = 0, width_scale = 0, x_offset = 0, y = 0;
+	uint32_t animation = 0, piece = 0, view = 0, width_scale = 0, x_offset = 0, y = 0;
+	const struct car_part_place *view_offsets = NULL;
 	struct race *race = NULL;
 
 	current_object->palette = RACE_CAR_RIDER(r12)->palette;
@@ -576,9 +578,9 @@ void goal_actor_rider_place(struct object *scene)
 	piece += 2u;
 	y = (uint16_t)SPRITE_PIECE(piece - 0x4u)->y_offset;
 	x_offset = (uint16_t)SPRITE_PIECE(piece - 0x4u)->x_offset;
-	view_offsets = RACE_CAR_RIDER(r12)->places + (view << 4);
-	x_offset = (uint16_t)(x_offset + CAR_PART_PLACE(view_offsets)->x);
-	y = (uint16_t)(y + CAR_PART_PLACE(view_offsets)->y);
+	view_offsets = rom_pointer(RACE_CAR_RIDER(r12)->places + (view << 4));
+	x_offset = (uint16_t)(x_offset + view_offsets->x);
+	y = (uint16_t)(y + view_offsets->y);
 	animation = RACE_CAR_RIDER(r12)->animation + view;
 	current_object->animation = animation;
 	animation_start(animation);

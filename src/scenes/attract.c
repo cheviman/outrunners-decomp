@@ -17,20 +17,20 @@
    19-107 and 139-195); what the bars show cannot be told without drawing them. */
 void bar_picture_start(void)
 {
-	uint32_t bar = 0;
+	const struct bar_picture_bar *bar = NULL;
 	struct object *object = NULL;
 	uint32_t scales = 0;
 
-	bar = bar_picture_bars_ADDRESS;
+	bar = rom_pointer(bar_picture_bars_ADDRESS);
 	do
 	{
 		object = start_object();
 		object->handler = bar_picture_bar_start_ADDRESS;
-		scales = BAR_PICTURE_BAR(bar)->scales;
-		object->list_data = BAR_PICTURE_BAR(bar)->target;
+		scales = bar->scales;
+		object->list_data = bar->target;
 		object->bar_picture.scales = scales;
-		bar += 8u;
-	} while ((int32_t)BAR_PICTURE_BAR(bar)->target >= 0);
+		bar = bar + 1;
+	} while ((int32_t)bar->target >= 0);
 }
 
 /* Only unused code reaches it (bar_picture_start): sets up a bar of the picture: drawn on the screen
@@ -144,17 +144,18 @@ void bar_picture_bar_draw(void)
    port D, which the VBLANK writes). */
 void attract_lamps_update(void)
 {
-	uint32_t attract_lamp_step = 0, screen_index = 0;
+	uint32_t screen_index = 0;
+	const struct attract_lamp_step *attract_lamp_step = NULL;
 
-	attract_lamp_step = game->vblank_counter;
-	attract_lamp_step = attract_lamp_step >> 3;
-	attract_lamp_step = (uint8_t)(attract_lamp_step * 2u);
+	attract_lamp_step = rom_pointer(game->vblank_counter);
+	attract_lamp_step = rom_pointer(address_of(attract_lamp_step) >> 3);
+	attract_lamp_step = rom_pointer((uint8_t)(address_of(attract_lamp_step) * 2u));
 	screen_index = screen->index;
-	attract_lamp_step = attract_lamp_steps_ADDRESS + (uint8_t)(attract_lamp_step + screen_index) * 2u;
+	attract_lamp_step = rom_pointer(attract_lamp_steps_ADDRESS + (uint8_t)(address_of(attract_lamp_step) + screen_index) * 2u);
 	screen_index = (uint8_t)(screen_index * 2u);
 	screen_index = (uint8_t)(screen_index * 2u);
-	game->checkpoint_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->checkpoint;
-	game->leader_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->leader;
+	game->checkpoint_lamp[screen_index] = attract_lamp_step->checkpoint;
+	game->leader_lamp[screen_index] = attract_lamp_step->leader;
 }
 
 /* The presentation of a car in the attract mode (game mode 3, car_presentation_object_handlers): the
@@ -275,7 +276,8 @@ void staff_credits_code_watch(void)
    staff_credits_code_done. */
 void staff_credits_code_show(void)
 {
-	uint32_t next_text = 0, text_record = 0;
+	uint32_t text_record = 0;
+	const struct sprite_text_record *next_text = NULL;
 	uint16_t frames_left = 0;
 
 	frames_left = current_object->staff_credits_code.frames_left;
@@ -286,11 +288,11 @@ void staff_credits_code_show(void)
 		fade_out_music();
 		return;
 	}
-	next_text = staff_credits_texts_ADDRESS;
-	while ((int16_t)SPRITE_TEXT_RECORD(next_text)->x >= 0)
+	next_text = rom_pointer(staff_credits_texts_ADDRESS);
+	while ((int16_t)next_text->x >= 0)
 	{
-		text_record = next_text;
-		next_text = draw_text(text_record);
+		text_record = address_of(next_text);
+		next_text = rom_pointer(draw_text(rom_pointer(text_record)));
 	}
 	staff_credits_code_done();
 }

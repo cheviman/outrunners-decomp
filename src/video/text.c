@@ -66,12 +66,12 @@ void load_shadowed_text_font(void)
 
 /* Writes the strings of the list R19 on the text layer (print_text_layer each) until an FFFF halfword.
    Not run in the scenarios. */
-void print_text_layer_list(uint32_t text_record)
+void print_text_layer_list(const struct text_layer_record *text_record)
 {
 	do
 	{
-		text_record = print_text_layer(text_record);
-	} while (TEXT_LAYER_RECORD(text_record)->cell != 0xFFFFu);
+		text_record = rom_pointer(print_text_layer(address_of(text_record)));
+	} while (text_record->cell != 0xFFFFu);
 }
 
 /* Writes a string on the text layer: from the record R19, the cell's address (310000 + its first
@@ -103,12 +103,12 @@ uint32_t print_text_layer(uint32_t text_record)
 
 /* Unused: erases a string from the text layer: from the cell of the print_text_layer record R19, writes
    0 cells until the next cell's character is 0. */
-void erase_text_layer_to_blank_character(uint32_t text_record)
+void erase_text_layer_to_blank_character(const struct text_layer_record *text_record)
 {
 	uint16_t blank_cell = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
+	cell_place = 0x310000u | text_record->cell;
 	blank_cell = 0u;
 	do
 	{
@@ -145,12 +145,12 @@ void print_text_layer_halfwords(uint32_t text_record)
 
 /* Unused: erases a string from the text layer as erase_text_layer_to_blank_character does, but until the
    next cell is all 0 (character and attribute). */
-void erase_text_layer_to_blank_cell(uint32_t text_record)
+void erase_text_layer_to_blank_cell(const struct text_layer_record *text_record)
 {
 	uint16_t blank_cell = 0;
 	uint32_t cell_place = 0;
 
-	cell_place = 0x310000u | TEXT_LAYER_RECORD(text_record)->cell;
+	cell_place = 0x310000u | text_record->cell;
 	blank_cell = 0u;
 	do
 	{
@@ -303,22 +303,22 @@ void draw_text_at(uint32_t place, uint16_t attribute, uint32_t text)
 
 /* Draws the text record R19 (x and y, an attribute, a string closed by 0) as one sprite per character
    and returns the address of the record after it. */
-uint32_t draw_text(uint32_t text_record)
+uint32_t draw_text(const struct sprite_text_record *text_record)
 {
 	uint16_t attribute = 0, font = 0;
 	uint32_t place = 0, sprite = 0, sprite_copy = 0, sprite_size = 0, sprite_words_0 = 0, text = 0;
 
-	text = text_record + 6u;
+	text = address_of(text_record) + 6u;
 	sprite = screen->sprite_list_last + 0x10u;
 	if (screen->sprite_list_limit <= sprite)
 		return text;
 	sprite_copy = sprite + 0x3000u;
 	sprite_words_0 = text_sprite_words_0_1;
 	sprite_size = text_sprite_size | ((uint32_t)screen->sprite_screen_bit << 16);
-	place = SPRITE_TEXT_RECORD(text_record)->place;
+	place = text_record->place;
 	place = (place << 16) | (place >> 16);
 	font = text_sprite_font;
-	attribute = text_sprite_palette | SPRITE_TEXT_RECORD(text_record)->attribute;
+	attribute = text_sprite_palette | text_record->attribute;
 	return draw_text_sprites(sprite_words_0, sprite_size, place, font, attribute, sprite, sprite_copy, text);
 }
 

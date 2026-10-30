@@ -937,7 +937,9 @@ void map_depth_from_y(void)
 void stage_result_line_draw(void)
 {
 	uint16_t attribute = 0;
-	uint32_t animation = 0, place_index = 0, place_palette = 0, place_text = 0, player = 0, retire_text = 0, stage_result_text = 0, text_place = 0;
+	uint32_t animation = 0, place_index = 0, place_palette = 0, player = 0, retire_text = 0, text_place = 0;
+	const struct stage_result_place_text *place_text = NULL;
+	const struct stage_result_text *stage_result_text = NULL;
 	uint32_t saved_position = 0;
 	uint8_t final_place = 0;
 
@@ -949,22 +951,22 @@ void stage_result_line_draw(void)
 		return;
 	}
 	current_object->stage_result_line.place_address = address_of(screen) + 0x320u + player;
-	stage_result_text = stage_result_labels_ADDRESS + current_object->stage_result_line.stage * 3u * 3u;
-	attribute = STAGE_RESULT_TEXT(stage_result_text)->attribute;
+	stage_result_text = rom_pointer(stage_result_labels_ADDRESS + current_object->stage_result_line.stage * 3u * 3u);
+	attribute = stage_result_text->attribute;
 	text_place = (0x40u + (current_object->stage_result_line.stage << 4)) << 16;
 	text_place |= (uint16_t)(text_place + 0xA8u);
-	stage_result_text += 2u;
+	stage_result_text = rom_pointer(address_of(stage_result_text) + 2u);
 	saved_position = text_place;
-	draw_text_at(text_place, attribute, stage_result_text);
+	draw_text_at(text_place, attribute, address_of(stage_result_text));
 	text_place = (saved_position & ~0xFFFFu) | (uint16_t)(saved_position + 0x40u);
 	player = screen->player;
 	place_index = screen->checkpoint_orders[(int32_t)(player + (current_object->stage_result_line.stage << 3))] * 3u;
 	if (current_object->stage_result_line.last == 0u)
 	{
-		place_text = stage_result_places_ADDRESS + place_index * 2u;
-		attribute = STAGE_RESULT_PLACE_TEXT(place_text)->attribute;
-		place_text += 2u;
-		draw_text_at(text_place, attribute, place_text);
+		place_text = rom_pointer(stage_result_places_ADDRESS + place_index * 2u);
+		attribute = place_text->attribute;
+		place_text = rom_pointer(address_of(place_text) + 2u);
+		draw_text_at(text_place, attribute, address_of(place_text));
 		return;
 	}
 	if (current_object->stage_result_line.stage != 5u)

@@ -534,17 +534,18 @@ void song_title_show(void)
 {
 	uint32_t negative = 0;
 	uint16_t colour = 0, next_speed = 0, speed = 0;
-	uint32_t colour_step = 0, position = 0, record = 0, text = 0;
+	uint32_t colour_step = 0, position = 0, text = 0;
+	const struct song_title_record *record = NULL;
 	uint16_t time_left = 0, new_time_left = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
-		record = current_object->song_title.text;
-		current_object->x = SONG_TITLE_RECORD(record)->x;
-		record += 2u;
-		current_object->song_title.text = record;
-		screen->lcd_scroll_request = record;
+		record = rom_pointer(current_object->song_title.text);
+		current_object->x = record->x;
+		record = record + 1;
+		current_object->song_title.text = address_of(record);
+		screen->lcd_scroll_request = address_of(record);
 		current_object->song_title.slide = 0xD2;
 		current_object->song_title.y = 0xC8u;
 		current_object->song_title.speed = 0x14u;

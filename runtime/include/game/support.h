@@ -69,6 +69,10 @@ static inline uint8_t *ram(uint32_t address)
 uint32_t address_outside(const void *pointer);
 void *pointer_to(uint32_t address);
 
+/* The same for a pointer the C keeps into the program's data, which nothing writes through: the piece of
+   the program's data at a ROM address, read in place */
+const void *rom_pointer(uint32_t address);
+
 static inline uint32_t address_of(const void *pointer)
 {
 	const uintptr_t offset = (uintptr_t)pointer - (uintptr_t)game;

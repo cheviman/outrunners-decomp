@@ -529,7 +529,7 @@ void player_car_read_controls(void);
 void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint32_t *p_road_x, uint32_t *p_segment_fraction, uint32_t *p_segment_length);
 void player_car_world_position(struct road_segment *segment_record, struct road_segment *next_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
 void player_car_place_view(struct road_segment *segment_record, uint32_t view_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
-void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, uint32_t handling, uint32_t gear_ratio);
+void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, const struct car_handling *handling, uint32_t gear_ratio);
 void player_car_engine_wheelspin(uint32_t force, uint32_t top_speed, uint32_t gear_ratio);
 void player_car_engine_grip(uint32_t force, uint32_t top_speed, uint32_t gear_ratio);
 void player_car_engine_standing(void);
@@ -539,17 +539,17 @@ void distance_offset_from_x(void);
 void distance_offset_from_z(void);
 void distance_offset_at_angle(void);
 void player_car_next_surfaces(void);
-uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width, uint32_t handling);
+uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width, const struct car_handling *handling);
 void wheel_effect_1_none(void);
-void wheel_effect_1_surface_1_inner(uint32_t surface);
-void wheel_effect_1_surface_1_outer(uint32_t surface);
-void wheel_effect_1_surface_2_inner(uint32_t surface);
-void wheel_effect_1_surface_2_outer(uint32_t surface);
+void wheel_effect_1_surface_1_inner(const struct roadside_surface *surface);
+void wheel_effect_1_surface_1_outer(const struct roadside_surface *surface);
+void wheel_effect_1_surface_2_inner(const struct roadside_surface *surface);
+void wheel_effect_1_surface_2_outer(const struct roadside_surface *surface);
 void wheel_effect_2_none(void);
-void wheel_effect_2_surface_1_inner(uint32_t surface);
-void wheel_effect_2_surface_1_outer(uint32_t surface);
-void wheel_effect_2_surface_2_inner(uint32_t surface);
-void wheel_effect_2_surface_2_outer(uint32_t surface);
+void wheel_effect_2_surface_1_inner(const struct roadside_surface *surface);
+void wheel_effect_2_surface_1_outer(const struct roadside_surface *surface);
+void wheel_effect_2_surface_2_inner(const struct roadside_surface *surface);
+void wheel_effect_2_surface_2_outer(const struct roadside_surface *surface);
 void player_car_off_road_shake(void);
 
 /* race/player_car.c: the screen's car each frame: its place, the view, the rivals' warning, the crash physics */
@@ -578,7 +578,7 @@ void race_car_draw(void);
 void race_car_draw_behind(uint32_t sprite_entry, struct race *race, uint32_t *p_last_piece, uint32_t *p_last_size_step);
 void race_car_draw_link(uint32_t depth_layer, uint32_t sprite_entry);
 uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y, struct race_car_spray *spray);
-uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, uint32_t places, uint32_t palette, uint16_t screen_x, uint16_t screen_y);
+uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, const struct car_part_place *places, uint32_t palette, uint16_t screen_x, uint16_t screen_y);
 void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step);
 void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step);
 void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_last_size_step);
@@ -983,11 +983,11 @@ void palette_fade_step(void);
 /* video/text.c: the text: the fonts, the text layer's strings, numbers in hexadecimal and BCD, text in sprites */
 void load_text_font(void);
 void load_shadowed_text_font(void);
-void print_text_layer_list(uint32_t text_record);
+void print_text_layer_list(const struct text_layer_record *text_record);
 uint32_t print_text_layer(uint32_t text_record);
-void erase_text_layer_to_blank_character(uint32_t text_record);
+void erase_text_layer_to_blank_character(const struct text_layer_record *text_record);
 void print_text_layer_halfwords(uint32_t text_record);
-void erase_text_layer_to_blank_cell(uint32_t text_record);
+void erase_text_layer_to_blank_cell(const struct text_layer_record *text_record);
 void print_hex_byte(uint32_t number, uint16_t cell, uint32_t cell_place);
 void print_hex_halfword(uint32_t number, uint16_t cell, uint32_t cell_place);
 void print_hex_24_bits(uint32_t number, uint16_t cell, uint32_t cell_place);
@@ -996,7 +996,7 @@ void print_hex_digits(uint32_t number, uint16_t cell, uint32_t digit_count, uint
 uint32_t bcd_to_binary(uint32_t value);
 uint32_t binary_to_bcd(uint32_t number);
 void draw_text_at(uint32_t place, uint16_t attribute, uint32_t text);
-uint32_t draw_text(uint32_t text_record);
+uint32_t draw_text(const struct sprite_text_record *text_record);
 uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint32_t place, uint16_t font, uint16_t attribute, uint32_t sprite, uint32_t sprite_copy, uint32_t text);
 
 /* video/unpack.c: unpacking the tile pages and the lists of packed blocks, a step each frame */
@@ -1004,7 +1004,7 @@ void unpack(uint32_t source, uint32_t destination);
 void unpack_queued_step(void);
 void unpack_list(uint32_t block_list);
 uint32_t unpack_tile_pages(uint32_t page_list, uint32_t list_next);
-void queue_unpack_list(uint32_t block_list);
+void queue_unpack_list(const struct packed_block_entry *block_list);
 void queue_tile_pages(uint32_t page_list);
 
 /* video/video.c: the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips */

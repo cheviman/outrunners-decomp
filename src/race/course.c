@@ -17,12 +17,12 @@
 void player_car_start_course(void)
 {
 	uint16_t ring_mask = 0, width_code = 0;
-	uint32_t course = 0;
+	const struct course_start *course = NULL;
 
 	move_halfwords(address_of(screen) + 0x2000u, zero_block_ADDRESS, 0x200u);
-	course = stage_courses[screen->first_stage];
-	player_car->course = course;
-	width_code = COURSE_START(course)->width_code;
+	course = rom_pointer(stage_courses[screen->first_stage]);
+	player_car->course = address_of(course);
+	width_code = course->width_code;
 	player_car->width_code = (uint8_t)width_code;
 	player_car->road_width = width_code * 0xB0u;
 	player_car->prebuilt_segments = screen->draw_distance >> 7;
@@ -44,7 +44,8 @@ void player_car_extend_course(void)
 {
 	uint8_t branch_stages = 0;
 	uint16_t ring_mask = 0, run_width = 0, window_offset = 0;
-	uint32_t branch = 0, course = 0, course_place = 0, forks_reached = 0, forks_taken = 0, run_length = 0;
+	uint32_t branch = 0, course_place = 0, forks_reached = 0, forks_taken = 0, run_length = 0;
+	const struct course_fork *course = NULL;
 	struct object *object = NULL;
 	struct race *race = NULL;
 
@@ -68,11 +69,11 @@ void player_car_extend_course(void)
 	forks_reached = player_car->forks_reached;
 	if (screen->forks_decided < forks_reached)
 		return;
-	course = player_car->course;
+	course = rom_pointer(player_car->course);
 	branch = screen->route_branches[(int32_t)(forks_reached - 1u)];
 	player_car->branch = branch;
-	branch_stages = COURSE_FORK(course)->branch_stages[(int32_t)branch];
-	player_car->course = COURSE_FORK(course)->branch_courses[(int32_t)branch];
+	branch_stages = course->branch_stages[(int32_t)branch];
+	player_car->course = course->branch_courses[(int32_t)branch];
 	screen->route_stage = branch_stages;
 	player_car->new_branch = 0xFFu;
 	screen->route_stage_level++;

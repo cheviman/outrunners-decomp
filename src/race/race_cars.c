@@ -259,7 +259,7 @@ void race_car_draw(void)
 				rider_places = first_rider->places;
 				palette = first_rider->palette;
 				r12 = first_rider->animation + view;
-				sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
+				sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rom_pointer(rider_places), palette, (uint16_t)screen_x, (uint16_t)screen_y);
 			}
 			r12 = (r12 & ~0xFFu) | current_object->race_car.gesture_shown;
 			if ((r12 & second_rider->gesture_mask) == 0u)
@@ -268,7 +268,7 @@ void race_car_draw(void)
 				rider_places = second_rider->places;
 				palette = second_rider->palette;
 				r12 = second_rider->animation + view;
-				sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
+				sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rom_pointer(rider_places), palette, (uint16_t)screen_x, (uint16_t)screen_y);
 			}
 			spray = address_of(current_object) + 0xC0u;
 			other_spray = (uint16_t)(address_of(current_object) + 0xD0u);
@@ -502,11 +502,11 @@ uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y
 	places = spray->places;
 	r12 = SPRAY_ANIMATION_NUMBERS(spray->animations)[(int32_t)kind];
 	palette = race_car_spray_palettes[kind];
-	return race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, places, palette, screen_x, screen_y);
+	return race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rom_pointer(places), palette, screen_x, screen_y);
 }
 
 /* Draws a part of the car (a wheel, a spray) at its offset from the car's place, scaled with the car. */
-uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, uint32_t places, uint32_t palette, uint16_t screen_x, uint16_t screen_y)
+uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, const struct car_part_place *places, uint32_t palette, uint16_t screen_x, uint16_t screen_y)
 {
 	uint32_t carry = 0;
 	uint16_t sprite_x = 0, sprite_y = 0;
@@ -514,11 +514,11 @@ uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_
 
 	sprite_x = (uint16_t)x_offset;
 	sprite_y = (uint16_t)y_offset;
-	places += view_offset;
-	if ((CAR_PART_PLACE(places)->x | CAR_PART_PLACE(places)->y) == 0u)
+	places = rom_pointer(address_of(places) + view_offset);
+	if ((places->x | places->y) == 0u)
 		return sprite_entry;
-	sprite_x = (uint16_t)((sprite_x + CAR_PART_PLACE(places)->x) * scale);
-	sprite_y = (uint16_t)((sprite_y + CAR_PART_PLACE(places)->y) * scale);
+	sprite_x = (uint16_t)((sprite_x + places->x) * scale);
+	sprite_y = (uint16_t)((sprite_y + places->y) * scale);
 	carry = (sprite_x >> 7) & 1u;
 	sprite_x = (uint16_t)(((int16_t)sprite_x >> 8) + carry);
 	carry = (sprite_y >> 7) & 1u;

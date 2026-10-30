@@ -730,7 +730,8 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32
    frame 0, -2 starts the animation whose number is the next entry. */
 uint32_t animation_advance(uint32_t leftover)
 {
-	uint32_t frame = 0, next_animation = 0, order_routine = 0, sprite_animation = 0;
+	uint32_t frame = 0, next_animation = 0, order_routine = 0;
+	const struct sprite_animation *sprite_animation = NULL;
 	uint8_t frame_countdown = 0;
 	uint32_t order = 0;
 
@@ -743,10 +744,10 @@ uint32_t animation_advance(uint32_t leftover)
 	current_object->frame_countdown = current_object->frame_time;
 	current_object->frame++;
 	frame = current_object->frame;
-	sprite_animation = sprite_animations[current_object->animation];
-	if (SPRITE_ANIMATION(sprite_animation)->frames[(int32_t)frame] > 0)
+	sprite_animation = rom_pointer(sprite_animations[current_object->animation]);
+	if (sprite_animation->frames[(int32_t)frame] > 0)
 		return leftover;
-	order = 0u - SPRITE_ANIMATION(sprite_animation)->frames[(int32_t)frame];
+	order = 0u - sprite_animation->frames[(int32_t)frame];
 	order_routine = animation_order_jumps[order];
 	switch (order)
 	{
@@ -755,7 +756,7 @@ uint32_t animation_advance(uint32_t leftover)
 		current_object->frame--;
 		return order_routine;
 	case 2:
-		next_animation = SPRITE_ANIMATION(sprite_animation)->frames[(int32_t)(frame + 1u)];
+		next_animation = sprite_animation->frames[(int32_t)(frame + 1u)];
 		animation_start(next_animation);
 		return order_routine;
 	case 1:
@@ -1151,10 +1152,11 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32
 void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32_t *p_last_piece, uint32_t *p_step_height)
 {
 	uint16_t halfway_word = 0, mirror_bits = 0, offset_x = 0, places_mask = 0, sprite_width = 0, view_end = 0, y = 0;
-	uint32_t attributes_and_size = 0, blank_place = 0, first_position = 0, item_count = 0, item_position = 0, items_left = 0, layer_head = 0, pair_x = 0, palette_word = 0, piece = 0, positions_moved = 0, previous_sprites = 0, projected_step = 0, ring_step = 0, size = 0, size_index = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_entry = 0, sprite_place = 0, sprite_size_step = 0, sprite_then_height_bits = 0, window_then_width_bits = 0;
+	uint32_t attributes_and_size = 0, blank_place = 0, first_position = 0, item_count = 0, item_position = 0, items_left = 0, layer_head = 0, pair_x = 0, palette_word = 0, positions_moved = 0, previous_sprites = 0, projected_step = 0, ring_step = 0, size = 0, size_index = 0, size_steps = 0, size_table = 0, spacing = 0, sprite_entry = 0, sprite_place = 0, sprite_size_step = 0, sprite_then_height_bits = 0, window_then_width_bits = 0;
 	struct depth_list *depth_list = NULL;
 	struct projected_segment *projected_segment = NULL;
 	struct road_segment *ring_segment = NULL;
+	const struct sprite_piece *piece = NULL;
 	uint16_t items_in_view = 0;
 	uint32_t flags = 0, flags_long = 0, previous_first_position = 0;
 
@@ -1212,12 +1214,12 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, u
 	projected_step = spacing << 4;
 	ring_step = spacing << 5;
 	items_left = item_count;
-	piece = SPRITE_ANIMATION(sprite_animations[current_object->animation])->frames[current_object->frame] + 2u;
+	piece = rom_pointer(SPRITE_ANIMATION(sprite_animations[current_object->animation])->frames[current_object->frame] + 2u);
 	palette_word = (uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[current_object->palette])[0] << 16;
 	attributes_and_size = (current_object->flags | ((uint32_t)current_object->flags_high << 8u));
 	attributes_and_size = attributes_and_size & 0xC0u;
-	attributes_and_size = attributes_and_size ^ SPRITE_PIECE(piece)->attributes;
-	sprite_then_height_bits = SPRITE_PIECE(piece)->sprite;
+	attributes_and_size = attributes_and_size ^ piece->attributes;
+	sprite_then_height_bits = piece->sprite;
 	size_steps = sprite_size_steps_ADDRESS + sprite_then_height_bits * 4u;
 	sprite_entry = screen->sprite_list_last + 0x10u;
 	current_object->size_step = 0xFFu;
@@ -1378,5 +1380,5 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, u
 	sprite_place = (sprite_place + 4u) & (places_mask | 0xFFFF0000u);
 	SPRITE_PLACE_WORDS(sprite_place)[0] = blank_place;
 	screen->next_sprite_place = (sprite_place + 4u) & (places_mask | 0xFFFF0000u);
-	*p_last_piece = piece;
+	*p_last_piece = address_of(piece);
 }

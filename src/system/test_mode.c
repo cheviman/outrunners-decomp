@@ -2766,7 +2766,8 @@ void test_mode_network_assignments_toggle_communication(void)
    cannot be reached); redraws. */
 void test_mode_network_assignments_toggle_privilege_mode(void)
 {
-	uint32_t privilege = 0, setting = 0;
+	uint32_t privilege = 0;
+	const struct privilege_mode_setting *setting = NULL;
 	uint8_t stepped_privilege = 0;
 
 	privilege = game->test_mode_privilege_mode;
@@ -2775,9 +2776,9 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 	if ((int8_t)stepped_privilege < 0)
 		privilege = 1u;
 	game->test_mode_privilege_mode = privilege;
-	setting = privilege_mode_settings_ADDRESS + privilege * 2u;
-	game->link_master = PRIVILEGE_MODE_SETTING(setting)->master;
-	game->isdn_mode = PRIVILEGE_MODE_SETTING(setting)->isdn;
+	setting = rom_pointer(privilege_mode_settings_ADDRESS + privilege * 2u);
+	game->link_master = setting->master;
+	game->isdn_mode = setting->isdn;
 	test_mode_network_assignments_draw();
 }
 

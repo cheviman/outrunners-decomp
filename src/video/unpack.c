@@ -329,7 +329,7 @@ uint32_t unpack_tile_pages(uint32_t page_list, uint32_t list_next)
    closed by a negative entry, the first taken unchecked) as they are in the screen's ring unpack_queue
    (unpack_write_place), with unpack_state set to say there is work, for unpack_queued_step.
    queue_tile_pages does the same for a list of tile pages. */
-void queue_unpack_list(uint32_t block_list)
+void queue_unpack_list(const struct packed_block_entry *block_list)
 {
 	uint32_t unpack_write_place = 0;
 	struct unpack_request *request = NULL;
@@ -340,12 +340,12 @@ void queue_unpack_list(uint32_t block_list)
 		unpack_write_place = screen->unpack_write_place;
 		request = pointer_to(address_of(screen) + 0xC00u + unpack_write_place * 2u * 4u);
 		screen->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
-		destination = PACKED_BLOCK_ENTRY(block_list)->destination;
-		request->source = PACKED_BLOCK_ENTRY(block_list)->source;
+		destination = block_list->destination;
+		request->source = block_list->source;
 		request->destination = destination;
 		screen->unpack_state = (screen->unpack_state & 0xFF00u) | 0xFFu;
-		block_list += 8u;
-	} while ((int32_t)PACKED_BLOCK_ENTRY(block_list)->source >= 0);
+		block_list = block_list + 1;
+	} while ((int32_t)block_list->source >= 0);
 }
 
 /* Queues the tilemap pages of the list R10 to be unpacked into video RAM: each 32-bit entry a page

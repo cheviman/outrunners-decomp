@@ -790,7 +790,7 @@ uint32_t network_check_five_ics(uint32_t left_caller)
 	io_write8(IO_2_CNT, 0x80u);
 	clear_text_layer();
 	error_texts = communication_board_error_texts_ADDRESS;
-	print_text_layer_list(error_texts);
+	print_text_layer_list(rom_pointer(error_texts));
 	left_caller_2 = 0u;
 	left_caller_2 = network_check_four_ics(left_caller_2);
 	if (left_caller_2 != 0u)
@@ -822,7 +822,7 @@ uint32_t network_check_four_ics(uint32_t left_caller)
 	io_write8(IO_2_CNT, 0x80u);
 	clear_text_layer();
 	error_texts = communication_board_error_texts_ADDRESS;
-	print_text_layer_list(error_texts);
+	print_text_layer_list(rom_pointer(error_texts));
 	self_test = io_read8(r12 + 0xCu);
 	ic_count = 4u;
 	network_check_show_ics(ic_count, self_test);
@@ -918,7 +918,7 @@ uint32_t network_check_error(uint32_t error_texts)
 	uint32_t left_caller = 0;
 
 	clear_text_layer();
-	print_text_layer_list(error_texts);
+	print_text_layer_list(rom_pointer(error_texts));
 	io_write8(IO_1_CNT, 6u);
 	io_write8(IO_2_CNT, 0x86u);
 	for (;;)

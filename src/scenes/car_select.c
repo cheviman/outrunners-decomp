@@ -786,16 +786,17 @@ void car_attendant_run(void)
    and goes to 2, where draw_object draws it where it was. */
 void turntable_car_show(void)
 {
-	uint32_t across = 0, animation = 0, car_angle = 0, down = 0, look = 0, point_depth = 0, ring_radius = 0, seen_angle = 0;
+	uint32_t across = 0, animation = 0, car_angle = 0, down = 0, point_depth = 0, ring_radius = 0, seen_angle = 0;
+	const struct animation_palette *look = NULL;
 	uint16_t angle_from_front = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		look = turntable_car_looks_ADDRESS + current_object->turntable_car.car * 4u;
-		animation = ANIMATION_PALETTE(look)->animation;
-		current_object->palette = ANIMATION_PALETTE(look)->palette;
+		look = rom_pointer(turntable_car_looks_ADDRESS + current_object->turntable_car.car * 4u);
+		animation = look->animation;
+		current_object->palette = look->palette;
 		animation_start(animation);
 		current_object->turntable_car.size = 0x100u;
 		current_object->state++;
@@ -922,7 +923,8 @@ void welcome_letter_start(void)
    (step_palette, from 006DCC) and ends 45 frames after the start. */
 void welcome_letter_show(void)
 {
-	uint32_t animation = 0, letter_index = 0, place = 0;
+	uint32_t animation = 0, letter_index = 0;
+	const struct welcome_letter_place *place = NULL;
 	uint16_t frames_left = 0, delay_left = 0;
 
 	switch (current_object->state)
@@ -934,10 +936,10 @@ void welcome_letter_show(void)
 		animation_start(animation);
 		current_object->palette = 0x18u;
 		letter_index = current_object->welcome_letter.index;
-		place = welcome_letter_places_ADDRESS + letter_index * 4u;
-		current_object->x = WELCOME_LETTER_PLACE(place)->x;
+		place = rom_pointer(welcome_letter_places_ADDRESS + letter_index * 4u);
+		current_object->x = place->x;
 		current_object->y = 0x50u;
-		current_object->frame = WELCOME_LETTER_PLACE(place)->letter;
+		current_object->frame = place->letter;
 		current_object->welcome_letter.delay = letter_index * 2u;
 		current_object->welcome_letter.frames_left = 0x2Du;
 		current_object->welcome_letter.palette_list = welcome_letter_palette_steps_ADDRESS;
@@ -1418,13 +1420,14 @@ void transmission_label_follow(void)
    away from; draw_object then draws it as its handler. */
 void driver_couple_start(void)
 {
-	uint32_t animation = 0, look = 0;
+	uint32_t animation = 0;
+	const struct animation_palette *look = NULL;
 
 	current_object->draw_mode = 0u;
 	current_object->depth_layer = 0xEFu;
-	look = driver_couple_looks_ADDRESS + player_car->model * 4u;
-	animation = ANIMATION_PALETTE(look)->animation;
-	current_object->palette = ANIMATION_PALETTE(look)->palette;
+	look = rom_pointer(driver_couple_looks_ADDRESS + player_car->model * 4u);
+	animation = look->animation;
+	current_object->palette = look->palette;
 	animation_start(animation);
 	current_object->x = 0xF0u;
 	if (current_object->driver_couple.left_side != 0u)
@@ -2229,7 +2232,8 @@ void entry_car_ring_start(void)
 void entry_car_ring_draw(void)
 {
 	uint32_t carry = 0;
-	uint32_t animation = 0, copy_count = 0, ignored = 0, look = 0, ring_angle = 0, ring_car = 0, ring_x = 0, ring_y = 0;
+	uint32_t animation = 0, copy_count = 0, ignored = 0, ring_angle = 0, ring_car = 0, ring_x = 0, ring_y = 0;
+	const struct animation_palette *look = NULL;
 	uint8_t copies = 0;
 
 	copy_count = current_object->entry_car_ring.copies;
@@ -2239,9 +2243,9 @@ void entry_car_ring_draw(void)
 		ring_car = (uint8_t)(ring_car + 1u);
 		ring_car = ring_car & 7u;
 		current_object->entry_car_ring.car = ring_car;
-		look = turntable_car_looks_ADDRESS + ring_car * 4u;
-		animation = ANIMATION_PALETTE(look)->animation;
-		current_object->palette = ANIMATION_PALETTE(look)->palette + 4u;
+		look = rom_pointer(turntable_car_looks_ADDRESS + ring_car * 4u);
+		animation = look->animation;
+		current_object->palette = look->palette + 4u;
 		animation_start(animation);
 		current_object->width_scale = 0x40u;
 		current_object->height_scale = 0x40u;
@@ -2310,7 +2314,8 @@ void entry_traffic_run(void)
 void entry_traffic_car_drive(void)
 {
 	uint8_t pass_sound = 0, tyre_noise = 0;
-	uint32_t animation = 0, ignored = 0, look = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, traffic_car = 0, traffic_path_step = 0;
+	uint32_t animation = 0, ignored = 0, mirrored_x = 0, path_size = 0, path_step = 0, random_swapped = 0, traffic_car = 0, traffic_path_step = 0;
+	const struct animation_palette *look = NULL;
 	uint8_t spin_chance = 0;
 	uint16_t spin_delay = 0, spin_delay_2 = 0;
 
@@ -2410,9 +2415,9 @@ void entry_traffic_car_drive(void)
 		random_swapped = byte_swap32(traffic_car);
 		traffic_car &= 7u;
 		current_object->entry_traffic_car.car = traffic_car;
-		look = turntable_car_looks_ADDRESS + traffic_car * 4u;
-		animation = ANIMATION_PALETTE(look)->animation;
-		current_object->palette = ANIMATION_PALETTE(look)->palette;
+		look = rom_pointer(turntable_car_looks_ADDRESS + traffic_car * 4u);
+		animation = look->animation;
+		current_object->palette = look->palette;
 		animation_start(animation);
 		current_object->draw_mode = 0xAu;
 		current_object->depth_layer = 3u;

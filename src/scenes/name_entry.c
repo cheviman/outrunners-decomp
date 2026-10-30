@@ -132,9 +132,9 @@ void name_entry_update(void)
 		return;
 	case 4:
 		text_record = address_of(current_object) + 0xA4u;
-		draw_text(text_record);
+		draw_text(rom_pointer(text_record));
 		text_record = address_of(current_object) + 0x9Au;
-		draw_text(text_record);
+		draw_text(rom_pointer(text_record));
 		return;
 	}
 	steps = (uint8_t)current_object->name_entry.turn_steps;
@@ -450,9 +450,9 @@ void name_entry_store_record(void)
 		current_object->state++;
 	}
 	text_record = address_of(current_object) + 0xA4u;
-	draw_text(text_record);
+	draw_text(rom_pointer(text_record));
 	text_record = address_of(current_object) + 0x9Au;
-	draw_text(text_record);
+	draw_text(rom_pointer(text_record));
 }
 
 /* The seconds left as the countdown number (timer frames / 30 in BCD, time_digits_draw), then the time
@@ -466,9 +466,9 @@ void name_entry_draw_time(void)
 	remaining_time = binary_to_bcd(remaining_time);
 	time_digits_draw(remaining_time);
 	text_record = address_of(current_object) + 0xA4u;
-	draw_text(text_record);
+	draw_text(rom_pointer(text_record));
 	text_record = address_of(current_object) + 0x9Au;
-	draw_text(text_record);
+	draw_text(rom_pointer(text_record));
 }
 
 /* A letter on the name entry's drum (font 2DE; index 0-31: A-Z ! ? . and the right arrow, the left arrow

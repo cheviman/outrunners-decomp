@@ -25,12 +25,12 @@ ram_structures 1173
 ram_variables 0
 ram_addresses 163
 code_addresses 206
-table_addresses 1283
+table_addresses 1163
 page_links 96
 ram_blocks 106
-pointer_conversions 706
+pointer_conversions 822
 functions 762
-lines 39759
+lines 39789
 casts 2696
 partial_writes 130
 mixed_partial_writes 0

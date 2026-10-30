@@ -35,7 +35,8 @@ void race_background_update(void)
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
-	uint32_t animation = 0, background = 0, background_inverted = 0, fades = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	uint32_t animation = 0, background = 0, background_inverted = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	const struct road_palette_record *fades = NULL;
 	struct tilemap_pages *page_word_address = NULL;
 	uint32_t view_turn_kept = 0;
 	uint8_t first_background = 0;
@@ -95,8 +96,8 @@ void race_background_update(void)
 		background = current_object->race_background.background;
 		if ((int8_t)background >= 0)
 		{
-			fades = background_palette_fades[background];
-			race_background_fade_palettes(fades);
+			fades = rom_pointer(background_palette_fades[background]);
+			race_background_fade_palettes(address_of(fades));
 			palettes = background_palettes[current_object->race_background.background];
 		}
 		queue_palette_list(palettes);
@@ -194,10 +195,10 @@ void race_background_update(void)
 			if ((int16_t)view_turn < 0x2A0)
 				break;
 			screen->backdrops_leaving = 0xFFu;
-			fades = background_leaving_fades[current_object->race_background.background];
-			start_palette_fades(fades);
-			fades = background_road_palettes[current_object->race_background.background];
-			if (fades == 0u)
+			fades = rom_pointer(background_leaving_fades[current_object->race_background.background]);
+			start_palette_fades(address_of(fades));
+			fades = rom_pointer(background_road_palettes[current_object->race_background.background]);
+			if (fades == NULL)
 			{
 				next_page_words = current_object->race_background.next_page_words;
 				TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
@@ -205,9 +206,9 @@ void race_background_update(void)
 				current_object->race_background.change_step++;
 				break;
 			}
-			screen->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
-			fades += 4u;
-			start_palette_fades(fades);
+			screen->road_palette_fades = fades->road_fades;
+			fades = fades + 1;
+			start_palette_fades(address_of(fades));
 			next_page_words = current_object->race_background.next_page_words;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 			current_object->race_background.next_page_words = next_page_words + 4u;
@@ -224,8 +225,8 @@ void race_background_update(void)
 		case 3:
 			if ((int16_t)view_turn > 0x160)
 				break;
-			fades = background_palette_fades[current_object->race_background.background];
-			race_background_fade_palettes(fades);
+			fades = rom_pointer(background_palette_fades[current_object->race_background.background]);
+			race_background_fade_palettes(address_of(fades));
 			next_page_words = current_object->race_background.next_page_words;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
 			current_object->race_background.next_page_words = next_page_words + 4u;
@@ -610,15 +611,16 @@ void palette_cycle_update(void)
 void sunset_fade_start(void)
 {
 	uint8_t blocks = 0, period = 0;
-	uint32_t fade = 0, fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, sunset_fade_record = 0, to = 0;
+	uint32_t fade = 0, fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, to = 0;
+	const struct sunset_fade_record *sunset_fade_record = NULL;
 	uint32_t count = 0, fade_count = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
-		sunset_fade_record = current_object->sunset_fade.data;
-		current_object->sunset_fade.count = SUNSET_FADE_RECORD(sunset_fade_record)->delay;
-		current_object->sunset_fade.fade_list = SUNSET_FADE_RECORD(sunset_fade_record)->fade_list;
+		sunset_fade_record = rom_pointer(current_object->sunset_fade.data);
+		current_object->sunset_fade.count = sunset_fade_record->delay;
+		current_object->sunset_fade.fade_list = sunset_fade_record->fade_list;
 		current_object->state++;
 		if ((uint16_t)current_object->sunset_fade.count != 0u)
 		{

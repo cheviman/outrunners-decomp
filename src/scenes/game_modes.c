@@ -342,7 +342,8 @@ void game_mode_play(void)
 {
 	uint32_t zero = 0;
 	uint8_t model = 0, player = 0, sound_code = 0, stage = 0;
-	uint32_t bookkeeping_entry = 0, colour_block = 0, demo_race_choice = 0, demo_record = 0, handler_list = 0, index = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
+	uint32_t bookkeeping_entry = 0, colour_block = 0, demo_record = 0, handler_list = 0, index = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
+	const struct demo_race_choice *demo_race_choice = NULL;
 	struct object *car = NULL, *object = NULL;
 	struct screen_lamps *lamp_place = NULL;
 	uint8_t racer = 0;
@@ -433,8 +434,8 @@ void game_mode_play(void)
 	case 10:
 		silence_and_clear_screen();
 		clear_race_state();
-		demo_race_choice = attract_demo_races_ADDRESS + screen->attract_car * 2u;
-		stage = DEMO_RACE_CHOICE(demo_race_choice)->stage;
+		demo_race_choice = rom_pointer(attract_demo_races_ADDRESS + screen->attract_car * 2u);
+		stage = demo_race_choice->stage;
 		screen->first_stage = stage;
 		screen->built_stage = stage;
 		screen->route_stage = stage;
@@ -446,7 +447,7 @@ void game_mode_play(void)
 		SCREEN(demo_record - 0x490u)->demo_player_count = 1u;
 		SCREEN(demo_record - 0x490u)->demo_players = screen->player;
 		SCREEN(demo_record - 0x490u)->demo_stage = stage;
-		model = DEMO_RACE_CHOICE(demo_race_choice)->model;
+		model = demo_race_choice->model;
 		player_car->model = model;
 		RACE(screen->race)->model = model;
 		screen->game_step = 0x1Bu;

@@ -569,14 +569,14 @@ void ranking_record_car_update(void)
 void passing_traffic_start(void)
 {
 	uint8_t step_count = 0;
-	uint32_t traffic_path_step = 0;
+	const struct traffic_path_step *traffic_path_step = NULL;
 
-	traffic_path_step = traffic_path_ADDRESS;
+	traffic_path_step = rom_pointer(traffic_path_ADDRESS);
 	step_count = 0u;
-	while (TRAFFIC_PATH_STEP(traffic_path_step)->size != 0u)
+	while (traffic_path_step->size != 0u)
 	{
 		step_count++;
-		traffic_path_step += 6u;
+		traffic_path_step = traffic_path_step + 1;
 	}
 	current_object->passing_traffic.path_steps = step_count;
 	current_object->handler = passing_traffic_update_ADDRESS;

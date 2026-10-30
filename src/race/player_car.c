@@ -37,7 +37,8 @@ void player_car_update(void)
 	uint32_t overflow = 0;
 	uint8_t crash_hit_sound = 0, dj_message = 0, frame_time = 0, tyre_noise = 0;
 	uint16_t grid_segment = 0, view_height_offset = 0;
-	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, crash_entry = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_side = 0, impact = 0, model = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0;
+	uint32_t arrival_animation = 0, brake_index = 0, crash_animation = 0, distance_index = 0, draw_distances = 0, goal_stop = 0, grid_list = 0, grid_place = 0, grid_road_place = 0, hit_side = 0, impact = 0, model = 0, other_slide = 0, other_weight = 0, other_x = 0, own_slide = 0, own_speed = 0, own_weight = 0, player_time = 0, road_x = 0, screen_view_default = 0, segment_fraction = 0, segment_length = 0, segment_record = 0, side_gap = 0, speed_difference = 0, speed_loss = 0, start_record = 0;
+	const struct crash_entry *crash_entry = NULL;
 	struct object *hit_object = NULL, *object = NULL;
 	struct race *other_record = NULL;
 	struct road_segment *car_segment_record = NULL;
@@ -383,7 +384,7 @@ void player_car_update(void)
 		player_car_move();
 		return;
 	case 0:
-		crash_entry = player_car->crash_table;
+		crash_entry = rom_pointer(player_car->crash_table);
 		impact = current_object->player_car.impact_speed;
 		if (impact >= 0xFFFFu)
 			impact = 0xFFFFu;
@@ -391,21 +392,21 @@ void player_car_update(void)
 		impact = (impact >> 7) + crash_place_offsets[screen->places[screen->player]];
 		if (impact >= 0x1F0u)
 			impact = 0x1F0u;
-		crash_entry += impact & ~0xFE0Fu;
-		current_object->player_car.speed_change = (int32_t)(speed_loss * CRASH_ENTRY(crash_entry)->speed_factor) >> 8;
+		crash_entry = rom_pointer(address_of(crash_entry) + (impact & ~0xFE0Fu));
+		current_object->player_car.speed_change = (int32_t)(speed_loss * crash_entry->speed_factor) >> 8;
 		hit_side = (uint16_t)player_car->road_x;
 		hit_side = hit_side >> 15;
-		current_object->player_car.sideways_push = CRASH_ENTRY(crash_entry)->push[(int32_t)hit_side];
-		current_object->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
+		current_object->player_car.sideways_push = crash_entry->push[(int32_t)hit_side];
+		current_object->player_car.bounce_speed = crash_entry->bounce_speed;
 		current_object->state = 5u;
 		current_object->player_car.step = 0u;
 		current_object->player_car.state_high = 0u;
 		current_object->flags |= 8u;
-		player_car->crash_sound = CRASH_ENTRY(crash_entry)->crash_sound;
+		player_car->crash_sound = crash_entry->crash_sound;
 		player_car->crash_sound_delay = 0xAu;
-		crash_hit_sound = (uint8_t)(CRASH_ENTRY(crash_entry)->hit_sound | ((uint32_t)CRASH_ENTRY(crash_entry)->crash_sound << 8u));
+		crash_hit_sound = (uint8_t)(crash_entry->hit_sound | ((uint32_t)crash_entry->crash_sound << 8u));
 		request_sound(crash_hit_sound);
-		crash_animation = CRASH_ENTRY(crash_entry)->animation[(int32_t)hit_side];
+		crash_animation = crash_entry->animation[(int32_t)hit_side];
 		view_height_offset = player_car_view_height();
 		crash_animation = (uint16_t)(crash_animation + view_height_offset);
 		current_object->animation = crash_animation;
@@ -442,7 +443,7 @@ void player_car_update(void)
 		break;
 	}
 	own_weight = car_weights[player_car->model];
-	crash_entry = player_car->crash_table;
+	crash_entry = rom_pointer(player_car->crash_table);
 	impact -= own_speed;
 	speed_difference = impact;
 	if ((int32_t)impact < 0)
@@ -450,23 +451,23 @@ void player_car_update(void)
 	impact = divide_s32((impact >> 8) * other_weight, own_weight) + crash_place_offsets[screen->places[screen->player]];
 	if (impact >= 0x1F0u)
 		impact = 0x1F0u;
-	crash_entry += impact & ~0xFE0Fu;
-	current_object->player_car.speed_change = (int32_t)(((int32_t)(speed_difference * CRASH_ENTRY(crash_entry)->car_speed_factor) >> 8) * other_weight) >> 8;
+	crash_entry = rom_pointer(address_of(crash_entry) + (impact & ~0xFE0Fu));
+	current_object->player_car.speed_change = (int32_t)(((int32_t)(speed_difference * crash_entry->car_speed_factor) >> 8) * other_weight) >> 8;
 	side_gap = side_gap - other_x + ((other_slide - own_slide) << 1);
 	hit_side = (0u - side_gap) >> 31;
-	side_gap = divide_s32(((int32_t)(side_gap * (int16_t)CRASH_ENTRY(crash_entry)->push[1]) >> 7) * other_weight, own_weight);
+	side_gap = divide_s32(((int32_t)(side_gap * (int16_t)crash_entry->push[1]) >> 7) * other_weight, own_weight);
 	overflow = v60_movt_overflow(side_gap, 32, 16);
 	current_object->player_car.sideways_push = side_gap;
-	current_object->player_car.bounce_speed = CRASH_ENTRY(crash_entry)->bounce_speed;
+	current_object->player_car.bounce_speed = crash_entry->bounce_speed;
 	current_object->state = 5u;
 	current_object->player_car.step = 0u;
 	current_object->player_car.state_high = 0u;
 	current_object->flags |= 8u;
-	player_car->crash_sound = CRASH_ENTRY(crash_entry)->crash_sound;
+	player_car->crash_sound = crash_entry->crash_sound;
 	player_car->crash_sound_delay = 0xAu;
-	crash_hit_sound = (uint8_t)(CRASH_ENTRY(crash_entry)->hit_sound | ((uint32_t)CRASH_ENTRY(crash_entry)->crash_sound << 8u));
+	crash_hit_sound = (uint8_t)(crash_entry->hit_sound | ((uint32_t)crash_entry->crash_sound << 8u));
 	request_sound(crash_hit_sound);
-	crash_animation = CRASH_ENTRY(crash_entry)->animation[(int32_t)hit_side];
+	crash_animation = crash_entry->animation[(int32_t)hit_side];
 	view_height_offset = player_car_view_height();
 	crash_animation = (uint16_t)(crash_animation + view_height_offset);
 	current_object->animation = crash_animation;
@@ -1315,7 +1316,7 @@ void rival_warning_update(void)
 	if (on_frames != 1u)
 	{
 		text = rival_warning_text_ADDRESS;
-		draw_text(text);
+		draw_text(rom_pointer(text));
 		return;
 	}
 	blinks = current_object->rival_warning.blinks;

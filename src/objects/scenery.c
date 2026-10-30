@@ -2116,11 +2116,12 @@ void fork_branch_draw(void)
 void fork_branch_sprite(uint32_t *p_size_and_attributes, uint32_t *p_height_word, uint32_t *p_width_bits, uint32_t *p_offset_palette)
 {
 	uint16_t height_word = 0, piece_attributes = 0, rom_offset = 0;
-	uint32_t frames = 0, size_step = 0, width_bits = 0;
+	uint32_t size_step = 0, width_bits = 0;
+	const struct sprite_frame *frames = NULL;
 
-	frames = SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0];
-	piece_attributes = SPRITE_FRAME(frames)->piece_words[0];
-	size_step = sprite_size_steps_ADDRESS + SPRITE_FRAME(frames)->piece_words[1] * 4u;
+	frames = rom_pointer(SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0]);
+	piece_attributes = frames->piece_words[0];
+	size_step = sprite_size_steps_ADDRESS + frames->piece_words[1] * 4u;
 	*p_size_and_attributes = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | piece_attributes;
 	size_step += 2u;
 	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;

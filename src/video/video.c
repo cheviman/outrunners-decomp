@@ -22,7 +22,8 @@
 uint32_t init_screen(void)
 {
 	uint16_t course_length = 0, section_length = 0;
-	uint32_t command_routine = 0, course_entry = 0, courses_left = 0, index = 0, length = 0, length_place = 0, screen_hardware = 0, stage_course = 0;
+	uint32_t command_routine = 0, courses_left = 0, index = 0, length = 0, length_place = 0, screen_hardware = 0, stage_course = 0;
+	const struct course_entry *course_entry = NULL;
 	uint32_t command = 0;
 
 	index = address_of(screen) >> 16;
@@ -45,15 +46,15 @@ uint32_t init_screen(void)
 	courses_left = 0x1Fu;
 	do
 	{
-		course_entry = COURSE_POINTER(stage_course)[0];
+		course_entry = rom_pointer(COURSE_POINTER(stage_course)[0]);
 		section_length = 0u;
 		course_length = 0u;
 		stage_course += 4u;
 		course_length += section_length;
 		for (;;)
 		{
-			length = COURSE_ENTRY(course_entry)->length;
-			course_entry += 6u;
+			length = course_entry->length;
+			course_entry = course_entry + 1;
 			if ((int16_t)length >= 0)
 			{
 				course_length += length;
@@ -67,11 +68,11 @@ uint32_t init_screen(void)
 			case 4:
 				continue;
 			case 0:
-				course_entry -= 4u;
-				course_entry = (COURSE_ENTRY(course_entry)->length | ((uint32_t)(COURSE_ENTRY(course_entry)->jump & 0xFFFFu) << 16u));
+				course_entry = rom_pointer(address_of(course_entry) - 4u);
+				course_entry = rom_pointer((course_entry->length | ((uint32_t)(course_entry->jump & 0xFFFFu) << 16u)));
 				continue;
 			case 3:
-				course_entry -= 2u;
+				course_entry = rom_pointer(address_of(course_entry) - 2u);
 				continue;
 			case 1:
 			case 5:
@@ -270,15 +271,16 @@ void clear_sprite_group_count(void)
    RAM, each showing two of the four layers). */
 void init_mixer(void)
 {
-	uint32_t first_layer = 0, hidden_layer_pair = 0, mixer = 0, second_layer = 0;
+	uint32_t first_layer = 0, mixer = 0, second_layer = 0;
+	const struct hidden_layer_pair *hidden_layer_pair = NULL;
 
 	mixer = screen->mixer;
 	move_halfwords_backward(mixer, mixer_register_defaults_ADDRESS, 0x28u);
 	move_halfwords(address_of(screen) + 0x160u, mixer_register_defaults_ADDRESS, 0x28u);
 	move_halfwords(address_of(screen) + 0x1B0u, mixer_register_defaults_ADDRESS, 0x28u);
-	hidden_layer_pair = hidden_layer_pairs_ADDRESS + screen->index * 2u;
-	first_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->first_layer;
-	second_layer = HIDDEN_LAYER_PAIR(hidden_layer_pair)->second_layer;
+	hidden_layer_pair = rom_pointer(hidden_layer_pairs_ADDRESS + screen->index * 2u);
+	first_layer = hidden_layer_pair->first_layer;
+	second_layer = hidden_layer_pair->second_layer;
 	io_write16(mixer + first_layer * 2u, 0u);
 	io_write16(mixer + second_layer * 2u, 0u);
 	screen->mixer_values[(int32_t)first_layer] = 0u;

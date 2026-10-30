@@ -190,10 +190,11 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	uint32_t zero = 0, negative = 0, overflow = 0, carry = 0;
 	uint8_t tyre_noise = 0;
 	uint16_t catch_up_target = 0, half_width = 0, max_road_x = 0, min_road_x = 0, new_sideways_speed = 0, road_half_width = 0, segment_then_offset = 0, start_road_x = 0, window_segment = 0;
-	uint32_t brake_force = 0, car_handling = 0, catch_up = 0, cornering = 0, drag = 0, drift = 0, drive_force = 0, forward_speed = 0, gas = 0, gear = 0, gear_curve = 0, gear_ratio = 0, grip = 0, new_speed = 0, next_segment = 0, origin_x = 0, origin_z = 0, road_force = 0, road_x = 0, segment_fraction = 0, segment_length = 0, segment_pitch = 0, speed = 0, steering = 0, wheel = 0;
+	uint32_t brake_force = 0, catch_up = 0, cornering = 0, drag = 0, drift = 0, drive_force = 0, forward_speed = 0, gas = 0, gear = 0, gear_curve = 0, gear_ratio = 0, grip = 0, new_speed = 0, next_segment = 0, origin_x = 0, origin_z = 0, road_force = 0, road_x = 0, segment_fraction = 0, segment_length = 0, segment_pitch = 0, speed = 0, steering = 0, wheel = 0;
+	const struct car_handling *car_handling = NULL;
 	uint16_t target_sideways_speed = 0, gap_to_ahead = 0, catch_up_change = 0;
 
-	car_handling = player_car->handling;
+	car_handling = rom_pointer(player_car->handling);
 	player_car->wheel_effect_sides = 0u;
 	player_car->wheel_effect_1 = 0u;
 	player_car->wheel_effect_2 = 0u;
@@ -209,7 +210,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		drag = (drag * drag) >> 16;
 		start_road_x = (uint16_t)player_car->road_x;
 		road_half_width = ROAD_SEGMENT(segment_record)->half_width;
-		half_width = CAR_HANDLING(car_handling)->half_width;
+		half_width = car_handling->half_width;
 		drag = player_car_road_drag(drag, start_road_x, road_half_width, half_width, car_handling);
 	}
 	segment_pitch = ROAD_SEGMENT(segment_record)->pitch;
@@ -224,7 +225,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		AS16(player_car->brake_lights) = 2u;
 	}
 	current_object->player_car.brake_force = brake_force;
-	brake_force = brake_force * CAR_HANDLING(car_handling)->brake_factor;
+	brake_force = brake_force * car_handling->brake_factor;
 	gear = player_car->gear;
 	gear_curve = address_of(screen) + 0x1300u + (uint16_t)(gear << 9);
 	speed = player_car->speed;
@@ -236,7 +237,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	new_speed = player_car->speed;
 	current_object->player_car.speed = new_speed;
 	wheel = current_object->player_car.wheel;
-	steering = (int32_t)(WHEEL_STEERING(CAR_HANDLING(car_handling)->steering)[wheel >> 3] * 0x14u) / 0x10;
+	steering = (int32_t)(WHEEL_STEERING(car_handling->steering)[wheel >> 3] * 0x14u) / 0x10;
 	if (new_speed <= 0xA000u)
 	{
 		if (new_speed > 0x2000u)
@@ -251,11 +252,11 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	new_sideways_speed = (uint16_t)divide_s32((uint32_t)(int16_t)new_sideways_speed << 8, player_car->catch_up + 0x100u);
 	player_car->skidding = 0u;
 	cornering = current_object->player_car.speed * steering;
-	grip = CAR_HANDLING(car_handling)->grip;
+	grip = car_handling->grip;
 	if ((int32_t)grip <= (int32_t)cornering)
 	{
 		player_car->skidding = 0xFFu;
-		cornering = (int32_t)((cornering - grip) * CAR_HANDLING(car_handling)->slide_factor) / -0x400000;
+		cornering = (int32_t)((cornering - grip) * car_handling->slide_factor) / -0x400000;
 		current_object->player_car.slide = cornering;
 		new_sideways_speed = (uint16_t)(new_sideways_speed + cornering + steering);
 		if (player_car->wheel_effect_sides == 0u)
@@ -275,7 +276,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		if ((int32_t)cornering <= (int32_t)grip)
 		{
 			player_car->skidding = 0xFFu;
-			cornering = (int32_t)((cornering - grip) * CAR_HANDLING(car_handling)->slide_factor) / -0x400000;
+			cornering = (int32_t)((cornering - grip) * car_handling->slide_factor) / -0x400000;
 			current_object->player_car.slide = cornering;
 			new_sideways_speed = (uint16_t)(new_sideways_speed + cornering + steering);
 			if (player_car->wheel_effect_sides == 0u)
@@ -586,7 +587,7 @@ void player_car_place_view(struct road_segment *segment_record, uint32_t view_se
    (car wheel_slip: tyre noise 1 or the model's skid noise, smoke; player_car_engine_wheelspin), the rest
    has grip (player_car_engine_grip); the revs (car revs) follow the speed through the gear's ratio, or
    the gas when the car stands; car moving says it moves. */
-void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, uint32_t handling, uint32_t gear_ratio)
+void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, const struct car_handling *handling, uint32_t gear_ratio)
 {
 	uint8_t tyre_noise = 0;
 	uint32_t top_speed = 0;
@@ -596,7 +597,7 @@ void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force
 	top_speed = (gear_ratio * 0xFFFFu) >> 8;
 	if (player_car->wheel_slip == 0u)
 	{
-		if (CAR_HANDLING(handling)->spin_start_force <= (int32_t)force)
+		if (handling->spin_start_force <= (int32_t)force)
 		{
 			player_car->wheel_slip = 0xFFu;
 			if (player_car->skidding == 0u)
@@ -604,7 +605,7 @@ void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force
 				tyre_noise = 1u;
 				set_tyre_noise_on_road(tyre_noise);
 			}
-			force = CAR_HANDLING(handling)->spin_drive_force;
+			force = handling->spin_drive_force;
 			if (player_car->wheel_effect_sides != 0u)
 			{
 				player_car_engine_wheelspin(force, top_speed, gear_ratio);
@@ -643,14 +644,14 @@ void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force
 		player_car_engine_wheelspin(force, top_speed, gear_ratio);
 		return;
 	}
-	if (CAR_HANDLING(handling)->spin_end_force <= (int32_t)force)
+	if (handling->spin_end_force <= (int32_t)force)
 	{
 		if (player_car->skidding == 0u)
 		{
 			tyre_noise = 1u;
 			set_tyre_noise_on_road(tyre_noise);
 		}
-		force = CAR_HANDLING(handling)->spin_drive_force;
+		force = handling->spin_drive_force;
 		if (player_car->wheel_effect_sides != 0u)
 		{
 			player_car_engine_wheelspin(force, top_speed, gear_ratio);
@@ -867,52 +868,53 @@ void distance_offset_at_angle(void)
 void player_car_next_surfaces(void)
 {
 	uint16_t stage_length = 0;
-	uint32_t stage_then_surfaces = 0;
+	const struct stage_roadside_surfaces *stage_then_surfaces = NULL;
 
-	stage_then_surfaces = screen->built_stage;
-	player_car->surface_stage = stage_then_surfaces;
-	stage_length = (uint16_t)(screen->stage_lengths[(int32_t)stage_then_surfaces] + screen->branch_road_length);
+	stage_then_surfaces = rom_pointer(screen->built_stage);
+	player_car->surface_stage = address_of(stage_then_surfaces);
+	stage_length = (uint16_t)(screen->stage_lengths[(int32_t)address_of(stage_then_surfaces)] + screen->branch_road_length);
 	player_car->surface_start = player_car->surface_next_start;
 	player_car->surface_next_start += stage_length;
-	stage_then_surfaces = stage_roadside_surface_lists_ADDRESS + (uint8_t)(stage_then_surfaces * 2u) * 4u;
-	player_car->surface_entry_1 = STAGE_ROADSIDE_SURFACES(stage_then_surfaces)->first;
-	player_car->surface_entry_2 = STAGE_ROADSIDE_SURFACES(stage_then_surfaces)->second;
+	stage_then_surfaces = rom_pointer(stage_roadside_surface_lists_ADDRESS + (uint8_t)(address_of(stage_then_surfaces) * 2u) * 4u);
+	player_car->surface_entry_1 = stage_then_surfaces->first;
+	player_car->surface_entry_2 = stage_then_surfaces->second;
 }
 
 /* The drag on the car: speed squared, times the model's off-road factor while slowed (car slowed_frames)
    or off the road (car off_road, with the off-road shake); and the roadside surfaces under its wheels
    (car surface_entry_1, surface_entry_2) give the effects at each side (car wheel_effect_sides: bit 0
    with wheel_effect_1, bit 1 with wheel_effect_2). */
-uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width, uint32_t handling)
+uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half_width, uint16_t half_width, const struct car_handling *handling)
 {
 	uint32_t carry = 0;
 	uint16_t beyond_edge = 0, inner_edge = 0, inner_edge_2 = 0, low_side = 0, outer_edge = 0, outer_edge_2 = 0;
-	uint32_t empty_bits = 0, roadside_surface = 0, roadside_surface_2 = 0, segment = 0, surface_bits = 0, surface_start = 0;
+	uint32_t empty_bits = 0, segment = 0, surface_bits = 0, surface_start = 0;
+	const struct roadside_surface *roadside_surface = NULL, *roadside_surface_2 = NULL;
 
-	roadside_surface = player_car->surface_entry_1;
-	roadside_surface_2 = player_car->surface_entry_2;
-	if (ROADSIDE_SURFACE(roadside_surface)->end < 0 && ROADSIDE_SURFACE(roadside_surface_2)->end < 0 && player_car->surface_next_start <= player_car->segment)
+	roadside_surface = rom_pointer(player_car->surface_entry_1);
+	roadside_surface_2 = rom_pointer(player_car->surface_entry_2);
+	if (roadside_surface->end < 0 && roadside_surface_2->end < 0 && player_car->surface_next_start <= player_car->segment)
 	{
 		player_car_next_surfaces();
-		roadside_surface = player_car->surface_entry_1;
-		roadside_surface_2 = player_car->surface_entry_2;
+		roadside_surface = rom_pointer(player_car->surface_entry_1);
+		roadside_surface_2 = rom_pointer(player_car->surface_entry_2);
 	}
 	segment = player_car->segment;
 	surface_start = player_car->surface_start;
-	if ((uint16_t)ROADSIDE_SURFACE(roadside_surface)->end + surface_start <= segment)
+	if ((uint16_t)roadside_surface->end + surface_start <= segment)
 	{
-		roadside_surface += 8u;
-		player_car->surface_entry_1 = roadside_surface;
+		roadside_surface = roadside_surface + 1;
+		player_car->surface_entry_1 = address_of(roadside_surface);
 	}
-	if ((uint16_t)ROADSIDE_SURFACE(roadside_surface_2)->end + surface_start <= segment)
+	if ((uint16_t)roadside_surface_2->end + surface_start <= segment)
 	{
-		roadside_surface_2 += 8u;
-		player_car->surface_entry_2 = roadside_surface_2;
+		roadside_surface_2 = roadside_surface_2 + 1;
+		player_car->surface_entry_2 = address_of(roadside_surface_2);
 	}
 	if (player_car->slowed_frames != 0u)
 	{
 		player_car->slowed_frames--;
-		drag = (drag * CAR_HANDLING(handling)->off_road_drag) >> 4;
+		drag = (drag * handling->off_road_drag) >> 4;
 		player_car_off_road_shake();
 		return drag;
 	}
@@ -927,13 +929,13 @@ uint32_t player_car_road_drag(uint32_t drag, uint16_t road_x, uint16_t road_half
 	if ((uint8_t)(surface_bits + carry) != 0u)
 	{
 		player_car->off_road = 0xFFu;
-		drag = (drag * CAR_HANDLING(handling)->off_road_drag) >> 4;
+		drag = (drag * handling->off_road_drag) >> 4;
 		player_car_off_road_shake();
 	}
-	inner_edge = ROADSIDE_SURFACE(roadside_surface)->inner_edge;
-	outer_edge = ROADSIDE_SURFACE(roadside_surface)->outer_edge;
-	inner_edge_2 = ROADSIDE_SURFACE(roadside_surface_2)->inner_edge;
-	outer_edge_2 = ROADSIDE_SURFACE(roadside_surface_2)->outer_edge;
+	inner_edge = roadside_surface->inner_edge;
+	outer_edge = roadside_surface->outer_edge;
+	inner_edge_2 = roadside_surface_2->inner_edge;
+	outer_edge_2 = roadside_surface_2->outer_edge;
 	beyond_edge = (uint16_t)(half_width - road_half_width);
 	half_width += road_half_width;
 	carry = inner_edge < beyond_edge;
@@ -1054,35 +1056,35 @@ void wheel_effect_1_none(void)
 /* wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+6) of surface_entry_1 past its inner bound
    (+2): the wheel at road_x plus the half track is past it and no other bound (player_car_road_drag's
    pick, wheel_effect_1_jumps). */
-void wheel_effect_1_surface_1_inner(uint32_t surface)
+void wheel_effect_1_surface_1_inner(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 1u;
-	player_car->wheel_effect_1 = ROADSIDE_SURFACE(surface)->inner_effect;
+	player_car->wheel_effect_1 = surface->inner_effect;
 }
 
 /* wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+7) of surface_entry_1 past its outer bound
    (+4), when the wheel at road_x plus the half track is past it and not past the bounds of
    surface_entry_2. */
-void wheel_effect_1_surface_1_outer(uint32_t surface)
+void wheel_effect_1_surface_1_outer(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 1u;
-	player_car->wheel_effect_1 = ROADSIDE_SURFACE(surface)->outer_effect;
+	player_car->wheel_effect_1 = surface->outer_effect;
 }
 
 /* wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+6) of surface_entry_2 past its inner bound
    (+2), when the wheel at road_x plus the half track is past it but not past its outer bound. */
-void wheel_effect_1_surface_2_inner(uint32_t surface)
+void wheel_effect_1_surface_2_inner(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 1u;
-	player_car->wheel_effect_1 = ROADSIDE_SURFACE(surface)->inner_effect;
+	player_car->wheel_effect_1 = surface->inner_effect;
 }
 
 /* wheel_effect_sides bit 0 and wheel_effect_1 = the effect (+7) of surface_entry_2 past its outer bound
    (+4): for the wheel at road_x plus the half track it comes before every other. */
-void wheel_effect_1_surface_2_outer(uint32_t surface)
+void wheel_effect_1_surface_2_outer(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 1u;
-	player_car->wheel_effect_1 = ROADSIDE_SURFACE(surface)->outer_effect;
+	player_car->wheel_effect_1 = surface->outer_effect;
 }
 
 /* The wheel at road_x less the model's half track is within the bounds of both surface entries: no
@@ -1093,35 +1095,35 @@ void wheel_effect_2_none(void)
 
 /* wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+6) of surface_entry_1 past its inner bound
    (+2), when the wheel at road_x less the half track is past it but not past its outer bound. */
-void wheel_effect_2_surface_1_inner(uint32_t surface)
+void wheel_effect_2_surface_1_inner(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 2u;
-	player_car->wheel_effect_2 = ROADSIDE_SURFACE(surface)->inner_effect;
+	player_car->wheel_effect_2 = surface->inner_effect;
 }
 
 /* wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+7) of surface_entry_1 past its outer bound
    (+4): for the wheel at road_x less the half track it comes before every other. */
-void wheel_effect_2_surface_1_outer(uint32_t surface)
+void wheel_effect_2_surface_1_outer(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 2u;
-	player_car->wheel_effect_2 = ROADSIDE_SURFACE(surface)->outer_effect;
+	player_car->wheel_effect_2 = surface->outer_effect;
 }
 
 /* wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+6) of surface_entry_2 past its inner bound
    (+2), when the wheel at road_x less the half track passes no bound of surface_entry_1 nor the outer
    one of surface_entry_2. */
-void wheel_effect_2_surface_2_inner(uint32_t surface)
+void wheel_effect_2_surface_2_inner(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 2u;
-	player_car->wheel_effect_2 = ROADSIDE_SURFACE(surface)->inner_effect;
+	player_car->wheel_effect_2 = surface->inner_effect;
 }
 
 /* wheel_effect_sides bit 1 and wheel_effect_2 = the effect (+7) of surface_entry_2 past its outer bound
    (+4), when the wheel at road_x less the half track passes no bound of surface_entry_1. */
-void wheel_effect_2_surface_2_outer(uint32_t surface)
+void wheel_effect_2_surface_2_outer(const struct roadside_surface *surface)
 {
 	player_car->wheel_effect_sides |= 2u;
-	player_car->wheel_effect_2 = ROADSIDE_SURFACE(surface)->outer_effect;
+	player_car->wheel_effect_2 = surface->outer_effect;
 }
 
 /* Off the road: the model's shake to the screen's bits of output port D (wheel_motor, the wheel motor's;

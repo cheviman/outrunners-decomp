@@ -497,7 +497,8 @@ void title_logo_copy_update(void)
    title_logo_shine for a frame), and it ends. */
 void title_logo_car_update(void)
 {
-	uint32_t animation = 0, model = 0, place = 0;
+	uint32_t animation = 0, model = 0;
+	const struct title_place *place = NULL;
 	uint8_t delay = 0;
 
 	switch (current_object->state)
@@ -515,9 +516,9 @@ void title_logo_car_update(void)
 		animation = title_car_animations[model];
 		animation_start(animation);
 		current_object->palette = title_logo_car_palettes[model];
-		place = title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2);
-		current_object->x = TITLE_PLACE(place)->x;
-		current_object->y = TITLE_PLACE(place)->y;
+		place = rom_pointer(title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2));
+		current_object->x = place->x;
+		current_object->y = place->y;
 		current_object->width_scale = 0x40u;
 		current_object->height_scale = 0x40u;
 		current_object->frame = 9u;
@@ -536,9 +537,9 @@ void title_logo_car_update(void)
 		animation = title_car_animations[model];
 		animation_start(animation);
 		current_object->palette = title_logo_car_palettes[model];
-		place = title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2);
-		current_object->x = TITLE_PLACE(place)->x;
-		current_object->y = TITLE_PLACE(place)->y;
+		place = rom_pointer(title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2));
+		current_object->x = place->x;
+		current_object->y = place->y;
 		current_object->width_scale = 0x40u;
 		current_object->height_scale = 0x40u;
 		current_object->frame = 9u;
@@ -570,7 +571,8 @@ void title_logo_car_update(void)
    logo (its animation from frame 0 when screen title_logo_shine is set). */
 void title_logo_stripe_update(void)
 {
-	uint32_t animation = 0, place = 0;
+	uint32_t animation = 0;
+	const struct title_place *place = NULL;
 	uint8_t frames = 0, frames_2 = 0;
 
 	switch (current_object->state)
@@ -613,9 +615,9 @@ void title_logo_stripe_update(void)
 	animation = TITLE_LOGO_STRIPE;
 	animation_start(animation);
 	current_object->palette = 0x270u;
-	place = title_logo_stripe_places_ADDRESS + ((uint32_t)current_object->title_logo_stripe.index << 2);
-	current_object->x = TITLE_PLACE(place)->x;
-	current_object->y = TITLE_PLACE(place)->y;
+	place = rom_pointer(title_logo_stripe_places_ADDRESS + ((uint32_t)current_object->title_logo_stripe.index << 2));
+	current_object->x = place->x;
+	current_object->y = place->y;
 	current_object->depth_layer = 0x198u;
 	current_object->title_logo_stripe.frames = 0x14u;
 	current_object->state++;
@@ -687,7 +689,8 @@ void title_board_palms_update(void)
 void title_seagull_fly(void)
 {
 	uint16_t y_wave = 0;
-	uint32_t angle = 0, animation = 0, place = 0;
+	uint32_t angle = 0, animation = 0;
+	const struct title_place *place = NULL;
 	uint8_t frames = 0;
 
 	switch (current_object->state)
@@ -699,9 +702,9 @@ void title_seagull_fly(void)
 		current_object->palette = 0x272u;
 		current_object->width_scale = 0xC0u;
 		current_object->height_scale = 0xC0u;
-		place = title_seagull_places_ADDRESS + ((uint32_t)current_object->title_seagull.index << 2);
-		current_object->x = TITLE_PLACE(place)->x;
-		current_object->y = TITLE_PLACE(place)->y;
+		place = rom_pointer(title_seagull_places_ADDRESS + ((uint32_t)current_object->title_seagull.index << 2));
+		current_object->x = place->x;
+		current_object->y = place->y;
 		current_object->depth_layer = 0x198u;
 		current_object->title_seagull.frames = 9u;
 		current_object->state++;

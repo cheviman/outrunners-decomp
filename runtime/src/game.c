@@ -282,12 +282,26 @@ void *pointer_to(uint32_t address)
 	}
 }
 
+const void *rom_pointer(uint32_t address)
+{
+	const uint8_t *data;
+
+	const uint32_t area = (address >> 20) & 0xf;
+
+	if (address != 0 && (area < 0x2 || area == 0xf) && (data = data_if_any(address)) != NULL)
+		return data;    /* the piece of the program's data there, read only */
+	return pointer_to(address);    /* the game's state, a memory of the board, none for 0, else a copy */
+}
+
 uint32_t address_outside(const void *pointer)
 {
 	const uintptr_t place = (uintptr_t)pointer;
+	uint32_t data_address;
 
 	if (pointer == NULL)
 		return 0;
+	if (program_data_address(pointer, &data_address))
+		return data_address;
 	if (place - (uintptr_t)s32_board.video_ram < S32_VIDEO_RAM_SIZE)
 		return 0x300000u + (uint32_t)(place - (uintptr_t)s32_board.video_ram);
 	if (place - (uintptr_t)s32_board.sprite_ram < S32_SPRITE_RAM_SIZE)
