@@ -117,14 +117,14 @@ void pack_seat_inputs(void)
 		link_send_seat_inputs(seat_buttons, link_event_place, &analog_place, &link_place);
 		return;
 	}
-	game->seat_1_player = SCREEN(SCREEN_1)->player + 1u;
+	game->seat_1_player = game->screen_1.player + 1u;
 	game->seat_1_buttons = seat_buttons;
 	game->seat_1_wheel = ~game->analog_inputs;
 	analog_place++;
 	game->seat_1_gas = game->analog_gas_1;
 	analog_place++;
 	game->seat_1_brake = game->analog_brake_1;
-	game->seat_2_player = SCREEN(SCREEN_2)->player + 1u;
+	game->seat_2_player = game->screen_2.player + 1u;
 	game->seat_2_buttons = other_seat_buttons;
 	analog_place++;
 	game->seat_2_wheel = ~game->analog_wheel_2;

@@ -118,7 +118,7 @@ void player_car_update(void)
 				player_car_publish();
 				return;
 			}
-			RACE(SCREEN(screen)->race)->time_left = (RACE(RACE_COPY_1)->master_time_difficulty_0 + 0x28u) * 0x1Eu;
+			RACE(SCREEN(screen)->race)->time_left = (game->race_copies[0].master_time_difficulty_0 + 0x28u) * 0x1Eu;
 			player_car_start_engine_sound();
 			player_car_animate();
 			player_car_publish();

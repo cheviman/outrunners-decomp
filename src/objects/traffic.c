@@ -95,7 +95,7 @@ void traffic_spawner_update(void)
 		racer_list++;
 		do
 		{
-			view_bottom = RACE(RACE_COPY_1)[RACER_NUMBERS(racer_list)[0]].window_segment;
+			view_bottom = game->race_copies[RACER_NUMBERS(racer_list)[0]].window_segment;
 			view_top = (uint16_t)((uint32_t)view_bottom + traffic_draw_distance);
 			view_bottom -= traffic_draw_distance;
 			view_top++;

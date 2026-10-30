@@ -23,8 +23,8 @@ void lcd_start(void)
 	game->lcd_send_step = 0u;
 	game->lcd_busy = 0u;
 	game->lcd_restart_frames = 0xE10u;
-	SCREEN(SCREEN_1)->button_lamps = 0u;
-	SCREEN(SCREEN_2)->button_lamps = 0u;
+	game->screen_1.button_lamps = 0u;
+	game->screen_2.button_lamps = 0u;
 	nibble = 0x30u;
 	lcd_write_command_nibble(nibble);
 	wait_count = 0x2008u;
@@ -49,16 +49,16 @@ void lcd_start(void)
 	lcd_command_nibble_after_pause(nibble);
 	text_0_to = lcd_boot_text[0].text_0_to_3;
 	text_4_to = lcd_boot_text[0].text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text[0]) = text_0_to;
-	AS32(SCREEN(SCREEN_1)->lcd_text[4]) = text_4_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[0]) = text_0_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[4]) = text_4_to;
+	AS32(game->screen_1.lcd_text[0]) = text_0_to;
+	AS32(game->screen_1.lcd_text[4]) = text_4_to;
+	AS32(game->screen_2.lcd_text[0]) = text_0_to;
+	AS32(game->screen_2.lcd_text[4]) = text_4_to;
 	text_8_to = lcd_boot_text[0].text_8_to_11;
 	text_12_to = lcd_boot_text[0].text_12_to_15;
-	AS32(SCREEN(SCREEN_1)->lcd_text[8]) = text_8_to;
-	AS32(SCREEN(SCREEN_1)->lcd_text[12]) = text_12_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
+	AS32(game->screen_1.lcd_text[8]) = text_8_to;
+	AS32(game->screen_1.lcd_text[12]) = text_12_to;
+	AS32(game->screen_2.lcd_text[8]) = text_8_to;
+	AS32(game->screen_2.lcd_text[12]) = text_12_to;
 	to_send = 0x40u;
 	lcd_command_nibble_after_pause(to_send);
 	to_send = 0u;
@@ -157,20 +157,20 @@ void lcd_reset(void)
 	uint32_t text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0;
 
 	game->lcd_restart_frames = 0u;
-	SCREEN(SCREEN_1)->button_lamps = 0u;
-	SCREEN(SCREEN_2)->button_lamps = 0u;
+	game->screen_1.button_lamps = 0u;
+	game->screen_2.button_lamps = 0u;
 	text_0_to = lcd_boot_text[0].text_0_to_3;
 	text_4_to = lcd_boot_text[0].text_4_to_7;
-	AS32(SCREEN(SCREEN_1)->lcd_text[0]) = text_0_to;
-	AS32(SCREEN(SCREEN_1)->lcd_text[4]) = text_4_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[0]) = text_0_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[4]) = text_4_to;
+	AS32(game->screen_1.lcd_text[0]) = text_0_to;
+	AS32(game->screen_1.lcd_text[4]) = text_4_to;
+	AS32(game->screen_2.lcd_text[0]) = text_0_to;
+	AS32(game->screen_2.lcd_text[4]) = text_4_to;
 	text_8_to = lcd_boot_text[0].text_8_to_11;
 	text_12_to = lcd_boot_text[0].text_12_to_15;
-	AS32(SCREEN(SCREEN_1)->lcd_text[8]) = text_8_to;
-	AS32(SCREEN(SCREEN_1)->lcd_text[12]) = text_12_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
-	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
+	AS32(game->screen_1.lcd_text[8]) = text_8_to;
+	AS32(game->screen_1.lcd_text[12]) = text_12_to;
+	AS32(game->screen_2.lcd_text[8]) = text_8_to;
+	AS32(game->screen_2.lcd_text[12]) = text_12_to;
 }
 
 /* Each VBLANK: counts lcd_restart_frames down and, when it runs out, has the LCDs started again
@@ -202,8 +202,8 @@ void lcd_refresh(void)
 	if (carry == 0u)
 	{
 		game->lcd_send_step = 0u;
-		lcd_text_4 = AS32(SCREEN(SCREEN_1)->lcd_text[4]);
-		lcd_send_buffer_1_0_long = AS32(SCREEN(SCREEN_1)->lcd_text[0]);
+		lcd_text_4 = AS32(game->screen_1.lcd_text[4]);
+		lcd_send_buffer_1_0_long = AS32(game->screen_1.lcd_text[0]);
 		game->lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long;
 		game->lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long >> 8u);
 		game->lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long >> 16u);
@@ -212,8 +212,8 @@ void lcd_refresh(void)
 		game->lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4 >> 8u);
 		game->lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4 >> 16u);
 		game->lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4 >> 24u);
-		lcd_text_12 = AS32(SCREEN(SCREEN_1)->lcd_text[12]);
-		lcd_send_buffer_1_8_long = AS32(SCREEN(SCREEN_1)->lcd_text[8]);
+		lcd_text_12 = AS32(game->screen_1.lcd_text[12]);
+		lcd_send_buffer_1_8_long = AS32(game->screen_1.lcd_text[8]);
 		game->lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long;
 		game->lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long >> 8u);
 		game->lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long >> 16u);
@@ -222,8 +222,8 @@ void lcd_refresh(void)
 		game->lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12 >> 8u);
 		game->lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12 >> 16u);
 		game->lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12 >> 24u);
-		lcd_text_4_2 = AS32(SCREEN(SCREEN_2)->lcd_text[4]);
-		lcd_send_buffer_2_0_long = AS32(SCREEN(SCREEN_2)->lcd_text[0]);
+		lcd_text_4_2 = AS32(game->screen_2.lcd_text[4]);
+		lcd_send_buffer_2_0_long = AS32(game->screen_2.lcd_text[0]);
 		game->lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long;
 		game->lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long >> 8u);
 		game->lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long >> 16u);
@@ -232,8 +232,8 @@ void lcd_refresh(void)
 		game->lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_2 >> 8u);
 		game->lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_2 >> 16u);
 		game->lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_2 >> 24u);
-		lcd_text_12_2 = AS32(SCREEN(SCREEN_2)->lcd_text[12]);
-		lcd_send_buffer_2_8_long = AS32(SCREEN(SCREEN_2)->lcd_text[8]);
+		lcd_text_12_2 = AS32(game->screen_2.lcd_text[12]);
+		lcd_send_buffer_2_8_long = AS32(game->screen_2.lcd_text[8]);
 		game->lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long;
 		game->lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long >> 8u);
 		game->lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long >> 16u);
@@ -250,8 +250,8 @@ void lcd_refresh(void)
 		nibble = 4u;
 	lcd_write_command_nibble(nibble);
 	game->lcd_send_step = 0u;
-	lcd_text_4 = AS32(SCREEN(SCREEN_1)->lcd_text[4]);
-	lcd_send_buffer_1_0_long_2 = AS32(SCREEN(SCREEN_1)->lcd_text[0]);
+	lcd_text_4 = AS32(game->screen_1.lcd_text[4]);
+	lcd_send_buffer_1_0_long_2 = AS32(game->screen_1.lcd_text[0]);
 	game->lcd_send_buffer_1[0] = (uint8_t)lcd_send_buffer_1_0_long_2;
 	game->lcd_send_buffer_1[1] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 8u);
 	game->lcd_send_buffer_1[2] = (uint8_t)(lcd_send_buffer_1_0_long_2 >> 16u);
@@ -260,8 +260,8 @@ void lcd_refresh(void)
 	game->lcd_send_buffer_1[5] = (uint8_t)(lcd_text_4 >> 8u);
 	game->lcd_send_buffer_1[6] = (uint8_t)(lcd_text_4 >> 16u);
 	game->lcd_send_buffer_1[7] = (uint8_t)(lcd_text_4 >> 24u);
-	lcd_text_12 = AS32(SCREEN(SCREEN_1)->lcd_text[12]);
-	lcd_send_buffer_1_8_long_2 = AS32(SCREEN(SCREEN_1)->lcd_text[8]);
+	lcd_text_12 = AS32(game->screen_1.lcd_text[12]);
+	lcd_send_buffer_1_8_long_2 = AS32(game->screen_1.lcd_text[8]);
 	game->lcd_send_buffer_1[8] = (uint8_t)lcd_send_buffer_1_8_long_2;
 	game->lcd_send_buffer_1[9] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 8u);
 	game->lcd_send_buffer_1[10] = (uint8_t)(lcd_send_buffer_1_8_long_2 >> 16u);
@@ -270,8 +270,8 @@ void lcd_refresh(void)
 	game->lcd_send_buffer_1[13] = (uint8_t)(lcd_text_12 >> 8u);
 	game->lcd_send_buffer_1[14] = (uint8_t)(lcd_text_12 >> 16u);
 	game->lcd_send_buffer_1[15] = (uint8_t)(lcd_text_12 >> 24u);
-	lcd_text_4_2 = AS32(SCREEN(SCREEN_2)->lcd_text[4]);
-	lcd_send_buffer_2_0_long_2 = AS32(SCREEN(SCREEN_2)->lcd_text[0]);
+	lcd_text_4_2 = AS32(game->screen_2.lcd_text[4]);
+	lcd_send_buffer_2_0_long_2 = AS32(game->screen_2.lcd_text[0]);
 	game->lcd_send_buffer_2[0] = (uint8_t)lcd_send_buffer_2_0_long_2;
 	game->lcd_send_buffer_2[1] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 8u);
 	game->lcd_send_buffer_2[2] = (uint8_t)(lcd_send_buffer_2_0_long_2 >> 16u);
@@ -280,8 +280,8 @@ void lcd_refresh(void)
 	game->lcd_send_buffer_2[5] = (uint8_t)(lcd_text_4_2 >> 8u);
 	game->lcd_send_buffer_2[6] = (uint8_t)(lcd_text_4_2 >> 16u);
 	game->lcd_send_buffer_2[7] = (uint8_t)(lcd_text_4_2 >> 24u);
-	lcd_text_12_2 = AS32(SCREEN(SCREEN_2)->lcd_text[12]);
-	lcd_send_buffer_2_8_long_2 = AS32(SCREEN(SCREEN_2)->lcd_text[8]);
+	lcd_text_12_2 = AS32(game->screen_2.lcd_text[12]);
+	lcd_send_buffer_2_8_long_2 = AS32(game->screen_2.lcd_text[8]);
 	game->lcd_send_buffer_2[8] = (uint8_t)lcd_send_buffer_2_8_long_2;
 	game->lcd_send_buffer_2[9] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 8u);
 	game->lcd_send_buffer_2[10] = (uint8_t)(lcd_send_buffer_2_8_long_2 >> 16u);

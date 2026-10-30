@@ -185,7 +185,7 @@ void route_map_update(void)
 			else
 			{
 				OBJECT(object)->stage_result_line.last = 1u;
-				leg_distance = RACE(RACE_COPY_1)[SCREEN(screen)->player].segment;
+				leg_distance = game->race_copies[SCREEN(screen)->player].segment;
 				stage_lengths = SCREEN(screen)->stage_lengths[0];
 				OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_lengths);
 				OBJECT(current_object)->route_map.leg_frames = divide_s32(((leg_distance * 5u) << 2) + leg_distance * 2u, stage_lengths);
@@ -251,7 +251,7 @@ void route_map_update(void)
 			else
 			{
 				lengths_place = screen + 0x700u;
-				leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
+				leg_distance = (uint32_t)game->race_copies[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 				branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 				OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 				OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 3u * 2u, branch_road_length);
@@ -302,7 +302,7 @@ void route_map_update(void)
 			}
 			else
 			{
-				leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
+				leg_distance = (uint32_t)game->race_copies[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
 				stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 				OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, stage_length);
 				OBJECT(current_object)->route_map.last_leg_progress += 4u;
@@ -380,7 +380,7 @@ void route_map_update(void)
 			else
 			{
 				lengths_place = screen + 0x700u;
-				leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
+				leg_distance = (uint32_t)game->race_copies[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start - SCREEN(lengths_place - 0x700u)->stage_lengths[SCREEN(screen)->current_stage];
 				branch_road_length = SCREEN(lengths_place - 0x700u)->branch_road_length;
 				OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 2, branch_road_length);
 				OBJECT(current_object)->route_map.leg_frames = divide_s32(leg_distance * 5u * 2u, branch_road_length);
@@ -459,7 +459,7 @@ void route_map_update(void)
 			}
 			else
 			{
-				leg_distance = (uint32_t)RACE(RACE_COPY_1)[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
+				leg_distance = (uint32_t)game->race_copies[SCREEN(screen)->player].segment - CAR(player_car)->reached_stage_start;
 				stage_length = SCREEN(screen)->stage_lengths[SCREEN(screen)->current_stage];
 				OBJECT(current_object)->route_map.last_leg_progress = divide_s32(leg_distance << 3, stage_length);
 				OBJECT(current_object)->route_map.last_leg_progress += 4u;

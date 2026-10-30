@@ -81,10 +81,12 @@ memory.NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2", 0x20FB00: "RAC
                       0x20FC00: "RACE_COPY_1", 0x20FC80: "RACE_COPY_2"}
 # the game's state, struct game, which the C reaches through game (game->game_frame_count): the work RAM, a
 # 64 KB page for each screen, its objects' area below its block; the game's variables after screen 1's block,
-# then the race records; after screen 2's the race records the ISDN link brings in, and the stacks
+# then the race records: this cabinet's two players', and the copies of every player's (eight with the link,
+# whose records link_receive_records brings in); after screen 2's the race records the ISDN link brings in,
+# and the stacks
 memory.STATE = "game"
 memory.STATE_BLOCKS = ((0x200000, "object_area_1", "object_area", 1), (0x208000, "screen_1", "screen", 1),
-                       (0x20FB00, "races", "race", 2), (0x20FC00, "race_copies", "race", 2),
+                       (0x20FB00, "races", "race", 2), (0x20FC00, "race_copies", "race", 8),
                        (0x210000, "object_area_2", "object_area", 1), (0x218000, "screen_2", "screen", 1),
                        (0x21E000, "isdn_races", "race", 8), (0x21F000, "stacks", None, 0x1000))
 memory.NOTES = {

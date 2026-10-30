@@ -68,7 +68,8 @@ struct car 200
 struct screen 6000
 # Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (the number
 # of stages at 60, the stage at 62, the time of the last checkpoint pass at 68, the time left at 6A in 30ths
-# of a second, the race time at 6C in thousandths), and the copy at 20FC00 and 20FC80 each screen keeps
+# of a second, the race time at 6C in thousandths), and the copies of every player's from 20FC00, 0x80 apart,
+# that the screens read (eight with the link: link_receive_records brings in the other cabinets')
 struct race 80
 # Below each screen's block (screen - 8000), its objects' area: this frame's list of objects and the next
 # frame's (each a count, then the low halves of the objects' addresses; the two, at 200 and 300, swap every

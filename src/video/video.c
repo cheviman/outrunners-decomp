@@ -238,10 +238,10 @@ void init_sprite_chip(void)
 void init_sprite_lists(void)
 {
 	move_halfwords(SPRITE_RAM, sprite_ram_start_entries_ADDRESS, 0x28u);
-	SCREEN(SCREEN_1)->sprite_list_last = SPRITE_LIST_1_A_ADDRESS;
-	SCREEN(SCREEN_2)->sprite_list_last = SPRITE_LIST_2_A_ADDRESS;
-	SCREEN(SCREEN_1)->next_sprite_place = 0x20C000u;
-	SCREEN(SCREEN_2)->next_sprite_place = 0x21C000u;
+	game->screen_1.sprite_list_last = SPRITE_LIST_1_A_ADDRESS;
+	game->screen_2.sprite_list_last = SPRITE_LIST_2_A_ADDRESS;
+	game->screen_1.next_sprite_place = 0x20C000u;
+	game->screen_2.next_sprite_place = 0x21C000u;
 	SPRITE_LIST_1_A = 0xFFFFu;
 	SPRITE_LIST_1_A_HALFWAY = 0xFFFFu;
 	SPRITE_LIST_1_B = 0xFFFFu;
@@ -252,8 +252,8 @@ void init_sprite_lists(void)
 	SPRITE_LIST_2_B_HALFWAY = 0xFFFFu;
 	game->sprite_lists_set_up = 1u;
 	game->sprite_list_buffers = 0u;
-	SCREEN(SCREEN_1)->sprite_groups &= 0xFF00u;
-	SCREEN(SCREEN_2)->sprite_groups &= 0xFF00u;
+	game->screen_1.sprite_groups &= 0xFF00u;
+	game->screen_2.sprite_groups &= 0xFF00u;
 }
 
 /* Sets the count of sprite groups drawn this frame (sprite_groups) to 0: unless something is drawn after

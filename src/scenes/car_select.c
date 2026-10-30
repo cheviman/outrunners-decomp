@@ -45,7 +45,7 @@ void car_select_run(void)
 	uint16_t timer = 0, timer_2 = 0;
 	uint32_t depth_offset = 0;
 
-	if (RACE(RACE_COPY_1)->entry_frames == 0u)
+	if (game->race_copies[0].entry_frames == 0u)
 		OBJECT(current_object)->car_select.entry_over = 0xFFu;
 	OBJECT(current_object)->car_select.time_left--;
 	switch (OBJECT(current_object)->state)
@@ -1779,7 +1779,7 @@ void car_select_entries_run(void)
 		{
 			racer_car_number = game->car_numbers[racer];
 			SCREEN(screen)->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
-			car_choice = RACE(RACE_COPY_1)[racer].car_choice - 1u;
+			car_choice = game->race_copies[racer].car_choice - 1u;
 			chosen_car = car_choice;
 			if ((int32_t)car_choice >= 0)
 			{
@@ -2132,7 +2132,7 @@ void entry_countdown_count(void)
 	uint32_t entry_frames = 0, remainder = 0, time_shown = 0;
 	uint32_t frames_shown = 0;
 
-	entry_frames = RACE(RACE_COPY_1)->entry_frames;
+	entry_frames = game->race_copies[0].entry_frames;
 	if (entry_frames == 0u)
 	{
 		SCREEN(screen)->entry_countdown_shown = 0u;

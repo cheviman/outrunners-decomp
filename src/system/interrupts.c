@@ -398,7 +398,7 @@ void update_lamps(void)
 		}
 	}
 	port_d = game->port_d_outputs[0] | game->checkpoint_lamp[0] | game->leader_lamp[0];
-	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+	if ((game->screen_1.demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
 		port_d |= game->wheel_motor[0];
 	io_write8(IO_1_PORT_D, port_d);
 	if (game->checkpoint_lamp_2_blinks != 0u)
@@ -424,7 +424,7 @@ void update_lamps(void)
 		}
 	}
 	port_d = game->port_d_outputs[1] | game->checkpoint_lamp_2 | game->leader_lamp_2;
-	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+	if ((game->screen_2.demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
 		port_d |= game->wheel_motor[1];
 	io_write8(IO_2_PORT_D, port_d);
 	screen_block = SCREEN_1;

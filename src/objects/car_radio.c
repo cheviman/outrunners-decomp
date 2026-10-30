@@ -35,7 +35,7 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		OBJECT(current_object)->car_radio.car_models[game->car_numbers[player]] = RACE(RACE_COPY_1)[player].model;
+		OBJECT(current_object)->car_radio.car_models[game->car_numbers[player]] = game->race_copies[player].model;
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);

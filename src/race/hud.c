@@ -1211,7 +1211,7 @@ void checkpoint_board_update(void)
 		do
 		{
 			racer = RACE_ORDER_PLAYERS(race)[0];
-			OBJECT(current_object)->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[RACE(RACE_COPY_1)[racer].model];
+			OBJECT(current_object)->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[game->race_copies[racer].model];
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);

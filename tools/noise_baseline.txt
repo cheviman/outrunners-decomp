@@ -21,9 +21,9 @@ uncommented 0
 rom_reads 0
 rom_table_reads 0
 board_replaced 1
-ram_structures 9034
+ram_structures 8920
 ram_variables 0
-ram_addresses 296
+ram_addresses 182
 code_addresses 206
 table_addresses 1283
 page_links 94

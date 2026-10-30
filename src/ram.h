@@ -6070,16 +6070,15 @@ struct game
 	struct race races[2];
 	union
 	{
-		struct race race_copies[2];
+		struct race race_copies[8];
 		struct
 		{
 			uint8_t pad_to_master_time_difficulty[0xB];
 			int8_t master_time_difficulty[0x6];
 			uint8_t pad_to_race_copy_window_segments[0x35];
-			uint16_t race_copy_window_segments[0x5D];
+			uint16_t race_copy_window_segments[0x1DD];
 		};
 	};
-	uint8_t pad_20FD00[0x300];
 	struct object_area object_area_2;
 	struct screen screen_2;
 	struct race isdn_races[8];

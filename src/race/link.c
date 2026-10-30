@@ -344,11 +344,11 @@ void network_check_join(void)
 		return;
 	}
 	car_number = (uint8_t)(game->cabinet_id * 2u);
-	SCREEN(SCREEN_1)->car_number = car_number;
-	RACE(RACE_1)->car_number = car_number;
+	game->screen_1.car_number = car_number;
+	game->races[0].car_number = car_number;
 	car_number++;
-	SCREEN(SCREEN_2)->car_number = car_number;
-	RACE(RACE_2)->car_number = car_number;
+	game->screen_2.car_number = car_number;
+	game->races[1].car_number = car_number;
 	network_check_result(machine);
 }
 
@@ -394,10 +394,10 @@ void network_check_stand_alone(void)
 	machine = 1u;
 	game->player_count = 2u;
 	game->machine_count = 1u;
-	SCREEN(SCREEN_1)->car_number = 0u;
-	RACE(RACE_1)->car_number = 0u;
-	SCREEN(SCREEN_2)->car_number = 1u;
-	RACE(RACE_2)->car_number = 1u;
+	game->screen_1.car_number = 0u;
+	game->races[0].car_number = 0u;
+	game->screen_2.car_number = 1u;
+	game->races[1].car_number = 1u;
 	network_check_result(machine);
 }
 
@@ -416,20 +416,20 @@ void network_check_result(uint32_t machine)
 	uint32_t saved_frames_left = 0;
 	uint8_t isdn_machine_id = 0, board_master = 0, slave_machine_id = 0, master_machine_id = 0;
 
-	RACE(RACE_1)->machine = machine;
-	RACE(RACE_2)->machine = machine;
+	game->races[0].machine = machine;
+	game->races[1].machine = machine;
 	machine = (uint8_t)(machine - 1u);
 	machine = (uint8_t)(machine * 2u);
-	RACE(RACE_1)->player = machine;
+	game->races[0].player = machine;
 	second_player = machine + 1u;
-	RACE(RACE_2)->player = second_player;
-	SCREEN(SCREEN_1)->player = machine;
-	SCREEN(SCREEN_2)->player = second_player;
-	SCREEN(SCREEN_1)->race_copy = race_copy_offsets[machine] + GAME_VARIABLES;
-	SCREEN(SCREEN_2)->race_copy = race_copy_offsets[second_player] + GAME_VARIABLES;
+	game->races[1].player = second_player;
+	game->screen_1.player = machine;
+	game->screen_2.player = second_player;
+	game->screen_1.race_copy = race_copy_offsets[machine] + GAME_VARIABLES;
+	game->screen_2.race_copy = race_copy_offsets[second_player] + GAME_VARIABLES;
 	race = RACE_1;
-	SCREEN(SCREEN_1)->race = RACE_1;
-	SCREEN(SCREEN_2)->race = RACE_2;
+	game->screen_1.race = RACE_1;
+	game->screen_2.race = RACE_2;
 	if (machine == 0u)
 	{
 		RACE(race)->master_advertise_sound = game->advertise_sound;
@@ -1004,7 +1004,7 @@ void link_take_master_settings(void)
 	r12 = load_course_records();
 	race = RACE_COPY_1;
 	coins_changed = 0u;
-	if (game->coin_setting != RACE(RACE_COPY_1)->master_coin_setting || game->coins_per_credit != RACE(race)->master_coins_per_credit || game->first_chute_multiplier != RACE(race)->master_first_chute_multiplier || game->bonus_adder != RACE(race)->master_bonus_adder || game->free_play != RACE(race)->master_free_play)
+	if (game->coin_setting != game->race_copies[0].master_coin_setting || game->coins_per_credit != RACE(race)->master_coins_per_credit || game->first_chute_multiplier != RACE(race)->master_first_chute_multiplier || game->bonus_adder != RACE(race)->master_bonus_adder || game->free_play != RACE(race)->master_free_play)
 	{
 		coins_changed = 0xFFFFFFFFu;
 		game->coin_setting = RACE(race)->master_coin_setting;
@@ -1420,7 +1420,7 @@ void entry_invitation_step(void)
 		SCREEN(screen)->game_step++;
 		return;
 	case 4:
-		if (RACE(RACE_COPY_1)->entry_frames != 0u)
+		if (game->race_copies[0].entry_frames != 0u)
 			return;
 		reset_screen_sound();
 		AS32(SCREEN(screen)->game_mode) = 2u;
