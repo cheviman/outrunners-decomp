@@ -30,21 +30,21 @@ void int_vector_40(void)
 	uint32_t screen_vblank_counter = 0;
 	uint32_t saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
 
-	saved_screen = screen;
+	saved_screen = address_of(screen);
 	saved_r12 = r12;
 	game->vblank_counter++;
 	game->vblanks_since_start++;
 	io_write16(IRQ_TIMER_0, vblank_timer_period);
 	game->timer_interrupts_left = 0x22u;
 	game->debug_timer_rounds--;
-	if (SCREEN(screen)->index != 0u)
+	if (screen->index != 0u)
 	{
-		saved_screen_2 = screen;
-		screen = SCREEN_1;
+		saved_screen_2 = address_of(screen);
+		screen = &game->screen_1;
 		vblank_update_mixer();
-		screen = SCREEN_2;
+		screen = &game->screen_2;
 		vblank_update_mixer();
-		screen = saved_screen_2;
+		screen = pointer_to(saved_screen_2);
 		if (game->send_video_registers == 0u)
 		{
 			move_halfwords(NBG2_SCROLL_X_ADDRESS, video_registers_ADDRESS + 0x20u, 8u);
@@ -63,13 +63,13 @@ void int_vector_40(void)
 	}
 	finish_sprite_list();
 	send_sound_requests();
-	if (SCREEN(screen)->skip_scroll_update == 0u)
+	if (screen->skip_scroll_update == 0u)
 		vblank_update_scrolls();
-	SCREEN(screen)->skip_scroll_update = 0u;
+	screen->skip_scroll_update = 0u;
 	if (game->test_mode_on == 0u)
 	{
 		read_switches_and_analog();
-		switch (SCREEN(screen)->index)
+		switch (screen->index)
 		{
 		case 0:
 			pack_seat_inputs();
@@ -86,12 +86,12 @@ void int_vector_40(void)
 	lcd_refresh();
 	count_total_time();
 	game->frame_ready = 0xFFu;
-	if (game->single_task == 0u && ((game->test_mode_on != 0u && SCREEN(screen)->index == 0u) || game->task_swapping != 0u))
+	if (game->single_task == 0u && ((game->test_mode_on != 0u && screen->index == 0u) || game->task_swapping != 0u))
 		swap_tasks();
-	screen_vblank_counter = screen_vblank_counters[SCREEN(screen)->index];
+	screen_vblank_counter = screen_vblank_counters[screen->index];
 	VBLANK_COUNT(screen_vblank_counter)[0]++;
 	r12 = saved_r12;
-	screen = saved_screen;
+	screen = pointer_to(saved_screen);
 	io_write8(IRQ_ACKNOWLEDGE, 0xFEu);
 }
 
@@ -105,30 +105,30 @@ void vblank_update_mixer(void)
 	uint32_t mixer = 0;
 	uint32_t flags = 0, flags_2 = 0;
 
-	if ((SCREEN(screen)->flags & 1u) != 0u)
+	if ((screen->flags & 1u) != 0u)
 	{
 		step_screen_fade();
-		move_halfwords(SCREEN(screen)->mixer + 0x3Eu, screen + 0x19Eu, 7u);
+		move_halfwords(screen->mixer + 0x3Eu, address_of(screen) + 0x19Eu, 7u);
 	}
-	flags = SCREEN(screen)->flags;
-	SCREEN(screen)->flags = flags & ~4u;
+	flags = screen->flags;
+	screen->flags = flags & ~4u;
 	if ((flags & 4u) != 0u)
 	{
-		mixer = SCREEN(screen)->mixer;
-		move_halfwords(mixer, screen + 0x160u, 0x1Fu);
-		move_halfwords(mixer + 0x4Cu, screen + 0x1ACu, 2u);
+		mixer = screen->mixer;
+		move_halfwords(mixer, address_of(screen) + 0x160u, 0x1Fu);
+		move_halfwords(mixer + 0x4Cu, address_of(screen) + 0x1ACu, 2u);
 	}
-	flags_2 = SCREEN(screen)->flags;
-	SCREEN(screen)->flags = flags_2 & ~8u;
+	flags_2 = screen->flags;
+	screen->flags = flags_2 & ~8u;
 	if ((flags_2 & 8u) != 0u)
 	{
-		mixer = SCREEN(screen)->mixer;
-		move_halfwords(screen + 0x160u, screen + 0x1B0u, 0x1Fu);
-		move_halfwords(screen + 0x1ACu, screen + 0x1FCu, 2u);
-		move_halfwords(mixer, screen + 0x1B0u, 0x1Fu);
-		move_halfwords(mixer + 0x4Cu, screen + 0x1FCu, 2u);
+		mixer = screen->mixer;
+		move_halfwords(address_of(screen) + 0x160u, address_of(screen) + 0x1B0u, 0x1Fu);
+		move_halfwords(address_of(screen) + 0x1ACu, address_of(screen) + 0x1FCu, 2u);
+		move_halfwords(mixer, address_of(screen) + 0x1B0u, 0x1Fu);
+		move_halfwords(mixer + 0x4Cu, address_of(screen) + 0x1FCu, 2u);
 	}
-	if (SCREEN(screen)->palette_upload_count != 0u)
+	if (screen->palette_upload_count != 0u)
 		upload_queued_palettes();
 }
 
@@ -143,7 +143,7 @@ void vblank_update_scrolls(void)
 	uint8_t control_byte = 0;
 	uint32_t new_scroll = 0, old_scroll = 0, other_layer = 0, running_layer = 0;
 
-	running_layer = SCREEN(screen)->index * 2u;
+	running_layer = screen->index * 2u;
 	NBG0_SCROLL_X[running_layer] = AS32(game->video_registers[8 + running_layer * 2u]);
 	NBG0_SCROLL_Y[running_layer] = AS32(game->video_registers[10 + running_layer * 2u]);
 	other_layer = 0u - running_layer + 2u;
@@ -295,8 +295,8 @@ void send_sound_requests(void)
 	uint32_t command_offset = 0, queue = 0, second_queue = 0, second_sound_queue_read = 0, sound_queue_read = 0;
 	uint8_t sound_queue_write = 0, second_sound_queue_write = 0;
 
-	command_offset = (uint32_t)SCREEN(screen)->index << 8;
-	queue = screen + 0x800u;
+	command_offset = (uint32_t)screen->index << 8;
+	queue = address_of(screen) + 0x800u;
 	sound_queue_read = SCREEN(queue - 0x800u)->sound_queue_read;
 	queue++;
 	sound_queue_write = SCREEN(queue - 0x801u)->sound_queue_write;
@@ -306,7 +306,7 @@ void send_sound_requests(void)
 		SOUND_COMMAND_1[command_offset] = SCREEN(queue - 0x802u)->sound_queue[(int32_t)sound_queue_read];
 		SCREEN(queue - 0x802u)->sound_queue_read = (sound_queue_read + 1u) & 0x1Fu;
 	}
-	second_queue = screen + 0x840u;
+	second_queue = address_of(screen) + 0x840u;
 	second_sound_queue_read = SCREEN(second_queue - 0x840u)->second_sound_queue_read;
 	second_queue++;
 	second_sound_queue_write = SCREEN(second_queue - 0x841u)->second_sound_queue_write;
@@ -429,30 +429,30 @@ void update_lamps(void)
 	io_write8(IO_2_PORT_D, port_d);
 	screen_block = SCREEN_1;
 	port_g = port_g_outputs_ADDRESS;
-	update_button_lamps(screen_block, port_g);
+	update_button_lamps(pointer_to(screen_block), port_g);
 	screen_block = SCREEN_2;
 	port_g = port_g_outputs_ADDRESS + 0x1u;
-	update_button_lamps(screen_block, port_g);
+	update_button_lamps(pointer_to(screen_block), port_g);
 }
 
 /* A screen's two button lamps, in its port G image (R11: port_g_outputs or port_g_outputs[1], which the
    LCD's output sends): the DJ/MUSIC lamp (bit 0) by the low byte of button_lamps and the << >> lamp (bit
    1) by its high byte: 0 off, negative on, n blinking every n vertical blanks (music_lamp_timer,
    arrows_lamp_timer), each mode taken when it changes (music_lamp_mode, arrows_lamp_mode). */
-void update_button_lamps(uint32_t screen_block, uint32_t port_g)
+void update_button_lamps(struct screen *screen_block, uint32_t port_g)
 {
 	uint8_t arrows_mode = 0, button_lamps = 0, lamps = 0;
 	uint8_t music_lamp_timer = 0, arrows_lamp_timer = 0;
 
 	lamps = PORT_OUTPUT_BITS(port_g)[0];
-	button_lamps = (uint8_t)SCREEN(screen_block)->button_lamps;
-	if (button_lamps != SCREEN(screen_block)->music_lamp_mode)
+	button_lamps = (uint8_t)screen_block->button_lamps;
+	if (button_lamps != screen_block->music_lamp_mode)
 	{
-		SCREEN(screen_block)->music_lamp_mode = button_lamps;
+		screen_block->music_lamp_mode = button_lamps;
 		if ((int8_t)button_lamps > 0)
 		{
 			lamps ^= 1u;
-			SCREEN(screen_block)->music_lamp_timer = button_lamps;
+			screen_block->music_lamp_timer = button_lamps;
 		}
 		else if (button_lamps == 0u)
 			lamps &= ~1u;
@@ -461,35 +461,35 @@ void update_button_lamps(uint32_t screen_block, uint32_t port_g)
 	}
 	else if ((int8_t)button_lamps > 0)
 	{
-		music_lamp_timer = SCREEN(screen_block)->music_lamp_timer;
-		SCREEN(screen_block)->music_lamp_timer = music_lamp_timer - 1u;
+		music_lamp_timer = screen_block->music_lamp_timer;
+		screen_block->music_lamp_timer = music_lamp_timer - 1u;
 		if (music_lamp_timer == 1u)
 		{
 			lamps ^= 1u;
-			SCREEN(screen_block)->music_lamp_timer = button_lamps;
+			screen_block->music_lamp_timer = button_lamps;
 		}
 	}
-	arrows_mode = (uint8_t)(SCREEN(screen_block)->button_lamps >> 8u);
-	if (arrows_mode == SCREEN(screen_block)->arrows_lamp_mode)
+	arrows_mode = (uint8_t)(screen_block->button_lamps >> 8u);
+	if (arrows_mode == screen_block->arrows_lamp_mode)
 	{
 		if ((int8_t)arrows_mode > 0)
 		{
-			arrows_lamp_timer = SCREEN(screen_block)->arrows_lamp_timer;
-			SCREEN(screen_block)->arrows_lamp_timer = arrows_lamp_timer - 1u;
+			arrows_lamp_timer = screen_block->arrows_lamp_timer;
+			screen_block->arrows_lamp_timer = arrows_lamp_timer - 1u;
 			if (arrows_lamp_timer == 1u)
 			{
 				lamps ^= 2u;
-				SCREEN(screen_block)->arrows_lamp_timer = arrows_mode;
+				screen_block->arrows_lamp_timer = arrows_mode;
 			}
 		}
 		PORT_OUTPUT_BITS(port_g)[0] = lamps;
 		return;
 	}
-	SCREEN(screen_block)->arrows_lamp_mode = arrows_mode;
+	screen_block->arrows_lamp_mode = arrows_mode;
 	if ((int8_t)arrows_mode > 0)
 	{
 		lamps ^= 2u;
-		SCREEN(screen_block)->arrows_lamp_timer = arrows_mode;
+		screen_block->arrows_lamp_timer = arrows_mode;
 		PORT_OUTPUT_BITS(port_g)[0] = lamps;
 		return;
 	}

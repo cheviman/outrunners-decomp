@@ -42,7 +42,7 @@ void read_switches_and_analog(void)
 	game->previous_switches = old_switches;
 	game->switches_pressed = ~old_switches & new_switches;
 	game->switches_released = old_switches & ~new_switches;
-	screen_turn = SCREEN(screen)->index;
+	screen_turn = screen->index;
 	screen_turn = screen_turn & 1u;
 	converter = ANALOG_INPUTS + screen_turn * 4u;
 	raw_place = analog_raw_ADDRESS + screen_turn * 4u;
@@ -198,29 +198,29 @@ void queue_seat_inputs(void)
 	seat_screen = SCREEN_1;
 	seat_record = seat_1_buttons_ADDRESS;
 	io_chip = 0xC00000u;
-	queue_screen_inputs(seat_screen, seat_record, io_chip);
+	queue_screen_inputs(pointer_to(seat_screen), pointer_to(seat_record), io_chip);
 	seat_screen = SCREEN_2;
 	seat_record = seat_2_buttons_ADDRESS;
 	io_chip = 0xC80000u;
-	queue_screen_inputs(seat_screen, seat_record, io_chip);
+	queue_screen_inputs(pointer_to(seat_screen), pointer_to(seat_record), io_chip);
 }
 
 /* Puts a screen's inputs into its ring of eight (screen + 130, at input_write_place): the seat's buttons
    (R11) with ~port B of its I/O chip (R12 + 2) in bits 8-15; and the record's wheel, gas and brake into
    the screen's wheel, gas and brake. On ISDN the record is the screen's race_copy's +2C (the inputs the
    link brought). */
-void queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record, uint32_t io_chip)
+void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_record, uint32_t io_chip)
 {
 	uint32_t input_write_place = 0, inputs = 0, seat_inputs = 0;
 
 	if (game->isdn_mode != 0u)
-		seat_record = SCREEN(seat_screen)->race_copy + 0x2Cu;
+		seat_record = pointer_to(seat_screen->race_copy + 0x2Cu);
 	inputs = (uint8_t)~io_read8(io_chip + 2u);
-	seat_inputs = (SEAT_INPUTS(seat_record)->buttons | ((uint32_t)SEAT_INPUTS(seat_record)->wheel << 8u) | ((uint32_t)SEAT_INPUTS(seat_record)->gas << 16u) | ((uint32_t)SEAT_INPUTS(seat_record)->brake << 24u));
-	input_write_place = SCREEN(seat_screen)->input_write_place;
-	SCREEN(seat_screen)->input_ring[(int32_t)input_write_place] = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
-	SCREEN(seat_screen)->input_write_place = (input_write_place + 1u) & 7u;
-	AS32(SCREEN(seat_screen)->wheel) = seat_inputs >> 8;
+	seat_inputs = (seat_record->buttons | ((uint32_t)seat_record->wheel << 8u) | ((uint32_t)seat_record->gas << 16u) | ((uint32_t)seat_record->brake << 24u));
+	input_write_place = seat_screen->input_write_place;
+	seat_screen->input_ring[(int32_t)input_write_place] = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
+	seat_screen->input_write_place = (input_write_place + 1u) & 7u;
+	AS32(seat_screen->wheel) = seat_inputs >> 8;
 }
 
 /* Takes the screen's inputs for the frame from its ring (input_read_place; both frame loops, before
@@ -235,10 +235,10 @@ uint32_t take_screen_inputs(void)
 	uint32_t buttons = 0, buttons_place = 0, input_changes = 0, input_read_place = 0, inputs = 0;
 	uint8_t new_status = 0;
 
-	input_read_place = SCREEN(screen)->input_read_place;
-	inputs = SCREEN(screen)->input_ring[(int32_t)input_read_place];
-	SCREEN(screen)->input_read_place = (input_read_place + 1u) & 7u;
-	buttons_place = screen + 0x110u;
+	input_read_place = screen->input_read_place;
+	inputs = screen->input_ring[(int32_t)input_read_place];
+	screen->input_read_place = (input_read_place + 1u) & 7u;
+	buttons_place = address_of(screen) + 0x110u;
 	buttons = SCREEN(buttons_place - 0x110u)->buttons;
 	SCREEN(buttons_place - 0x110u)->buttons = inputs;
 	buttons_place += 4u;
@@ -249,19 +249,19 @@ uint32_t take_screen_inputs(void)
 	SCREEN(buttons_place - 0x118u)->buttons_released = buttons & ~inputs;
 	if (game->isdn_mode != 0u)
 	{
-		new_link_status = RACE(SCREEN(screen)->race_copy)->link_status;
+		new_link_status = RACE(screen->race_copy)->link_status;
 		new_status = new_link_status;
-		old_link_status = SCREEN(screen)->link_status;
-		SCREEN(screen)->link_status = new_status;
+		old_link_status = screen->link_status;
+		screen->link_status = new_status;
 		input_changes = (input_changes & ~0xFFu) | (uint8_t)~old_link_status;
 		input_changes = input_changes & (new_link_status | 0xFFFFFF00u);
-		SCREEN(screen)->link_status_set = input_changes;
+		screen->link_status_set = input_changes;
 		status_cleared = ~new_link_status & old_link_status;
-		SCREEN(screen)->link_status_cleared = status_cleared;
+		screen->link_status_cleared = status_cleared;
 		input_changes = input_changes | status_cleared;
-		SCREEN(screen)->link_status_changed = input_changes;
-		if (SCREEN(screen)->game_mode != 8u && (new_link_status & 0xCu) != 0u)
-			AS32(SCREEN(screen)->game_mode) = 8u;
+		screen->link_status_changed = input_changes;
+		if (screen->game_mode != 8u && (new_link_status & 0xCu) != 0u)
+			AS32(screen->game_mode) = 8u;
 	}
 	return input_changes;
 }

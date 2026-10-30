@@ -5,7 +5,7 @@ Description: writes sprite_sheets.txt, the map of the sprite ROM's pieces into s
              animation
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    25-10-2026
+Modified:    30-10-2026
 Author:      Sebastian Toyos
 
 Usage: py tools/sprite_sheets.py          (reads rom/ and src/; writes sprite_sheets.txt)
@@ -84,8 +84,8 @@ def families_by_animation():
     families = sorted({family for family in re.findall(r"^scoped\s+object\s+(\w+)\s", symbols, re.M)},
                       key=len, reverse=True)
     found = {}
-    function_line = re.compile(r"^(?:static )?\w[\w ]*?\b(\w+)\(.*\)$")
-    for path in sorted((ROOT / "src").glob("game_*.c")):
+    function_line = re.compile(r"^(?:static )?\w[\w *]*?\b(\w+)\(.*\)$")
+    for path in sorted(path for path in (ROOT / "src").rglob("*.c") if "sound" not in path.parts):
         current, constant = None, None
         for line in path.read_text(encoding="utf-8").splitlines():
             match = function_line.match(line)

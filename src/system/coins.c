@@ -49,36 +49,36 @@ void update_coins(void)
 
 	if (game->free_play != 0u)
 		return;
-	saved_screen = screen;
+	saved_screen = address_of(screen);
 	if (game->seat1_coin_sounds != 0u)
 	{
 		sound = 0x4Eu;
-		screen = SCREEN_1;
+		screen = &game->screen_1;
 		queue_sound(sound);
 		game->seat1_coin_sounds--;
 	}
 	if (game->seat2_coin_sounds != 0u)
 	{
 		sound = 0x4Eu;
-		screen = SCREEN_2;
+		screen = &game->screen_2;
 		queue_sound(sound);
 		game->seat2_coin_sounds--;
 	}
 	if (game->seat1_service_sounds != 0u)
 	{
 		sound = 0x50u;
-		screen = SCREEN_1;
+		screen = &game->screen_1;
 		queue_sound(sound);
 		game->seat1_service_sounds--;
 	}
 	if (game->seat2_service_sounds != 0u)
 	{
 		sound = 0x50u;
-		screen = SCREEN_2;
+		screen = &game->screen_2;
 		queue_sound(sound);
 		game->seat2_service_sounds--;
 	}
-	screen = saved_screen;
+	screen = pointer_to(saved_screen);
 	pressed_switches = game->switches_pressed;
 	credits_given = 0u;
 	if ((pressed_switches & 1u) != 0u)
@@ -86,7 +86,7 @@ void update_coins(void)
 		seat_credits = seat1_credits_ADDRESS;
 		service_sounds = seat1_service_sounds_ADDRESS;
 		r12 = SCREEN_1;
-		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
+		credits_given = add_service_credit(credits_given, pointer_to(seat_credits), service_sounds);
 		counter = SOUND_RAM + 0x1F04u;
 		bookkeeping_add16(counter, credits_given);
 	}
@@ -96,7 +96,7 @@ void update_coins(void)
 		seat_credits = seat2_credits_ADDRESS;
 		service_sounds = seat2_service_sounds_ADDRESS;
 		r12 = SCREEN_2;
-		credits_given = add_service_credit(credits_given, seat_credits, service_sounds);
+		credits_given = add_service_credit(credits_given, pointer_to(seat_credits), service_sounds);
 		counter = SOUND_RAM + 0x1F04u;
 		bookkeeping_add16(counter, credits_given);
 	}
@@ -214,25 +214,25 @@ void write_bookkeeping_credits(uint32_t bookkeeping_place)
    more, up to 9 (at 9 its coin units are cleared; beyond, nothing); a credit given brings the screen R12
    to the title from the attract mode (show_title_on_credit), asks for the seat's service sound (R11) and
    counts one in R9, which it returns. Not run in the scenarios. */
-uint16_t add_service_credit(uint16_t credits_given, uint32_t seat_credits, uint32_t service_sounds)
+uint16_t add_service_credit(uint16_t credits_given, struct seat_credits *seat_credits, uint32_t service_sounds)
 {
 	uint32_t zero = 0;
 	uint8_t credits = 0;
 
-	SEAT_CREDITS(seat_credits)->credits++;
-	credits = SEAT_CREDITS(seat_credits)->credits;
+	seat_credits->credits++;
+	credits = seat_credits->credits;
 	zero = (uint8_t)(credits - 9u) == 0u;
 	if (credits >= 9u)
 	{
-		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
-		SEAT_CREDITS(seat_credits)->coin_units = 0u;
+		seat_credits->bonus_units = 0u;
+		seat_credits->coin_units = 0u;
 		if (zero == 0u)
 		{
-			SEAT_CREDITS(seat_credits)->credits = 9u;
+			seat_credits->credits = 9u;
 			return credits_given;
 		}
 	}
-	show_title_on_credit(r12);
+	show_title_on_credit(pointer_to(r12));
 	SEAT_SOUND_COUNTS(service_sounds)[0] = 1u;
 	credits_given = (uint8_t)(credits_given + 1u);
 	return credits_given;
@@ -249,7 +249,8 @@ uint16_t add_service_credit(uint16_t credits_given, uint32_t seat_credits, uint3
 uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t chute_entry)
 {
 	uint8_t bonus_units = 0, chute_units = 0, credit_units = 0, units_per_credit = 0;
-	uint32_t coin_sounds = 0, counter = 0, seat_credits = 0, units_per_bonus = 0;
+	uint32_t coin_sounds = 0, counter = 0, units_per_bonus = 0;
+	struct seat_credits *seat_credits = NULL;
 	uint32_t switch_bit = 0, owed_pulses = 0;
 
 	switch_bit = COIN_CHUTE(chute_entry)->switch_bit;
@@ -258,53 +259,53 @@ uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t
 		return credits_given;
 	coin_sounds = COIN_CHUTE(chute_entry - 0x4u)->coin_sounds;
 	chute_entry = chute_entry + 4u + game->chute_entry_offset;
-	seat_credits = COIN_CHUTE_VARIANT(chute_entry)->credits;
+	seat_credits = pointer_to(COIN_CHUTE_VARIANT(chute_entry)->credits);
 	io_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
 	owed_pulses = COIN_CHUTE_VARIANT(chute_entry)->pulses_owed;
 	COIN_METER(owed_pulses - 0x2u)->pulses_owed++;
 	counter = COIN_CHUTE_VARIANT(chute_entry)->counter;
 	bookkeeping_increment16(counter);
-	if (SEAT_CREDITS(seat_credits)->credits >= 9u)
+	if (seat_credits->credits >= 9u)
 		return credits_given;
 	SEAT_SOUND_COUNTS(coin_sounds)[0]++;
 	chute_units = CHUTE_UNIT_SETTINGS(COIN_CHUTE_VARIANT(chute_entry)->coin_units)[0];
 	units_per_bonus = game->bonus_adder;
 	if (units_per_bonus != 0u)
 	{
-		bonus_units = (uint8_t)(SEAT_CREDITS(seat_credits)->bonus_units + chute_units);
+		bonus_units = (uint8_t)(seat_credits->bonus_units + chute_units);
 		while (units_per_bonus <= bonus_units)
 		{
-			SEAT_CREDITS(seat_credits)->coin_units++;
+			seat_credits->coin_units++;
 			bonus_units -= units_per_bonus;
 		}
-		SEAT_CREDITS(seat_credits)->bonus_units = bonus_units;
+		seat_credits->bonus_units = bonus_units;
 	}
 	units_per_credit = game->coins_per_credit;
-	credit_units = (uint8_t)(SEAT_CREDITS(seat_credits)->coin_units + chute_units);
+	credit_units = (uint8_t)(seat_credits->coin_units + chute_units);
 	do
 	{
 		if (credit_units < units_per_credit)
 		{
-			SEAT_CREDITS(seat_credits)->coin_units = credit_units;
+			seat_credits->coin_units = credit_units;
 			return credits_given;
 		}
-		SEAT_CREDITS(seat_credits)->credits++;
-		show_title_on_credit(r12);
+		seat_credits->credits++;
+		show_title_on_credit(pointer_to(r12));
 		credits_given = (uint8_t)(credits_given + 1u);
 		credit_units -= units_per_credit;
-	} while (SEAT_CREDITS(seat_credits)->credits < 9u);
+	} while (seat_credits->credits < 9u);
 	credit_units = 0u;
-	SEAT_CREDITS(seat_credits)->bonus_units = 0u;
-	SEAT_CREDITS(seat_credits)->coin_units = credit_units;
+	seat_credits->bonus_units = 0u;
+	seat_credits->coin_units = credit_units;
 	return credits_given;
 }
 
 /* A credit on the screen R12 during the attract mode (game modes 1-5, the low byte of its game_mode)
    brings it to the title: game_mode = 2 (game mode 2, game_mode_title, from its first step). */
-void show_title_on_credit(uint32_t screen_block)
+void show_title_on_credit(struct screen *screen_block)
 {
-	if ((int8_t)SCREEN(screen_block)->game_mode > 0 && (int8_t)SCREEN(screen_block)->game_mode < 6)
-		AS32(SCREEN(screen_block)->game_mode) = 2u;
+	if ((int8_t)screen_block->game_mode > 0 && (int8_t)screen_block->game_mode < 6)
+		AS32(screen_block->game_mode) = 2u;
 }
 
 /* Adds one to the 16-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FFFF, with

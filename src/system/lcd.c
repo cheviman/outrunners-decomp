@@ -386,23 +386,23 @@ void lcd_update(void)
 	uint32_t ignored = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_end = 0, text_place = 0;
 	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
-	text_place = screen + 0xF10u;
-	if (SCREEN(screen)->dj_face == 0u)
+	text_place = address_of(screen) + 0xF10u;
+	if (screen->dj_face == 0u)
 		scroll_width = 0xFu;
 	else
 	{
-		mouth_shapes = SCREEN(screen)->dj_mouth_shapes;
+		mouth_shapes = screen->dj_mouth_shapes;
 		if (mouth_shapes == 0u)
 		{
 			AS16(SCREEN(text_place - 0xF10u)->lcd_text[0]) = dj_face_characters[0];
-			SCREEN(screen)->dj_mouth_frames = 3u;
+			screen->dj_mouth_frames = 3u;
 			scroll_width = 0xDu;
 			text_place += 2u;
 		}
 		else
 		{
-			dj_mouth_frames = SCREEN(screen)->dj_mouth_frames;
-			SCREEN(screen)->dj_mouth_frames = dj_mouth_frames - 1u;
+			dj_mouth_frames = screen->dj_mouth_frames;
+			screen->dj_mouth_frames = dj_mouth_frames - 1u;
 			if (dj_mouth_frames != 1u)
 			{
 				text_place += 2u;
@@ -414,101 +414,101 @@ void lcd_update(void)
 				mouth_shapes++;
 				if ((int8_t)mouth_shape < 0)
 				{
-					SCREEN(screen)->dj_mouth_shapes = 0u;
+					screen->dj_mouth_shapes = 0u;
 					AS16(SCREEN(text_place - 0xF10u)->lcd_text[0]) = dj_face_characters[0];
-					SCREEN(screen)->dj_mouth_frames = 3u;
+					screen->dj_mouth_frames = 3u;
 					scroll_width = 0xDu;
 					text_place += 2u;
 				}
 				else
 				{
 					AS16(SCREEN(text_place - 0xF10u)->lcd_text[0]) = dj_face_characters[mouth_shape];
-					SCREEN(screen)->dj_mouth_shapes = mouth_shapes;
-					SCREEN(screen)->dj_mouth_frames = 3u;
+					screen->dj_mouth_shapes = mouth_shapes;
+					screen->dj_mouth_frames = 3u;
 					scroll_width = 0xDu;
 					text_place += 2u;
 				}
 			}
 		}
 	}
-	lcd_scroll_request = SCREEN(screen)->lcd_scroll_request;
+	lcd_scroll_request = screen->lcd_scroll_request;
 	if (lcd_scroll_request != 0u)
 	{
-		SCREEN(screen)->lcd_scroll = lcd_scroll_request;
-		SCREEN(screen)->lcd_scroll_request = 0u;
-		SCREEN(screen)->lcd_scroll_step = 0u;
+		screen->lcd_scroll = lcd_scroll_request;
+		screen->lcd_scroll_request = 0u;
+		screen->lcd_scroll_step = 0u;
 		space_character = 0x20u;
 		set_bytes(text_place, scroll_width + 1u, space_character);
 	}
-	lcd_scroll = SCREEN(screen)->lcd_scroll;
+	lcd_scroll = screen->lcd_scroll;
 	if (lcd_scroll == 0u)
 		return;
-	switch (SCREEN(screen)->lcd_scroll_step)
+	switch (screen->lcd_scroll_step)
 	{
 	case 0:
 		character = TEXT_CHARACTERS(lcd_scroll)[0];
-		SCREEN(screen)->lcd_scroll = lcd_scroll + 1u;
+		screen->lcd_scroll = lcd_scroll + 1u;
 		if (character == 0x60u)
 			character = 7u;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		LCD_CHARACTERS(text_end)[0] = character;
-		SCREEN(screen)->lcd_scroll_frames = 5u;
-		SCREEN(screen)->lcd_scroll_step++;
-		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
-		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
+		screen->lcd_scroll_frames = 5u;
+		screen->lcd_scroll_step++;
+		lcd_scroll_frames = screen->lcd_scroll_frames;
+		screen->lcd_scroll_frames = lcd_scroll_frames - 1u;
 		if (lcd_scroll_frames != 1u)
 			return;
-		if (TEXT_CHARACTERS(SCREEN(screen)->lcd_scroll)[0] != 0u)
+		if (TEXT_CHARACTERS(screen->lcd_scroll)[0] != 0u)
 		{
-			SCREEN(screen)->lcd_scroll_step--;
+			screen->lcd_scroll_step--;
 			return;
 		}
-		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
-		SCREEN(screen)->lcd_scroll_step++;
+		screen->lcd_scroll = scroll_width + 1u;
+		screen->lcd_scroll_step++;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		LCD_CHARACTERS(text_end)[0] = 0x20u;
-		SCREEN(screen)->lcd_scroll_frames = 5u;
-		SCREEN(screen)->lcd_scroll_step++;
+		screen->lcd_scroll_frames = 5u;
+		screen->lcd_scroll_step++;
 		break;
 	case 1:
-		lcd_scroll_frames = SCREEN(screen)->lcd_scroll_frames;
-		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames - 1u;
+		lcd_scroll_frames = screen->lcd_scroll_frames;
+		screen->lcd_scroll_frames = lcd_scroll_frames - 1u;
 		if (lcd_scroll_frames != 1u)
 			return;
-		if (TEXT_CHARACTERS(SCREEN(screen)->lcd_scroll)[0] != 0u)
+		if (TEXT_CHARACTERS(screen->lcd_scroll)[0] != 0u)
 		{
-			SCREEN(screen)->lcd_scroll_step--;
+			screen->lcd_scroll_step--;
 			return;
 		}
-		SCREEN(screen)->lcd_scroll = scroll_width + 1u;
-		SCREEN(screen)->lcd_scroll_step++;
+		screen->lcd_scroll = scroll_width + 1u;
+		screen->lcd_scroll_step++;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		LCD_CHARACTERS(text_end)[0] = 0x20u;
-		SCREEN(screen)->lcd_scroll_frames = 5u;
-		SCREEN(screen)->lcd_scroll_step++;
+		screen->lcd_scroll_frames = 5u;
+		screen->lcd_scroll_step++;
 		break;
 	case 2:
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
 		LCD_CHARACTERS(text_end)[0] = 0x20u;
-		SCREEN(screen)->lcd_scroll_frames = 5u;
-		SCREEN(screen)->lcd_scroll_step++;
-		lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
-		SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
+		screen->lcd_scroll_frames = 5u;
+		screen->lcd_scroll_step++;
+		lcd_scroll_frames_2 = screen->lcd_scroll_frames;
+		screen->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
 		if (lcd_scroll_frames_2 == 1u)
 		{
-			SCREEN(screen)->lcd_scroll--;
-			SCREEN(screen)->lcd_scroll_step--;
+			screen->lcd_scroll--;
+			screen->lcd_scroll_step--;
 		}
 		return;
 	case 3:
 		break;
 	}
-	lcd_scroll_frames_2 = SCREEN(screen)->lcd_scroll_frames;
-	SCREEN(screen)->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
+	lcd_scroll_frames_2 = screen->lcd_scroll_frames;
+	screen->lcd_scroll_frames = lcd_scroll_frames_2 - 1u;
 	if (lcd_scroll_frames_2 != 1u)
 		return;
-	SCREEN(screen)->lcd_scroll--;
-	SCREEN(screen)->lcd_scroll_step--;
+	screen->lcd_scroll--;
+	screen->lcd_scroll_step--;
 }
 
 /* Clears the cabinet's LCD: sixteen spaces, no DJ message (screen dj_mouth_shapes), no scrolling text
@@ -517,18 +517,18 @@ void clear_lcd(void)
 {
 	uint32_t text_place = 0;
 
-	text_place = screen + 0xF10u;
+	text_place = address_of(screen) + 0xF10u;
 	AS32(SCREEN(text_place - 0xF10u)->lcd_text[0]) = 0x20202020u;
 	text_place += 4u;
 	AS32(SCREEN(text_place - 0xF14u)->lcd_text[4]) = 0x20202020u;
 	text_place += 4u;
 	AS32(SCREEN(text_place - 0xF18u)->lcd_text[8]) = 0x20202020u;
 	AS32(SCREEN(text_place - 0xF18u)->lcd_text[12]) = 0x20202020u;
-	SCREEN(screen)->dj_mouth_shapes = 0u;
-	SCREEN(screen)->dj_mouth_frames = 3u;
-	SCREEN(screen)->dj_face = 0u;
-	SCREEN(screen)->lcd_scroll_request = 0u;
-	SCREEN(screen)->lcd_scroll = 0u;
+	screen->dj_mouth_shapes = 0u;
+	screen->dj_mouth_frames = 3u;
+	screen->dj_face = 0u;
+	screen->lcd_scroll_request = 0u;
+	screen->lcd_scroll = 0u;
 }
 
 /* Starts the race information on the cabinet LCD: clears it (clear_lcd), shows the DJ's face in its
@@ -536,8 +536,8 @@ void clear_lcd(void)
 void lcd_race_info_start(void)
 {
 	clear_lcd();
-	SCREEN(screen)->dj_face = 0xFFu;
-	OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
+	screen->dj_face = 0xFFu;
+	current_object->handler = lcd_race_info_update_ADDRESS;
 	lcd_race_info_update();
 }
 
@@ -555,67 +555,67 @@ void lcd_race_info_update(void)
 	uint32_t countdown = 0, countdown_frames = 0, maximum_speed = 0, order_list = 0, racer = 0, racers_left = 0, shown_speed = 0, text_place = 0;
 	uint16_t page_frames = 0;
 
-	if (CAR(player_car)->at_goal != 0u)
+	if (player_car->at_goal != 0u)
 	{
-		OBJECT(current_object)->state = 0u;
-		OBJECT(current_object)->handler = lcd_race_info_finish_ADDRESS;
+		current_object->state = 0u;
+		current_object->handler = lcd_race_info_finish_ADDRESS;
 		lcd_race_info_finish();
 		return;
 	}
-	if (CAR(player_car)->race_over != 0u)
+	if (player_car->race_over != 0u)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		lcd_race_info_average_page();
 		return;
 	}
-	if (SCREEN(screen)->lcd_scroll != 0u)
+	if (screen->lcd_scroll != 0u)
 	{
-		OBJECT(current_object)->state = 1u;
-		OBJECT(current_object)->handler = lcd_race_info_paused_ADDRESS;
+		current_object->state = 1u;
+		current_object->handler = lcd_race_info_paused_ADDRESS;
 		lcd_race_info_paused();
 		return;
 	}
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		countdown = OBJECT(CAR(player_car)->object)->player_car.timer;
+		countdown = OBJECT(player_car->object)->player_car.timer;
 		if (countdown != 0u)
 		{
 			countdown_frames = 0u;
 			divux_pair(0x1Eu, &countdown, &countdown_frames);
-			move_halfwords(screen + 0xF12u, lcd_countdown_bars[(countdown_frames + 2u) / 5u], 7u);
-			SCREEN(screen)->lcd_text[9] = countdown + 0x31u;
+			move_halfwords(address_of(screen) + 0xF12u, lcd_countdown_bars[(countdown_frames + 2u) / 5u], 7u);
+			screen->lcd_text[9] = countdown + 0x31u;
 			return;
 		}
-		OBJECT(current_object)->lcd_race_info.racer_count = RACE(SCREEN(screen)->host_record)->racer_count;
-		OBJECT(current_object)->lcd_race_info.order_list = SCREEN(screen)->host_record + 0x20u;
-		OBJECT(current_object)->lcd_race_info.page_frames = 0x96u;
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->lcd_race_info.page_step = 0u;
-		OBJECT(current_object)->state++;
+		current_object->lcd_race_info.racer_count = RACE(screen->host_record)->racer_count;
+		current_object->lcd_race_info.order_list = screen->host_record + 0x20u;
+		current_object->lcd_race_info.page_frames = 0x96u;
+		current_object->state++;
+		current_object->lcd_race_info.page_step = 0u;
+		current_object->state++;
 		break;
 	case 1:
-		OBJECT(current_object)->lcd_race_info.page_step = 0u;
-		OBJECT(current_object)->state++;
+		current_object->lcd_race_info.page_step = 0u;
+		current_object->state++;
 		break;
 	case 2:
 		break;
 	}
-	page_frames = OBJECT(current_object)->lcd_race_info.page_frames;
-	OBJECT(current_object)->lcd_race_info.page_frames = page_frames - 1u;
+	page_frames = current_object->lcd_race_info.page_frames;
+	current_object->lcd_race_info.page_frames = page_frames - 1u;
 	if (page_frames == 1u)
 	{
-		page = (uint8_t)(OBJECT(current_object)->lcd_race_info.page + 1u);
+		page = (uint8_t)(current_object->lcd_race_info.page + 1u);
 		if ((int8_t)page >= 5)
 			page = 0u;
-		OBJECT(current_object)->lcd_race_info.page = page;
-		OBJECT(current_object)->lcd_race_info.page_step = 0u;
-		OBJECT(current_object)->lcd_race_info.page_frames = 0x96u;
+		current_object->lcd_race_info.page = page;
+		current_object->lcd_race_info.page_step = 0u;
+		current_object->lcd_race_info.page_frames = 0x96u;
 	}
-	switch (OBJECT(current_object)->lcd_race_info.page)
+	switch (current_object->lcd_race_info.page)
 	{
 	case 0:
-		switch (OBJECT(current_object)->lcd_race_info.page_step)
+		switch (current_object->lcd_race_info.page_step)
 		{
 		case 0:
 			lcd_race_info_time_page();
@@ -628,35 +628,35 @@ void lcd_race_info_update(void)
 	case 1:
 		break;
 	case 2:
-		switch (OBJECT(current_object)->lcd_race_info.page_step)
+		switch (current_object->lcd_race_info.page_step)
 		{
 		case 0:
-			move_halfwords(screen + 0xF12u, lcd_speed_label_ADDRESS, 7u);
-			OBJECT(current_object)->lcd_race_info.page_step++;
+			move_halfwords(address_of(screen) + 0xF12u, lcd_speed_label_ADDRESS, 7u);
+			current_object->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		}
-		text_place = screen + 0xF1Cu;
-		shown_speed = SCREEN(screen)->shown_speed;
+		text_place = address_of(screen) + 0xF1Cu;
+		shown_speed = screen->shown_speed;
 		lcd_race_info_write_number(shown_speed, text_place);
 		return;
 	case 3:
-		switch (OBJECT(current_object)->lcd_race_info.page_step)
+		switch (current_object->lcd_race_info.page_step)
 		{
 		case 0:
-			move_halfwords(screen + 0xF12u, lcd_maximum_label_ADDRESS, 7u);
-			OBJECT(current_object)->lcd_race_info.page_step++;
+			move_halfwords(address_of(screen) + 0xF12u, lcd_maximum_label_ADDRESS, 7u);
+			current_object->lcd_race_info.page_step++;
 			break;
 		case 1:
 			break;
 		}
-		text_place = screen + 0xF1Cu;
-		maximum_speed = (uint16_t)SCREEN(screen)->maximum_speed;
+		text_place = address_of(screen) + 0xF1Cu;
+		maximum_speed = (uint16_t)screen->maximum_speed;
 		lcd_race_info_write_number(maximum_speed, text_place);
 		return;
 	case 4:
-		switch (OBJECT(current_object)->lcd_race_info.page_step)
+		switch (current_object->lcd_race_info.page_step)
 		{
 		case 0:
 			lcd_race_info_average_page();
@@ -667,41 +667,41 @@ void lcd_race_info_update(void)
 		}
 		break;
 	}
-	switch (OBJECT(current_object)->lcd_race_info.page_step)
+	switch (current_object->lcd_race_info.page_step)
 	{
 	case 0:
-		if (RACE(SCREEN(screen)->host_record)->racer_count == 1u)
+		if (RACE(screen->host_record)->racer_count == 1u)
 		{
-			OBJECT(current_object)->lcd_race_info.page++;
-			switch (OBJECT(current_object)->lcd_race_info.page_step)
+			current_object->lcd_race_info.page++;
+			switch (current_object->lcd_race_info.page_step)
 			{
 			case 0:
-				move_halfwords(screen + 0xF12u, lcd_speed_label_ADDRESS, 7u);
-				OBJECT(current_object)->lcd_race_info.page_step++;
+				move_halfwords(address_of(screen) + 0xF12u, lcd_speed_label_ADDRESS, 7u);
+				current_object->lcd_race_info.page_step++;
 				break;
 			case 1:
 				break;
 			}
-			text_place = screen + 0xF1Cu;
-			shown_speed = SCREEN(screen)->shown_speed;
+			text_place = address_of(screen) + 0xF1Cu;
+			shown_speed = screen->shown_speed;
 			lcd_race_info_write_number(shown_speed, text_place);
 			return;
 		}
-		move_halfwords(screen + 0xF12u, lcd_order_label_ADDRESS, 7u);
-		OBJECT(current_object)->lcd_race_info.frames = 0u;
-		OBJECT(current_object)->lcd_race_info.page_step++;
+		move_halfwords(address_of(screen) + 0xF12u, lcd_order_label_ADDRESS, 7u);
+		current_object->lcd_race_info.frames = 0u;
+		current_object->lcd_race_info.page_step++;
 		break;
 	case 1:
 		break;
 	}
-	text_place = screen + 0xF18u;
-	order_list = OBJECT(current_object)->lcd_race_info.order_list;
-	racers_left = OBJECT(current_object)->lcd_race_info.racer_count;
+	text_place = address_of(screen) + 0xF18u;
+	order_list = current_object->lcd_race_info.order_list;
+	racers_left = current_object->lcd_race_info.racer_count;
 	do
 	{
 		racer = RACE_ORDER_PLAYERS(order_list)[0];
 		order_list++;
-		if (SCREEN(screen)->player != racer || (OBJECT(current_object)->lcd_race_info.frames & 8u) == 0u)
+		if (screen->player != racer || (current_object->lcd_race_info.frames & 8u) == 0u)
 			character = (uint8_t)(game->car_numbers[racer] + 0x31u);
 		else
 			character = 0x20u;
@@ -709,14 +709,14 @@ void lcd_race_info_update(void)
 		racers_left--;
 		text_place++;
 	} while (racers_left != 0u);
-	OBJECT(current_object)->lcd_race_info.frames++;
+	current_object->lcd_race_info.frames++;
 }
 
 /* Writes the Time page's label on the LCD, then the time (lcd_race_info_time). */
 void lcd_race_info_time_page(void)
 {
-	move_halfwords(screen + 0xF12u, lcd_time_label_ADDRESS, 7u);
-	OBJECT(current_object)->lcd_race_info.page_step++;
+	move_halfwords(address_of(screen) + 0xF12u, lcd_time_label_ADDRESS, 7u);
+	current_object->lcd_race_info.page_step++;
 	lcd_race_info_time();
 }
 
@@ -726,10 +726,10 @@ void lcd_race_info_time(void)
 {
 	uint32_t digit = 0, race_time = 0, text_place = 0;
 
-	race_time = CAR(player_car)->race_time / 0xAu;
+	race_time = player_car->race_time / 0xAu;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
-	text_place = screen + 0xF20u - 1u;
+	text_place = address_of(screen) + 0xF20u - 1u;
 	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
@@ -749,8 +749,8 @@ void lcd_race_info_time(void)
 /* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */
 void lcd_race_info_average_page(void)
 {
-	move_halfwords(screen + 0xF12u, lcd_average_label_ADDRESS, 7u);
-	OBJECT(current_object)->lcd_race_info.page_step++;
+	move_halfwords(address_of(screen) + 0xF12u, lcd_average_label_ADDRESS, 7u);
+	current_object->lcd_race_info.page_step++;
 	lcd_race_info_average();
 }
 
@@ -760,9 +760,9 @@ void lcd_race_info_average(void)
 {
 	uint32_t speed_samples = 0, speed_sum = 0, text_place = 0;
 
-	text_place = screen + 0xF1Cu;
-	speed_sum = SCREEN(screen)->speed_sum;
-	speed_samples = SCREEN(screen)->speed_samples;
+	text_place = address_of(screen) + 0xF1Cu;
+	speed_sum = screen->speed_sum;
+	speed_samples = screen->speed_samples;
 	if (speed_samples == 0u)
 	{
 		lcd_race_info_write_number(speed_sum, text_place);
@@ -820,52 +820,52 @@ void lcd_race_info_finish(void)
 {
 	uint16_t frames = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		move_halfwords(screen + 0xF12u, lcd_finish_label_ADDRESS, 7u);
-		OBJECT(current_object)->state++;
-		if (SCREEN(screen)->lcd_scroll == 0u)
+		move_halfwords(address_of(screen) + 0xF12u, lcd_finish_label_ADDRESS, 7u);
+		current_object->state++;
+		if (screen->lcd_scroll == 0u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
-		if (SCREEN(screen)->lcd_scroll == 0u)
+		if (screen->lcd_scroll == 0u)
 			return;
-		OBJECT(current_object)->state++;
-		if (SCREEN(screen)->lcd_scroll != 0u)
+		current_object->state++;
+		if (screen->lcd_scroll != 0u)
 			return;
 		lcd_race_info_average_page();
-		OBJECT(current_object)->lcd_race_info.frames = 0x96u;
-		OBJECT(current_object)->state++;
-		frames = OBJECT(current_object)->lcd_race_info.frames;
-		OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+		current_object->lcd_race_info.frames = 0x96u;
+		current_object->state++;
+		frames = current_object->lcd_race_info.frames;
+		current_object->lcd_race_info.frames = frames - 1u;
 		if (frames != 1u)
 			return;
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		lcd_race_info_time_page();
 		return;
 	case 2:
 		break;
 	case 3:
-		frames = OBJECT(current_object)->lcd_race_info.frames;
-		OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+		frames = current_object->lcd_race_info.frames;
+		current_object->lcd_race_info.frames = frames - 1u;
 		if (frames != 1u)
 			return;
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		lcd_race_info_time_page();
 		return;
 	}
-	if (SCREEN(screen)->lcd_scroll != 0u)
+	if (screen->lcd_scroll != 0u)
 		return;
 	lcd_race_info_average_page();
-	OBJECT(current_object)->lcd_race_info.frames = 0x96u;
-	OBJECT(current_object)->state++;
-	frames = OBJECT(current_object)->lcd_race_info.frames;
-	OBJECT(current_object)->lcd_race_info.frames = frames - 1u;
+	current_object->lcd_race_info.frames = 0x96u;
+	current_object->state++;
+	frames = current_object->lcd_race_info.frames;
+	current_object->lcd_race_info.frames = frames - 1u;
 	if (frames != 1u)
 		return;
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 	lcd_race_info_time_page();
 }
 
@@ -873,9 +873,9 @@ void lcd_race_info_finish(void)
    writes the page's label again. */
 void lcd_race_info_paused(void)
 {
-	if (SCREEN(screen)->lcd_scroll == 0u)
+	if (screen->lcd_scroll == 0u)
 	{
-		OBJECT(current_object)->handler = lcd_race_info_update_ADDRESS;
+		current_object->handler = lcd_race_info_update_ADDRESS;
 		lcd_race_info_update();
 		return;
 	}

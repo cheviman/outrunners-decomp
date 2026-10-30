@@ -35,42 +35,43 @@ void race_background_update(void)
 	uint32_t zero = 0;
 	uint8_t background_2 = 0, branch = 0, first_stage_2 = 0;
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
-	uint32_t animation = 0, background = 0, background_inverted = 0, fades = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_address = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	uint32_t animation = 0, background = 0, background_inverted = 0, fades = 0, first_stage = 0, index = 0, mixer_address = 0, mixer_bits = 0, new_background = 0, next_page_words = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, race_background_layer_setup = 0, route_stage = 0, tile_page_list = 0, tile_pages = 0;
+	struct tilemap_pages *page_word_address = NULL;
 	uint32_t view_turn_kept = 0;
 	uint8_t first_background = 0;
 	uint16_t signed_turn = 0, turn_back = 0, slope_scroll_y = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		index = SCREEN(screen)->index;
-		OBJECT(current_object)->race_background.page_half = index;
+		index = screen->index;
+		current_object->race_background.page_half = index;
 		race_background_layer_setup = race_background_layer_setups_ADDRESS + index * 5u * 4u;
-		OBJECT(current_object)->race_background.scroll_x_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup)->scroll_x_address;
+		current_object->race_background.scroll_x_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup)->scroll_x_address;
 		race_background_layer_setup += 4u;
-		OBJECT(current_object)->race_background.scroll_y_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x4u)->scroll_y_address;
+		current_object->race_background.scroll_y_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x4u)->scroll_y_address;
 		race_background_layer_setup += 4u;
-		OBJECT(current_object)->race_background.tile_bank_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x8u)->tile_bank_address;
+		current_object->race_background.tile_bank_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0x8u)->tile_bank_address;
 		race_background_layer_setup += 4u;
-		page_word_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->page_word_address;
-		OBJECT(current_object)->race_background.page_word_address = page_word_address;
-		TILEMAP_PAGES(page_word_address)->pages = background_page_words[(uint32_t)OBJECT(current_object)->race_background.page_half << 3];
+		page_word_address = pointer_to(RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->page_word_address);
+		current_object->race_background.page_word_address = address_of(page_word_address);
+		page_word_address->pages = background_page_words[(uint32_t)current_object->race_background.page_half << 3];
 		mixer_address = RACE_BACKGROUND_LAYER_SETUP(race_background_layer_setup - 0xCu)->mixer_address;
 		mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 		mixer_bits = mixer_bits & ~0xFu;
 		MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 4u;
-		SCREEN(screen)->flags |= 4u;
-		background_inverted = SCREEN(screen)->first_stage;
+		screen->flags |= 4u;
+		background_inverted = screen->first_stage;
 		if (background_inverted != 0u)
 			background_inverted = (uint8_t)~stage_backgrounds[background_inverted];
 		first_background = ~background_inverted;
-		OBJECT(current_object)->race_background.background = first_background;
-		tile_page_list = current_object + 0x2Cu;
+		current_object->race_background.background = first_background;
+		tile_page_list = address_of(current_object) + 0x2Cu;
 		tile_pages = no_background_tile_pages_ADDRESS;
 		if ((int8_t)first_background >= 0)
 			tile_pages = background_tile_page_lists[(uint8_t)~background_inverted] + 0x10u;
 		r12 = tile_page_list;
-		page_number = OBJECT(current_object)->race_background.page_half * 5u * 2u + 1u;
+		page_number = current_object->race_background.page_half * 5u * 2u + 1u;
 		page_count = 4u;
 		do
 		{
@@ -82,25 +83,25 @@ void race_background_update(void)
 		} while (page_count != 0u);
 		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 		r12 = unpack_tile_pages(tile_page_list, r12);
-		TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = stage_tile_banks[SCREEN(screen)->first_stage];
-		SCREEN(screen)->background_changing = 0u;
-		SCREEN(screen)->stage_background_change = 0u;
-		SCREEN(screen)->backdrops_leaving = 0u;
-		SCREEN(screen)->background_fading = 0xFFu;
-		SCREEN(screen)->background_at_start = 0xFFu;
-		first_stage = SCREEN(screen)->first_stage;
+		TILEMAP_BANKS(current_object->race_background.tile_bank_address)->tile_bank = stage_tile_banks[screen->first_stage];
+		screen->background_changing = 0u;
+		screen->stage_background_change = 0u;
+		screen->backdrops_leaving = 0u;
+		screen->background_fading = 0xFFu;
+		screen->background_at_start = 0xFFu;
+		first_stage = screen->first_stage;
 		race_background_start_objects(first_stage);
 		palettes = no_background_palettes_ADDRESS;
-		background = OBJECT(current_object)->race_background.background;
+		background = current_object->race_background.background;
 		if ((int8_t)background >= 0)
 		{
 			fades = background_palette_fades[background];
 			race_background_fade_palettes(fades);
-			palettes = background_palettes[OBJECT(current_object)->race_background.background];
+			palettes = background_palettes[current_object->race_background.background];
 		}
 		queue_palette_list(palettes);
-		OBJECT(current_object)->state++;
-		first_stage_2 = SCREEN(screen)->first_stage;
+		current_object->state++;
+		first_stage_2 = screen->first_stage;
 		if (first_stage_2 == 6u)
 			race_background_start_lower_animation();
 		else
@@ -116,28 +117,28 @@ void race_background_update(void)
 			}
 		}
 	case 1:
-		if (SCREEN(screen)->stage_background_change == 0u)
+		if (screen->stage_background_change == 0u)
 		{
-			if (CAR(player_car)->new_branch == 0u)
+			if (player_car->new_branch == 0u)
 				break;
-			CAR(player_car)->new_branch = 0u;
+			player_car->new_branch = 0u;
 		}
-		SCREEN(screen)->background_changing = 0xFFu;
-		new_background = SCREEN(screen)->built_stage;
-		if (SCREEN(screen)->stage_background_change == 0u)
+		screen->background_changing = 0xFFu;
+		new_background = screen->built_stage;
+		if (screen->stage_background_change == 0u)
 		{
 			new_background = new_background * 2u;
-			new_background = (new_background & ~0xFFu) | (uint8_t)(new_background + CAR(player_car)->branch);
+			new_background = (new_background & ~0xFFu) | (uint8_t)(new_background + player_car->branch);
 		}
 		else
 			new_background = (uint8_t)(new_background + 0x2Au);
-		OBJECT(current_object)->race_background.background = new_background;
-		tile_page_list = current_object + 0x2Cu;
+		current_object->race_background.background = new_background;
+		tile_page_list = address_of(current_object) + 0x2Cu;
 		tile_pages = background_tile_page_lists[new_background];
 		r12 = tile_page_list;
-		page_half = OBJECT(current_object)->race_background.page_half;
+		page_half = current_object->race_background.page_half;
 		page_half = page_half ^ 2u;
-		OBJECT(current_object)->race_background.page_half = page_half;
+		current_object->race_background.page_half = page_half;
 		page_half = page_half * 5u * 2u + 1u;
 		page_count = 9u;
 		do
@@ -150,22 +151,22 @@ void race_background_update(void)
 		} while (page_count != 0u);
 		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
 		queue_tile_pages(tile_page_list);
-		page_word_set = OBJECT(current_object)->race_background.page_half * 2u;
-		branch = SCREEN(screen)->stage_background_branch;
-		if (SCREEN(screen)->stage_background_change != 0u)
+		page_word_set = current_object->race_background.page_half * 2u;
+		branch = screen->stage_background_branch;
+		if (screen->stage_background_change != 0u)
 		{
-			OBJECT(current_object)->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
-			OBJECT(current_object)->state++;
-			OBJECT(current_object)->race_background.change_step = 0u;
+			current_object->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
+			current_object->state++;
+			current_object->race_background.change_step = 0u;
 			break;
 		}
-		branch = CAR(player_car)->branch;
-		OBJECT(current_object)->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->race_background.change_step = 0u;
+		branch = player_car->branch;
+		current_object->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
+		current_object->state++;
+		current_object->race_background.change_step = 0u;
 		break;
 	case 2:
-		signed_turn = (int16_t)((uint32_t)CAR(player_car)->view_yaw << 4) >> 4;
+		signed_turn = (int16_t)((uint32_t)player_car->view_yaw << 4) >> 4;
 		zero = signed_turn == 0u;
 		view_turn = signed_turn;
 		if ((int16_t)signed_turn < 0)
@@ -174,77 +175,77 @@ void race_background_update(void)
 			zero = turn_back == 0u;
 			view_turn = turn_back;
 		}
-		switch (OBJECT(current_object)->race_background.change_step)
+		switch (current_object->race_background.change_step)
 		{
 		case 0:
 			if (zero)
 				break;
-			SCREEN(screen)->background_fading = 0xFFu;
-			background = OBJECT(current_object)->race_background.background;
+			screen->background_fading = 0xFFu;
+			background = current_object->race_background.background;
 			palettes = background_palettes[background];
 			queue_palette_list(palettes);
-			TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
-			next_page_words = OBJECT(current_object)->race_background.next_page_words;
-			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-			OBJECT(current_object)->race_background.change_step++;
+			TILEMAP_BANKS(current_object->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
+			next_page_words = current_object->race_background.next_page_words;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			current_object->race_background.next_page_words = next_page_words + 4u;
+			current_object->race_background.change_step++;
 			break;
 		case 1:
 			if ((int16_t)view_turn < 0x2A0)
 				break;
-			SCREEN(screen)->backdrops_leaving = 0xFFu;
-			fades = background_leaving_fades[OBJECT(current_object)->race_background.background];
+			screen->backdrops_leaving = 0xFFu;
+			fades = background_leaving_fades[current_object->race_background.background];
 			start_palette_fades(fades);
-			fades = background_road_palettes[OBJECT(current_object)->race_background.background];
+			fades = background_road_palettes[current_object->race_background.background];
 			if (fades == 0u)
 			{
-				next_page_words = OBJECT(current_object)->race_background.next_page_words;
-				TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-				OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-				OBJECT(current_object)->race_background.change_step++;
+				next_page_words = current_object->race_background.next_page_words;
+				TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+				current_object->race_background.next_page_words = next_page_words + 4u;
+				current_object->race_background.change_step++;
 				break;
 			}
-			SCREEN(screen)->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
+			screen->road_palette_fades = ROAD_PALETTE_RECORD(fades)->road_fades;
 			fades += 4u;
 			start_palette_fades(fades);
-			next_page_words = OBJECT(current_object)->race_background.next_page_words;
-			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-			OBJECT(current_object)->race_background.change_step++;
+			next_page_words = current_object->race_background.next_page_words;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			current_object->race_background.next_page_words = next_page_words + 4u;
+			current_object->race_background.change_step++;
 			break;
 		case 2:
 			view_turn_kept = view_turn;
-			SCREEN(screen)->backdrops_leaving = 0u;
-			SCREEN(screen)->background_at_start = 0u;
-			route_stage = SCREEN(screen)->route_stage;
+			screen->backdrops_leaving = 0u;
+			screen->background_at_start = 0u;
+			route_stage = screen->route_stage;
 			race_background_start_objects(route_stage);
 			view_turn = (uint16_t)view_turn_kept;
-			OBJECT(current_object)->race_background.change_step++;
+			current_object->race_background.change_step++;
 		case 3:
 			if ((int16_t)view_turn > 0x160)
 				break;
-			fades = background_palette_fades[OBJECT(current_object)->race_background.background];
+			fades = background_palette_fades[current_object->race_background.background];
 			race_background_fade_palettes(fades);
-			next_page_words = OBJECT(current_object)->race_background.next_page_words;
-			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-			OBJECT(current_object)->race_background.change_step++;
+			next_page_words = current_object->race_background.next_page_words;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			current_object->race_background.next_page_words = next_page_words + 4u;
+			current_object->race_background.change_step++;
 			break;
 		case 4:
 			if ((int16_t)view_turn > 0x60)
 				break;
-			next_page_words = OBJECT(current_object)->race_background.next_page_words;
-			TILEMAP_PAGES(OBJECT(current_object)->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
-			OBJECT(current_object)->race_background.next_page_words = next_page_words + 4u;
-			OBJECT(current_object)->race_background.change_step++;
+			next_page_words = current_object->race_background.next_page_words;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = BACKGROUND_PAGE_WORD_STEPS(next_page_words)[0];
+			current_object->race_background.next_page_words = next_page_words + 4u;
+			current_object->race_background.change_step++;
 			break;
 		case 5:
 			if (zero == 0u)
 				break;
-			SCREEN(screen)->background_changing = 0u;
-			SCREEN(screen)->stage_background_change = 0u;
-			OBJECT(current_object)->state--;
-			background_2 = OBJECT(current_object)->race_background.background;
+			screen->background_changing = 0u;
+			screen->stage_background_change = 0u;
+			current_object->state--;
+			background_2 = current_object->race_background.background;
 			if (background_2 == 5u)
 			{
 				race_background_start_lower_animation();
@@ -270,46 +271,47 @@ void race_background_update(void)
 		}
 		break;
 	}
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
-	slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)CAR(player_car)->road_pitch] >> 6) + SCREEN(screen)->horizon_line - 1u;
+	VIDEO_REGISTER_WORDS(current_object->race_background.scroll_x_address)[0] = scroll_x - 0xA0u;
+	slope_scroll_y = ((int16_t)sine_table[(uint32_t)(int16_t)player_car->road_pitch] >> 6) + screen->horizon_line - 1u;
 	scroll_y = slope_scroll_y;
 	if ((int16_t)slope_scroll_y >= 0)
 	{
-		scroll_y_limit = (uint16_t)(0u - SCREEN(screen)->road_top_line + 0x180u);
+		scroll_y_limit = (uint16_t)(0u - screen->road_top_line + 0x180u);
 		if ((int16_t)scroll_y_limit < (int16_t)scroll_y)
 			scroll_y = (uint16_t)scroll_y_limit;
 	}
 	else
 		scroll_y = 0u;
-	SCREEN(screen)->background_scroll_y = scroll_y;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->race_background.scroll_y_address)[0] = scroll_y;
+	screen->background_scroll_y = scroll_y;
+	VIDEO_REGISTER_WORDS(current_object->race_background.scroll_y_address)[0] = scroll_y;
 }
 
 /* Loads the tiles of the background's lower animation (queue_tile_pages with
    background_lower_animation_tile_pages by screen) and starts it (race_background_lower_animation). */
 void race_background_start_lower_animation(void)
 {
-	uint32_t object = 0, tile_pages = 0;
+	uint32_t tile_pages = 0;
+	struct object *object = NULL;
 
-	tile_pages = background_lower_animation_tile_pages[SCREEN(screen)->index];
+	tile_pages = background_lower_animation_tile_pages[screen->index];
 	queue_tile_pages(tile_pages);
 	object = start_object();
-	OBJECT(object)->race_background_lower_animation.delay = 2u;
-	OBJECT(object)->race_background_lower_animation.step = SCREEN(screen)->index;
-	OBJECT(object)->race_background_lower_animation.page_word_address = OBJECT(current_object)->race_background.page_word_address;
-	OBJECT(object)->handler = race_background_lower_animation_wait_ADDRESS;
+	object->race_background_lower_animation.delay = 2u;
+	object->race_background_lower_animation.step = screen->index;
+	object->race_background_lower_animation.page_word_address = current_object->race_background.page_word_address;
+	object->handler = race_background_lower_animation_wait_ADDRESS;
 }
 
 /* Waits until the animation's tiles are loaded (screen unpack_state), then goes on to
    race_background_lower_animation_cycle. */
 void race_background_lower_animation_wait(void)
 {
-	if (SCREEN(screen)->unpack_state != 0u)
+	if (screen->unpack_state != 0u)
 		return;
-	OBJECT(current_object)->handler = race_background_lower_animation_cycle_ADDRESS;
+	current_object->handler = race_background_lower_animation_cycle_ADDRESS;
 	race_background_lower_animation_cycle();
 }
 
@@ -321,21 +323,21 @@ void race_background_lower_animation_cycle(void)
 	uint32_t step = 0;
 	uint8_t delay = 0;
 
-	if (SCREEN(screen)->background_changing != 0u)
+	if (screen->background_changing != 0u)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	delay = OBJECT(current_object)->race_background_lower_animation.delay;
-	OBJECT(current_object)->race_background_lower_animation.delay = delay - 1u;
+	delay = current_object->race_background_lower_animation.delay;
+	current_object->race_background_lower_animation.delay = delay - 1u;
 	if (delay == 1u)
 	{
-		OBJECT(current_object)->race_background_lower_animation.delay = 2u;
-		step = OBJECT(current_object)->race_background_lower_animation.step;
+		current_object->race_background_lower_animation.delay = 2u;
+		step = current_object->race_background_lower_animation.step;
 		step = (uint8_t)(step + 2u);
 		step = step & 7u;
-		OBJECT(current_object)->race_background_lower_animation.step = step;
-		TILEMAP_PAGES(OBJECT(current_object)->race_background_lower_animation.page_word_address)->lower_pages = background_lower_animation_page_pairs[step];
+		current_object->race_background_lower_animation.step = step;
+		TILEMAP_PAGES(current_object->race_background_lower_animation.page_word_address)->lower_pages = background_lower_animation_page_pairs[step];
 	}
 }
 
@@ -343,25 +345,26 @@ void race_background_lower_animation_cycle(void)
    R0 and screen) and starts it (race_background_upper_animation). */
 void race_background_start_upper_animation(uint32_t animation)
 {
-	uint32_t object = 0, tile_pages = 0;
+	uint32_t tile_pages = 0;
+	struct object *object = NULL;
 
 	animation = animation * 2u;
-	tile_pages = background_upper_animation_tile_pages[(uint8_t)(animation + SCREEN(screen)->index)];
+	tile_pages = background_upper_animation_tile_pages[(uint8_t)(animation + screen->index)];
 	queue_tile_pages(tile_pages);
 	object = start_object();
-	OBJECT(object)->race_background_upper_animation.delay = 3u;
-	OBJECT(object)->race_background_upper_animation.step = SCREEN(screen)->index;
-	OBJECT(object)->race_background_upper_animation.page_word_address = OBJECT(current_object)->race_background.page_word_address;
-	OBJECT(object)->handler = race_background_upper_animation_wait_ADDRESS;
+	object->race_background_upper_animation.delay = 3u;
+	object->race_background_upper_animation.step = screen->index;
+	object->race_background_upper_animation.page_word_address = current_object->race_background.page_word_address;
+	object->handler = race_background_upper_animation_wait_ADDRESS;
 }
 
 /* Waits until the animation's tiles are loaded (screen unpack_state), then goes on to
    race_background_upper_animation_cycle. */
 void race_background_upper_animation_wait(void)
 {
-	if (SCREEN(screen)->unpack_state != 0u)
+	if (screen->unpack_state != 0u)
 		return;
-	OBJECT(current_object)->handler = race_background_upper_animation_cycle_ADDRESS;
+	current_object->handler = race_background_upper_animation_cycle_ADDRESS;
 	race_background_upper_animation_cycle();
 }
 
@@ -373,22 +376,22 @@ void race_background_upper_animation_cycle(void)
 	uint32_t step = 0;
 	uint8_t delay = 0;
 
-	if (SCREEN(screen)->background_changing != 0u)
+	if (screen->background_changing != 0u)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	delay = OBJECT(current_object)->race_background_upper_animation.delay;
-	OBJECT(current_object)->race_background_upper_animation.delay = delay - 1u;
+	delay = current_object->race_background_upper_animation.delay;
+	current_object->race_background_upper_animation.delay = delay - 1u;
 	if (delay != 1u)
 		return;
-	OBJECT(current_object)->race_background_upper_animation.delay = 3u;
-	step = OBJECT(current_object)->race_background_upper_animation.step;
+	current_object->race_background_upper_animation.delay = 3u;
+	step = current_object->race_background_upper_animation.step;
 	step = (uint8_t)(step + 2u);
 	if ((int8_t)step >= 6)
 		step = (uint8_t)(step - 6u);
-	OBJECT(current_object)->race_background_upper_animation.step = step;
-	TILEMAP_PAGES(OBJECT(current_object)->race_background_upper_animation.page_word_address)->upper_pages = background_upper_animation_page_pairs[step];
+	current_object->race_background_upper_animation.step = step;
+	TILEMAP_PAGES(current_object->race_background_upper_animation.page_word_address)->upper_pages = background_upper_animation_page_pairs[step];
 }
 
 /* Sets up the screen's two tilemaps (0 and 2 for screen 1, 1 and 3 for screen 2; their register copies
@@ -402,26 +405,28 @@ void race_background_upper_animation_cycle(void)
    title_screen_update. */
 void set_up_background(uint32_t background_setup)
 {
-	uint32_t background_registers = 0, mixer_address = 0, mixer_bits = 0, pages_address = 0, palette_list = 0, tile_banks_address = 0, tile_pages = 0;
+	uint32_t background_registers = 0, mixer_address = 0, mixer_bits = 0, palette_list = 0, tile_pages = 0;
+	struct tilemap_banks *tile_banks_address = NULL;
+	struct tilemap_pages *pages_address = NULL;
 	uint8_t tile_bank = 0, second_tile_bank = 0;
 	uint32_t pages = 0, second_pages = 0;
 
-	background_registers = background_register_lists[SCREEN(screen)->index];
-	pages_address = BACKGROUND_REGISTERS(background_registers)->pages_address;
+	background_registers = background_register_lists[screen->index];
+	pages_address = pointer_to(BACKGROUND_REGISTERS(background_registers)->pages_address);
 	pages = BACKGROUND_SETUP(background_setup)->pages;
 	background_setup += 4u;
-	TILEMAP_PAGES(pages_address)->pages = pages;
+	pages_address->pages = pages;
 	second_pages = BACKGROUND_SETUP(background_setup - 0x4u)->second_pages;
 	background_setup += 4u;
-	TILEMAP_PAGES(pages_address)->second_pages = second_pages;
+	pages_address->second_pages = second_pages;
 	background_registers += 4u;
-	tile_banks_address = BACKGROUND_REGISTERS(background_registers - 0x4u)->tile_banks_address;
+	tile_banks_address = pointer_to(BACKGROUND_REGISTERS(background_registers - 0x4u)->tile_banks_address);
 	tile_bank = BACKGROUND_SETUP(background_setup - 0x8u)->tile_bank;
 	background_setup++;
-	TILEMAP_BANKS(tile_banks_address)->tile_bank = tile_bank;
+	tile_banks_address->tile_bank = tile_bank;
 	second_tile_bank = BACKGROUND_SETUP(background_setup - 0x9u)->second_tile_bank;
 	background_setup++;
-	TILEMAP_BANKS(tile_banks_address)->second_tile_bank = second_tile_bank;
+	tile_banks_address->second_tile_bank = second_tile_bank;
 	background_registers += 4u;
 	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x8u)->zoom_x_address)[0] = 0x200u;
 	background_registers += 4u;
@@ -450,7 +455,7 @@ void set_up_background(uint32_t background_setup)
 	mixer_bits = mixer_bits & ~0xFu;
 	background_setup++;
 	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority;
-	SCREEN(screen)->flags |= 4u;
+	screen->flags |= 4u;
 	background_setup++;
 	tile_pages = BACKGROUND_SETUP(background_setup - 0xCu)->tile_pages;
 	queue_tile_pages(tile_pages);
@@ -462,10 +467,11 @@ void set_up_background(uint32_t background_setup)
    within the stage, screen stage_background_change), each with its data (field 80) and this object (14). */
 void race_background_start_objects(uint32_t stage)
 {
-	uint32_t object = 0, object_list = 0, objects_left = 0;
+	uint32_t object_list = 0, objects_left = 0;
+	struct object *object = NULL;
 	uint32_t entry_count = 0;
 
-	if (SCREEN(screen)->stage_background_change != 0u)
+	if (screen->stage_background_change != 0u)
 		stage = (uint8_t)(stage + 0x1Fu);
 	object_list = stage_background_object_lists[stage];
 	entry_count = OBJECT_START_LIST(object_list)->count >> 3;
@@ -476,10 +482,10 @@ void race_background_start_objects(uint32_t stage)
 		do
 		{
 			object = start_object();
-			OBJECT(object)->handler = OBJECT_LIST_PAIR(object_list)->handler;
+			object->handler = OBJECT_LIST_PAIR(object_list)->handler;
 			object_list += 4u;
-			OBJECT(object)->list_data = OBJECT_LIST_PAIR(object_list - 0x4u)->data;
-			OBJECT(object)->parent = current_object;
+			object->list_data = OBJECT_LIST_PAIR(object_list - 0x4u)->data;
+			object->parent = address_of(current_object);
 			objects_left--;
 			object_list += 4u;
 		} while (objects_left != 0u);
@@ -497,93 +503,93 @@ void palette_cycle_update(void)
 	uint32_t palette_cycle_record = 0, palette_list = 0, palettes = 0;
 	uint16_t delay = 0, frames_left = 0, step_countdown = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		palette_cycle_record = OBJECT(current_object)->palette_cycle.data;
-		OBJECT(current_object)->palette_cycle.delay = PALETTE_CYCLE_RECORD(palette_cycle_record)->delay;
+		palette_cycle_record = current_object->palette_cycle.data;
+		current_object->palette_cycle.delay = PALETTE_CYCLE_RECORD(palette_cycle_record)->delay;
 		palette_cycle_record += 2u;
-		OBJECT(current_object)->palette_cycle.frames_left = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x2u)->frames_left;
+		current_object->palette_cycle.frames_left = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x2u)->frames_left;
 		palette_cycle_record += 2u;
-		OBJECT(current_object)->palette_cycle.palette_list = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x4u)->palette_list;
+		current_object->palette_cycle.palette_list = PALETTE_CYCLE_RECORD(palette_cycle_record - 0x4u)->palette_list;
 		step_frames = (uint16_t)PALETTE_CYCLE_RECORD(palette_cycle_record - 0x4u)->step_frames;
-		OBJECT(current_object)->palette_cycle.step_frames = step_frames;
-		OBJECT(current_object)->palette_cycle.step_countdown = step_frames;
-		OBJECT(current_object)->palette_cycle.running = 0u;
-		OBJECT(current_object)->state++;
-		if (OBJECT(current_object)->palette_cycle.delay != 0u)
+		current_object->palette_cycle.step_frames = step_frames;
+		current_object->palette_cycle.step_countdown = step_frames;
+		current_object->palette_cycle.running = 0u;
+		current_object->state++;
+		if (current_object->palette_cycle.delay != 0u)
 		{
-			delay = OBJECT(current_object)->palette_cycle.delay;
-			OBJECT(current_object)->palette_cycle.delay = delay - 1u;
+			delay = current_object->palette_cycle.delay;
+			current_object->palette_cycle.delay = delay - 1u;
 			if (delay != 1u)
 				return;
 		}
-		OBJECT(current_object)->state++;
-		if (OBJECT(current_object)->palette_cycle.frames_left != 0u)
+		current_object->state++;
+		if (current_object->palette_cycle.frames_left != 0u)
 		{
-			frames_left = OBJECT(current_object)->palette_cycle.frames_left;
-			OBJECT(current_object)->palette_cycle.frames_left = frames_left - 1u;
+			frames_left = current_object->palette_cycle.frames_left;
+			current_object->palette_cycle.frames_left = frames_left - 1u;
 			if (frames_left == 1u)
 			{
-				OBJECT(current_object)->flags = 0u;
+				current_object->flags = 0u;
 				return;
 			}
 		}
 		else
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		break;
 	case 1:
-		delay = OBJECT(current_object)->palette_cycle.delay;
-		OBJECT(current_object)->palette_cycle.delay = delay - 1u;
+		delay = current_object->palette_cycle.delay;
+		current_object->palette_cycle.delay = delay - 1u;
 		if (delay != 1u)
 			return;
-		OBJECT(current_object)->state++;
-		if (OBJECT(current_object)->palette_cycle.frames_left != 0u)
+		current_object->state++;
+		if (current_object->palette_cycle.frames_left != 0u)
 		{
-			frames_left = OBJECT(current_object)->palette_cycle.frames_left;
-			OBJECT(current_object)->palette_cycle.frames_left = frames_left - 1u;
+			frames_left = current_object->palette_cycle.frames_left;
+			current_object->palette_cycle.frames_left = frames_left - 1u;
 			if (frames_left == 1u)
 			{
-				OBJECT(current_object)->flags = 0u;
+				current_object->flags = 0u;
 				return;
 			}
 		}
 		else
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		break;
 	case 2:
-		frames_left = OBJECT(current_object)->palette_cycle.frames_left;
-		OBJECT(current_object)->palette_cycle.frames_left = frames_left - 1u;
+		frames_left = current_object->palette_cycle.frames_left;
+		current_object->palette_cycle.frames_left = frames_left - 1u;
 		if (frames_left == 1u)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
 		break;
 	case 3:
 		break;
 	}
-	switch (OBJECT(current_object)->palette_cycle.running)
+	switch (current_object->palette_cycle.running)
 	{
 	case 0:
-		if (SCREEN(screen)->background_fading != 0u)
+		if (screen->background_fading != 0u)
 			return;
-		OBJECT(current_object)->palette_cycle.running++;
+		current_object->palette_cycle.running++;
 		break;
 	case 1:
 		break;
 	}
-	if (SCREEN(screen)->background_fading != 0u)
+	if (screen->background_fading != 0u)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	step_countdown = OBJECT(current_object)->palette_cycle.step_countdown;
-	OBJECT(current_object)->palette_cycle.step_countdown = step_countdown - 1u;
+	step_countdown = current_object->palette_cycle.step_countdown;
+	current_object->palette_cycle.step_countdown = step_countdown - 1u;
 	if (step_countdown != 1u)
 		return;
-	OBJECT(current_object)->palette_cycle.step_countdown = OBJECT(current_object)->palette_cycle.step_frames;
-	palette_list = OBJECT(current_object)->palette_cycle.palette_list;
+	current_object->palette_cycle.step_countdown = current_object->palette_cycle.step_frames;
+	palette_list = current_object->palette_cycle.palette_list;
 	palettes = PALETTE_CYCLE_STEPS(palette_list)[0];
 	palette_list += 4u;
 	if ((int32_t)palettes < 0)
@@ -592,7 +598,7 @@ void palette_cycle_update(void)
 		palettes = PALETTE_CYCLE_STEPS(palette_list)[0];
 		palette_list += 4u;
 	}
-	OBJECT(current_object)->palette_cycle.palette_list = palette_list;
+	current_object->palette_cycle.palette_list = palette_list;
 	queue_palette_list(palettes);
 }
 
@@ -607,45 +613,45 @@ void sunset_fade_start(void)
 	uint32_t fade = 0, fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, sunset_fade_record = 0, to = 0;
 	uint32_t count = 0, fade_count = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		sunset_fade_record = OBJECT(current_object)->sunset_fade.data;
-		OBJECT(current_object)->sunset_fade.count = SUNSET_FADE_RECORD(sunset_fade_record)->delay;
-		OBJECT(current_object)->sunset_fade.fade_list = SUNSET_FADE_RECORD(sunset_fade_record)->fade_list;
-		OBJECT(current_object)->state++;
-		if ((uint16_t)OBJECT(current_object)->sunset_fade.count != 0u)
+		sunset_fade_record = current_object->sunset_fade.data;
+		current_object->sunset_fade.count = SUNSET_FADE_RECORD(sunset_fade_record)->delay;
+		current_object->sunset_fade.fade_list = SUNSET_FADE_RECORD(sunset_fade_record)->fade_list;
+		current_object->state++;
+		if ((uint16_t)current_object->sunset_fade.count != 0u)
 		{
-			count = OBJECT(current_object)->sunset_fade.count;
-			OBJECT(current_object)->sunset_fade.count = count - 1u;
+			count = current_object->sunset_fade.count;
+			current_object->sunset_fade.count = count - 1u;
 			if (count != 1u)
 				return;
 		}
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
-		count = OBJECT(current_object)->sunset_fade.count;
-		OBJECT(current_object)->sunset_fade.count = count - 1u;
+		count = current_object->sunset_fade.count;
+		current_object->sunset_fade.count = count - 1u;
 		if (count != 1u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 2:
 		break;
 	}
-	if (SCREEN(screen)->background_fading != 0u)
+	if (screen->background_fading != 0u)
 		return;
-	fade = OBJECT(current_object)->sunset_fade.fade_list;
+	fade = current_object->sunset_fade.fade_list;
 	fade_count = PALETTE_FADE_LIST(fade)->length / 0xCu;
 	fades_left = fade_count;
 	fade += 4u;
 	if (fade_count == 0u)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	OBJECT(current_object)->sunset_fade.count = fades_left;
-	fade_slot = current_object + 0x18u;
+	current_object->sunset_fade.count = fades_left;
+	fade_slot = address_of(current_object) + 0x18u;
 	do
 	{
 		from = PALETTE_FADE_ENTRY(fade)->from;
@@ -657,12 +663,12 @@ void sunset_fade_start(void)
 		fade++;
 		period = PALETTE_FADE_ENTRY(fade - 0xBu)->period;
 		fade++;
-		fade_object = start_palette_fade(blocks, period, from, to, (uint16_t)r12);
+		fade_object = address_of(start_palette_fade(blocks, period, from, to, (uint16_t)r12));
 		FADE_OBJECTS(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;
 	} while (fades_left != 0u);
-	OBJECT(current_object)->handler = sunset_fade_wait_ADDRESS;
+	current_object->handler = sunset_fade_wait_ADDRESS;
 }
 
 /* Waits for its palette fades to finish, then ends; if the stage's background starts changing (screen
@@ -670,18 +676,19 @@ void sunset_fade_start(void)
 void sunset_fade_wait(void)
 {
 	uint8_t all_flags = 0, fade_flags = 0;
-	uint32_t fade = 0, fade_slot = 0, fades_left = 0;
+	uint32_t fade_slot = 0, fades_left = 0;
+	struct object *fade = NULL;
 
 	all_flags = 0u;
-	fade_slot = current_object + 0x18u;
-	fades_left = OBJECT(current_object)->sunset_fade.count;
+	fade_slot = address_of(current_object) + 0x18u;
+	fades_left = current_object->sunset_fade.count;
 	do
 	{
-		fade = FADE_OBJECTS(fade_slot)[0];
+		fade = pointer_to(FADE_OBJECTS(fade_slot)[0]);
 		fade_slot += 4u;
-		if (fade != 0u)
+		if (fade != NULL)
 		{
-			fade_flags = (uint8_t)(OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
+			fade_flags = (uint8_t)(fade->flags | ((uint32_t)fade->flags_high << 8u) | ((uint32_t)fade->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				FADE_OBJECTS(fade_slot)[-1] = 0u;
@@ -689,20 +696,20 @@ void sunset_fade_wait(void)
 		fades_left--;
 	} while (fades_left != 0u);
 	if ((all_flags & 1u) == 0u)
-		OBJECT(current_object)->flags = 0u;
-	if (SCREEN(screen)->background_fading == 0u)
+		current_object->flags = 0u;
+	if (screen->background_fading == 0u)
 		return;
-	fade_slot = current_object + 0x18u;
-	fades_left = OBJECT(current_object)->sunset_fade.count;
+	fade_slot = address_of(current_object) + 0x18u;
+	fades_left = current_object->sunset_fade.count;
 	do
 	{
-		fade = FADE_OBJECTS(fade_slot)[0];
+		fade = pointer_to(FADE_OBJECTS(fade_slot)[0]);
 		fade_slot += 4u;
-		if (fade != 0u)
-			OBJECT(fade)->flags = 0u;
+		if (fade != NULL)
+			fade->flags = 0u;
 		fades_left--;
 	} while (fades_left != 0u);
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* Unused object handler: sets up a sprite on the background as backdrop_near_start does (from its data
@@ -712,22 +719,22 @@ void backdrop_far_start(void)
 {
 	uint32_t animation = 0, backdrop_record = 0;
 
-	if (SCREEN(screen)->background_at_start != 0u)
-		OBJECT(current_object)->state++;
-	OBJECT(current_object)->backdrop.leaving = 0u;
-	backdrop_record = OBJECT(current_object)->backdrop.data;
+	if (screen->background_at_start != 0u)
+		current_object->state++;
+	current_object->backdrop.leaving = 0u;
+	backdrop_record = current_object->backdrop.data;
 	animation = BACKDROP_RECORD(backdrop_record)->animation;
 	backdrop_record += 4u;
-	OBJECT(current_object)->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
+	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
+	current_object->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	OBJECT(current_object)->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
-	OBJECT(current_object)->draw_mode = 0xAu;
-	OBJECT(current_object)->depth_layer = 1u;
+	current_object->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
+	current_object->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	current_object->draw_mode = 0xAu;
+	current_object->depth_layer = 1u;
 	animation_start(animation);
-	OBJECT(current_object)->handler = backdrop_far_update_ADDRESS;
+	current_object->handler = backdrop_far_update_ADDRESS;
 	backdrop_far_update();
 }
 
@@ -741,18 +748,18 @@ void backdrop_far_update(void)
 	uint32_t zero = 0;
 	uint32_t scroll_x = 0;
 
-	OBJECT(current_object)->backdrop.leaving |= SCREEN(screen)->backdrops_leaving;
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	current_object->backdrop.leaving |= screen->backdrops_leaving;
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	OBJECT(current_object)->x = 0u - (((scroll_x - OBJECT(current_object)->backdrop.panorama_x) & 0x3FFu) - 0x2A0u);
-	switch (OBJECT(current_object)->state)
+	current_object->x = 0u - (((scroll_x - current_object->backdrop.panorama_x) & 0x3FFu) - 0x2A0u);
+	switch (current_object->state)
 	{
 	case 0:
 		zero = backdrop_off_screen();
 		if (zero == 0u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
 		break;
@@ -760,12 +767,12 @@ void backdrop_far_update(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop.height);
+		current_object->y = 0u - (screen->background_scroll_y - 0xFFu - current_object->backdrop.height);
 		draw_object(scroll_x);
 		return;
 	}
-	if (OBJECT(current_object)->backdrop.leaving != 0u)
-		OBJECT(current_object)->flags = 0u;
+	if (current_object->backdrop.leaving != 0u)
+		current_object->flags = 0u;
 }
 
 /* Sets up a sprite on the background a little nearer than the panorama (the hill of the Acropolis with
@@ -776,22 +783,22 @@ void backdrop_near_start(void)
 {
 	uint32_t animation = 0, backdrop_record = 0;
 
-	if (SCREEN(screen)->background_at_start != 0u)
-		OBJECT(current_object)->state++;
-	OBJECT(current_object)->backdrop.leaving = 0u;
-	backdrop_record = OBJECT(current_object)->backdrop.data;
+	if (screen->background_at_start != 0u)
+		current_object->state++;
+	current_object->backdrop.leaving = 0u;
+	backdrop_record = current_object->backdrop.data;
 	animation = BACKDROP_RECORD(backdrop_record)->animation;
 	backdrop_record += 4u;
-	OBJECT(current_object)->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
+	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
+	current_object->backdrop.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	OBJECT(current_object)->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
-	OBJECT(current_object)->draw_mode = 0xAu;
-	OBJECT(current_object)->depth_layer = 1u;
+	current_object->backdrop.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
+	current_object->backdrop.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	current_object->draw_mode = 0xAu;
+	current_object->depth_layer = 1u;
 	animation_start(animation);
-	OBJECT(current_object)->handler = backdrop_near_update_ADDRESS;
+	current_object->handler = backdrop_near_update_ADDRESS;
 	backdrop_near_update();
 }
 
@@ -806,19 +813,19 @@ void backdrop_near_update(void)
 	uint16_t height = 0, scroll_x = 0, y_change = 0;
 	uint32_t minus_y = 0;
 
-	OBJECT(current_object)->backdrop.leaving |= SCREEN(screen)->backdrops_leaving;
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	current_object->backdrop.leaving |= screen->backdrops_leaving;
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	scroll_x = (scroll_x - OBJECT(current_object)->backdrop.panorama_x) & 0x3FFu;
-	OBJECT(current_object)->x = 0u - (scroll_x + (scroll_x >> 2) - 0x320u);
-	switch (OBJECT(current_object)->state)
+	scroll_x = (scroll_x - current_object->backdrop.panorama_x) & 0x3FFu;
+	current_object->x = 0u - (scroll_x + (scroll_x >> 2) - 0x320u);
+	switch (current_object->state)
 	{
 	case 0:
 		zero = backdrop_off_screen();
 		if (zero == 0u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
 		break;
@@ -826,18 +833,18 @@ void backdrop_near_update(void)
 	zero = backdrop_off_screen();
 	if (zero)
 	{
-		if (OBJECT(current_object)->backdrop.leaving != 0u)
-			OBJECT(current_object)->flags = 0u;
+		if (current_object->backdrop.leaving != 0u)
+			current_object->flags = 0u;
 		return;
 	}
-	height = OBJECT(current_object)->backdrop.height;
-	minus_y = (uint16_t)(SCREEN(screen)->background_scroll_y - 0xFFu - height);
-	height -= SCREEN(screen)->road_top_line;
+	height = current_object->backdrop.height;
+	minus_y = (uint16_t)(screen->background_scroll_y - 0xFFu - height);
+	height -= screen->road_top_line;
 	if ((int16_t)height < (int16_t)minus_y)
 		minus_y = height;
-	y_change = (uint16_t)(0u - minus_y - OBJECT(current_object)->y);
+	y_change = (uint16_t)(0u - minus_y - current_object->y);
 	if ((int16_t)y_change > 1 || (int16_t)y_change < -1)
-		OBJECT(current_object)->y = 0u - minus_y;
+		current_object->y = 0u - minus_y;
 	draw_object(minus_y);
 }
 
@@ -848,24 +855,24 @@ void backdrop_landmark_start(void)
 {
 	uint32_t animation = 0, backdrop_record = 0;
 
-	if (SCREEN(screen)->background_at_start != 0u)
-		OBJECT(current_object)->state++;
-	OBJECT(current_object)->backdrop_landmark.leaving = 0u;
-	backdrop_record = OBJECT(current_object)->backdrop_landmark.data;
+	if (screen->background_at_start != 0u)
+		current_object->state++;
+	current_object->backdrop_landmark.leaving = 0u;
+	backdrop_record = current_object->backdrop_landmark.data;
 	animation = BACKDROP_RECORD(backdrop_record)->animation;
 	backdrop_record += 4u;
-	OBJECT(current_object)->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
+	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_landmark.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
+	current_object->backdrop_landmark.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_landmark.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
+	current_object->backdrop_landmark.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_landmark.half_width = BACKDROP_RECORD(backdrop_record - 0xAu)->half_width;
-	OBJECT(current_object)->draw_mode = 0xAu;
-	OBJECT(current_object)->depth_layer = 2u;
+	current_object->backdrop_landmark.half_width = BACKDROP_RECORD(backdrop_record - 0xAu)->half_width;
+	current_object->draw_mode = 0xAu;
+	current_object->depth_layer = 2u;
 	animation_start(animation);
-	OBJECT(current_object)->backdrop_landmark.approach_start = 0u - BACKDROP_RECORD(backdrop_record - 0xAu)->approach_distance + CAR(player_car)->window_segment;
-	OBJECT(current_object)->handler = backdrop_landmark_update_ADDRESS;
+	current_object->backdrop_landmark.approach_start = 0u - BACKDROP_RECORD(backdrop_record - 0xAu)->approach_distance + player_car->window_segment;
+	current_object->handler = backdrop_landmark_update_ADDRESS;
 	backdrop_landmark_update();
 }
 
@@ -880,41 +887,41 @@ void backdrop_landmark_update(void)
 	uint16_t height = 0, scale = 0, scroll_x = 0, y_change = 0;
 	uint32_t approach = 0, minus_y = 0;
 
-	OBJECT(current_object)->backdrop_landmark.leaving |= SCREEN(screen)->backdrops_leaving;
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	current_object->backdrop_landmark.leaving |= screen->backdrops_leaving;
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	scroll_x = (scroll_x - OBJECT(current_object)->backdrop_landmark.panorama_x) & 0x3FFu;
-	OBJECT(current_object)->x = 0u - (scroll_x + (scroll_x >> 2) - 0x320u);
-	switch (OBJECT(current_object)->state)
+	scroll_x = (scroll_x - current_object->backdrop_landmark.panorama_x) & 0x3FFu;
+	current_object->x = 0u - (scroll_x + (scroll_x >> 2) - 0x320u);
+	switch (current_object->state)
 	{
 	case 0:
 		zero = backdrop_off_screen();
 		if (zero == 0u)
 			return;
-		OBJECT(current_object)->state++;
-		approach = CAR(player_car)->window_segment;
-		approach = (uint16_t)(approach - OBJECT(current_object)->backdrop_landmark.approach_start);
+		current_object->state++;
+		approach = player_car->window_segment;
+		approach = (uint16_t)(approach - current_object->backdrop_landmark.approach_start);
 		scale = (uint16_t)sine_table[approach >> 1] >> 6;
 		if ((int16_t)scale >= 0x100)
 		{
 			scale = 0x100u;
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		}
-		OBJECT(current_object)->width_scale = scale;
-		OBJECT(current_object)->height_scale = scale;
+		current_object->width_scale = scale;
+		current_object->height_scale = scale;
 		break;
 	case 1:
-		approach = CAR(player_car)->window_segment;
-		approach = (uint16_t)(approach - OBJECT(current_object)->backdrop_landmark.approach_start);
+		approach = player_car->window_segment;
+		approach = (uint16_t)(approach - current_object->backdrop_landmark.approach_start);
 		scale = (uint16_t)sine_table[approach >> 1] >> 6;
 		if ((int16_t)scale >= 0x100)
 		{
 			scale = 0x100u;
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		}
-		OBJECT(current_object)->width_scale = scale;
-		OBJECT(current_object)->height_scale = scale;
+		current_object->width_scale = scale;
+		current_object->height_scale = scale;
 		break;
 	case 2:
 		break;
@@ -922,18 +929,18 @@ void backdrop_landmark_update(void)
 	zero = backdrop_off_screen();
 	if (zero)
 	{
-		if (OBJECT(current_object)->backdrop_landmark.leaving != 0u)
-			OBJECT(current_object)->flags = 0u;
+		if (current_object->backdrop_landmark.leaving != 0u)
+			current_object->flags = 0u;
 		return;
 	}
-	height = OBJECT(current_object)->backdrop_landmark.height;
-	minus_y = (uint16_t)(SCREEN(screen)->background_scroll_y - 0xFFu - height);
-	height -= SCREEN(screen)->road_top_line;
+	height = current_object->backdrop_landmark.height;
+	minus_y = (uint16_t)(screen->background_scroll_y - 0xFFu - height);
+	height -= screen->road_top_line;
 	if ((int16_t)height < (int16_t)minus_y)
 		minus_y = height;
-	y_change = (uint16_t)(0u - minus_y - OBJECT(current_object)->y);
+	y_change = (uint16_t)(0u - minus_y - current_object->y);
 	if ((int16_t)y_change > 1 || (int16_t)y_change < -1)
-		OBJECT(current_object)->y = 0u - minus_y;
+		current_object->y = 0u - minus_y;
 	draw_object(minus_y);
 }
 
@@ -943,23 +950,23 @@ void backdrop_flashing_start(void)
 {
 	uint32_t animation = 0, backdrop_record = 0;
 
-	if (SCREEN(screen)->background_at_start != 0u)
-		OBJECT(current_object)->state++;
-	OBJECT(current_object)->backdrop_flashing.leaving = 0u;
-	backdrop_record = OBJECT(current_object)->backdrop_flashing.data;
+	if (screen->background_at_start != 0u)
+		current_object->state++;
+	current_object->backdrop_flashing.leaving = 0u;
+	backdrop_record = current_object->backdrop_flashing.data;
 	animation = BACKDROP_RECORD(backdrop_record)->animation;
 	backdrop_record += 4u;
-	OBJECT(current_object)->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
+	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_flashing.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
+	current_object->backdrop_flashing.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_flashing.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	OBJECT(current_object)->backdrop_flashing.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
-	OBJECT(current_object)->draw_mode = 0xAu;
-	OBJECT(current_object)->depth_layer = 1u;
+	current_object->backdrop_flashing.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
+	current_object->backdrop_flashing.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	current_object->draw_mode = 0xAu;
+	current_object->depth_layer = 1u;
 	animation_start(animation);
-	OBJECT(current_object)->backdrop_flashing.other_palette = 0x120u;
-	OBJECT(current_object)->handler = backdrop_flashing_update_ADDRESS;
+	current_object->backdrop_flashing.other_palette = 0x120u;
+	current_object->handler = backdrop_flashing_update_ADDRESS;
 	backdrop_flashing_update();
 }
 
@@ -973,23 +980,23 @@ void backdrop_flashing_update(void)
 	uint32_t minus_y = 0;
 	uint16_t other_palette = 0;
 
-	OBJECT(current_object)->backdrop_flashing.leaving |= SCREEN(screen)->backdrops_leaving;
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	current_object->backdrop_flashing.leaving |= screen->backdrops_leaving;
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	OBJECT(current_object)->x = 0u - (((scroll_x - OBJECT(current_object)->backdrop_flashing.panorama_x) & 0x3FFu) - 0x2A0u);
+	current_object->x = 0u - (((scroll_x - current_object->backdrop_flashing.panorama_x) & 0x3FFu) - 0x2A0u);
 	animation_advance(0u);
-	other_palette = OBJECT(current_object)->backdrop_flashing.other_palette;
-	minus_y = OBJECT(current_object)->palette;
-	OBJECT(current_object)->palette = other_palette;
-	OBJECT(current_object)->backdrop_flashing.other_palette = minus_y;
-	switch (OBJECT(current_object)->state)
+	other_palette = current_object->backdrop_flashing.other_palette;
+	minus_y = current_object->palette;
+	current_object->palette = other_palette;
+	current_object->backdrop_flashing.other_palette = minus_y;
+	switch (current_object->state)
 	{
 	case 0:
 		zero = backdrop_off_screen();
 		if (zero == 0u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
 		break;
@@ -997,12 +1004,12 @@ void backdrop_flashing_update(void)
 	zero = backdrop_off_screen();
 	if (zero == 0u)
 	{
-		OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_flashing.height);
+		current_object->y = 0u - (screen->background_scroll_y - 0xFFu - current_object->backdrop_flashing.height);
 		draw_object(minus_y);
 		return;
 	}
-	if (OBJECT(current_object)->backdrop_flashing.leaving != 0u)
-		OBJECT(current_object)->flags = 0u;
+	if (current_object->backdrop_flashing.leaving != 0u)
+		current_object->flags = 0u;
 }
 
 /* Sets up a sprite on the background that is drawn every other frame, so it looks faint (the pyramids of
@@ -1012,23 +1019,23 @@ void backdrop_translucent_start(void)
 {
 	uint32_t animation = 0, backdrop_record = 0;
 
-	if (SCREEN(screen)->background_at_start != 0u)
-		OBJECT(current_object)->state++;
-	OBJECT(current_object)->backdrop_translucent.leaving = 0u;
-	backdrop_record = OBJECT(current_object)->backdrop_translucent.data;
+	if (screen->background_at_start != 0u)
+		current_object->state++;
+	current_object->backdrop_translucent.leaving = 0u;
+	backdrop_record = current_object->backdrop_translucent.data;
 	animation = BACKDROP_RECORD(backdrop_record)->animation;
 	backdrop_record += 4u;
-	OBJECT(current_object)->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
+	current_object->palette = BACKDROP_RECORD(backdrop_record - 0x4u)->palette;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_translucent.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
+	current_object->backdrop_translucent.panorama_x = BACKDROP_RECORD(backdrop_record - 0x6u)->panorama_x;
 	backdrop_record += 2u;
-	OBJECT(current_object)->backdrop_translucent.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
-	OBJECT(current_object)->backdrop_translucent.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
-	OBJECT(current_object)->draw_mode = 0xAu;
-	OBJECT(current_object)->depth_layer = 1u;
+	current_object->backdrop_translucent.height = BACKDROP_RECORD(backdrop_record - 0x8u)->height;
+	current_object->backdrop_translucent.half_width = BACKDROP_RECORD(backdrop_record - 0x8u)->half_width;
+	current_object->draw_mode = 0xAu;
+	current_object->depth_layer = 1u;
 	animation_start(animation);
-	OBJECT(current_object)->backdrop_translucent.frame_count = 0u;
-	OBJECT(current_object)->handler = backdrop_translucent_update_ADDRESS;
+	current_object->backdrop_translucent.frame_count = 0u;
+	current_object->handler = backdrop_translucent_update_ADDRESS;
 	backdrop_translucent_update();
 }
 
@@ -1040,20 +1047,20 @@ void backdrop_translucent_update(void)
 	uint32_t zero = 0;
 	uint32_t scroll_x = 0;
 
-	OBJECT(current_object)->backdrop_translucent.leaving |= SCREEN(screen)->backdrops_leaving;
-	scroll_x = CAR(player_car)->view_yaw;
-	if (SCREEN(screen)->background_changing == 0u)
+	current_object->backdrop_translucent.leaving |= screen->backdrops_leaving;
+	scroll_x = player_car->view_yaw;
+	if (screen->background_changing == 0u)
 		scroll_x = scroll_x >> 2;
-	OBJECT(current_object)->x = 0u - (((scroll_x - OBJECT(current_object)->backdrop_translucent.panorama_x) & 0x3FFu) - 0x2A0u);
+	current_object->x = 0u - (((scroll_x - current_object->backdrop_translucent.panorama_x) & 0x3FFu) - 0x2A0u);
 	animation_advance(0u);
-	OBJECT(current_object)->backdrop_translucent.frame_count++;
-	switch (OBJECT(current_object)->state)
+	current_object->backdrop_translucent.frame_count++;
+	switch (current_object->state)
 	{
 	case 0:
 		zero = backdrop_off_screen();
 		if (zero == 0u)
 			return;
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		break;
 	case 1:
 		break;
@@ -1061,13 +1068,13 @@ void backdrop_translucent_update(void)
 	zero = backdrop_off_screen();
 	if (zero)
 	{
-		if (OBJECT(current_object)->backdrop_translucent.leaving != 0u)
-			OBJECT(current_object)->flags = 0u;
+		if (current_object->backdrop_translucent.leaving != 0u)
+			current_object->flags = 0u;
 		return;
 	}
-	if ((OBJECT(current_object)->backdrop_translucent.frame_count & 1u) != 0u)
+	if ((current_object->backdrop_translucent.frame_count & 1u) != 0u)
 		return;
-	OBJECT(current_object)->y = 0u - (SCREEN(screen)->background_scroll_y - 0xFFu - OBJECT(current_object)->backdrop_translucent.height);
+	current_object->y = 0u - (screen->background_scroll_y - 0xFFu - current_object->backdrop_translucent.height);
 	draw_object(scroll_x);
 }
 
@@ -1079,12 +1086,12 @@ uint32_t backdrop_off_screen(void)
 	uint16_t centre_x = 0, half_screen = 0, half_width = 0, minus_right_edge = 0;
 
 	half_screen = 0xA0u;
-	centre_x = (uint16_t)(OBJECT(current_object)->x - 0xA0u);
-	half_width = OBJECT(current_object)->backdrop.half_width;
+	centre_x = (uint16_t)(current_object->x - 0xA0u);
+	half_width = current_object->backdrop.half_width;
 	minus_right_edge = (uint16_t)(0u - centre_x - half_width);
 	if ((int16_t)(centre_x - half_width) > 0xA0 || (int16_t)half_screen < (int16_t)minus_right_edge)
 	{
-		OBJECT(current_object)->flags &= 0xDFu;
+		current_object->flags &= 0xDFu;
 		zero = 0u == 0u;
 		return zero;
 	}

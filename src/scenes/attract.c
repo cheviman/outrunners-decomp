@@ -17,17 +17,18 @@
    19-107 and 139-195); what the bars show cannot be told without drawing them. */
 void bar_picture_start(void)
 {
-	uint32_t bar = 0, object = 0;
+	uint32_t bar = 0;
+	struct object *object = NULL;
 	uint32_t scales = 0;
 
 	bar = bar_picture_bars_ADDRESS;
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = bar_picture_bar_start_ADDRESS;
+		object->handler = bar_picture_bar_start_ADDRESS;
 		scales = BAR_PICTURE_BAR(bar)->scales;
-		OBJECT(object)->list_data = BAR_PICTURE_BAR(bar)->target;
-		OBJECT(object)->bar_picture.scales = scales;
+		object->list_data = BAR_PICTURE_BAR(bar)->target;
+		object->bar_picture.scales = scales;
 		bar += 8u;
 	} while ((int32_t)BAR_PICTURE_BAR(bar)->target >= 0);
 }
@@ -42,21 +43,21 @@ void bar_picture_bar_start(void)
 	uint8_t random_x = 0, random_y = 0;
 	uint32_t width_scale_long = 0;
 
-	OBJECT(current_object)->draw_mode = 0u;
+	current_object->draw_mode = 0u;
 	animation = 0u;
 	animation_start(animation);
-	OBJECT(current_object)->palette = 0x25u;
-	width_scale_long = OBJECT(current_object)->bar_picture.scales;
-	OBJECT(current_object)->width_scale = (uint16_t)width_scale_long;
-	OBJECT(current_object)->height_scale = (uint16_t)(width_scale_long >> 16u);
-	OBJECT(current_object)->depth_layer = 3u;
-	OBJECT(current_object)->x = 0xA0u;
-	OBJECT(current_object)->y = 0x70u;
+	current_object->palette = 0x25u;
+	width_scale_long = current_object->bar_picture.scales;
+	current_object->width_scale = (uint16_t)width_scale_long;
+	current_object->height_scale = (uint16_t)(width_scale_long >> 16u);
+	current_object->depth_layer = 3u;
+	current_object->x = 0xA0u;
+	current_object->y = 0x70u;
 	random_x = io_read8(0xD80000u);
-	OBJECT(current_object)->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
+	current_object->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
 	random_y = io_read8(0xD80000u);
-	OBJECT(current_object)->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
-	OBJECT(current_object)->handler = bar_picture_bar_fly_ADDRESS;
+	current_object->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
+	current_object->handler = bar_picture_bar_fly_ADDRESS;
 }
 
 /* Only unused code reaches it (bar_picture_start): each frame the bar's speed_x and speed_y grow by 1
@@ -71,10 +72,10 @@ void bar_picture_bar_fly(void)
 	uint16_t target_x = 0, x_distance = 0, target_y = 0, y_distance = 0;
 
 	landed = 0xFFFFFFFFu;
-	x_motion = (uint16_t)OBJECT(current_object)->bar_picture.speed_x;
+	x_motion = (uint16_t)current_object->bar_picture.speed_x;
 	old_x_speed = (uint16_t)x_motion;
-	x_motion += OBJECT(current_object)->x;
-	target_x = OBJECT(current_object)->bar_picture.target_x;
+	x_motion += current_object->x;
+	target_x = current_object->bar_picture.target_x;
 	x_distance = target_x - x_motion;
 	overflow = (uint32_t)(int16_t)target_x - (int16_t)x_motion != (uint32_t)(int16_t)(target_x - x_motion);
 	zero = x_distance == 0u;
@@ -85,29 +86,29 @@ void bar_picture_bar_fly(void)
 		if ((negative ^ overflow) | zero)
 			x_motion = 0xFFFFu;
 		x_motion += old_x_speed;
-		OBJECT(current_object)->bar_picture.speed_x = x_motion;
-		x_motion += OBJECT(current_object)->x;
+		current_object->bar_picture.speed_x = x_motion;
+		x_motion += current_object->x;
 		landed = 0u;
 	}
-	OBJECT(current_object)->x = x_motion;
-	y_motion = (uint16_t)OBJECT(current_object)->bar_picture.speed_y;
+	current_object->x = x_motion;
+	y_motion = (uint16_t)current_object->bar_picture.speed_y;
 	old_y_speed = (uint16_t)y_motion;
-	y_motion = (uint16_t)(y_motion + OBJECT(current_object)->y);
-	target_y = OBJECT(current_object)->bar_picture.target_y;
+	y_motion = (uint16_t)(y_motion + current_object->y);
+	target_y = current_object->bar_picture.target_y;
 	y_distance = target_y - y_motion;
 	overflow = (uint32_t)(int16_t)target_y - (int16_t)y_motion != (uint32_t)(int16_t)(target_y - y_motion);
 	zero = y_distance == 0u;
 	negative = y_distance >> 15;
 	if (target_y == y_motion)
 	{
-		OBJECT(current_object)->y = y_motion;
+		current_object->y = y_motion;
 		if (landed == 0u)
 		{
 			draw_object(y_motion);
 			return;
 		}
-		OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
-		OBJECT(current_object)->frame = 0xDu;
+		current_object->handler = bar_picture_bar_draw_ADDRESS;
+		current_object->frame = 0xDu;
 		draw_object(y_motion);
 		return;
 	}
@@ -115,17 +116,17 @@ void bar_picture_bar_fly(void)
 	if ((negative ^ overflow) | zero)
 		y_motion = 0xFFFFu;
 	y_motion = (uint16_t)(y_motion + old_y_speed);
-	OBJECT(current_object)->bar_picture.speed_y = y_motion;
-	y_motion = (uint16_t)(y_motion + OBJECT(current_object)->y);
+	current_object->bar_picture.speed_y = y_motion;
+	y_motion = (uint16_t)(y_motion + current_object->y);
 	landed = 0u;
-	OBJECT(current_object)->y = y_motion;
+	current_object->y = y_motion;
 	if (landed == 0u)
 	{
 		draw_object(y_motion);
 		return;
 	}
-	OBJECT(current_object)->handler = bar_picture_bar_draw_ADDRESS;
-	OBJECT(current_object)->frame = 0xDu;
+	current_object->handler = bar_picture_bar_draw_ADDRESS;
+	current_object->frame = 0xDu;
 	draw_object(y_motion);
 }
 
@@ -148,7 +149,7 @@ void attract_lamps_update(void)
 	attract_lamp_step = game->vblank_counter;
 	attract_lamp_step = attract_lamp_step >> 3;
 	attract_lamp_step = (uint8_t)(attract_lamp_step * 2u);
-	screen_index = SCREEN(screen)->index;
+	screen_index = screen->index;
 	attract_lamp_step = attract_lamp_steps_ADDRESS + (uint8_t)(attract_lamp_step + screen_index) * 2u;
 	screen_index = (uint8_t)(screen_index * 2u);
 	screen_index = (uint8_t)(screen_index * 2u);
@@ -166,26 +167,27 @@ void attract_lamps_update(void)
    the picture's colours cycle. State 2 (the palette only, no picture) is not set by its own code. */
 void car_presentation_update(void)
 {
-	uint32_t animation = 0, background_setup = 0, colour_list = 0, object = 0, palette_index = 0;
+	uint32_t animation = 0, background_setup = 0, colour_list = 0, palette_index = 0;
+	struct object *object = NULL;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		object = start_object();
-		OBJECT(object)->handler = car_name_start_ADDRESS;
+		object->handler = car_name_start_ADDRESS;
 		object = start_object();
-		OBJECT(object)->handler = staff_credits_code_start_ADDRESS;
-		OBJECT(object)->staff_credits_code.presentation = current_object;
-		OBJECT(current_object)->car_presentation.staff_credits_code = object;
-		OBJECT(current_object)->state++;
-		background_setup = 0x1AA0u + SCREEN(screen)->index * 5u * 4u;
+		object->handler = staff_credits_code_start_ADDRESS;
+		object->staff_credits_code.presentation = address_of(current_object);
+		current_object->car_presentation.staff_credits_code = address_of(object);
+		current_object->state++;
+		background_setup = 0x1AA0u + screen->index * 5u * 4u;
 		set_up_background(background_setup);
-		OBJECT(current_object)->draw_mode = 0u;
-		OBJECT(current_object)->x = 0xA0u;
-		OBJECT(current_object)->y = 0x60u;
-		OBJECT(current_object)->depth_layer = 0u;
-		animation = attract_car_picture_animations[SCREEN(screen)->attract_car];
-		OBJECT(current_object)->palette = 0x275u;
+		current_object->draw_mode = 0u;
+		current_object->x = 0xA0u;
+		current_object->y = 0x60u;
+		current_object->depth_layer = 0u;
+		animation = attract_car_picture_animations[screen->attract_car];
+		current_object->palette = 0x275u;
 		animation_start(animation);
 		animation_advance(0u);
 		draw_object(0u);
@@ -193,27 +195,27 @@ void car_presentation_update(void)
 	case 1:
 		animation_advance(0u);
 		draw_object(0u);
-		palette_index = OBJECT(current_object)->car_presentation.palette_step;
+		palette_index = current_object->car_presentation.palette_step;
 		colour_list = car_presentation_palette_cycle[palette_index];
 		if (colour_list == 0u)
 		{
 			colour_list = car_presentation_palette_cycle[0];
 			palette_index = 0u;
 		}
-		OBJECT(current_object)->car_presentation.palette_step = palette_index + 1u;
+		current_object->car_presentation.palette_step = palette_index + 1u;
 		queue_palette_list(colour_list);
 		return;
 	case 2:
 		break;
 	}
-	palette_index = OBJECT(current_object)->car_presentation.palette_step;
+	palette_index = current_object->car_presentation.palette_step;
 	colour_list = car_presentation_palette_cycle[palette_index];
 	if (colour_list == 0u)
 	{
 		colour_list = car_presentation_palette_cycle[0];
 		palette_index = 0u;
 	}
-	OBJECT(current_object)->car_presentation.palette_step = palette_index + 1u;
+	current_object->car_presentation.palette_step = palette_index + 1u;
 	queue_palette_list(colour_list);
 }
 
@@ -226,8 +228,8 @@ void staff_credits_code_start(void)
 	uint32_t new_controls = 0;
 
 	staff_credits_code_read_controls(&new_controls, &zero);
-	OBJECT(current_object)->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
-	OBJECT(current_object)->handler = staff_credits_code_watch_ADDRESS;
+	current_object->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
+	current_object->handler = staff_credits_code_watch_ADDRESS;
 	staff_credits_code_watch();
 }
 
@@ -248,12 +250,12 @@ void staff_credits_code_watch(void)
 		staff_credits_code_done();
 		return;
 	}
-	next_control = OBJECT(current_object)->staff_credits_code.code_place;
+	next_control = current_object->staff_credits_code.code_place;
 	element = STAFF_CREDITS_CODE_CONTROLS(next_control)[0];
 	next_control++;
 	if (element != new_controls)
 		next_control = staff_credits_code_sequence_ADDRESS;
-	OBJECT(current_object)->staff_credits_code.code_place = next_control;
+	current_object->staff_credits_code.code_place = next_control;
 	if (STAFF_CREDITS_CODE_CONTROLS(next_control)[0] != 0u)
 	{
 		staff_credits_code_done();
@@ -261,11 +263,11 @@ void staff_credits_code_watch(void)
 	}
 	sound_code = 9u;
 	queue_sound(sound_code);
-	SCREEN(screen)->mode_timer += 0x4B0u;
-	presentation_timer = OBJECT(current_object)->staff_credits_code.presentation + 0x10u;
+	screen->mode_timer += 0x4B0u;
+	presentation_timer = current_object->staff_credits_code.presentation + 0x10u;
 	OBJECT(presentation_timer - 0x10u)->car_presentation.timer += 0x4B0u;
-	OBJECT(current_object)->staff_credits_code.frames_left = 0x4B0u;
-	OBJECT(current_object)->handler = staff_credits_code_show_ADDRESS;
+	current_object->staff_credits_code.frames_left = 0x4B0u;
+	current_object->handler = staff_credits_code_show_ADDRESS;
 	staff_credits_code_show();
 }
 
@@ -276,11 +278,11 @@ void staff_credits_code_show(void)
 	uint32_t next_text = 0, text_record = 0;
 	uint16_t frames_left = 0;
 
-	frames_left = OBJECT(current_object)->staff_credits_code.frames_left;
-	OBJECT(current_object)->staff_credits_code.frames_left = frames_left - 1u;
+	frames_left = current_object->staff_credits_code.frames_left;
+	current_object->staff_credits_code.frames_left = frames_left - 1u;
 	if (frames_left == 1u)
 	{
-		OBJECT(current_object)->handler = staff_credits_code_done_ADDRESS;
+		current_object->handler = staff_credits_code_done_ADDRESS;
 		fade_out_music();
 		return;
 	}
@@ -308,9 +310,9 @@ void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero
 	uint32_t control_bit = 0;
 	uint8_t pressed_controls = 0;
 
-	held_before = OBJECT(current_object)->staff_credits_code.controls_held;
+	held_before = current_object->staff_credits_code.controls_held;
 	controls_now = 0u;
-	reading = (uint8_t)~SCREEN(screen)->wheel;
+	reading = (uint8_t)~screen->wheel;
 	if ((held_before & 8u) != 0u)
 	{
 		if (reading < 0x40u)
@@ -320,18 +322,18 @@ void staff_credits_code_read_controls(uint32_t *p_new_controls, uint32_t *p_zero
 		controls_now |= 8u;
 	control_bit = 2u;
 	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
-	reading = SCREEN(screen)->gas;
+	reading = screen->gas;
 	control_bit = 5u;
 	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
-	reading = SCREEN(screen)->brake;
+	reading = screen->brake;
 	control_bit = 4u;
 	controls_now = staff_credits_code_control_bit(held_before, controls_now, reading, control_bit);
-	reading = (uint8_t)SCREEN(screen)->buttons;
+	reading = (uint8_t)screen->buttons;
 	if ((reading & 0x10u) != 0u)
 		controls_now |= 1u;
 	if ((reading & 0x20u) != 0u)
 		controls_now |= 2u;
-	OBJECT(current_object)->staff_credits_code.controls_held = controls_now;
+	current_object->staff_credits_code.controls_held = controls_now;
 	pressed_controls = ~held_before & controls_now;
 	zero = pressed_controls == 0u;
 	newly_on = pressed_controls;
@@ -365,23 +367,24 @@ void car_name_start(void)
 {
 	uint8_t letter_delay = 0;
 	uint16_t letter_x = 0;
-	uint32_t letter_place = 0, object = 0;
+	uint32_t letter_place = 0;
+	struct object *object = NULL;
 
-	letter_place = attract_car_names[SCREEN(screen)->attract_car];
+	letter_place = attract_car_names[screen->attract_car];
 	letter_x = 0x168u;
 	letter_delay = 0xFu;
 	while (CAR_NAME_LETTERS(letter_place)[0] != 0u)
 	{
 		object = start_object();
-		OBJECT(object)->handler = car_name_letter_update_ADDRESS;
-		OBJECT(object)->car_name_letter.character = CAR_NAME_LETTERS(letter_place)[0];
-		OBJECT(object)->x = letter_x;
+		object->handler = car_name_letter_update_ADDRESS;
+		object->car_name_letter.character = CAR_NAME_LETTERS(letter_place)[0];
+		object->x = letter_x;
 		letter_x += 0x12u;
-		OBJECT(object)->car_name_letter.delay = letter_delay;
+		object->car_name_letter.delay = letter_delay;
 		letter_delay += 2u;
 		letter_place++;
 	}
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* A letter of the presented car's name (font 346 at size A0, its colours cycling through 001D70 with
@@ -395,83 +398,83 @@ void car_name_letter_update(void)
 	uint8_t delay = 0, slide_frames = 0;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->depth_layer = 0x19Eu;
+		current_object->draw_mode = 0xAu;
+		current_object->depth_layer = 0x19Eu;
 		animation = CAR_NAME_FONT;
 		animation_start(animation);
-		OBJECT(current_object)->car_name_letter.palette_list = car_name_letter_palette_steps_ADDRESS;
-		OBJECT(current_object)->frame = OBJECT(current_object)->car_name_letter.character;
-		OBJECT(current_object)->x += 8u;
-		OBJECT(current_object)->y = 0x14u;
-		OBJECT(current_object)->width_scale = 0xA0u;
-		OBJECT(current_object)->height_scale = 0xA0u;
-		OBJECT(current_object)->car_name_letter.frames_left = 0x78u;
-		OBJECT(current_object)->car_name_letter.slide_frames = 0xEu;
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->car_name_letter.frames_left--;
-		delay = OBJECT(current_object)->car_name_letter.delay;
-		OBJECT(current_object)->car_name_letter.delay = delay - 1u;
+		current_object->car_name_letter.palette_list = car_name_letter_palette_steps_ADDRESS;
+		current_object->frame = current_object->car_name_letter.character;
+		current_object->x += 8u;
+		current_object->y = 0x14u;
+		current_object->width_scale = 0xA0u;
+		current_object->height_scale = 0xA0u;
+		current_object->car_name_letter.frames_left = 0x78u;
+		current_object->car_name_letter.slide_frames = 0xEu;
+		current_object->state++;
+		current_object->car_name_letter.frames_left--;
+		delay = current_object->car_name_letter.delay;
+		current_object->car_name_letter.delay = delay - 1u;
 		if (delay != 1u)
 			return;
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->x -= 0x18u;
-		slide_frames = OBJECT(current_object)->car_name_letter.slide_frames;
-		OBJECT(current_object)->car_name_letter.slide_frames = slide_frames - 1u;
+		current_object->state++;
+		current_object->x -= 0x18u;
+		slide_frames = current_object->car_name_letter.slide_frames;
+		current_object->car_name_letter.slide_frames = slide_frames - 1u;
 		if (slide_frames == 1u)
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		break;
 	case 1:
-		OBJECT(current_object)->car_name_letter.frames_left--;
-		delay = OBJECT(current_object)->car_name_letter.delay;
-		OBJECT(current_object)->car_name_letter.delay = delay - 1u;
+		current_object->car_name_letter.frames_left--;
+		delay = current_object->car_name_letter.delay;
+		current_object->car_name_letter.delay = delay - 1u;
 		if (delay != 1u)
 			return;
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->x -= 0x18u;
-		slide_frames = OBJECT(current_object)->car_name_letter.slide_frames;
-		OBJECT(current_object)->car_name_letter.slide_frames = slide_frames - 1u;
+		current_object->state++;
+		current_object->x -= 0x18u;
+		slide_frames = current_object->car_name_letter.slide_frames;
+		current_object->car_name_letter.slide_frames = slide_frames - 1u;
 		if (slide_frames == 1u)
-			OBJECT(current_object)->state++;
-		frames_left = OBJECT(current_object)->car_name_letter.frames_left;
-		OBJECT(current_object)->car_name_letter.frames_left = frames_left - 1u;
+			current_object->state++;
+		frames_left = current_object->car_name_letter.frames_left;
+		current_object->car_name_letter.frames_left = frames_left - 1u;
 		if (frames_left == 1u)
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		step_palette();
 		draw_object(0u);
 		return;
 	case 2:
-		OBJECT(current_object)->x -= 0x18u;
-		slide_frames = OBJECT(current_object)->car_name_letter.slide_frames;
-		OBJECT(current_object)->car_name_letter.slide_frames = slide_frames - 1u;
+		current_object->x -= 0x18u;
+		slide_frames = current_object->car_name_letter.slide_frames;
+		current_object->car_name_letter.slide_frames = slide_frames - 1u;
 		if (slide_frames == 1u)
-			OBJECT(current_object)->state++;
-		frames_left = OBJECT(current_object)->car_name_letter.frames_left;
-		OBJECT(current_object)->car_name_letter.frames_left = frames_left - 1u;
+			current_object->state++;
+		frames_left = current_object->car_name_letter.frames_left;
+		current_object->car_name_letter.frames_left = frames_left - 1u;
 		if (frames_left == 1u)
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		step_palette();
 		draw_object(0u);
 		return;
 	case 3:
 		break;
 	case 4:
-		OBJECT(current_object)->x -= 0x18u;
-		if ((int16_t)OBJECT(current_object)->x >= 0)
+		current_object->x -= 0x18u;
+		if ((int16_t)current_object->x >= 0)
 		{
 			step_palette();
 			draw_object(0u);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	frames_left = OBJECT(current_object)->car_name_letter.frames_left;
-	OBJECT(current_object)->car_name_letter.frames_left = frames_left - 1u;
+	frames_left = current_object->car_name_letter.frames_left;
+	current_object->car_name_letter.frames_left = frames_left - 1u;
 	if (frames_left == 1u)
-		OBJECT(current_object)->state++;
+		current_object->state++;
 	step_palette();
 	draw_object(0u);
 }
@@ -486,24 +489,24 @@ void demo_captions_run(void)
 	uint32_t cue = 0;
 	uint32_t frames_to_cue = 0, jump_target = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->demo_captions.timeline = timeline_1AFC0_ADDRESS;
-		OBJECT(current_object)->demo_captions.frames &= 0xFFFF0000u;
-		OBJECT(current_object)->state++;
+		current_object->demo_captions.timeline = timeline_1AFC0_ADDRESS;
+		current_object->demo_captions.frames &= 0xFFFF0000u;
+		current_object->state++;
 		return;
 	case 1:
 		break;
 	}
-	OBJECT(current_object)->demo_captions.frames = (OBJECT(current_object)->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)OBJECT(current_object)->demo_captions.frames + 1u & 0xFFFFu);
-	cue = OBJECT(current_object)->demo_captions.timeline;
-	frames_to_cue = DEMO_CAPTION_CUE(cue)->frame - (uint16_t)OBJECT(current_object)->demo_captions.frames;
+	current_object->demo_captions.frames = (current_object->demo_captions.frames & 0xFFFF0000u) | ((uint16_t)current_object->demo_captions.frames + 1u & 0xFFFFu);
+	cue = current_object->demo_captions.timeline;
+	frames_to_cue = DEMO_CAPTION_CUE(cue)->frame - (uint16_t)current_object->demo_captions.frames;
 	zero = frames_to_cue == 0u;
 	cue += 4u;
 	if ((int32_t)frames_to_cue < 0)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
 	if (zero)
@@ -521,7 +524,7 @@ void demo_captions_run(void)
 			demo_captions_music_select();
 			break;
 		}
-		OBJECT(current_object)->demo_captions.timeline += 8u;
+		current_object->demo_captions.timeline += 8u;
 	}
 }
 
@@ -530,7 +533,8 @@ void demo_captions_run(void)
 void demo_captions_head_to_head(void)
 {
 	uint8_t first_record = 0, record = 0;
-	uint32_t object = 0, record_count = 0;
+	uint32_t record_count = 0;
+	struct object *object = NULL;
 
 	record_count = 2u;
 	first_record = 0u;
@@ -541,8 +545,8 @@ void demo_captions_head_to_head(void)
 	else
 		record++;
 	object = start_object();
-	OBJECT(object)->handler = demo_caption_update_ADDRESS;
-	OBJECT(object)->demo_caption.record = record;
+	object->handler = demo_caption_update_ADDRESS;
+	object->demo_caption.record = record;
 }
 
 /* Frame 225 of the demo captions: AT THE CHECKPOINT ONLY THE RACE LEADER CAN SELECT THE NEXT STAGE !
@@ -572,13 +576,13 @@ void demo_captions_music_select(void)
 /* Starts R1 demo_caption objects with the records from R0 on. */
 void demo_captions_start(uint8_t first_record, uint32_t record_count)
 {
-	uint32_t object = 0;
+	struct object *object = NULL;
 
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = demo_caption_update_ADDRESS;
-		OBJECT(object)->demo_caption.record = first_record;
+		object->handler = demo_caption_update_ADDRESS;
+		object->demo_caption.record = first_record;
 		first_record++;
 		record_count--;
 	} while (record_count != 0u);
@@ -592,40 +596,40 @@ void demo_caption_update(void)
 	uint32_t animation = 0, picture = 0;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		break;
 	case 1:
-		frames_left = OBJECT(current_object)->demo_caption.frames_left;
-		OBJECT(current_object)->demo_caption.frames_left = frames_left - 1u;
+		frames_left = current_object->demo_caption.frames_left;
+		current_object->demo_caption.frames_left = frames_left - 1u;
 		if (frames_left == 1u)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
 		animation_advance(0u);
 		draw_object(0u);
 		return;
 	}
-	OBJECT(current_object)->draw_mode = 0u;
-	picture = demo_caption_pictures_ADDRESS + ((uint32_t)OBJECT(current_object)->demo_caption.record << 4);
+	current_object->draw_mode = 0u;
+	picture = demo_caption_pictures_ADDRESS + ((uint32_t)current_object->demo_caption.record << 4);
 	animation = PICTURE_RECORD(picture)->animation;
 	picture += 2u;
 	animation_start(animation);
-	OBJECT(current_object)->palette = PICTURE_RECORD(picture - 0x2u)->palette;
+	current_object->palette = PICTURE_RECORD(picture - 0x2u)->palette;
 	picture += 2u;
-	OBJECT(current_object)->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
+	current_object->width_scale = PICTURE_RECORD(picture - 0x4u)->width_scale;
 	picture += 2u;
-	OBJECT(current_object)->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
+	current_object->height_scale = PICTURE_RECORD(picture - 0x6u)->height_scale;
 	picture += 2u;
-	OBJECT(current_object)->x = PICTURE_RECORD(picture - 0x8u)->x;
+	current_object->x = PICTURE_RECORD(picture - 0x8u)->x;
 	picture += 2u;
-	OBJECT(current_object)->y = PICTURE_RECORD(picture - 0xAu)->y;
+	current_object->y = PICTURE_RECORD(picture - 0xAu)->y;
 	picture += 2u;
-	OBJECT(current_object)->depth_layer = PICTURE_RECORD(picture - 0xCu)->depth_layer;
-	OBJECT(current_object)->demo_caption.frames_left = PICTURE_RECORD(picture - 0xCu)->frames_left;
-	OBJECT(current_object)->state++;
+	current_object->depth_layer = PICTURE_RECORD(picture - 0xCu)->depth_layer;
+	current_object->demo_caption.frames_left = PICTURE_RECORD(picture - 0xCu)->frames_left;
+	current_object->state++;
 	animation_advance(0u);
 	draw_object(0u);
 }

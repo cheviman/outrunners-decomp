@@ -3810,6 +3810,60 @@ struct car
 	uint8_t pad_183[0x7D];
 };
 
+struct view
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint16_t pitch;
+	uint16_t yaw;
+	uint16_t window_offset;
+	uint16_t horizon_line;
+	uint16_t segment_remaining;
+	uint8_t pad_16[0xA];
+};
+
+struct road_segment
+{
+	uint16_t heading;
+	uint16_t pitch;
+	uint32_t x;
+	uint32_t z;
+	uint32_t y;
+	uint16_t width;
+	uint16_t half_width;
+	union
+	{
+		uint16_t width_code_and_event;
+		uint8_t width_code;
+		struct
+		{
+			uint8_t pad_14[0x1];
+			uint8_t road_event;
+		};
+	};
+	uint8_t pad_16[0xA];
+};
+
+struct projected_segment
+{
+	uint16_t scale;
+	uint16_t width;
+	uint16_t x;
+	uint16_t y;
+	uint16_t depth_layer;
+	uint8_t pad_0A[0x2];
+	uint8_t width_code;
+	uint8_t road_event;
+	uint8_t pad_0E[0x2];
+};
+
+struct depth_list
+{
+	uint16_t head;
+	uint16_t tail;
+};
+
 struct screen
 {
 	uint8_t index;
@@ -3961,7 +4015,8 @@ struct screen
 	uint32_t own_hit_box;
 	uint8_t pad_504[0xC];
 	uint32_t hit_box_count;
-	uint8_t pad_514[0x1EC];
+	uint8_t pad_514[0xEC];
+	struct view views[0x8];
 	uint16_t stage_lengths[0x1F];
 	uint16_t branch_road_length;
 	uint8_t pad_740[0xC0];
@@ -4020,17 +4075,29 @@ struct screen
 	uint8_t pad_F86[0x20];
 	uint16_t traffic_draw_distance;
 	uint8_t traffic_count;
-	uint8_t pad_FA9[0xF57];
+	uint8_t pad_FA9[0x57];
+	struct car car;
+	uint8_t pad_1200[0xD00];
 	uint8_t crest_count;
 	uint8_t pad_1F01[0xF];
 	uint16_t crest_layers[0x10];
 	uint16_t crest_heights[0x10];
-	uint8_t pad_1F50[0x30B0];
-	uint16_t depth_lists;
-	uint8_t pad_5002[0x676];
-	uint16_t text_depth_list_head;
-	uint16_t text_depth_list_tail;
-	uint8_t pad_567C[0x184];
+	uint8_t pad_1F50[0xB0];
+	struct road_segment road_segments[0x80];
+	struct projected_segment projected_segments[0x80];
+	uint8_t pad_3800[0x1800];
+	union
+	{
+		struct depth_list depth_layers[0x1A0];
+		struct
+		{
+			uint16_t depth_lists;
+			uint8_t pad_5002[0x676];
+			uint16_t text_depth_list_head;
+			uint16_t text_depth_list_tail;
+		};
+	};
+	uint8_t pad_5680[0x180];
 	union
 	{
 		uint32_t route_map_signals;
@@ -4047,6 +4114,12 @@ struct screen
 	uint8_t pad_5808[0x7F8];
 };
 
+struct object_list
+{
+	uint16_t count;
+	uint16_t objects[0x7F];
+};
+
 struct object_area
 {
 	uint32_t list;
@@ -4054,7 +4127,10 @@ struct object_area
 	uint32_t next_list;
 	uint32_t list_end;
 	uint8_t slots[0x7C];
-	uint8_t pad_8C[0x7F74];
+	uint8_t pad_8C[0x74];
+	struct object spare_object;
+	struct object_list object_lists[0x2];
+	struct object objects[0x7C];
 };
 
 struct race
@@ -4138,12 +4214,6 @@ struct race
 	uint16_t time_left;
 	uint32_t race_time;
 	uint8_t pad_70[0x10];
-};
-
-struct object_list
-{
-	uint16_t count;
-	uint16_t objects[0x7F];
 };
 
 struct object_list_block
@@ -4876,54 +4946,6 @@ struct screen_sound_page
 	uint8_t pad_19[0xE7];
 };
 
-struct road_segment
-{
-	uint16_t heading;
-	uint16_t pitch;
-	uint32_t x;
-	uint32_t z;
-	uint32_t y;
-	uint16_t width;
-	uint16_t half_width;
-	union
-	{
-		uint16_t width_code_and_event;
-		uint8_t width_code;
-		struct
-		{
-			uint8_t pad_14[0x1];
-			uint8_t road_event;
-		};
-	};
-	uint8_t pad_16[0xA];
-};
-
-struct view
-{
-	uint32_t x;
-	uint32_t y;
-	uint32_t z;
-	uint16_t pitch;
-	uint16_t yaw;
-	uint16_t window_offset;
-	uint16_t horizon_line;
-	uint16_t segment_remaining;
-	uint8_t pad_16[0xA];
-};
-
-struct projected_segment
-{
-	uint16_t scale;
-	uint16_t width;
-	uint16_t x;
-	uint16_t y;
-	uint16_t depth_layer;
-	uint8_t pad_0A[0x2];
-	uint8_t width_code;
-	uint8_t road_event;
-	uint8_t pad_0E[0x2];
-};
-
 struct seat_credits
 {
 	uint8_t credits;
@@ -5028,12 +5050,6 @@ struct palette_block_entry
 	uint32_t colours;
 	uint16_t place;
 	uint16_t blocks;
-};
-
-struct depth_list
-{
-	uint16_t head;
-	uint16_t tail;
 };
 
 struct object_list_pair
@@ -5316,7 +5332,15 @@ struct course_record_copy
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
 _Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
 _Static_assert(sizeof(struct screen) == 0x6000, "struct screen has the size of the game's blocks");
+_Static_assert(offsetof(struct screen, views) == 0x600, "views at its place in struct screen");
+_Static_assert(offsetof(struct screen, car) == 0x1000, "car at its place in struct screen");
+_Static_assert(offsetof(struct screen, road_segments) == 0x2000, "road_segments at its place in struct screen");
+_Static_assert(offsetof(struct screen, projected_segments) == 0x3000, "projected_segments at its place in struct screen");
+_Static_assert(offsetof(struct screen, depth_layers) == 0x5000, "depth_layers at its place in struct screen");
 _Static_assert(sizeof(struct object_area) == 0x8000, "struct object_area has the size of the game's blocks");
+_Static_assert(offsetof(struct object_area, spare_object) == 0x100, "spare_object at its place in struct object_area");
+_Static_assert(offsetof(struct object_area, object_lists) == 0x200, "object_lists at its place in struct object_area");
+_Static_assert(offsetof(struct object_area, objects) == 0x400, "objects at its place in struct object_area");
 _Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
 _Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the size of the game's blocks");
 _Static_assert(sizeof(struct object_list_block) == 0x8, "struct object_list_block has the size of the game's blocks");

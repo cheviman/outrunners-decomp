@@ -25,111 +25,112 @@
    race_to_goal.txt, frames 7659-8325). */
 void road_surface_update(void)
 {
-	uint32_t event = 0, fraction_shift = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, ignored_5 = 0, ignored_6 = 0, ignored_7 = 0, max_depth = 0, near_scroll = 0, object = 0, previous_depth = 0, previous_line = 0, previous_x = 0, road_palette_fades = 0, rounding = 0, stripe_count = 0;
+	uint32_t event = 0, fraction_shift = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, ignored_5 = 0, ignored_6 = 0, ignored_7 = 0, max_depth = 0, near_scroll = 0, previous_depth = 0, previous_line = 0, previous_x = 0, road_palette_fades = 0, rounding = 0, stripe_count = 0;
+	struct object *object = NULL;
 	uint8_t first_flag = 0, first_tiles_flag = 0, second_tiles_flag = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		road_surface_start();
-		OBJECT(current_object)->road_surface.event_delay = 0x1Eu;
-		OBJECT(current_object)->state++;
+		current_object->road_surface.event_delay = 0x1Eu;
+		current_object->state++;
 		return;
 	case 1:
 		road_surface_lines(&ignored, &ignored_2, &ignored_3, &r12, &ignored_4, &r14, &ignored_5, &ignored_6, &ignored_7);
-		OBJECT(current_object)->road_surface.points_buffer ^= 0x60u;
-		OBJECT(current_object)->state++;
-		if (OBJECT(current_object)->road_surface.segment_page_set == 0u)
+		current_object->road_surface.points_buffer ^= 0x60u;
+		current_object->state++;
+		if (current_object->road_surface.segment_page_set == 0u)
 		{
-			road_palette_fades = SCREEN(screen)->road_palette_fades;
+			road_palette_fades = screen->road_palette_fades;
 			start_palette_fades(road_palette_fades);
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		}
 		break;
 	case 2:
 		road_surface_lines(&previous_line, &previous_x, &previous_depth, &r12, &stripe_count, &r14, &fraction_shift, &rounding, &max_depth);
 		road_surface_halfway_lines(previous_line, previous_x, previous_depth, stripe_count, (uint8_t)fraction_shift, rounding, (uint16_t)max_depth, &r12, &r14);
-		if (OBJECT(current_object)->road_surface.segment_page_set == 0u)
+		if (current_object->road_surface.segment_page_set == 0u)
 		{
-			road_palette_fades = SCREEN(screen)->road_palette_fades;
+			road_palette_fades = screen->road_palette_fades;
 			start_palette_fades(road_palette_fades);
-			OBJECT(current_object)->state++;
+			current_object->state++;
 		}
 		break;
 	case 3:
 		road_surface_lines(&previous_line, &previous_x, &previous_depth, &r12, &stripe_count, &r14, &fraction_shift, &rounding, &max_depth);
 		road_surface_halfway_lines(previous_line, previous_x, previous_depth, stripe_count, (uint8_t)fraction_shift, rounding, (uint16_t)max_depth, &r12, &r14);
-		if (OBJECT(current_object)->road_surface.segment_page_set != 0u)
+		if (current_object->road_surface.segment_page_set != 0u)
 		{
-			OBJECT(current_object)->road_surface.page_set = OBJECT(current_object)->road_surface.segment_page_set;
-			road_palette_fades = SCREEN(screen)->road_palette_fades;
+			current_object->road_surface.page_set = current_object->road_surface.segment_page_set;
+			road_palette_fades = screen->road_palette_fades;
 			road_surface_fade_back(road_palette_fades);
-			OBJECT(current_object)->state--;
+			current_object->state--;
 		}
 		break;
 	}
-	near_scroll = OBJECT(current_object)->road_surface.near_scroll;
+	near_scroll = current_object->road_surface.near_scroll;
 	near_scroll = (uint16_t)(near_scroll + 0x4FFu);
-	PAGE_SELECT(OBJECT(current_object)->road_surface.page_register)[0] = OBJECT(current_object)->road_surface.page_table[(int32_t)((near_scroll >> 9) + (OBJECT(current_object)->road_surface.page_set - 3u) * 5u)];
-	if (OBJECT(current_object)->road_surface.segment <= OBJECT(current_object)->road_surface.last_segment)
+	PAGE_SELECT(current_object->road_surface.page_register)[0] = current_object->road_surface.page_table[(int32_t)((near_scroll >> 9) + (current_object->road_surface.page_set - 3u) * 5u)];
+	if (current_object->road_surface.segment <= current_object->road_surface.last_segment)
 		return;
-	OBJECT(current_object)->road_surface.last_segment = OBJECT(current_object)->road_surface.segment;
-	if (OBJECT(current_object)->road_surface.event_delay != 0u)
+	current_object->road_surface.last_segment = current_object->road_surface.segment;
+	if (current_object->road_surface.event_delay != 0u)
 	{
-		OBJECT(current_object)->road_surface.last_event = OBJECT(current_object)->road_surface.event;
-		OBJECT(current_object)->road_surface.event_delay--;
+		current_object->road_surface.last_event = current_object->road_surface.event;
+		current_object->road_surface.event_delay--;
 		return;
 	}
-	event = OBJECT(current_object)->road_surface.event;
-	if (OBJECT(current_object)->road_surface.last_event == event)
+	event = current_object->road_surface.event;
+	if (current_object->road_surface.last_event == event)
 		return;
-	OBJECT(current_object)->road_surface.last_event = event;
+	current_object->road_surface.last_event = event;
 	switch (event)
 	{
 	case 4:
-		SCREEN(screen)->stage_background_change = 0xFFu;
-		SCREEN(screen)->stage_background_branch = 0u;
+		screen->stage_background_change = 0xFFu;
+		screen->stage_background_branch = 0u;
 		return;
 	case 5:
-		SCREEN(screen)->stage_background_change = 0xFFu;
-		SCREEN(screen)->stage_background_branch = 1u;
+		screen->stage_background_change = 0xFFu;
+		screen->stage_background_branch = 1u;
 		return;
 	case 0:
 		return;
 	case 1:
-		first_flag = ~OBJECT(current_object)->road_surface.first_tiles_flag;
-		OBJECT(current_object)->road_surface.first_tiles_flag = first_flag;
+		first_flag = ~current_object->road_surface.first_tiles_flag;
+		current_object->road_surface.first_tiles_flag = first_flag;
 		if (first_flag == 0u)
 			return;
 		road_surface_start_tiles_change();
 		return;
 	case 3:
-		first_tiles_flag = ~OBJECT(current_object)->road_surface.first_tiles_flag;
-		OBJECT(current_object)->road_surface.first_tiles_flag = first_tiles_flag;
+		first_tiles_flag = ~current_object->road_surface.first_tiles_flag;
+		current_object->road_surface.first_tiles_flag = first_tiles_flag;
 		if (first_tiles_flag != 0u)
 			road_surface_start_tiles_change();
-		second_tiles_flag = ~OBJECT(current_object)->road_surface.second_tiles_flag;
-		OBJECT(current_object)->road_surface.second_tiles_flag = second_tiles_flag;
+		second_tiles_flag = ~current_object->road_surface.second_tiles_flag;
+		current_object->road_surface.second_tiles_flag = second_tiles_flag;
 		if (second_tiles_flag == 0u)
 			return;
 		object = start_object();
-		OBJECT(object)->road_tiles_change.table_half = 1u;
-		OBJECT(object)->road_tiles_change.road = current_object;
-		OBJECT(object)->road_tiles_change.flag = current_object + 0xBu;
-		OBJECT(object)->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
-		OBJECT(object)->handler = road_tiles_change_update_ADDRESS;
+		object->road_tiles_change.table_half = 1u;
+		object->road_tiles_change.road = address_of(current_object);
+		object->road_tiles_change.flag = address_of(current_object) + 0xBu;
+		object->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
+		object->handler = road_tiles_change_update_ADDRESS;
 		return;
 	case 2:
-		second_tiles_flag = ~OBJECT(current_object)->road_surface.second_tiles_flag;
-		OBJECT(current_object)->road_surface.second_tiles_flag = second_tiles_flag;
+		second_tiles_flag = ~current_object->road_surface.second_tiles_flag;
+		current_object->road_surface.second_tiles_flag = second_tiles_flag;
 		if (second_tiles_flag == 0u)
 			return;
 		object = start_object();
-		OBJECT(object)->road_tiles_change.table_half = 1u;
-		OBJECT(object)->road_tiles_change.road = current_object;
-		OBJECT(object)->road_tiles_change.flag = current_object + 0xBu;
-		OBJECT(object)->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
-		OBJECT(object)->handler = road_tiles_change_update_ADDRESS;
+		object->road_tiles_change.table_half = 1u;
+		object->road_tiles_change.road = address_of(current_object);
+		object->road_tiles_change.flag = address_of(current_object) + 0xBu;
+		object->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
+		object->handler = road_tiles_change_update_ADDRESS;
 		return;
 	}
 }
@@ -145,7 +146,7 @@ void road_surface_start(void)
 	uint16_t video_bits = 0;
 	uint32_t line_select_table = 0, mixer_address = 0, mixer_bits = 0, palettes = 0, road_surface_layer_setup = 0;
 
-	road_surface_layer_setup = road_surface_layer_setups_ADDRESS + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
+	road_surface_layer_setup = road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u;
 	video_bits = game->video_registers[2] & ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup)->video_mask;
 	road_surface_layer_setup += 2u;
 	game->video_registers[2] = video_bits | ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x2u)->video_bits;
@@ -157,30 +158,30 @@ void road_surface_start(void)
 	road_surface_layer_setup += 4u;
 	TILE_BANK_VALUES(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0xCu)->tile_bank_address)[0] = 0u;
 	road_surface_layer_setup += 4u;
-	OBJECT(current_object)->road_surface.page_register = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x10u)->page_register;
+	current_object->road_surface.page_register = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x10u)->page_register;
 	road_surface_layer_setup += 4u;
 	mixer_address = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x14u)->mixer_address;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = mixer_bits & ~0xFu;
 	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 8u;
-	SCREEN(screen)->flags |= 4u;
+	screen->flags |= 4u;
 	road_surface_layer_setup += 4u;
-	OBJECT(current_object)->road_surface.line_scroll_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_scroll_table;
+	current_object->road_surface.line_scroll_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_scroll_table;
 	line_select_table = ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x18u)->line_select_table;
-	OBJECT(current_object)->road_surface.line_select_table = line_select_table;
+	current_object->road_surface.line_select_table = line_select_table;
 	move_halfwords(line_select_table - 0x1C0u, zero_block_ADDRESS, 0xE0u);
 	move_halfwords(line_select_table + 0x640u, zero_block_ADDRESS, 0xE0u);
 	move_halfwords(line_select_table + 0xE40u, zero_block_ADDRESS, 0xE0u);
 	move_halfwords(line_select_table + 0x1640u, zero_block_ADDRESS, 0xE0u);
-	OBJECT(current_object)->road_surface.page_set = stage_road_page_sets[SCREEN(screen)->first_stage];
-	OBJECT(current_object)->road_surface.points_buffer = 0u;
-	OBJECT(current_object)->road_surface.last_event = 0u;
-	OBJECT(current_object)->road_surface.last_segment = 0u;
-	OBJECT(current_object)->road_surface.first_tiles_flag = 0u;
-	OBJECT(current_object)->road_surface.second_tiles_flag = 0u;
-	move_halfwords(current_object + 0x18u, road_surface_page_words_ADDRESS, 0x1Eu);
-	palettes = stage_road_palettes[SCREEN(screen)->first_stage];
-	SCREEN(screen)->road_palette_fades = ROAD_PALETTE_LISTS(palettes)[0];
+	current_object->road_surface.page_set = stage_road_page_sets[screen->first_stage];
+	current_object->road_surface.points_buffer = 0u;
+	current_object->road_surface.last_event = 0u;
+	current_object->road_surface.last_segment = 0u;
+	current_object->road_surface.first_tiles_flag = 0u;
+	current_object->road_surface.second_tiles_flag = 0u;
+	move_halfwords(address_of(current_object) + 0x18u, road_surface_page_words_ADDRESS, 0x1Eu);
+	palettes = stage_road_palettes[screen->first_stage];
+	screen->road_palette_fades = ROAD_PALETTE_LISTS(palettes)[0];
 	palettes += 4u;
 	queue_palette_list(palettes);
 }
@@ -207,30 +208,30 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	uint16_t segment_scale = 0, remaining_scale = 0;
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
 
-	view_segment = screen + 0x3000u;
+	view_segment = address_of(screen) + 0x3000u;
 	table_offset = (uint8_t)(game->video_registers[2] >> 8u);
 	table_offset = (uint8_t)(table_offset + 8u);
 	table_offset = (table_offset & 0xCu) << 7;
-	scroll_place = OBJECT(current_object)->road_surface.line_scroll_table + table_offset * 4u;
+	scroll_place = current_object->road_surface.line_scroll_table + table_offset * 4u;
 	scroll_bottom = scroll_place;
-	select_place = OBJECT(current_object)->road_surface.line_select_table + table_offset * 4u;
-	segment = RACE(SCREEN(screen)->race_copy)->window_segment;
+	select_place = current_object->road_surface.line_select_table + table_offset * 4u;
+	segment = RACE(screen->race_copy)->window_segment;
 	stripe &= ~0xFFFFu;
 	fraction_shift = 0xF4u;
 	rounding = 0x800u;
-	sprite_origin_y = (int16_t)SCREEN(screen)->sprite_origin_y;
+	sprite_origin_y = (int16_t)screen->sprite_origin_y;
 	max_depth = 0xFFu;
 	skip_state = 1u;
-	point_entry = screen + 0x3800u + OBJECT(current_object)->road_surface.points_buffer * 2u * 4u;
+	point_entry = address_of(screen) + 0x3800u + current_object->road_surface.points_buffer * 2u * 4u;
 	line = 0xE0u;
 	while (PROJECTED_SEGMENT(view_segment)->scale == 0u)
 	{
 		view_segment += 0x10u;
 		segment++;
 	}
-	OBJECT(current_object)->road_surface.segment_page_set = PROJECTED_SEGMENT(view_segment)->width_code;
-	OBJECT(current_object)->road_surface.event = PROJECTED_SEGMENT(view_segment)->road_event;
-	OBJECT(current_object)->road_surface.segment = segment;
+	current_object->road_surface.segment_page_set = PROJECTED_SEGMENT(view_segment)->width_code;
+	current_object->road_surface.event = PROJECTED_SEGMENT(view_segment)->road_event;
+	current_object->road_surface.segment = segment;
 	ROAD_POINTS(point_entry)[0] = segment;
 	segment = 0u - (segment & ~0xFFFCu);
 	overflow = v60_overflow_add32(segment, 2u, 0u);
@@ -310,7 +311,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 				if ((int32_t)line_reached_first <= (int32_t)point_line)
 				{
 					skip_state = 0u;
-					OBJECT(current_object)->road_surface.skipped_line = 0u;
+					current_object->road_surface.skipped_line = 0u;
 					previous_line = point_line;
 					previous_x = point_x;
 					previous_depth = point_depth;
@@ -325,11 +326,11 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 				{
 					if (line_count != 1u)
 					{
-						OBJECT(current_object)->road_surface.skipped_x = previous_x;
-						OBJECT(current_object)->road_surface.skipped_depth = previous_depth;
+						current_object->road_surface.skipped_x = previous_x;
+						current_object->road_surface.skipped_depth = previous_depth;
 						road_surface_fill_lines(line, point_line, point_x, point_depth, (uint16_t)stripe, fraction_shift, rounding, max_depth, &previous_line, &previous_x, &previous_depth, &x_step, &depth_step, &scroll_place, &select_place, &zero);
-						OBJECT(current_object)->road_surface.skipped_x_step = x_step;
-						OBJECT(current_object)->road_surface.skipped_depth_step = depth_step;
+						current_object->road_surface.skipped_x_step = x_step;
+						current_object->road_surface.skipped_depth_step = depth_step;
 						skip_state = 0u;
 						if (zero == 0u)
 						{
@@ -359,10 +360,10 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 					line_count = (line_count - 1u) * 2u;
 					scroll_place -= line_count;
 					select_place -= line_count;
-					OBJECT(current_object)->road_surface.skipped_line = point_line;
-					OBJECT(current_object)->road_surface.skipped_scroll_place = scroll_place;
-					OBJECT(current_object)->road_surface.skipped_select_place = select_place;
-					OBJECT(current_object)->road_surface.skipped_stripe = stripe;
+					current_object->road_surface.skipped_line = point_line;
+					current_object->road_surface.skipped_scroll_place = scroll_place;
+					current_object->road_surface.skipped_select_place = select_place;
+					current_object->road_surface.skipped_stripe = stripe;
 					skip_state = 0xFFFFFFFFu;
 				}
 			}
@@ -427,10 +428,10 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		}
 		break;
 	}
-	SCREEN(screen)->road_top_line = point_line;
+	screen->road_top_line = point_line;
 	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 	road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth, &select_place, &stripe);
-	OBJECT(current_object)->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
+	current_object->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
 	*p_previous_line = previous_line;
 	*p_previous_x = previous_x;
 	*p_previous_depth = previous_depth;
@@ -456,16 +457,16 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	table_offset = (uint8_t)(game->video_registers[2] >> 8u);
 	table_offset = (uint8_t)(table_offset + 4u);
 	table_offset = (table_offset & 0xCu) << 7;
-	scroll_place = OBJECT(current_object)->road_surface.line_scroll_table + table_offset * 4u;
-	select_place = OBJECT(current_object)->road_surface.line_select_table + table_offset * 4u;
+	scroll_place = current_object->road_surface.line_scroll_table + table_offset * 4u;
+	select_place = current_object->road_surface.line_select_table + table_offset * 4u;
 	*p_stripe &= ~0xFFFFu;
 	skip_state = 1u;
 	line = 0xE0u;
-	points = OBJECT(current_object)->road_surface.points_buffer;
+	points = current_object->road_surface.points_buffer;
 	last_frame_points = points ^ 0x60u;
-	OBJECT(current_object)->road_surface.points_buffer = last_frame_points;
-	points = screen + 0x3800u + points * 2u * 4u;
-	last_frame_points = screen + 0x3800u + last_frame_points * 2u * 4u;
+	current_object->road_surface.points_buffer = last_frame_points;
+	points = address_of(screen) + 0x3800u + points * 2u * 4u;
+	last_frame_points = address_of(screen) + 0x3800u + last_frame_points * 2u * 4u;
 	segment = ROAD_POINTS(points)[0];
 	last_frame_segment = ROAD_POINTS(last_frame_points)[0];
 	last_frame_points += 2u;
@@ -573,11 +574,11 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					}
 					else
 					{
-						OBJECT(current_object)->road_surface.skipped_x = previous_x;
-						OBJECT(current_object)->road_surface.skipped_depth = previous_depth;
+						current_object->road_surface.skipped_x = previous_x;
+						current_object->road_surface.skipped_depth = previous_depth;
 						road_surface_fill_lines(line, point_line, point_x, point_depth, (uint16_t)*p_stripe, fraction_shift, rounding, max_depth, &previous_line, &previous_x, &previous_depth, &x_step, &depth_step, &scroll_place, &select_place, &zero);
-						OBJECT(current_object)->road_surface.skipped_x_step = x_step;
-						OBJECT(current_object)->road_surface.skipped_depth_step = depth_step;
+						current_object->road_surface.skipped_x_step = x_step;
+						current_object->road_surface.skipped_depth_step = depth_step;
 						skip_state = 0u;
 						if (zero == 0u)
 						{
@@ -606,10 +607,10 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 					line_count = (line_count - 1u) * 2u;
 					scroll_place -= line_count;
 					select_place -= line_count;
-					OBJECT(current_object)->road_surface.skipped_line = point_line;
-					OBJECT(current_object)->road_surface.skipped_scroll_place = scroll_place;
-					OBJECT(current_object)->road_surface.skipped_select_place = select_place;
-					OBJECT(current_object)->road_surface.skipped_stripe = *p_stripe;
+					current_object->road_surface.skipped_line = point_line;
+					current_object->road_surface.skipped_scroll_place = scroll_place;
+					current_object->road_surface.skipped_select_place = select_place;
+					current_object->road_surface.skipped_stripe = *p_stripe;
 					skip_state = 0xFFFFFFFFu;
 					scroll_place -= 2u;
 					LINE_SCROLL_VALUES(scroll_place)[0] = point_x;
@@ -630,7 +631,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 			else
 			{
 				skip_state = 0u;
-				OBJECT(current_object)->road_surface.skipped_line = 0u;
+				current_object->road_surface.skipped_line = 0u;
 			}
 		}
 		previous_line = point_line;
@@ -772,16 +773,16 @@ void road_surface_fill_skipped_lines(uint8_t fraction_shift, uint32_t rounding, 
 	uint16_t line_select = 0;
 	uint32_t line_count = 0, scroll_place = 0, skipped_depth_step = 0, skipped_line = 0, x_step = 0;
 
-	skipped_line = OBJECT(current_object)->road_surface.skipped_line;
+	skipped_line = current_object->road_surface.skipped_line;
 	if (skipped_line == 0u)
 		return;
-	*p_previous_x = (OBJECT(current_object)->road_surface.skipped_x << 12) + rounding;
-	*p_previous_depth = (OBJECT(current_object)->road_surface.skipped_depth << 12) + rounding;
-	x_step = OBJECT(current_object)->road_surface.skipped_x_step;
-	skipped_depth_step = OBJECT(current_object)->road_surface.skipped_depth_step;
-	scroll_place = OBJECT(current_object)->road_surface.skipped_scroll_place;
-	*p_select_place = OBJECT(current_object)->road_surface.skipped_select_place;
-	*p_stripe = OBJECT(current_object)->road_surface.skipped_stripe;
+	*p_previous_x = (current_object->road_surface.skipped_x << 12) + rounding;
+	*p_previous_depth = (current_object->road_surface.skipped_depth << 12) + rounding;
+	x_step = current_object->road_surface.skipped_x_step;
+	skipped_depth_step = current_object->road_surface.skipped_depth_step;
+	scroll_place = current_object->road_surface.skipped_scroll_place;
+	*p_select_place = current_object->road_surface.skipped_select_place;
+	*p_stripe = current_object->road_surface.skipped_stripe;
 	line_count = 0xDFu - skipped_line;
 	if (0xDFu == skipped_line)
 	{
@@ -809,14 +810,14 @@ void road_surface_fill_skipped_lines(uint8_t fraction_shift, uint32_t rounding, 
    page table) with the road's first flag (0A). */
 void road_surface_start_tiles_change(void)
 {
-	uint32_t object = 0;
+	struct object *object = NULL;
 
 	object = start_object();
-	OBJECT(object)->road_tiles_change.table_half = 0u;
-	OBJECT(object)->road_tiles_change.road = current_object;
-	OBJECT(object)->road_tiles_change.flag = current_object + 0xAu;
-	OBJECT(object)->road_tiles_change.data = road_tiles_change_first_data_ADDRESS;
-	OBJECT(object)->handler = road_tiles_change_update_ADDRESS;
+	object->road_tiles_change.table_half = 0u;
+	object->road_tiles_change.road = address_of(current_object);
+	object->road_tiles_change.flag = address_of(current_object) + 0xAu;
+	object->road_tiles_change.data = road_tiles_change_first_data_ADDRESS;
+	object->handler = road_tiles_change_update_ADDRESS;
 }
 
 /* Changes the road's tiles for a stretch of road (road_surface starts it when an event turns one of its
@@ -832,16 +833,16 @@ void road_tiles_change_update(void)
 	uint32_t byte_count = 0, data = 0, halfword_count = 0, page_count = 0, page_numbers = 0, page_set = 0, row_bytes = 0, row_count = 0, source_end = 0, source_slot = 0, step = 0, table_place = 0, table_source = 0, target_end = 0, target_page_numbers = 0, target_slot = 0;
 	uint8_t target_page = 0, pages_left = 0, step_2 = 0, target_page_back = 0, pages_left_2 = 0, step_3 = 0;
 
-	data = OBJECT(current_object)->road_tiles_change.data;
-	switch (OBJECT(current_object)->state)
+	data = current_object->road_tiles_change.data;
+	switch (current_object->state)
 	{
 	case 0:
-		source_slot = current_object + 0x18u;
-		target_slot = current_object + 0x28u;
-		page_set = OBJECT(OBJECT(current_object)->road_tiles_change.road)->road_surface.page_set;
-		OBJECT(current_object)->road_tiles_change.page_set = page_set;
+		source_slot = address_of(current_object) + 0x18u;
+		target_slot = address_of(current_object) + 0x28u;
+		page_set = OBJECT(current_object->road_tiles_change.road)->road_surface.page_set;
+		current_object->road_tiles_change.page_set = page_set;
 		r12 = data - 0xCu + page_set * 4u;
-		target_page_numbers = data + 0x18u + SCREEN(screen)->index * 4u;
+		target_page_numbers = data + 0x18u + screen->index * 4u;
 		page_count = 4u;
 		do
 		{
@@ -854,19 +855,19 @@ void road_tiles_change_update(void)
 			r12++;
 			source_slot += 4u;
 		} while (page_count != 0u);
-		OBJECT(current_object)->road_tiles_change.step = 0u;
-		OBJECT(current_object)->road_tiles_change.pages_left = 4u;
-		OBJECT(current_object)->state++;
+		current_object->road_tiles_change.step = 0u;
+		current_object->road_tiles_change.pages_left = 4u;
+		current_object->state++;
 	case 1:
-		step = OBJECT(current_object)->road_tiles_change.step;
-		move_halfwords(OBJECT(current_object)->road_tiles_change.target_pages[(int32_t)step], OBJECT(current_object)->road_tiles_change.source_pages[(int32_t)step], 0x200u);
-		OBJECT(current_object)->road_tiles_change.step++;
-		pages_left = OBJECT(current_object)->road_tiles_change.pages_left;
-		OBJECT(current_object)->road_tiles_change.pages_left = pages_left - 1u;
+		step = current_object->road_tiles_change.step;
+		move_halfwords(current_object->road_tiles_change.target_pages[(int32_t)step], current_object->road_tiles_change.source_pages[(int32_t)step], 0x200u);
+		current_object->road_tiles_change.step++;
+		pages_left = current_object->road_tiles_change.pages_left;
+		current_object->road_tiles_change.pages_left = pages_left - 1u;
 		if (pages_left != 1u)
 			return;
-		table_source = data + 0x20u + SCREEN(screen)->index * 5u * 2u;
-		table_place = OBJECT(current_object)->road_tiles_change.road + 0x18u + OBJECT(current_object)->road_tiles_change.table_half;
+		table_source = data + 0x20u + screen->index * 5u * 2u;
+		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
 		row_count = 3u;
 		do
 		{
@@ -881,8 +882,8 @@ void road_tiles_change_update(void)
 			} while (row_bytes != 0u);
 			row_count--;
 		} while (row_count != 0u);
-		source_slot = current_object + 0x18u;
-		page_numbers = data + OBJECT(current_object)->road_tiles_change.page_set * 4u;
+		source_slot = address_of(current_object) + 0x18u;
+		page_numbers = data + current_object->road_tiles_change.page_set * 4u;
 		page_count = 4u;
 		do
 		{
@@ -891,13 +892,13 @@ void road_tiles_change_update(void)
 			page_numbers++;
 			source_slot += 4u;
 		} while (page_count != 0u);
-		OBJECT(current_object)->road_tiles_change.step = 0x10u;
-		OBJECT(current_object)->state++;
+		current_object->road_tiles_change.step = 0x10u;
+		current_object->state++;
 		return;
 	case 2:
 		halfword_count = 0x10u;
-		source_slot = current_object + 0x18u;
-		target_slot = current_object + 0x28u;
+		source_slot = address_of(current_object) + 0x18u;
+		target_slot = address_of(current_object) + 0x28u;
 		page_count = 4u;
 		do
 		{
@@ -909,12 +910,12 @@ void road_tiles_change_update(void)
 			source_slot += 4u;
 			target_slot += 4u;
 		} while (page_count != 0u);
-		step_2 = OBJECT(current_object)->road_tiles_change.step;
-		OBJECT(current_object)->road_tiles_change.step = step_2 - 1u;
+		step_2 = current_object->road_tiles_change.step;
+		current_object->road_tiles_change.step = step_2 - 1u;
 		if (step_2 != 1u)
 			return;
 		table_source = data + 0x34u;
-		table_place = OBJECT(current_object)->road_tiles_change.road + 0x18u + OBJECT(current_object)->road_tiles_change.table_half;
+		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
 		byte_count = 0x1Eu;
 		do
 		{
@@ -923,16 +924,16 @@ void road_tiles_change_update(void)
 			table_source++;
 			table_place += 2u;
 		} while (byte_count != 0u);
-		OBJECT(current_object)->state++;
+		current_object->state++;
 	case 3:
-		if (TILES_CHANGE_FLAGS(OBJECT(current_object)->road_tiles_change.flag)[0] != 0u)
+		if (TILES_CHANGE_FLAGS(current_object->road_tiles_change.flag)[0] != 0u)
 			return;
-		source_slot = current_object + 0x18u;
-		target_slot = current_object + 0x28u;
-		page_set = OBJECT(OBJECT(current_object)->road_tiles_change.road)->road_surface.page_set;
-		OBJECT(current_object)->road_tiles_change.page_set = page_set;
+		source_slot = address_of(current_object) + 0x18u;
+		target_slot = address_of(current_object) + 0x28u;
+		page_set = OBJECT(current_object->road_tiles_change.road)->road_surface.page_set;
+		current_object->road_tiles_change.page_set = page_set;
 		r12 = data + page_set * 4u;
-		target_page_numbers = data + 0x18u + SCREEN(screen)->index * 4u;
+		target_page_numbers = data + 0x18u + screen->index * 4u;
 		page_count = 4u;
 		do
 		{
@@ -945,19 +946,19 @@ void road_tiles_change_update(void)
 			r12++;
 			source_slot += 4u;
 		} while (page_count != 0u);
-		OBJECT(current_object)->road_tiles_change.step = 0u;
-		OBJECT(current_object)->road_tiles_change.pages_left = 4u;
-		OBJECT(current_object)->state++;
+		current_object->road_tiles_change.step = 0u;
+		current_object->road_tiles_change.pages_left = 4u;
+		current_object->state++;
 	case 4:
-		step = OBJECT(current_object)->road_tiles_change.step;
-		move_halfwords(OBJECT(current_object)->road_tiles_change.target_pages[(int32_t)step], OBJECT(current_object)->road_tiles_change.source_pages[(int32_t)step], 0x200u);
-		OBJECT(current_object)->road_tiles_change.step++;
-		pages_left_2 = OBJECT(current_object)->road_tiles_change.pages_left;
-		OBJECT(current_object)->road_tiles_change.pages_left = pages_left_2 - 1u;
+		step = current_object->road_tiles_change.step;
+		move_halfwords(current_object->road_tiles_change.target_pages[(int32_t)step], current_object->road_tiles_change.source_pages[(int32_t)step], 0x200u);
+		current_object->road_tiles_change.step++;
+		pages_left_2 = current_object->road_tiles_change.pages_left;
+		current_object->road_tiles_change.pages_left = pages_left_2 - 1u;
 		if (pages_left_2 != 1u)
 			return;
-		table_source = data + 0x20u + SCREEN(screen)->index * 5u * 2u;
-		table_place = OBJECT(current_object)->road_tiles_change.road + 0x18u + OBJECT(current_object)->road_tiles_change.table_half;
+		table_source = data + 0x20u + screen->index * 5u * 2u;
+		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
 		row_count = 3u;
 		do
 		{
@@ -972,8 +973,8 @@ void road_tiles_change_update(void)
 			} while (row_bytes != 0u);
 			row_count--;
 		} while (row_count != 0u);
-		source_slot = current_object + 0x18u;
-		page_numbers = data - 0xCu + OBJECT(current_object)->road_tiles_change.page_set * 4u;
+		source_slot = address_of(current_object) + 0x18u;
+		page_numbers = data - 0xCu + current_object->road_tiles_change.page_set * 4u;
 		page_count = 4u;
 		do
 		{
@@ -982,13 +983,13 @@ void road_tiles_change_update(void)
 			page_numbers++;
 			source_slot += 4u;
 		} while (page_count != 0u);
-		OBJECT(current_object)->road_tiles_change.step = 0x10u;
-		OBJECT(current_object)->state++;
+		current_object->road_tiles_change.step = 0x10u;
+		current_object->state++;
 		return;
 	case 5:
 		halfword_count = 0x10u;
-		source_slot = current_object + 0x18u;
-		target_slot = current_object + 0x28u;
+		source_slot = address_of(current_object) + 0x18u;
+		target_slot = address_of(current_object) + 0x28u;
 		page_count = 4u;
 		do
 		{
@@ -1000,12 +1001,12 @@ void road_tiles_change_update(void)
 			source_slot += 4u;
 			target_slot += 4u;
 		} while (page_count != 0u);
-		step_3 = OBJECT(current_object)->road_tiles_change.step;
-		OBJECT(current_object)->road_tiles_change.step = step_3 - 1u;
+		step_3 = current_object->road_tiles_change.step;
+		current_object->road_tiles_change.step = step_3 - 1u;
 		if (step_3 != 1u)
 			return;
 		table_source = data + 0x52u;
-		table_place = OBJECT(current_object)->road_tiles_change.road + 0x18u + OBJECT(current_object)->road_tiles_change.table_half;
+		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
 		byte_count = 0x1Eu;
 		do
 		{
@@ -1014,7 +1015,7 @@ void road_tiles_change_update(void)
 			table_source++;
 			table_place += 2u;
 		} while (byte_count != 0u);
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
 }

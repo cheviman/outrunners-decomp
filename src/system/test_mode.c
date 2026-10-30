@@ -254,7 +254,7 @@ void test_mode_memory_test(void)
 	interrupts_off();
 	cell_value = test_mode_clear_text();
 	SOUND_PROGRAM_HOLD = 1u;
-	current_object = memory_test_results_ADDRESS;
+	current_object = pointer_to(memory_test_results_ADDRESS);
 	blank_result = 0u;
 	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
 	AS16(game->memory_test_results[0]) = 0x101u;
@@ -268,11 +268,11 @@ void test_mode_memory_test(void)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[0] = rom_check;
 	rom_check = (rom_check & ~0xFFu) | 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (ic40_checksum != odd_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[1] = rom_check;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	AS16(game->memory_test_results[2]) = 0x101u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x100000u;
@@ -284,11 +284,11 @@ void test_mode_memory_test(void)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[2] = rom_check;
 	rom_check = (rom_check & ~0xFFu) | 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (ic39_checksum != odd_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[3] = rom_check;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	AS32(game->memory_test_results[4]) = 0x1010101u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x300000u;
@@ -301,22 +301,22 @@ void test_mode_memory_test(void)
 	game->memory_test_results[4] = chip_result;
 	video_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (video_lane_1_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[5] = chip_result;
 	video_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (video_lane_2_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[6] = chip_result;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if ((failures & ~0xFFFu) != 0u)
 		chip_result = 3u;
 	game->memory_test_results[7] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = init_video();
 	AS32(game->memory_test_results[8]) = 0x1010101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -330,22 +330,22 @@ void test_mode_memory_test(void)
 	game->memory_test_results[8] = chip_result;
 	sprite_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (sprite_lane_1_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[9] = chip_result;
 	sprite_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (sprite_lane_2_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[10] = chip_result;
 	sprite_lane_3_failures = failures & ~0xFFFu;
 	failures = sprite_lane_3_failures;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	game->memory_test_results[11] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	init_sprite_lists();
 	AS16(game->memory_test_results[12]) = 0x101u;
 	test_mode_memory_test_draw(&failures, &r12);
@@ -357,11 +357,11 @@ void test_mode_memory_test(void)
 		chip_result = 3u;
 	game->memory_test_results[12] = chip_result;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
 	game->memory_test_results[13] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
 	AS16(game->memory_test_results[14]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -373,11 +373,11 @@ void test_mode_memory_test(void)
 		chip_result = 3u;
 	game->memory_test_results[14] = chip_result;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
 	game->memory_test_results[15] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
 	AS16(game->memory_test_results[16]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -389,11 +389,11 @@ void test_mode_memory_test(void)
 		chip_result = 3u;
 	game->memory_test_results[16] = chip_result;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
 	game->memory_test_results[17] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
 	AS16(game->memory_test_results[18]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -405,11 +405,11 @@ void test_mode_memory_test(void)
 		chip_result = 3u;
 	game->memory_test_results[18] = chip_result;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
 	game->memory_test_results[19] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
 	AS32(game->memory_test_results[20]) = 0x1010101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -424,24 +424,24 @@ void test_mode_memory_test(void)
 	game->memory_test_results[20] = chip_result;
 	work_byte_1_failures = failures & 0xFF00u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (work_byte_1_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[21] = chip_result;
 	work_byte_2_failures = failures & 0xFF0000u;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (work_byte_2_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[22] = chip_result;
 	work_byte_3_failures = failures & ~0xFFFFFFu;
 	failures = work_byte_3_failures;
 	chip_result = 2u;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	if (work_byte_3_failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[23] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	init_sprite_lists();
 	game->memory_test_results[24] = 1u;
 	test_mode_memory_test_draw(&failures, &r12);
@@ -454,7 +454,7 @@ void test_mode_memory_test(void)
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
 	game->memory_test_results[24] = chip_result;
-	current_object = current_object + 1u;
+	current_object = pointer_to(address_of(current_object) + 1u);
 	init_sprite_lists();
 	test_mode_memory_test_draw(&failures, &r12);
 	SOUND_PROGRAM_HOLD = 0u;
@@ -1930,7 +1930,7 @@ void test_mode_game_assignments_run(void)
 	}
 	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = settings_magic_ADDRESS;
+		current_object = pointer_to(settings_magic_ADDRESS);
 		switch (game->test_mode_page_cursor)
 		{
 		case 0:
@@ -1977,7 +1977,7 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 	uint32_t advertise_on = 0, bar_cells_left = 0, cell = 0, colour = 0, difficulty_seconds = 0, digit_count = 0, number = 0, row_cell = 0, seconds = 0, stages_left = 0, steering_on = 0, text = 0;
 	uint32_t bar_length = 0;
 
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	cell = TEXT_CELL(32, 5);
 	colour = 0x64u;
 	digit_count = 2u;
@@ -1998,7 +1998,7 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 	grey = 0x60u;
 	test_mode_colour_line(grey, cell);
 	row_cell = TEXT_CELL(28, 10);
-	difficulty_seconds = current_object + 0x32u;
+	difficulty_seconds = address_of(current_object) + 0x32u;
 	stages_left = 6u;
 	do
 	{
@@ -2107,17 +2107,17 @@ void test_mode_game_assignments_exit(void)
 	uint32_t setting_places = 0;
 
 	setting_places = game_assignments_setting_places_ADDRESS;
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	do
 	{
-		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
+		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
 		setting_places++;
-		if ((uint8_t)current_object == 0u)
+		if ((uint8_t)address_of(current_object) == 0u)
 		{
 			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
+	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	game->test_mode_flags |= 2u;
 	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -2177,7 +2177,7 @@ void test_mode_coin_assignments_run(uint32_t item_count)
 	}
 	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = settings_magic_ADDRESS;
+		current_object = pointer_to(settings_magic_ADDRESS);
 		switch (game->test_mode_page_cursor)
 		{
 		case 0:
@@ -2225,7 +2225,7 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours,
 	uint16_t blank_cell = 0;
 	uint32_t cell = 0, colours = 0, credits = 0, description = 0, description_byte = 0, digit_count = 0, line_cell = 0, line_text = 0, lines_left = 0, number = 0, plural_offset = 0;
 
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	cell = TEXT_CELL(32, 9);
 	colours = 0x64u;
 	digit_count = 2u;
@@ -2376,7 +2376,7 @@ void test_mode_coin_assignments_manual_run(void)
 	}
 	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = settings_magic_ADDRESS;
+		current_object = pointer_to(settings_magic_ADDRESS);
 		switch (game->test_mode_page_cursor)
 		{
 		case 0:
@@ -2417,7 +2417,7 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 	uint32_t bonus_rest = 0, cell = 0, coins_for_bonus = 0, coins_for_credit = 0, counted_coins = 0, credits = 0, digit_count = 0, leftover_coins = 0, multiplier = 0, numerator = 0, plural_offset = 0, rows_left = 0, shown_bonus = 0, shown_multiplier = 0, text = 0, toward_bonus = 0;
 	uint32_t saved_leftover_coins = 0;
 
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	cell = TEXT_CELL(23, 8);
 	coins_for_credit = game->coins_per_credit;
 	item_count = (item_count & ~0xFFFFu) | 0x6464u;
@@ -2595,14 +2595,14 @@ void test_mode_coin_assignments_exit(void)
 	setting_places = coin_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
+		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
 		setting_places++;
-		if ((uint8_t)current_object == 0u)
+		if ((uint8_t)address_of(current_object) == 0u)
 		{
 			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
+	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	game->test_mode_flags |= 2u;
 	r12 = bookkeeping_clear_credits();
 	game->test_mode_routine = test_mode_menu_ADDRESS;
@@ -2620,7 +2620,7 @@ void test_mode_network_assignments_start(void)
 	character = test_mode_clear_text();
 	text = network_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	if (game->stand_alone != 0u)
 	{
 		cell = TEXT_CELL(8, 12);
@@ -2671,7 +2671,7 @@ void test_mode_network_assignments_run(void)
 	}
 	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = settings_magic_ADDRESS;
+		current_object = pointer_to(settings_magic_ADDRESS);
 		switch (game->test_mode_page_cursor)
 		{
 		case 0:
@@ -2709,7 +2709,7 @@ uint16_t test_mode_network_assignments_draw(void)
 	uint16_t cabinet_number_then_colour_2 = 0;
 	uint32_t cabinet_number_then_colour = 0, cell = 0, colour = 0, digit_count = 0, privilege = 0, stand_alone_bit = 0, text = 0;
 
-	current_object = settings_magic_ADDRESS;
+	current_object = pointer_to(settings_magic_ADDRESS);
 	stand_alone_bit = game->stand_alone;
 	stand_alone_bit = stand_alone_bit & 1u;
 	text = communication_texts[stand_alone_bit];
@@ -2798,14 +2798,14 @@ void test_mode_network_assignments_exit(void)
 	setting_places = network_assignments_setting_places_ADDRESS;
 	do
 	{
-		current_object = IN_PAGE(current_object, TEST_MODE_SETTING_PLACES(setting_places)[0]);
+		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
 		setting_places++;
-		if ((uint8_t)current_object == 0u)
+		if ((uint8_t)address_of(current_object) == 0u)
 		{
 			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
-	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
+	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	game->test_mode_flags |= 2u;
 	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
@@ -2873,7 +2873,7 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	uint32_t average_time = 0, cell = 0, coin_credits = 0, coin_sum = 0, coins_a = 0, coins_b = 0, colours = 0, credit_sum = 0, digit_count = 0, games_a = 0, games_b = 0, longest_time = 0, play_time_a = 0, play_time_b = 0, plural_offset = 0, service_credits = 0, shortest_time = 0, time_cell = 0, total_coins = 0, total_credits = 0, total_games = 0, total_time = 0;
 	uint32_t game_count = 0;
 
-	current_object = BOOKKEEPING_CHECKSUM_ADDRESS;
+	current_object = pointer_to(BOOKKEEPING_CHECKSUM_ADDRESS);
 	cell = TEXT_CELL(26, 5);
 	coins_a = BOOKKEEPING_CHUTE_A_COINS;
 	coin_sum = coins_a;
@@ -2881,7 +2881,7 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	digit_count = 5u;
 	test_mode_draw_number(digit_count, &coins_a, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF334u;
-	coins_b = BOOKKEEPING_BLOCK(current_object)->chute_b_coins;
+	coins_b = BOOKKEEPING_BLOCK(address_of(current_object))->chute_b_coins;
 	coin_sum += coins_b;
 	colours = 0x64u;
 	digit_count = 5u;
@@ -2893,14 +2893,14 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	plural_offset = 0xFFFFFFFEu;
 	test_mode_draw_count(total_coins, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF4B4u;
-	coin_credits = BOOKKEEPING_BLOCK(current_object)->coin_credits;
+	coin_credits = BOOKKEEPING_BLOCK(address_of(current_object))->coin_credits;
 	credit_sum = coin_credits;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(coin_credits, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF534u;
-	service_credits = BOOKKEEPING_BLOCK(current_object)->service_credits;
+	service_credits = BOOKKEEPING_BLOCK(address_of(current_object))->service_credits;
 	credit_sum += service_credits;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
@@ -2913,39 +2913,39 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	plural_offset = 0xFFFFFFFEu;
 	test_mode_draw_count(total_credits, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF6B4u;
-	games_a = BOOKKEEPING_BLOCK(current_object)->games_a;
+	games_a = BOOKKEEPING_BLOCK(address_of(current_object))->games_a;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(games_a, digit_count, plural_offset, &colours, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF734u;
-	games_b = BOOKKEEPING_BLOCK(current_object)->games_b;
+	games_b = BOOKKEEPING_BLOCK(address_of(current_object))->games_b;
 	colours = (colours & ~0xFFFFu) | 0x646Au;
 	digit_count = 5u;
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(games_b, digit_count, plural_offset, &colours, &cell);
 	time_cell = TEXT_CELL(20, 16);
-	total_time = BOOKKEEPING_BLOCK(current_object)->total_time;
+	total_time = BOOKKEEPING_BLOCK(address_of(current_object))->total_time;
 	time_cell = test_mode_draw_duration(total_time, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF8A8u;
-	play_time_a = BOOKKEEPING_BLOCK(current_object)->play_time_a;
+	play_time_a = BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a;
 	time_cell = test_mode_draw_duration(play_time_a, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF928u;
-	play_time_b = BOOKKEEPING_BLOCK(current_object)->play_time_b;
+	play_time_b = BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b;
 	time_cell = test_mode_draw_duration(play_time_b, time_cell);
-	games_a = BOOKKEEPING_BLOCK(current_object)->games_a;
-	game_count = BOOKKEEPING_BLOCK(current_object)->games_b + games_a;
+	games_a = BOOKKEEPING_BLOCK(address_of(current_object))->games_a;
+	game_count = BOOKKEEPING_BLOCK(address_of(current_object))->games_b + games_a;
 	total_games = game_count;
 	if (game_count == 0u)
 		return games_a;
 	time_cell = (time_cell & ~0xFFFFu) | 0xFA34u;
-	average_time = divide_u32(BOOKKEEPING_BLOCK(current_object)->play_time_a + BOOKKEEPING_BLOCK(current_object)->play_time_b, total_games);
+	average_time = divide_u32(BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a + BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b, total_games);
 	test_mode_draw_minutes_seconds(&average_time, &time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xFAB4u;
-	longest_time = BOOKKEEPING_BLOCK(current_object)->longest_play;
+	longest_time = BOOKKEEPING_BLOCK(address_of(current_object))->longest_play;
 	test_mode_draw_minutes_seconds(&longest_time, &time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xFB34u;
-	shortest_time = BOOKKEEPING_BLOCK(current_object)->shortest_play;
+	shortest_time = BOOKKEEPING_BLOCK(address_of(current_object))->shortest_play;
 	test_mode_draw_minutes_seconds(&shortest_time, &time_cell);
 	return shortest_time;
 }
@@ -2962,7 +2962,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 	uint32_t bar_blocks = 0, bar_cell = 0, bar_scale = 0, car_then_time = 0, cell = 0, colour = 0, colour_name = 0, digit_count = 0, digit_step = 0, divisor = 0, drawn_counts = 0, games = 0, largest_count = 0, number_cell = 0, record = 0, records_left = 0, rest_time = 0, row_cell = 0, stage_counts = 0, stages_left = 0;
 	uint32_t rounded_blocks = 0;
 
-	current_object = BOOKKEEPING_CHECKSUM_ADDRESS;
+	current_object = pointer_to(BOOKKEEPING_CHECKSUM_ADDRESS);
 	stage_counts = BOOKKEEPING_HISTOGRAM_ADDRESS;
 	largest_count = 0u;
 	stages_left = 7u;
@@ -2977,7 +2977,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 	bar_scale = 0u;
 	if (largest_count != 0u)
 		bar_scale = divide_u32(0x50000000u, largest_count);
-	drawn_counts = current_object + 0x24u;
+	drawn_counts = address_of(current_object) + 0x24u;
 	cell = TEXT_CELL(13, 5);
 	stages_left = 7u;
 	do
@@ -3007,7 +3007,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 		cell += 0x80u;
 	} while (stages_left != 0u);
 	row_cell = TEXT_CELL(19, 14);
-	record = current_object + 0x32u;
+	record = address_of(current_object) + 0x32u;
 	records_left = 0xAu;
 	do
 	{
@@ -3146,14 +3146,14 @@ uint32_t test_mode_duration_to_seconds(uint32_t duration)
 
 /* Unused: writes a time of R0 seconds at R10 as two bytes: the seconds (R0 mod 60), then the minutes (R0
    / 60). */
-void test_mode_split_minutes_seconds(uint32_t seconds, uint32_t stored_time)
+void test_mode_split_minutes_seconds(uint32_t seconds, struct stored_duration *stored_time)
 {
 	uint32_t remainder = 0;
 
 	remainder = 0u;
 	divux_pair(SECONDS_PER_MINUTE, &seconds, &remainder);
-	STORED_DURATION(stored_time)->seconds = remainder;
-	STORED_DURATION(stored_time)->minutes = seconds;
+	stored_time->seconds = remainder;
+	stored_time->minutes = seconds;
 }
 
 /* Opens the BACKUP DATA CLEAR page: YES (CLEAR) and NO (CANCEL), the instructions, the cursor on NO;

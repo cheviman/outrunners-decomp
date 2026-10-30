@@ -4,7 +4,7 @@
  *                 reaches (game/assets.h)
  *    Version:     0.1.0
  *    Created:     27-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -928,6 +928,15 @@ const uint8_t *data_at(uint32_t address)
 	if (!(found = find(&program, folded(place))))
 		data_outside(address);
 	return found;
+}
+
+const uint8_t *data_if_any(uint32_t address)
+{
+	const uint32_t place = address & 0xffffff;
+
+	if (place >= 0x200000 && (place & 0xf00000) != 0xf00000)
+		return NULL;
+	return find(&program, folded(place));
 }
 
 const uint8_t *assets_sound_data(uint32_t offset)

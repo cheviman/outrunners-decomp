@@ -135,7 +135,7 @@ void boot(void)
 		block_count--;
 	} while (block_count != 0u);
 	move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
-	player_car = 0x219000u;
+	player_car = &game->screen_2.car;
 	game->waiting_task_frame = 0x21FF84u;
 	game->waiting_task_stack = 0x21F800u;
 	initialise_game();
@@ -234,13 +234,13 @@ void second_task(uint32_t entry_point)
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
-			r12 = course_records_update(r12);
+			r12 = address_of(course_records_update(pointer_to(r12)));
 			game->game_frame_count++;
-			screen = SCREEN_1;
+			screen = &game->screen_1;
 			input_changes = take_screen_inputs();
-			mode = SCREEN(screen)->game_mode;
-			player_car = screen + 0x1000u;
-			mode = check_game_start(mode, input_changes);
+			mode = screen->game_mode;
+			player_car = &screen->car;
+			mode = check_game_start(mode, pointer_to(input_changes));
 			switch (mode)
 			{
 			case 0:
@@ -333,7 +333,7 @@ void second_task(uint32_t entry_point)
 			block_count--;
 		} while (block_count != 0u);
 		move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
-		player_car = 0x219000u;
+		player_car = &game->screen_2.car;
 		game->waiting_task_frame = 0x21FF84u;
 		game->waiting_task_stack = 0x21F800u;
 		initialise_game();
@@ -387,12 +387,12 @@ void second_task_frames(void)
 			link_receive_records();
 		r14 = race_entries_update(r14);
 		race_progress_update(&r12, &r14);
-		r12 = course_records_update(r12);
-		screen = SCREEN_2;
+		r12 = address_of(course_records_update(pointer_to(r12)));
+		screen = &game->screen_2;
 		input_changes = take_screen_inputs();
-		mode = SCREEN(screen)->game_mode;
-		player_car = screen + 0x1000u;
-		mode = check_game_start(mode, input_changes);
+		mode = screen->game_mode;
+		player_car = &screen->car;
+		mode = check_game_start(mode, pointer_to(input_changes));
 		switch (mode)
 		{
 		case 0:
@@ -438,13 +438,13 @@ void second_task_frames(void)
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
-			r12 = course_records_update(r12);
+			r12 = address_of(course_records_update(pointer_to(r12)));
 			game->game_frame_count++;
-			screen = SCREEN_1;
+			screen = &game->screen_1;
 			input_changes = take_screen_inputs();
-			mode = SCREEN(screen)->game_mode;
-			player_car = screen + 0x1000u;
-			mode = check_game_start(mode, input_changes);
+			mode = screen->game_mode;
+			player_car = &screen->car;
+			mode = check_game_start(mode, pointer_to(input_changes));
 			switch (mode)
 			{
 			case 0:
@@ -487,55 +487,55 @@ void second_task_frames(void)
    bit 6) takes the credit (not with free play; and clears the bytes at 20E0A2 and 20E0AA, after each
    seat's coin units), turns the lamp off and starts a game: game mode 6 at step 0, link_event 1, the
    race record's car part cleared (race_record_clear) and race entry_request = FF. Returns the game mode. */
-uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
+uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits)
 {
 	uint8_t lamp_blink = 0;
 	uint32_t index = 0, play_mode = 0;
 
 	if (mode == 0u || mode == 6u)
 		return mode;
-	index = SCREEN(screen)->index;
+	index = screen->index;
 	if (game->free_play != 0u)
 	{
-		lamp_blink = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
-		SCREEN(screen)->start_lamp_blink = lamp_blink;
+		lamp_blink = (uint8_t)(screen->start_lamp_blink + 1u);
+		screen->start_lamp_blink = lamp_blink;
 		game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
-		if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
+		if ((screen->buttons_pressed & 0x40u) == 0u)
 			return mode;
 		if (game->free_play == 0u)
 		{
-			SEAT_CREDITS(seat_credits)->credits--;
-			SEAT_CREDITS(seat_credits)->bonus_units = 0u;
+			seat_credits->credits--;
+			seat_credits->bonus_units = 0u;
 		}
-		SCREEN(screen)->start_lamp_blink = 0u;
+		screen->start_lamp_blink = 0u;
 		game->port_d_outputs[index] &= ~4u;
 		play_mode = 6u;
-		AS32(SCREEN(screen)->game_mode) = 6u;
-		SCREEN(screen)->link_event = 1u;
+		AS32(screen->game_mode) = 6u;
+		screen->link_event = 1u;
 		race_record_clear();
-		RACE(SCREEN(screen)->race)->entry_request = 0xFFu;
+		RACE(screen->race)->entry_request = 0xFFu;
 		return play_mode;
 	}
-	seat_credits = seat_credits_addresses[index];
-	if (SEAT_CREDITS(seat_credits)->credits == 0u)
+	seat_credits = pointer_to(seat_credits_addresses[index]);
+	if (seat_credits->credits == 0u)
 		return mode;
-	lamp_blink = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
-	SCREEN(screen)->start_lamp_blink = lamp_blink;
+	lamp_blink = (uint8_t)(screen->start_lamp_blink + 1u);
+	screen->start_lamp_blink = lamp_blink;
 	game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
-	if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
+	if ((screen->buttons_pressed & 0x40u) == 0u)
 		return mode;
 	if (game->free_play == 0u)
 	{
-		SEAT_CREDITS(seat_credits)->credits--;
-		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
+		seat_credits->credits--;
+		seat_credits->bonus_units = 0u;
 	}
-	SCREEN(screen)->start_lamp_blink = 0u;
+	screen->start_lamp_blink = 0u;
 	game->port_d_outputs[index] &= ~4u;
 	play_mode = 6u;
-	AS32(SCREEN(screen)->game_mode) = 6u;
-	SCREEN(screen)->link_event = 1u;
+	AS32(screen->game_mode) = 6u;
+	screen->link_event = 1u;
 	race_record_clear();
-	RACE(SCREEN(screen)->race)->entry_request = 0xFFu;
+	RACE(screen->race)->entry_request = 0xFFu;
 	return play_mode;
 }
 
@@ -546,7 +546,7 @@ void wait_for_frame(void)
 {
 	for (;;)
 	{
-		if ((uint8_t)SCREEN(screen)->unpack_state == 0u)
+		if ((uint8_t)screen->unpack_state == 0u)
 		{
 			do
 			{
@@ -578,16 +578,16 @@ void initialise_game(void)
 	io_write8(EVENT_CODE, 0u);
 	io_write8(EVENT_CODE, 0u);
 	io_write8(EVENT_CODE, 0x1Fu);
-	screen = SCREEN_2;
+	screen = &game->screen_2;
 	clear_screen_ram();
 	init_screen();
-	screen = SCREEN_1;
+	screen = &game->screen_1;
 	clear_screen_ram();
 	checksum = init_screen();
 	initialise_board(checksum);
-	screen = SCREEN_1;
+	screen = &game->screen_1;
 	initialise_screen();
-	screen = SCREEN_2;
+	screen = &game->screen_2;
 	initialise_screen();
 }
 

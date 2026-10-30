@@ -21,7 +21,8 @@
 void load_settings(uint32_t checksum)
 {
 	uint16_t new_checksum = 0, write_count = 0;
-	uint32_t settings = 0, settings_length = 0;
+	uint32_t settings_length = 0;
+	struct settings_copy *settings = NULL;
 
 	eeprom_read_settings(checksum);
 	if (game->settings_magic == 0x41474553u)
@@ -32,9 +33,9 @@ void load_settings(uint32_t checksum)
 		game->backup_eeprom_write_count = 0x64u;
 		new_checksum = signature_checksum();
 		game->settings_signature = new_checksum;
-		settings = eeprom_write_count_ADDRESS;
+		settings = pointer_to(eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
+		new_checksum = crc16(address_of(settings), settings_length);
 		game->settings_checksum = new_checksum;
 		game->backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
@@ -46,9 +47,9 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		new_checksum = signature_checksum();
 		game->settings_signature = new_checksum;
-		settings = eeprom_write_count_ADDRESS;
+		settings = pointer_to(eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
+		new_checksum = crc16(address_of(settings), settings_length);
 		game->settings_checksum = new_checksum;
 		game->backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
@@ -59,66 +60,66 @@ void load_settings(uint32_t checksum)
 	{
 		game->settings_signature = new_checksum;
 		bookkeeping_reset(new_checksum);
-		settings = eeprom_write_count_ADDRESS;
+		settings = pointer_to(eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
-		settings = settings_checksum_ADDRESS;
+		new_checksum = crc16(address_of(settings), settings_length);
+		settings = pointer_to(settings_checksum_ADDRESS);
 		if (game->settings_checksum == new_checksum)
 		{
-			write_count = SETTINGS_COPY(settings)->write_count;
+			write_count = settings->write_count;
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 			game->eeprom_write_count = write_count;
 			game->backup_eeprom_write_count = write_count;
 			new_checksum = signature_checksum();
 			game->settings_signature = new_checksum;
-			settings = eeprom_write_count_ADDRESS;
+			settings = pointer_to(eeprom_write_count_ADDRESS);
 			settings_length = 0x3Au;
-			new_checksum = crc16(settings, settings_length);
+			new_checksum = crc16(address_of(settings), settings_length);
 			game->settings_checksum = new_checksum;
 			game->backup_settings_checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
-		settings = backup_eeprom_write_count_ADDRESS;
+		settings = pointer_to(backup_eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		checksum = crc16(settings, settings_length);
-		settings = backup_settings_checksum_ADDRESS;
+		checksum = crc16(address_of(settings), settings_length);
+		settings = pointer_to(backup_settings_checksum_ADDRESS);
 		if (game->backup_settings_checksum != checksum)
 		{
 			bookkeeping_reset(checksum);
 			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 			new_checksum = signature_checksum();
 			game->settings_signature = new_checksum;
-			settings = eeprom_write_count_ADDRESS;
+			settings = pointer_to(eeprom_write_count_ADDRESS);
 			settings_length = 0x3Au;
-			new_checksum = crc16(settings, settings_length);
+			new_checksum = crc16(address_of(settings), settings_length);
 			game->settings_checksum = new_checksum;
 			game->backup_settings_checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
-		write_count = SETTINGS_COPY(settings)->write_count;
+		write_count = settings->write_count;
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		game->eeprom_write_count = write_count;
 		game->backup_eeprom_write_count = write_count;
 		new_checksum = signature_checksum();
 		game->settings_signature = new_checksum;
-		settings = eeprom_write_count_ADDRESS;
+		settings = pointer_to(eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
+		new_checksum = crc16(address_of(settings), settings_length);
 		game->settings_checksum = new_checksum;
 		game->backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
-	settings = eeprom_write_count_ADDRESS;
+	settings = pointer_to(eeprom_write_count_ADDRESS);
 	settings_length = 0x3Au;
-	new_checksum = crc16(settings, settings_length);
+	new_checksum = crc16(address_of(settings), settings_length);
 	if (game->settings_checksum != new_checksum)
 	{
-		settings = backup_eeprom_write_count_ADDRESS;
+		settings = pointer_to(backup_eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		checksum = crc16(settings, settings_length);
+		checksum = crc16(address_of(settings), settings_length);
 		if (game->backup_settings_checksum == checksum)
 		{
 			move_halfwords(settings_checksum_ADDRESS, backup_settings_checksum_ADDRESS, 0x1Eu);
@@ -129,17 +130,17 @@ void load_settings(uint32_t checksum)
 		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
 		new_checksum = signature_checksum();
 		game->settings_signature = new_checksum;
-		settings = eeprom_write_count_ADDRESS;
+		settings = pointer_to(eeprom_write_count_ADDRESS);
 		settings_length = 0x3Au;
-		new_checksum = crc16(settings, settings_length);
+		new_checksum = crc16(address_of(settings), settings_length);
 		game->settings_checksum = new_checksum;
 		game->backup_settings_checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
-	settings = backup_eeprom_write_count_ADDRESS;
+	settings = pointer_to(backup_eeprom_write_count_ADDRESS);
 	settings_length = 0x3Au;
-	new_checksum = crc16(settings, settings_length);
+	new_checksum = crc16(address_of(settings), settings_length);
 	if (game->settings_checksum != new_checksum || game->backup_settings_checksum != new_checksum)
 	{
 		move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);

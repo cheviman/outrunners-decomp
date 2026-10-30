@@ -77,56 +77,57 @@ uint32_t load_course_records(void)
 void ranking_update(void)
 {
 	uint8_t next_course = 0, record_course = 0;
-	uint32_t handler_list = 0, object = 0;
+	uint32_t handler_list = 0;
+	struct object *object = NULL;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->ranking.courses_shown = 0u;
+		current_object->ranking.courses_shown = 0u;
 		handler_list = ranking_objects_ADDRESS;
 		start_object_list(handler_list);
 		object = start_object();
-		OBJECT(object)->ranking_background.ranking = current_object;
-		OBJECT(object)->handler = ranking_background_update_ADDRESS;
+		object->ranking_background.ranking = address_of(current_object);
+		object->handler = ranking_background_update_ADDRESS;
 		object = start_object();
-		OBJECT(object)->handler = ranking_title_left_update_ADDRESS;
+		object->handler = ranking_title_left_update_ADDRESS;
 		object = start_object();
-		OBJECT(object)->handler = ranking_title_right_update_ADDRESS;
-		OBJECT(current_object)->state++;
+		object->handler = ranking_title_right_update_ADDRESS;
+		current_object->state++;
 		return;
 	case 1:
-		OBJECT(current_object)->ranking.course_over &= 0xDFFFu;
-		if ((SCREEN(screen)->flags & 1u) != 0u)
+		current_object->ranking.course_over &= 0xDFFFu;
+		if ((screen->flags & 1u) != 0u)
 			return;
-		if (OBJECT(current_object)->ranking.courses_shown >= 3u)
+		if (current_object->ranking.courses_shown >= 3u)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
-		OBJECT(current_object)->ranking.courses_shown++;
-		OBJECT(current_object)->ranking.frames_left = 0x3Cu;
-		record_course = SCREEN(screen)->record_course;
+		current_object->ranking.courses_shown++;
+		current_object->ranking.frames_left = 0x3Cu;
+		record_course = screen->record_course;
 		object = start_object();
-		OBJECT(object)->handler = ranking_course_banner_update_ADDRESS;
-		OBJECT(object)->ranking_course_banner.ranking = current_object;
-		OBJECT(object)->ranking_course_banner.course = record_course;
+		object->handler = ranking_course_banner_update_ADDRESS;
+		object->ranking_course_banner.ranking = address_of(current_object);
+		object->ranking_course_banner.course = record_course;
 		object = start_object();
-		OBJECT(object)->handler = ranking_record_start_ADDRESS;
-		OBJECT(object)->ranking_record.course = record_course;
-		OBJECT(current_object)->state++;
+		object->handler = ranking_record_start_ADDRESS;
+		object->ranking_record.course = record_course;
+		current_object->state++;
 		return;
 	case 2:
-		frames_left = OBJECT(current_object)->ranking.frames_left;
-		OBJECT(current_object)->ranking.frames_left = frames_left - 1u;
+		frames_left = current_object->ranking.frames_left;
+		current_object->ranking.frames_left = frames_left - 1u;
 		if (frames_left != 1u)
 			return;
-		OBJECT(current_object)->ranking.course_over |= 0x2000u;
-		next_course = (uint8_t)(SCREEN(screen)->record_course + 1u);
+		current_object->ranking.course_over |= 0x2000u;
+		next_course = (uint8_t)(screen->record_course + 1u);
 		if (next_course >= 0xAu)
 			next_course = 0u;
-		SCREEN(screen)->record_course = next_course;
-		OBJECT(current_object)->state--;
+		screen->record_course = next_course;
+		current_object->state--;
 		return;
 	}
 }
@@ -142,71 +143,71 @@ void ranking_background_update(void)
 {
 	uint32_t scroll_x_address = 0;
 
-	if (SCREEN(screen)->game_mode == 5u)
+	if (screen->game_mode == 5u)
 	{
 		for (;;)
 		{
-			switch (OBJECT(current_object)->state)
+			switch (current_object->state)
 			{
 			case 0:
-				OBJECT(current_object)->ranking_background.courses_shown = OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.courses_shown;
-				if (OBJECT(current_object)->ranking_background.courses_shown == 0u)
+				current_object->ranking_background.courses_shown = OBJECT(current_object->ranking_background.ranking)->ranking.courses_shown;
+				if (current_object->ranking_background.courses_shown == 0u)
 				{
-					if (SCREEN(screen)->index != 0u)
+					if (screen->index != 0u)
 						io_write8(IO_2_CNT, 0x86u);
 					else
 						io_write8(IO_1_CNT, 6u);
-					SCREEN(screen)->fade_kind = 1u;
-					SCREEN(screen)->flags |= 1u;
+					screen->fade_kind = 1u;
+					screen->flags |= 1u;
 				}
 				ranking_background_load();
-				OBJECT(current_object)->state++;
+				current_object->state++;
 			case 1:
-				if (SCREEN(screen)->unpack_state != 0u)
+				if (screen->unpack_state != 0u)
 					break;
-				if (OBJECT(current_object)->ranking_background.courses_shown != 0u)
+				if (current_object->ranking_background.courses_shown != 0u)
 				{
-					SCREEN(screen)->fade_kind = 3u;
-					SCREEN(screen)->flags |= 1u;
+					screen->fade_kind = 3u;
+					screen->flags |= 1u;
 				}
-				OBJECT(current_object)->state++;
-				if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
+				current_object->state++;
+				if ((OBJECT(current_object->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
 					break;
-				if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
+				if (current_object->ranking_background.courses_shown != 3u)
 				{
-					SCREEN(screen)->fade_kind = 2u;
-					SCREEN(screen)->flags |= 1u;
-					OBJECT(current_object)->state++;
-					if ((SCREEN(screen)->flags & 1u) != 0u)
+					screen->fade_kind = 2u;
+					screen->flags |= 1u;
+					current_object->state++;
+					if ((screen->flags & 1u) != 0u)
 						break;
-					OBJECT(current_object)->state = 0u;
+					current_object->state = 0u;
 					break;
 				}
-				SCREEN(screen)->fade_kind = 0u;
-				SCREEN(screen)->flags |= 1u;
-				OBJECT(current_object)->state = 4u;
+				screen->fade_kind = 0u;
+				screen->flags |= 1u;
+				current_object->state = 4u;
 				continue;
 			case 2:
-				if ((OBJECT(OBJECT(current_object)->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
+				if ((OBJECT(current_object->ranking_background.ranking)->ranking.course_over & 0x2000u) == 0u)
 					break;
-				if (OBJECT(current_object)->ranking_background.courses_shown != 3u)
+				if (current_object->ranking_background.courses_shown != 3u)
 				{
-					SCREEN(screen)->fade_kind = 2u;
-					SCREEN(screen)->flags |= 1u;
-					OBJECT(current_object)->state++;
-					if ((SCREEN(screen)->flags & 1u) != 0u)
+					screen->fade_kind = 2u;
+					screen->flags |= 1u;
+					current_object->state++;
+					if ((screen->flags & 1u) != 0u)
 						break;
-					OBJECT(current_object)->state = 0u;
+					current_object->state = 0u;
 					break;
 				}
-				SCREEN(screen)->fade_kind = 0u;
-				SCREEN(screen)->flags |= 1u;
-				OBJECT(current_object)->state = 4u;
+				screen->fade_kind = 0u;
+				screen->flags |= 1u;
+				current_object->state = 4u;
 				continue;
 			case 3:
-				if ((SCREEN(screen)->flags & 1u) == 0u)
-					OBJECT(current_object)->state = 0u;
-				scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
+				if ((screen->flags & 1u) == 0u)
+					current_object->state = 0u;
+				scroll_x_address = current_object->ranking_background.scroll_x_address;
 				VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 				return;
 			case 4:
@@ -215,7 +216,7 @@ void ranking_background_update(void)
 			break;
 		}
 	}
-	scroll_x_address = OBJECT(current_object)->ranking_background.scroll_x_address;
+	scroll_x_address = current_object->ranking_background.scroll_x_address;
 	VIDEO_REGISTER_WORDS(scroll_x_address)[0] -= 3u;
 }
 
@@ -225,17 +226,17 @@ void ranking_title_left_update(void)
 {
 	uint32_t animation = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->palette = 0x2B2u;
+		current_object->state++;
+		current_object->draw_mode = 0xAu;
+		current_object->palette = 0x2B2u;
 		animation = RANKING_TITLE_LEFT;
 		animation_start(animation);
-		OBJECT(current_object)->depth_layer = 0x19Eu;
-		OBJECT(current_object)->x = 0u;
-		OBJECT(current_object)->y = 0x30u;
+		current_object->depth_layer = 0x19Eu;
+		current_object->x = 0u;
+		current_object->y = 0x30u;
 		break;
 	case 1:
 		break;
@@ -252,17 +253,17 @@ void ranking_title_right_update(void)
 {
 	uint32_t animation = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->palette = 0x2B3u;
+		current_object->state++;
+		current_object->draw_mode = 0xAu;
+		current_object->palette = 0x2B3u;
 		animation = RANKING_TITLE_RIGHT;
 		animation_start(animation);
-		OBJECT(current_object)->depth_layer = 0x19Du;
-		OBJECT(current_object)->x = 0x13Fu;
-		OBJECT(current_object)->y = 0x30u;
+		current_object->depth_layer = 0x19Du;
+		current_object->x = 0x13Fu;
+		current_object->y = 0x30u;
 		break;
 	case 1:
 		break;
@@ -281,31 +282,31 @@ void ranking_course_banner_update(void)
 	uint32_t animation = 0, course_number = 0;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->state++;
-		course_number = OBJECT(current_object)->ranking_course_banner.course;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->palette = ranking_course_banner_palettes[course_number];
+		current_object->state++;
+		course_number = current_object->ranking_course_banner.course;
+		current_object->draw_mode = 0xAu;
+		current_object->palette = ranking_course_banner_palettes[course_number];
 		animation = ranking_course_banner_animations[course_number];
 		animation_start(animation);
-		OBJECT(current_object)->depth_layer = 0x19Cu;
-		OBJECT(current_object)->x = 0xA0u;
-		OBJECT(current_object)->y = 0x50u;
-		OBJECT(current_object)->ranking_course_banner.frames_left = 0x5Au;
+		current_object->depth_layer = 0x19Cu;
+		current_object->x = 0xA0u;
+		current_object->y = 0x50u;
+		current_object->ranking_course_banner.frames_left = 0x5Au;
 		break;
 	case 1:
 		break;
 	}
-	frames_left = OBJECT(current_object)->ranking_course_banner.frames_left;
-	OBJECT(current_object)->ranking_course_banner.frames_left = frames_left - 1u;
+	frames_left = current_object->ranking_course_banner.frames_left;
+	current_object->ranking_course_banner.frames_left = frames_left - 1u;
 	if (frames_left != 1u)
 	{
 		draw_object(course_number);
 		return;
 	}
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* Sets up the course's record line from the records at 20E300 (by course: the initials, '-' shown as
@@ -314,11 +315,12 @@ void ranking_course_banner_update(void)
 void ranking_record_start(void)
 {
 	uint8_t character_index = 0, initial = 0;
-	uint32_t characters_left = 0, initial_place = 0, object = 0, record_offset = 0, record_time = 0, text_place = 0;
+	uint32_t characters_left = 0, initial_place = 0, record_offset = 0, record_time = 0, text_place = 0;
+	struct object *object = NULL;
 	uint8_t second_initial = 0;
 
-	text_place = current_object + 0x80u;
-	record_offset = OBJECT(current_object)->ranking_record.course;
+	text_place = address_of(current_object) + 0x80u;
+	record_offset = current_object->ranking_record.course;
 	record_offset = (uint8_t)(record_offset * 6u);
 	initial_place = course_records_ADDRESS + 0x1u + record_offset;
 	initial = COURSE_RECORD_BYTES(initial_place)[0];
@@ -348,14 +350,14 @@ void ranking_record_start(void)
 	do
 	{
 		object = start_object();
-		OBJECT(object)->ranking_record_character.ranking_record = current_object;
-		OBJECT(object)->ranking_record_character.index = character_index;
-		OBJECT(object)->ranking_record_character.course = OBJECT(current_object)->ranking_record.course;
-		OBJECT(object)->handler = ranking_record_character_update_ADDRESS;
+		object->ranking_record_character.ranking_record = address_of(current_object);
+		object->ranking_record_character.index = character_index;
+		object->ranking_record_character.course = current_object->ranking_record.course;
+		object->handler = ranking_record_character_update_ADDRESS;
 		character_index++;
 		characters_left--;
 	} while (characters_left != 0u);
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* A character of a course's record line (font 2DE, palette 27): 0 its character from the record's text
@@ -366,98 +368,99 @@ void ranking_record_start(void)
    to the left, 16 pixels a frame, and ends at x -20. */
 void ranking_record_character_update(void)
 {
-	uint32_t animation = 0, character_index = 0, object = 0;
+	uint32_t animation = 0, character_index = 0;
+	struct object *object = NULL;
 	uint8_t colour_delay = 0;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->ranking_record_character.frames_left = 0x3Au;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->palette = 0x27u;
+		current_object->state++;
+		current_object->ranking_record_character.frames_left = 0x3Au;
+		current_object->draw_mode = 0xAu;
+		current_object->palette = 0x27u;
 		animation = NAME_ENTRY_FONT;
 		animation_start(animation);
-		object = OBJECT(current_object)->ranking_record_character.ranking_record;
-		character_index = OBJECT(current_object)->ranking_record_character.index;
-		OBJECT(current_object)->depth_layer = OBJECT(current_object)->ranking_record_character.index;
-		OBJECT(current_object)->frame = OBJECT(object)->ranking_record.text[(int32_t)character_index];
-		OBJECT(current_object)->x = ranking_record_character_xs[character_index];
-		OBJECT(current_object)->y = ranking_record_character_ys[character_index];
-		OBJECT(current_object)->ranking_record_character.slide_steps = 0u;
+		object = pointer_to(current_object->ranking_record_character.ranking_record);
+		character_index = current_object->ranking_record_character.index;
+		current_object->depth_layer = current_object->ranking_record_character.index;
+		current_object->frame = object->ranking_record.text[(int32_t)character_index];
+		current_object->x = ranking_record_character_xs[character_index];
+		current_object->y = ranking_record_character_ys[character_index];
+		current_object->ranking_record_character.slide_steps = 0u;
 	case 1:
-		OBJECT(current_object)->x += 0x20u;
-		OBJECT(current_object)->ranking_record_character.slide_steps++;
-		if (OBJECT(current_object)->ranking_record_character.slide_steps >= 7u)
+		current_object->x += 0x20u;
+		current_object->ranking_record_character.slide_steps++;
+		if (current_object->ranking_record_character.slide_steps >= 7u)
 		{
 			object = start_object();
-			OBJECT(object)->handler = ranking_record_car_update_ADDRESS;
-			OBJECT(object)->ranking_record_car.course = OBJECT(current_object)->ranking_record_character.course;
-			OBJECT(current_object)->state++;
+			object->handler = ranking_record_car_update_ADDRESS;
+			object->ranking_record_car.course = current_object->ranking_record_character.course;
+			current_object->state++;
 		}
-		OBJECT(current_object)->ranking_record_character.colour_delay = OBJECT(current_object)->ranking_record_character.index + 2u;
-		colour_delay = OBJECT(current_object)->ranking_record_character.colour_delay;
-		OBJECT(current_object)->ranking_record_character.colour_delay = colour_delay - 1u;
+		current_object->ranking_record_character.colour_delay = current_object->ranking_record_character.index + 2u;
+		colour_delay = current_object->ranking_record_character.colour_delay;
+		current_object->ranking_record_character.colour_delay = colour_delay - 1u;
 		if (colour_delay == 1u)
 		{
-			character_index = OBJECT(current_object)->ranking_record_character.course;
-			OBJECT(current_object)->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
-			OBJECT(current_object)->state++;
+			character_index = current_object->ranking_record_character.course;
+			current_object->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
+			current_object->state++;
 		}
 		break;
 	case 2:
-		colour_delay = OBJECT(current_object)->ranking_record_character.colour_delay;
-		OBJECT(current_object)->ranking_record_character.colour_delay = colour_delay - 1u;
+		colour_delay = current_object->ranking_record_character.colour_delay;
+		current_object->ranking_record_character.colour_delay = colour_delay - 1u;
 		if (colour_delay == 1u)
 		{
-			character_index = OBJECT(current_object)->ranking_record_character.course;
-			OBJECT(current_object)->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
-			OBJECT(current_object)->state++;
+			character_index = current_object->ranking_record_character.course;
+			current_object->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
+			current_object->state++;
 		}
-		frames_left = OBJECT(current_object)->ranking_record_character.frames_left;
-		OBJECT(current_object)->ranking_record_character.frames_left = frames_left - 1u;
+		frames_left = current_object->ranking_record_character.frames_left;
+		current_object->ranking_record_character.frames_left = frames_left - 1u;
 		if (frames_left != 1u)
 		{
 			draw_object(character_index);
 			return;
 		}
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->x -= 0x10u;
-		if (OBJECT(current_object)->x != 0xFFE0u)
+		current_object->state++;
+		current_object->x -= 0x10u;
+		if (current_object->x != 0xFFE0u)
 		{
 			draw_object(character_index);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	case 3:
 		break;
 	case 4:
-		OBJECT(current_object)->x -= 0x10u;
-		if (OBJECT(current_object)->x != 0xFFE0u)
+		current_object->x -= 0x10u;
+		if (current_object->x != 0xFFE0u)
 		{
 			draw_object(character_index);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	frames_left = OBJECT(current_object)->ranking_record_character.frames_left;
-	OBJECT(current_object)->ranking_record_character.frames_left = frames_left - 1u;
+	frames_left = current_object->ranking_record_character.frames_left;
+	current_object->ranking_record_character.frames_left = frames_left - 1u;
 	if (frames_left != 1u)
 	{
 		draw_object(character_index);
 		return;
 	}
-	OBJECT(current_object)->state++;
-	OBJECT(current_object)->x -= 0x10u;
-	if (OBJECT(current_object)->x != 0xFFE0u)
+	current_object->state++;
+	current_object->x -= 0x10u;
+	if (current_object->x != 0xFFE0u)
 	{
 		draw_object(character_index);
 		return;
 	}
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* The record holder's car under the course's record line (animation car_model_turn_animations by the
@@ -469,91 +472,91 @@ void ranking_record_car_update(void)
 	uint32_t animation = 0, car_model = 0, course = 0;
 	uint16_t wait_frames = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->ranking_record_car.wait_frames = 0xFu;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		course = OBJECT(current_object)->ranking_record_car.course;
+		current_object->state++;
+		current_object->ranking_record_car.wait_frames = 0xFu;
+		current_object->draw_mode = 0xAu;
+		course = current_object->ranking_record_car.course;
 		car_model = game->course_records[(uint8_t)(course * 6u)];
 		animation = car_model_turn_animations[car_model];
-		OBJECT(current_object)->palette = car_model_palettes[car_model];
+		current_object->palette = car_model_palettes[car_model];
 		animation_start(animation);
-		OBJECT(current_object)->x = 0u;
-		OBJECT(current_object)->y = 0x88u;
-		OBJECT(current_object)->height_scale = 0x50u;
-		OBJECT(current_object)->width_scale = 0x50u;
-		OBJECT(current_object)->frame = 9u;
-		OBJECT(current_object)->depth_layer = 0x19Eu;
-		OBJECT(current_object)->x += 0x10u;
-		if (OBJECT(current_object)->x < 0x108u)
+		current_object->x = 0u;
+		current_object->y = 0x88u;
+		current_object->height_scale = 0x50u;
+		current_object->width_scale = 0x50u;
+		current_object->frame = 9u;
+		current_object->depth_layer = 0x19Eu;
+		current_object->x += 0x10u;
+		if (current_object->x < 0x108u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		draw_object(car_model);
 		return;
 	case 1:
-		OBJECT(current_object)->x += 0x10u;
-		if (OBJECT(current_object)->x < 0x108u)
+		current_object->x += 0x10u;
+		if (current_object->x < 0x108u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->state++;
+		current_object->state++;
 		draw_object(car_model);
 		return;
 	case 2:
-		OBJECT(current_object)->frame--;
-		if (OBJECT(current_object)->frame != 4u)
+		current_object->frame--;
+		if (current_object->frame != 4u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->state++;
-		wait_frames = OBJECT(current_object)->ranking_record_car.wait_frames;
-		OBJECT(current_object)->ranking_record_car.wait_frames = wait_frames - 1u;
+		current_object->state++;
+		wait_frames = current_object->ranking_record_car.wait_frames;
+		current_object->ranking_record_car.wait_frames = wait_frames - 1u;
 		if (wait_frames != 1u)
 		{
 			draw_object(0u);
 			return;
 		}
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->x -= 0x10u;
-		if (OBJECT(current_object)->x != 0u)
+		current_object->state++;
+		current_object->x -= 0x10u;
+		if (current_object->x != 0u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	case 3:
-		wait_frames = OBJECT(current_object)->ranking_record_car.wait_frames;
-		OBJECT(current_object)->ranking_record_car.wait_frames = wait_frames - 1u;
+		wait_frames = current_object->ranking_record_car.wait_frames;
+		current_object->ranking_record_car.wait_frames = wait_frames - 1u;
 		if (wait_frames != 1u)
 		{
 			draw_object(0u);
 			return;
 		}
-		OBJECT(current_object)->state++;
-		OBJECT(current_object)->x -= 0x10u;
-		if (OBJECT(current_object)->x != 0u)
+		current_object->state++;
+		current_object->x -= 0x10u;
+		if (current_object->x != 0u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	case 4:
-		OBJECT(current_object)->x -= 0x10u;
-		if (OBJECT(current_object)->x != 0u)
+		current_object->x -= 0x10u;
+		if (current_object->x != 0u)
 		{
 			draw_object(car_model);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	case 5:
 		draw_object(car_model);
@@ -575,8 +578,8 @@ void passing_traffic_start(void)
 		step_count++;
 		traffic_path_step += 6u;
 	}
-	OBJECT(current_object)->passing_traffic.path_steps = step_count;
-	OBJECT(current_object)->handler = passing_traffic_update_ADDRESS;
+	current_object->passing_traffic.path_steps = step_count;
+	current_object->handler = passing_traffic_update_ADDRESS;
 	passing_traffic_update();
 }
 
@@ -585,27 +588,28 @@ void passing_traffic_start(void)
    (wait). */
 void passing_traffic_update(void)
 {
-	uint32_t object = 0, random = 0;
+	uint32_t random = 0;
+	struct object *object = NULL;
 	uint16_t wait = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		random = random_number();
 		if ((random & 0xFu) == 0u)
 		{
 			object = start_object();
-			OBJECT(object)->handler = passing_car_update_ADDRESS;
-			OBJECT(object)->passing_car.step = OBJECT(current_object)->passing_traffic.path_steps;
-			OBJECT(current_object)->passing_traffic.wait = 0xAu;
-			OBJECT(current_object)->state++;
+			object->handler = passing_car_update_ADDRESS;
+			object->passing_car.step = current_object->passing_traffic.path_steps;
+			current_object->passing_traffic.wait = 0xAu;
+			current_object->state++;
 		}
 		return;
 	case 1:
-		wait = OBJECT(current_object)->passing_traffic.wait;
-		OBJECT(current_object)->passing_traffic.wait = wait - 1u;
+		wait = current_object->passing_traffic.wait;
+		current_object->passing_traffic.wait = wait - 1u;
 		if (wait == 1u)
-			OBJECT(current_object)->state--;
+			current_object->state--;
 		return;
 	}
 }
@@ -622,98 +626,98 @@ void passing_car_update(void)
 	uint32_t animation = 0, car_model = 0, mirrored_x = 0, path_size = 0, random_side = 0, step = 0, step_index = 0, traffic_path_step = 0;
 	uint16_t near_step = 0, far_step = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		car_model = random_number();
 		random_side = car_model;
 		car_model &= 7u;
 		animation = car_model_turn_animations[car_model];
-		OBJECT(current_object)->palette = car_model_palettes[car_model];
+		current_object->palette = car_model_palettes[car_model];
 		animation_start(animation);
 		pass_sound = car_pass_sounds[car_model];
 		request_sound(pass_sound);
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->depth_layer = 3u;
-		OBJECT(current_object)->frame = 0xCu;
-		OBJECT(current_object)->state++;
+		current_object->draw_mode = 0xAu;
+		current_object->depth_layer = 3u;
+		current_object->frame = 0xCu;
+		current_object->state++;
 		if ((int32_t)random_side >= 0)
 		{
-			step = (uint16_t)OBJECT(current_object)->passing_car.step;
+			step = (uint16_t)current_object->passing_car.step;
 			near_step = step - 1u;
 			step_index = near_step;
 			if ((int16_t)near_step < 0)
 			{
-				OBJECT(current_object)->flags = 0u;
+				current_object->flags = 0u;
 				return;
 			}
-			OBJECT(current_object)->passing_car.step = step_index;
+			current_object->passing_car.step = step_index;
 			traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
 			path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-			OBJECT(current_object)->width_scale = path_size;
-			OBJECT(current_object)->height_scale = path_size;
+			current_object->width_scale = path_size;
+			current_object->height_scale = path_size;
 			traffic_path_step += 2u;
-			OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-			OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+			current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+			current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 			draw_object(path_size);
 			return;
 		}
-		OBJECT(current_object)->frame = 1u;
-		OBJECT(current_object)->state++;
-		step = (uint16_t)OBJECT(current_object)->passing_car.step;
+		current_object->frame = 1u;
+		current_object->state++;
+		step = (uint16_t)current_object->passing_car.step;
 		far_step = step - 1u;
 		step_index = far_step;
 		if ((int16_t)far_step < 0)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
-		OBJECT(current_object)->passing_car.step = step_index;
+		current_object->passing_car.step = step_index;
 		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
 		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		OBJECT(current_object)->width_scale = mirrored_x;
-		OBJECT(current_object)->height_scale = mirrored_x;
+		current_object->width_scale = mirrored_x;
+		current_object->height_scale = mirrored_x;
 		traffic_path_step += 2u;
-		OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 		draw_object(mirrored_x);
 		return;
 	case 1:
-		step = (uint16_t)OBJECT(current_object)->passing_car.step;
+		step = (uint16_t)current_object->passing_car.step;
 		near_step = step - 1u;
 		step_index = near_step;
 		if ((int16_t)near_step < 0)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
-		OBJECT(current_object)->passing_car.step = step_index;
+		current_object->passing_car.step = step_index;
 		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
 		path_size = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		OBJECT(current_object)->width_scale = path_size;
-		OBJECT(current_object)->height_scale = path_size;
+		current_object->width_scale = path_size;
+		current_object->height_scale = path_size;
 		traffic_path_step += 2u;
-		OBJECT(current_object)->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 		draw_object(path_size);
 		return;
 	case 2:
-		step = (uint16_t)OBJECT(current_object)->passing_car.step;
+		step = (uint16_t)current_object->passing_car.step;
 		far_step = step - 1u;
 		step_index = far_step;
 		if ((int16_t)far_step < 0)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
-		OBJECT(current_object)->passing_car.step = step_index;
+		current_object->passing_car.step = step_index;
 		traffic_path_step = traffic_path_ADDRESS + step_index * 3u * 2u;
 		mirrored_x = TRAFFIC_PATH_STEP(traffic_path_step)->size;
-		OBJECT(current_object)->width_scale = mirrored_x;
-		OBJECT(current_object)->height_scale = mirrored_x;
+		current_object->width_scale = mirrored_x;
+		current_object->height_scale = mirrored_x;
 		traffic_path_step += 2u;
-		OBJECT(current_object)->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
-		OBJECT(current_object)->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
+		current_object->x = 0x96u - TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->x;
+		current_object->y = TRAFFIC_PATH_STEP(traffic_path_step - 0x2u)->y;
 		draw_object(mirrored_x);
 		return;
 	}
@@ -733,37 +737,37 @@ void ranking_background_load(void)
 	uint32_t background_number = 0, background_pages = 0, colour_list = 0, index = 0, mixer_place = 0, mixer_priority = 0, page_numbers = 0, page_place = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0, ranking_background_registers = 0;
 	uint32_t saved_fades = 0;
 
-	ranking_background_registers = ranking_background_register_sets_ADDRESS + SCREEN(screen)->index * 0xCu * 4u;
-	OBJECT(current_object)->ranking_background.tile_bank_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers)->tile_bank_address;
+	ranking_background_registers = ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u;
+	current_object->ranking_background.tile_bank_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers)->tile_bank_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.pages_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x4u)->pages_address;
+	current_object->ranking_background.pages_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x4u)->pages_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x8u)->scroll_x_address;
+	current_object->ranking_background.scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x8u)->scroll_x_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0xCu)->scroll_y_address;
+	current_object->ranking_background.scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0xCu)->scroll_y_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.zoom_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x10u)->zoom_x_address;
+	current_object->ranking_background.zoom_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x10u)->zoom_x_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.zoom_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x14u)->zoom_y_address;
+	current_object->ranking_background.zoom_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x14u)->zoom_y_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.zoom_center_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x18u)->zoom_center_x_address;
+	current_object->ranking_background.zoom_center_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x18u)->zoom_center_x_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.zoom_center_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x1Cu)->zoom_center_y_address;
+	current_object->ranking_background.zoom_center_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x1Cu)->zoom_center_y_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.cleared_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x20u)->cleared_scroll_x_address;
+	current_object->ranking_background.cleared_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x20u)->cleared_scroll_x_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.cleared_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x24u)->cleared_scroll_y_address;
+	current_object->ranking_background.cleared_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x24u)->cleared_scroll_y_address;
 	ranking_background_registers += 4u;
-	OBJECT(current_object)->ranking_background.second_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_x_address;
-	OBJECT(current_object)->ranking_background.second_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_y_address;
+	current_object->ranking_background.second_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_x_address;
+	current_object->ranking_background.second_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_y_address;
 	game->send_video_registers = 0xFFu;
-	background_number = course_backgrounds[SCREEN(screen)->record_course];
-	TILE_BANK_VALUES(OBJECT(current_object)->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
+	background_number = course_backgrounds[screen->record_course];
+	TILE_BANK_VALUES(current_object->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
 	saved_fades = background_palette_fades[background_number];
 	colour_list = background_palettes[background_number];
 	background_pages = background_tile_page_lists[background_number] + 0x10u;
-	page_place = current_object + 0xB0u;
-	page_numbers = ranking_background_page_numbers[SCREEN(screen)->index];
+	page_place = address_of(current_object) + 0xB0u;
+	page_numbers = ranking_background_page_numbers[screen->index];
 	pages_to_copy = 4u;
 	do
 	{
@@ -774,23 +778,23 @@ void ranking_background_load(void)
 		background_pages += 4u;
 	} while (pages_to_copy != 0u);
 	OBJECT_TILE_PAGES(page_place)[0] = 0xFFFFFFFFu;
-	queued_pages = current_object + 0xB0u;
+	queued_pages = address_of(current_object) + 0xB0u;
 	queue_tile_pages(queued_pages);
 	queue_palette_list(colour_list);
 	palette_fades = saved_fades;
 	start_palette_fades(palette_fades);
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_x_address)[0] = 0x200u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_y_address)[0] = 0x200u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_center_x_address)[0] = 0u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.zoom_center_y_address)[0] = 0u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.cleared_scroll_x_address)[0] = 0u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.cleared_scroll_y_address)[0] = 0u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.second_scroll_x_address)[0] = 0u;
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.second_scroll_y_address)[0] = 0u;
-	index = SCREEN(screen)->index;
-	PAGE_SELECT(OBJECT(current_object)->ranking_background.pages_address)[0] = byte_swap32(ranking_background_page_numbers[index]);
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.scroll_x_address)[0] = ranking_background_scroll_xs[index];
-	VIDEO_REGISTER_WORDS(OBJECT(current_object)->ranking_background.scroll_y_address)[0] = 0x60u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.zoom_x_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.zoom_y_address)[0] = 0x200u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.zoom_center_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.zoom_center_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.cleared_scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.cleared_scroll_y_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.second_scroll_x_address)[0] = 0u;
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.second_scroll_y_address)[0] = 0u;
+	index = screen->index;
+	PAGE_SELECT(current_object->ranking_background.pages_address)[0] = byte_swap32(ranking_background_page_numbers[index]);
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_x_address)[0] = ranking_background_scroll_xs[index];
+	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_y_address)[0] = 0x60u;
 	mixer_place = ranking_mixer_addresses[index];
 	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
 	mixer_priority = mixer_priority & ~0xFu;
@@ -798,5 +802,5 @@ void ranking_background_load(void)
 	mixer_place += 4u;
 	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
 	MIXER_VALUE_PAIRS(mixer_place)[0] = mixer_priority & ~0xFu;
-	SCREEN(screen)->flags |= 4u;
+	screen->flags |= 4u;
 }

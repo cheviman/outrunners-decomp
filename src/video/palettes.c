@@ -32,7 +32,7 @@ void queue_stage_load(void)
 {
 	uint32_t colour_block = 0;
 
-	colour_block = scene_palettes[SCREEN(screen)->route_stage];
+	colour_block = scene_palettes[screen->route_stage];
 	queue_palette(colour_block);
 }
 
@@ -63,7 +63,7 @@ void queue_palette_upload(uint32_t list_flag, uint32_t colour_record)
 {
 	uint32_t upload_count = 0, upload_queue = 0;
 
-	upload_queue = screen + 0x900u;
+	upload_queue = address_of(screen) + 0x900u;
 	if ((int32_t)SCREEN(upload_queue - 0x900u)->palette_upload_count < 0x80)
 	{
 		upload_count = SCREEN(upload_queue - 0x900u)->palette_upload_count + 1u;
@@ -79,7 +79,7 @@ void upload_queued_palettes(void)
 	uint32_t colour_record = 0, upload_queue = 0, uploads_left = 0;
 	uint32_t queued_upload = 0;
 
-	upload_queue = screen + 0x900u;
+	upload_queue = address_of(screen) + 0x900u;
 	uploads_left = SCREEN(upload_queue - 0x900u)->palette_upload_count;
 	upload_queue += 4u;
 	for (;;)
@@ -100,7 +100,7 @@ void upload_queued_palettes(void)
 		if (uploads_left == 0u)
 			break;
 	}
-	SCREEN(screen)->palette_upload_count = uploads_left;
+	screen->palette_upload_count = uploads_left;
 }
 
 /* Copies a block of colours (place, length in bytes, colours) into the screen's palette RAM (600000 for
@@ -110,7 +110,7 @@ void upload_palette(uint32_t colour_block)
 	uint32_t blocks_left = 0, palette_address = 0;
 	uint32_t colours_0_place = 0, colours_2 = 0, colours_4_place = 0, colours_6 = 0, colours_8_place = 0, colours_10 = 0, colours_12_place = 0, colours_14 = 0;
 
-	palette_address = SCREEN(screen)->index;
+	palette_address = screen->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u | PALETTE_BLOCK(colour_block)->place;
 	colour_block += 2u;
 	blocks_left = PALETTE_BLOCK(colour_block - 0x2u)->length;
@@ -153,7 +153,7 @@ void upload_palette_list(uint32_t colour_list)
 	uint32_t blocks_left = 0, colour_source = 0, entries_left = 0, palette_address = 0;
 	uint32_t colours_2 = 0, colours_6 = 0, colours_10 = 0, colours_14 = 0;
 
-	palette_address = SCREEN(screen)->index;
+	palette_address = screen->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u;
 	entries_left = PALETTE_BLOCK_LIST(colour_list)->length >> 3;
 	colour_list += 4u;
@@ -203,76 +203,76 @@ void step_screen_fade(void)
 	uint16_t level = 0;
 	uint32_t channels_left = 0, fade_start = 0, mixer_register = 0;
 
-	switch (SCREEN(screen)->fade_kind)
+	switch (screen->fade_kind)
 	{
 	case 0:
 		fade_start = screen_fade_starts_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 1:
 		fade_start = screen_fade_from_black_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 2:
 		fade_start = screen_fade_to_white_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 3:
 		fade_start = screen_fade_from_white_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 4:
 		fade_start = screen_fade_to_red_tint_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 5:
 		fade_start = screen_fade_from_red_tint_ADDRESS;
-		SCREEN(screen)->fade_level = SCREEN_FADE_START(fade_start)->level;
+		screen->fade_level = SCREEN_FADE_START(fade_start)->level;
 		fade_start++;
-		SCREEN(screen)->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
+		screen->fade_step = SCREEN_FADE_START(fade_start - 0x1u)->step;
 		fade_start++;
-		SCREEN(screen)->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
-		SCREEN(screen)->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
-		SCREEN(screen)->fade_kind = 6u;
+		screen->fade_end = SCREEN_FADE_START(fade_start - 0x2u)->end;
+		screen->fade_channels = SCREEN_FADE_START(fade_start - 0x2u)->channels;
+		screen->fade_kind = 6u;
 		break;
 	case 6:
 		break;
 	}
-	level = (uint8_t)(SCREEN(screen)->fade_level + SCREEN(screen)->fade_step) & 0x3Fu;
-	SCREEN(screen)->fade_level = (uint8_t)level;
-	mixer_register = screen + 0x19Fu;
+	level = (uint8_t)(screen->fade_level + screen->fade_step) & 0x3Fu;
+	screen->fade_level = (uint8_t)level;
+	mixer_register = address_of(screen) + 0x19Fu;
 	SCREEN(mixer_register - 0x19Fu)->colour_offset_mode = 0xC0u;
-	channels = SCREEN(screen)->fade_channels;
+	channels = screen->fade_channels;
 	channels_left = 3u;
 	mixer_register++;
 	do
@@ -286,8 +286,8 @@ void step_screen_fade(void)
 		}
 		channels_left--;
 	} while (channels_left != 0u);
-	if (level == SCREEN(screen)->fade_end)
-		SCREEN(screen)->flags &= ~1u;
+	if (level == screen->fade_end)
+		screen->flags &= ~1u;
 }
 
 /* Starts a palette_fade for each 12-byte record of list R19 (a 32-bit length in bytes, then records:
@@ -360,7 +360,8 @@ void race_background_fade_palettes(uint32_t fade_list)
 {
 	uint8_t blocks = 0, period = 0;
 	uint16_t palette_offset = 0;
-	uint32_t fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, object = 0, to = 0;
+	uint32_t fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, to = 0;
+	struct object *object = NULL;
 	uint32_t fade_count = 0;
 
 	fade_count = PALETTE_FADE_LIST(fade_list)->length / 0xCu;
@@ -368,14 +369,14 @@ void race_background_fade_palettes(uint32_t fade_list)
 	fade_list += 4u;
 	if (fade_count == 0u)
 	{
-		SCREEN(screen)->background_fading = 0u;
+		screen->background_fading = 0u;
 		return;
 	}
 	object = start_object();
-	OBJECT(object)->handler = race_background_fade_watch_update_ADDRESS;
-	OBJECT(object)->race_background_fade_watch.background = current_object;
-	OBJECT(object)->race_background_fade_watch.count = fades_left;
-	fade_slot = object + 0x80u;
+	object->handler = race_background_fade_watch_update_ADDRESS;
+	object->race_background_fade_watch.background = address_of(current_object);
+	object->race_background_fade_watch.count = fades_left;
+	fade_slot = address_of(object) + 0x80u;
 	do
 	{
 		from = PALETTE_FADE_ENTRY(fade_list)->from;
@@ -387,7 +388,7 @@ void race_background_fade_palettes(uint32_t fade_list)
 		fade_list++;
 		period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 		fade_list++;
-		fade_object = start_palette_fade(blocks, period, from, to, palette_offset);
+		fade_object = address_of(start_palette_fade(blocks, period, from, to, palette_offset));
 		BACKGROUND_FADES(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;
@@ -400,18 +401,19 @@ void race_background_fade_palettes(uint32_t fade_list)
 void race_background_fade_watch_update(void)
 {
 	uint8_t all_flags = 0, fade_flags = 0;
-	uint32_t fade = 0, fade_slot = 0, fades_left = 0;
+	uint32_t fade_slot = 0, fades_left = 0;
+	struct object *fade = NULL;
 
 	all_flags = 0u;
-	fade_slot = current_object + 0x80u;
-	fades_left = OBJECT(current_object)->race_background_fade_watch.count;
+	fade_slot = address_of(current_object) + 0x80u;
+	fades_left = current_object->race_background_fade_watch.count;
 	do
 	{
-		fade = BACKGROUND_FADES(fade_slot)[0];
+		fade = pointer_to(BACKGROUND_FADES(fade_slot)[0]);
 		fade_slot += 4u;
-		if (fade != 0u)
+		if (fade != NULL)
 		{
-			fade_flags = (uint8_t)(OBJECT(fade)->flags | ((uint32_t)OBJECT(fade)->flags_high << 8u) | ((uint32_t)OBJECT(fade)->flags_upper << 16u));
+			fade_flags = (uint8_t)(fade->flags | ((uint32_t)fade->flags_high << 8u) | ((uint32_t)fade->flags_upper << 16u));
 			all_flags |= fade_flags;
 			if ((fade_flags & 1u) == 0u)
 				BACKGROUND_FADES(fade_slot)[-1] = 0u;
@@ -420,8 +422,8 @@ void race_background_fade_watch_update(void)
 	} while (fades_left != 0u);
 	if ((all_flags & 1u) == 0u)
 	{
-		SCREEN(screen)->background_fading = 0u;
-		OBJECT(current_object)->flags = 0u;
+		screen->background_fading = 0u;
+		current_object->flags = 0u;
 	}
 }
 
@@ -429,26 +431,26 @@ void race_background_fade_watch_update(void)
    (R0 blocks of 16 in its upload record), a step every R1 frames, the first after (screen
    palette_fades_started mod R1) + 1 (palette_fades_started counts the fades started); returns the
    object. */
-uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to, uint16_t palette_offset)
+struct object *start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to, uint16_t palette_offset)
 {
 	uint8_t phase = 0;
-	uint32_t object = 0;
+	struct object *object = NULL;
 
 	object = start_object();
-	OBJECT(object)->handler = palette_fade_prepare_ADDRESS;
-	OBJECT(object)->palette_fade.upload_length = 8u;
-	OBJECT(object)->palette_fade.upload_colours = object + 0x34u;
-	OBJECT(object)->palette_fade.palette_offset = palette_offset;
-	OBJECT(object)->palette_fade.blocks = blocks;
-	phase = remainder_u8(SCREEN(screen)->palette_fades_started, period);
-	SCREEN(screen)->palette_fades_started++;
-	OBJECT(object)->palette_fade.delay = phase + 1u;
-	OBJECT(object)->palette_fade.period = period;
-	OBJECT(object)->palette_fade.from = from;
-	OBJECT(object)->palette_fade.to = to;
-	OBJECT(object)->palette_fade.colour_place = object + 0x34u;
-	OBJECT(object)->palette_fade.difference_place = object + 0x54u;
-	OBJECT(object)->palette_fade.colours_left = 0x10u;
+	object->handler = palette_fade_prepare_ADDRESS;
+	object->palette_fade.upload_length = 8u;
+	object->palette_fade.upload_colours = address_of(object) + 0x34u;
+	object->palette_fade.palette_offset = palette_offset;
+	object->palette_fade.blocks = blocks;
+	phase = remainder_u8(screen->palette_fades_started, period);
+	screen->palette_fades_started++;
+	object->palette_fade.delay = phase + 1u;
+	object->palette_fade.period = period;
+	object->palette_fade.from = from;
+	object->palette_fade.to = to;
+	object->palette_fade.colour_place = address_of(object) + 0x34u;
+	object->palette_fade.difference_place = address_of(object) + 0x54u;
+	object->palette_fade.colours_left = 0x10u;
 	return object;
 }
 
@@ -461,10 +463,10 @@ void palette_fade_prepare(void)
 	uint32_t difference_place = 0, from = 0, to = 0;
 	uint8_t colours_left = 0;
 
-	from = OBJECT(current_object)->palette_fade.from;
-	to = OBJECT(current_object)->palette_fade.to;
-	r12 = OBJECT(current_object)->palette_fade.colour_place;
-	difference_place = OBJECT(current_object)->palette_fade.difference_place;
+	from = current_object->palette_fade.from;
+	to = current_object->palette_fade.to;
+	r12 = current_object->palette_fade.colour_place;
+	difference_place = current_object->palette_fade.difference_place;
 	from_colour = PALETTE_COLOURS(from)[0];
 	to_colour = PALETTE_COLOURS(to)[0];
 	PALETTE_FADE_COLOURS(r12)[0] = from_colour;
@@ -477,20 +479,20 @@ void palette_fade_prepare(void)
 	difference_place++;
 	PALETTE_FADE_DIFFERENCES(difference_place)[0] = ((from_colour >> 5) & 0x1Fu) - ((to_colour >> 5) & 0x1Fu);
 	difference_place++;
-	colours_left = OBJECT(current_object)->palette_fade.colours_left;
-	OBJECT(current_object)->palette_fade.colours_left = colours_left - 1u;
+	colours_left = current_object->palette_fade.colours_left;
+	current_object->palette_fade.colours_left = colours_left - 1u;
 	from += 2u;
 	to += 2u;
 	if (colours_left == 1u)
 	{
-		OBJECT(current_object)->handler = palette_fade_step_ADDRESS;
+		current_object->handler = palette_fade_step_ADDRESS;
 		palette_fade_step();
 		return;
 	}
-	OBJECT(current_object)->palette_fade.from = from;
-	OBJECT(current_object)->palette_fade.to = to;
-	OBJECT(current_object)->palette_fade.colour_place = r12;
-	OBJECT(current_object)->palette_fade.difference_place = difference_place;
+	current_object->palette_fade.from = from;
+	current_object->palette_fade.to = to;
+	current_object->palette_fade.colour_place = r12;
+	current_object->palette_fade.difference_place = difference_place;
 }
 
 /* Every period frames (delay; start_palette_fade staggers the first) moves each of the 16 colours one
@@ -505,22 +507,22 @@ void palette_fade_step(void)
 	uint32_t colour_place = 0, colours_left = 0, difference_place = 0, upload = 0;
 	uint8_t delay = 0;
 
-	if ((SCREEN(screen)->flags & 1u) != 0u)
+	if ((screen->flags & 1u) != 0u)
 	{
-		fade_kind = SCREEN(screen)->fade_kind;
+		fade_kind = screen->fade_kind;
 		if ((int8_t)fade_kind <= 5 && (fade_kind & 1u) == 0u)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
 	}
-	delay = OBJECT(current_object)->palette_fade.delay;
-	OBJECT(current_object)->palette_fade.delay = delay - 1u;
+	delay = current_object->palette_fade.delay;
+	current_object->palette_fade.delay = delay - 1u;
 	if (delay != 1u)
 		return;
-	OBJECT(current_object)->palette_fade.delay = OBJECT(current_object)->palette_fade.period;
-	difference_place = current_object + 0x54u;
-	colour_place = current_object + 0x34u;
+	current_object->palette_fade.delay = current_object->palette_fade.period;
+	difference_place = address_of(current_object) + 0x54u;
+	colour_place = address_of(current_object) + 0x34u;
 	colour_step = 0u;
 	colours_left = 0x10u;
 	for (;;)
@@ -588,7 +590,7 @@ void palette_fade_step(void)
 							colours_left--;
 							if (colours_left != 0u)
 								continue;
-							OBJECT(current_object)->flags = 0u;
+							current_object->flags = 0u;
 							return;
 						}
 						PALETTE_FADE_DIFFERENCES(difference_place)[0]--;
@@ -675,6 +677,6 @@ void palette_fade_step(void)
 		}
 		difference_place++;
 	}
-	upload = current_object + 0x28u;
+	upload = address_of(current_object) + 0x28u;
 	queue_palette_list(upload);
 }

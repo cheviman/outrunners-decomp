@@ -289,13 +289,13 @@ void draw_text_at(uint32_t place, uint16_t attribute, uint32_t text)
 	uint16_t font = 0;
 	uint32_t sprite = 0, sprite_copy = 0, sprite_size = 0, sprite_words_0 = 0;
 
-	sprite = SCREEN(screen)->sprite_list_last + 0x10u;
-	if (SCREEN(screen)->sprite_list_limit <= sprite)
+	sprite = screen->sprite_list_last + 0x10u;
+	if (screen->sprite_list_limit <= sprite)
 		return;
 	sprite_copy = sprite + 0x3000u;
 	sprite_words_0 = text_sprite_words_0_1;
 	place = (place << 16) | (place >> 16);
-	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	sprite_size = text_sprite_size | ((uint32_t)screen->sprite_screen_bit << 16);
 	font = text_sprite_font;
 	attribute |= text_sprite_palette;
 	draw_text_sprites(sprite_words_0, sprite_size, place, font, attribute, sprite, sprite_copy, text);
@@ -309,12 +309,12 @@ uint32_t draw_text(uint32_t text_record)
 	uint32_t place = 0, sprite = 0, sprite_copy = 0, sprite_size = 0, sprite_words_0 = 0, text = 0;
 
 	text = text_record + 6u;
-	sprite = SCREEN(screen)->sprite_list_last + 0x10u;
-	if (SCREEN(screen)->sprite_list_limit <= sprite)
+	sprite = screen->sprite_list_last + 0x10u;
+	if (screen->sprite_list_limit <= sprite)
 		return text;
 	sprite_copy = sprite + 0x3000u;
 	sprite_words_0 = text_sprite_words_0_1;
-	sprite_size = text_sprite_size | ((uint32_t)SCREEN(screen)->sprite_screen_bit << 16);
+	sprite_size = text_sprite_size | ((uint32_t)screen->sprite_screen_bit << 16);
 	place = SPRITE_TEXT_RECORD(text_record)->place;
 	place = (place << 16) | (place >> 16);
 	font = text_sprite_font;
@@ -364,15 +364,15 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 		character = next_character;
 		sprite += 2u;
 	} while (character != 0u);
-	depth_layer = screen + 0x5678u;
+	depth_layer = address_of(screen) + 0x5678u;
 	text_depth_list_head = SCREEN(depth_layer - 0x5678u)->text_depth_list_head;
 	if (text_depth_list_head == 0u)
 		SCREEN(depth_layer - 0x5678u)->text_depth_list_tail = sprite;
-	first_sprite = SCREEN(screen)->sprite_list_last + 0x10u;
+	first_sprite = screen->sprite_list_last + 0x10u;
 	AS32(SPRITE_WORDS(sprite)[0]) = text_depth_list_head;
 	AS32(SPRITE_WORDS(sprite_copy)[0]) = (uint16_t)(text_depth_list_head + 0x300u);
-	SCREEN(screen)->sprite_list_last = sprite;
+	screen->sprite_list_last = sprite;
 	SCREEN(depth_layer - 0x5678u)->text_depth_list_head = (first_sprite >> 4) | 0x8000u;
-	SCREEN(screen)->sprite_groups++;
+	screen->sprite_groups++;
 	return text;
 }

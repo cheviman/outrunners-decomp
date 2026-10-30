@@ -24,40 +24,41 @@
 void coin_prompt_update(void)
 {
 	uint8_t coin_units = 0, credits = 0, first_piece = 0, message = 0;
-	uint32_t object = 0, piece_count = 0;
+	uint32_t piece_count = 0;
+	struct object *object = NULL;
 	uint8_t round_frames = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		if (SCREEN(screen)->game_mode == 6u)
+		if (screen->game_mode == 6u)
 		{
-			OBJECT(current_object)->flags = 0u;
-			OBJECT(current_object)->flags_high = 0u;
+			current_object->flags = 0u;
+			current_object->flags_high = 0u;
 			return;
 		}
-		OBJECT(current_object)->coin_prompt.next_car = SCREEN(screen)->car_number;
-		OBJECT(current_object)->state++;
+		current_object->coin_prompt.next_car = screen->car_number;
+		current_object->state++;
 		break;
 	case 1:
-		round_frames = OBJECT(current_object)->coin_prompt.round_frames;
-		OBJECT(current_object)->coin_prompt.round_frames = round_frames - 1u;
+		round_frames = current_object->coin_prompt.round_frames;
+		current_object->coin_prompt.round_frames = round_frames - 1u;
 		if (round_frames != 1u)
 		{
-			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-				SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
+			if (screen->game_mode != 6u && screen->game_mode != 7u && screen->lcd_scroll == 0u)
+				screen->lcd_scroll_request = coin_prompt_lcd_texts[current_object->coin_prompt.message];
 			return;
 		}
 		break;
 	}
-	OBJECT(current_object)->coin_prompt.round_frames = 0x1Eu;
-	OBJECT(current_object)->coin_prompt.car = OBJECT(current_object)->coin_prompt.next_car;
+	current_object->coin_prompt.round_frames = 0x1Eu;
+	current_object->coin_prompt.car = current_object->coin_prompt.next_car;
 	object = start_object();
-	OBJECT(object)->handler = coin_prompt_car_drive_ADDRESS;
-	OBJECT(object)->car = OBJECT(current_object)->coin_prompt.next_car;
-	OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.next_car;
-	OBJECT(current_object)->coin_prompt.next_car++;
-	OBJECT(current_object)->coin_prompt.next_car &= 7u;
+	object->handler = coin_prompt_car_drive_ADDRESS;
+	object->car = current_object->coin_prompt.next_car;
+	object->car_colour = current_object->coin_prompt.next_car;
+	current_object->coin_prompt.next_car++;
+	current_object->coin_prompt.next_car &= 7u;
 	if (game->free_play != 0u)
 	{
 		message = 2u;
@@ -67,7 +68,7 @@ void coin_prompt_update(void)
 	}
 	else
 	{
-		switch (SCREEN(screen)->index)
+		switch (screen->index)
 		{
 		case 0:
 			credits = game->seat1_credits;
@@ -84,10 +85,10 @@ void coin_prompt_update(void)
 			piece_count = 2u;
 			first_piece = 0u;
 			object = coin_prompt_start_key_prompt(piece_count, first_piece);
-			OBJECT(current_object)->coin_prompt.message = message;
-			OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.car;
-			if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-				SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
+			current_object->coin_prompt.message = message;
+			object->car_colour = current_object->coin_prompt.car;
+			if (screen->game_mode != 6u && screen->game_mode != 7u && screen->lcd_scroll == 0u)
+				screen->lcd_scroll_request = coin_prompt_lcd_texts[current_object->coin_prompt.message];
 			return;
 		}
 		if (coin_units != 0u)
@@ -95,14 +96,14 @@ void coin_prompt_update(void)
 		else
 			message = 0u;
 		object = start_object();
-		OBJECT(object)->handler = coin_prompt_message_update_ADDRESS;
-		OBJECT(object)->coin_prompt_message.prompt = current_object;
-		OBJECT(object)->coin_prompt_message.message = message;
+		object->handler = coin_prompt_message_update_ADDRESS;
+		object->coin_prompt_message.prompt = address_of(current_object);
+		object->coin_prompt_message.message = message;
 	}
-	OBJECT(current_object)->coin_prompt.message = message;
-	OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.car;
-	if (SCREEN(screen)->game_mode != 6u && SCREEN(screen)->game_mode != 7u && SCREEN(screen)->lcd_scroll == 0u)
-		SCREEN(screen)->lcd_scroll_request = coin_prompt_lcd_texts[OBJECT(current_object)->coin_prompt.message];
+	current_object->coin_prompt.message = message;
+	object->car_colour = current_object->coin_prompt.car;
+	if (screen->game_mode != 6u && screen->game_mode != 7u && screen->lcd_scroll == 0u)
+		screen->lcd_scroll_request = coin_prompt_lcd_texts[current_object->coin_prompt.message];
 }
 
 /* The little car that drives across the prompt from right to left each round (coin_prompt starts it):
@@ -112,32 +113,32 @@ void coin_prompt_car_drive(void)
 	uint32_t animation = 0;
 	uint16_t x = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		animation = coin_prompt_car_animations[OBJECT(current_object)->car];
+		animation = coin_prompt_car_animations[current_object->car];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_car_palettes[OBJECT(current_object)->car_colour] + 4u;
-		OBJECT(current_object)->draw_mode = 0xAu;
-		OBJECT(current_object)->width_scale = 0x40u;
-		OBJECT(current_object)->height_scale = 0x40u;
-		OBJECT(current_object)->x = 0x140u;
-		OBJECT(current_object)->y = 0xC0u;
-		OBJECT(current_object)->frame = 4u;
-		OBJECT(current_object)->depth_layer = 0x19Eu;
-		OBJECT(current_object)->state++;
+		current_object->palette = coin_prompt_car_palettes[current_object->car_colour] + 4u;
+		current_object->draw_mode = 0xAu;
+		current_object->width_scale = 0x40u;
+		current_object->height_scale = 0x40u;
+		current_object->x = 0x140u;
+		current_object->y = 0xC0u;
+		current_object->frame = 4u;
+		current_object->depth_layer = 0x19Eu;
+		current_object->state++;
 		break;
 	case 1:
 		break;
 	}
-	x = OBJECT(current_object)->x - 0xEu;
-	OBJECT(current_object)->x = x;
+	x = current_object->x - 0xEu;
+	current_object->x = x;
 	if ((int16_t)x >= 0)
 	{
 		draw_object(0u);
 		return;
 	}
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* The prompt's message for a round (coin_prompt starts one every 30 frames): after 6 frames, INSERT
@@ -149,90 +150,90 @@ void coin_prompt_message_update(void)
 	uint32_t animation = 0;
 	uint8_t frames = 0, frames_2 = 0, frames_3 = 0;
 
-	if (OBJECT(OBJECT(current_object)->coin_prompt_message.prompt)->coin_prompt.message != OBJECT(current_object)->coin_prompt_message.message)
+	if (OBJECT(current_object->coin_prompt_message.prompt)->coin_prompt.message != current_object->coin_prompt_message.message)
 	{
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		OBJECT(current_object)->coin_prompt_message.frames = 6u;
-		OBJECT(current_object)->state++;
-		frames = OBJECT(current_object)->coin_prompt_message.frames;
-		OBJECT(current_object)->coin_prompt_message.frames = frames - 1u;
+		current_object->coin_prompt_message.frames = 6u;
+		current_object->state++;
+		frames = current_object->coin_prompt_message.frames;
+		current_object->coin_prompt_message.frames = frames - 1u;
 		if (frames != 1u)
 			return;
-		OBJECT(current_object)->draw_mode = 0u;
-		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
+		current_object->draw_mode = 0u;
+		animation = coin_prompt_message_animations[current_object->coin_prompt_message.message];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->car_colour];
-		OBJECT(current_object)->x = 0xA0u;
-		OBJECT(current_object)->y = 0xC0u;
-		OBJECT(current_object)->depth_layer = 0x19Du;
-		OBJECT(current_object)->coin_prompt_message.frames = 0x16u;
-		OBJECT(current_object)->state++;
+		current_object->palette = coin_prompt_message_palettes[current_object->car_colour];
+		current_object->x = 0xA0u;
+		current_object->y = 0xC0u;
+		current_object->depth_layer = 0x19Du;
+		current_object->coin_prompt_message.frames = 0x16u;
+		current_object->state++;
 		break;
 	case 1:
-		frames = OBJECT(current_object)->coin_prompt_message.frames;
-		OBJECT(current_object)->coin_prompt_message.frames = frames - 1u;
+		frames = current_object->coin_prompt_message.frames;
+		current_object->coin_prompt_message.frames = frames - 1u;
 		if (frames != 1u)
 			return;
-		OBJECT(current_object)->draw_mode = 0u;
-		animation = coin_prompt_message_animations[OBJECT(current_object)->coin_prompt_message.message];
+		current_object->draw_mode = 0u;
+		animation = coin_prompt_message_animations[current_object->coin_prompt_message.message];
 		animation_start(animation);
-		OBJECT(current_object)->palette = coin_prompt_message_palettes[OBJECT(current_object)->car_colour];
-		OBJECT(current_object)->x = 0xA0u;
-		OBJECT(current_object)->y = 0xC0u;
-		OBJECT(current_object)->depth_layer = 0x19Du;
-		OBJECT(current_object)->coin_prompt_message.frames = 0x16u;
-		OBJECT(current_object)->state++;
+		current_object->palette = coin_prompt_message_palettes[current_object->car_colour];
+		current_object->x = 0xA0u;
+		current_object->y = 0xC0u;
+		current_object->depth_layer = 0x19Du;
+		current_object->coin_prompt_message.frames = 0x16u;
+		current_object->state++;
 		break;
 	case 2:
 		break;
 	case 3:
-		frames_2 = OBJECT(current_object)->coin_prompt_message.frames;
-		OBJECT(current_object)->coin_prompt_message.frames = frames_2 - 1u;
+		frames_2 = current_object->coin_prompt_message.frames;
+		current_object->coin_prompt_message.frames = frames_2 - 1u;
 		if (frames_2 != 1u)
 		{
 			draw_object(0u);
 			return;
 		}
-		OBJECT(current_object)->flags = 0u;
+		current_object->flags = 0u;
 		return;
 	}
 	animation_advance(0u);
-	frames_3 = OBJECT(current_object)->coin_prompt_message.frames;
-	OBJECT(current_object)->coin_prompt_message.frames = frames_3 - 1u;
+	frames_3 = current_object->coin_prompt_message.frames;
+	current_object->coin_prompt_message.frames = frames_3 - 1u;
 	if (frames_3 != 1u)
 	{
 		draw_object(0u);
 		return;
 	}
-	OBJECT(current_object)->depth_layer--;
-	OBJECT(current_object)->coin_prompt_message.frames = 0x1Eu;
-	OBJECT(current_object)->state++;
-	frames_2 = OBJECT(current_object)->coin_prompt_message.frames;
-	OBJECT(current_object)->coin_prompt_message.frames = frames_2 - 1u;
+	current_object->depth_layer--;
+	current_object->coin_prompt_message.frames = 0x1Eu;
+	current_object->state++;
+	frames_2 = current_object->coin_prompt_message.frames;
+	current_object->coin_prompt_message.frames = frames_2 - 1u;
 	if (frames_2 != 1u)
 	{
 		draw_object(0u);
 		return;
 	}
-	OBJECT(current_object)->flags = 0u;
+	current_object->flags = 0u;
 }
 
 /* Starts R1 pieces of the ignition key prompt (ignition_key_prompt), pieces R2 on, and returns the last
    one. */
-uint32_t coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_piece)
+struct object *coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_piece)
 {
-	uint32_t object = 0;
+	struct object *object = NULL;
 
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = ignition_key_prompt_update_ADDRESS;
-		OBJECT(object)->ignition_key_prompt.piece = first_piece;
+		object->handler = ignition_key_prompt_update_ADDRESS;
+		object->ignition_key_prompt.piece = first_piece;
 		first_piece++;
 		piece_count--;
 	} while (piece_count != 0u);
@@ -248,40 +249,40 @@ void ignition_key_prompt_update(void)
 	uint32_t animation = 0, piece = 0;
 	uint16_t frames_left = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
 		break;
 	case 1:
-		frames_left = OBJECT(current_object)->ignition_key_prompt.frames_left;
-		OBJECT(current_object)->ignition_key_prompt.frames_left = frames_left - 1u;
+		frames_left = current_object->ignition_key_prompt.frames_left;
+		current_object->ignition_key_prompt.frames_left = frames_left - 1u;
 		if (frames_left == 1u)
 		{
-			OBJECT(current_object)->flags = 0u;
+			current_object->flags = 0u;
 			return;
 		}
 		animation_advance(0u);
 		draw_object(0u);
 		return;
 	}
-	OBJECT(current_object)->draw_mode = 0u;
-	piece = ignition_key_prompt_pieces_ADDRESS + ((uint32_t)OBJECT(current_object)->ignition_key_prompt.piece << 4);
+	current_object->draw_mode = 0u;
+	piece = ignition_key_prompt_pieces_ADDRESS + ((uint32_t)current_object->ignition_key_prompt.piece << 4);
 	animation = PICTURE_RECORD(piece)->animation;
 	piece += 2u;
 	animation_start(animation);
-	OBJECT(current_object)->palette = PICTURE_RECORD(piece - 0x2u)->palette;
+	current_object->palette = PICTURE_RECORD(piece - 0x2u)->palette;
 	piece += 2u;
-	OBJECT(current_object)->width_scale = PICTURE_RECORD(piece - 0x4u)->width_scale;
+	current_object->width_scale = PICTURE_RECORD(piece - 0x4u)->width_scale;
 	piece += 2u;
-	OBJECT(current_object)->height_scale = PICTURE_RECORD(piece - 0x6u)->height_scale;
+	current_object->height_scale = PICTURE_RECORD(piece - 0x6u)->height_scale;
 	piece += 2u;
-	OBJECT(current_object)->x = PICTURE_RECORD(piece - 0x8u)->x;
+	current_object->x = PICTURE_RECORD(piece - 0x8u)->x;
 	piece += 2u;
-	OBJECT(current_object)->y = PICTURE_RECORD(piece - 0xAu)->y;
+	current_object->y = PICTURE_RECORD(piece - 0xAu)->y;
 	piece += 2u;
-	OBJECT(current_object)->depth_layer = PICTURE_RECORD(piece - 0xCu)->depth_layer;
-	OBJECT(current_object)->ignition_key_prompt.frames_left = PICTURE_RECORD(piece - 0xCu)->frames_left;
-	OBJECT(current_object)->state++;
+	current_object->depth_layer = PICTURE_RECORD(piece - 0xCu)->depth_layer;
+	current_object->ignition_key_prompt.frames_left = PICTURE_RECORD(piece - 0xCu)->frames_left;
+	current_object->state++;
 	animation_advance(0u);
 	draw_object(0u);
 }
@@ -298,22 +299,22 @@ void credit_display_update(void)
 	uint32_t text = 0;
 	uint32_t credits_kept = 0, coin_units_kept = 0;
 
-	switch (OBJECT(current_object)->state)
+	switch (current_object->state)
 	{
 	case 0:
-		if (SCREEN(screen)->game_mode == 6u)
+		if (screen->game_mode == 6u)
 		{
-			OBJECT(current_object)->flags = 0u;
-			OBJECT(current_object)->flags_high = 0u;
+			current_object->flags = 0u;
+			current_object->flags_high = 0u;
 		}
 		if (game->free_play != 0u)
 		{
-			OBJECT(current_object)->state++;
+			current_object->state++;
 			text = credit_free_play_text_ADDRESS;
 			draw_text(text);
 			return;
 		}
-		OBJECT(current_object)->state += 2u;
+		current_object->state += 2u;
 		break;
 	case 1:
 		text = credit_free_play_text_ADDRESS;
@@ -322,7 +323,7 @@ void credit_display_update(void)
 	case 2:
 		break;
 	}
-	switch (SCREEN(screen)->index)
+	switch (screen->index)
 	{
 	case 0:
 		credits = game->seat1_credits;
@@ -343,8 +344,8 @@ void credit_display_update(void)
 	coin_units_shown = (uint8_t)coin_units_kept;
 	units = (uint8_t)credits_kept;
 	r12 &= ~0xFFu;
-	OBJECT(current_object)->y = 0xCFu;
-	OBJECT(current_object)->depth_layer = 0x19Eu;
+	current_object->y = 0xCFu;
+	current_object->depth_layer = 0x19Eu;
 	while ((int8_t)units >= 0xA)
 	{
 		units -= 0xAu;
@@ -352,24 +353,24 @@ void credit_display_update(void)
 	}
 	if ((uint8_t)r12 != 0u)
 	{
-		OBJECT(current_object)->credit_display.digit_kind = 0u;
-		OBJECT(current_object)->credit_display.digit = credit_digit_characters[(uint8_t)r12];
-		OBJECT(current_object)->x = 0xACu;
+		current_object->credit_display.digit_kind = 0u;
+		current_object->credit_display.digit = credit_digit_characters[(uint8_t)r12];
+		current_object->x = 0xACu;
 		credit_display_digit();
 	}
-	OBJECT(current_object)->credit_display.digit_kind = 0u;
-	OBJECT(current_object)->credit_display.digit = credit_digit_characters[units];
-	OBJECT(current_object)->x = 0xB4u;
+	current_object->credit_display.digit_kind = 0u;
+	current_object->credit_display.digit = credit_digit_characters[units];
+	current_object->x = 0xB4u;
 	credit_display_digit();
 	if (coin_units_shown != 0u)
 	{
-		OBJECT(current_object)->credit_display.digit_kind = 1u;
-		OBJECT(current_object)->credit_display.digit = coin_units_shown;
-		OBJECT(current_object)->x = 0xC0u;
+		current_object->credit_display.digit_kind = 1u;
+		current_object->credit_display.digit = coin_units_shown;
+		current_object->x = 0xC0u;
 		credit_display_digit();
-		OBJECT(current_object)->credit_display.digit_kind = 2u;
-		OBJECT(current_object)->credit_display.digit = game->coins_per_credit;
-		OBJECT(current_object)->x = 0xC8u;
+		current_object->credit_display.digit_kind = 2u;
+		current_object->credit_display.digit = game->coins_per_credit;
+		current_object->x = 0xC8u;
 		credit_display_digit();
 	}
 }
@@ -381,11 +382,11 @@ void credit_display_digit(void)
 {
 	uint32_t animation = 0, digit_kind = 0;
 
-	OBJECT(current_object)->draw_mode = 0u;
-	digit_kind = OBJECT(current_object)->credit_display.digit_kind;
+	current_object->draw_mode = 0u;
+	digit_kind = current_object->credit_display.digit_kind;
 	animation = credit_display_animations[digit_kind];
 	animation_start(animation);
-	OBJECT(current_object)->palette = credit_display_palettes[digit_kind];
-	OBJECT(current_object)->frame = OBJECT(current_object)->credit_display.digit;
+	current_object->palette = credit_display_palettes[digit_kind];
+	current_object->frame = current_object->credit_display.digit;
 	draw_object(digit_kind);
 }

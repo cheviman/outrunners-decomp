@@ -19,11 +19,12 @@
    first. */
 void game_mode_title(void)
 {
-	uint32_t colour_block = 0, object = 0;
+	uint32_t colour_block = 0;
+	struct object *object = NULL;
 	uint16_t mode_timer = 0;
 
 	attract_lamps_update();
-	switch (SCREEN(screen)->mode_step)
+	switch (screen->mode_step)
 	{
 	case 0:
 		clear_objects();
@@ -33,37 +34,37 @@ void game_mode_title(void)
 		colour_block = title_palette;
 		queue_palette(colour_block);
 		object = start_object();
-		OBJECT(object)->handler = title_screen_update_ADDRESS;
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->input_write_place = 0u;
-		SCREEN(screen)->input_read_place = 0u;
-		if (SCREEN(screen)->index != 0u)
+		object->handler = title_screen_update_ADDRESS;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		screen->input_write_place = 0u;
+		screen->input_read_place = 0u;
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x86u);
 		else
 			io_write8(IO_1_CNT, 6u);
-		SCREEN(screen)->mode_step++;
+		screen->mode_step++;
 		return;
 	case 1:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->mode_timer = 0x1C2u;
-			SCREEN(screen)->mode_step++;
+			screen->mode_timer = 0x1C2u;
+			screen->mode_step++;
 		}
 		return;
 	case 2:
-		mode_timer = SCREEN(screen)->mode_timer;
-		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		mode_timer = screen->mode_timer;
+		screen->mode_timer = mode_timer - 1u;
 		if (mode_timer == 1u)
 		{
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
-			SCREEN(screen)->mode_step++;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
+			screen->mode_step++;
 		}
 		return;
 	case 3:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
-			AS32(SCREEN(screen)->game_mode) = 3u;
+		if ((screen->flags & 1u) == 0u)
+			AS32(screen->game_mode) = 3u;
 		return;
 	}
 }
@@ -71,7 +72,7 @@ void game_mode_title(void)
 /* Game mode 0 (the first frame after start-up): game mode 2 and its first step (game_mode_title). */
 void game_mode_power_on(void)
 {
-	AS32(SCREEN(screen)->game_mode) = 2u;
+	AS32(screen->game_mode) = 2u;
 	game_mode_title();
 }
 
@@ -79,7 +80,7 @@ void game_mode_power_on(void)
    step (game_mode_title). */
 void game_mode_restart(void)
 {
-	AS32(SCREEN(screen)->game_mode) = 2u;
+	AS32(screen->game_mode) = 2u;
 	game_mode_title();
 }
 
@@ -95,32 +96,32 @@ void game_mode_car_presentation(void)
 	uint16_t mode_timer = 0;
 
 	attract_lamps_update();
-	switch (SCREEN(screen)->mode_step)
+	switch (screen->mode_step)
 	{
 	case 0:
 		break;
 	case 1:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->mode_timer = 0xB4u;
-			SCREEN(screen)->mode_step++;
+			screen->mode_timer = 0xB4u;
+			screen->mode_step++;
 		}
 		return;
 	case 2:
-		mode_timer = SCREEN(screen)->mode_timer;
-		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		mode_timer = screen->mode_timer;
+		screen->mode_timer = mode_timer - 1u;
 		if (mode_timer == 1u)
 		{
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
-			SCREEN(screen)->mode_step++;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
+			screen->mode_step++;
 		}
 		return;
 	case 3:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
-			SCREEN(screen)->link_event = 3u;
-			AS32(SCREEN(screen)->game_mode) = 4u;
+			screen->link_event = 3u;
+			AS32(screen->game_mode) = 4u;
 		}
 		return;
 	}
@@ -128,15 +129,15 @@ void game_mode_car_presentation(void)
 	reset_tile_layers();
 	clear_sprite_group_count();
 	clear_text_layer();
-	colour_block = scene_palettes[attract_car_scene_palettes[SCREEN(screen)->attract_car]];
+	colour_block = scene_palettes[attract_car_scene_palettes[screen->attract_car]];
 	queue_palette(colour_block);
 	colour_block = black_background_palette_ADDRESS;
 	queue_palette(colour_block);
 	handler_list = car_presentation_objects_ADDRESS;
 	start_object_list(handler_list);
-	SCREEN(screen)->fade_kind = 1u;
-	SCREEN(screen)->flags |= 1u;
-	SCREEN(screen)->mode_step++;
+	screen->fade_kind = 1u;
+	screen->flags |= 1u;
+	screen->mode_step++;
 }
 
 /* Game mode 4, the demo race of the attract mode (the car just presented, attract_car, on its stage):
@@ -149,7 +150,7 @@ void game_mode_demo_race(void)
 
 	attract_lamps_update();
 	left_caller = 0u;
-	switch (SCREEN(screen)->mode_step)
+	switch (screen->mode_step)
 	{
 	case 0:
 		left_caller = demo_race_set_up();
@@ -179,14 +180,14 @@ uint32_t demo_race_set_up(void)
 {
 	uint32_t left_caller = 0;
 
-	SCREEN(screen)->demo_flags |= 0x100u;
+	screen->demo_flags |= 0x100u;
 	clear_objects();
 	reset_tile_layers();
 	clear_sprite_group_count();
 	clear_text_layer();
-	SCREEN(screen)->mode_step++;
-	SCREEN(screen)->mode_timer &= 0xFF00u;
-	SCREEN(screen)->game_step = 0xAu;
+	screen->mode_step++;
+	screen->mode_timer &= 0xFF00u;
+	screen->game_step = 0xAu;
 	left_caller = 1u;
 	return left_caller;
 }
@@ -196,24 +197,24 @@ void demo_race_fade_in(void)
 {
 	uint8_t frame_parity = 0;
 
-	SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | ((uint8_t)SCREEN(screen)->mode_timer + 1u & 0xFFu);
-	frame_parity = (uint8_t)SCREEN(screen)->mode_timer & 1u;
-	SCREEN(screen)->mode_timer = (SCREEN(screen)->mode_timer & 0xFF00u) | (frame_parity & 0xFFu);
+	screen->mode_timer = (screen->mode_timer & 0xFF00u) | ((uint8_t)screen->mode_timer + 1u & 0xFFu);
+	frame_parity = (uint8_t)screen->mode_timer & 1u;
+	screen->mode_timer = (screen->mode_timer & 0xFF00u) | (frame_parity & 0xFFu);
 	if (frame_parity == 0u)
 	{
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->mode_step++;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		screen->mode_step++;
 	}
 }
 
 /* Step 2 of the demo race: when the fade is over, mode_timer 600 frames (20 seconds) and step 3. */
 void demo_race_start_timer(void)
 {
-	if ((SCREEN(screen)->flags & 1u) == 0u)
+	if ((screen->flags & 1u) == 0u)
 	{
-		SCREEN(screen)->mode_timer = 0x258u;
-		SCREEN(screen)->mode_step++;
+		screen->mode_timer = 0x258u;
+		screen->mode_step++;
 	}
 }
 
@@ -222,13 +223,13 @@ void demo_race_count_down(void)
 {
 	uint16_t mode_timer = 0;
 
-	mode_timer = SCREEN(screen)->mode_timer;
-	SCREEN(screen)->mode_timer = mode_timer - 1u;
+	mode_timer = screen->mode_timer;
+	screen->mode_timer = mode_timer - 1u;
 	if (mode_timer == 1u)
 	{
-		SCREEN(screen)->fade_kind = 0u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->mode_step++;
+		screen->fade_kind = 0u;
+		screen->flags |= 1u;
+		screen->mode_step++;
 	}
 }
 
@@ -238,9 +239,9 @@ uint32_t demo_race_end(uint32_t left_caller)
 {
 	uint32_t left_caller_2 = 0;
 
-	if ((SCREEN(screen)->flags & 1u) != 0u)
+	if ((screen->flags & 1u) != 0u)
 		return left_caller;
-	AS32(SCREEN(screen)->game_mode) = 5u;
+	AS32(screen->game_mode) = 5u;
 	race_record_clear();
 	left_caller_2 = 1u;
 	return left_caller_2;
@@ -255,46 +256,47 @@ uint32_t demo_race_end(uint32_t left_caller)
    1 (back to the title). attract_lamps_update every frame first. */
 void game_mode_ranking(void)
 {
-	uint32_t colour_block = 0, handler_list = 0, object = 0;
+	uint32_t colour_block = 0, handler_list = 0;
+	struct object *object = NULL;
 	uint16_t mode_timer = 0;
 
 	attract_lamps_update();
-	switch (SCREEN(screen)->mode_step)
+	switch (screen->mode_step)
 	{
 	case 0:
 		break;
 	case 1:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
-			SCREEN(screen)->mode_step++;
+		if ((screen->flags & 1u) == 0u)
+			screen->mode_step++;
 		return;
 	case 2:
-		mode_timer = SCREEN(screen)->mode_timer;
-		SCREEN(screen)->mode_timer = mode_timer - 1u;
+		mode_timer = screen->mode_timer;
+		screen->mode_timer = mode_timer - 1u;
 		if (mode_timer == 1u)
-			SCREEN(screen)->mode_step++;
+			screen->mode_step++;
 		return;
 	case 3:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
-			AS32(SCREEN(screen)->game_mode) = 1u;
+		if ((screen->flags & 1u) == 0u)
+			AS32(screen->game_mode) = 1u;
 		return;
 	}
-	SCREEN(screen)->demo_flags &= ~0x100u;
-	game->wheel_motor[SCREEN(screen)->index] = 0u;
+	screen->demo_flags &= ~0x100u;
+	game->wheel_motor[screen->index] = 0u;
 	reset_screen_sound();
 	clear_objects();
 	reset_tile_layers();
 	clear_sprite_group_count();
 	clear_text_layer();
-	r12 = clear_published_car();
+	r12 = address_of(clear_published_car());
 	colour_block = ranking_palette;
 	queue_palette(colour_block);
-	SCREEN(screen)->mode_step++;
+	screen->mode_step++;
 	handler_list = ranking_objects_ADDRESS;
 	start_object_list(handler_list);
 	object = start_object();
-	OBJECT(object)->handler = ranking_update_ADDRESS;
-	SCREEN(screen)->mode_timer = 0x10Eu;
-	RACE(SCREEN(screen)->race)->game_over = 0u;
+	object->handler = ranking_update_ADDRESS;
+	screen->mode_timer = 0x10Eu;
+	RACE(screen->race)->game_over = 0u;
 }
 
 /* Game mode 6, a game (check_game_start starts it at step 0) and the demo's race (game_mode_demo_race,
@@ -340,31 +342,33 @@ void game_mode_play(void)
 {
 	uint32_t zero = 0;
 	uint8_t model = 0, player = 0, sound_code = 0, stage = 0;
-	uint32_t bookkeeping_entry = 0, car = 0, colour_block = 0, demo_race_choice = 0, demo_record = 0, handler_list = 0, index = 0, lamp_place = 0, object = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
+	uint32_t bookkeeping_entry = 0, colour_block = 0, demo_race_choice = 0, demo_record = 0, handler_list = 0, index = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
+	struct object *car = NULL, *object = NULL;
+	struct screen_lamps *lamp_place = NULL;
 	uint8_t racer = 0;
 	uint32_t flags = 0;
 
-	switch (SCREEN(screen)->game_step)
+	switch (screen->game_step)
 	{
 	case 0:
 		sound_code = 0x21u;
 		queue_sound(sound_code);
-		SCREEN(screen)->button_lamps = 0xFFFFu;
+		screen->button_lamps = 0xFFFFu;
 		game->lcd_restart_frames = 0u;
-		SCREEN(screen)->fade_kind = 0u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->game_step++;
-		RACE(SCREEN(screen)->race)->game_over = 0u;
+		screen->fade_kind = 0u;
+		screen->flags |= 1u;
+		screen->game_step++;
+		RACE(screen->race)->game_over = 0u;
 		return;
 	case 1:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
-			race = race_copy_offsets[SCREEN(screen)->host_player] + 0x20E01Fu;
+			race = race_copy_offsets[screen->host_player] + 0x20E01Fu;
 			racers_left = RACE(race - 0x1Fu)->racer_count;
 			race++;
 			if (racers_left == 0u)
 				return;
-			player = SCREEN(screen)->player;
+			player = screen->player;
 			do
 			{
 				racer = RACE_ORDER_PLAYERS(race)[0];
@@ -374,180 +378,180 @@ void game_mode_play(void)
 			} while ((racers_left != 0u) & (racer != player));
 			if (zero)
 			{
-				if (SCREEN(screen)->player == SCREEN(screen)->host_player && game->isdn_mode == 0u)
+				if (screen->player == screen->host_player && game->isdn_mode == 0u)
 					io_write8(LINK_ENTRIES_CLOSED, 1u);
-				SCREEN(screen)->game_step++;
+				screen->game_step++;
 			}
 		}
 		return;
 	case 2:
-		SCREEN(screen)->demo_flags &= ~0x100u;
-		game->wheel_motor[SCREEN(screen)->index] = 0u;
-		SCREEN(screen)->game_start_time = BOOKKEEPING_TOTAL_TIME;
-		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + SCREEN(screen)->index * 2u;
+		screen->demo_flags &= ~0x100u;
+		game->wheel_motor[screen->index] = 0u;
+		screen->game_start_time = BOOKKEEPING_TOTAL_TIME;
+		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + screen->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
-		io_write8(EVENT_CODE, game_start_c00074_bytes[SCREEN(screen)->index]);
-		if (SCREEN(screen)->entry_countdown_shown == 0u)
+		io_write8(EVENT_CODE, game_start_c00074_bytes[screen->index]);
+		if (screen->entry_countdown_shown == 0u)
 			reset_screen_sound();
 		clear_screen();
 		clear_race_state();
 		colour_block = car_select_palette;
 		queue_palette(colour_block);
-		SCREEN(screen)->in_game = 0xFFu;
-		SCREEN(screen)->host_record = race_copy_offsets[SCREEN(screen)->host_player] + GAME_VARIABLES;
-		SCREEN(screen)->current_stage_level = 0u;
-		SCREEN(screen)->first_stage = 0u;
-		SCREEN(screen)->route_stage_level = 0u;
-		SCREEN(screen)->built_stage = 0u;
-		SCREEN(screen)->current_stage = 0u;
-		SCREEN(screen)->route_stage = 0u;
-		SCREEN(screen)->built_stage_level = 0u;
-		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
-		SCREEN_LAMPS(lamp_place)->leader_all = 8u;
+		screen->in_game = 0xFFu;
+		screen->host_record = race_copy_offsets[screen->host_player] + GAME_VARIABLES;
+		screen->current_stage_level = 0u;
+		screen->first_stage = 0u;
+		screen->route_stage_level = 0u;
+		screen->built_stage = 0u;
+		screen->current_stage = 0u;
+		screen->route_stage = 0u;
+		screen->built_stage_level = 0u;
+		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
+		lamp_place->checkpoint_all = 2u;
+		lamp_place->leader_all = 8u;
 		object = start_object();
-		OBJECT(object)->handler = car_select_start_ADDRESS;
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		if (SCREEN(screen)->index != 0u)
+		object->handler = car_select_start_ADDRESS;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x86u);
 		else
 			io_write8(IO_1_CNT, 6u);
-		SCREEN(screen)->game_step++;
+		screen->game_step++;
 		return;
 	case 3:
 		return;
 	case 4:
-		SCREEN(screen)->fade_kind = 0u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->game_step++;
-		SCREEN(screen)->entry_countdown_shown = 0u;
-		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
-		SCREEN_LAMPS(lamp_place)->leader_all = 8u;
+		screen->fade_kind = 0u;
+		screen->flags |= 1u;
+		screen->game_step++;
+		screen->entry_countdown_shown = 0u;
+		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
+		lamp_place->checkpoint_all = 2u;
+		lamp_place->leader_all = 8u;
 		return;
 	case 10:
 		silence_and_clear_screen();
 		clear_race_state();
-		demo_race_choice = attract_demo_races_ADDRESS + SCREEN(screen)->attract_car * 2u;
+		demo_race_choice = attract_demo_races_ADDRESS + screen->attract_car * 2u;
 		stage = DEMO_RACE_CHOICE(demo_race_choice)->stage;
-		SCREEN(screen)->first_stage = stage;
-		SCREEN(screen)->built_stage = stage;
-		SCREEN(screen)->route_stage = stage;
-		SCREEN(screen)->current_stage_level = 0u;
-		SCREEN(screen)->route_stage_level = stage;
-		SCREEN(screen)->built_stage_level = 0u;
-		demo_record = screen + 0x490u;
-		SCREEN(screen)->host_record = demo_record;
+		screen->first_stage = stage;
+		screen->built_stage = stage;
+		screen->route_stage = stage;
+		screen->current_stage_level = 0u;
+		screen->route_stage_level = stage;
+		screen->built_stage_level = 0u;
+		demo_record = address_of(screen) + 0x490u;
+		screen->host_record = demo_record;
 		SCREEN(demo_record - 0x490u)->demo_player_count = 1u;
-		SCREEN(demo_record - 0x490u)->demo_players = SCREEN(screen)->player;
+		SCREEN(demo_record - 0x490u)->demo_players = screen->player;
 		SCREEN(demo_record - 0x490u)->demo_stage = stage;
 		model = DEMO_RACE_CHOICE(demo_race_choice)->model;
-		CAR(player_car)->model = model;
-		RACE(SCREEN(screen)->race)->model = model;
-		SCREEN(screen)->game_step = 0x1Bu;
+		player_car->model = model;
+		RACE(screen->race)->model = model;
+		screen->game_step = 0x1Bu;
 		colour_block = title_palette;
 		queue_palette(colour_block);
-		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
+		if (RACE(screen->race_copy)->published != 0u)
 			return;
-		if (SCREEN(screen)->index != 0u)
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
-		SCREEN(screen)->game_step = 0x17u;
+		car->player_car.place = screen->places[screen->player];
+		screen->game_step = 0x17u;
 		return;
 	case 27:
-		if (RACE(SCREEN(screen)->race_copy)->published != 0u)
+		if (RACE(screen->race_copy)->published != 0u)
 			return;
-		if (SCREEN(screen)->index != 0u)
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
-		SCREEN(screen)->game_step = 0x17u;
+		car->player_car.place = screen->places[screen->player];
+		screen->game_step = 0x17u;
 		return;
 	case 5:
-		if ((SCREEN(screen)->flags & 1u) != 0u)
+		if ((screen->flags & 1u) != 0u)
 			return;
-		RACE(SCREEN(screen)->race)->ready = 0u;
+		RACE(screen->race)->ready = 0u;
 		silence_and_clear_screen();
-		if (SCREEN(screen)->index != 0u)
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
 		handler_list = player_car_objects_ADDRESS;
 		car = start_object_list(handler_list);
-		OBJECT(car)->player_car.place = SCREEN(screen)->places[SCREEN(screen)->player];
-		SCREEN(screen)->game_step = 0x17u;
+		car->player_car.place = screen->places[screen->player];
+		screen->game_step = 0x17u;
 		return;
 	case 23:
-		if (RACE(SCREEN(screen)->race_copy)->published == 0u)
+		if (RACE(screen->race_copy)->published == 0u)
 			return;
-		SCREEN(screen)->race_running = 0xFFu;
+		screen->race_running = 0xFFu;
 		handler_list = race_objects_ADDRESS;
-		if ((SCREEN(screen)->demo_flags & 0x100u) != 0u)
+		if ((screen->demo_flags & 0x100u) != 0u)
 			handler_list = demo_race_objects_ADDRESS;
 		start_object_list(handler_list);
-		SCREEN(screen)->game_step++;
+		screen->game_step++;
 		return;
 	case 24:
 	case 25:
-		SCREEN(screen)->game_step++;
+		screen->game_step++;
 		return;
 	case 26:
-		SCREEN(screen)->game_step = 0xBu;
-		SCREEN(screen)->input_write_place = 0u;
-		SCREEN(screen)->input_read_place = 0u;
-		if (SCREEN(screen)->index != 0u)
+		screen->game_step = 0xBu;
+		screen->input_write_place = 0u;
+		screen->input_read_place = 0u;
+		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x86u);
 		else
 			io_write8(IO_1_CNT, 6u);
 		return;
 	case 11:
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->game_step = 6u;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		screen->game_step = 6u;
 		return;
 	case 6:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
-			SCREEN(screen)->game_step++;
+		if ((screen->flags & 1u) == 0u)
+			screen->game_step++;
 		return;
 	case 7:
-		flags = SCREEN(screen)->flags;
-		SCREEN(screen)->flags = flags & ~2u;
+		flags = screen->flags;
+		screen->flags = flags & ~2u;
 		if ((flags & 2u) != 0u)
 		{
-			SCREEN(screen)->race_running = 0u;
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
-			SCREEN(screen)->game_step++;
+			screen->race_running = 0u;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
+			screen->game_step++;
 		}
 		return;
 	case 8:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
-			lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-			SCREEN_LAMPS(lamp_place)->checkpoint_all = 2u;
-			SCREEN_LAMPS(lamp_place)->leader_all = 8u;
-			SCREEN(screen)->game_step++;
+			lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
+			lamp_place->checkpoint_all = 2u;
+			lamp_place->leader_all = 8u;
+			screen->game_step++;
 		}
 		return;
 	case 9:
 		clear_text_layer();
 		reset_tile_layers();
-		SCREEN(screen)->game_step = 0xCu;
+		screen->game_step = 0xCu;
 		clear_objects();
 		return;
 	case 12:
-		if (RACE(SCREEN(screen)->race_copy)->finished == 0u)
+		if (RACE(screen->race_copy)->finished == 0u)
 		{
 			reset_screen_sound();
 			song_title = meaning_of_the_light_title_ADDRESS;
@@ -559,60 +563,60 @@ void game_mode_play(void)
 		queue_palette(colour_block);
 		handler_list = route_map_objects_ADDRESS;
 		start_object_list(handler_list);
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->game_step++;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		screen->game_step++;
 		return;
 	case 13:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
-			SCREEN(screen)->game_step++;
+		if ((screen->flags & 1u) == 0u)
+			screen->game_step++;
 		return;
 	case 14:
-		if ((SCREEN(screen)->buttons_pressed & 0x40u) != 0u)
+		if ((screen->buttons_pressed & 0x40u) != 0u)
 		{
-			SCREEN(screen)->game_step = 0x10u;
+			screen->game_step = 0x10u;
 			return;
 		}
 		return;
 	case 15:
-		SCREEN(screen)->game_step = 0x10u;
+		screen->game_step = 0x10u;
 		return;
 	case 16:
 		zero = course_record_beaten();
 		if (zero == 0u)
 		{
-			SCREEN(screen)->game_step = 0x12u;
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
+			screen->game_step = 0x12u;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
 			return;
 		}
-		SCREEN(screen)->game_step = 0x15u;
+		screen->game_step = 0x15u;
 		return;
 	case 18:
-		if ((SCREEN(screen)->flags & 1u) == 0u)
+		if ((screen->flags & 1u) == 0u)
 		{
 			clear_objects();
-			SCREEN(screen)->game_step++;
+			screen->game_step++;
 			object = start_object();
-			OBJECT(object)->handler = name_entry_update_ADDRESS;
+			object->handler = name_entry_update_ADDRESS;
 		}
 		return;
 	case 19:
-		SCREEN(screen)->fade_kind = 1u;
-		SCREEN(screen)->flags |= 1u;
-		SCREEN(screen)->game_step++;
+		screen->fade_kind = 1u;
+		screen->flags |= 1u;
+		screen->game_step++;
 		return;
 	case 20:
 		return;
 	case 21:
 		set_player_ready();
-		SCREEN(screen)->game_step++;
+		screen->game_step++;
 		zero = players_not_ready();
 		if (zero == 0u)
 		{
-			SCREEN(screen)->game_step = 0x11u;
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
+			screen->game_step = 0x11u;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
 			fade_out_music();
 		}
 		return;
@@ -620,17 +624,17 @@ void game_mode_play(void)
 		zero = players_not_ready();
 		if (zero == 0u)
 		{
-			SCREEN(screen)->game_step = 0x11u;
-			SCREEN(screen)->fade_kind = 0u;
-			SCREEN(screen)->flags |= 1u;
+			screen->game_step = 0x11u;
+			screen->fade_kind = 0u;
+			screen->flags |= 1u;
 			fade_out_music();
 		}
 		return;
 	case 17:
-		if ((SCREEN(screen)->flags & 1u) != 0u)
+		if ((screen->flags & 1u) != 0u)
 			return;
-		time_played = BOOKKEEPING_TOTAL_TIME - SCREEN(screen)->game_start_time;
-		bookkeeping_entry = SOUND_RAM + 0x1F18u + SCREEN(screen)->index * 4u;
+		time_played = BOOKKEEPING_TOTAL_TIME - screen->game_start_time;
+		bookkeeping_entry = SOUND_RAM + 0x1F18u + screen->index * 4u;
 		bookkeeping_add32(bookkeeping_entry, time_played);
 		if (BOOKKEEPING_LONGEST_PLAY < (uint16_t)time_played)
 		{
@@ -642,32 +646,32 @@ void game_mode_play(void)
 			bookkeeping_entry = BOOKKEEPING_SHORTEST_PLAY_ADDRESS;
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
-		stage_level = SCREEN(screen)->current_stage_level;
-		if (RACE(SCREEN(screen)->race_copy)->finished != 0u)
+		stage_level = screen->current_stage_level;
+		if (RACE(screen->race_copy)->finished != 0u)
 			stage_level = 6u;
 		bookkeeping_entry = BOOKKEEPING_HISTOGRAM_ADDRESS + stage_level * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
-		index = SCREEN(screen)->index;
+		index = screen->index;
 		io_write8(EVENT_CODE, game_end_c00074_bytes[index]);
 		io_write8(EVENT_CODE, game_end_c00074_next_bytes[index]);
 		sound_code = 0x1Eu;
 		request_sound(sound_code);
 		reset_screen_sound();
 		reset_tile_layers();
-		SCREEN(screen)->race_started = 0u;
-		SCREEN(screen)->in_game = 0u;
-		SCREEN(screen)->is_host = 0u;
+		screen->race_started = 0u;
+		screen->in_game = 0u;
+		screen->is_host = 0u;
 		race_record_clear();
 		clear_objects();
-		SCREEN(screen)->game_step = 0x1Cu;
-		RACE(SCREEN(screen)->race)->game_over = 0xFFu;
-		lamp_place = GAME_VARIABLES + SCREEN(screen)->index * 4u;
-		SCREEN_LAMPS(lamp_place)->checkpoint_all = 0u;
-		SCREEN_LAMPS(lamp_place)->leader_all = 0u;
+		screen->game_step = 0x1Cu;
+		RACE(screen->race)->game_over = 0xFFu;
+		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
+		lamp_place->checkpoint_all = 0u;
+		lamp_place->leader_all = 0u;
 		clear_lcd();
 		return;
 	case 28:
-		AS32(SCREEN(screen)->game_mode) = 5u;
+		AS32(screen->game_mode) = 5u;
 		return;
 	}
 }
@@ -696,7 +700,7 @@ void clear_screen(void)
 void clear_race_state(void)
 {
 	race_record_clear();
-	move_halfwords(player_car, zero_block_ADDRESS, 0x180u);
-	move_halfwords(screen + 0x330u, zero_block_ADDRESS, 0xB0u);
-	move_halfwords(screen + 0x600u, zero_block_ADDRESS, 0x80u);
+	move_halfwords(address_of(player_car), zero_block_ADDRESS, 0x180u);
+	move_halfwords(address_of(screen) + 0x330u, zero_block_ADDRESS, 0xB0u);
+	move_halfwords(address_of(screen) + 0x600u, zero_block_ADDRESS, 0x80u);
 }

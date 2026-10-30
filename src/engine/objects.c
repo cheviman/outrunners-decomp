@@ -19,18 +19,18 @@ void clear_objects(void)
 {
 	uint32_t halfword_count = 0;
 
-	move_halfwords(screen - 0x7FF0u, zero_block_ADDRESS, 0x7Cu);
-	OBJECT_AREA(screen - 0x8000u)->list = screen - 0x7E00u;
-	OBJECT_AREA(screen - 0x8000u)->list_first = screen - 0x7DFEu;
-	OBJECT_AREA(screen - 0x8000u)->list_end = screen - 0x7DFEu;
-	OBJECT_AREA(screen - 0x8000u)->next_list = screen - 0x7D00u;
-	halfword_count = (uint8_t)OBJECT_LIST(screen - 0x7E00u)->count;
+	move_halfwords(address_of(screen) - 0x7FF0u, zero_block_ADDRESS, 0x7Cu);
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list = address_of(screen) - 0x7E00u;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list_first = address_of(screen) - 0x7DFEu;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list_end = address_of(screen) - 0x7DFEu;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->next_list = address_of(screen) - 0x7D00u;
+	halfword_count = (uint8_t)OBJECT_LIST(address_of(screen) - 0x7E00u)->count;
 	halfword_count = (uint16_t)(halfword_count + 1u);
-	move_halfwords(screen - 0x7E00u, zero_block_ADDRESS, halfword_count);
-	halfword_count = (uint8_t)OBJECT_LIST(screen - 0x7D00u)->count;
+	move_halfwords(address_of(screen) - 0x7E00u, zero_block_ADDRESS, halfword_count);
+	halfword_count = (uint8_t)OBJECT_LIST(address_of(screen) - 0x7D00u)->count;
 	halfword_count = (uint16_t)(halfword_count + 1u);
-	move_halfwords(screen - 0x7D00u, zero_block_ADDRESS, halfword_count);
-	SCREEN(screen)->palette_upload_count &= 0xFFFF0000u;
+	move_halfwords(address_of(screen) - 0x7D00u, zero_block_ADDRESS, halfword_count);
+	screen->palette_upload_count &= 0xFFFF0000u;
 }
 
 /* The object loop, once a frame for the screen: each live object (flags bit 0) of this frame's list
@@ -39,67 +39,69 @@ void clear_objects(void)
    and the two lists swap. */
 void run_objects(void)
 {
-	uint32_t blocks_left = 0, count = 0, list_block = 0, list_entry = 0, zero_high = 0, zero_low = 0;
+	uint32_t blocks_left = 0, count = 0, list_entry = 0, zero_high = 0, zero_low = 0;
+	struct object_list_block *list_block = NULL;
 	uint32_t next_list = 0;
 
-	current_object = screen;
-	list_entry = OBJECT_AREA(screen - 0x8000u)->list + 2u;
-	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count = 0u;
+	current_object = pointer_to(address_of(screen));
+	list_entry = OBJECT_AREA(address_of(screen) - 0x8000u)->list + 2u;
+	OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
-		current_object = LINKED(current_object, OBJECT_LINKS(list_entry)[0]);
+		current_object = pointer_to(LINKED(address_of(current_object), OBJECT_LINKS(list_entry)[0]));
 		list_entry += 2u;
-		if ((uint16_t)current_object == 0u)
+		if ((uint16_t)address_of(current_object) == 0u)
 			break;
-		if ((OBJECT(current_object)->flags & 1u) != 0u)
+		if ((current_object->flags & 1u) != 0u)
 		{
-			call_code(OBJECT(current_object)->handler);
-			next_list = OBJECT_AREA(screen - 0x8000u)->next_list;
+			call_code(current_object->handler);
+			next_list = OBJECT_AREA(address_of(screen) - 0x8000u)->next_list;
 			OBJECT_LIST(next_list)->count++;
-			OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->next_list)->count - 1u)] = current_object;
+			OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->count - 1u)] = address_of(current_object);
 			continue;
 		}
-		OBJECT_AREA(screen - 0x8000u)->slots[OBJECT(current_object)->slot] = 0u;
+		OBJECT_AREA(address_of(screen) - 0x8000u)->slots[current_object->slot] = 0u;
 	}
-	list_block = OBJECT_AREA(screen - 0x8000u)->list;
-	blocks_left = OBJECT_LIST_BLOCK(list_block)->count;
+	list_block = pointer_to(OBJECT_AREA(address_of(screen) - 0x8000u)->list);
+	blocks_left = list_block->count;
 	blocks_left = (uint16_t)(blocks_left + 4u);
 	blocks_left = blocks_left >> 2;
 	zero_low = 0u;
 	zero_high = 0u;
 	do
 	{
-		OBJECT_LIST_BLOCK(list_block)->low = zero_low;
-		OBJECT_LIST_BLOCK(list_block)->high = zero_high;
+		list_block->low = zero_low;
+		list_block->high = zero_high;
 		blocks_left--;
-		list_block += 8u;
+		list_block = list_block + 1;
 	} while (blocks_left != 0u);
-	OBJECT_AREA(screen - 0x8000u)->list ^= 0x100u;
-	OBJECT_AREA(screen - 0x8000u)->next_list ^= 0x100u;
-	count = OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count;
-	OBJECT_AREA(screen - 0x8000u)->list_first = OBJECT_AREA(screen - 0x8000u)->list + 2u;
-	OBJECT_AREA(screen - 0x8000u)->list_end = OBJECT_AREA(screen - 0x8000u)->list_first + count * 2u;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list ^= 0x100u;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->next_list ^= 0x100u;
+	count = OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->list)->count;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list_first = OBJECT_AREA(address_of(screen) - 0x8000u)->list + 2u;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->list_end = OBJECT_AREA(address_of(screen) - 0x8000u)->list_first + count * 2u;
 }
 
 /* Takes the first free object slot of the screen (FF into its byte at screen - 7FF0), clears its 100
    bytes, makes it live (flags bit 0) with its slot number at 8, puts it on this frame's list and returns
    it; with no slot free, it returns the spare object at screen - 7F00 without any of that. */
-uint32_t start_object(void)
+struct object *start_object(void)
 {
 	uint32_t zero = 0;
-	uint32_t free_flag = 0, free_index = 0, object = 0, object_bytes = 0;
+	uint32_t free_flag = 0, free_index = 0, object_bytes = 0;
+	struct object *object = NULL;
 	uint32_t list = 0;
 
-	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
+	search_bytes(address_of(screen) - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
 	zero = free_index == 0x7Cu;
 	if (zero)
 	{
-		object = screen - 0x7F00u;
+		object = pointer_to(address_of(screen) - 0x7F00u);
 		return object;
 	}
 	OBJECT_SLOT_FLAGS(free_flag)[0] = 0xFFu;
-	object = screen - 0x7C00u + (free_index << 8);
-	object_bytes = object;
+	object = pointer_to(address_of(screen) - 0x7C00u + (free_index << 8));
+	object_bytes = address_of(object);
 	for (uint32_t repeat = 0; repeat < 31u; repeat++)
 	{
 		OBJECT_WORDS(object_bytes)[0] = 0u;
@@ -108,11 +110,11 @@ uint32_t start_object(void)
 	}
 	OBJECT_WORDS(object_bytes)[0] = 0u;
 	OBJECT_WORDS(object_bytes)[1] = 0u;
-	OBJECT(object)->flags |= 1u;
-	OBJECT(object)->slot = free_index;
-	list = OBJECT_AREA(screen - 0x8000u)->list;
+	object->flags |= 1u;
+	object->slot = free_index;
+	list = OBJECT_AREA(address_of(screen) - 0x8000u)->list;
 	OBJECT_LIST(list)->count++;
-	OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(screen - 0x8000u)->list)->count - 1u)] = object;
+	OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->list)->count - 1u)] = address_of(object);
 	return object;
 }
 
@@ -126,11 +128,11 @@ uint32_t reserve_object_slot(void)
 	uint32_t zero = 0;
 	uint32_t free_flag = 0, free_index = 0, object = 0;
 
-	search_bytes(screen - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
+	search_bytes(address_of(screen) - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
 	zero = free_index == 0x7Cu;
 	if (zero)
 	{
-		object = screen - 0x7F00u;
+		object = address_of(screen) - 0x7F00u;
 		return object;
 	}
 	OBJECT_SLOT_FLAGS(free_flag)[0] = 0xFFu;
@@ -144,17 +146,18 @@ uint32_t reserve_object_slot(void)
    n + 4, for reserve_object_slot's slot n slot n + 10. */
 void free_object_slot(uint16_t object)
 {
-	OBJECT_AREA(screen - 0x8000u)->slots[(uint16_t)object >> 8] = 0u;
+	OBJECT_AREA(address_of(screen) - 0x8000u)->slots[(uint16_t)object >> 8] = 0u;
 }
 
 /* Starts an object for each handler of the list R10 (a 32-bit count, then the handlers: the
    object_handlers_* tables), each with its place in the list at 9, and returns the last one. Used by the
    game modes (game_mode_car_presentation, game_mode_ranking, game_mode_play, initialise_board...),
    name_entry and ranking. */
-uint32_t start_object_list(uint32_t handler_list)
+struct object *start_object_list(uint32_t handler_list)
 {
 	uint8_t list_index = 0;
-	uint32_t object = 0, objects_left = 0;
+	uint32_t objects_left = 0;
+	struct object *object = NULL;
 
 	objects_left = OBJECT_START_LIST(handler_list)->count;
 	list_index = 0u;
@@ -162,8 +165,8 @@ uint32_t start_object_list(uint32_t handler_list)
 	do
 	{
 		object = start_object();
-		OBJECT(object)->handler = OBJECT_HANDLERS(handler_list)[0];
-		OBJECT(object)->number = list_index;
+		object->handler = OBJECT_HANDLERS(handler_list)[0];
+		object->number = list_index;
 		list_index++;
 		objects_left--;
 		handler_list += 4u;
@@ -176,7 +179,7 @@ uint32_t random_number(void)
 {
 	uint32_t number = 0, state = 0;
 
-	state = SCREEN(screen)->random_state;
+	state = screen->random_state;
 	if ((uint16_t)state == 0u)
 		state ^= 0x2A6D365Bu;
 	number = state;
@@ -185,6 +188,6 @@ uint32_t random_number(void)
 	state = (state << 16) | (state >> 16);
 	number = (number & ~0xFFFFu) | (uint16_t)(number + state);
 	state = (state & ~0xFFFFu) | (uint16_t)number;
-	SCREEN(screen)->random_state = (state << 16) | (state >> 16);
+	screen->random_state = (state << 16) | (state >> 16);
 	return number;
 }

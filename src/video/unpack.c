@@ -120,49 +120,50 @@ void unpack_queued_step(void)
 {
 	uint32_t carry = 0;
 	uint8_t copy_count = 0, flags = 0, length_byte = 0;
-	uint32_t copy_source = 0, destination = 0, flags_left = 0, request = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
+	uint32_t copy_source = 0, destination = 0, flags_left = 0, source = 0, unpack_copy_source = 0, unpack_destination = 0, unpack_read_place = 0;
+	struct unpack_request *request = NULL;
 	uint8_t unpack_copy_count = 0;
 	uint32_t length_bits = 0;
 
-	if ((int8_t)(uint8_t)(SCREEN(screen)->unpack_state >> 8u) <= 0)
+	if ((int8_t)(uint8_t)(screen->unpack_state >> 8u) <= 0)
 	{
-		if ((uint8_t)(SCREEN(screen)->unpack_state >> 8u) != 0u)
+		if ((uint8_t)(screen->unpack_state >> 8u) != 0u)
 		{
-			unpack_copy_source = SCREEN(screen)->unpack_copy_source;
-			unpack_destination = SCREEN(screen)->unpack_destination;
+			unpack_copy_source = screen->unpack_copy_source;
+			unpack_destination = screen->unpack_destination;
 			UNPACKED_BYTES(unpack_destination)[0] = UNPACKED_BYTES(unpack_copy_source)[0];
-			SCREEN(screen)->unpack_copy_source = unpack_copy_source + 1u;
-			SCREEN(screen)->unpack_destination = unpack_destination + 1u;
-			unpack_copy_count = SCREEN(screen)->unpack_copy_count;
-			SCREEN(screen)->unpack_copy_count = unpack_copy_count - 1u;
+			screen->unpack_copy_source = unpack_copy_source + 1u;
+			screen->unpack_destination = unpack_destination + 1u;
+			unpack_copy_count = screen->unpack_copy_count;
+			screen->unpack_copy_count = unpack_copy_count - 1u;
 			if (unpack_copy_count == 1u)
 			{
-				SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
+				screen->unpack_state = (screen->unpack_state & 0xFFu) | 0x100u;
 				return;
 			}
 			return;
 		}
-		unpack_read_place = SCREEN(screen)->unpack_read_place;
-		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
+		unpack_read_place = screen->unpack_read_place;
+		if (unpack_read_place == screen->unpack_write_place)
 		{
-			SCREEN(screen)->unpack_state = 0u;
+			screen->unpack_state = 0u;
 			return;
 		}
-		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
-		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		source = UNPACK_REQUEST(request)->source;
-		destination = UNPACK_REQUEST(request)->destination;
+		request = pointer_to(address_of(screen) + 0xC00u + unpack_read_place * 2u * 4u);
+		screen->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
+		source = request->source;
+		destination = request->destination;
 		flags = PACKED_BYTES(source)[0];
 		flags_left = 9u;
-		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
+		screen->unpack_state = (screen->unpack_state & 0xFFu) | 0x100u;
 		source++;
 	}
 	else
 	{
-		flags = SCREEN(screen)->unpack_flags;
-		flags_left = SCREEN(screen)->unpack_flags_left;
-		source = SCREEN(screen)->unpack_source;
-		destination = SCREEN(screen)->unpack_destination;
+		flags = screen->unpack_flags;
+		flags_left = screen->unpack_flags_left;
+		source = screen->unpack_source;
+		destination = screen->unpack_destination;
 	}
 	for (;;)
 	{
@@ -178,10 +179,10 @@ void unpack_queued_step(void)
 		if (carry)
 		{
 			UNPACKED_BYTES(destination)[0] = PACKED_BYTES(source)[0];
-			SCREEN(screen)->unpack_flags = flags;
-			SCREEN(screen)->unpack_flags_left = flags_left;
-			SCREEN(screen)->unpack_source = source + 1u;
-			SCREEN(screen)->unpack_destination = destination + 1u;
+			screen->unpack_flags = flags;
+			screen->unpack_flags_left = flags_left;
+			screen->unpack_source = source + 1u;
+			screen->unpack_destination = destination + 1u;
 			return;
 		}
 		flags_left--;
@@ -206,13 +207,13 @@ void unpack_queued_step(void)
 			copy_count++;
 			copy_source += destination;
 			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
-			SCREEN(screen)->unpack_flags = flags;
-			SCREEN(screen)->unpack_flags_left = flags_left;
-			SCREEN(screen)->unpack_copy_source = copy_source + 1u;
-			SCREEN(screen)->unpack_copy_count = copy_count;
-			SCREEN(screen)->unpack_source = source;
-			SCREEN(screen)->unpack_destination = destination + 1u;
-			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
+			screen->unpack_flags = flags;
+			screen->unpack_flags_left = flags_left;
+			screen->unpack_copy_source = copy_source + 1u;
+			screen->unpack_copy_count = copy_count;
+			screen->unpack_source = source;
+			screen->unpack_destination = destination + 1u;
+			screen->unpack_state = (screen->unpack_state & 0xFFu) | 0xFF00u;
 			return;
 		}
 		copy_count = PACKED_BYTES(source)[0];
@@ -221,28 +222,28 @@ void unpack_queued_step(void)
 		{
 			copy_source += destination;
 			UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
-			SCREEN(screen)->unpack_flags = flags;
-			SCREEN(screen)->unpack_flags_left = flags_left;
-			SCREEN(screen)->unpack_copy_source = copy_source + 1u;
-			SCREEN(screen)->unpack_copy_count = copy_count;
-			SCREEN(screen)->unpack_source = source;
-			SCREEN(screen)->unpack_destination = destination + 1u;
-			SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
+			screen->unpack_flags = flags;
+			screen->unpack_flags_left = flags_left;
+			screen->unpack_copy_source = copy_source + 1u;
+			screen->unpack_copy_count = copy_count;
+			screen->unpack_source = source;
+			screen->unpack_destination = destination + 1u;
+			screen->unpack_state = (screen->unpack_state & 0xFFu) | 0xFF00u;
 			return;
 		}
-		unpack_read_place = SCREEN(screen)->unpack_read_place;
-		if (unpack_read_place == SCREEN(screen)->unpack_write_place)
+		unpack_read_place = screen->unpack_read_place;
+		if (unpack_read_place == screen->unpack_write_place)
 		{
-			SCREEN(screen)->unpack_state = 0u;
+			screen->unpack_state = 0u;
 			return;
 		}
-		request = screen + 0xC00u + unpack_read_place * 2u * 4u;
-		SCREEN(screen)->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
-		source = UNPACK_REQUEST(request)->source;
-		destination = UNPACK_REQUEST(request)->destination;
+		request = pointer_to(address_of(screen) + 0xC00u + unpack_read_place * 2u * 4u);
+		screen->unpack_read_place = (unpack_read_place + 1u) & 0x3Fu;
+		source = request->source;
+		destination = request->destination;
 		flags = PACKED_BYTES(source)[0];
 		flags_left = 9u;
-		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0x100u;
+		screen->unpack_state = (screen->unpack_state & 0xFFu) | 0x100u;
 		source++;
 	}
 	copy_count = 0u;
@@ -271,13 +272,13 @@ void unpack_queued_step(void)
 	copy_count++;
 	copy_source += destination;
 	UNPACKED_BYTES(destination)[0] = UNPACKED_BYTES(copy_source)[0];
-	SCREEN(screen)->unpack_flags = flags;
-	SCREEN(screen)->unpack_flags_left = flags_left;
-	SCREEN(screen)->unpack_copy_source = copy_source + 1u;
-	SCREEN(screen)->unpack_copy_count = copy_count;
-	SCREEN(screen)->unpack_source = source;
-	SCREEN(screen)->unpack_destination = destination + 1u;
-	SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFFu) | 0xFF00u;
+	screen->unpack_flags = flags;
+	screen->unpack_flags_left = flags_left;
+	screen->unpack_copy_source = copy_source + 1u;
+	screen->unpack_copy_count = copy_count;
+	screen->unpack_source = source;
+	screen->unpack_destination = destination + 1u;
+	screen->unpack_state = (screen->unpack_state & 0xFFu) | 0xFF00u;
 }
 
 /* Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address
@@ -330,18 +331,19 @@ uint32_t unpack_tile_pages(uint32_t page_list, uint32_t list_next)
    queue_tile_pages does the same for a list of tile pages. */
 void queue_unpack_list(uint32_t block_list)
 {
-	uint32_t request = 0, unpack_write_place = 0;
+	uint32_t unpack_write_place = 0;
+	struct unpack_request *request = NULL;
 	uint32_t destination = 0;
 
 	do
 	{
-		unpack_write_place = SCREEN(screen)->unpack_write_place;
-		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
-		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
+		unpack_write_place = screen->unpack_write_place;
+		request = pointer_to(address_of(screen) + 0xC00u + unpack_write_place * 2u * 4u);
+		screen->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
 		destination = PACKED_BLOCK_ENTRY(block_list)->destination;
-		UNPACK_REQUEST(request)->source = PACKED_BLOCK_ENTRY(block_list)->source;
-		UNPACK_REQUEST(request)->destination = destination;
-		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
+		request->source = PACKED_BLOCK_ENTRY(block_list)->source;
+		request->destination = destination;
+		screen->unpack_state = (screen->unpack_state & 0xFF00u) | 0xFFu;
 		block_list += 8u;
 	} while ((int32_t)PACKED_BLOCK_ENTRY(block_list)->source >= 0);
 }
@@ -353,19 +355,20 @@ void queue_unpack_list(uint32_t block_list)
    race_background_update. */
 void queue_tile_pages(uint32_t page_list)
 {
-	uint32_t page_bits = 0, page_entry = 0, request = 0, unpack_write_place = 0;
+	uint32_t page_bits = 0, page_entry = 0, unpack_write_place = 0;
+	struct unpack_request *request = NULL;
 
 	while ((int32_t)TILE_PAGE_ENTRIES(page_list)[0] >= 0)
 	{
-		unpack_write_place = SCREEN(screen)->unpack_write_place;
-		request = screen + 0xC00u + unpack_write_place * 2u * 4u;
-		SCREEN(screen)->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
+		unpack_write_place = screen->unpack_write_place;
+		request = pointer_to(address_of(screen) + 0xC00u + unpack_write_place * 2u * 4u);
+		screen->unpack_write_place = (unpack_write_place + 1u) & 0x3Fu;
 		page_bits = TILE_PAGE_ENTRIES(page_list)[0];
 		page_entry = page_bits;
 		page_bits &= ~0xFFFFFFu;
-		UNPACK_REQUEST(request)->source = page_entry ^ page_bits;
-		UNPACK_REQUEST(request)->destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
-		SCREEN(screen)->unpack_state = (SCREEN(screen)->unpack_state & 0xFF00u) | 0xFFu;
+		request->source = page_entry ^ page_bits;
+		request->destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
+		screen->unpack_state = (screen->unpack_state & 0xFF00u) | 0xFFu;
 		page_list += 4u;
 	}
 }

@@ -11,10 +11,14 @@
  */
 #include "game.h"
 
-uint32_t r12, r14, current_object, player_car, screen, stack_pointer = 0x21F400u;
+uint32_t r12, r14, stack_pointer = 0x21F400u;
+struct object *current_object;
+struct car *player_car;
+struct screen *screen;
 
-/* the same, for the runtime to keep a copy for each of the game's tasks */
-uint32_t *const game_context[] = { &r12, &r14, &current_object, &player_car, &screen, &stack_pointer };
+/* the same, for the runtime to keep a copy for each of the game's tasks (1: a pointer into the game's
+   state, where the original holds its address) */
+const game_register game_context[] = { { &r12, 0 }, { &r14, 0 }, { &current_object, 1 }, { &player_car, 1 }, { &screen, 1 }, { &stack_pointer, 0 } };
 const uint8_t game_context_registers[] = { 12, 14, 20, 23, 25, 32 };
 const size_t game_context_count = 6;
 

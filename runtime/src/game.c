@@ -46,7 +46,7 @@ typedef struct
 	host_task *native;
 	uint32_t frame;                       /* the interrupt frame a new task starts from */
 	uint32_t token;                       /* what 0[R24] holds while it waits */
-	uint32_t context[CONTEXT_LIMIT];
+	uintptr_t context[CONTEXT_LIMIT];     /* a number, or a pointer into the game's state (game_context) */
 } game_task;
 
 static game_task task_records[2];
@@ -143,12 +143,32 @@ void swap_tasks(void)
 	swap_pending = true;
 }
 
+/* A register the whole program shares, as the C keeps it: the number, or the pointer into the game's state
+   for the address the original holds there (where the C keeps a pointer) */
+static uintptr_t shared_register(size_t index)
+{
+	if (game_context[index].pointer)
+		return (uintptr_t)*(void **)game_context[index].variable;
+	return *(uint32_t *)game_context[index].variable;
+}
+
+static void set_shared_register(size_t index, uintptr_t value)
+{
+	if (game_context[index].pointer)
+		*(void **)game_context[index].variable = (void *)value;
+	else
+		*(uint32_t *)game_context[index].variable = (uint32_t)value;
+}
+
 static void start_task(void)
 {
 	const uint32_t frame = running_task->frame;
 
 	for (size_t index = 0; index < game_context_count; index++)
-		*game_context[index] = mem_read32(frame + 4u * game_context_registers[index]);
+	{
+		const uint32_t value = mem_read32(frame + 4u * game_context_registers[index]);
+		set_shared_register(index, game_context[index].pointer ? (uintptr_t)pointer_to(value) : value);
+	}
 	psw = mem_read32(frame + FRAME_PSW);
 	call_code(mem_read32(frame + FRAME_PC));
 	fprintf(stderr, "The task started from the frame at %06X came to its end (frame %llu)\n", frame,
@@ -164,7 +184,7 @@ static void switch_task(void)
 	bool fresh = false;
 
 	for (size_t index = 0; index < game_context_count; index++)
-		from->context[index] = *game_context[index];
+		from->context[index] = shared_register(index);
 	if (waiting_task && frame == waiting_task->token)
 		to = waiting_task;
 	else
@@ -181,7 +201,7 @@ static void switch_task(void)
 	running_task = to;
 	if (!fresh)
 		for (size_t index = 0; index < game_context_count; index++)
-			*game_context[index] = to->context[index];
+			set_shared_register(index, to->context[index]);
 	host_task_switch(to->native);
 }
 
@@ -211,19 +231,76 @@ void call_code(uint32_t address)
 
 static void print_recent_calls(void);
 
+/* the copies of the ROM ram_outside hands out, each with the address it copied from: a few, so that a
+   pointer the C keeps into one (the text R20 walks) outlives the copies other reads make */
+#define OUTSIDE_COPIES 4
+static uint8_t outside_copy[OUTSIDE_COPIES][0x200];    /* as large as the largest structure (struct player) */
+static uint32_t outside_address[OUTSIDE_COPIES];
+static unsigned outside_next;
+
 uint8_t *ram_outside(uint32_t address)
 {
-	/* as large as the largest structure (struct player) */
-	static uint8_t copy[0x200];
-	uint32_t index;
+	unsigned copy;
 
+	if (address == 0)
+		return NULL;    /* (no place: what a pointer the C keeps holds where the original holds 0) */
 	if ((address & 0xffffff) < 0x200000 || (address & 0xf00000) == 0xf00000)
 	{
-		for (index = 0; index < sizeof copy; index++)
-			copy[index] = *data_at(address + index);
-		return copy;
+		/* the copy of the same place again (what was written to it goes, as the bus drops it), or the
+		   oldest one */
+		for (copy = 0; copy < OUTSIDE_COPIES && outside_address[copy] != address; copy++)
+			;
+		if (copy == OUTSIDE_COPIES)
+		{
+			copy = outside_next;
+			outside_next = (outside_next + 1) % OUTSIDE_COPIES;
+		}
+		for (uint32_t index = 0; index < sizeof outside_copy[copy]; index++)
+		{
+			/* (0 where no piece has data: what the code reads through such a copy is the ROM's data) */
+			const uint8_t *byte = data_if_any(address + index);
+			outside_copy[copy][index] = byte ? *byte : 0;
+		}
+		outside_address[copy] = address;
+		return outside_copy[copy];
 	}
 	fprintf(stderr, "Work RAM access at %06X (frame %llu)\n", address & 0xffffff, (unsigned long long)frames);
+	print_recent_calls();
+	exit(3);
+}
+
+void *pointer_to(uint32_t address)
+{
+	switch ((address >> 20) & 0xf)
+	{
+	case 0x3:
+	case 0x4:
+	case 0x7:
+		return board(address);    /* the video RAM, the sprite RAM, the RAM the sound program shares */
+	default:
+		return ram(address);      /* the game's state; none for 0; a copy of the ROM; else the program stops */
+	}
+}
+
+uint32_t address_outside(const void *pointer)
+{
+	const uintptr_t place = (uintptr_t)pointer;
+
+	if (pointer == NULL)
+		return 0;
+	if (place - (uintptr_t)s32_board.video_ram < S32_VIDEO_RAM_SIZE)
+		return 0x300000u + (uint32_t)(place - (uintptr_t)s32_board.video_ram);
+	if (place - (uintptr_t)s32_board.sprite_ram < S32_SPRITE_RAM_SIZE)
+		return 0x400000u + (uint32_t)(place - (uintptr_t)s32_board.sprite_ram);
+	if (place - (uintptr_t)s32_board.shared_ram < S32_SHARED_RAM_SIZE)
+		return 0x700000u + (uint32_t)(place - (uintptr_t)s32_board.shared_ram);
+	for (unsigned copy = 0; copy < OUTSIDE_COPIES; copy++)
+	{
+		const uintptr_t offset = (uintptr_t)pointer - (uintptr_t)outside_copy[copy];
+		if (offset < sizeof outside_copy[copy])
+			return outside_address[copy] + (uint32_t)offset;
+	}
+	fprintf(stderr, "A pointer into the game's state points outside it (frame %llu)\n", (unsigned long long)frames);
 	print_recent_calls();
 	exit(3);
 }

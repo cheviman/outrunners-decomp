@@ -16,7 +16,10 @@
 #include "ram.h"
 
 /* registers the whole program shares */
-extern uint32_t r12, r14, current_object, player_car, screen, stack_pointer;
+extern uint32_t r12, r14, stack_pointer;
+extern struct object *current_object;
+extern struct car *player_car;
+extern struct screen *screen;
 
 /* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
    addresses: what it stores and compares, and what call_code() runs */
@@ -266,10 +269,10 @@ extern uint32_t r12, r14, current_object, player_car, screen, stack_pointer;
 /* engine/objects.c: the objects: the object loop, starting and freeing objects and their lists, the random numbers */
 void clear_objects(void);
 void run_objects(void);
-uint32_t start_object(void);
+struct object *start_object(void);
 uint32_t reserve_object_slot(void);
 void free_object_slot(uint16_t object);
-uint32_t start_object_list(uint32_t handler_list);
+struct object *start_object_list(uint32_t handler_list);
 uint32_t random_number(void);
 
 /* engine/sprites.c: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road */
@@ -281,9 +284,9 @@ void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite
 void draw_object_at_car_window_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_car_window_segment_on_road(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
-void draw_object_at_segment_scale(uint16_t y, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
+void draw_object_at_segment_scale(uint16_t y, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
-void draw_object_at_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
+void draw_object_at_scale(uint16_t y, uint32_t scale, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_on_screen(uint32_t *p_leftover, uint32_t *p_sprite_entry);
 void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_last_frame, uint32_t *p_last_size_step);
 void draw_object_one_piece(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_last_size_step);
@@ -336,7 +339,7 @@ void car_radio_dj_remark_2f(void);
 void car_radio_dj_remark_2c(void);
 uint8_t car_radio_song(uint32_t song_number);
 void car_radio_show_title(uint32_t title);
-uint32_t start_song_title(uint32_t song_title);
+struct object *start_song_title(uint32_t song_title);
 void song_title_show(void);
 void start_dj_message_if_quiet(uint8_t dj_message);
 void start_dj_message(uint8_t message);
@@ -344,9 +347,9 @@ void start_dj_message(uint8_t message);
 /* objects/race_people.c: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors */
 void race_car_occupant_update(void);
 void rider_gesture_update(void);
-uint32_t rider_gesture_check_view(uint32_t car);
-uint32_t rider_gesture_check_place(uint8_t visible_mask, uint32_t car);
-void rider_gesture_place(uint16_t scale, uint32_t car);
+uint32_t rider_gesture_check_view(struct object *car);
+uint32_t rider_gesture_check_place(uint8_t visible_mask, struct object *car);
+void rider_gesture_place(uint16_t scale, struct object *car);
 void race_opening_update(void);
 void race_opening_sounds_start(void);
 void race_opening_sounds_play(void);
@@ -357,7 +360,7 @@ void race_car_start_ending(void);
 void goal_actor_car_start(void);
 void goal_actor_driver_start(void);
 void goal_actor_passenger_start(void);
-void goal_actor_rider_place(uint32_t scene);
+void goal_actor_rider_place(struct object *scene);
 void goal_actor_start(void);
 void goal_actor_run(void);
 
@@ -513,7 +516,7 @@ void entry_invitation_step(void);
 void race_record_clear(void);
 void set_player_ready(void);
 uint32_t players_not_ready(void);
-uint32_t course_records_update(uint32_t record_entry);
+struct course_record_entry *course_records_update(struct course_record_entry *record_entry);
 void link_receive_records(void);
 void link_isdn_receive_records(void);
 void link_copy_records_in(uint32_t record_count, uint32_t board_records, uint32_t race_records);
@@ -524,8 +527,8 @@ void player_car_load_gears(void);
 void player_car_build_torque_curves(void);
 void player_car_read_controls(void);
 void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint32_t *p_road_x, uint32_t *p_segment_fraction, uint32_t *p_segment_length);
-void player_car_world_position(uint32_t segment_record, uint32_t next_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
-void player_car_place_view(uint32_t segment_record, uint32_t view_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
+void player_car_world_position(struct road_segment *segment_record, struct road_segment *next_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
+void player_car_place_view(struct road_segment *segment_record, uint32_t view_segment, uint32_t road_x, uint32_t segment_fraction, uint32_t segment_length);
 void player_car_engine(uint32_t road_force, uint32_t drive_force, uint32_t force, uint32_t handling, uint32_t gear_ratio);
 void player_car_engine_wheelspin(uint32_t force, uint32_t top_speed, uint32_t gear_ratio);
 void player_car_engine_grip(uint32_t force, uint32_t top_speed, uint32_t gear_ratio);
@@ -554,8 +557,8 @@ void player_car_update(void);
 void player_car_move(void);
 void player_car_steer_to_stop(void);
 void player_car_check_place(void);
-uint32_t player_car_publish(void);
-uint32_t clear_published_car(void);
+struct view *player_car_publish(void);
+struct view *clear_published_car(void);
 void player_car_set_horizon(void);
 void player_car_place_on_road(void);
 void player_car_clear_hit(void);
@@ -572,9 +575,9 @@ void player_car_crash_step(void);
 /* race/race_cars.c: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces */
 void race_cars_start(void);
 void race_car_draw(void);
-void race_car_draw_behind(uint32_t sprite_entry, uint32_t race, uint32_t *p_last_piece, uint32_t *p_last_size_step);
+void race_car_draw_behind(uint32_t sprite_entry, struct race *race, uint32_t *p_last_piece, uint32_t *p_last_size_step);
 void race_car_draw_link(uint32_t depth_layer, uint32_t sprite_entry);
-uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y, uint32_t spray);
+uint32_t race_car_draw_spray(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint8_t wheel_effect_sides, uint32_t scale, uint32_t sprite_entry, uint16_t screen_x, uint16_t screen_y, struct race_car_spray *spray);
 uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_offset, uint32_t scale, uint32_t sprite_entry, uint32_t places, uint32_t palette, uint16_t screen_x, uint16_t screen_y);
 void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step);
 void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step);
@@ -651,7 +654,7 @@ void step_palette(void);
 void coin_prompt_update(void);
 void coin_prompt_car_drive(void);
 void coin_prompt_message_update(void);
-uint32_t coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_piece);
+struct object *coin_prompt_start_key_prompt(uint32_t piece_count, uint8_t first_piece);
 void ignition_key_prompt_update(void);
 void credit_display_update(void);
 void credit_display_digit(void);
@@ -746,9 +749,9 @@ void init_coins(void);
 void update_coins(void);
 void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter, uint32_t meter_bits);
 void write_bookkeeping_credits(uint32_t bookkeeping_place);
-uint16_t add_service_credit(uint16_t credits_given, uint32_t seat_credits, uint32_t service_sounds);
+uint16_t add_service_credit(uint16_t credits_given, struct seat_credits *seat_credits, uint32_t service_sounds);
 uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t chute_entry);
-void show_title_on_credit(uint32_t screen_block);
+void show_title_on_credit(struct screen *screen_block);
 void bookkeeping_increment16(uint32_t counter);
 void bookkeeping_increment8(uint32_t counter_address);
 void bookkeeping_add16(uint32_t counter, uint16_t amount);
@@ -770,7 +773,7 @@ void read_switches_and_analog(void);
 void pack_seat_inputs(void);
 void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint32_t *p_analog_place, uint32_t *p_link_place);
 void queue_seat_inputs(void);
-void queue_screen_inputs(uint32_t seat_screen, uint32_t seat_record, uint32_t io_chip);
+void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_record, uint32_t io_chip);
 uint32_t take_screen_inputs(void);
 
 /* system/interrupts.c: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link */
@@ -787,7 +790,7 @@ void check_test_button(void);
 void send_sound_requests(void);
 void count_total_time(void);
 void update_lamps(void);
-void update_button_lamps(uint32_t screen_block, uint32_t port_g);
+void update_button_lamps(struct screen *screen_block, uint32_t port_g);
 
 /* system/lcd.c: the cabinets' LCD: its driver and the race's information on it */
 void lcd_start(void);
@@ -816,7 +819,7 @@ uint16_t crc16(uint32_t bytes, uint32_t byte_count);
 uint16_t signature_checksum(void);
 void second_task(uint32_t entry_point);
 void second_task_frames(void);
-uint32_t check_game_start(uint32_t mode, uint32_t seat_credits);
+uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits);
 void wait_for_frame(void);
 void initialise_game(void);
 void initialise_screen(void);
@@ -935,7 +938,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 uint32_t test_mode_draw_duration(uint32_t seconds, uint32_t cell);
 void test_mode_draw_minutes_seconds(uint32_t *p_seconds, uint32_t *p_cell);
 uint32_t test_mode_duration_to_seconds(uint32_t duration);
-void test_mode_split_minutes_seconds(uint32_t seconds, uint32_t stored_time);
+void test_mode_split_minutes_seconds(uint32_t seconds, struct stored_duration *stored_time);
 void test_mode_backup_data_clear_start(void);
 void test_mode_backup_data_clear_run(void);
 void test_mode_backup_data_clear_wait(void);
@@ -973,7 +976,7 @@ void start_palette_fades(uint32_t fade_list);
 void road_surface_fade_back(uint32_t fade_list);
 void race_background_fade_palettes(uint32_t fade_list);
 void race_background_fade_watch_update(void);
-uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to, uint16_t palette_offset);
+struct object *start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to, uint16_t palette_offset);
 void palette_fade_prepare(void);
 void palette_fade_step(void);
 

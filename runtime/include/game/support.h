@@ -50,9 +50,9 @@ extern struct game *game;
    its definition as BOARD_ORIGINAL(name), which keeps the original as original_name */
 #define BOARD_ORIGINAL(name) original_##name
 
-/* a structure pointer that is not in work RAM: in the program ROM (a link left at 0 in an object a
-   scenario crafted), the bus reads the ROM there and drops writes, so it gets a copy of the ROM to read
-   and write; anywhere else the program stops */
+/* a structure pointer that is not in work RAM: 0, no place (NULL, which address_of takes back to 0); in
+   the program ROM (a link left at 0 in an object a scenario crafted), the bus reads the ROM there and drops
+   writes, so it gets a copy of the ROM to read and write; anywhere else the program stops */
 uint8_t *ram_outside(uint32_t address);
 
 static inline uint8_t *ram(uint32_t address)
@@ -60,6 +60,21 @@ static inline uint8_t *ram(uint32_t address)
 	if ((address & 0xf00000) != 0x200000)
 		return ram_outside(address);
 	return &((uint8_t *)game)[address & 0x1ffff];
+}
+
+/* The address the original holds for the place a pointer the C keeps points at: in the game's state, its
+   work RAM address; in a memory of the board, its address there; in a copy of the ROM ram_outside made,
+   the address it copied from; none (NULL), 0. And the pointer the C keeps where the original holds an
+   address: a place of the game's state or of the board's plain memories, a copy of the ROM, none for 0 */
+uint32_t address_outside(const void *pointer);
+void *pointer_to(uint32_t address);
+
+static inline uint32_t address_of(const void *pointer)
+{
+	const uintptr_t offset = (uintptr_t)pointer - (uintptr_t)game;
+	if (offset < 0x20000u)
+		return 0x200000u + (uint32_t)offset;
+	return address_outside(pointer);
 }
 
 #define RAM8(address)   (*(uint8_t *)ram(address))
@@ -227,7 +242,13 @@ void frame_end(void);
    when the handler is done, as the V70 returns into it. Each task keeps its own copy of the registers the
    whole program shares (game_context, written by tools/decompile.py) */
 void swap_tasks(void);
-extern uint32_t *const game_context[];
+typedef struct
+{
+	void *variable;     /* the C's global for it */
+	uint8_t pointer;    /* a pointer into the game's state, where the original holds its address; else a
+	                       32-bit number */
+} game_register;
+extern const game_register game_context[];
 extern const uint8_t game_context_registers[];  /* the V70 register each one is */
 extern const size_t game_context_count;
 
