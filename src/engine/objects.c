@@ -39,17 +39,18 @@ void clear_objects(void)
    and the two lists swap. */
 void run_objects(void)
 {
-	uint32_t blocks_left = 0, count = 0, list_entry = 0, zero_high = 0, zero_low = 0;
+	uint32_t blocks_left = 0, count = 0, zero_high = 0, zero_low = 0;
+	uint16_t *list_entry = NULL;
 	struct object_list_block *list_block = NULL;
 	uint32_t next_list = 0;
 
 	current_object = pointer_to(address_of(screen));
-	list_entry = OBJECT_AREA(address_of(screen) - 0x8000u)->list + 2u;
+	list_entry = pointer_to(OBJECT_AREA(address_of(screen) - 0x8000u)->list + 2u);
 	OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->count = 0u;
 	for (;;)
 	{
-		current_object = pointer_to(LINKED(address_of(current_object), OBJECT_LINKS(list_entry)[0]));
-		list_entry += 2u;
+		current_object = pointer_to(LINKED(address_of(current_object), list_entry[0]));
+		list_entry++;
 		if ((uint16_t)address_of(current_object) == 0u)
 			break;
 		if ((current_object->flags & 1u) != 0u)
@@ -88,8 +89,9 @@ void run_objects(void)
 struct object *start_object(void)
 {
 	uint32_t zero = 0;
-	uint32_t free_flag = 0, free_index = 0, object_bytes = 0;
+	uint32_t free_flag = 0, free_index = 0;
 	struct object *object = NULL;
+	uint32_t *object_bytes = NULL;
 	uint32_t list = 0;
 
 	search_bytes(address_of(screen) - 0x7FF0u, 0x7Cu, 0u, 1u, &free_index, &free_flag);
@@ -101,15 +103,15 @@ struct object *start_object(void)
 	}
 	OBJECT_SLOT_FLAGS(free_flag)[0] = 0xFFu;
 	object = pointer_to(address_of(screen) - 0x7C00u + (free_index << 8));
-	object_bytes = address_of(object);
+	object_bytes = pointer_to(address_of(object));
 	for (uint32_t repeat = 0; repeat < 31u; repeat++)
 	{
-		OBJECT_WORDS(object_bytes)[0] = 0u;
-		OBJECT_WORDS(object_bytes)[1] = 0u;
-		object_bytes += 8u;
+		object_bytes[0] = 0u;
+		object_bytes[1] = 0u;
+		object_bytes += 2;
 	}
-	OBJECT_WORDS(object_bytes)[0] = 0u;
-	OBJECT_WORDS(object_bytes)[1] = 0u;
+	object_bytes[0] = 0u;
+	object_bytes[1] = 0u;
 	object->flags |= 1u;
 	object->slot = free_index;
 	list = OBJECT_AREA(address_of(screen) - 0x8000u)->list;

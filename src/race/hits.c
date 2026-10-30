@@ -119,10 +119,11 @@ void vector_angles(uint32_t z, uint32_t from_x, uint32_t from_y, uint32_t from_z
 void player_car_build_hit_boxes(void)
 {
 	uint16_t road_x = 0, segment = 0, segment_fraction = 0;
-	uint32_t hit_box = 0, model = 0, player = 0, racer_list = 0, racer_player = 0, racers_left = 0;
+	uint32_t hit_box = 0, model = 0, player = 0, racer_player = 0, racers_left = 0;
 	struct race *racer_copy = NULL;
+	uint8_t *racer_list = NULL;
 
-	racer_list = screen->host_record + 0x20u;
+	racer_list = pointer_to(screen->host_record + 0x20u);
 	racers_left = RACE(screen->host_record)->racer_count;
 	player = screen->player;
 	if ((screen->demo_flags & 0x100u) != 0u)
@@ -132,7 +133,7 @@ void player_car_build_hit_boxes(void)
 	hit_box += 4u;
 	do
 	{
-		racer_player = RACE_ORDER_PLAYERS(racer_list)[0];
+		racer_player = racer_list[0];
 		racer_list++;
 		if ((screen->demo_flags & 0x100u) != 0u || player == racer_player)
 		{

@@ -425,7 +425,9 @@ void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale,
 	uint16_t x = (uint16_t)*p_x;
 	uint32_t sprite_entry = *p_sprite_entry;
 	uint16_t attributes = 0, flip_bits = 0, frame_x = 0, frame_y = 0, sprite_height = 0, sprite_palette_word = 0, sprite_rom_offset = 0, sprite_source_size = 0, sprite_width = 0, sprite_x = 0, sprite_y = 0;
-	uint32_t flip_index = 0, frame = 0, frame_height_scale = 0, frame_width_scale = 0, palette_words = 0, piece_count = 0, signed_height_scale = 0, signed_width_scale = 0, size_step = 0, size_step_offset = 0;
+	uint32_t flip_index = 0, frame = 0, frame_height_scale = 0, frame_width_scale = 0, piece_count = 0, signed_height_scale = 0, signed_width_scale = 0, size_step_offset = 0;
+	const uint16_t *palette_words = NULL;
+	const struct sprite_size_step *size_step = NULL;
 	uint16_t source_size = 0, rom_offset = 0, palette_word = 0, height = 0, height_bits = 0, width = 0;
 
 	frame_x = (uint16_t)x;
@@ -433,7 +435,7 @@ void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale,
 	frame_height_scale = height_scale;
 	frame_width_scale = width_scale;
 	frame = SPRITE_ANIMATION(sprite_animations[current_object->animation])->frames[current_object->frame];
-	palette_words = sprite_palettes[current_object->palette];
+	palette_words = rom_pointer(sprite_palettes[current_object->palette]);
 	flip_bits = (current_object->flags | ((uint32_t)current_object->flags_high << 8u)) & 0xC0u;
 	flip_index = flip_bits;
 	flip_index = flip_index >> 5;
@@ -446,23 +448,19 @@ void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale,
 		attributes = SPRITE_PIECE(frame)->attributes ^ flip_bits;
 		size_step_offset = current_object->size_step * 3u;
 		frame += 2u;
-		size_step = sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u;
-		source_size = SPRITE_SIZE_STEP(size_step)->source_size;
-		size_step += 2u;
+		size_step = rom_pointer(sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u);
+		source_size = size_step->source_size;
 		sprite_source_size = source_size;
-		rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
-		size_step += 2u;
+		rom_offset = size_step->rom_offset;
 		sprite_rom_offset = rom_offset;
-		palette_word = SPRITE_PALETTE_WORDS(palette_words)[0];
-		palette_words += 2u;
+		palette_word = palette_words[0];
+		palette_words++;
 		sprite_palette_word = palette_word;
-		height = SPRITE_SIZE_STEP(size_step - 0x4u)->height;
-		size_step += 2u;
-		height_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
-		size_step += 2u;
+		height = size_step->height;
+		height_bits = size_step->height_bits;
 		sprite_height = (((height * frame_height_scale) >> 8) & 0x3FFu) | height_bits;
-		width = SPRITE_SIZE_STEP(size_step - 0x8u)->width;
-		sprite_width = (((width * frame_width_scale) >> 8) & 0x3FFu) | SPRITE_SIZE_STEP(size_step - 0x8u)->width_bits | screen->sprite_screen_bit;
+		width = size_step->width;
+		sprite_width = (((width * frame_width_scale) >> 8) & 0x3FFu) | size_step->width_bits | screen->sprite_screen_bit;
 		frame += 2u;
 		sprite_y = (uint16_t)(((int32_t)(SPRITE_PIECE(frame - 0x4u)->y_offset * signed_height_scale) >> 8) + frame_y);
 		frame += 2u;
@@ -497,7 +495,7 @@ void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale,
 	*p_x = (*p_x & 0xFFFF0000u) | attributes;
 	*p_sprite_entry = sprite_entry;
 	*p_last_frame = frame;
-	*p_last_size_step = size_step;
+	*p_last_size_step = address_of(&size_step->width);
 }
 
 /* Draw mode 8: the first piece of the animation's frame at its own size (no zoom, no flip), at x, y on
@@ -591,7 +589,8 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32
 {
 	uint32_t sprite_entry = *p_sprite_entry;
 	uint16_t entry_word = 0, flip_bits = 0, halfway_width = 0, halfway_x = 0, halfway_y = 0, piece_height_bits = 0, piece_width_bits = 0, sprite_rom_offset = 0, sprite_screen_bit = 0, sprite_source_size = 0;
-	uint32_t copy_entry = 0, flip_index = 0, frame = 0, halfway_height_scale = 0, halfway_width_scale = 0, height_scale = 0, offset_sign = 0, offset_x = 0, offset_y = 0, palette_words = 0, piece_height = 0, piece_width = 0, previous_place = 0, size_step_offset = 0, width_scale = 0, x = 0, y = 0;
+	uint32_t copy_entry = 0, flip_index = 0, frame = 0, halfway_height_scale = 0, halfway_width_scale = 0, height_scale = 0, offset_sign = 0, offset_x = 0, offset_y = 0, piece_height = 0, piece_width = 0, previous_place = 0, size_step_offset = 0, width_scale = 0, x = 0, y = 0;
+	const uint16_t *palette_words = NULL;
 	struct sprite_place *sprite_place = NULL;
 	const struct sprite_size_step *size_step = NULL;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, palette_word = 0;
@@ -634,7 +633,7 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32
 	sprite_place++;
 	screen->next_sprite_place = LINKED(address_of(sprite_place), address_of(sprite_place) & 0xEFFFu);
 	frame = SPRITE_ANIMATION(sprite_animations[current_object->animation])->frames[current_object->frame];
-	palette_words = sprite_palettes[current_object->palette];
+	palette_words = rom_pointer(sprite_palettes[current_object->palette]);
 	flip_bits = (current_object->flags | ((uint32_t)current_object->flags_high << 8u)) & 0xC0u;
 	flip_index = flip_bits;
 	offset_sign = smoothed_flip_signs[flip_index >> 5];
@@ -696,8 +695,8 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32
 		sprite_entry += 2u;
 		SPRITE_WORDS(copy_entry)[0] = sprite_rom_offset;
 		copy_entry += 2u;
-		palette_word = SPRITE_PALETTE_WORDS(palette_words)[0];
-		palette_words += 2u;
+		palette_word = palette_words[0];
+		palette_words++;
 		entry_word = palette_word;
 		SPRITE_WORDS(sprite_entry)[0] = entry_word;
 		sprite_entry += 2u;

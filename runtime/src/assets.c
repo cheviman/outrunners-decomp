@@ -759,7 +759,9 @@ static int read_piece(const char *folder, const data_region *region, const json_
 
 	into->address = (uint32_t)strtoul(json_text(entry, "address"), NULL, 16);
 	into->size = size ? (uint32_t)size->number : 0u;
-	if (!(into->data = malloc(into->size ? into->size : 1u)))
+	/* a byte more than the piece holds: a pointer just past its end (a list walked to its end) is still this
+	   piece's, which program_data_address takes back to the address after it */
+	if (!(into->data = malloc((size_t)into->size + 1u)))
 	{
 		snprintf(assets_problem, ASSETS_PROBLEM_SIZE, "no memory for the asset %s", name);
 		return 0;
@@ -967,8 +969,8 @@ int program_data_address(const void *pointer, uint32_t *address)
 		else
 			high = middle;
 	}
-	if (low == 0 || (uintptr_t)pointer - (uintptr_t)by_place[low - 1]->data >= by_place[low - 1]->size)
-		return 0;
+	if (low == 0 || (uintptr_t)pointer - (uintptr_t)by_place[low - 1]->data > by_place[low - 1]->size)
+		return 0;    /* (just past a piece's end is its: each piece has a byte more than its data, no other's) */
 	*address = by_place[low - 1]->address + (uint32_t)((uintptr_t)pointer - (uintptr_t)by_place[low - 1]->data);
 	return 1;
 }

@@ -313,7 +313,8 @@ void car_radio_update(void)
 void car_radio_talk(void)
 {
 	uint8_t message = 0, queued_message = 0, sound = 0;
-	uint32_t car_number = 0, remark_choice = 0, remark_list = 0, remark_routine = 0;
+	uint32_t car_number = 0, remark_choice = 0, remark_routine = 0;
+	const uint32_t *remark_list = NULL;
 	uint8_t cars_to_introduce = 0;
 
 	if ((current_object->car_radio.buttons & 0x700u) != 0u)
@@ -376,20 +377,20 @@ void car_radio_talk(void)
 		}
 		if (current_object->state != 3u)
 			return;
-		remark_list = current_object->car_radio.remark_list;
-		if (remark_list == 0u)
+		remark_list = rom_pointer(current_object->car_radio.remark_list);
+		if (remark_list == NULL)
 		{
 			remark_choice = random_number();
 			remark_choice &= 0x3FFu;
 			if ((int32_t)remark_choice >= 0xE)
 				return;
-			remark_list = dj_remark_lists[remark_choice];
+			remark_list = rom_pointer(dj_remark_lists[remark_choice]);
 		}
-		remark_routine = REMARK_ROUTINES(remark_list)[0];
-		remark_list += 4u;
-		if (REMARK_ROUTINES(remark_list)[0] == 0u)
-			remark_list = 0u;
-		current_object->car_radio.remark_list = remark_list;
+		remark_routine = remark_list[0];
+		remark_list++;
+		if (remark_list[0] == 0u)
+			remark_list = rom_pointer(0u);
+		current_object->car_radio.remark_list = address_of(remark_list);
 		switch (remark_routine)
 		{
 		case 0x01929Eu:

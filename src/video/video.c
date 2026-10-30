@@ -209,24 +209,25 @@ void clear_tile_page(uint16_t page)
 void init_sprite_chip(void)
 {
 	uint16_t control_flip = 0;
-	uint32_t control_register = 0, control_values = 0;
+	uint32_t control_register = 0;
+	const uint8_t *control_values = NULL;
 
 	io_write16(0x500000u, sprite_control_mode);
 	control_register = SPRITE_CONTROL + 0x4u;
 	control_flip = sprite_control_flip;
-	control_values = sprite_control_rest_ADDRESS;
+	control_values = rom_pointer(sprite_control_rest_ADDRESS);
 	if (game->flip_screen != 0u)
 		control_flip = control_flip ^ 3u;
 	io_write16(control_register, control_flip);
 	control_register += 2u;
-	io_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
+	io_write16(control_register, control_values[0]);
 	control_values++;
 	control_register += 2u;
-	io_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
+	io_write16(control_register, control_values[0]);
 	control_values++;
 	control_register += 2u;
-	io_write16(control_register, SPRITE_CONTROL_VALUES(control_values)[0]);
-	io_write16(control_register + 2u, SPRITE_CONTROL_VALUES(control_values)[1]);
+	io_write16(control_register, control_values[0]);
+	io_write16(control_register + 2u, control_values[1]);
 	init_sprite_lists();
 }
 

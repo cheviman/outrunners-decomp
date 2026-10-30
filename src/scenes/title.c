@@ -348,8 +348,9 @@ void title_palm_tree_update(void)
 void title_logo_update(void)
 {
 	uint8_t object_index = 0;
-	uint32_t animation = 0, object_index_2 = 0, objects_left = 0, palette_list = 0;
+	uint32_t animation = 0, object_index_2 = 0, objects_left = 0;
 	struct object *object = NULL;
+	const uint16_t *palette_list = NULL;
 	uint8_t frames = 0, frames_2 = 0;
 
 	switch (current_object->state)
@@ -378,9 +379,9 @@ void title_logo_update(void)
 			draw_object(0u);
 			return;
 		}
-		palette_list = current_object->title_logo.palette_list;
-		current_object->palette = TITLE_LOGO_PALETTES(palette_list)[0];
-		current_object->title_logo.palette_list = palette_list + 2u;
+		palette_list = rom_pointer(current_object->title_logo.palette_list);
+		current_object->palette = palette_list[0];
+		current_object->title_logo.palette_list = address_of(palette_list + 1);
 		draw_object(0u);
 		return;
 	case 3:
@@ -434,7 +435,8 @@ void title_logo_update(void)
    slides in from the right, meets it, flashes through the palettes at 01AC62 (palette_list) and ends. */
 void title_logo_copy_update(void)
 {
-	uint32_t animation = 0, palette_list = 0;
+	uint32_t animation = 0;
+	const uint16_t *palette_list = NULL;
 	uint8_t frames = 0, frames_2 = 0;
 
 	switch (current_object->state)
@@ -460,9 +462,9 @@ void title_logo_copy_update(void)
 			current_object->flags = 0u;
 			return;
 		}
-		palette_list = current_object->title_logo_copy.palette_list;
-		current_object->palette = TITLE_LOGO_PALETTES(palette_list)[0];
-		current_object->title_logo_copy.palette_list = palette_list + 2u;
+		palette_list = rom_pointer(current_object->title_logo_copy.palette_list);
+		current_object->palette = palette_list[0];
+		current_object->title_logo_copy.palette_list = address_of(palette_list + 1);
 		draw_object(0u);
 		return;
 	}

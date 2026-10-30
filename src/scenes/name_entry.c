@@ -381,7 +381,8 @@ void name_entry_choose(void)
    (name_entry_store_record). */
 void name_entry_finish(uint32_t name_place)
 {
-	uint32_t entered_name = 0, rejected_name = 0;
+	uint32_t entered_name = 0;
+	const uint32_t *rejected_name = NULL;
 	uint32_t element = 0;
 
 	current_object->name_entry.open = 0u;
@@ -399,10 +400,10 @@ void name_entry_finish(uint32_t name_place)
 		name_entry_store_record();
 		return;
 	}
-	rejected_name = name_entry_rejected_names_ADDRESS;
+	rejected_name = name_entry_rejected_names;
 	do
 	{
-		if ((int32_t)REJECTED_NAMES(rejected_name)[0] < 0)
+		if ((int32_t)rejected_name[0] < 0)
 		{
 			current_object->state++;
 			current_object->name_entry.timer = 0x3Cu;
@@ -410,8 +411,8 @@ void name_entry_finish(uint32_t name_place)
 			name_entry_store_record();
 			return;
 		}
-		element = REJECTED_NAMES(rejected_name)[0];
-		rejected_name += 4u;
+		element = rejected_name[0];
+		rejected_name++;
 	} while (entered_name != element);
 	current_object->name_entry.name[0] = 0x2Du;
 	current_object->name_entry.name[1] = 0x2Du;
@@ -584,7 +585,9 @@ void name_entry_letter_update(void)
 void name_entry_lcd_update(void)
 {
 	uint8_t lcd_character = 0;
-	uint32_t characters_left = 0, lcd_place = 0, name_place = 0;
+	uint32_t characters_left = 0;
+	uint8_t *lcd_place = NULL;
+	uint8_t *name_place = NULL;
 	struct object *object = NULL;
 
 	switch (current_object->state)
@@ -599,18 +602,18 @@ void name_entry_lcd_update(void)
 		break;
 	}
 	object = pointer_to(current_object->name_entry_lcd.name_entry);
-	name_place = address_of(object) + 0xA0u;
-	lcd_place = address_of(screen) + 0xF1Cu;
+	name_place = pointer_to(address_of(object) + 0xA0u);
+	lcd_place = &screen->lcd_text[12];
 	characters_left = 3u;
 	do
 	{
-		lcd_character = NAME_LETTERS(name_place)[0];
+		lcd_character = name_place[0];
 		name_place++;
-		if (name_place == 0u)
+		if (name_place == NULL)
 		{
 			do
 			{
-				LCD_CHARACTERS(lcd_place)[0] = 0x20u;
+				lcd_place[0] = 0x20u;
 				characters_left--;
 				lcd_place++;
 			} while (characters_left != 0u);
@@ -622,7 +625,7 @@ void name_entry_lcd_update(void)
 			lcd_character = 0x7Fu;
 		if (lcd_character == 0x5Cu)
 			lcd_character = 0x65u;
-		LCD_CHARACTERS(lcd_place)[0] = lcd_character;
+		lcd_place[0] = lcd_character;
 		characters_left--;
 		lcd_place++;
 	} while (characters_left != 0u);

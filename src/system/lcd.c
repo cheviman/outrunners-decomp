@@ -18,7 +18,8 @@
 void lcd_start(void)
 {
 	uint8_t nibble = 0, to_send = 0;
-	uint32_t character_row = 0, text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0, wait_count = 0;
+	uint32_t text_0_to = 0, text_12_to = 0, text_4_to = 0, text_8_to = 0, wait_count = 0;
+	const uint8_t *character_row = NULL;
 
 	game->lcd_send_step = 0u;
 	game->lcd_busy = 0u;
@@ -63,10 +64,10 @@ void lcd_start(void)
 	lcd_command_nibble_after_pause(to_send);
 	to_send = 0u;
 	lcd_command_nibble_after_pause(to_send);
-	character_row = lcd_custom_characters_ADDRESS;
+	character_row = lcd_custom_characters;
 	for (;;)
 	{
-		to_send = LCD_CHARACTER_ROWS(character_row)[0];
+		to_send = character_row[0];
 		character_row++;
 		if ((int8_t)to_send < 0)
 			break;
@@ -383,7 +384,9 @@ void lcd_send_next_nibble(void)
 void lcd_update(void)
 {
 	uint8_t character = 0, space_character = 0;
-	uint32_t ignored = 0, lcd_scroll = 0, lcd_scroll_request = 0, mouth_shape = 0, mouth_shapes = 0, scroll_width = 0, text_end = 0, text_place = 0;
+	uint32_t ignored = 0, lcd_scroll_request = 0, mouth_shape = 0, scroll_width = 0, text_end = 0, text_place = 0;
+	const uint8_t *mouth_shapes = NULL;
+	const uint8_t *lcd_scroll = NULL;
 	uint8_t dj_mouth_frames = 0, lcd_scroll_frames = 0, lcd_scroll_frames_2 = 0;
 
 	text_place = address_of(screen) + 0xF10u;
@@ -391,8 +394,8 @@ void lcd_update(void)
 		scroll_width = 0xFu;
 	else
 	{
-		mouth_shapes = screen->dj_mouth_shapes;
-		if (mouth_shapes == 0u)
+		mouth_shapes = rom_pointer(screen->dj_mouth_shapes);
+		if (mouth_shapes == NULL)
 		{
 			AS16(SCREEN(text_place - 0xF10u)->lcd_text[0]) = dj_face_characters[0];
 			screen->dj_mouth_frames = 3u;
@@ -410,7 +413,7 @@ void lcd_update(void)
 			}
 			else
 			{
-				mouth_shape = DJ_MOUTH_SHAPE_NUMBERS(mouth_shapes)[0];
+				mouth_shape = mouth_shapes[0];
 				mouth_shapes++;
 				if ((int8_t)mouth_shape < 0)
 				{
@@ -423,7 +426,7 @@ void lcd_update(void)
 				else
 				{
 					AS16(SCREEN(text_place - 0xF10u)->lcd_text[0]) = dj_face_characters[mouth_shape];
-					screen->dj_mouth_shapes = mouth_shapes;
+					screen->dj_mouth_shapes = address_of(mouth_shapes);
 					screen->dj_mouth_frames = 3u;
 					scroll_width = 0xDu;
 					text_place += 2u;
@@ -440,14 +443,14 @@ void lcd_update(void)
 		space_character = 0x20u;
 		set_bytes(text_place, scroll_width + 1u, space_character);
 	}
-	lcd_scroll = screen->lcd_scroll;
-	if (lcd_scroll == 0u)
+	lcd_scroll = rom_pointer(screen->lcd_scroll);
+	if (lcd_scroll == NULL)
 		return;
 	switch (screen->lcd_scroll_step)
 	{
 	case 0:
-		character = TEXT_CHARACTERS(lcd_scroll)[0];
-		screen->lcd_scroll = lcd_scroll + 1u;
+		character = lcd_scroll[0];
+		screen->lcd_scroll = address_of(lcd_scroll + 1);
 		if (character == 0x60u)
 			character = 7u;
 		move_string(text_place + 1u, scroll_width, text_place, scroll_width, 1u, 0u, 0u, 0u, &text_end, &ignored);
@@ -550,7 +553,8 @@ void lcd_race_info_start(void)
 void lcd_race_info_update(void)
 {
 	uint8_t character = 0, page = 0;
-	uint32_t countdown = 0, countdown_frames = 0, maximum_speed = 0, order_list = 0, racer = 0, racers_left = 0, shown_speed = 0, text_place = 0;
+	uint32_t countdown = 0, countdown_frames = 0, maximum_speed = 0, racer = 0, racers_left = 0, shown_speed = 0, text_place = 0;
+	uint8_t *order_list = NULL;
 	uint16_t page_frames = 0;
 
 	if (player_car->at_goal != 0u)
@@ -693,11 +697,11 @@ void lcd_race_info_update(void)
 		break;
 	}
 	text_place = address_of(screen) + 0xF18u;
-	order_list = current_object->lcd_race_info.order_list;
+	order_list = pointer_to(current_object->lcd_race_info.order_list);
 	racers_left = current_object->lcd_race_info.racer_count;
 	do
 	{
-		racer = RACE_ORDER_PLAYERS(order_list)[0];
+		racer = order_list[0];
 		order_list++;
 		if (screen->player != racer || (current_object->lcd_race_info.frames & 8u) == 0u)
 			character = (uint8_t)(game->car_numbers[racer] + 0x31u);
@@ -722,26 +726,27 @@ void lcd_race_info_time_page(void)
    minutes'seconds"hundredths. */
 void lcd_race_info_time(void)
 {
-	uint32_t digit = 0, race_time = 0, text_place = 0;
+	uint32_t digit = 0, race_time = 0;
+	uint8_t *text_place = NULL;
 
 	race_time = player_car->race_time / 0xAu;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
-	text_place = address_of(screen) + 0xF20u - 1u;
-	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
+	text_place = &screen->lcd_text[15];
+	text_place[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
 	text_place--;
-	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
+	text_place[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &race_time, &digit);
-	text_place = text_place - 1u - 1u;
-	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
+	text_place -= 2;
+	text_place[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(6u, &race_time, &digit);
 	text_place--;
-	LCD_CHARACTERS(text_place)[0] = digit + 0x30u;
-	LCD_CHARACTERS(text_place)[-2] = race_time + 0x30u;
+	text_place[0] = digit + 0x30u;
+	text_place[-2] = race_time + 0x30u;
 }
 
 /* Writes the Ave. page's label on the LCD, then the average speed (lcd_race_info_average). */

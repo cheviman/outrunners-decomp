@@ -196,9 +196,10 @@ void reload_settings(uint32_t eeprom_word)
 void eeprom_read_settings(uint32_t eeprom_word)
 {
 	uint8_t command = 0;
-	uint32_t lines = 0, lines_port = 0, settings = 0, word_count = 0;
+	uint32_t lines = 0, lines_port = 0, word_count = 0;
+	uint16_t *settings = NULL;
 
-	settings = settings_magic_ADDRESS;
+	settings = pointer_to(settings_magic_ADDRESS);
 	command = 0x80u;
 	word_count = 0x40u;
 	eeprom_begin(&lines, &r12, &lines_port);
@@ -206,9 +207,9 @@ void eeprom_read_settings(uint32_t eeprom_word)
 	{
 		eeprom_read_word(command, r12, lines_port, &eeprom_word, &lines);
 		command++;
-		SETTINGS_WORDS(settings)[0] = eeprom_word;
+		settings[0] = eeprom_word;
 		word_count--;
-		settings += 2u;
+		settings++;
 	} while (word_count != 0u);
 }
 
@@ -247,24 +248,25 @@ void eeprom_write_settings(void)
 {
 	uint8_t command = 0;
 	uint16_t checksum = 0, eeprom_word = 0;
-	uint32_t lines = 0, lines_port = 0, settings = 0, settings_length = 0, word_count = 0;
+	uint32_t lines = 0, lines_port = 0, settings_length = 0, word_count = 0;
+	uint16_t *settings = NULL;
 
-	settings = eeprom_write_count_ADDRESS;
+	settings = &game->eeprom_write_count;
 	settings_length = 0x3Au;
-	checksum = crc16(settings, settings_length);
+	checksum = crc16(address_of(settings), settings_length);
 	game->settings_checksum = checksum;
 	move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 	command = 0x30u;
 	eeprom_begin(&lines, &r12, &lines_port);
 	eeprom_send_command((uint8_t)lines, command, lines_port);
-	settings = settings_magic_ADDRESS;
+	settings = pointer_to(settings_magic_ADDRESS);
 	command = 0x40u;
 	word_count = 0x40u;
 	eeprom_begin(&lines, &r12, &lines_port);
 	do
 	{
-		eeprom_word = SETTINGS_WORDS(settings)[0];
-		settings += 2u;
+		eeprom_word = settings[0];
+		settings++;
 		lines = eeprom_write_word(eeprom_word, (uint8_t)lines, command, r12, lines_port);
 		command++;
 		word_count--;

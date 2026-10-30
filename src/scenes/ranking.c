@@ -24,7 +24,7 @@ uint32_t load_course_records(void)
 
 	courses_left = 0xAu;
 	backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS;
-	course_record = rom_pointer(default_course_records_ADDRESS);
+	course_record = default_course_records;
 	record_copy = pointer_to(course_records_ADDRESS);
 	for (;;)
 	{
@@ -311,27 +311,28 @@ void ranking_course_banner_update(void)
 void ranking_record_start(void)
 {
 	uint8_t character_index = 0, initial = 0;
-	uint32_t characters_left = 0, initial_place = 0, record_offset = 0, record_time = 0, text_place = 0;
+	uint32_t characters_left = 0, record_offset = 0, record_time = 0, text_place = 0;
+	uint8_t *initial_place = NULL;
 	struct object *object = NULL;
 	uint8_t second_initial = 0;
 
 	text_place = address_of(current_object) + 0x80u;
 	record_offset = current_object->ranking_record.course;
 	record_offset = (uint8_t)(record_offset * 6u);
-	initial_place = course_records_ADDRESS + 0x1u + record_offset;
-	initial = COURSE_RECORD_BYTES(initial_place)[0];
+	initial_place = pointer_to(course_records_ADDRESS + 0x1u + record_offset);
+	initial = initial_place[0];
 	initial_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
 	OBJECT(text_place - 0x80u)->ranking_record.text[0] = initial;
-	second_initial = COURSE_RECORD_BYTES(initial_place)[0];
+	second_initial = initial_place[0];
 	initial_place++;
 	initial = second_initial;
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
 	OBJECT(text_place - 0x81u)->ranking_record.text[1] = initial;
-	initial = COURSE_RECORD_BYTES(initial_place)[0];
+	initial = initial_place[0];
 	text_place++;
 	if (initial == 0x2Du)
 		initial = 0x2Eu;
@@ -567,7 +568,7 @@ void passing_traffic_start(void)
 	uint8_t step_count = 0;
 	const struct traffic_path_step *traffic_path_step = NULL;
 
-	traffic_path_step = rom_pointer(traffic_path_ADDRESS);
+	traffic_path_step = traffic_path;
 	step_count = 0u;
 	while (traffic_path_step->size != 0u)
 	{
@@ -727,8 +728,11 @@ void passing_car_update(void)
    bit 2); send_video_registers = FF to send the registers. */
 void ranking_background_load(void)
 {
-	uint32_t background_number = 0, background_pages = 0, colour_list = 0, index = 0, mixer_place = 0, mixer_priority = 0, page_numbers = 0, page_place = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0;
+	uint32_t background_number = 0, colour_list = 0, index = 0, mixer_priority = 0, page_numbers = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0;
+	uint32_t *mixer_place = NULL;
+	uint32_t *page_place = NULL;
 	const struct ranking_background_registers *ranking_background_registers = NULL;
+	const uint32_t *background_pages = NULL;
 	uint32_t saved_fades = 0;
 
 	ranking_background_registers = rom_pointer(ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u);
@@ -749,19 +753,19 @@ void ranking_background_load(void)
 	TILE_BANK_VALUES(current_object->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
 	saved_fades = background_palette_fades[background_number];
 	colour_list = background_palettes[background_number];
-	background_pages = background_tile_page_lists[background_number] + 0x10u;
-	page_place = address_of(current_object) + 0xB0u;
+	background_pages = rom_pointer(background_tile_page_lists[background_number] + 0x10u);
+	page_place = &current_object->ranking_background.page_list;
 	page_numbers = ranking_background_page_numbers[screen->index];
 	pages_to_copy = 4u;
 	do
 	{
-		OBJECT_TILE_PAGES(page_place)[0] = TILE_PAGE_ENTRIES(background_pages)[0] | (page_numbers & ~0xFFFFFFu);
-		page_place += 4u;
+		page_place[0] = background_pages[0] | (page_numbers & ~0xFFFFFFu);
+		page_place++;
 		page_numbers = page_numbers << 8;
 		pages_to_copy--;
-		background_pages += 4u;
+		background_pages++;
 	} while (pages_to_copy != 0u);
-	OBJECT_TILE_PAGES(page_place)[0] = 0xFFFFFFFFu;
+	page_place[0] = 0xFFFFFFFFu;
 	queued_pages = address_of(current_object) + 0xB0u;
 	queue_tile_pages(queued_pages);
 	queue_palette_list(colour_list);
@@ -779,12 +783,12 @@ void ranking_background_load(void)
 	PAGE_SELECT(current_object->ranking_background.pages_address)[0] = byte_swap32(ranking_background_page_numbers[index]);
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_x_address)[0] = ranking_background_scroll_xs[index];
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_y_address)[0] = 0x60u;
-	mixer_place = ranking_mixer_addresses[index];
-	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
+	mixer_place = pointer_to(ranking_mixer_addresses[index]);
+	mixer_priority = mixer_place[0];
 	mixer_priority = mixer_priority & ~0xFu;
-	MIXER_VALUE_PAIRS(mixer_place)[0] = mixer_priority | 1u;
-	mixer_place += 4u;
-	mixer_priority = MIXER_VALUE_PAIRS(mixer_place)[0];
-	MIXER_VALUE_PAIRS(mixer_place)[0] = mixer_priority & ~0xFu;
+	mixer_place[0] = mixer_priority | 1u;
+	mixer_place++;
+	mixer_priority = mixer_place[0];
+	mixer_place[0] = mixer_priority & ~0xFu;
 	screen->flags |= 4u;
 }

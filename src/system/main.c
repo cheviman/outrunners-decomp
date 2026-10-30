@@ -21,20 +21,22 @@
    (network_check), and goes on as the boot task's frame loop (second_task(1), screen 2's). */
 void boot(void)
 {
-	uint32_t block_count = 0, clear_address = 0, delay_count = 0, destination = 0, fill = 0, fill_high = 0, link_off_delay = 0, pair_count = 0, source = 0;
+	uint32_t block_count = 0, delay_count = 0, destination = 0, fill = 0, fill_high = 0, link_off_delay = 0, pair_count = 0;
+	const uint8_t *source = NULL;
+	uint32_t *clear_address = NULL;
 	uint32_t psw_image = 0;
 	uint32_t psw = 0;
 
 	load_privileged(5u, vector_table_ADDRESS);
-	source = 0xA4u;
+	source = rom_pointer(0xA4u);
 	destination = 0xE00000u;
 	pair_count = 8u;
 	do
 	{
-		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
+		mem_write8(destination, source[0]);
 		source++;
 		destination++;
-		mem_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
+		mem_write8(destination, source[0]);
 		pair_count--;
 		source++;
 		destination++;
@@ -45,13 +47,13 @@ void boot(void)
 	mem_write8(0xE80003u, (uint8_t)(boot_e80000_bytes >> 24u));
 	destination = INTERRUPT_CONTROL;
 	pair_count = 6u;
-	source = 0xB8u;
+	source = rom_pointer(0xB8u);
 	do
 	{
-		io_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
+		io_write8(destination, source[0]);
 		source++;
 		destination++;
-		io_write8(destination, BOOT_REGISTER_VALUES(source)[0]);
+		io_write8(destination, source[0]);
 		pair_count--;
 		source++;
 		destination++;
@@ -70,21 +72,21 @@ void boot(void)
 	fill = 0u;
 	fill_high = 0u;
 	block_count = 0x20u;
-	clear_address = 0x21E000u;
+	clear_address = pointer_to(0x21E000u);
 	do
 	{
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
 		block_count--;
 	} while (block_count != 0u);
 	io_write32(LINK_BOARD_ON, 0u);
@@ -95,43 +97,43 @@ void boot(void)
 	} while (link_off_delay != 0u);
 	fill = 0u;
 	fill_high = 0u;
-	clear_address = 0x21F000u;
+	clear_address = pointer_to(0x21F000u);
 	block_count = 0x80u;
 	do
 	{
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
 		block_count--;
 	} while (block_count != 0u);
 	init_io_chips();
 	fill = 0u;
 	fill_high = 0u;
 	block_count = 0x100u;
-	clear_address = GAME_VARIABLES;
+	clear_address = &game->waiting_task_frame;
 	do
 	{
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
-		CLEARED_RAM_WORDS(clear_address)[0] = fill;
-		CLEARED_RAM_WORDS(clear_address)[1] = fill_high;
-		clear_address += 8u;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
+		clear_address[0] = fill;
+		clear_address[1] = fill_high;
+		clear_address += 2;
 		block_count--;
 	} while (block_count != 0u);
 	move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);

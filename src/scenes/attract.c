@@ -21,7 +21,7 @@ void bar_picture_start(void)
 	struct object *object = NULL;
 	uint32_t scales = 0;
 
-	bar = rom_pointer(bar_picture_bars_ADDRESS);
+	bar = bar_picture_bars;
 	do
 	{
 		object = start_object();
@@ -241,7 +241,8 @@ void staff_credits_code_watch(void)
 {
 	uint32_t zero = 0;
 	uint8_t sound_code = 0;
-	uint32_t new_controls = 0, next_control = 0;
+	uint32_t new_controls = 0;
+	const uint8_t *next_control = NULL;
 	uint8_t element = 0;
 	uint32_t presentation_timer = 0;
 
@@ -251,13 +252,13 @@ void staff_credits_code_watch(void)
 		staff_credits_code_done();
 		return;
 	}
-	next_control = current_object->staff_credits_code.code_place;
-	element = STAFF_CREDITS_CODE_CONTROLS(next_control)[0];
+	next_control = rom_pointer(current_object->staff_credits_code.code_place);
+	element = next_control[0];
 	next_control++;
 	if (element != new_controls)
-		next_control = staff_credits_code_sequence_ADDRESS;
-	current_object->staff_credits_code.code_place = next_control;
-	if (STAFF_CREDITS_CODE_CONTROLS(next_control)[0] != 0u)
+		next_control = staff_credits_code_sequence;
+	current_object->staff_credits_code.code_place = address_of(next_control);
+	if (next_control[0] != 0u)
 	{
 		staff_credits_code_done();
 		return;
@@ -369,17 +370,17 @@ void car_name_start(void)
 {
 	uint8_t letter_delay = 0;
 	uint16_t letter_x = 0;
-	uint32_t letter_place = 0;
+	const uint8_t *letter_place = NULL;
 	struct object *object = NULL;
 
-	letter_place = attract_car_names[screen->attract_car];
+	letter_place = rom_pointer(attract_car_names[screen->attract_car]);
 	letter_x = 0x168u;
 	letter_delay = 0xFu;
-	while (CAR_NAME_LETTERS(letter_place)[0] != 0u)
+	while (letter_place[0] != 0u)
 	{
 		object = start_object();
 		object->handler = car_name_letter_update_ADDRESS;
-		object->car_name_letter.character = CAR_NAME_LETTERS(letter_place)[0];
+		object->car_name_letter.character = letter_place[0];
 		object->x = letter_x;
 		letter_x += 0x12u;
 		object->car_name_letter.delay = letter_delay;

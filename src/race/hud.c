@@ -1112,7 +1112,8 @@ void branch_arrow_update(void)
 {
 	uint8_t dj_message = 0;
 	uint16_t new_scale = 0, new_y = 0;
-	uint32_t animation = 0, lcd_text = 0, palette = 0, palette_list = 0;
+	uint32_t animation = 0, lcd_text = 0, palette = 0;
+	const int16_t *palette_list = NULL;
 
 	switch (current_object->state)
 	{
@@ -1145,17 +1146,17 @@ void branch_arrow_update(void)
 		}
 		if ((int16_t)RACE(screen->race_copy)->segment < (int16_t)current_object->branch_arrow.leave_segment)
 		{
-			palette_list = current_object->branch_arrow.palette_list;
-			palette = OBJECT_PALETTE_STEPS(palette_list)[0];
-			palette_list += 2u;
+			palette_list = rom_pointer(current_object->branch_arrow.palette_list);
+			palette = palette_list[0];
+			palette_list++;
 			if ((int16_t)palette < 0)
 			{
-				palette_list += palette;
-				palette = (uint16_t)OBJECT_PALETTE_STEPS(palette_list)[0];
-				palette_list += 2u;
+				palette_list = rom_pointer(address_of(palette_list) + palette);
+				palette = (uint16_t)palette_list[0];
+				palette_list++;
 			}
 			current_object->palette = palette;
-			current_object->branch_arrow.palette_list = palette_list;
+			current_object->branch_arrow.palette_list = address_of(palette_list);
 			draw_object(palette);
 			return;
 		}
@@ -1175,17 +1176,17 @@ void branch_arrow_update(void)
 	new_scale = (uint16_t)(current_object->width_scale + 6u);
 	current_object->width_scale = new_scale;
 	current_object->height_scale = new_scale;
-	palette_list = current_object->branch_arrow.palette_list;
-	palette = OBJECT_PALETTE_STEPS(palette_list)[0];
-	palette_list += 2u;
+	palette_list = rom_pointer(current_object->branch_arrow.palette_list);
+	palette = palette_list[0];
+	palette_list++;
 	if ((int16_t)palette < 0)
 	{
-		palette_list += palette;
-		palette = (uint16_t)OBJECT_PALETTE_STEPS(palette_list)[0];
-		palette_list += 2u;
+		palette_list = rom_pointer(address_of(palette_list) + palette);
+		palette = (uint16_t)palette_list[0];
+		palette_list++;
 	}
 	current_object->palette = palette;
-	current_object->branch_arrow.palette_list = palette_list;
+	current_object->branch_arrow.palette_list = address_of(palette_list);
 	draw_object(palette);
 }
 
@@ -1200,7 +1201,8 @@ void checkpoint_board_update(void)
 {
 	uint8_t checkpoints_passed = 0;
 	uint16_t row_offset = 0;
-	uint32_t blink_on = 0, checkpoint = 0, checkpoint_count = 0, leave_segment = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
+	uint32_t blink_on = 0, checkpoint = 0, leave_segment = 0, player = 0, race = 0, racer = 0, racers_left = 0, row_player = 0, row_time = 0, screen_player = 0;
+	uint8_t *checkpoint_count = NULL;
 	struct object *object = NULL;
 	uint8_t blink_timer = 0, rows_left = 0;
 	uint16_t gap = 0, offset_before = 0;
@@ -1218,9 +1220,9 @@ void checkpoint_board_update(void)
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);
-		checkpoint_count = address_of(screen) + 0x480u + screen->player;
-		current_object->checkpoint_board.checkpoints_seen = CHECKPOINT_COUNTS(checkpoint_count)[0];
-		current_object->checkpoint_board.checkpoint_count = checkpoint_count;
+		checkpoint_count = pointer_to(address_of(screen) + 0x480u + screen->player);
+		current_object->checkpoint_board.checkpoints_seen = checkpoint_count[0];
+		current_object->checkpoint_board.checkpoint_count = address_of(checkpoint_count);
 		current_object->checkpoint_board.rows_shown = 0u;
 		current_object->state++;
 	case 1:
@@ -1484,48 +1486,49 @@ void checkpoint_board_gap_time(uint32_t time, uint32_t player)
 {
 	uint32_t zero = 0;
 	uint8_t zero_char = 0;
-	uint32_t digit = 0, text = 0;
+	uint32_t digit = 0;
+	uint8_t *text = NULL;
 
-	text = address_of(current_object) + 0xB7u + player * 2u * 4u;
+	text = pointer_to(address_of(current_object) + 0xB7u + player * 2u * 4u);
 	zero_char = 0x30u;
-	OBJECT_TEXT_CHARACTERS(text)[0] = 0u;
+	text[0] = 0u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
+	text[0] = digit + 0x30u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	text--;
-	OBJECT_TEXT_CHARACTERS(text)[0] = digit + 0x30u;
+	text[0] = digit + 0x30u;
 	text--;
-	OBJECT_TEXT_CHARACTERS(text)[0] = 0x22u;
+	text[0] = 0x22u;
 	digit = 0u;
 	divx_pair(0xAu, &time, &digit);
 	zero = (uint32_t)(time == 0u);
 	if (zero == 0u)
 	{
 		text--;
-		OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
+		text[0] = digit + zero_char;
 		digit = 0u;
 		divx_pair(6u, &time, &digit);
 		zero = (uint32_t)(time == 0u);
 		if (zero)
 		{
 			text--;
-			OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
-			AS16(OBJECT_TEXT_CHARACTERS(text)[-2]) = 0x2020u;
+			text[0] = digit + zero_char;
+			AS16(text[-2]) = 0x2020u;
 			return;
 		}
 		text--;
-		OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
+		text[0] = digit + zero_char;
 		text--;
-		OBJECT_TEXT_CHARACTERS(text)[0] = 0x27u;
-		OBJECT_TEXT_CHARACTERS(text)[-1] = time + zero_char;
+		text[0] = 0x27u;
+		text[-1] = time + zero_char;
 		return;
 	}
 	text--;
-	OBJECT_TEXT_CHARACTERS(text)[0] = digit + zero_char;
+	text[0] = digit + zero_char;
 	text--;
-	OBJECT_TEXT_CHARACTERS(text)[0] = 0x20u;
-	AS16(OBJECT_TEXT_CHARACTERS(text)[-2]) = 0x2020u;
+	text[0] = 0x20u;
+	AS16(text[-2]) = 0x2020u;
 }

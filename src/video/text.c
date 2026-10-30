@@ -25,9 +25,10 @@ void load_shadowed_text_font(void)
 {
 	uint32_t carry = 0;
 	uint8_t row_bits = 0;
-	uint32_t characters_left = 0, destination = 0, font_rows = 0, pen = 0, pixel_mask = 0, pixel_pairs_left = 0, row_pixels = 0, rows_left = 0, shadow = 0, shadow_pixels = 0;
+	uint32_t characters_left = 0, destination = 0, pen = 0, pixel_mask = 0, pixel_pairs_left = 0, row_pixels = 0, rows_left = 0, shadow = 0, shadow_pixels = 0;
+	const uint8_t *font_rows = NULL;
 
-	font_rows = one_bit_font_ADDRESS;
+	font_rows = rom_pointer(one_bit_font_ADDRESS);
 	destination = VIDEO_RAM + 0x18000u;
 	pen = 1u;
 	characters_left = 0x80u;
@@ -37,7 +38,7 @@ void load_shadowed_text_font(void)
 		shadow = 0u;
 		do
 		{
-			row_bits = TEXT_FONT_ROWS(font_rows)[0];
+			row_bits = font_rows[0];
 			pixel_pairs_left = 4u;
 			row_pixels = 0u;
 			font_rows++;

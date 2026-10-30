@@ -249,15 +249,16 @@ uint16_t add_service_credit(uint16_t credits_given, struct seat_credits *seat_cr
 uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t chute_entry)
 {
 	uint8_t bonus_units = 0, chute_units = 0, credit_units = 0, units_per_credit = 0;
-	uint32_t coin_sounds = 0, counter = 0, units_per_bonus = 0;
+	uint32_t counter = 0, units_per_bonus = 0;
 	struct seat_credits *seat_credits = NULL;
+	uint8_t *coin_sounds = NULL;
 	uint32_t switch_bit = 0, owed_pulses = 0;
 
 	switch_bit = COIN_CHUTE(chute_entry)->switch_bit;
 	chute_entry += 4u;
 	if ((released_switches & shl32(1u, (int)(switch_bit))) == 0u)
 		return credits_given;
-	coin_sounds = COIN_CHUTE(chute_entry - 0x4u)->coin_sounds;
+	coin_sounds = pointer_to(COIN_CHUTE(chute_entry - 0x4u)->coin_sounds);
 	chute_entry = chute_entry + 4u + game->chute_entry_offset;
 	seat_credits = pointer_to(COIN_CHUTE_VARIANT(chute_entry)->credits);
 	io_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
@@ -267,7 +268,7 @@ uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t
 	bookkeeping_increment16(counter);
 	if (seat_credits->credits >= 9u)
 		return credits_given;
-	SEAT_SOUND_COUNTS(coin_sounds)[0]++;
+	coin_sounds[0]++;
 	chute_units = CHUTE_UNIT_SETTINGS(COIN_CHUTE_VARIANT(chute_entry)->coin_units)[0];
 	units_per_bonus = game->bonus_adder;
 	if (units_per_bonus != 0u)

@@ -480,23 +480,25 @@ void test_mode_memory_test_draw(uint32_t *p_cell_value, uint32_t *p_text_place)
 {
 	uint16_t cell_value = (uint16_t)*p_cell_value;
 	uint16_t cell_contents = 0;
-	uint32_t result_cells = 0, result_place = 0, results_left = 0, text = 0, text_place = 0;
+	uint32_t results_left = 0, text = 0, text_place = 0;
+	uint8_t *result_place = NULL;
 	const struct memory_test_result_text *result_text = NULL;
+	const uint16_t *result_cells = NULL;
 	uint8_t colour = 0, character = 0, character_1 = 0, character_2 = 0;
 	uint16_t cell = 0;
 
 	text = memory_test_page_text_ADDRESS;
 	test_mode_draw_texts(cell_value, text);
-	result_place = memory_test_results_ADDRESS;
-	result_cells = memory_test_result_cells_ADDRESS;
+	result_place = &game->memory_test_results[0];
+	result_cells = rom_pointer(memory_test_result_cells_ADDRESS);
 	text_place = TEXT_CELL(0, 0);
 	results_left = 0x19u;
 	do
 	{
-		result_text = rom_pointer(memory_test_result_texts_ADDRESS + CHIP_TEST_RESULTS(result_place)[0] * 3u * 2u);
+		result_text = rom_pointer(memory_test_result_texts_ADDRESS + result_place[0] * 3u * 2u);
 		colour = result_text->colour;
-		cell = TEST_MODE_CELLS(result_cells)[0];
-		result_cells += 2u;
+		cell = result_cells[0];
+		result_cells++;
 		text_place = LINKED(text_place, cell);
 		character = result_text->character_0;
 		cell_contents = (uint16_t)((uint16_t)((uint32_t)colour << 8) | character);
@@ -996,20 +998,21 @@ uint16_t test_mode_memory_test_nibbles(uint32_t size, uint32_t ram_start)
 void test_mode_memory_test_blink(void)
 {
 	uint16_t character = 0;
-	uint32_t next_cell = 0, now_testing = 0;
+	uint32_t next_cell = 0;
+	const uint8_t *now_testing = NULL;
 	uint32_t cell = 0;
 
 	character = 0x6600u;
 	next_cell = TEXT_CELL(14, 25);
-	now_testing = memory_test_now_testing_text_ADDRESS;
+	now_testing = rom_pointer(memory_test_now_testing_text_ADDRESS);
 	do
 	{
-		character = (uint16_t)((character & ~0xFFu) | TEST_MODE_CHARACTERS(now_testing)[0]);
+		character = (uint16_t)((character & ~0xFFu) | now_testing[0]);
 		cell = next_cell;
 		next_cell += 2u;
 		TEXT_LAYER_CELLS(cell)[0] ^= character;
 		now_testing++;
-	} while (TEST_MODE_CHARACTERS(now_testing)[0] != 0u);
+	} while (now_testing[0] != 0u);
 }
 
 /* Starts the VOLUME ADJUSTMENT, the calibration of the wheels' and pedals' potentiometers: draws ADJUST
@@ -1041,7 +1044,8 @@ void test_mode_volume_adjustment_select(uint32_t character)
 {
 	uint8_t position = 0;
 	uint16_t drawn_character = 0;
-	uint32_t analog_input = 0, cell = 0, controls_left = 0, page_cursor = 0, text = 0;
+	uint32_t cell = 0, controls_left = 0, page_cursor = 0, text = 0;
+	uint8_t *analog_input = NULL;
 	struct volume_range *range = NULL;
 	uint8_t blink_timer = 0;
 	uint16_t cursor_character = 0;
@@ -1080,11 +1084,11 @@ void test_mode_volume_adjustment_select(uint32_t character)
 		test_mode_draw_texts(drawn_character, text);
 		test_mode_show_exit_prompt();
 		range = pointer_to(volume_ranges_ADDRESS);
-		analog_input = test_mode_analog_inputs_ADDRESS;
+		analog_input = &game->test_mode_analog_inputs;
 		controls_left = 6u;
 		do
 		{
-			position = (uint8_t)(ANALOG_POSITIONS(analog_input)[0] & ~1u);
+			position = (uint8_t)(analog_input[0] & ~1u);
 			range->low = position;
 			range->high = position | 1u;
 			controls_left--;
@@ -1114,15 +1118,16 @@ void test_mode_volume_adjustment_select(uint32_t character)
    BUTTON TO EXIT blinks. */
 void test_mode_volume_adjustment_adjust(void)
 {
-	uint32_t analog_input = 0, controls_left = 0, position = 0;
+	uint32_t controls_left = 0, position = 0;
+	uint8_t *analog_input = NULL;
 	struct volume_range *range = NULL;
 
-	analog_input = test_mode_analog_inputs_ADDRESS;
+	analog_input = &game->test_mode_analog_inputs;
 	range = pointer_to(volume_ranges_ADDRESS);
 	controls_left = 6u;
 	do
 	{
-		position = ANALOG_POSITIONS(analog_input)[0];
+		position = analog_input[0];
 		analog_input++;
 		if (position < range->low)
 			range->low = position;
@@ -1276,25 +1281,25 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 	uint32_t carry = 0;
 	uint8_t colour = 0, test_switches_b = 0;
 	uint16_t range_high = 0, range_low = 0, test_switches = 0;
-	uint32_t analog_input = 0, bar_cells = 0, bit = 0, cell = 0, controls_left = 0, digit_count = 0, item = 0, port_a = 0, port_b = 0, position = 0, text = 0;
-	struct volume_range *range = NULL;
+	uint32_t analog_input = 0, bar_cells = 0, bit = 0, cell = 0, controls_left = 0, digit_count = 0, item = 0, port_a = 0, port_b = 0, position = 0, range = 0, text = 0;
 
 	text = input_test_bars_text_ADDRESS;
 	test_mode_draw_texts(character, text);
 	cell = TEXT_CELL(0, 0);
 	item = input_test_items_ADDRESS;
 	analog_input = test_mode_analog_inputs_ADDRESS;
-	range = pointer_to(volume_ranges_ADDRESS);
+	range = volume_ranges_ADDRESS;
 	bar_cells = input_test_bar_cells_ADDRESS;
 	controls_left = 6u;
 	do
 	{
 		position = ANALOG_POSITIONS(analog_input)[0];
-		range_low = range->low;
+		range_low = VOLUME_RANGE(range)->low;
 		analog_input++;
+		range++;
 		if (position < range_low)
 			position = range_low;
-		range_high = range->high;
+		range_high = VOLUME_RANGE(range - 0x1u)->high;
 		range++;
 		if (range_high < position)
 			position = range_high;
@@ -1480,7 +1485,7 @@ uint32_t test_mode_output_test_draw(void)
 	const struct output_test_output *output = NULL;
 
 	cell = TEXT_CELL(0, 0);
-	output = rom_pointer(output_test_outputs_ADDRESS);
+	output = output_test_outputs;
 	do
 	{
 		cell = LINKED(cell, output->cell);
@@ -1497,12 +1502,12 @@ uint32_t test_mode_output_test_draw(void)
    output bytes (the list at 01D5C0). */
 void test_mode_output_test_toggle(void)
 {
-	uint32_t output_variable = 0;
+	uint32_t *output_variable = NULL;
 	const struct output_test_output *output = NULL;
 
 	output = rom_pointer(output_test_outputs_ADDRESS + 0x2u + game->test_mode_page_cursor * 4u - 2u);
-	output_variable = output->variable + GAME_VARIABLES;
-	OUTPUT_BITS(output_variable)[0] ^= shl32(1u, (int)(output->bit));
+	output_variable = pointer_to(output->variable + GAME_VARIABLES);
+	output_variable[0] ^= shl32(1u, (int)(output->bit));
 }
 
 /* The output test's EXIT: turns the lamps and the wheel motor off (port_d_outputs &= E0E1,
@@ -2102,13 +2107,13 @@ void test_mode_game_assignments_advertise(void)
    back to the menu. */
 void test_mode_game_assignments_exit(void)
 {
-	uint32_t setting_places = 0;
+	const uint8_t *setting_places = NULL;
 
-	setting_places = game_assignments_setting_places_ADDRESS;
+	setting_places = rom_pointer(game_assignments_setting_places_ADDRESS);
 	current_object = pointer_to(settings_magic_ADDRESS);
 	do
 	{
-		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
+		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
@@ -2587,12 +2592,12 @@ void test_mode_coin_assignments_manual_exit(void)
    in the shared RAM (bookkeeping_clear_credits); back to the menu. */
 void test_mode_coin_assignments_exit(void)
 {
-	uint32_t setting_places = 0;
+	const uint8_t *setting_places = NULL;
 
-	setting_places = coin_assignments_setting_places_ADDRESS;
+	setting_places = rom_pointer(coin_assignments_setting_places_ADDRESS);
 	do
 	{
-		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
+		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
@@ -2791,12 +2796,12 @@ void test_mode_network_assignments_step_cabinet_id(void)
    the menu. */
 void test_mode_network_assignments_exit(void)
 {
-	uint32_t setting_places = 0;
+	const uint8_t *setting_places = NULL;
 
-	setting_places = network_assignments_setting_places_ADDRESS;
+	setting_places = rom_pointer(network_assignments_setting_places_ADDRESS);
 	do
 	{
-		current_object = pointer_to(IN_PAGE(address_of(current_object), TEST_MODE_SETTING_PLACES(setting_places)[0]));
+		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
@@ -2957,8 +2962,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 {
 	uint32_t carry = 0;
 	uint16_t character = 0, stage_games = 0, zero_character = 0;
-	uint32_t bar_blocks = 0, bar_cell = 0, bar_scale = 0, car_then_time = 0, cell = 0, colour = 0, colour_name = 0, digit_count = 0, divisor = 0, drawn_counts = 0, games = 0, largest_count = 0, number_cell = 0, record = 0, records_left = 0, rest_time = 0, row_cell = 0, stage_counts = 0, stages_left = 0;
-	const struct time_digit_step *digit_step = NULL;
+	uint32_t bar_blocks = 0, bar_cell = 0, bar_scale = 0, car_then_time = 0, cell = 0, colour = 0, colour_name = 0, digit_count = 0, digit_step = 0, divisor = 0, drawn_counts = 0, games = 0, largest_count = 0, number_cell = 0, record = 0, records_left = 0, rest_time = 0, row_cell = 0, stage_counts = 0, stages_left = 0;
 	uint32_t rounded_blocks = 0;
 
 	current_object = pointer_to(BOOKKEEPING_CHECKSUM_ADDRESS);
@@ -3053,19 +3057,20 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 			record++;
 			car_then_time = BACKUP_COURSE_RECORD(record - 0x4u)->time;
 			zero_character = 0x6430u;
-			digit_step = rom_pointer(time_digit_steps_ADDRESS);
+			digit_step = time_digit_steps_ADDRESS;
 			record += 2u;
 			cell += 4u;
 			do
 			{
 				rest_time = 0u;
-				divisor = digit_step->divisor;
+				divisor = TIME_DIGIT_STEP(digit_step)->divisor;
+				digit_step += 4u;
 				divux_pair(divisor, &car_then_time, &rest_time);
 				TEXT_LAYER_CELLS(cell)[0] = car_then_time + zero_character;
-				cell += digit_step->cell_step;
+				cell += TIME_DIGIT_STEP(digit_step - 0x4u)->cell_step;
 				car_then_time = rest_time;
-				digit_step++;
-			} while ((int32_t)digit_step->divisor >= 0);
+				digit_step += 4u;
+			} while ((int32_t)TIME_DIGIT_STEP(digit_step)->divisor >= 0);
 		}
 		records_left--;
 		row_cell += 0x80u;
@@ -3393,18 +3398,19 @@ void test_mode_show_continue_prompt(void)
    out, draws it (shown 21 frames) if its first cell is empty, else erases it (hidden 11 frames). */
 void test_mode_blink_prompt(uint16_t character)
 {
-	uint32_t cell = 0, text = 0;
+	uint32_t cell = 0;
+	const uint8_t *text = NULL;
 	uint8_t blink_timer = 0;
 
 	blink_timer = game->test_mode_blink_timer - 1u;
 	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer >= 0)
 		return;
-	text = game->test_mode_prompt_text;
-	cell = 0x310000u | AS16(TEST_MODE_TEXT_BYTES(text)[0]);
+	text = rom_pointer(game->test_mode_prompt_text);
+	cell = 0x310000u | AS16(text[0]);
 	if (TEXT_LAYER_CELLS(cell)[0] == 0u)
 	{
-		test_mode_draw_texts(character, text);
+		test_mode_draw_texts(character, address_of(text));
 		game->test_mode_blink_timer = 0x14;
 		return;
 	}
@@ -3601,7 +3607,8 @@ void test_mode_read_controls(void)
 {
 	uint32_t carry = 0;
 	uint8_t buttons = 0, converter_bits = 0, port_f_pressed = 0, previous_buttons = 0, reading = 0;
-	uint32_t analog_input = 0, bank_then_count = 0, bits_left = 0, converter_input = 0;
+	uint32_t bank_then_count = 0, bits_left = 0, converter_input = 0;
+	uint8_t *analog_input = NULL;
 	uint8_t port_e_a = 0, port_e_b = 0, port_f_a = 0, port_f_b = 0;
 	uint32_t flags_before = 0, test_mode_flags_long = 0;
 
@@ -3625,7 +3632,7 @@ void test_mode_read_controls(void)
 	game->test_mode_routine = (game->test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	bank_then_count = carry;
 	converter_input = ANALOG_INPUTS + bank_then_count * 4u;
-	analog_input = test_mode_analog_inputs_ADDRESS + bank_then_count * 4u;
+	analog_input = pointer_to(test_mode_analog_inputs_ADDRESS + bank_then_count * 4u);
 	bank_then_count = (uint8_t)(0u - bank_then_count);
 	bank_then_count = (uint8_t)(bank_then_count + 2u);
 	bank_then_count = (uint8_t)(bank_then_count * 2u);
@@ -3641,7 +3648,7 @@ void test_mode_read_controls(void)
 			reading = (uint8_t)(reading * 2u + carry);
 			bits_left--;
 		} while (bits_left != 0u);
-		ANALOG_POSITIONS(analog_input)[0] = reading;
+		analog_input[0] = reading;
 		bank_then_count--;
 		analog_input++;
 		converter_input += 2u;

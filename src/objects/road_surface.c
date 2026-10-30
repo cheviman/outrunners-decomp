@@ -144,7 +144,9 @@ void road_surface_update(void)
 void road_surface_start(void)
 {
 	uint16_t video_bits = 0;
-	uint32_t line_select_table = 0, mixer_address = 0, mixer_bits = 0, palettes = 0;
+	uint32_t line_select_table = 0, mixer_bits = 0;
+	uint32_t *mixer_address = NULL;
+	const uint32_t *palettes = NULL;
 	const struct road_surface_layer_setup *road_surface_layer_setup = NULL;
 
 	road_surface_layer_setup = rom_pointer(road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
@@ -155,10 +157,10 @@ void road_surface_start(void)
 	game->send_video_registers = 0xFFu;
 	TILE_BANK_VALUES(road_surface_layer_setup->tile_bank_address)[0] = 0u;
 	current_object->road_surface.page_register = road_surface_layer_setup->page_register;
-	mixer_address = road_surface_layer_setup->mixer_address;
-	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
+	mixer_address = pointer_to(road_surface_layer_setup->mixer_address);
+	mixer_bits = mixer_address[0];
 	mixer_bits = mixer_bits & ~0xFu;
-	MIXER_VALUE_PAIRS(mixer_address)[0] = mixer_bits | 8u;
+	mixer_address[0] = mixer_bits | 8u;
 	screen->flags |= 4u;
 	current_object->road_surface.line_scroll_table = road_surface_layer_setup->line_scroll_table;
 	line_select_table = road_surface_layer_setup->line_select_table;
@@ -174,10 +176,10 @@ void road_surface_start(void)
 	current_object->road_surface.first_tiles_flag = 0u;
 	current_object->road_surface.second_tiles_flag = 0u;
 	move_halfwords(address_of(current_object) + 0x18u, road_surface_page_words_ADDRESS, 0x1Eu);
-	palettes = stage_road_palettes[screen->first_stage];
-	screen->road_palette_fades = ROAD_PALETTE_LISTS(palettes)[0];
-	palettes += 4u;
-	queue_palette_list(palettes);
+	palettes = rom_pointer(stage_road_palettes[screen->first_stage]);
+	screen->road_palette_fades = palettes[0];
+	palettes++;
+	queue_palette_list(address_of(palettes));
 }
 
 /* Works out this frame's road: from the segments in view (screen + 3000, 16 bytes each, the first at the
@@ -824,30 +826,33 @@ void road_surface_start_tiles_change(void)
    the table. */
 void road_tiles_change_update(void)
 {
-	uint32_t byte_count = 0, data = 0, halfword_count = 0, page_count = 0, page_numbers = 0, page_set = 0, row_bytes = 0, row_count = 0, source_end = 0, source_slot = 0, step = 0, table_place = 0, table_source = 0, target_end = 0, target_page_numbers = 0, target_slot = 0;
+	uint32_t byte_count = 0, data = 0, halfword_count = 0, page_count = 0, page_set = 0, row_bytes = 0, row_count = 0, source_end = 0, step = 0, target_end = 0;
+	uint8_t *table_place = NULL;
+	const uint8_t *page_numbers = NULL, *table_source = NULL, *target_page_numbers = NULL;
+	uint32_t *source_slot = NULL, *target_slot = NULL;
 	uint8_t target_page = 0, pages_left = 0, step_2 = 0, target_page_back = 0, pages_left_2 = 0, step_3 = 0;
 
 	data = current_object->road_tiles_change.data;
 	switch (current_object->state)
 	{
 	case 0:
-		source_slot = address_of(current_object) + 0x18u;
-		target_slot = address_of(current_object) + 0x28u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		target_slot = &current_object->road_tiles_change.target_pages[0];
 		page_set = OBJECT(current_object->road_tiles_change.road)->road_surface.page_set;
 		current_object->road_tiles_change.page_set = page_set;
 		r12 = data - 0xCu + page_set * 4u;
-		target_page_numbers = data + 0x18u + screen->index * 4u;
+		target_page_numbers = rom_pointer(data + 0x18u + screen->index * 4u);
 		page_count = 4u;
 		do
 		{
-			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
-			target_page = ROAD_TILES_CHANGE_BYTES(target_page_numbers)[0];
+			source_slot[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
+			target_page = target_page_numbers[0];
 			target_page_numbers++;
-			TILE_PAGE_PLACES(target_slot)[0] = 0x300000u + ((uint32_t)target_page << 8) * 4u;
-			target_slot += 4u;
+			target_slot[0] = 0x300000u + ((uint32_t)target_page << 8) * 4u;
+			target_slot++;
 			page_count--;
 			r12++;
-			source_slot += 4u;
+			source_slot++;
 		} while (page_count != 0u);
 		current_object->road_tiles_change.step = 0u;
 		current_object->road_tiles_change.pages_left = 4u;
@@ -860,85 +865,85 @@ void road_tiles_change_update(void)
 		current_object->road_tiles_change.pages_left = pages_left - 1u;
 		if (pages_left != 1u)
 			return;
-		table_source = data + 0x20u + screen->index * 5u * 2u;
-		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
+		table_source = rom_pointer(data + 0x20u + screen->index * 5u * 2u);
+		table_place = pointer_to(current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half);
 		row_count = 3u;
 		do
 		{
-			r12 = table_source;
+			r12 = address_of(table_source);
 			row_bytes = 0xAu;
 			do
 			{
-				ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
+				table_place[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
 				row_bytes--;
 				r12++;
-				table_place += 2u;
+				table_place += 2;
 			} while (row_bytes != 0u);
 			row_count--;
 		} while (row_count != 0u);
-		source_slot = address_of(current_object) + 0x18u;
-		page_numbers = data + current_object->road_tiles_change.page_set * 4u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		page_numbers = rom_pointer(data + current_object->road_tiles_change.page_set * 4u);
 		page_count = 4u;
 		do
 		{
-			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u;
+			source_slot[0] = 0x300000u + ((uint32_t)page_numbers[0] << 8) * 4u;
 			page_count--;
 			page_numbers++;
-			source_slot += 4u;
+			source_slot++;
 		} while (page_count != 0u);
 		current_object->road_tiles_change.step = 0x10u;
 		current_object->state++;
 		return;
 	case 2:
 		halfword_count = 0x10u;
-		source_slot = address_of(current_object) + 0x18u;
-		target_slot = address_of(current_object) + 0x28u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		target_slot = &current_object->road_tiles_change.target_pages[0];
 		page_count = 4u;
 		do
 		{
-			r12 = TILE_PAGE_PLACES(source_slot)[0];
-			move_string(r12, halfword_count, TILE_PAGE_PLACES(target_slot)[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
-			TILE_PAGE_PLACES(source_slot)[0] = source_end;
-			TILE_PAGE_PLACES(target_slot)[0] = target_end;
+			r12 = source_slot[0];
+			move_string(r12, halfword_count, target_slot[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
+			source_slot[0] = source_end;
+			target_slot[0] = target_end;
 			page_count--;
-			source_slot += 4u;
-			target_slot += 4u;
+			source_slot++;
+			target_slot++;
 		} while (page_count != 0u);
 		step_2 = current_object->road_tiles_change.step;
 		current_object->road_tiles_change.step = step_2 - 1u;
 		if (step_2 != 1u)
 			return;
-		table_source = data + 0x34u;
-		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
+		table_source = rom_pointer(data + 0x34u);
+		table_place = pointer_to(current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half);
 		byte_count = 0x1Eu;
 		do
 		{
-			ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(table_source)[0];
+			table_place[0] = table_source[0];
 			byte_count--;
 			table_source++;
-			table_place += 2u;
+			table_place += 2;
 		} while (byte_count != 0u);
 		current_object->state++;
 	case 3:
 		if (TILES_CHANGE_FLAGS(current_object->road_tiles_change.flag)[0] != 0u)
 			return;
-		source_slot = address_of(current_object) + 0x18u;
-		target_slot = address_of(current_object) + 0x28u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		target_slot = &current_object->road_tiles_change.target_pages[0];
 		page_set = OBJECT(current_object->road_tiles_change.road)->road_surface.page_set;
 		current_object->road_tiles_change.page_set = page_set;
 		r12 = data + page_set * 4u;
-		target_page_numbers = data + 0x18u + screen->index * 4u;
+		target_page_numbers = rom_pointer(data + 0x18u + screen->index * 4u);
 		page_count = 4u;
 		do
 		{
-			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
-			target_page_back = ROAD_TILES_CHANGE_BYTES(target_page_numbers)[0];
+			source_slot[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(r12)[0] << 8) * 4u;
+			target_page_back = target_page_numbers[0];
 			target_page_numbers++;
-			TILE_PAGE_PLACES(target_slot)[0] = 0x300000u + ((uint32_t)target_page_back << 8) * 4u;
-			target_slot += 4u;
+			target_slot[0] = 0x300000u + ((uint32_t)target_page_back << 8) * 4u;
+			target_slot++;
 			page_count--;
 			r12++;
-			source_slot += 4u;
+			source_slot++;
 		} while (page_count != 0u);
 		current_object->road_tiles_change.step = 0u;
 		current_object->road_tiles_change.pages_left = 4u;
@@ -951,63 +956,63 @@ void road_tiles_change_update(void)
 		current_object->road_tiles_change.pages_left = pages_left_2 - 1u;
 		if (pages_left_2 != 1u)
 			return;
-		table_source = data + 0x20u + screen->index * 5u * 2u;
-		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
+		table_source = rom_pointer(data + 0x20u + screen->index * 5u * 2u);
+		table_place = pointer_to(current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half);
 		row_count = 3u;
 		do
 		{
-			r12 = table_source;
+			r12 = address_of(table_source);
 			row_bytes = 0xAu;
 			do
 			{
-				ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
+				table_place[0] = ROAD_TILES_CHANGE_BYTES(r12)[0];
 				row_bytes--;
 				r12++;
-				table_place += 2u;
+				table_place += 2;
 			} while (row_bytes != 0u);
 			row_count--;
 		} while (row_count != 0u);
-		source_slot = address_of(current_object) + 0x18u;
-		page_numbers = data - 0xCu + current_object->road_tiles_change.page_set * 4u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		page_numbers = rom_pointer(data - 0xCu + current_object->road_tiles_change.page_set * 4u);
 		page_count = 4u;
 		do
 		{
-			TILE_PAGE_PLACES(source_slot)[0] = 0x300000u + ((uint32_t)ROAD_TILES_CHANGE_BYTES(page_numbers)[0] << 8) * 4u;
+			source_slot[0] = 0x300000u + ((uint32_t)page_numbers[0] << 8) * 4u;
 			page_count--;
 			page_numbers++;
-			source_slot += 4u;
+			source_slot++;
 		} while (page_count != 0u);
 		current_object->road_tiles_change.step = 0x10u;
 		current_object->state++;
 		return;
 	case 5:
 		halfword_count = 0x10u;
-		source_slot = address_of(current_object) + 0x18u;
-		target_slot = address_of(current_object) + 0x28u;
+		source_slot = &current_object->road_tiles_change.source_pages[0];
+		target_slot = &current_object->road_tiles_change.target_pages[0];
 		page_count = 4u;
 		do
 		{
-			r12 = TILE_PAGE_PLACES(source_slot)[0];
-			move_string(r12, halfword_count, TILE_PAGE_PLACES(target_slot)[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
-			TILE_PAGE_PLACES(source_slot)[0] = source_end;
-			TILE_PAGE_PLACES(target_slot)[0] = target_end;
+			r12 = source_slot[0];
+			move_string(r12, halfword_count, target_slot[0], halfword_count, 2u, 0u, 0u, 0u, &target_end, &source_end);
+			source_slot[0] = source_end;
+			target_slot[0] = target_end;
 			page_count--;
-			source_slot += 4u;
-			target_slot += 4u;
+			source_slot++;
+			target_slot++;
 		} while (page_count != 0u);
 		step_3 = current_object->road_tiles_change.step;
 		current_object->road_tiles_change.step = step_3 - 1u;
 		if (step_3 != 1u)
 			return;
-		table_source = data + 0x52u;
-		table_place = current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half;
+		table_source = rom_pointer(data + 0x52u);
+		table_place = pointer_to(current_object->road_tiles_change.road + 0x18u + current_object->road_tiles_change.table_half);
 		byte_count = 0x1Eu;
 		do
 		{
-			ROAD_PAGE_TABLE_BYTES(table_place)[0] = ROAD_TILES_CHANGE_BYTES(table_source)[0];
+			table_place[0] = table_source[0];
 			byte_count--;
 			table_source++;
-			table_place += 2u;
+			table_place += 2;
 		} while (byte_count != 0u);
 		current_object->flags = 0u;
 		return;

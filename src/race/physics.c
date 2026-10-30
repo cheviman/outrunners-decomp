@@ -16,17 +16,17 @@
    (gear_ratio), and the roadside surfaces of the first stage (player_car_next_surfaces). */
 void player_car_load_gears(void)
 {
-	uint32_t gear_list = 0, handling = 0, model = 0, model_transmission = 0;
+	uint32_t handling = 0, model = 0, model_transmission = 0;
+	const struct gear_list *gear_list = NULL;
 
 	model = player_car->model;
 	handling = car_handlings[model];
 	model_transmission = player_car->transmission + model * 2u;
 	player_car->torque_curves = car_torque_curves[model_transmission];
-	gear_list = car_gear_lists[model_transmission];
-	player_car->top_gear = GEAR_LIST(gear_list)->top_gear;
-	gear_list++;
-	player_car->gear_ratios = gear_list;
-	player_car->gear_ratio = GEAR_LIST(gear_list - 0x1u)->first_ratio;
+	gear_list = rom_pointer(car_gear_lists[model_transmission]);
+	player_car->top_gear = gear_list->top_gear;
+	player_car->gear_ratios = address_of(&gear_list->first_ratio);
+	player_car->gear_ratio = gear_list->first_ratio;
 	player_car->handling = handling;
 	player_car_next_surfaces();
 }
@@ -35,11 +35,12 @@ void player_car_load_gears(void)
    model's points (car torque_curves). */
 void player_car_build_torque_curves(void)
 {
-	uint32_t curve_entry = 0, curve_force = 0, force_step = 0, gears_left = 0, speed = 0, steps_left = 0;
+	uint32_t curve_force = 0, force_step = 0, gears_left = 0, speed = 0, steps_left = 0;
+	uint16_t *curve_entry = NULL;
 	const struct torque_point *torque_point = NULL, *torque_point_2 = NULL;
 	uint16_t next_speed = 0, next_force = 0;
 
-	curve_entry = address_of(screen) + 0x1300u;
+	curve_entry = pointer_to(address_of(screen) + 0x1300u);
 	torque_point = rom_pointer(player_car->torque_curves);
 	gears_left = player_car->top_gear;
 	gears_left = (uint8_t)(gears_left + 1u);
@@ -58,10 +59,10 @@ void player_car_build_torque_curves(void)
 			torque_point++;
 			do
 			{
-				TORQUE_CURVE_FORCES(curve_entry)[0] = curve_force >> 16;
+				curve_entry[0] = curve_force >> 16;
 				curve_force += force_step;
 				steps_left--;
-				curve_entry += 2u;
+				curve_entry++;
 			} while (steps_left != 0u);
 		} while (torque_point_2->speed >= 0);
 		torque_point = torque_point_2 + 1;

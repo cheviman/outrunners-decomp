@@ -27,7 +27,7 @@
 void int_vector_40(void)
 {
 	uint8_t tile_bank_bits = 0;
-	uint32_t screen_vblank_counter = 0;
+	uint8_t *screen_vblank_counter = NULL;
 	uint32_t saved_screen = 0, saved_r12 = 0, saved_screen_2 = 0;
 
 	saved_screen = address_of(screen);
@@ -88,8 +88,8 @@ void int_vector_40(void)
 	game->frame_ready = 0xFFu;
 	if (game->single_task == 0u && ((game->test_mode_on != 0u && screen->index == 0u) || game->task_swapping != 0u))
 		swap_tasks();
-	screen_vblank_counter = screen_vblank_counters[screen->index];
-	VBLANK_COUNT(screen_vblank_counter)[0]++;
+	screen_vblank_counter = pointer_to(screen_vblank_counters[screen->index]);
+	screen_vblank_counter[0]++;
 	r12 = saved_r12;
 	screen = pointer_to(saved_screen);
 	io_write8(IRQ_ACKNOWLEDGE, 0xFEu);

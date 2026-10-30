@@ -1370,17 +1370,14 @@ void rival_alarm_update(void)
    push_decay, gravity and the address of its crash table. */
 void player_car_load_crash_physics(void)
 {
-	uint32_t crash_physics = 0;
+	const struct crash_physics *crash_physics = NULL;
 
-	crash_physics = car_crash_physics[player_car->model];
-	player_car->bounce_damping = CRASH_PHYSICS(crash_physics)->bounce_damping;
-	crash_physics += 2u;
-	player_car->speed_change_decay = CRASH_PHYSICS(crash_physics - 0x2u)->speed_change_decay;
-	crash_physics += 2u;
-	player_car->push_decay = CRASH_PHYSICS(crash_physics - 0x4u)->push_decay;
-	crash_physics += 2u;
-	player_car->gravity = CRASH_PHYSICS(crash_physics - 0x6u)->gravity;
-	player_car->crash_table = crash_physics + 2u;
+	crash_physics = rom_pointer(car_crash_physics[player_car->model]);
+	player_car->bounce_damping = crash_physics->bounce_damping;
+	player_car->speed_change_decay = crash_physics->speed_change_decay;
+	player_car->push_decay = crash_physics->push_decay;
+	player_car->gravity = crash_physics->gravity;
+	player_car->crash_table = address_of(&crash_physics->gravity) + 2u;
 }
 
 /* The crash playing out, each frame of player_car_update's state 5 and the frame a hit starts it: at the

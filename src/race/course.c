@@ -44,7 +44,8 @@ void player_car_extend_course(void)
 {
 	uint8_t branch_stages = 0;
 	uint16_t ring_mask = 0, run_width = 0, window_offset = 0;
-	uint32_t branch = 0, course_place = 0, forks_reached = 0, forks_taken = 0, run_length = 0;
+	uint32_t branch = 0, forks_reached = 0, forks_taken = 0, run_length = 0;
+	const uint8_t *course_place = NULL;
 	const struct course_fork *course = NULL;
 	struct object *object = NULL;
 	struct race *race = NULL;
@@ -89,9 +90,9 @@ void player_car_extend_course(void)
 	for (;;)
 	{
 		player_car->course_records_read++;
-		course_place = player_car->course;
-		run_length = (int16_t)AS16(COURSE_BYTES(course_place)[0]);
-		course_place += 2u;
+		course_place = rom_pointer(player_car->course);
+		run_length = (int16_t)AS16(course_place[0]);
+		course_place += 2;
 		if ((int16_t)run_length > 0)
 			break;
 		switch (0u - run_length)
@@ -105,45 +106,45 @@ void player_car_extend_course(void)
 			object = start_object();
 			object->handler = goal_update_ADDRESS;
 			object->position = player_car->built_segments;
-			player_car->course = course_place;
+			player_car->course = address_of(course_place);
 			continue;
 		case 1:
-			player_car->course = AS32(COURSE_BYTES(course_place)[0]);
+			player_car->course = AS32(course_place[0]);
 			continue;
 		case 2:
 			race = pointer_to(screen->race);
 			player_car->forks_reached++;
 			race->stage_count++;
-			player_car->course = course_place;
+			player_car->course = address_of(course_place);
 			player_car->at_fork = 0xFFu;
 			return;
 		case 3:
 			player_car->pitch_angle = 0u;
-			player_car->course = course_place + 4u;
+			player_car->course = address_of(course_place + 4);
 			continue;
 		case 4:
-			screen->built_stage_level = COURSE_BYTES(course_place)[0];
+			screen->built_stage_level = course_place[0];
 			course_place++;
-			screen->built_stage = COURSE_BYTES(course_place)[0];
+			screen->built_stage = course_place[0];
 			player_car->stage_segments = 0xFFFFu;
-			player_car->course = course_place + 1u;
+			player_car->course = address_of(course_place + 1);
 			player_car->stage_start = player_car->built_segments;
 			continue;
 		case 5:
 			player_car->heading_angle = 0u;
-			player_car->course = course_place + 4u;
+			player_car->course = address_of(course_place + 4);
 			continue;
 		}
 	}
 	player_car->run_left = run_length;
-	player_car->pitch_step = (uint32_t)(int8_t)COURSE_BYTES(course_place)[0] << 8;
+	player_car->pitch_step = (uint32_t)(int8_t)course_place[0] << 8;
 	course_place++;
-	player_car->heading_step = (uint32_t)(int8_t)COURSE_BYTES(course_place)[0] << 8;
+	player_car->heading_step = (uint32_t)(int8_t)course_place[0] << 8;
 	course_place++;
-	run_width = COURSE_BYTES(course_place)[0];
+	run_width = course_place[0];
 	course_place++;
-	player_car->road_event = COURSE_BYTES(course_place)[0];
-	player_car->course = course_place + 1u;
+	player_car->road_event = course_place[0];
+	player_car->course = address_of(course_place + 1);
 	player_car->width_code = (uint8_t)run_width;
 	run_width = (uint16_t)(run_width * 0xB0u);
 	player_car->road_width_target = run_width;
@@ -162,7 +163,8 @@ void player_car_extend_course(void)
 void player_car_build_segment(uint16_t ring_mask)
 {
 	uint16_t road_width = 0, run_width = 0;
-	uint32_t course_place = 0, heading_cosine = 0, heading_sine = 0, pitch_cosine = 0, pitch_sine = 0, run_length = 0;
+	uint32_t heading_cosine = 0, heading_sine = 0, pitch_cosine = 0, pitch_sine = 0, run_length = 0;
+	const uint8_t *course_place = NULL;
 	struct object *object = NULL;
 	struct race *race = NULL;
 	struct road_segment *ring_segment = NULL;
@@ -177,9 +179,9 @@ void player_car_build_segment(uint16_t ring_mask)
 		for (;;)
 		{
 			player_car->course_records_read++;
-			course_place = player_car->course;
-			run_length = (int16_t)AS16(COURSE_BYTES(course_place)[0]);
-			course_place += 2u;
+			course_place = rom_pointer(player_car->course);
+			run_length = (int16_t)AS16(course_place[0]);
+			course_place += 2;
 			if ((int16_t)run_length > 0)
 				break;
 			switch (0u - run_length)
@@ -193,45 +195,45 @@ void player_car_build_segment(uint16_t ring_mask)
 				object = start_object();
 				object->handler = goal_update_ADDRESS;
 				object->position = player_car->built_segments;
-				player_car->course = course_place;
+				player_car->course = address_of(course_place);
 				continue;
 			case 1:
-				player_car->course = AS32(COURSE_BYTES(course_place)[0]);
+				player_car->course = AS32(course_place[0]);
 				continue;
 			case 2:
 				race = pointer_to(screen->race);
 				player_car->forks_reached++;
 				race->stage_count++;
-				player_car->course = course_place;
+				player_car->course = address_of(course_place);
 				player_car->at_fork = 0xFFu;
 				return;
 			case 3:
 				player_car->pitch_angle = 0u;
-				player_car->course = course_place + 4u;
+				player_car->course = address_of(course_place + 4);
 				continue;
 			case 4:
-				screen->built_stage_level = COURSE_BYTES(course_place)[0];
+				screen->built_stage_level = course_place[0];
 				course_place++;
-				screen->built_stage = COURSE_BYTES(course_place)[0];
+				screen->built_stage = course_place[0];
 				player_car->stage_segments = 0xFFFFu;
-				player_car->course = course_place + 1u;
+				player_car->course = address_of(course_place + 1);
 				player_car->stage_start = player_car->built_segments;
 				continue;
 			case 5:
 				player_car->heading_angle = 0u;
-				player_car->course = course_place + 4u;
+				player_car->course = address_of(course_place + 4);
 				continue;
 			}
 		}
 		player_car->run_left = run_length;
-		player_car->pitch_step = (uint32_t)(int8_t)COURSE_BYTES(course_place)[0] << 8;
+		player_car->pitch_step = (uint32_t)(int8_t)course_place[0] << 8;
 		course_place++;
-		player_car->heading_step = (uint32_t)(int8_t)COURSE_BYTES(course_place)[0] << 8;
+		player_car->heading_step = (uint32_t)(int8_t)course_place[0] << 8;
 		course_place++;
-		run_width = COURSE_BYTES(course_place)[0];
+		run_width = course_place[0];
 		course_place++;
-		player_car->road_event = COURSE_BYTES(course_place)[0];
-		player_car->course = course_place + 1u;
+		player_car->road_event = course_place[0];
+		player_car->course = address_of(course_place + 1);
 		player_car->width_code = (uint8_t)run_width;
 		run_width = (uint16_t)(run_width * 0xB0u);
 		player_car->road_width_target = run_width;
@@ -304,9 +306,10 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 {
 	uint32_t carry = 0;
 	uint16_t crest_layer = 0, crest_y = 0, previous_y = 0, screen_top_y = 0;
-	uint32_t draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, projection_pattern = 0, scale = 0, segment_depth = 0, segment_y = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
+	uint32_t draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, scale = 0, segment_depth = 0, segment_y = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
 	struct car *car = NULL;
 	struct projected_segment *previous_projected = NULL, *projected_segment = NULL;
+	const uint8_t *projection_pattern = NULL;
 	struct road_segment *ring_segment = NULL;
 	uint8_t projected = 0;
 	uint16_t last_y = 0;
@@ -356,11 +359,11 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 	screen->crest_count = 0u;
 	previous_y = 0x7FFFu;
 	screen->crest_heights[0] = screen_top_y + 0xE0u;
-	projection_pattern = segment_projection_pattern_ADDRESS;
+	projection_pattern = rom_pointer(segment_projection_pattern_ADDRESS);
 	for (;;)
 	{
 		ring_segment = pointer_to((address_of(ring_segment) + 0x20u) & ~0x5000u);
-		projected = ROAD_PROJECTION_PATTERN(projection_pattern)[0];
+		projected = projection_pattern[0];
 		projection_pattern++;
 		projected_segment = projected_segment + 1;
 		if (projected == 0u)

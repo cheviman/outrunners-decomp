@@ -318,7 +318,7 @@ void race_opening_sounds_play(void)
 	if (sound_cue->time != 0u)
 	{
 		current_object->race_opening.next_count = sound_cue->time;
-		current_object->race_opening.sound_list = address_of(sound_cue) + 1u;
+		current_object->race_opening.sound_list = address_of(&sound_cue->sound);
 		return;
 	}
 	current_object->state++;
@@ -347,9 +347,9 @@ void stage_end_sounds_update(void)
 	case 0:
 		current_object->state++;
 		current_object->stage_end_sounds.stage = RACE(screen->race_copy)->stage_count;
-		sound_cue = rom_pointer(stage_end_sound_cues_ADDRESS);
+		sound_cue = stage_end_sound_cues;
 		current_object->stage_end_sounds.countdown = sound_cue->time;
-		current_object->stage_end_sounds.sound_list = address_of(sound_cue) + 1u;
+		current_object->stage_end_sounds.sound_list = address_of(&sound_cue->sound);
 		return;
 	case 1:
 		if (current_object->stage_end_sounds.stage != RACE(screen->race_copy)->stage_count)
@@ -368,7 +368,7 @@ void stage_end_sounds_update(void)
 		if (sound_cue->time != 0u)
 		{
 			current_object->stage_end_sounds.countdown = sound_cue->time;
-			current_object->stage_end_sounds.sound_list = address_of(sound_cue) + 1u;
+			current_object->stage_end_sounds.sound_list = address_of(&sound_cue->sound);
 			return;
 		}
 		current_object->state++;
@@ -619,29 +619,30 @@ void goal_actor_run(void)
 	uint32_t carry = 0;
 	uint8_t frame_time = 0;
 	uint16_t step_flags = 0;
-	uint32_t animation = 0, ignored = 0, script = 0, script_word = 0, step_value = 0;
+	uint32_t animation = 0, ignored = 0, script = 0, step_value = 0;
+	const uint16_t *script_word = NULL;
 	uint16_t wait_count = 0, repeat_count = 0;
 	uint32_t next_step = 0, command = 0, step_end = 0;
 
-	script_word = current_object->goal_actor.script;
+	script_word = rom_pointer(current_object->goal_actor.script);
 	for (;;)
 	{
-		step_flags = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
+		step_flags = script_word[0];
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
-		script_word += 2u;
+		script_word++;
 		if (carry)
 		{
 			current_object->goal_actor.counter++;
-			wait_count = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			wait_count = script_word[0];
+			script_word++;
 			if (current_object->goal_actor.counter <= wait_count)
 			{
 				draw_object(step_value);
 				return;
 			}
 			current_object->goal_actor.counter = 0u;
-			current_object->goal_actor.script = script_word;
+			current_object->goal_actor.script = address_of(script_word);
 			continue;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
@@ -649,16 +650,16 @@ void goal_actor_run(void)
 		if (carry)
 		{
 			current_object->goal_actor.counter++;
-			repeat_count = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			repeat_count = script_word[0];
+			script_word++;
 			if (current_object->goal_actor.counter <= repeat_count)
 			{
-				script_word = current_object->goal_actor.step;
-				current_object->goal_actor.script = script_word;
+				script_word = rom_pointer(current_object->goal_actor.step);
+				current_object->goal_actor.script = address_of(script_word);
 				continue;
 			}
 			current_object->goal_actor.counter = 0u;
-			current_object->goal_actor.script = script_word;
+			current_object->goal_actor.script = address_of(script_word);
 			continue;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
@@ -669,111 +670,111 @@ void goal_actor_run(void)
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->frame = (uint8_t)GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->frame = (uint8_t)script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->x += GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->x += script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->x = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->x = script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->y += GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->y += script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->y = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->y = script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->width_scale += GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			current_object->height_scale += GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->width_scale += script_word[0];
+			current_object->height_scale += script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->width_scale = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			current_object->height_scale = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->width_scale = script_word[0];
+			current_object->height_scale = script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->depth_layer += GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->depth_layer += script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->depth_layer = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->depth_layer = script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			animation = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
+			animation = script_word[0];
 			current_object->animation = animation;
 			frame_time = SPRITE_ANIMATION(sprite_animations[animation])->frame_time;
 			current_object->frame_time = frame_time;
 			current_object->frame_countdown = frame_time;
 			current_object->frame = 0u;
-			script_word += 2u;
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			current_object->palette = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			current_object->palette = script_word[0];
+			script_word++;
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		step_flags = (uint16_t)(step_flags * 2u);
 		if (carry)
 		{
-			step_value = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-			script_word += 2u;
+			step_value = script_word[0];
+			script_word++;
 			request_sound((uint8_t)step_value);
 		}
 		carry = (uint16_t)(step_flags * 2u) < step_flags;
 		if (carry == 0u)
 		{
-			next_step = script_word;
+			next_step = address_of(script_word);
 			script = current_object->goal_actor.script;
 			current_object->goal_actor.script = next_step;
 			current_object->goal_actor.step = script;
 			draw_object(step_value);
 			return;
 		}
-		command = GOAL_ACTOR_SCRIPT_WORDS(script_word)[0];
-		script_word += 2u;
+		command = script_word[0];
+		script_word++;
 		switch (command)
 		{
 		case 0:
 			OBJECT(current_object->goal_actor.scene)->state = 2u;
-			next_step = script_word;
+			next_step = address_of(script_word);
 			script = current_object->goal_actor.script;
 			current_object->goal_actor.script = next_step;
 			current_object->goal_actor.step = script;
@@ -784,14 +785,14 @@ void goal_actor_run(void)
 			current_object->flags_high = 0u;
 			return;
 		case 2:
-			step_end = script_word;
+			step_end = address_of(script_word);
 			script = current_object->goal_actor.script;
 			current_object->goal_actor.script = step_end;
 			current_object->goal_actor.step = script;
 			return;
 		case 3:
 			current_object->flags ^= 0x40u;
-			next_step = script_word;
+			next_step = address_of(script_word);
 			script = current_object->goal_actor.script;
 			current_object->goal_actor.script = next_step;
 			current_object->goal_actor.step = script;
@@ -799,7 +800,7 @@ void goal_actor_run(void)
 			return;
 		case 4:
 			player_car->segment_progress = (player_car->segment_progress & 0xFFFF0000u) | ((uint16_t)player_car->segment_progress + 0x4000u & 0xFFFFu);
-			next_step = script_word;
+			next_step = address_of(script_word);
 			script = current_object->goal_actor.script;
 			current_object->goal_actor.script = next_step;
 			current_object->goal_actor.step = script;
@@ -809,15 +810,15 @@ void goal_actor_run(void)
 			break;
 		}
 		current_object->goal_actor.counter++;
-		step_value = (uint16_t)(GOAL_ACTOR_SCRIPT_WORDS(script_word)[0] + ((uint32_t)goal_actor_place_waits[screen->places[screen->player]] << 3));
-		script_word += 2u;
+		step_value = (uint16_t)(script_word[0] + ((uint32_t)goal_actor_place_waits[screen->places[screen->player]] << 3));
+		script_word++;
 		if (current_object->goal_actor.counter <= step_value)
 		{
-			script_word = current_object->goal_actor.step;
-			current_object->goal_actor.script = script_word;
+			script_word = rom_pointer(current_object->goal_actor.step);
+			current_object->goal_actor.script = address_of(script_word);
 			continue;
 		}
 		current_object->goal_actor.counter = 0u;
-		current_object->goal_actor.script = script_word;
+		current_object->goal_actor.script = address_of(script_word);
 	}
 }

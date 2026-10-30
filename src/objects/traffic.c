@@ -27,8 +27,10 @@ void traffic_spawner_update(void)
 {
 	uint32_t negative = 0, overflow = 0;
 	uint16_t object_position = 0, position = 0, spawn_position = 0, stretch_count = 0, stretch_top = 0, traffic_draw_distance = 0, view_bottom = 0, view_top = 0;
-	uint32_t built_stage = 0, leader_stage = 0, racer_list = 0, racers_left = 0, stretches = 0;
+	uint32_t built_stage = 0, leader_stage = 0, racers_left = 0;
 	struct object *traffic_object = NULL;
+	uint8_t *racer_list = NULL;
+	uint16_t *stretches = NULL;
 	const struct traffic_spawn_entry *entry = NULL;
 	uint16_t stage_start = 0, road_position = 0, level = 0;
 
@@ -84,32 +86,32 @@ void traffic_spawner_update(void)
 			current_object->traffic_spawner.list = address_of(entry);
 			screen->traffic_count++;
 		}
-		racer_list = screen->traffic_racer_list;
-		stretches = address_of(screen) + 0xF84u;
+		racer_list = pointer_to(screen->traffic_racer_list);
+		stretches = &screen->visible_stretch_count;
 		traffic_draw_distance = screen->traffic_draw_distance;
 		stretch_count = 0u;
 		stretch_top = 0xFFFFu;
-		racers_left = RACER_NUMBERS(racer_list)[0];
+		racers_left = racer_list[0];
 		racer_list++;
 		do
 		{
-			view_bottom = game->race_copies[RACER_NUMBERS(racer_list)[0]].window_segment;
+			view_bottom = game->race_copies[racer_list[0]].window_segment;
 			view_top = (uint16_t)((uint32_t)view_bottom + traffic_draw_distance);
 			view_bottom -= traffic_draw_distance;
 			view_top++;
 			racer_list++;
 			if (view_top < stretch_top)
 			{
-				STRETCH_ENDS(stretches)[0] = stretch_top;
-				stretches += 2u;
-				STRETCH_ENDS(stretches)[0] = view_top - 1u;
+				stretches[0] = stretch_top;
+				stretches++;
+				stretches[0] = view_top - 1u;
 				stretch_count++;
-				stretches += 2u;
+				stretches++;
 			}
 			stretch_top = (uint16_t)view_bottom;
 			racers_left--;
 		} while (racers_left != 0u);
-		STRETCH_ENDS(stretches)[0] = stretch_top;
+		stretches[0] = stretch_top;
 		screen->visible_stretch_count = stretch_count;
 		return;
 	}
@@ -192,30 +194,27 @@ void traffic_car_update(void)
    is seen from, traffic_car_draw), scale_shift FF, passed 0; goes on to state 1. */
 void traffic_car_start(void)
 {
-	uint32_t start_animation = 0, traffic_sprite_record = 0;
+	uint32_t start_animation = 0;
 	const struct traffic_record *record = NULL;
+	const struct traffic_sprite_record *traffic_sprite_record = NULL;
 	uint8_t passing_sound = 0, hit_sound = 0;
 	uint16_t animation = 0, palette = 0, weight = 0;
 
 	record = rom_pointer(current_object->traffic.record);
-	traffic_sprite_record = record->sprite;
-	animation = TRAFFIC_SPRITE_RECORD(traffic_sprite_record)->animation;
-	traffic_sprite_record += 2u;
+	traffic_sprite_record = rom_pointer(record->sprite);
+	animation = traffic_sprite_record->animation;
 	start_animation = animation;
 	current_object->draw_mode = 0xBu;
-	palette = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x2u)->palette;
-	traffic_sprite_record += 2u;
+	palette = traffic_sprite_record->palette;
 	current_object->palette = palette;
 	current_object->scale_shift = 0xFFu;
-	passing_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x4u)->passing_sound;
-	traffic_sprite_record++;
+	passing_sound = traffic_sprite_record->passing_sound;
 	current_object->traffic.passing_sound = passing_sound;
-	hit_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x5u)->hit_sound;
-	traffic_sprite_record++;
+	hit_sound = traffic_sprite_record->hit_sound;
 	current_object->traffic.hit_sound = hit_sound;
-	weight = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x6u)->weight;
+	weight = traffic_sprite_record->weight;
 	current_object->traffic.weight = weight;
-	current_object->traffic.hit_box = traffic_sprite_record + 2u;
+	current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 	current_object->side = (uint8_t)record->side;
 	AS32(current_object->traffic.x_offset) = record->x_offset;
 	current_object->traffic.speed = record->speed;
@@ -472,33 +471,30 @@ void traffic_figure_update(void)
 {
 	uint32_t zero = 0, negative = 0;
 	uint16_t position = 0, position_fraction = 0, seen_from = 0, whole_segment = 0;
-	uint32_t animation = 0, traffic_sprite_record = 0;
+	uint32_t animation = 0;
 	struct race *race = NULL;
 	const struct traffic_record *record = NULL;
+	const struct traffic_sprite_record *traffic_sprite_record = NULL;
 	uint16_t stop_distance = 0, speed = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		record = rom_pointer(current_object->traffic.record);
-		traffic_sprite_record = record->sprite;
-		animation = TRAFFIC_SPRITE_RECORD(traffic_sprite_record)->animation;
-		traffic_sprite_record += 2u;
+		traffic_sprite_record = rom_pointer(record->sprite);
+		animation = traffic_sprite_record->animation;
 		if (animation != SWORDFISH)
 		{
 			if (animation == ELEPHANT || animation == CYCLIST)
 				current_object->scale_shift = 0u;
 			else
 				current_object->scale_shift = 1u;
-			current_object->palette = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x2u)->palette;
+			current_object->palette = traffic_sprite_record->palette;
 			current_object->draw_mode = 5u;
-			traffic_sprite_record += 2u;
-			current_object->traffic.passing_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x4u)->passing_sound;
-			traffic_sprite_record++;
-			current_object->traffic.hit_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x5u)->hit_sound;
-			traffic_sprite_record++;
-			current_object->traffic.weight = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x6u)->weight;
-			current_object->traffic.hit_box = traffic_sprite_record + 2u;
+			current_object->traffic.passing_sound = traffic_sprite_record->passing_sound;
+			current_object->traffic.hit_sound = traffic_sprite_record->hit_sound;
+			current_object->traffic.weight = traffic_sprite_record->weight;
+			current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 			current_object->side = (uint8_t)record->side;
 			AS32(current_object->traffic.x_offset) = record->x_offset;
 			current_object->traffic.speed = record->speed;
@@ -507,15 +503,12 @@ void traffic_figure_update(void)
 			return;
 		}
 		current_object->scale_shift = 2u;
-		current_object->palette = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x2u)->palette;
+		current_object->palette = traffic_sprite_record->palette;
 		current_object->draw_mode = 4u;
-		traffic_sprite_record += 2u;
-		current_object->traffic.passing_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x4u)->passing_sound;
-		traffic_sprite_record++;
-		current_object->traffic.hit_sound = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x5u)->hit_sound;
-		traffic_sprite_record++;
-		current_object->traffic.weight = TRAFFIC_SPRITE_RECORD(traffic_sprite_record - 0x6u)->weight;
-		current_object->traffic.hit_box = traffic_sprite_record + 2u;
+		current_object->traffic.passing_sound = traffic_sprite_record->passing_sound;
+		current_object->traffic.hit_sound = traffic_sprite_record->hit_sound;
+		current_object->traffic.weight = traffic_sprite_record->weight;
+		current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 		current_object->side = (uint8_t)record->side;
 		AS32(current_object->traffic.x_offset) = record->x_offset;
 		current_object->traffic.speed = record->speed;

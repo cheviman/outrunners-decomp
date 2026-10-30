@@ -39,7 +39,8 @@ void car_select_run(void)
 	uint32_t zero = 0;
 	uint8_t car_index = 0, car_sound = 0, dj_message = 0, group_index = 0, new_turn = 0, sound_code = 0, turn_now = 0;
 	uint16_t default_car = 0, new_angle = 0, row_number = 0;
-	uint32_t background = 0, colour_block = 0, first_rowselect = 0, fourth_rowselect = 0, model = 0, remaining_time = 0, rows_to_fill = 0, rowscroll_address = 0, second_rowselect = 0, setup = 0, song_title = 0, wheel = 0, wheel_position = 0;
+	uint32_t background = 0, colour_block = 0, first_rowselect = 0, fourth_rowselect = 0, model = 0, remaining_time = 0, rows_to_fill = 0, rowscroll_address = 0, second_rowselect = 0, song_title = 0, wheel = 0, wheel_position = 0;
+	const struct car_select_tilemap_setup *setup = NULL;
 	struct object *object = NULL;
 	struct race *race = NULL;
 	uint32_t setup_bits = 0;
@@ -64,21 +65,15 @@ void car_select_run(void)
 			dj_message = 0x3Bu;
 			start_dj_message(dj_message);
 		}
-		setup = car_select_tilemap_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u;
-		current_object->car_select.scroll_x_address = CAR_SELECT_TILEMAP_SETUP(setup)->scroll_x_address;
-		setup += 4u;
-		current_object->car_select.scroll_y_address = CAR_SELECT_TILEMAP_SETUP(setup - 0x4u)->scroll_y_address;
-		setup += 4u;
-		current_object->car_select.second_scroll_x_address = CAR_SELECT_TILEMAP_SETUP(setup - 0x8u)->second_scroll_x_address;
-		setup += 4u;
-		current_object->car_select.second_scroll_y_address = CAR_SELECT_TILEMAP_SETUP(setup - 0xCu)->second_scroll_y_address;
-		setup += 4u;
-		current_object->car_select.rowscroll_address = CAR_SELECT_TILEMAP_SETUP(setup - 0x10u)->rowscroll_address;
-		setup += 4u;
-		current_object->car_select.rowselect_address = CAR_SELECT_TILEMAP_SETUP(setup - 0x14u)->rowselect_address;
-		setup += 4u;
-		background = CAR_SELECT_TILEMAP_SETUP(setup - 0x18u)->background;
-		setup_bits = setup + 4u;
+		setup = rom_pointer(car_select_tilemap_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+		current_object->car_select.scroll_x_address = setup->scroll_x_address;
+		current_object->car_select.scroll_y_address = setup->scroll_y_address;
+		current_object->car_select.second_scroll_x_address = setup->second_scroll_x_address;
+		current_object->car_select.second_scroll_y_address = setup->second_scroll_y_address;
+		current_object->car_select.rowscroll_address = setup->rowscroll_address;
+		current_object->car_select.rowselect_address = setup->rowselect_address;
+		background = setup->background;
+		setup_bits = address_of(&setup->video_register_bits);
 		set_up_background(background);
 		game->video_registers[2] |= CAR_SELECT_TILEMAP_SETUP(setup_bits - 0x1Cu)->video_register_bits;
 		VIDEO_REGISTER_WORDS(current_object->car_select.second_scroll_y_address)[0] = 0xE0u;
@@ -505,7 +500,8 @@ uint32_t car_select_update_rowscroll(void)
 {
 	uint8_t fraction_shift = 0;
 	uint16_t line_scroll = 0;
-	uint32_t far_page = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, scroll_place = 0;
+	uint32_t far_page = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, scroll_place = 0;
+	uint16_t *line_offsets = NULL;
 
 	near_page = (uint8_t)(game->video_registers[2] >> 8u);
 	far_page = near_page;
@@ -529,17 +525,17 @@ uint32_t car_select_update_rowscroll(void)
 	case 1:
 	case 2:
 		fraction_shift = 0xFAu;
-		line_offsets = address_of(screen) + 0x3800u;
+		line_offsets = pointer_to(address_of(screen) + 0x3800u);
 		lines_left = 0x78u;
 		do
 		{
-			line_scroll = shift_by(FLOOR_LINE_OFFSETS(line_offsets)[0], (uint8_t)fraction_shift, 16);
+			line_scroll = shift_by(line_offsets[0], (uint8_t)fraction_shift, 16);
 			LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
 			near_scroll_place += 2u;
 			LINE_SCROLL_VALUES(scroll_place)[0] = line_scroll;
 			scroll_place += 2u;
 			lines_left--;
-			line_offsets += 2u;
+			line_offsets++;
 		} while (lines_left != 0u);
 		current_object->car_select.rowscroll_copies--;
 		break;
@@ -577,7 +573,8 @@ void car_select_skew_floor(uint16_t skew_step)
 {
 	uint8_t fraction_shift = 0;
 	uint16_t far_offset = 0, near_offset = 0, skew = 0;
-	uint32_t far_page = 0, far_scroll_place = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, rowscroll_address = 0;
+	uint32_t far_page = 0, far_scroll_place = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, rowscroll_address = 0;
+	uint16_t *line_offsets = NULL;
 
 	near_page = (uint8_t)(game->video_registers[2] >> 8u);
 	far_page = near_page;
@@ -586,22 +583,22 @@ void car_select_skew_floor(uint16_t skew_step)
 	rowscroll_address = current_object->car_select.rowscroll_address;
 	near_scroll_place = rowscroll_address + 0xD0u + ((near_page & 0xCu) << 7) * 4u;
 	far_scroll_place = rowscroll_address + 0xD0u + ((far_page & 0xCu) << 7) * 4u;
-	line_offsets = address_of(screen) + 0x3800u;
+	line_offsets = pointer_to(address_of(screen) + 0x3800u);
 	skew = 0u;
 	fraction_shift = 0xFAu;
 	lines_left = 0x78u;
 	do
 	{
 		skew += skew_step;
-		near_offset = (uint16_t)(FLOOR_LINE_OFFSETS(line_offsets)[0] + skew);
+		near_offset = (uint16_t)(line_offsets[0] + skew);
 		far_offset = (uint16_t)(near_offset + skew);
-		FLOOR_LINE_OFFSETS(line_offsets)[0] = far_offset;
+		line_offsets[0] = far_offset;
 		LINE_SCROLL_VALUES(near_scroll_place)[0] = shift_by(near_offset, (uint8_t)fraction_shift, 16);
 		near_scroll_place += 2u;
 		LINE_SCROLL_VALUES(far_scroll_place)[0] = shift_by(far_offset, (uint8_t)fraction_shift, 16);
 		far_scroll_place += 2u;
 		lines_left--;
-		line_offsets += 2u;
+		line_offsets++;
 	} while (lines_left != 0u);
 	current_object->car_select.rowscroll_copies = 3u;
 }
@@ -836,66 +833,65 @@ void turntable_car_show(void)
 void turntable_scenery_show(void)
 {
 	uint16_t leftover = 0, size = 0;
-	uint32_t across = 0, animation = 0, down = 0, group = 0, item_angle = 0, item_place = 0, point_depth = 0, ring_radius = 0, saved_place = 0;
+	uint32_t across = 0, animation = 0, down = 0, item_angle = 0, point_depth = 0, ring_radius = 0;
+	uint16_t *saved_place = NULL;
+	const struct turntable_scenery_group *group = NULL;
+	const struct turntable_scenery_item *item_place = NULL;
 	uint32_t kept_saved_place = 0, kept_item_place = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		group = turntable_scenery_groups_ADDRESS + current_object->turntable_scenery.group * 2u * 4u;
-		animation = TURNTABLE_SCENERY_GROUP(group)->animation;
-		group += 2u;
+		group = rom_pointer(turntable_scenery_groups_ADDRESS + current_object->turntable_scenery.group * 2u * 4u);
+		animation = group->animation;
 		animation_start(animation);
-		current_object->palette = TURNTABLE_SCENERY_GROUP(group - 0x2u)->palette;
-		group += 2u;
-		size = TURNTABLE_SCENERY_GROUP(group - 0x4u)->size;
+		current_object->palette = group->palette;
+		size = group->size;
 		current_object->size_step = size >> 12;
 		current_object->turntable_scenery.size = size & 0xFFFu;
-		current_object->turntable_scenery.item_list = group + 2u + TURNTABLE_SCENERY_GROUP(group - 0x4u)->item_list_offset;
+		current_object->turntable_scenery.item_list = address_of(&group->item_list_offset) + group->item_list_offset;
 		current_object->state++;
 		break;
 	case 1:
 		break;
 	}
-	item_place = current_object->turntable_scenery.item_list;
-	saved_place = address_of(current_object) + 0x80u;
+	item_place = rom_pointer(current_object->turntable_scenery.item_list);
+	saved_place = &current_object->turntable_scenery.item_places;
 	current_object->turntable_scenery.angle = OBJECT(current_object->turntable_scenery.car_select)->car_select.angle;
 	for (;;)
 	{
-		item_angle = TURNTABLE_SCENERY_ITEM(item_place)->angle;
-		item_place += 2u;
+		item_angle = item_place->angle;
 		if ((int16_t)item_angle < 0)
 			break;
 		item_angle = (uint16_t)(item_angle - current_object->turntable_scenery.angle);
 		item_angle = item_angle & 0xFFFu;
-		ring_radius = TURNTABLE_SCENERY_ITEM(item_place - 0x2u)->radius;
-		item_place += 2u;
+		ring_radius = item_place->radius;
 		if (item_angle < 0x480u || item_angle > 0xB7Fu)
 		{
-			item_place += 2u;
-			saved_place += 2u;
-			ITEM_PLACE_WORDS(saved_place)[0] = 0u;
-			saved_place += 2u;
+			item_place++;
+			saved_place++;
+			saved_place[0] = 0u;
+			saved_place++;
 			continue;
 		}
 		ring_radius += screen->turntable_radius_offset;
 		across = (int32_t)(sine_table[item_angle] * ring_radius) >> 14;
 		point_depth = (int32_t)((0u - cosine_table[item_angle]) * ring_radius) >> 14;
-		down = TURNTABLE_SCENERY_ITEM(item_place - 0x4u)->height;
+		down = item_place->height;
 		point_depth += 0x140u;
-		kept_saved_place = saved_place;
-		current_object->previous_place = LINKED(address_of(screen), ITEM_PLACE_WORDS(saved_place)[0]);
-		current_object->flags = (current_object->flags & 0xDFu) | ITEM_PLACE_WORDS(saved_place)[1];
-		kept_item_place = item_place + 2u;
+		kept_saved_place = address_of(saved_place);
+		current_object->previous_place = LINKED(address_of(screen), saved_place[0]);
+		current_object->flags = (current_object->flags & 0xDFu) | saved_place[1];
+		kept_item_place = address_of(&item_place->height) + 2u;
 		leftover = turntable_draw(across, down, point_depth);
-		item_place = kept_item_place;
-		saved_place = kept_saved_place;
-		ITEM_PLACE_WORDS(saved_place)[0] = (uint16_t)current_object->turntable_scenery.previous_place;
+		item_place = rom_pointer(kept_item_place);
+		saved_place = pointer_to(kept_saved_place);
+		saved_place[0] = (uint16_t)current_object->turntable_scenery.previous_place;
 		leftover = (uint16_t)((leftover & ~0xFFu) | current_object->flags);
-		saved_place += 2u;
-		ITEM_PLACE_WORDS(saved_place)[0] = leftover & ~0xDFu;
-		saved_place += 2u;
+		saved_place++;
+		saved_place[0] = leftover & ~0xDFu;
+		saved_place++;
 	}
 	animation_advance(0u);
 }
@@ -989,7 +985,7 @@ void select_car_heading_show(void)
 	switch (current_object->state)
 	{
 	case 0:
-		piece = rom_pointer(select_instruction_pieces_ADDRESS);
+		piece = select_instruction_pieces;
 		while (piece->animation != 0u)
 		{
 			object = start_object();
@@ -1724,8 +1720,9 @@ void waiting_banner_show(void)
 void car_select_entries_run(void)
 {
 	uint8_t own_car_number = 0;
-	uint32_t chosen_car = 0, flag_blink_frames = 0, ignored = 0, lcd_text_end = 0, own_number = 0, players_left = 0, racer = 0, racer_car_number = 0, racer_place = 0, racers_left = 0;
+	uint32_t chosen_car = 0, flag_blink_frames = 0, ignored = 0, lcd_text_end = 0, own_number = 0, players_left = 0, racer = 0, racer_car_number = 0, racers_left = 0;
 	struct object *car_flag = NULL, *object = NULL;
+	uint8_t *racer_place = NULL;
 	uint8_t blink_timer = 0;
 	uint32_t car_choice = 0;
 
@@ -1778,12 +1775,12 @@ void car_select_entries_run(void)
 		screen->lcd_text[(int32_t)(own_number + 8u)] ^= current_object->car_select_entries.digit_toggle;
 		current_object->car_select_entries.blink_timer = 8u;
 	}
-	racer_place = current_object->car_select_entries.race_order;
-	racers_left = RACER_NUMBERS(racer_place)[0];
+	racer_place = pointer_to(current_object->car_select_entries.race_order);
+	racers_left = racer_place[0];
 	racer_place++;
 	do
 	{
-		racer = RACER_NUMBERS(racer_place)[0];
+		racer = racer_place[0];
 		racer_place++;
 		if (screen->player != racer && (current_object->car_select_entries.shown_players & shl32(1u, (int)(racer))) == 0u)
 		{
@@ -2474,17 +2471,18 @@ void entry_traffic_car_drive(void)
    of its palette_list; a negative entry goes back by that many bytes, to loop. */
 void step_palette(void)
 {
-	uint32_t list_place = 0, palette_entry = 0;
+	uint32_t palette_entry = 0;
+	const int16_t *list_place = NULL;
 
-	list_place = current_object->step_palette.palette_list;
-	palette_entry = OBJECT_PALETTE_STEPS(list_place)[0];
-	list_place += 2u;
+	list_place = rom_pointer(current_object->step_palette.palette_list);
+	palette_entry = list_place[0];
+	list_place++;
 	if ((int16_t)palette_entry < 0)
 	{
-		list_place += palette_entry;
-		palette_entry = (uint16_t)OBJECT_PALETTE_STEPS(list_place)[0];
-		list_place += 2u;
+		list_place = rom_pointer(address_of(list_place) + palette_entry);
+		palette_entry = (uint16_t)list_place[0];
+		list_place++;
 	}
 	current_object->palette = palette_entry;
-	current_object->step_palette.palette_list = list_place;
+	current_object->step_palette.palette_list = address_of(list_place);
 }

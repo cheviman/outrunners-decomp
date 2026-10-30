@@ -23,7 +23,9 @@ void read_switches_and_analog(void)
 {
 	uint8_t chip_1_port_f_on = 0, chip_2_port_f_on = 0, chip_2_switches = 0, new_switches = 0, old_switches = 0, test_switch = 0;
 	uint16_t calibration_high = 0, calibration_low = 0, reading = 0;
-	uint32_t calibration = 0, converter = 0, inputs_left = 0, raw_place = 0, scaled_place = 0, screen_turn = 0;
+	uint32_t converter = 0, inputs_left = 0, screen_turn = 0;
+	uint8_t *calibration = NULL;
+	uint8_t *raw_place = NULL, *scaled_place = NULL;
 	uint8_t chip_1_port_e = 0, chip_1_port_f = 0, chip_2_port_e = 0, chip_2_port_f = 0;
 	uint16_t capped_reading = 0;
 
@@ -45,10 +47,10 @@ void read_switches_and_analog(void)
 	screen_turn = screen->index;
 	screen_turn = screen_turn & 1u;
 	converter = ANALOG_INPUTS + screen_turn * 4u;
-	raw_place = analog_raw_ADDRESS + screen_turn * 4u;
-	scaled_place = analog_inputs_ADDRESS + screen_turn * 4u;
+	raw_place = pointer_to(analog_raw_ADDRESS + screen_turn * 4u);
+	scaled_place = pointer_to(analog_inputs_ADDRESS + screen_turn * 4u);
 	inputs_left = analog_input_counts[screen_turn];
-	calibration = analog_calibration_addresses[screen_turn];
+	calibration = pointer_to(analog_calibration_addresses[screen_turn]);
 	do
 	{
 		io_write8(converter, 0xFFu);
@@ -67,10 +69,10 @@ void read_switches_and_analog(void)
 		reading = (uint16_t)(reading * 2u);
 		reading = (uint16_t)((reading & ~0xFFu) | io_read8(converter));
 		reading = reading >> 7;
-		ANALOG_VALUES(raw_place)[0] = (uint8_t)reading;
-		calibration_low = ANALOG_CALIBRATION_BYTES(calibration)[0];
+		raw_place[0] = (uint8_t)reading;
+		calibration_low = calibration[0];
 		calibration++;
-		calibration_high = ANALOG_CALIBRATION_BYTES(calibration)[0];
+		calibration_high = calibration[0];
 		raw_place++;
 		calibration++;
 		if (calibration_high < reading)
@@ -79,7 +81,7 @@ void read_switches_and_analog(void)
 		reading = (uint16_t)(capped_reading - calibration_low);
 		if ((int16_t)capped_reading < (int16_t)calibration_low)
 			reading = 0u;
-		ANALOG_VALUES(scaled_place)[0] = divide_u16((uint16_t)(reading * 0xFFu), (uint16_t)(calibration_high - calibration_low));
+		scaled_place[0] = divide_u16((uint16_t)(reading * 0xFFu), (uint16_t)(calibration_high - calibration_low));
 		inputs_left--;
 		scaled_place++;
 		converter += 2u;
