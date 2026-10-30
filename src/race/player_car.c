@@ -109,7 +109,7 @@ void player_car_update(void)
 			player_car_set_horizon();
 			player_car_extend_course();
 			SCREEN(screen)->shown_view = screen + 0x600u;
-			player_car_project_road();
+			player_car_project_road(&r12, &r14);
 			player_car_load_crash_physics();
 			if (SCREEN(screen)->is_host == 0u)
 			{
@@ -282,17 +282,17 @@ void player_car_update(void)
 				if (CAR(player_car)->speed != 0u)
 				{
 					segment_record = PAGE_ADD(screen + 0x2000u, CAR(player_car)->segment_offset);
-					player_car_drive(&segment_record, &road_x, &segment_fraction, &segment_length);
+					player_car_drive(&segment_record, &r12, &road_x, &segment_fraction, &segment_length);
 					CAR(player_car)->wheel_effect_1 = 2u;
 					CAR(player_car)->wheel_effect_2 = 2u;
 					CAR(player_car)->wheel_effect_sides = 3u;
 					AS16(CAR(player_car)->brake_lights) = 2u;
-					player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+					player_car_place_view(segment_record, r12, road_x, segment_fraction, segment_length);
 					player_car_move_view();
 					player_car_set_horizon();
 					player_car_publish();
 					player_car_extend_course();
-					player_car_project_road();
+					player_car_project_road(&r12, &r14);
 					player_car_engine_sound();
 					animation_advance(0u);
 					return;
@@ -308,13 +308,13 @@ void player_car_update(void)
 				if (timer_4 != 1u)
 				{
 					segment_record = PAGE_ADD(screen + 0x2000u, CAR(player_car)->segment_offset);
-					player_car_drive(&segment_record, &road_x, &segment_fraction, &segment_length);
-					player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+					player_car_drive(&segment_record, &r12, &road_x, &segment_fraction, &segment_length);
+					player_car_place_view(segment_record, r12, road_x, segment_fraction, segment_length);
 					player_car_move_view();
 					player_car_set_horizon();
 					player_car_publish();
 					player_car_extend_course();
-					player_car_project_road();
+					player_car_project_road(&r12, &r14);
 					player_car_engine_sound();
 					animation_advance(0u);
 					return;
@@ -322,13 +322,13 @@ void player_car_update(void)
 				OBJECT(current_object)->player_car.step++;
 				SCREEN(screen)->flags |= 0x10u;
 				segment_record = PAGE_ADD(screen + 0x2000u, CAR(player_car)->segment_offset);
-				player_car_drive(&segment_record, &road_x, &segment_fraction, &segment_length);
-				player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+				player_car_drive(&segment_record, &r12, &road_x, &segment_fraction, &segment_length);
+				player_car_place_view(segment_record, r12, road_x, segment_fraction, segment_length);
 				player_car_move_view();
 				player_car_set_horizon();
 				player_car_publish();
 				player_car_extend_course();
-				player_car_project_road();
+				player_car_project_road(&r12, &r14);
 				player_car_engine_sound();
 				animation_advance(0u);
 				return;
@@ -337,13 +337,13 @@ void player_car_update(void)
 				OBJECT(current_object)->player_car.brake = 0x80u;
 				OBJECT(current_object)->player_car.wheel = 0x80u;
 				segment_record = PAGE_ADD(screen + 0x2000u, CAR(player_car)->segment_offset);
-				player_car_drive(&segment_record, &road_x, &segment_fraction, &segment_length);
-				player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+				player_car_drive(&segment_record, &r12, &road_x, &segment_fraction, &segment_length);
+				player_car_place_view(segment_record, r12, road_x, segment_fraction, segment_length);
 				player_car_move_view();
 				player_car_set_horizon();
 				player_car_publish();
 				player_car_extend_course();
-				player_car_project_road();
+				player_car_project_road(&r12, &r14);
 				player_car_engine_sound();
 				animation_advance(0u);
 				return;
@@ -483,15 +483,15 @@ void player_car_move(void)
 	uint32_t road_x = 0, segment_fraction = 0, segment_length = 0, segment_record = 0;
 
 	segment_record = ((screen + 0x2000u) & ~0xFFFFu) | (uint16_t)(screen + 0x2000u + CAR(player_car)->segment_offset);
-	player_car_drive(&segment_record, &road_x, &segment_fraction, &segment_length);
-	player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+	player_car_drive(&segment_record, &r12, &road_x, &segment_fraction, &segment_length);
+	player_car_place_view(segment_record, r12, road_x, segment_fraction, segment_length);
 	if (OBJECT(current_object)->state == 5u)
 		CAR(player_car)->wheel_effect_sides = 0u;
 	player_car_move_view();
 	player_car_set_horizon();
 	player_car_publish();
 	player_car_extend_course();
-	player_car_project_road();
+	player_car_project_road(&r12, &r14);
 	player_car_engine_sound();
 	player_car_animate();
 }
@@ -653,9 +653,9 @@ void player_car_check_place(void)
    animation, palette, frame, wheel effects, speed, sideways speed, flags, segments, place across the
    road and bounce into its race record (race published set), from which race_car draws it on both
    screens. Not in ISDN mode (isdn_mode), which reads them back instead. */
-void player_car_publish(void)
+uint32_t player_car_publish(void)
 {
-	uint32_t race = 0, race_copy = 0, shown_view = 0, view_ring_slot = 0, view_slot = 0;
+	uint32_t race = 0, race_copy = 0, shown_view = 0, view = 0, view_ring_slot = 0, view_slot = 0;
 
 	race = SCREEN(screen)->race;
 	race_copy = SCREEN(screen)->race_copy;
@@ -666,30 +666,30 @@ void player_car_publish(void)
 		view_ring_slot = view_ring_slot & 7u;
 		SCREEN(screen)->view_ring_slot = view_ring_slot;
 		RACE(race)->view_slot = view_ring_slot;
-		r12 = screen + 0x600u + (uint16_t)(view_ring_slot << 5);
+		view = screen + 0x600u + (uint16_t)(view_ring_slot << 5);
 		view_slot = RACE(race_copy)->view_slot;
 		shown_view = screen + 0x600u + (uint16_t)(view_slot << 5);
 		SCREEN(screen)->shown_view = shown_view;
 	}
 	else
 	{
-		r12 = screen + 0x600u;
-		shown_view = r12;
+		view = screen + 0x600u;
+		shown_view = view;
 		SCREEN(screen)->shown_view = shown_view;
 	}
-	VIEW(r12)->x = CAR(player_car)->view_x;
+	VIEW(view)->x = CAR(player_car)->view_x;
 	CAR(player_car)->view_x = VIEW(shown_view)->x;
-	VIEW(r12)->y = CAR(player_car)->view_y;
+	VIEW(view)->y = CAR(player_car)->view_y;
 	CAR(player_car)->view_y = VIEW(shown_view)->y;
-	VIEW(r12)->z = CAR(player_car)->view_z;
+	VIEW(view)->z = CAR(player_car)->view_z;
 	CAR(player_car)->view_z = VIEW(shown_view)->z;
-	VIEW(r12)->pitch = CAR(player_car)->view_pitch;
+	VIEW(view)->pitch = CAR(player_car)->view_pitch;
 	CAR(player_car)->view_pitch = VIEW(shown_view)->pitch;
-	VIEW(r12)->yaw = CAR(player_car)->view_yaw;
+	VIEW(view)->yaw = CAR(player_car)->view_yaw;
 	CAR(player_car)->view_yaw = VIEW(shown_view)->yaw;
-	VIEW(r12)->window_offset = CAR(player_car)->window_offset;
-	VIEW(r12)->segment_remaining = CAR(player_car)->segment_remaining;
-	VIEW(r12)->horizon_line = SCREEN(screen)->horizon_line;
+	VIEW(view)->window_offset = CAR(player_car)->window_offset;
+	VIEW(view)->segment_remaining = CAR(player_car)->segment_remaining;
+	VIEW(view)->horizon_line = SCREEN(screen)->horizon_line;
 	SCREEN(screen)->horizon_line = VIEW(shown_view)->horizon_line;
 	if (isdn_mode == 0u)
 	{
@@ -714,6 +714,7 @@ void player_car_publish(void)
 		RACE(race)->bounce_height = (uint16_t)OBJECT(current_object)->player_car.bounce_height;
 		RACE(race)->published = 0xFFu;
 	}
+	return view;
 }
 
 /* Clears what the screen's car hands on to the race record (player_car_publish's), for the ranking
@@ -724,9 +725,9 @@ void player_car_publish(void)
    window_offset, segment_remaining, the horizon (screen horizon_line), and the halfword at C8 of
    current_object (player_car_publish's bounce_height) with race bounce_height; from the ranking
    current_object is what run_objects left in it, not the car. */
-void clear_published_car(void)
+uint32_t clear_published_car(void)
 {
-	uint32_t race = 0, view_ring_slot = 0;
+	uint32_t race = 0, view = 0, view_ring_slot = 0;
 
 	race = SCREEN(screen)->race;
 	RACE(race)->published = 0u;
@@ -735,18 +736,18 @@ void clear_published_car(void)
 	view_ring_slot = view_ring_slot & 7u;
 	SCREEN(screen)->view_ring_slot = view_ring_slot;
 	RACE(race)->view_slot = view_ring_slot;
-	r12 = screen + 0x600u + (uint16_t)(view_ring_slot << 5);
-	SCREEN(screen)->shown_view = r12;
+	view = screen + 0x600u + (uint16_t)(view_ring_slot << 5);
+	SCREEN(screen)->shown_view = view;
 	CAR(player_car)->view_x = 0;
-	VIEW(r12)->x = 0u;
+	VIEW(view)->x = 0u;
 	CAR(player_car)->view_y = 0;
-	VIEW(r12)->y = 0u;
+	VIEW(view)->y = 0u;
 	CAR(player_car)->view_z = 0;
-	VIEW(r12)->z = 0u;
+	VIEW(view)->z = 0u;
 	CAR(player_car)->view_pitch = 0u;
-	VIEW(r12)->pitch = 0u;
+	VIEW(view)->pitch = 0u;
 	CAR(player_car)->view_yaw = 0u;
-	VIEW(r12)->yaw = 0u;
+	VIEW(view)->yaw = 0u;
 	CAR(player_car)->wheel_effect_sides = 0u;
 	RACE(race)->wheel_effect_sides = 0u;
 	CAR(player_car)->hard_acceleration = 0u;
@@ -764,13 +765,14 @@ void clear_published_car(void)
 	CAR(player_car)->window_segment = 0u;
 	RACE(race)->window_segment = 0u;
 	CAR(player_car)->window_offset = 0u;
-	VIEW(r12)->window_offset = 0u;
+	VIEW(view)->window_offset = 0u;
 	CAR(player_car)->segment_remaining = 0u;
-	VIEW(r12)->segment_remaining = 0u;
+	VIEW(view)->segment_remaining = 0u;
 	SCREEN(screen)->horizon_line = 0u;
-	VIEW(r12)->horizon_line = 0u;
+	VIEW(view)->horizon_line = 0u;
 	OBJECT(current_object)->player_car.bounce_height &= 0xFFFF0000u;
 	RACE(race)->bounce_height = 0;
+	return view;
 }
 
 /* Works out the horizon's line on the screen (screen horizon_line) from the view's tilt: the nod (car
@@ -795,7 +797,7 @@ void player_car_set_horizon(void)
    place, its world position (player_car_world_position) and the view behind it (player_car_place_view). */
 void player_car_place_on_road(void)
 {
-	uint32_t road_x = 0, segment_fraction = 0, segment_length = 0, segment_record = 0;
+	uint32_t next_segment = 0, road_x = 0, segment_fraction = 0, segment_length = 0, segment_record = 0;
 
 	CAR(player_car)->segment_fraction = 0u;
 	CAR(player_car)->road_x = (uint16_t)OBJECT(current_object)->player_car.world_x;
@@ -803,9 +805,9 @@ void player_car_place_on_road(void)
 	road_x = (uint16_t)CAR(player_car)->road_x;
 	segment_length = 0x80u;
 	segment_fraction = CAR(player_car)->segment_fraction;
-	r12 = (segment_record + 0x20u) & ~0x5000u;
-	player_car_world_position(segment_record, road_x, segment_fraction, segment_length);
-	player_car_place_view(segment_record, road_x, segment_fraction, segment_length);
+	next_segment = (segment_record + 0x20u) & ~0x5000u;
+	player_car_world_position(segment_record, next_segment, road_x, segment_fraction, segment_length);
+	player_car_place_view(segment_record, next_segment, road_x, segment_fraction, segment_length);
 }
 
 /* Ends what a hit was doing to the car: no sideways_push, speed_change, bounce, no hit pending (flags
@@ -1167,11 +1169,11 @@ void player_car_move_view(void)
    faster and close; once on it stays for 30 frames (rival_hold) after the rival has gone. */
 void player_car_check_rivals(void)
 {
-	uint32_t ahead_race = 0, gap = 0, position = 0, race = 0, speed = 0, speed_gap = 0;
+	uint32_t ahead_race = 0, gap = 0, position = 0, race = 0, race_2 = 0, speed = 0, speed_gap = 0;
 
 	race = SCREEN(screen)->race_copy;
 	ahead_race = SCREEN(screen)->ahead_record;
-	r12 = SCREEN(screen)->behind_record;
+	race_2 = SCREEN(screen)->behind_record;
 	position = (RACE(race)->segment_fraction | ((uint32_t)RACE(race)->segment << 16u));
 	speed = RACE(race)->speed;
 	position = (position & ~0xFFFFu) | (uint16_t)(position << 9);
@@ -1222,7 +1224,7 @@ void player_car_check_rivals(void)
 			}
 		}
 	}
-	if (r12 == race)
+	if (race_2 == race)
 	{
 		if (OBJECT(current_object)->player_car.rival_hold == 0u)
 		{
@@ -1232,9 +1234,9 @@ void player_car_check_rivals(void)
 		OBJECT(current_object)->player_car.rival_hold--;
 		return;
 	}
-	gap = (RACE(r12)->segment_fraction | ((uint32_t)RACE(r12)->segment << 16u));
+	gap = (RACE(race_2)->segment_fraction | ((uint32_t)RACE(race_2)->segment << 16u));
 	gap = ((gap & ~0xFFFFu) | (uint16_t)(gap << 9)) - position;
-	speed_gap = RACE(r12)->speed - speed;
+	speed_gap = RACE(race_2)->speed - speed;
 	if (OBJECT(current_object)->player_car.rival_near == 0u)
 	{
 		if (speed < 0x6000u || (int32_t)gap < -0x30000 || (int32_t)speed_gap > 0x2000 || (int32_t)speed_gap < 0)

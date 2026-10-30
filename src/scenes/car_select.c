@@ -280,7 +280,7 @@ void car_select_run(void)
 			if (zero)
 			{
 				car_select_turn_to_choice();
-				car_select_update_rowscroll();
+				r12 = car_select_update_rowscroll();
 				remaining_time = OBJECT(current_object)->car_select.time_left;
 				remaining_time = remaining_time / 0x1Eu;
 				remaining_time = binary_to_bcd(remaining_time);
@@ -303,7 +303,7 @@ void car_select_run(void)
 		OBJECT(object)->transmission_choice.car_select = current_object;
 		OBJECT(current_object)->state++;
 		car_select_turn_to_choice();
-		car_select_update_rowscroll();
+		r12 = car_select_update_rowscroll();
 		remaining_time = OBJECT(current_object)->car_select.time_left;
 		remaining_time = remaining_time / 0x1Eu;
 		remaining_time = binary_to_bcd(remaining_time);
@@ -318,7 +318,7 @@ void car_select_run(void)
 			if (zero)
 			{
 				car_select_turn_to_choice();
-				car_select_update_rowscroll();
+				r12 = car_select_update_rowscroll();
 				remaining_time = OBJECT(current_object)->car_select.time_left;
 				remaining_time = remaining_time / 0x1Eu;
 				remaining_time = binary_to_bcd(remaining_time);
@@ -499,26 +499,26 @@ void car_select_turn_to_choice(void)
 /* Writes the line scroll of the tile layer for the next frames: the top 104 lines all at top_scroll,
    which moves one more each frame, and while rowscroll_copies says, the floor's 120 lines from their
    offsets at 3800 of the screen. */
-void car_select_update_rowscroll(void)
+uint32_t car_select_update_rowscroll(void)
 {
 	uint8_t fraction_shift = 0;
 	uint16_t line_scroll = 0;
-	uint32_t far_page = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0;
+	uint32_t far_page = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, scroll_place = 0;
 
 	near_page = (uint8_t)(video_registers[2] >> 8u);
 	far_page = near_page;
 	near_page = (uint8_t)(near_page + 4u);
 	far_page = (uint8_t)(far_page + 8u);
 	near_scroll_place = OBJECT(current_object)->car_select.rowscroll_address + ((near_page & 0xCu) << 7) * 4u;
-	r12 = OBJECT(current_object)->car_select.rowscroll_address + ((far_page & 0xCu) << 7) * 4u;
+	scroll_place = OBJECT(current_object)->car_select.rowscroll_address + ((far_page & 0xCu) << 7) * 4u;
 	line_scroll = (uint16_t)(OBJECT(current_object)->car_select.top_scroll + 1u);
 	OBJECT(current_object)->car_select.top_scroll = line_scroll;
 	lines_left = 0x68u;
 	do
 	{
 		LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
-		LINE_SCROLL_VALUES(r12)[0] = line_scroll;
-		r12 += 2u;
+		LINE_SCROLL_VALUES(scroll_place)[0] = line_scroll;
+		scroll_place += 2u;
 		lines_left--;
 		near_scroll_place += 2u;
 	} while (lines_left != 0u);
@@ -534,8 +534,8 @@ void car_select_update_rowscroll(void)
 			line_scroll = shift_by(FLOOR_LINE_OFFSETS(line_offsets)[0], (uint8_t)fraction_shift, 16);
 			LINE_SCROLL_VALUES(near_scroll_place)[0] = line_scroll;
 			near_scroll_place += 2u;
-			LINE_SCROLL_VALUES(r12)[0] = line_scroll;
-			r12 += 2u;
+			LINE_SCROLL_VALUES(scroll_place)[0] = line_scroll;
+			scroll_place += 2u;
 			lines_left--;
 			line_offsets += 2u;
 		} while (lines_left != 0u);
@@ -543,10 +543,11 @@ void car_select_update_rowscroll(void)
 		break;
 	case 3:
 		OBJECT(current_object)->car_select.rowscroll_copies--;
-		return;
+		return scroll_place;
 	case 0:
 		break;
 	}
+	return scroll_place;
 }
 
 /* Skews the turntable's floor for a step toward the next car (car_select_skew_floor with 6). */
@@ -574,7 +575,7 @@ void car_select_skew_floor(uint16_t skew_step)
 {
 	uint8_t fraction_shift = 0;
 	uint16_t far_offset = 0, near_offset = 0, skew = 0;
-	uint32_t far_page = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, rowscroll_address = 0;
+	uint32_t far_page = 0, far_scroll_place = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, rowscroll_address = 0;
 
 	near_page = (uint8_t)(video_registers[2] >> 8u);
 	far_page = near_page;
@@ -582,7 +583,7 @@ void car_select_skew_floor(uint16_t skew_step)
 	far_page = (uint8_t)(far_page + 8u);
 	rowscroll_address = OBJECT(current_object)->car_select.rowscroll_address;
 	near_scroll_place = rowscroll_address + 0xD0u + ((near_page & 0xCu) << 7) * 4u;
-	r12 = rowscroll_address + 0xD0u + ((far_page & 0xCu) << 7) * 4u;
+	far_scroll_place = rowscroll_address + 0xD0u + ((far_page & 0xCu) << 7) * 4u;
 	line_offsets = screen + 0x3800u;
 	skew = 0u;
 	fraction_shift = 0xFAu;
@@ -595,8 +596,8 @@ void car_select_skew_floor(uint16_t skew_step)
 		FLOOR_LINE_OFFSETS(line_offsets)[0] = far_offset;
 		LINE_SCROLL_VALUES(near_scroll_place)[0] = shift_by(near_offset, (uint8_t)fraction_shift, 16);
 		near_scroll_place += 2u;
-		LINE_SCROLL_VALUES(r12)[0] = shift_by(far_offset, (uint8_t)fraction_shift, 16);
-		r12 += 2u;
+		LINE_SCROLL_VALUES(far_scroll_place)[0] = shift_by(far_offset, (uint8_t)fraction_shift, 16);
+		far_scroll_place += 2u;
 		lines_left--;
 		line_offsets += 2u;
 	} while (lines_left != 0u);

@@ -81,7 +81,7 @@ void race_background_update(void)
 			tile_pages += 4u;
 		} while (page_count != 0u);
 		OBJECT_TILE_PAGES(r12)[0] = 0xFFFFFFFFu;
-		unpack_tile_pages(tile_page_list);
+		r12 = unpack_tile_pages(tile_page_list, r12);
 		TILEMAP_BANKS(OBJECT(current_object)->race_background.tile_bank_address)->tile_bank = stage_tile_banks[SCREEN(screen)->first_stage];
 		SCREEN(screen)->background_changing = 0u;
 		SCREEN(screen)->stage_background_change = 0u;
@@ -657,7 +657,7 @@ void sunset_fade_start(void)
 		fade++;
 		period = PALETTE_FADE_ENTRY(fade - 0xBu)->period;
 		fade++;
-		fade_object = start_palette_fade(blocks, period, from, to);
+		fade_object = start_palette_fade(blocks, period, from, to, (uint16_t)r12);
 		FADE_OBJECTS(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;

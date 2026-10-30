@@ -295,6 +295,7 @@ void step_screen_fade(void)
 void start_palette_fades(uint32_t fade_list)
 {
 	uint8_t blocks = 0, period = 0;
+	uint16_t palette_offset = 0;
 	uint32_t fades_left = 0, from = 0, to = 0;
 	uint32_t fade_count = 0;
 
@@ -308,13 +309,13 @@ void start_palette_fades(uint32_t fade_list)
 			from = PALETTE_FADE_ENTRY(fade_list)->from;
 			to = PALETTE_FADE_ENTRY(fade_list)->to;
 			fade_list += 8u;
-			r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
+			palette_offset = PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 			fade_list += 2u;
 			blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 			fade_list++;
 			period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 			fade_list++;
-			start_palette_fade(blocks, period, from, to);
+			start_palette_fade(blocks, period, from, to, palette_offset);
 			fades_left--;
 		} while (fades_left != 0u);
 	}
@@ -325,6 +326,7 @@ void start_palette_fades(uint32_t fade_list)
 void road_surface_fade_back(uint32_t fade_list)
 {
 	uint8_t blocks = 0, period = 0;
+	uint16_t palette_offset = 0;
 	uint32_t fades_left = 0, from = 0, to = 0;
 	uint32_t fade_count = 0;
 
@@ -339,13 +341,13 @@ void road_surface_fade_back(uint32_t fade_list)
 			fade_list += 4u;
 			from = PALETTE_FADE_ENTRY(fade_list - 0x4u)->to;
 			fade_list += 4u;
-			r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
+			palette_offset = PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 			fade_list += 2u;
 			blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 			fade_list++;
 			period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 			fade_list++;
-			start_palette_fade(blocks, period, from, to);
+			start_palette_fade(blocks, period, from, to, palette_offset);
 			fades_left--;
 		} while (fades_left != 0u);
 	}
@@ -357,6 +359,7 @@ void road_surface_fade_back(uint32_t fade_list)
 void race_background_fade_palettes(uint32_t fade_list)
 {
 	uint8_t blocks = 0, period = 0;
+	uint16_t palette_offset = 0;
 	uint32_t fade_object = 0, fade_slot = 0, fades_left = 0, from = 0, object = 0, to = 0;
 	uint32_t fade_count = 0;
 
@@ -378,13 +381,13 @@ void race_background_fade_palettes(uint32_t fade_list)
 		from = PALETTE_FADE_ENTRY(fade_list)->from;
 		to = PALETTE_FADE_ENTRY(fade_list)->to;
 		fade_list += 8u;
-		r12 = (r12 & ~0xFFFFu) | PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
+		palette_offset = PALETTE_FADE_ENTRY(fade_list - 0x8u)->palette_offset;
 		fade_list += 2u;
 		blocks = PALETTE_FADE_ENTRY(fade_list - 0xAu)->blocks;
 		fade_list++;
 		period = PALETTE_FADE_ENTRY(fade_list - 0xBu)->period;
 		fade_list++;
-		fade_object = start_palette_fade(blocks, period, from, to);
+		fade_object = start_palette_fade(blocks, period, from, to, palette_offset);
 		BACKGROUND_FADES(fade_slot)[0] = fade_object;
 		fades_left--;
 		fade_slot += 4u;
@@ -426,7 +429,7 @@ void race_background_fade_watch_update(void)
    (R0 blocks of 16 in its upload record), a step every R1 frames, the first after (screen
    palette_fades_started mod R1) + 1 (palette_fades_started counts the fades started); returns the
    object. */
-uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to)
+uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint32_t to, uint16_t palette_offset)
 {
 	uint8_t phase = 0;
 	uint32_t object = 0;
@@ -435,7 +438,7 @@ uint32_t start_palette_fade(uint8_t blocks, uint8_t period, uint32_t from, uint3
 	OBJECT(object)->handler = palette_fade_prepare_ADDRESS;
 	OBJECT(object)->palette_fade.upload_length = 8u;
 	OBJECT(object)->palette_fade.upload_colours = object + 0x34u;
-	OBJECT(object)->palette_fade.palette_offset = r12;
+	OBJECT(object)->palette_fade.palette_offset = palette_offset;
 	OBJECT(object)->palette_fade.blocks = blocks;
 	phase = remainder_u8(SCREEN(screen)->palette_fades_started, period);
 	SCREEN(screen)->palette_fades_started++;

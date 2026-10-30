@@ -165,7 +165,7 @@ void eeprom_lock(void)
 	uint32_t lines = 0, lines_port = 0;
 
 	command = 0u;
-	eeprom_begin(&lines, &lines_port);
+	eeprom_begin(&lines, &r12, &lines_port);
 	eeprom_send_command((uint8_t)lines, command, lines_port);
 	interrupts_on();
 }
@@ -177,8 +177,8 @@ void eeprom_read_one_word(uint8_t command)
 	uint32_t ignored = 0, lines = 0, lines_port = 0;
 
 	command |= 0x80u;
-	eeprom_begin(&lines, &lines_port);
-	eeprom_read_word(command, lines_port, &ignored, &lines);
+	eeprom_begin(&lines, &r12, &lines_port);
+	eeprom_read_word(command, r12, lines_port, &ignored, &lines);
 	interrupts_on();
 }
 
@@ -200,10 +200,10 @@ void eeprom_read_settings(uint32_t eeprom_word)
 	settings = settings_magic_ADDRESS;
 	command = 0x80u;
 	word_count = 0x40u;
-	eeprom_begin(&lines, &lines_port);
+	eeprom_begin(&lines, &r12, &lines_port);
 	do
 	{
-		eeprom_read_word(command, lines_port, &eeprom_word, &lines);
+		eeprom_read_word(command, r12, lines_port, &eeprom_word, &lines);
 		command++;
 		SETTINGS_WORDS(settings)[0] = eeprom_word;
 		word_count--;
@@ -218,8 +218,8 @@ void eeprom_write_one_word(uint16_t eeprom_word, uint8_t command)
 	uint32_t lines = 0, lines_port = 0;
 
 	command |= 0x40u;
-	eeprom_begin(&lines, &lines_port);
-	eeprom_write_word(eeprom_word, (uint8_t)lines, command, lines_port);
+	eeprom_begin(&lines, &r12, &lines_port);
+	eeprom_write_word(eeprom_word, (uint8_t)lines, command, r12, lines_port);
 	interrupts_on();
 }
 
@@ -254,17 +254,17 @@ void eeprom_write_settings(void)
 	settings_checksum = checksum;
 	move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
 	command = 0x30u;
-	eeprom_begin(&lines, &lines_port);
+	eeprom_begin(&lines, &r12, &lines_port);
 	eeprom_send_command((uint8_t)lines, command, lines_port);
 	settings = settings_magic_ADDRESS;
 	command = 0x40u;
 	word_count = 0x40u;
-	eeprom_begin(&lines, &lines_port);
+	eeprom_begin(&lines, &r12, &lines_port);
 	do
 	{
 		eeprom_word = SETTINGS_WORDS(settings)[0];
 		settings += 2u;
-		lines = eeprom_write_word(eeprom_word, (uint8_t)lines, command, lines_port);
+		lines = eeprom_write_word(eeprom_word, (uint8_t)lines, command, r12, lines_port);
 		command++;
 		word_count--;
 	} while (word_count != 0u);
@@ -272,7 +272,7 @@ void eeprom_write_settings(void)
 
 /* Reads the EEPROM word of read command R4 (eeprom_send_command): 18 clock pulses collecting the data
    out (bit 7 of R12, port F of the second I/O chip), the 16-bit word into R0; then chip select off. */
-void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_word, uint32_t *p_lines)
+void eeprom_read_word(uint8_t command, uint32_t eeprom_port, uint32_t lines_port, uint32_t *p_eeprom_word, uint32_t *p_lines)
 {
 	uint32_t eeprom_word = *p_eeprom_word;
 	uint8_t lines = (uint8_t)*p_lines;
@@ -284,7 +284,7 @@ void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_w
 	do
 	{
 		lines = eeprom_set_lines(lines, lines_port);
-		eeprom_word = (eeprom_word & ~0xFFu) | io_read8(r12);
+		eeprom_word = (eeprom_word & ~0xFFu) | io_read8(eeprom_port);
 		eeprom_word = eeprom_word * 2u;
 		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
@@ -301,7 +301,7 @@ void eeprom_read_word(uint8_t command, uint32_t lines_port, uint32_t *p_eeprom_w
 /* Writes R0 into the EEPROM word of write command R4 (eeprom_send_command): its 16 bits high first, chip
    select dropped to start the write, then waits, clocking, until the data out (bit 7 of R12) says it is
    done. */
-uint8_t eeprom_write_word(uint16_t eeprom_word, uint8_t lines, uint8_t command, uint32_t lines_port)
+uint8_t eeprom_write_word(uint16_t eeprom_word, uint8_t lines, uint8_t command, uint32_t eeprom_port, uint32_t lines_port)
 {
 	uint8_t data_bit = 0, data_out = 0;
 	uint16_t word_bits = 0;
@@ -335,7 +335,7 @@ uint8_t eeprom_write_word(uint16_t eeprom_word, uint8_t lines, uint8_t command, 
 	{
 		lines |= 0x20u;
 		lines = eeprom_set_lines(lines, lines_port);
-		data_out = io_read8(r12);
+		data_out = io_read8(eeprom_port);
 		lines ^= 0x40u;
 		lines = eeprom_set_lines(lines, lines_port);
 	} while ((int8_t)data_out >= 0);
@@ -382,12 +382,12 @@ uint8_t eeprom_send_command(uint8_t lines, uint8_t command, uint32_t lines_port)
 
 /* Starts an EEPROM access: the interrupts off, R13 the EEPROM's lines (C8000E, port H of the second I/O
    chip), R12 its data out (C8000A, port F, bit 7), R2 the lines' present value. */
-void eeprom_begin(uint32_t *p_lines, uint32_t *p_lines_port)
+void eeprom_begin(uint32_t *p_lines, uint32_t *p_eeprom_port, uint32_t *p_lines_port)
 {
 	uint8_t lines_now = 0;
 
 	*p_lines_port = IO_2_PORT_H;
-	r12 = IO_2_PORT_F;
+	*p_eeprom_port = IO_2_PORT_F;
 	lines_now = io_read8(IO_2_PORT_H);
 	interrupts_off();
 	*p_lines = (*p_lines & 0xFFFFFF00u) | lines_now;

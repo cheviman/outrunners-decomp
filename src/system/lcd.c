@@ -60,7 +60,6 @@ void lcd_start(void)
 	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
 	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
 	to_send = 0x40u;
-	r12 = unk_218F20_ADDRESS;
 	lcd_command_nibble_after_pause(to_send);
 	to_send = 0u;
 	lcd_command_nibble_after_pause(to_send);
@@ -172,7 +171,6 @@ void lcd_reset(void)
 	AS32(SCREEN(SCREEN_1)->lcd_text[12]) = text_12_to;
 	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
 	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
-	r12 = unk_218F20_ADDRESS;
 }
 
 /* Each VBLANK: counts lcd_restart_frames down and, when it runs out, has the LCDs started again

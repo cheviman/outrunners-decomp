@@ -106,7 +106,6 @@ void race_car_draw(void)
 	uint8_t hard_acceleration_frame = 0, wheel_effect_sides = 0;
 	uint16_t crash_text_y = 0, element = 0, far_segment = 0, other_spray = 0, segment = 0, sprite_x = 0, sprite_y = 0, window_segment = 0, x_offset = 0, y_offset = 0;
 	uint32_t animation = 0, blink_counter = 0, body_animation = 0, body_attributes = 0, car = 0, depth = 0, depth_layer = 0, first_rider = 0, ignored = 0, palette = 0, piece = 0, race = 0, relative_y = 0, rider_places = 0, scale = 0, screen_x = 0, screen_y = 0, second_rider = 0, second_rider_frame = 0, spray = 0, sprite_entry = 0, view = 0, view_offset = 0, x_term = 0, y_term = 0;
-	uint8_t second_rider_gesture = 0;
 	uint16_t swapped_rider = 0, swapped_spray = 0;
 
 	OBJECT(current_object)->race_car.blink_counter++;
@@ -128,7 +127,7 @@ void race_car_draw(void)
 	{
 		if (segment <= window_segment)
 		{
-			race_car_draw_behind(sprite_entry, race);
+			race_car_draw_behind(sprite_entry, race, &r12, &r14);
 			return;
 		}
 		if (far_segment <= segment)
@@ -154,7 +153,7 @@ void race_car_draw(void)
 	{
 		if (OBJECT(current_object)->race_car.rival != 0u)
 		{
-			race_car_draw_behind(sprite_entry, race);
+			race_car_draw_behind(sprite_entry, race, &r12, &r14);
 			return;
 		}
 		depth_layer = 0x1C0u;
@@ -172,7 +171,7 @@ void race_car_draw(void)
 		{
 			if (OBJECT(current_object)->race_car.rival != 0u)
 			{
-				race_car_draw_behind(sprite_entry, race);
+				race_car_draw_behind(sprite_entry, race, &r12, &r14);
 				return;
 			}
 			depth_layer = 0x1C0u;
@@ -201,7 +200,7 @@ void race_car_draw(void)
 	OBJECT(current_object)->y = screen_y;
 	OBJECT(current_object)->width_scale = scale;
 	OBJECT(current_object)->depth_layer = depth_layer;
-	race_car_put_frame(scale, sprite_x, sprite_y, &body_attributes, &sprite_entry, &palette);
+	race_car_put_frame(scale, sprite_x, sprite_y, &body_attributes, &sprite_entry, &r12, &palette, &r14);
 	OBJECT(current_object)->race_car.body_attributes = body_attributes;
 	if (OBJECT(current_object)->race_car.special_body == 0u)
 	{
@@ -259,9 +258,7 @@ void race_car_draw(void)
 				sprite_entry = race_car_draw_part(view_offset, x_offset, y_offset, scale, sprite_entry, rider_places, palette, (uint16_t)screen_x, (uint16_t)screen_y);
 			}
 			r12 = (r12 & ~0xFFu) | OBJECT(current_object)->race_car.gesture_shown;
-			second_rider_gesture = r12 & RACE_CAR_RIDER(second_rider)->gesture_mask;
-			r12 = (r12 & ~0xFFu) | second_rider_gesture;
-			if (second_rider_gesture == 0u)
+			if ((r12 & RACE_CAR_RIDER(second_rider)->gesture_mask) == 0u)
 			{
 				r14 = second_rider_frame;
 				rider_places = RACE_CAR_RIDER(second_rider)->places;
@@ -293,8 +290,8 @@ void race_car_draw(void)
 				palette = 0x58u;
 				sprite_x = (uint16_t)screen_x;
 				sprite_y = (uint16_t)screen_y;
-				race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &palette);
-				race_car_put_sprite(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &palette);
+				race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &r12, &palette, &r14);
+				race_car_put_sprite(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &r12, &palette, &r14);
 			}
 		}
 		else
@@ -335,7 +332,7 @@ void race_car_draw(void)
 			sprite_x = (uint16_t)screen_x;
 			crash_text_y = (uint16_t)OBJECT(current_object)->race_car.crash_text_y;
 			scale = 0x100u;
-			race_car_put_frame(scale, sprite_x, crash_text_y, &ignored, &sprite_entry, &palette);
+			race_car_put_frame(scale, sprite_x, crash_text_y, &ignored, &sprite_entry, &r12, &palette, &r14);
 			OBJECT(current_object)->race_car.crash_text_rise++;
 			OBJECT(current_object)->race_car.crash_text_rise &= 7u;
 			race_car_draw_link(depth_layer, sprite_entry);
@@ -345,11 +342,11 @@ void race_car_draw(void)
 		r12 = 0x1Bu;
 		sprite_x = (uint16_t)(screen_x - 3u);
 		sprite_y = (uint16_t)((uint16_t)screen_y - ((0x30u * scale) >> 8));
-		sprite_entry = race_car_put_flat_sprite(sprite_entry, element, sprite_x, sprite_y);
+		race_car_put_flat_sprite(element, sprite_x, sprite_y, &sprite_entry, &r12, &r14);
 		r12 = OBJECT(current_object)->race_car.tag_animation;
 		sprite_y -= 0x16u;
 		sprite_x += 0x15u;
-		sprite_entry = race_car_put_flat_sprite(sprite_entry, element, sprite_x, sprite_y);
+		race_car_put_flat_sprite(element, sprite_x, sprite_y, &sprite_entry, &r12, &r14);
 		race_car_draw_link(depth_layer, sprite_entry);
 		return;
 	}
@@ -382,7 +379,7 @@ void race_car_draw(void)
 		sprite_x = (uint16_t)screen_x;
 		crash_text_y = (uint16_t)OBJECT(current_object)->race_car.crash_text_y;
 		scale = 0x100u;
-		race_car_put_frame(scale, sprite_x, crash_text_y, &ignored, &sprite_entry, &palette);
+		race_car_put_frame(scale, sprite_x, crash_text_y, &ignored, &sprite_entry, &r12, &palette, &r14);
 		OBJECT(current_object)->race_car.crash_text_rise++;
 		OBJECT(current_object)->race_car.crash_text_rise &= 7u;
 		race_car_draw_link(depth_layer, sprite_entry);
@@ -398,11 +395,11 @@ void race_car_draw(void)
 	r12 = 0x1Bu;
 	sprite_x = (uint16_t)(screen_x - 3u);
 	sprite_y = (uint16_t)((uint16_t)screen_y - ((0x30u * scale) >> 8));
-	sprite_entry = race_car_put_flat_sprite(sprite_entry, element, sprite_x, sprite_y);
+	race_car_put_flat_sprite(element, sprite_x, sprite_y, &sprite_entry, &r12, &r14);
 	r12 = OBJECT(current_object)->race_car.tag_animation;
 	sprite_y -= 0x16u;
 	sprite_x += 0x15u;
-	sprite_entry = race_car_put_flat_sprite(sprite_entry, element, sprite_x, sprite_y);
+	race_car_put_flat_sprite(element, sprite_x, sprite_y, &sprite_entry, &r12, &r14);
 	race_car_draw_link(depth_layer, sprite_entry);
 }
 
@@ -411,10 +408,10 @@ void race_car_draw(void)
    on the road (the difference of road_x, at most 58 either way) and up by its bounce; its car and its
    number tag (tag_animation, tag_palette), into the list of that depth layer (race_car_draw_link), with
    special_body and gesture_shown cleared. */
-void race_car_draw_behind(uint32_t sprite_entry, uint32_t race)
+void race_car_draw_behind(uint32_t sprite_entry, uint32_t race, uint32_t *p_last_piece, uint32_t *p_last_size_step)
 {
 	uint16_t sprite_x = 0, sprite_y = 0;
-	uint32_t depth_layer = 0, distance_behind = 0, ignored = 0, own_race = 0, palette = 0, scale = 0;
+	uint32_t animation = 0, depth_layer = 0, distance_behind = 0, frame = 0, ignored = 0, own_race = 0, palette = 0, scale = 0;
 	uint16_t past_limit = 0;
 
 	OBJECT(current_object)->race_car.special_body = 0u;
@@ -439,16 +436,16 @@ void race_car_draw_behind(uint32_t sprite_entry, uint32_t race)
 	sprite_y = (uint16_t)((int16_t)(0u - RACE(race)->bounce_height) >> 2);
 	scale = distance_behind * 3u;
 	scale = (scale & ~0xFFFFu) | ((uint16_t)scale >> 3);
-	r12 = RACE(race)->animation;
+	animation = RACE(race)->animation;
 	palette = RACE(race)->palette;
-	r14 = RACE(race)->frame;
-	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &palette);
+	frame = RACE(race)->frame;
+	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &animation, &palette, &frame);
 	sprite_y = (uint16_t)((int16_t)(distance_behind * 0xFFECu) >> 8);
 	scale = distance_behind;
-	r12 = OBJECT(current_object)->race_car.tag_animation;
+	*p_last_piece = OBJECT(current_object)->race_car.tag_animation;
 	palette = OBJECT(current_object)->race_car.tag_palette;
-	r14 = 0u;
-	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &palette);
+	*p_last_size_step = 0u;
+	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, p_last_piece, &palette, p_last_size_step);
 	race_car_draw_link(depth_layer, sprite_entry);
 }
 
@@ -521,68 +518,70 @@ uint32_t race_car_draw_part(uint32_t view_offset, uint16_t x_offset, uint16_t y_
 	carry = (sprite_y >> 7) & 1u;
 	sprite_x += screen_x;
 	sprite_y = (uint16_t)(((int16_t)sprite_y >> 8) + carry + screen_y);
-	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &palette);
+	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &r12, &palette, &r14);
 	return sprite_entry;
 }
 
 /* Puts the first piece of frame R14 of animation R12 with palette R13 into the sprite list, scaled by R8
    at R17, R18 (race_car_put_sprite). */
-void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_palette)
+void race_car_put_frame(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step)
 {
 	uint32_t piece_attributes = 0;
 
-	r12 = SPRITE_ANIMATION(sprite_animations[(int32_t)r12])->frames[(int32_t)r14] + 2u;
+	*p_last_piece = SPRITE_ANIMATION(sprite_animations[(int32_t)*p_last_piece])->frames[(int32_t)*p_last_size_step] + 2u;
 	*p_palette = sprite_palettes[*p_palette];
-	race_car_put_sprite(scale, sprite_x, sprite_y, &piece_attributes, p_sprite_entry, p_palette);
+	race_car_put_sprite(scale, sprite_x, sprite_y, &piece_attributes, p_sprite_entry, p_last_piece, p_palette, p_last_size_step);
 	*p_attributes = (*p_attributes & 0xFFFF0000u) | (piece_attributes & 0xFFFFu);
 }
 
 /* Writes one sprite of a frame's piece into the screen's sprite list (and its copy at + 3000), its size
    and offsets scaled by R8, at R17, R18. */
-void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_palette)
+void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_attributes, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_palette, uint32_t *p_last_size_step)
 {
 	uint32_t sprite_entry = *p_sprite_entry;
+	uint32_t last_piece = *p_last_piece;
 	uint16_t height_and_bits = 0, palette_word = 0, piece_attributes = 0, piece_x = 0, piece_y = 0, sprite_rom_offset = 0, sprite_source_size = 0, width_and_bits = 0;
+	uint32_t size_step = 0;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0, element = 0;
 
-	piece_attributes = SPRITE_PIECE(r12)->attributes;
+	piece_attributes = SPRITE_PIECE(last_piece)->attributes;
 	SPRITE_WORDS(sprite_entry)[6144] = piece_attributes;
 	SPRITE_WORDS(sprite_entry)[0] = piece_attributes;
 	sprite_entry += 2u;
-	r12 += 2u;
-	r14 = sprite_size_steps_ADDRESS + SPRITE_PIECE(r12 - 0x2u)->sprite * 4u;
-	source_size = SPRITE_SIZE_STEP(r14)->source_size;
-	r14 += 2u;
+	last_piece += 2u;
+	size_step = sprite_size_steps_ADDRESS + SPRITE_PIECE(last_piece - 0x2u)->sprite * 4u;
+	source_size = SPRITE_SIZE_STEP(size_step)->source_size;
+	size_step += 2u;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
 	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
-	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
-	r14 += 2u;
+	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
+	size_step += 2u;
 	sprite_rom_offset = rom_offset;
-	height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
-	r14 += 2u;
-	height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
-	r14 += 2u;
+	height = SPRITE_SIZE_STEP(size_step - 0x4u)->height;
+	size_step += 2u;
+	height_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
+	size_step += 2u;
 	height_and_bits = (((height * scale) >> 8) & 0x3FFu) | height_bits;
 	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
-	width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
-	r14 += 2u;
-	width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
-	r14 += 2u;
+	width = SPRITE_SIZE_STEP(size_step - 0x8u)->width;
+	size_step += 2u;
+	width_bits = SPRITE_SIZE_STEP(size_step - 0xAu)->width_bits;
+	size_step += 2u;
 	width_and_bits = (((width * scale) >> 8) & 0x3FFu) | width_bits | SCREEN(screen)->sprite_screen_bit;
 	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
 	sprite_entry += 2u;
-	r12 += 2u;
-	piece_y = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x4u)->y_offset * scale) >> 8) + sprite_y);
+	last_piece += 2u;
+	piece_y = (uint16_t)(((int32_t)(SPRITE_PIECE(last_piece - 0x4u)->y_offset * scale) >> 8) + sprite_y);
 	SPRITE_WORDS(sprite_entry)[6144] = piece_y;
 	SPRITE_WORDS(sprite_entry)[0] = piece_y;
 	sprite_entry += 2u;
-	r12 += 2u;
-	piece_x = (uint16_t)(((int32_t)(SPRITE_PIECE(r12 - 0x6u)->x_offset * scale) >> 8) + sprite_x);
+	last_piece += 2u;
+	piece_x = (uint16_t)(((int32_t)(SPRITE_PIECE(last_piece - 0x6u)->x_offset * scale) >> 8) + sprite_x);
 	SPRITE_WORDS(sprite_entry)[6144] = piece_x;
 	SPRITE_WORDS(sprite_entry)[0] = piece_x;
 	sprite_entry += 2u;
@@ -596,46 +595,51 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	SPRITE_WORDS(sprite_entry)[0] = palette_word;
 	sprite_entry += 2u;
 	SCREEN(screen)->sprite_groups++;
-	r12 += 2u;
+	last_piece += 2u;
 	*p_attributes = (*p_attributes & 0xFFFF0000u) | piece_attributes;
 	*p_sprite_entry = sprite_entry;
+	*p_last_piece = last_piece;
+	*p_last_size_step = size_step;
 }
 
 /* Writes the first piece of animation R12 into the sprite list at R17, R18 at its own size (the number
    tags). */
-uint32_t race_car_put_flat_sprite(uint32_t sprite_entry, uint16_t palette_word, uint16_t sprite_x, uint16_t sprite_y)
+void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t sprite_y, uint32_t *p_sprite_entry, uint32_t *p_last_piece, uint32_t *p_last_size_step)
 {
+	uint32_t sprite_entry = *p_sprite_entry;
+	uint32_t last_piece = *p_last_piece;
 	uint16_t attributes = 0, height_and_bits = 0, sprite_rom_offset = 0, sprite_source_size = 0, width_and_bits = 0;
+	uint32_t piece = 0, size_step = 0;
 	uint16_t source_size = 0, rom_offset = 0, height = 0, height_bits = 0, width = 0, width_bits = 0;
 
-	r12 = SPRITE_ANIMATION(sprite_animations[(int32_t)r12])->frames[0] + 2u;
-	attributes = SPRITE_PIECE(r12)->attributes;
+	piece = SPRITE_ANIMATION(sprite_animations[(int32_t)last_piece])->frames[0] + 2u;
+	attributes = SPRITE_PIECE(piece)->attributes;
 	SPRITE_WORDS(sprite_entry)[6144] = attributes;
 	SPRITE_WORDS(sprite_entry)[0] = attributes;
 	sprite_entry += 2u;
-	r12 += 2u;
-	r14 = sprite_size_steps_ADDRESS + SPRITE_PIECE(r12 - 0x2u)->sprite * 4u;
-	source_size = SPRITE_SIZE_STEP(r14)->source_size;
-	r14 += 2u;
+	piece += 2u;
+	size_step = sprite_size_steps_ADDRESS + SPRITE_PIECE(piece - 0x2u)->sprite * 4u;
+	source_size = SPRITE_SIZE_STEP(size_step)->source_size;
+	size_step += 2u;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry)[6144] = sprite_source_size;
 	SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;
 	sprite_entry += 2u;
-	rom_offset = SPRITE_SIZE_STEP(r14 - 0x2u)->rom_offset;
-	r14 += 2u;
+	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
+	size_step += 2u;
 	sprite_rom_offset = rom_offset;
-	height = SPRITE_SIZE_STEP(r14 - 0x4u)->height;
-	r14 += 2u;
-	height_bits = SPRITE_SIZE_STEP(r14 - 0x6u)->height_bits;
-	r14 += 2u;
+	height = SPRITE_SIZE_STEP(size_step - 0x4u)->height;
+	size_step += 2u;
+	height_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
+	size_step += 2u;
 	height_and_bits = height | height_bits;
 	SPRITE_WORDS(sprite_entry)[6144] = height_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = height_and_bits;
 	sprite_entry += 2u;
-	width = SPRITE_SIZE_STEP(r14 - 0x8u)->width;
-	r14 += 2u;
-	width_bits = SPRITE_SIZE_STEP(r14 - 0xAu)->width_bits;
-	r14 += 2u;
+	width = SPRITE_SIZE_STEP(size_step - 0x8u)->width;
+	size_step += 2u;
+	width_bits = SPRITE_SIZE_STEP(size_step - 0xAu)->width_bits;
+	size_step += 2u;
 	width_and_bits = width | width_bits | SCREEN(screen)->sprite_screen_bit;
 	SPRITE_WORDS(sprite_entry)[6144] = width_and_bits;
 	SPRITE_WORDS(sprite_entry)[0] = width_and_bits;
@@ -653,6 +657,8 @@ uint32_t race_car_put_flat_sprite(uint32_t sprite_entry, uint16_t palette_word, 
 	SPRITE_WORDS(sprite_entry)[0] = palette_word;
 	sprite_entry += 2u;
 	SCREEN(screen)->sprite_groups++;
-	r12 += 2u;
-	return sprite_entry;
+	piece += 2u;
+	*p_sprite_entry = sprite_entry;
+	*p_last_piece = piece;
+	*p_last_size_step = size_step;
 }

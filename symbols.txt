@@ -4529,6 +4529,7 @@ param eeprom_set_lines R13 lines_port
 param eeprom_begin R2 lines
 param eeprom_begin R13 lines_port
 local eeprom_begin 0004AC R2 lines_now
+param eeprom_begin R12 eeprom_port
 param eeprom_send_command R2 lines
 param eeprom_send_command R4 command
 param eeprom_send_command R13 lines_port
@@ -4540,6 +4541,7 @@ param eeprom_read_word R2 lines
 param eeprom_read_word R4 command
 param eeprom_read_word R13 lines_port
 local eeprom_read_word 0003C5,0003DD R3 pulse_count
+param eeprom_read_word R12 eeprom_port
 param eeprom_write_word R0 eeprom_word
 param eeprom_write_word R2 lines
 param eeprom_write_word R4 command
@@ -4548,6 +4550,7 @@ local eeprom_write_word 0003ED,0003F3,000401 R6 word_bits            # the word 
 local eeprom_write_word 00043B R0 data_out
 local eeprom_write_word 0003FD R0 data_bit             # the word's top bit, into the data line (bit 7)
 local eeprom_write_word 0003F6,000417,00041B,00042C R3 pulse_count
+param eeprom_write_word R12 eeprom_port
 local eeprom_lock 0002E1 R4 command
 local eeprom_lock 0002EA,0002ED R2 lines
 local eeprom_lock 0002EA R13 lines_port
@@ -4631,6 +4634,7 @@ local link_send_seat_inputs 000BCD t1 gas_input
 local link_send_seat_inputs 000BD1 t1 brake_input
 local queue_seat_inputs 000BF3,000C09 R10 seat_screen
 local queue_seat_inputs 000BFA,000C10 R11 seat_record
+local queue_seat_inputs 000BFF,000C15 R12 io_chip
 param queue_screen_inputs R10 seat_screen
 param queue_screen_inputs R11 seat_record seat_inputs   # seat_1_buttons or seat_2_buttons; on ISDN the race_copy's link_buttons
 local queue_screen_inputs 000C2B,000C38 R0 inputs
@@ -4919,6 +4923,7 @@ local car_select_update_rowscroll 00546D,0054AB R0 line_scroll
 local car_select_update_rowscroll 005473,00547D,0054A4,0054B4 R9 lines_left
 local car_select_update_rowscroll 00549C R1 fraction_shift
 local car_select_update_rowscroll 00549F,0054A8 R10 line_offsets floor_line_offsets
+local car_select_update_rowscroll 005463,00547A,0054B1 R12 scroll_place
 local car_select_skew_floor_next 0054BC R0 skew_step
 local car_select_skew_floor_previous 0054C1 R0 skew_step
 param car_select_skew_floor R0 skew_step
@@ -4931,6 +4936,7 @@ local car_select_skew_floor 0054F7 R4 fraction_shift
 local car_select_skew_floor 0054FA,00551C R9 lines_left
 local car_select_skew_floor 005504 R1 near_offset
 local car_select_skew_floor 00550A R2 far_offset
+local car_select_skew_floor 0054E9,005519 R12 far_scroll_place   # the far rows' line scroll values, two bytes a row
 local car_attendant_run 00554D,005598,0055D9,005622,005635,005655,00565C R9 animation
 local car_attendant_run 0055A6,0055BD,0055CD,00566A,005646 R0 attendant_angle   # his angle round the turntable (plus side_offset at 005646)
 local car_attendant_run 00566E,005673,005678 R0 attendant_angle            # less 40 and the turntable's angle: where the view sees him
@@ -5226,6 +5232,7 @@ local player_car_world_position 00A56F R4 segment_pitch
 local player_car_world_position 00A55B,00A5B5 R18 segment_remaining
 local player_car_world_position 00A627 R0 previous_heading
 local player_car_world_position 00A627 t2 heading
+param player_car_world_position R12 next_segment
 local player_car_place_view 00A63C,00A648,00A658,00A66C R0 view_shift
 local player_car_place_view 00A67D R9 shift_offset
 local player_car_place_view 00A6AE R0 offset_y
@@ -5259,6 +5266,7 @@ param player_car_engine R9 force
 param player_car_engine R19 gear_ratio
 local player_car_engine 00A876 R18 top_speed
 local player_car_engine 00A8B4,00A8ED R0 tyre_noise
+param player_car_engine R12 handling
 param player_car_engine_wheelspin R9 force
 param player_car_engine_wheelspin R18 top_speed
 param player_car_engine_wheelspin R19 gear_ratio
@@ -5300,6 +5308,7 @@ local player_car_road_drag 00B5E1 R15 inner_edge_1
 local player_car_road_drag 00B5E5 R16 outer_edge_1
 local player_car_road_drag 00B5E9 R17 inner_edge_2
 local player_car_road_drag 00B5ED R18 outer_edge_2
+param player_car_road_drag R12 handling
 local player_car_off_road_shake 00B6E9 R0 tyre_noise
 local race_cars_start 009597,009743 R0 cars_left
 local race_cars_start 0095A0 R1 player
@@ -5341,6 +5350,10 @@ local race_car_draw_behind 009B6C R9 depth_layer
 local race_car_draw 00991C t1 swapped_rider
 local race_car_draw 0099E9 t1 swapped_spray
 local race_car_draw_behind 009B55 R11 own_race
+param race_car_draw_behind R12 last_piece
+param race_car_draw_behind R14 last_size_step
+local race_car_draw_behind 009BAE,009BBA R12 animation   # the car's animation, which race_car_put_frame draws from
+local race_car_draw_behind 009BB6,009BBA R14 frame
 local race_car_draw 0099B7 R12 gestures_shown
 local race_car_draw 0099BC t3 second_rider_gesture
 param race_car_draw_spray R4 view_offset
@@ -5374,6 +5387,8 @@ param race_car_put_frame R13 palette
 param race_car_put_frame R17 sprite_x
 param race_car_put_frame R18 sprite_y
 local race_car_put_frame 009CAE R0 piece_attributes
+param race_car_put_frame R12 last_piece
+param race_car_put_frame R14 last_size_step
 param race_car_put_sprite R0 attributes
 param race_car_put_sprite R8 scale
 param race_car_put_sprite R10 sprite_entry sprite_words
@@ -5388,6 +5403,8 @@ local race_car_put_sprite 009D06 R2 width_and_bits
 local race_car_put_sprite 009D1C R2 piece_y
 local race_car_put_sprite 009D31 R2 piece_x
 local race_car_put_sprite 009D44 R2 palette_word
+param race_car_put_sprite R12 last_piece
+param race_car_put_sprite R14 last_size_step
 param race_car_put_flat_sprite R10 sprite_entry sprite_words
 param race_car_put_flat_sprite R13 palette_word
 param race_car_put_flat_sprite R17 sprite_x
@@ -5396,7 +5413,10 @@ local race_car_put_flat_sprite 009D79 R1 sprite_source_size
 local race_car_put_flat_sprite 009D84 R1 sprite_rom_offset
 local race_car_put_flat_sprite 009D8A R2 height_and_bits
 local race_car_put_flat_sprite 009D9B R2 width_and_bits
+param race_car_put_flat_sprite R12 last_piece
+param race_car_put_flat_sprite R14 last_size_step
 local player_car_load_gears 00A01C R1 model_transmission
+local player_car_load_gears 00A010 R12 handling                  # car_handlings[model], into the car's handling
 local player_car_build_torque_curves 00A069,00A084 R1 curve_force
 local player_car_build_torque_curves 00A04A,00A081 R10 curve_entry torque_curve_forces
 local player_car_build_torque_curves 00A074,00A087 R2 steps_left
@@ -5644,6 +5664,7 @@ local race_entries_update 00DA6C,00DA78 R3 player
 local race_entries_update 00DA30,00DA5C R9 next_entry_frames
 local race_entries_update 00DA2E t1 old_entry_frames
 local race_entries_update 00DA13,00DAB3,00DAB9 R13 other_race
+param race_entries_update R14 entry_place
 local race_progress_update 00DB96,00DBAB,00DBBA,00DBD1,00DCCE,00DD09 R0 racers_left
 local race_progress_update 00DC1E,00DC22,00DC25,00DD91,00DD95 R0 fork_index
 local race_progress_update 00DC68,00DCC3 R0 comparisons_left
@@ -5669,6 +5690,8 @@ local race_progress_update 00DC61,00DC65 R16 sort_place
 local race_progress_update 00DC6F,00DC83 R16 sort_place race_order_players   # past race_order (20): the next racer's byte
 local race_progress_update 00DB8C R9 host_racer_count
 local race_progress_update 00DB8F R1 host_pass_count
+param race_progress_update R12 host_record
+param race_progress_update R14 racer_copy
 local entry_invitation_step 00DE1A,00DEA1 R10 lamp screen_lamps
 local entry_invitation_step 00DE57 R10 object_list
 local players_not_ready 00DEE0,00DEF3 R1 racers_left
@@ -5880,6 +5903,8 @@ local put_object_sprites 00EFF3 R4 sprite_y           # word 4
 local put_object_sprites 00F000 R5 sprite_x           # word 5
 local put_object_sprites 00EFBB R6 sprite_rom_offset  # word 6
 local put_object_sprites 00EFBE R7 sprite_palette_word  # word 7
+param put_object_sprites R12 last_frame
+param put_object_sprites R14 last_size_step
 param draw_object_one_piece R0 leftover
 param draw_object_one_piece R10 sprite_entry sprite_words
 local draw_object_one_piece 00F0A7,00F0AA R2 sprite_height
@@ -5887,6 +5912,8 @@ local draw_object_one_piece 00F0AD,00F0B3 R3 sprite_width
 local draw_object_one_piece 00F0BA R4 sprite_y
 local draw_object_one_piece 00F0C0 R5 sprite_x
 local draw_object_one_piece 00F08F R26 size_step_offset
+param draw_object_one_piece R12 last_piece
+param draw_object_one_piece R14 last_size_step
 param draw_object_smoothed R0 leftover
 param draw_object_smoothed R10 sprite_entry sprite_words
 local draw_object_smoothed 00F171 R0 x
@@ -6261,6 +6288,7 @@ local unpack_tile_pages 010F7A,010F80 R0 page_bits       # the entry, then its t
 local unpack_tile_pages 010F98 R10 source
 local unpack_tile_pages 010F90 R11 destination
 local unpack_tile_pages 010F98 t1 next_entry
+param unpack_tile_pages R12 list_next
 param queue_unpack_list R10 block_list packed_block_entry
 local queue_unpack_list 010FAF R11 request unpack_request
 local queue_unpack_list 010FC0 t4 destination
@@ -6976,6 +7004,7 @@ param start_palette_fade R1 period
 param start_palette_fade R10 from
 param start_palette_fade R11 to
 local start_palette_fade 0185A6 R0 phase   # palette_fades_started modulo period: when in its period the fade first steps
+param start_palette_fade R12 palette_offset
 local palette_fade_prepare 0185E9,018604,01861C,018622,018628 R0 from_colour   # the from colour, its components shifted down in turn; at the end the last difference
 local palette_fade_prepare 0185EC,018607 R1 to_colour
 local palette_fade_prepare 0185D2,0185E9 R10 from
@@ -7149,6 +7178,7 @@ param kanji_text_viewer_draw_line R10 text
 local kanji_text_viewer_draw_line 01B1B1,01B1BA R13 character
 param kanji_text_viewer_draw_character R11 place
 param kanji_text_viewer_draw_character R13 rows
+local kanji_text_viewer_draw_character 01B1CD,01B1D0,01B1D3,01B1D7,01B1DA,01B1DF,01B1E2 R12 bitmap_place
 local kanji_text_viewer_draw_quarter 01B1E7,01B1FB R1 rows_left
 param kanji_text_viewer_character_address R13 character   # hands back the address of its rows
 param kanji_text_viewer_draw_number R3 cell text_layer_cells
@@ -7160,6 +7190,7 @@ local test_mode_start 01C35C R0 text_0_to_3
 local test_mode_start 01C365 R0 text_8_to_11
 local test_mode_start 01C35C R1 text_4_to_7
 local test_mode_start 01C365 R1 text_12_to_15
+local test_mode_start 01C36B R12 lcd_place
 local test_mode_menu 01C3A4,01C3A7,01C3AF R0 cell_value   # carried from test_mode_clear_text through the drawing: test_mode_draw_texts writes with its upper byte
 local test_mode_menu 01C3BB,01C3C4,01C3DC R0 heading   # test_mode_flags bit 0, the heading's index; then on to the drawing as its cell value
 local test_mode_menu 01C3AA,01C3BE R10 text
@@ -7226,6 +7257,7 @@ local test_mode_memory_test_words 01CA28 t4 read_low_17_bits
 local test_mode_memory_test_words 01CA2F t4 read_low_14_bits
 local test_mode_memory_test_words 01CA36 t4 read_low_11_bits
 local test_mode_memory_test_words 01CA3D t4 read_low_8_bits
+local test_mode_memory_test_words 01CA0D,01CA16 R12 checked_address   # where the read back goes on, four bytes a step
 param test_mode_memory_test_halfwords R0 size       # the bytes to test (its low half cleared for the failed bits it hands back: failures)
 param test_mode_memory_test_halfwords R10 memory_start
 local test_mode_memory_test_halfwords 01CA62 R1 halfword_count
@@ -7242,6 +7274,7 @@ local test_mode_memory_test_halfwords 01CACA t4 read_low_13_bits
 local test_mode_memory_test_halfwords 01CAD1 t4 read_low_10_bits
 local test_mode_memory_test_halfwords 01CAD8 t4 read_low_7_bits
 local test_mode_memory_test_halfwords 01CA6B,01CABA R0 failures
+local test_mode_memory_test_halfwords 01CAA9,01CAB2 R12 checked_address   # where the read back goes on, two bytes a step
 # ======== locals (batch L6) ========
 # The test mode's text helpers, whose registers the pages pass on from one call to the next: R0 the
 # character (a text cell's contents: the colour in its high byte, the character in its low byte; the colour
@@ -7331,6 +7364,7 @@ local test_mode_memory_test_nibbles 01CC49 t3 checked_address_low_9
 local test_mode_memory_test_nibbles 01CC53 t3 checked_address_low_7
 local test_mode_memory_test_nibbles 01CC5D t3 checked_address_low_5
 local test_mode_memory_test_nibbles 01CB9D,01CC17 R0 wrong_bits
+local test_mode_memory_test_nibbles 01CC06,01CC0F R12 checked_address   # where the read back goes on, two bytes a step
 local test_mode_memory_test_blink 01CC80,01CC91 R26 character   # NOW TESTING's character in palette 66, xored into its cell
 local test_mode_memory_test_blink 01CC94 t2 cell
 # The volume adjustment
@@ -7905,6 +7939,7 @@ field seat_inputs 01 wheel u8             # the wheel (analog_inputs inverted), 
 field seat_inputs 02 gas u8
 field seat_inputs 03 brake u8
 local queue_screen_inputs 000C22 R11 seat_record seat_inputs   # on ISDN: the race_copy's link_buttons ("movea.b 2C[20[R10]], R11")
+param queue_screen_inputs R12 io_chip
 # The cabinet's LCD
 local lcd_update 018A5B R11 lcd_scroll text_characters   # screen lcd_scroll: the text it scrolls in, a character every 5 frames
 # ======== the board's registers batch M1's files print as numbers (I/O chips at C00000 and C80000, sound RAM, link board) ========
@@ -8199,16 +8234,24 @@ local network_check_toggle_memory_text 00D732,00D741 R27 next_cell text_layer_ce
 local draw_object_smoothed 00F160,00F1C3,00F1C6,00F1C9,00F1CF R27 sprite_place
 local draw_object_smoothed 00F15C,00F189,00F18C,00F21C,00F308 R28 previous_place
 local draw_object_smoothed 00F227,00F2FF R27 entry_word     # the halfword that goes into the sprite entry and its copy: the piece's attributes, then the palette
+param draw_object_smoothed R12 last_frame
+param draw_object_smoothed R14 last_size_step
 local road_row_draw 00F625,00F8CD,00F8D7 R27 sprite_place
 local road_row_draw 00F8F0,00F8F6,00F8FC R27 sprite_place sprite_place_words   # the blank places after the last item, a word at a time
 local road_row_draw 00F61E,00F635,00F644,00F647,00F8D2,00F8DA R28 previous_sprites sprite_words   # the sprite list (in the sprite RAM, or the one being put together in the work RAM), or 100000 in the program ROM when there is none to step from (board() reads those as the bus does)
+param road_row_draw R12 last_piece
+param road_row_draw R14 step_height
 local road_row_pair_draw 00F973,00FC7E,00FC88 R27 sprite_place
 local road_row_pair_draw 00FCA1,00FCA7,00FCAD R27 sprite_place sprite_place_words
 local road_row_pair_draw 00F96C,00F983,00F992,00F995,00FC83,00FC8B R28 previous_sprites sprite_words
+param road_row_pair_draw R12 last_piece
+param road_row_pair_draw R14 step_height
 local player_car_project_road 01015F,0101A1,0101CE,0101DC,0101FB R27 segment_y
 local player_car_project_road 010166,010185,010202 R28 segment_depth
 local player_car_project_road 01023D R27 crest_y
 local player_car_project_road 010240 R28 crest_layer
+param player_car_project_road R12 matrix_yx
+param player_car_project_road R14 matrix_yz
 local start_object 011D4A R27 free_index                 # the search of the slots' bytes: the first free one's index (7C: none), and its byte
 local start_object 011D4A R28 free_flag object_slot_flags
 local reserve_object_slot 011DF2 R27 free_index
@@ -8336,6 +8379,8 @@ elements sprite_place_words u32 ram
 # (014072 "mov.h 2[R26], R27", 014076 "movz.hw 4[R26], R26")
 field sprite_frame 02 piece_words u16[]
 local fork_branch_sprite 01406E R26 frames sprite_frame   # "mov.w 4[R26], R26": the first frame of animation 74
+param fork_branch_sprite R12 size_and_attributes
+param fork_branch_sprite R14 width_bits
 # An object list (object_area list, next_list: 200200 and 200300, the two lists of screen 1), its entries after the
 # count a halfword each, the low half of an object's address, 0 at the end: run_objects 011CE4 "mov.h [R22+], R20"
 elements object_links u16 ram
@@ -8478,6 +8523,7 @@ local player_car_build_hit_boxes 012238,01225D R10 racer_list race_order_players
 # writes a box from its record on (R11 two bytes in), player_car_build_hit_boxes the player before it
 local player_car_build_hit_boxes 01225A,012291 R11 hit_box car_hit_box   # the first box ("mov.w R0, [R11+]" 01225A: past hit_box_count), then the next one player_car_write_hit_box hands back
 local player_car_write_hit_box 0122BC R19 box_size item_hit_box   # car_hit_box_sizes by the model ("movea.w 126BC[PC](R2), R19"), read a bound at a time ("add.h [R19+], R15" 0122CA-0122DC)
+param player_car_write_hit_box R12 racer_copy
 # The race's display: the texts objects keep for draw_text_at, and the checkpoint counts
 elements object_text_characters u8 ram        # a text an object keeps for draw_text_at (lap_timer, goal, checkpoint_board's rows), a character each: time_to_text writes it from its end back ("mov.b R1, [-R10]"), closed by 0
 elements checkpoint_counts u8 ram             # a player's count of the checkpoints passed (screen checkpoints_passed + player: checkpoint_board checkpoint_count)
@@ -8519,9 +8565,13 @@ field road_segment 14 width_code_and_event u16   # the width code (low byte) and
 # The system's files (test_mode.c, sound.c, main.c, interrupts.c, coins.c, lcd.c) and the video's (video.c,
 # palettes.c, unpack.c): what their pointers reach, R12 and R20 typed where the code sets them.
 # The test mode: the text layer's cells (text_layer_cells) the pages draw through R12, a cell at a time
-local test_mode_memory_test_draw 01C94D,01C96B R12 r12 text_layer_cells   # 31F000, then each chip's cell ("mov.h [R11+], R12": memory_test_result_cells), four cells of its result ("mov.h R0, [R12+]" 01C971-01C983)
-local test_mode_coin_assignments_draw 01DDD5,01DE1E R12 r12 text_layer_cells   # 31F522, the first line's cell, then the next line's (80 bytes on, 01DE1E); the text after the lines a cell at a time ("mov.h R0, [R12+]" 01DE4B)
-local test_mode_bookkeeping_draw_histogram 01E956 R12 r12 text_layer_cells   # the record's time, a digit at a time: "add.w [R13+], R12" moves to the next digit's cell by time_digit_step cell_step (2, 4 or 6: whole cells)
+local test_mode_memory_test_draw 01C94D,01C96B R12 text_place text_layer_cells   # 31F000, then each chip's cell ("mov.h [R11+], R12": memory_test_result_cells), four cells of its result ("mov.h R0, [R12+]" 01C971-01C983)
+param test_mode_memory_test_draw R12 text_place
+local test_mode_coin_assignments_draw 01DDD5,01DE1E R12 line_cell text_layer_cells   # 31F522, the first line's cell, then the next line's (80 bytes on, 01DE1E); the text after the lines a cell at a time ("mov.h R0, [R12+]" 01DE4B)
+param test_mode_coin_assignments_draw R12 line_cell
+local test_mode_bookkeeping_draw_histogram 01E956 R12 cell text_layer_cells   # the record's time, a digit at a time: "add.w [R13+], R12" moves to the next digit's cell by time_digit_step cell_step (2, 4 or 6: whole cells)
+param test_mode_bookkeeping_draw_histogram R12 cell
+param test_mode_bookkeeping_draw_histogram R0 last_character
 # The memory test's walk of the sound RAM (test_mode_memory_test_nibbles takes the video RAM and the sprite RAM, two
 # memories; test_mode_memory_test_words the work RAM, but its read of a wrong word back, -4[R12] after the last one,
 # would be element -1 of 220000, which ram() takes as 200000: both stay untyped)
@@ -8531,12 +8581,17 @@ local test_mode_memory_test_bytes 01CB03,01CB3F R12 tested_address tested_sound_
 # the controls' positions (test_mode_analog_inputs, 20E710), a byte at a time through R12
 local test_mode_volume_adjustment_draw 01CEEF R12 calibration analog_calibration_bytes   # "movea.b 638[R24], R12": each control's range ("movz.bw [R12+], R0", "movz.bw [R12+], R1" 01CEF7-01CF2B)
 local test_mode_volume_adjustment_draw 01CF53 R12 analog_input analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01CF5B)
+param test_mode_volume_adjustment_draw R12 last_analog_input
 local test_mode_input_test_draw 01D165 R12 analog_input analog_positions   # "movea.b 710[R24], R12": each control's position ("movz.bw [R12+], R0" 01D177)
 local test_mode_input_test_draw 01D1C4,01D1D2,01D209,01D215 R12 port_a io   # monitor A's I/O chip (C00000), then the port of the switch in its low byte (input_test_items), 8 (port E) and A (port F)
-local test_mode_output_test_draw 01D4AC R12 r12 output_bits   # "add.w R24, R12": the output's byte in the game's variables (port_d_outputs, port_g_outputs), its bit tested ("test1 R0, [R12]" 01D4B2)
+param test_mode_input_test_draw R12 last_port
+param test_mode_input_test_draw R14 last_bar_cells
+local test_mode_output_test_draw 01D4AC R12 output_bits output_bits   # "add.w R24, R12": the output's byte in the game's variables (port_d_outputs, port_g_outputs), its bit tested ("test1 R0, [R12]" 01D4B2)
 # The game assignments: the time difficulty a byte a stage, and the settings' backup copy 3C bytes on
 elements time_difficulty_seconds u8 ram     # the seconds each stage's time gets, a byte each (time_difficulty, 20E632 on: PRE-STAGE, STAGE 1-4, FINAL STAGE), which test_mode_game_assignments_draw walks ("movz.bw [R12+], R0" 01DAD2)
-local test_mode_game_assignments_draw 01DAC8 R12 r12 time_difficulty_seconds   # "movea.b 32[R20], R12": time_difficulty
+local test_mode_game_assignments_draw 01DAC8 R12 difficulty_seconds time_difficulty_seconds   # "movea.b 32[R20], R12": time_difficulty
+param test_mode_game_assignments_draw R12 difficulty_seconds
+param test_mode_game_assignments_draw R0 character
 struct backed_up_setting 3D          # a setting (a byte of the settings in settings_magic's page, 20E600) and its copy in the backup 3C bytes on (from backup_settings_checksum, the copy load_settings keeps): the pages' EXIT compares each setting of test_mode_setting_places with its copy ("cmp.b [R20], 3C[R20]")
 field backed_up_setting 00 value u8
 field backed_up_setting 3C backup u8
@@ -8562,12 +8617,13 @@ local test_mode_bookkeeping_draw_totals 01E740 R20 current_object bookkeeping_bl
 # The coins: the port D outputs a coin meter's bit is in (update_coins passes them in R12) and the seats' credits
 # in the bookkeeping (write_bookkeeping_credits writes four halfwords from R12)
 local update_coins 011190,0111A0,0111B6,0111C6 R12 r12 port_output_bits   # "movea.b 92[R24], R12", "movea.b 93[R24], R12": port_d_outputs for seat 1's meters, port_d_outputs[1] for seat 2's (pulse_coin_meter "or.b R0, [R12]", "and.b R0, [R12]")
-local pulse_coin_meter 0111FF,01120C R12 r12 bookkeeping_halfwords   # 701F74 (BOOKKEEPING_SEAT_1_CREDITS) and 701FF0 in the backup: write_bookkeeping_credits "mov.h A0[R24], [R12+]" 011213-011225
+local pulse_coin_meter 0111FF,01120C R12 meter_bits bookkeeping_halfwords   # 701F74 (BOOKKEEPING_SEAT_1_CREDITS) and 701FF0 in the backup: write_bookkeeping_credits "mov.h A0[R24], [R12+]" 011213-011225
+param pulse_coin_meter R12 meter_bits
 # The course: init_screen adds up each road's lengths walking its stream of 6-byte entries (stage_courses), R12 the entry
 struct course_entry 6 rom            # an entry of a course's stream (car course): a section's length, or a command when negative (FFFF goes on at the address after it; FFFE a fork and FFFA end the road; FFFC, a stage's command, is 4 bytes long)
 field course_entry 00 length u16                 # init_screen "movz.hw [R12], R0" 013D7B, then "add.w #6, R12"
 field course_entry 02 jump u32 course_entry      # FFFF's: where the course goes on ("mov.w [-R12], R12" 013DAC)
-local init_screen 013D6F,013D7E,013DB1 R12 r12 course_entry   # the road's first entry (stage_courses, "mov.w [R10+], R12"), the next one ("add.w #6, R12"), and the one after a stage's 4-byte command ("sub.w #2, R12" 013DB1)
+local init_screen 013D6F,013D7E,013DAC,013DB1 R12 course_entry course_entry   # the road's first entry (stage_courses, "mov.w [R10+], R12"), the next one ("add.w #6, R12"), where an FFFF entry goes on ("mov.w [-R12], R12" 013DAC), and the one after a stage's 4-byte command ("sub.w #2, R12" 013DB1)
 # The unused unpack_list carries its list's next entry in R12 across unpack
 local unpack_list 010F6C R12 r12 packed_block_entry   # "xch.w R10, R12": the next entry (8 bytes on)
 # ======== memory reached through pointers (batch P2) ========
@@ -8593,27 +8649,31 @@ field course_record_entry 00 model u8      # the car's model (00DF33 "mov.b 12[R
 field course_record_entry 01 name u8       # the name's first letter (00DF39 "mov.b 13[R11], 1[R12]": race record_name)
 field course_record_entry 02 name_rest u16 # its other two (00DF3F "mov.h 14[R11], 2[R12]": race record_name_rest)
 field course_record_entry 04 time u16      # in hundredths (00DF29 "cmp.h R1, 4[R12]": the race's finish_time at or under it replaces it)
-local course_records_update 00DF23 R12 r12 course_record_entry
+local course_records_update 00DF23 R12 record_entry course_record_entry
+param course_records_update R12 record_entry
 # The view the car hands on (player_car_publish, clear_published_car: R12 = screen + 600 + 20 * view_ring_slot)
-local player_car_publish 00755F R12 r12 view    # ISDN: the first view ("movea.b 600[R25], R12")
-local player_car_publish 007584 R12 r12 view    # the next of the ring ("movea.b 600[R25](R0), R12")
-local clear_published_car 007696 R12 r12 view
+local player_car_publish 00755F R12 view view    # ISDN: the first view ("movea.b 600[R25], R12")
+local player_car_publish 007584 R12 view view    # the next of the ring ("movea.b 600[R25](R0), R12")
+local clear_published_car 007696 R12 view view
 field view 14 segment_remaining u16      # the rest of the car's segment (car segment_remaining): player_car_publish 0075DF "mov.h 3A[R23], 14[R12]", clear_published_car clears it; nothing reads it back
 # The race cars' hit boxes: each racer's race_copy record (player_car_build_hit_boxes 01227B "movea.b 1C00[R24](R1),
 # R12": 20FC00 + 80 * its player), and the screen's list of boxes from 514 (player_car_check_car_hits 01259C "mov.w
 # [R14+], R5" past hit_box_count, then a box of 18 bytes at a time: [R14+] through its fields, the rest skipped)
-local player_car_build_hit_boxes 01227B R12 r12 race
+local player_car_build_hit_boxes 01227B R12 racer_copy race
 local player_car_check_car_hits 01259C R14 r14 car_hit_box
+local player_car_check_car_hits 012577,01259C,0125A4,0125AC,0125B6,0125B9,0125D6,0125D9,0125DC,0125DF,01260E,01261A,012622 R14 other_hit_box   # the screen's hit boxes (510), the other cars'
 # The next segment of the ring ((segment + 20) & AFFF in the page, R12): player_car_drive works out the length of
 # the car's segment from the two headings, player_car_world_position (which gets it from player_car_drive or
 # player_car_place_on_road) the height and the heading between them, player_car_place_view the view's ("or.h #2000,
 # R12; and.h #AFFF, R12" after the view's shift) and, twelve segments on (+180), where the view looks
-local player_car_drive 00A41A R12 r12 road_segment
-local player_car_drive 00A4C0 R12 r12 road_segment   # ISDN: the race_copy's segment's next
-local player_car_place_on_road 0077CE R12 r12 road_segment
+local player_car_drive 00A41A R12 next_segment road_segment
+local player_car_drive 00A4C0 R12 next_segment road_segment   # ISDN: the race_copy's segment's next
+param player_car_drive R12 next_segment
+local player_car_place_on_road 0077CE R12 next_segment road_segment
 local player_car_place_view 00A696 R12 view_segment road_segment   # after the view's shift (the and.h #AFFF at 00A69B goes into the read of its y)
 local player_car_place_view 00A724 R12 far_segment road_segment   # twelve segments on
 local player_car_place_view 00A754 R12 far_segment road_segment   # twelve segments on from the next
+param player_car_place_view R12 view_segment
 # The race car's object in R12 (race_cars_start 0096B8 "mov.h R21, R12": the page from before, the low half the car's
 # object), which its riders and their gestures keep as their car, and whose player they take (009719, 00973D "mov.b 9[R12], B[R21]")
 local race_cars_start 0096B8 R12 r12 object.race_car
@@ -8628,12 +8688,20 @@ local draw_object_from_road_edge_doubled 00EDA9 R12 r12 projected_segment
 # halfword a line, the depth's tilemap row plus the stripe in r14), written from the bottom line up ("mov.h R0,
 # [-R12]"); the lines above the road's top are cleared two at a time
 elements line_select_pairs u32 board   # two lines' selects at once, as road_surface_lines and road_surface_halfway_lines clear the lines above the road ("test.w [-R12]" 016E51, 016FE2; "mov.w #0, [R12]" 016E4D, 016FDE)
-local road_surface_lines 016D1A,016DC2,016E1A,016E43 R12 r12 line_selects   # "movea.w [5C[R20]](R0), R12" (016D1A): the bottom line's place; "sub.w R9, R12" (016DC2) past skipped lines; "mov.h R0, [-R12]" (016E1A) a line's select; "mov.h #0, [-R12]" (016E43) the line above the road
-local road_surface_lines 016E51 R12 r12 line_select_pairs
-local road_surface_halfway_lines 016E9F,016F4F,016FA7,016FD4 R12 r12 line_selects
-local road_surface_halfway_lines 016FE2 R12 r12 line_select_pairs
-local road_surface_fill_lines 017055,01709C R12 r12 line_selects   # "mov.h R0, [-R12]": a line's select, up from where road_surface_lines left R12
-local road_surface_fill_skipped_lines 0170CE,017102 R12 r12 line_selects   # "mov.w 78[R20], R12" (skipped_select_place), then "mov.h R0, [R12+]" down the skipped lines
+local road_surface_lines 016D1A,016DC2,016E1A,016E43 R12 select_place line_selects   # "movea.w [5C[R20]](R0), R12" (016D1A): the bottom line's place; "sub.w R9, R12" (016DC2) past skipped lines; "mov.h R0, [-R12]" (016E1A) a line's select; "mov.h #0, [-R12]" (016E43) the line above the road
+local road_surface_lines 016E51 R12 select_place line_select_pairs
+param road_surface_lines R12 select_place
+param road_surface_lines R14 stripe
+local road_surface_halfway_lines 016E9F,016F4F,016FA7,016FD4 R12 select_place line_selects
+local road_surface_halfway_lines 016FE2 R12 select_place line_select_pairs
+param road_surface_halfway_lines R12 select_place
+param road_surface_halfway_lines R14 stripe
+local road_surface_fill_lines 017055,01709C R12 select_place line_selects   # "mov.h R0, [-R12]": a line's select, up from where road_surface_lines left R12
+param road_surface_fill_lines R12 select_place
+param road_surface_fill_lines R14 stripe
+local road_surface_fill_skipped_lines 0170CE,017102 R12 select_place line_selects   # "mov.w 78[R20], R12" (skipped_select_place), then "mov.h R0, [R12+]" down the skipped lines
+param road_surface_fill_skipped_lines R12 select_place
+param road_surface_fill_skipped_lines R14 stripe
 # The rider records of the goal scene's car (race_car_rider: goal_actor_driver_start + 90, goal_actor_passenger_start
 # + A0 of the scene's race car), which goal_actor_rider_place reads through R12
 local goal_actor_rider_place entry R12 r12 race_car_rider   # its places by view ("mov.w [R12], R11"), animation (4), palette (6) and frame (A)
@@ -8651,16 +8719,17 @@ field course_record_copy 01 name u8[3]
 field course_record_copy 04 time u16      # in hundredths
 field course_record_copy 00 model_and_name u32   # the model and the name's three letters at once (load_course_records 001D9C "mov.w [R11+], [R12+]" from default_course_records)
 field course_record 00 model_and_name u32        # (load_course_records 001D9C "mov.w [R11+], [R12+]")
-local load_course_records 001D93,001DA0,001DC0 R12 r12 course_record_copy   # "movea.b 300[R24], R12": the first course's; after a record's time ("mov.h [R11+], [R12+]" 001DA0, "mov.h [R10+], [R12+]" 001DC0) the next one's
-local load_course_records 001D9C R12 r12 course_record_copy+4   # "mov.w [R11+], [R12+]": past the model and the name
-local load_course_records 001DB0 R12 r12 course_record_copy+1   # "and.b #7, [R12+]": past the model
-local load_course_records 001DB4 R12 r12 course_record_copy+2
-local load_course_records 001DB8 R12 r12 course_record_copy+3
-local load_course_records 001DBC R12 r12 course_record_copy+4
+local load_course_records 001D93,001DA0,001DC0 R12 record_copy course_record_copy   # "movea.b 300[R24], R12": the first course's; after a record's time ("mov.h [R11+], [R12+]" 001DA0, "mov.h [R10+], [R12+]" 001DC0) the next one's
+local load_course_records 001D9C R12 record_copy course_record_copy+4   # "mov.w [R11+], [R12+]": past the model and the name
+local load_course_records 001DB0 R12 record_copy course_record_copy+1   # "and.b #7, [R12+]": past the model
+local load_course_records 001DB4 R12 record_copy course_record_copy+2
+local load_course_records 001DB8 R12 record_copy course_record_copy+3
+local load_course_records 001DBC R12 record_copy course_record_copy+4
 # The unused kanji text viewer's drawing on the bitmap layer (VIDEO_RAM + 1040 on, 100 bytes a row)
 elements bitmap_layer_words u32 board   # the bitmap layer's pixels in the video RAM, eight 4-bit pixels a word: kanji_text_viewer_draw_quarter writes a character's row at a time ("rvbyt 1A6340(R0), [R12]" 01B1ED)
-local kanji_text_viewer_draw_quarter entry R12 r12 bitmap_layer_words   # the quarter's first row (kanji_text_viewer_draw_character: place, + 4, + 800, + 804)
-local kanji_text_viewer_draw_quarter 01B1F6 R12 r12 bitmap_layer_words   # "movea.b 100[R12], R12": the next row
+local kanji_text_viewer_draw_quarter entry R12 bitmap_place bitmap_layer_words   # the quarter's first row (kanji_text_viewer_draw_character: place, + 4, + 800, + 804)
+local kanji_text_viewer_draw_quarter 01B1F6 R12 bitmap_place bitmap_layer_words   # "movea.b 100[R12], R12": the next row
+param kanji_text_viewer_draw_quarter R12 bitmap_place
 
 # ======== animation numbers by name (the sprite naming) ========
 # The animations (sprite_animations) the functions start by a number, where the number is only that animation in
@@ -8725,3 +8794,10 @@ constant game_over_banner_show 2F4 GAME_OVER_BANNER
 constant route_map_leg_show 306 ROUTE_MAP_LEG
 constant car_name_letter_update 346 CAR_NAME_FONT
 constant welcome_letter_show 346 CAR_NAME_FONT
+local bookkeeping_clear_credits 0113BB R12 bookkeeping_place
+param show_title_on_credit R12 screen_block
+param wheel_effect_1_surface_2_inner R14 surface
+param wheel_effect_1_surface_2_outer R14 surface
+param wheel_effect_2_surface_2_inner R14 surface
+param wheel_effect_2_surface_2_outer R14 surface
+param write_bookkeeping_credits R12 bookkeeping_place

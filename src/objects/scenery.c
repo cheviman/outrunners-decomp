@@ -189,10 +189,10 @@ void scenery_update(void)
 		return;
 	case 1:
 		road_row_crash_check(&along_distance, &next_hit_box);
-		road_row_draw(along_distance, next_hit_box);
+		road_row_draw(along_distance, next_hit_box, &r12, &r14);
 		return;
 	case 2:
-		road_row_draw(0u, 0u);
+		road_row_draw(0u, 0u, &r12, &r14);
 		return;
 	}
 }
@@ -297,7 +297,7 @@ void flashing_scenery_update(void)
 		}
 		OBJECT(current_object)->palette = element;
 		OBJECT(current_object)->flashing_scenery.palette_cycle = palettes;
-		road_row_draw(along_distance, next_hit_box);
+		road_row_draw(along_distance, next_hit_box, &r12, &r14);
 		return;
 	case 2:
 		palettes = OBJECT(current_object)->flashing_scenery.palette_cycle;
@@ -311,7 +311,7 @@ void flashing_scenery_update(void)
 		}
 		OBJECT(current_object)->palette = element;
 		OBJECT(current_object)->flashing_scenery.palette_cycle = palettes;
-		road_row_draw(along_distance, next_hit_box);
+		road_row_draw(along_distance, next_hit_box, &r12, &r14);
 		return;
 	}
 }
@@ -334,7 +334,7 @@ void scenery_pair_update(void)
 	case 2:
 		break;
 	}
-	road_row_pair_draw(along_distance, next_hit_box);
+	road_row_pair_draw(along_distance, next_hit_box, &r12, &r14);
 }
 
 /* Animated scenery high over the road, drawn from the middle of the screen instead of the road's centre
@@ -354,7 +354,7 @@ void overhead_scenery_update(void)
 	case 1:
 	case 2:
 		animation_order = animation_advance(0u);
-		road_row_draw(animation_order, 0u);
+		road_row_draw(animation_order, 0u, &r12, &r14);
 		return;
 	}
 }
@@ -463,11 +463,11 @@ void fork_sign_update(void)
 		road_row_start();
 		return;
 	case 2:
-		road_row_draw(0u, 0u);
+		road_row_draw(0u, 0u, &r12, &r14);
 		return;
 	case 1:
 		fork_sign_hit_check(&along_distance, &next_hit_box);
-		road_row_draw(along_distance, next_hit_box);
+		road_row_draw(along_distance, next_hit_box, &r12, &r14);
 		return;
 	}
 }
@@ -490,7 +490,7 @@ void animated_scenery_update(void)
 		break;
 	}
 	along_distance = animation_advance(along_distance);
-	road_row_draw(along_distance, next_hit_box);
+	road_row_draw(along_distance, next_hit_box, &r12, &r14);
 }
 
 /* The same code as road_row_start, at another address: the first step of animated_scenery and
@@ -551,7 +551,7 @@ void animated_scenery_pair_update(void)
 		break;
 	}
 	along_distance = animation_advance(along_distance);
-	road_row_pair_draw(along_distance, next_hit_box);
+	road_row_pair_draw(along_distance, next_hit_box, &r12, &r14);
 }
 
 /* What walks across the road as the car comes near (the camels of the desert stages). By state: 0 reads
@@ -1696,11 +1696,11 @@ void sounding_scenery_update(void)
 			request_sound(sound);
 		}
 		animation_order = animation_advance(0u);
-		road_row_draw(animation_order, 0u);
+		road_row_draw(animation_order, 0u, &r12, &r14);
 		return;
 	case 3:
 		animation_order = animation_advance(0u);
-		road_row_draw(animation_order, 0u);
+		road_row_draw(animation_order, 0u, &r12, &r14);
 		return;
 	}
 }
@@ -2013,7 +2013,7 @@ void fork_branch_draw(void)
 		last_scale = 0x1FF8u;
 	branch_distance = (uint16_t)(branch_distance << 3);
 	last_x += (uint32_t)((int32_t)(((int32_t)((cosine_table[(uint16_t)(branch_distance + 0x800u)] + 0x4000u) * 0x5186u) >> 14) * last_scale) >> 12) * OBJECT(current_object)->fork_branch.direction;
-	fork_branch_sprite(&height_word, &offset_palette);
+	fork_branch_sprite(&r12, &height_word, &r14, &offset_palette);
 	for (;;)
 	{
 		view_record += 0x10u;
@@ -2111,21 +2111,22 @@ void fork_branch_draw(void)
 /* Builds the sprite words of the branch's road piece for fork_branch_draw: the first frame of animation
    74 (its size and place in the sprite ROM, the size steps at 0x122B74) and the palette of the stage
    being built (fork_branch_stage_palettes by screen built_stage, into sprite_palettes). */
-void fork_branch_sprite(uint32_t *p_height_word, uint32_t *p_offset_palette)
+void fork_branch_sprite(uint32_t *p_size_and_attributes, uint32_t *p_height_word, uint32_t *p_width_bits, uint32_t *p_offset_palette)
 {
 	uint16_t height_word = 0, piece_attributes = 0, rom_offset = 0;
-	uint32_t frames = 0, size_step = 0;
+	uint32_t frames = 0, size_step = 0, width_bits = 0;
 
 	frames = SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0];
 	piece_attributes = SPRITE_FRAME(frames)->piece_words[0];
 	size_step = sprite_size_steps_ADDRESS + SPRITE_FRAME(frames)->piece_words[1] * 4u;
-	r12 = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | piece_attributes;
+	*p_size_and_attributes = ((uint32_t)SPRITE_SIZE_STEP(size_step)->source_size << 16) | piece_attributes;
 	size_step += 2u;
 	rom_offset = SPRITE_SIZE_STEP(size_step - 0x2u)->rom_offset;
 	size_step += 4u;
 	height_word = 1u | SPRITE_SIZE_STEP(size_step - 0x6u)->height_bits;
-	r14 = SPRITE_SIZE_STEP(size_step - 0x6u)->width_bits;
-	r14 = r14 | SCREEN(screen)->sprite_screen_bit;
+	width_bits = SPRITE_SIZE_STEP(size_step - 0x6u)->width_bits;
+	width_bits = width_bits | SCREEN(screen)->sprite_screen_bit;
 	*p_offset_palette = ((uint32_t)SPRITE_PALETTE_WORDS(sprite_palettes[fork_branch_stage_palettes[SCREEN(screen)->built_stage]])[0] << 16) | rom_offset;
 	*p_height_word = (*p_height_word & 0xFFFF0000u) | height_word;
+	*p_width_bits = width_bits;
 }

@@ -15,47 +15,47 @@
    letters, the time in hundredths) from the backup RAM (701F32); a course without one there (its first
    byte negative) gets its default from default_course_records (SGA, 5'00"00); the model is kept to its
    low three bits. */
-void load_course_records(void)
+uint32_t load_course_records(void)
 {
-	uint32_t backup_record = 0, course_record = 0, courses_left = 0;
+	uint32_t backup_record = 0, course_record = 0, courses_left = 0, record_copy = 0;
 	uint32_t model_place = 0;
 
 	courses_left = 0xAu;
 	backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS;
 	course_record = default_course_records_ADDRESS;
-	r12 = course_records_ADDRESS;
+	record_copy = course_records_ADDRESS;
 	for (;;)
 	{
 		if ((int8_t)BACKUP_COURSE_RECORD(backup_record)->model >= 0)
 		{
-			COURSE_RECORD_COPY(r12)->model = BACKUP_COURSE_RECORD(backup_record)->model;
-			model_place = r12;
-			r12++;
+			COURSE_RECORD_COPY(record_copy)->model = BACKUP_COURSE_RECORD(backup_record)->model;
+			model_place = record_copy;
+			record_copy++;
 			COURSE_RECORD_COPY(model_place)->model &= 7u;
 			backup_record++;
-			COURSE_RECORD_COPY(r12 - 0x1u)->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
-			r12++;
+			COURSE_RECORD_COPY(record_copy - 0x1u)->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
+			record_copy++;
 			backup_record++;
-			COURSE_RECORD_COPY(r12 - 0x2u)->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
-			r12++;
+			COURSE_RECORD_COPY(record_copy - 0x2u)->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
+			record_copy++;
 			backup_record++;
-			COURSE_RECORD_COPY(r12 - 0x3u)->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
-			r12++;
+			COURSE_RECORD_COPY(record_copy - 0x3u)->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
+			record_copy++;
 			backup_record++;
-			COURSE_RECORD_COPY(r12 - 0x4u)->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
-			r12 += 2u;
+			COURSE_RECORD_COPY(record_copy - 0x4u)->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
+			record_copy += 2u;
 			course_record += 6u;
 			courses_left--;
 			backup_record += 2u;
 			if (courses_left == 0u)
-				return;
+				return record_copy;
 			continue;
 		}
-		COURSE_RECORD_COPY(r12)->model_and_name = COURSE_RECORD(course_record)->model_and_name;
-		r12 += 4u;
+		COURSE_RECORD_COPY(record_copy)->model_and_name = COURSE_RECORD(course_record)->model_and_name;
+		record_copy += 4u;
 		course_record += 4u;
-		COURSE_RECORD_COPY(r12 - 0x4u)->time = COURSE_RECORD(course_record - 0x4u)->time;
-		r12 += 2u;
+		COURSE_RECORD_COPY(record_copy - 0x4u)->time = COURSE_RECORD(course_record - 0x4u)->time;
+		record_copy += 2u;
 		backup_record += 6u;
 		courses_left--;
 		course_record += 2u;
@@ -63,6 +63,7 @@ void load_course_records(void)
 			continue;
 		break;
 	}
+	return record_copy;
 }
 
 /* The ranking in the attract mode (game mode 5, game_mode_ranking): OutRunner of OutRunners, the record

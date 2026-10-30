@@ -232,9 +232,9 @@ void second_task(uint32_t entry_point)
 			if (test_mode_on != 0u)
 				break;
 			link_receive_records();
-			race_entries_update();
-			race_progress_update();
-			course_records_update();
+			r14 = race_entries_update(r14);
+			race_progress_update(&r12, &r14);
+			r12 = course_records_update(r12);
 			game_frame_count++;
 			screen = SCREEN_1;
 			input_changes = take_screen_inputs();
@@ -303,7 +303,7 @@ void second_task(uint32_t entry_point)
 	{
 		task_swapping = 0u;
 		wait_for_frame();
-		test_mode_start();
+		r12 = test_mode_start();
 		do
 		{
 			wait_for_frame();
@@ -385,9 +385,9 @@ void second_task_frames(void)
 			break;
 		if (second_task_waiting == 0u)
 			link_receive_records();
-		race_entries_update();
-		race_progress_update();
-		course_records_update();
+		r14 = race_entries_update(r14);
+		race_progress_update(&r12, &r14);
+		r12 = course_records_update(r12);
 		screen = SCREEN_2;
 		input_changes = take_screen_inputs();
 		mode = SCREEN(screen)->game_mode;
@@ -436,9 +436,9 @@ void second_task_frames(void)
 			if (test_mode_on != 0u)
 				return;
 			link_receive_records();
-			race_entries_update();
-			race_progress_update();
-			course_records_update();
+			r14 = race_entries_update(r14);
+			race_progress_update(&r12, &r14);
+			r12 = course_records_update(r12);
 			game_frame_count++;
 			screen = SCREEN_1;
 			input_changes = take_screen_inputs();
@@ -622,11 +622,11 @@ void initialise_board(uint32_t checksum)
 	init_coins();
 	start_sound_program();
 	tile_page_list = boot_tile_pages_5d_ADDRESS;
-	unpack_tile_pages(tile_page_list);
+	unpack_tile_pages(tile_page_list, r12);
 	tile_page_list = boot_tile_pages_5e_ADDRESS;
-	unpack_tile_pages(tile_page_list);
+	unpack_tile_pages(tile_page_list, r12);
 	tile_page_list = boot_tile_pages_29_to_4e_ADDRESS;
-	unpack_tile_pages(tile_page_list);
+	unpack_tile_pages(tile_page_list, r12);
 	read_switches_and_analog();
 	read_switches_and_analog();
 	take_screen_inputs();

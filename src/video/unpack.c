@@ -304,7 +304,7 @@ void unpack_list(uint32_t block_list)
 /* Unpacks a list of tilemap pages into video RAM at once (unpack): each 32-bit entry a page number in
    its top byte (the page at 300000 + 400 * page) and the address of its packed data below, closed by a
    negative entry; the list format of queue_tile_pages. */
-void unpack_tile_pages(uint32_t page_list)
+uint32_t unpack_tile_pages(uint32_t page_list, uint32_t list_next)
 {
 	uint32_t destination = 0, entry_word = 0, page_bits = 0, source = 0;
 	uint32_t next_entry = 0;
@@ -317,10 +317,11 @@ void unpack_tile_pages(uint32_t page_list)
 		destination = 0x300000u + (byte_swap32(page_bits) << 8) * 4u;
 		next_entry = page_list + 4u;
 		source = entry_word ^ page_bits;
-		r12 = next_entry;
+		list_next = next_entry;
 		unpack(source, destination);
-		page_list = r12;
+		page_list = list_next;
 	}
+	return list_next;
 }
 
 /* Unused: queues the entries of an unpack_list list (the packed data's address, where to unpack it;

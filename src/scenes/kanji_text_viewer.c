@@ -151,7 +151,7 @@ void kanji_text_viewer_draw_line(uint32_t place, uint32_t *p_text_ended, uint32_
 			return;
 		}
 		character = kanji_text_viewer_character_address(character);
-		kanji_text_viewer_draw_character(place, character);
+		r12 = kanji_text_viewer_draw_character(place, character);
 		place += 8u;
 	}
 	*p_text_ended = 0xFFFFFFFFu;
@@ -160,34 +160,36 @@ void kanji_text_viewer_draw_line(uint32_t place, uint32_t *p_text_ended, uint32_
 /* Only unused code reaches it (kanji_text_viewer_draw_line): draws a 16x16 character on the bitmap layer
    at R11 from its 32 bytes at R13: four 8x8 quarters (kanji_text_viewer_draw_quarter), upper left, upper
    right, lower left, lower right. */
-void kanji_text_viewer_draw_character(uint32_t place, uint32_t rows)
+uint32_t kanji_text_viewer_draw_character(uint32_t place, uint32_t rows)
 {
-	r12 = place;
-	rows = kanji_text_viewer_draw_quarter(rows);
-	r12 = place + 4u;
-	rows = kanji_text_viewer_draw_quarter(rows);
-	r12 = place + 0x800u;
-	rows = kanji_text_viewer_draw_quarter(rows);
-	r12 = place + 0x804u;
-	kanji_text_viewer_draw_quarter(rows);
+	uint32_t bitmap_place = 0;
+
+	bitmap_place = place;
+	kanji_text_viewer_draw_quarter(&bitmap_place, &rows);
+	bitmap_place = place + 4u;
+	kanji_text_viewer_draw_quarter(&bitmap_place, &rows);
+	bitmap_place = place + 0x800u;
+	kanji_text_viewer_draw_quarter(&bitmap_place, &rows);
+	bitmap_place = place + 0x804u;
+	kanji_text_viewer_draw_quarter(&bitmap_place, &rows);
+	return bitmap_place;
 }
 
 /* Only unused code reaches it (kanji_text_viewer_draw_character): draws eight rows of eight one-bit
    pixels (a byte each, from R13) at R12 on the bitmap layer, 100 bytes a row, each byte spread by the
    table at 1A6340 into eight 4-bit pixels of pen 1. */
-uint32_t kanji_text_viewer_draw_quarter(uint32_t rows)
+void kanji_text_viewer_draw_quarter(uint32_t *p_bitmap_place, uint32_t *p_rows)
 {
 	uint32_t rows_left = 0;
 
 	rows_left = 8u;
 	do
 	{
-		BITMAP_LAYER_WORDS(r12)[0] = byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(rows)[0]]);
-		r12 += 0x100u;
+		BITMAP_LAYER_WORDS(*p_bitmap_place)[0] = byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(*p_rows)[0]]);
+		*p_bitmap_place += 0x100u;
 		rows_left--;
-		rows++;
+		(*p_rows)++;
 	} while (rows_left != 0u);
-	return rows;
 }
 
 /* Only unused code reaches it (kanji_text_viewer_draw_line): the address of character R13 of the kanji

@@ -294,11 +294,11 @@ void player_car_build_segment(uint16_t ring_mask)
    from the view's pitch and yaw), then each segment from the window's start out to the view's distance
    turned into the view and scaled by its depth into the screen's list at screen + 3000 (scale, width, x,
    y, the segment's byte), segments behind the view or too far left out. */
-void player_car_project_road(void)
+void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 {
 	uint32_t carry = 0;
 	uint16_t crest_layer = 0, crest_y = 0, previous_y = 0, screen_top_y = 0;
-	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yy = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segment_depth = 0, segment_y = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
+	uint32_t car = 0, draw_distance = 0, fixed_point_shift = 0, matrix_xx = 0, matrix_xz = 0, matrix_yx = 0, matrix_yy = 0, matrix_yz = 0, matrix_zx = 0, matrix_zy = 0, matrix_zz = 0, near_limit = 0, previous_projected = 0, projected_segment = 0, projection_pattern = 0, ring_segment = 0, scale = 0, segment_depth = 0, segment_y = 0, segments_left = 0, to_view_x = 0, to_view_y = 0, to_view_z = 0, unrotated_z = 0, view_pitch = 0, view_yaw = 0, x = 0;
 	uint8_t projected = 0;
 	uint16_t last_y = 0;
 	uint32_t copied_x_y = 0, copied_road_bytes = 0, width_code_halfword = 0, width_code_halfword_2 = 0;
@@ -311,12 +311,12 @@ void player_car_project_road(void)
 	matrix_xx = cosine_table[view_yaw];
 	fixed_point_shift = 0xFFFFFFF2u;
 	matrix_xz = 0u - matrix_zx;
-	r12 = matrix_zy * matrix_zx;
-	carry = (r12 >> 13) & 1u;
-	r12 = ((int32_t)r12 >> 14) + carry;
-	r14 = matrix_zy * matrix_xx;
-	carry = (r14 >> 13) & 1u;
-	r14 = ((int32_t)r14 >> 14) + carry;
+	matrix_yx = matrix_zy * matrix_zx;
+	carry = (matrix_yx >> 13) & 1u;
+	matrix_yx = ((int32_t)matrix_yx >> 14) + carry;
+	matrix_yz = matrix_zy * matrix_xx;
+	carry = (matrix_yz >> 13) & 1u;
+	matrix_yz = ((int32_t)matrix_yz >> 14) + carry;
 	matrix_zx = matrix_zx * matrix_yy;
 	carry = (matrix_zx >> 13) & 1u;
 	matrix_zx = ((int32_t)matrix_zx >> 14) + carry;
@@ -331,11 +331,11 @@ void player_car_project_road(void)
 	car += 4u;
 	CAR(car - 0xE4u)->view_matrix_xz = matrix_xz;
 	car += 4u;
-	CAR(car - 0xE8u)->view_matrix_yx = r12;
+	CAR(car - 0xE8u)->view_matrix_yx = matrix_yx;
 	car += 4u;
 	CAR(car - 0xECu)->view_matrix_yy = matrix_yy;
 	car += 4u;
-	CAR(car - 0xF0u)->view_matrix_yz = r14;
+	CAR(car - 0xF0u)->view_matrix_yz = matrix_yz;
 	car += 4u;
 	CAR(car - 0xF4u)->view_matrix_zx = matrix_zx;
 	car += 4u;
@@ -377,34 +377,30 @@ void player_car_project_road(void)
 			PROJECTED_SEGMENT(projected_segment)->width_code = (uint8_t)width_code_halfword;
 			PROJECTED_SEGMENT(projected_segment)->road_event = (uint8_t)(width_code_halfword >> 8u);
 			segments_left--;
-			if (segments_left == 0u)
-			{
-				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
-				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
-				return;
-			}
-			continue;
+			if (segments_left != 0u)
+				continue;
+			PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
+			note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
+			break;
 		}
 		x = to_view_x + ROAD_SEGMENT(ring_segment)->x;
 		segment_y = to_view_y + ROAD_SEGMENT(ring_segment)->y;
 		segment_depth = to_view_z + ROAD_SEGMENT(ring_segment)->z;
 		unrotated_z = segment_depth;
 		segment_depth = (int32_t)(segment_depth * matrix_zz + x * matrix_zx + segment_y * matrix_zy + fixed_point_shift) >> 14;
-		segment_y = (int32_t)(segment_y * matrix_yy + x * r12 + unrotated_z * r14 + fixed_point_shift) >> 14;
+		segment_y = (int32_t)(segment_y * matrix_yy + x * matrix_yx + unrotated_z * matrix_yz + fixed_point_shift) >> 14;
 		x = (int32_t)(x * matrix_xx + unrotated_z * matrix_xz + fixed_point_shift) >> 14;
 		if ((int32_t)draw_distance <= (int32_t)segment_depth || (int32_t)segment_depth <= (int32_t)near_limit)
 		{
 			PROJECTED_SEGMENT(projected_segment)->scale = 0u;
 			segments_left--;
-			if (segments_left == 0u)
-			{
-				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
-				crest_y = (uint16_t)previous_y;
-				crest_layer = 3u;
-				note_road_crest(crest_y, crest_layer);
-				return;
-			}
-			continue;
+			if (segments_left != 0u)
+				continue;
+			PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
+			crest_y = (uint16_t)previous_y;
+			crest_layer = 3u;
+			note_road_crest(crest_y, crest_layer);
+			break;
 		}
 		scale = perspective_scales[segment_depth];
 		PROJECTED_SEGMENT(projected_segment)->scale = scale;
@@ -431,20 +427,22 @@ void player_car_project_road(void)
 		{
 			note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 			segments_left--;
-			if (segments_left == 0u)
-			{
-				PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
-				note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
-				return;
-			}
-			continue;
+			if (segments_left != 0u)
+				continue;
+			PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
+			note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
+			break;
 		}
 		segments_left--;
 		if (segments_left == 0u)
+		{
+			PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
+			note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
 			break;
+		}
 	}
-	PROJECTED_SEGMENT(projected_segment)[1].scale = 0u;
-	note_road_crest((uint16_t)segment_y, (uint16_t)segment_depth);
+	*p_matrix_yx = matrix_yx;
+	*p_matrix_yz = matrix_yz;
 }
 
 /* Notes a crest of the road while player_car_project_road projects it, for crest_clip_update: when it is

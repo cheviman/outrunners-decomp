@@ -285,7 +285,7 @@ void game_mode_ranking(void)
 	reset_tile_layers();
 	clear_sprite_group_count();
 	clear_text_layer();
-	clear_published_car();
+	r12 = clear_published_car();
 	colour_block = ranking_palette;
 	queue_palette(colour_block);
 	SCREEN(screen)->mode_step++;

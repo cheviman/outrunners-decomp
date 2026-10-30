@@ -8,7 +8,7 @@ unk_fields 0
 register_names 0
 temp_names 0
 stack_names 0
-context_registers 720
+context_registers 347
 var_fields 0
 mem_access 21
 wide_access 204
@@ -21,12 +21,12 @@ rom_reads 0
 rom_table_reads 0
 board_replaced 1
 functions 762
-lines 39578
-casts 2694
-partial_writes 140
+lines 39629
+casts 2698
+partial_writes 132
 mixed_partial_writes 0
 board_registers 377
-clean_functions 776
-clean_lines 963
+clean_functions 788
+clean_lines 977
 faithful_functions 1000
 faithful_lines 1000

@@ -22,7 +22,7 @@
 uint32_t init_screen(void)
 {
 	uint16_t course_length = 0, section_length = 0;
-	uint32_t command_routine = 0, courses_left = 0, index = 0, length = 0, length_place = 0, screen_hardware = 0, stage_course = 0;
+	uint32_t command_routine = 0, course_entry = 0, courses_left = 0, index = 0, length = 0, length_place = 0, screen_hardware = 0, stage_course = 0;
 	uint32_t command = 0;
 
 	index = screen >> 16;
@@ -45,15 +45,15 @@ uint32_t init_screen(void)
 	courses_left = 0x1Fu;
 	do
 	{
-		r12 = COURSE_POINTER(stage_course)[0];
+		course_entry = COURSE_POINTER(stage_course)[0];
 		section_length = 0u;
 		course_length = 0u;
 		stage_course += 4u;
 		course_length += section_length;
 		for (;;)
 		{
-			length = COURSE_ENTRY(r12)->length;
-			r12 += 6u;
+			length = COURSE_ENTRY(course_entry)->length;
+			course_entry += 6u;
 			if ((int16_t)length >= 0)
 			{
 				course_length += length;
@@ -67,10 +67,11 @@ uint32_t init_screen(void)
 			case 4:
 				continue;
 			case 0:
-				r12 = COURSE_ENTRY(r12)[-1].jump;
+				course_entry -= 4u;
+				course_entry = (COURSE_ENTRY(course_entry)->length | ((uint32_t)(COURSE_ENTRY(course_entry)->jump & 0xFFFFu) << 16u));
 				continue;
 			case 3:
-				r12 -= 2u;
+				course_entry -= 2u;
 				continue;
 			case 1:
 			case 5:
