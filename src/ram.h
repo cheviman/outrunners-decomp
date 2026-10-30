@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -12,8 +12,9 @@
 #ifndef ORUNNERS_RAM_H
 #define ORUNNERS_RAM_H
 
-/* the game's variables in work RAM; SCREEN_1 and SCREEN_2 are the blocks of the two screens,
-   which the code reaches through screen (R25 of the task that runs each) */
+/* the game's variables in work RAM, by their addresses (the fields of struct game, at the end);
+   SCREEN_1 and SCREEN_2 are the blocks of the two screens, which the code reaches through screen
+   (R25 of the task that runs each) */
 #define GAME_VARIABLES 0x20E000u
 #define SCREEN_1 0x208000u
 #define RACE_1 0x20FB00u
@@ -22,287 +23,146 @@
 #define RACE_COPY_2 0x20FC80u
 #define SCREEN_2 0x218000u
 #define waiting_task_frame_ADDRESS 0x20E000u
-#define waiting_task_frame RAM32(waiting_task_frame_ADDRESS)
 #define waiting_task_stack_ADDRESS 0x20E004u
-#define waiting_task_stack RAM32(waiting_task_stack_ADDRESS)
 #define vblanks_since_start_ADDRESS 0x20E00Au
-#define vblanks_since_start RAM16(vblanks_since_start_ADDRESS)
 #define debug_timer_rounds_ADDRESS 0x20E00Eu
-#define debug_timer_rounds RAM8(debug_timer_rounds_ADDRESS)
 #define sprite_list_buffers_ADDRESS 0x20E020u
-#define sprite_list_buffers RAM16(sprite_list_buffers_ADDRESS)
 #define sprite_lists_set_up_ADDRESS 0x20E022u
-#define sprite_lists_set_up RAM8(sprite_lists_set_up_ADDRESS)
 #define frame_ready_ADDRESS 0x20E023u
-#define frame_ready RAM8(frame_ready_ADDRESS)
 #define single_task_ADDRESS 0x20E024u
-#define single_task RAM8(single_task_ADDRESS)
 #define game_frame_count_ADDRESS 0x20E026u
-#define game_frame_count RAM8(game_frame_count_ADDRESS)
 #define send_video_registers_ADDRESS 0x20E027u
-#define send_video_registers RAM8(send_video_registers_ADDRESS)
 #define task_swapping_ADDRESS 0x20E028u
-#define task_swapping RAM8(task_swapping_ADDRESS)
 #define second_task_waiting_ADDRESS 0x20E02Bu
-#define second_task_waiting RAM8(second_task_waiting_ADDRESS)
 #define timer_interrupts_left_ADDRESS 0x20E02Cu
-#define timer_interrupts_left RAM8(timer_interrupts_left_ADDRESS)
 #define vblank_counter_ADDRESS 0x20E02Du
-#define vblank_counter RAM8(vblank_counter_ADDRESS)
 #define cleared_on_race_over_ADDRESS 0x20E02Eu
-#define cleared_on_race_over RAM8(cleared_on_race_over_ADDRESS)
 #define car_numbers_ADDRESS 0x20E030u
-#define car_numbers ((uint8_t *)ram(car_numbers_ADDRESS))
 #define link_wait_frames_start_ADDRESS 0x20E038u
-#define link_wait_frames_start RAM16(link_wait_frames_start_ADDRESS)
 #define total_time_count_ADDRESS 0x20E03Au
-#define total_time_count RAM16(total_time_count_ADDRESS)
 #define machine_count_ADDRESS 0x20E040u
-#define machine_count RAM8(machine_count_ADDRESS)
 #define player_count_ADDRESS 0x20E041u
-#define player_count RAM8(player_count_ADDRESS)
 #define link_off_ADDRESS 0x20E042u
-#define link_off RAM8(link_off_ADDRESS)
 #define link_failed_ADDRESS 0x20E043u
-#define link_failed RAM8(link_failed_ADDRESS)
 #define link_wait_frames_ADDRESS 0x20E046u
-#define link_wait_frames RAM16(link_wait_frames_ADDRESS)
 #define network_check_blink_counter_ADDRESS 0x20E048u
-#define network_check_blink_counter RAM16(network_check_blink_counter_ADDRESS)
 #define isdn_players_this_side_ADDRESS 0x20E04Au
-#define isdn_players_this_side RAM8(isdn_players_this_side_ADDRESS)
 #define isdn_players_other_side_ADDRESS 0x20E04Bu
-#define isdn_players_other_side RAM8(isdn_players_other_side_ADDRESS)
 #define link_wait_count_ADDRESS 0x20E060u
-#define link_wait_count RAM32(link_wait_count_ADDRESS)
 #define coin_meters_ADDRESS 0x20E080u
-#define coin_meters RAM8(coin_meters_ADDRESS)
 #define seat1_coin_sounds_ADDRESS 0x20E08Cu
-#define seat1_coin_sounds RAM8(seat1_coin_sounds_ADDRESS)
 #define seat2_coin_sounds_ADDRESS 0x20E08Du
-#define seat2_coin_sounds RAM8(seat2_coin_sounds_ADDRESS)
 #define seat1_service_sounds_ADDRESS 0x20E08Eu
-#define seat1_service_sounds RAM8(seat1_service_sounds_ADDRESS)
 #define seat2_service_sounds_ADDRESS 0x20E08Fu
-#define seat2_service_sounds RAM8(seat2_service_sounds_ADDRESS)
 #define chute_entry_offset_ADDRESS 0x20E091u
-#define chute_entry_offset RAM8(chute_entry_offset_ADDRESS)
 #define port_d_outputs_ADDRESS 0x20E092u
-#define port_d_outputs ((uint8_t *)ram(port_d_outputs_ADDRESS))
 #define port_g_outputs_ADDRESS 0x20E094u
-#define port_g_outputs ((uint8_t *)ram(port_g_outputs_ADDRESS))
 #define seat1_credits_ADDRESS 0x20E0A0u
-#define seat1_credits RAM8(seat1_credits_ADDRESS)
 #define seat1_coin_units_ADDRESS 0x20E0A1u
-#define seat1_coin_units RAM8(seat1_coin_units_ADDRESS)
 #define seat1_bookkeeping_byte_ADDRESS 0x20E0A4u
-#define seat1_bookkeeping_byte RAM8(seat1_bookkeeping_byte_ADDRESS)
 #define seat2_credits_ADDRESS 0x20E0A8u
-#define seat2_credits RAM8(seat2_credits_ADDRESS)
 #define seat2_coin_units_ADDRESS 0x20E0A9u
-#define seat2_coin_units RAM8(seat2_coin_units_ADDRESS)
 #define seat2_bookkeeping_byte_ADDRESS 0x20E0ACu
-#define seat2_bookkeeping_byte RAM8(seat2_bookkeeping_byte_ADDRESS)
 #define checkpoint_lamp_ADDRESS 0x20E0C0u
-#define checkpoint_lamp ((uint8_t *)ram(checkpoint_lamp_ADDRESS))
 #define checkpoint_lamp_blinks_ADDRESS 0x20E0C1u
-#define checkpoint_lamp_blinks RAM8(checkpoint_lamp_blinks_ADDRESS)
 #define checkpoint_lamp_period_ADDRESS 0x20E0C2u
-#define checkpoint_lamp_period RAM8(checkpoint_lamp_period_ADDRESS)
 #define checkpoint_lamp_timer_ADDRESS 0x20E0C3u
-#define checkpoint_lamp_timer RAM8(checkpoint_lamp_timer_ADDRESS)
 #define checkpoint_lamp_2_ADDRESS 0x20E0C4u
-#define checkpoint_lamp_2 RAM8(checkpoint_lamp_2_ADDRESS)
 #define checkpoint_lamp_2_blinks_ADDRESS 0x20E0C5u
-#define checkpoint_lamp_2_blinks RAM8(checkpoint_lamp_2_blinks_ADDRESS)
 #define checkpoint_lamp_2_period_ADDRESS 0x20E0C6u
-#define checkpoint_lamp_2_period RAM8(checkpoint_lamp_2_period_ADDRESS)
 #define checkpoint_lamp_2_timer_ADDRESS 0x20E0C7u
-#define checkpoint_lamp_2_timer RAM8(checkpoint_lamp_2_timer_ADDRESS)
 #define leader_lamp_ADDRESS 0x20E0C8u
-#define leader_lamp ((uint8_t *)ram(leader_lamp_ADDRESS))
 #define leader_lamp_blinks_ADDRESS 0x20E0C9u
-#define leader_lamp_blinks RAM8(leader_lamp_blinks_ADDRESS)
 #define leader_lamp_period_ADDRESS 0x20E0CAu
-#define leader_lamp_period RAM8(leader_lamp_period_ADDRESS)
 #define leader_lamp_timer_ADDRESS 0x20E0CBu
-#define leader_lamp_timer RAM8(leader_lamp_timer_ADDRESS)
 #define leader_lamp_2_ADDRESS 0x20E0CCu
-#define leader_lamp_2 RAM8(leader_lamp_2_ADDRESS)
 #define leader_lamp_2_blinks_ADDRESS 0x20E0CDu
-#define leader_lamp_2_blinks RAM8(leader_lamp_2_blinks_ADDRESS)
 #define leader_lamp_2_period_ADDRESS 0x20E0CEu
-#define leader_lamp_2_period RAM8(leader_lamp_2_period_ADDRESS)
 #define leader_lamp_2_timer_ADDRESS 0x20E0CFu
-#define leader_lamp_2_timer RAM8(leader_lamp_2_timer_ADDRESS)
 #define wheel_motor_ADDRESS 0x20E0D0u
-#define wheel_motor ((uint8_t *)ram(wheel_motor_ADDRESS))
 #define screen_2_vblanks_ADDRESS 0x20E0FCu
-#define screen_2_vblanks RAM8(screen_2_vblanks_ADDRESS)
 #define screen_2_vblanks_high_ADDRESS 0x20E0FDu
-#define screen_2_vblanks_high RAM8(screen_2_vblanks_high_ADDRESS)
 #define screen_1_vblanks_ADDRESS 0x20E0FEu
-#define screen_1_vblanks RAM8(screen_1_vblanks_ADDRESS)
 #define screen_1_vblanks_high_ADDRESS 0x20E0FFu
-#define screen_1_vblanks_high RAM8(screen_1_vblanks_high_ADDRESS)
 #define switches_ADDRESS 0x20E100u
-#define switches RAM8(switches_ADDRESS)
 #define previous_switches_ADDRESS 0x20E101u
-#define previous_switches RAM8(previous_switches_ADDRESS)
 #define switches_pressed_ADDRESS 0x20E102u
-#define switches_pressed RAM8(switches_pressed_ADDRESS)
 #define switches_released_ADDRESS 0x20E103u
-#define switches_released RAM8(switches_released_ADDRESS)
 #define second_io_chip_port_f_ADDRESS 0x20E104u
-#define second_io_chip_port_f RAM8(second_io_chip_port_f_ADDRESS)
 #define analog_raw_ADDRESS 0x20E110u
-#define analog_raw RAM8(analog_raw_ADDRESS)
 #define analog_inputs_ADDRESS 0x20E116u
-#define analog_inputs RAM8(analog_inputs_ADDRESS)
 #define analog_gas_1_ADDRESS 0x20E117u
-#define analog_gas_1 RAM8(analog_gas_1_ADDRESS)
 #define analog_brake_1_ADDRESS 0x20E118u
-#define analog_brake_1 RAM8(analog_brake_1_ADDRESS)
 #define analog_wheel_2_ADDRESS 0x20E119u
-#define analog_wheel_2 RAM8(analog_wheel_2_ADDRESS)
 #define analog_gas_2_ADDRESS 0x20E11Au
-#define analog_gas_2 RAM8(analog_gas_2_ADDRESS)
 #define analog_brake_2_ADDRESS 0x20E11Bu
-#define analog_brake_2 RAM8(analog_brake_2_ADDRESS)
 #define seat_1_player_ADDRESS 0x20E120u
-#define seat_1_player RAM8(seat_1_player_ADDRESS)
 #define seat_1_buttons_ADDRESS 0x20E121u
-#define seat_1_buttons RAM8(seat_1_buttons_ADDRESS)
 #define seat_1_wheel_ADDRESS 0x20E122u
-#define seat_1_wheel RAM8(seat_1_wheel_ADDRESS)
 #define seat_1_gas_ADDRESS 0x20E123u
-#define seat_1_gas RAM8(seat_1_gas_ADDRESS)
 #define seat_1_brake_ADDRESS 0x20E124u
-#define seat_1_brake RAM8(seat_1_brake_ADDRESS)
 #define seat_2_player_ADDRESS 0x20E125u
-#define seat_2_player RAM8(seat_2_player_ADDRESS)
 #define seat_2_buttons_ADDRESS 0x20E126u
-#define seat_2_buttons RAM8(seat_2_buttons_ADDRESS)
 #define seat_2_wheel_ADDRESS 0x20E127u
-#define seat_2_wheel RAM8(seat_2_wheel_ADDRESS)
 #define seat_2_gas_ADDRESS 0x20E128u
-#define seat_2_gas RAM8(seat_2_gas_ADDRESS)
 #define seat_2_brake_ADDRESS 0x20E129u
-#define seat_2_brake RAM8(seat_2_brake_ADDRESS)
 #define video_registers_ADDRESS 0x20E200u
-#define video_registers ((uint16_t *)ram(video_registers_ADDRESS))
 #define scroll_targets_ADDRESS 0x20E290u
-#define scroll_targets ((uint32_t *)ram(scroll_targets_ADDRESS))
 #define tile_banks_ADDRESS 0x20E2B0u
-#define tile_banks ((uint8_t *)ram(tile_banks_ADDRESS))
 #define course_records_ADDRESS 0x20E300u
-#define course_records ((uint8_t *)ram(course_records_ADDRESS))
 #define course_record_times_ADDRESS 0x20E304u
-#define course_record_times ((uint16_t *)ram(course_record_times_ADDRESS))
 #define lcd_send_buffer_1_ADDRESS 0x20E3C0u
-#define lcd_send_buffer_1 ((uint8_t *)ram(lcd_send_buffer_1_ADDRESS))
 #define lcd_send_buffer_2_ADDRESS 0x20E3D0u
-#define lcd_send_buffer_2 ((uint8_t *)ram(lcd_send_buffer_2_ADDRESS))
 #define lcd_restart_frames_ADDRESS 0x20E3F0u
-#define lcd_restart_frames RAM16(lcd_restart_frames_ADDRESS)
 #define lcd_send_step_ADDRESS 0x20E3F2u
-#define lcd_send_step RAM8(lcd_send_step_ADDRESS)
 #define lcd_busy_ADDRESS 0x20E3F3u
-#define lcd_busy RAM8(lcd_busy_ADDRESS)
 #define lcd_init_step_ADDRESS 0x20E3F4u
-#define lcd_init_step RAM8(lcd_init_step_ADDRESS)
 #define settings_magic_ADDRESS 0x20E600u
-#define settings_magic RAM32(settings_magic_ADDRESS)
 #define settings_signature_ADDRESS 0x20E604u
-#define settings_signature RAM16(settings_signature_ADDRESS)
 #define settings_checksum_ADDRESS 0x20E608u
-#define settings_checksum RAM16(settings_checksum_ADDRESS)
 #define eeprom_write_count_ADDRESS 0x20E60Au
-#define eeprom_write_count RAM16(eeprom_write_count_ADDRESS)
 #define flip_screen_ADDRESS 0x20E60Cu
-#define flip_screen RAM8(flip_screen_ADDRESS)
 #define advertise_sound_ADDRESS 0x20E60Du
-#define advertise_sound RAM8(advertise_sound_ADDRESS)
 #define coins_per_credit_ADDRESS 0x20E610u
-#define coins_per_credit RAM8(coins_per_credit_ADDRESS)
 #define first_chute_multiplier_ADDRESS 0x20E611u
-#define first_chute_multiplier RAM8(first_chute_multiplier_ADDRESS)
 #define second_chute_multiplier_ADDRESS 0x20E612u
-#define second_chute_multiplier RAM8(second_chute_multiplier_ADDRESS)
 #define bonus_adder_ADDRESS 0x20E613u
-#define bonus_adder RAM8(bonus_adder_ADDRESS)
 #define coin_setting_ADDRESS 0x20E614u
-#define coin_setting RAM8(coin_setting_ADDRESS)
 #define free_play_ADDRESS 0x20E615u
-#define free_play RAM8(free_play_ADDRESS)
 #define stand_alone_ADDRESS 0x20E620u
-#define stand_alone RAM8(stand_alone_ADDRESS)
 #define link_master_ADDRESS 0x20E621u
-#define link_master RAM8(link_master_ADDRESS)
 #define cabinet_id_ADDRESS 0x20E622u
-#define cabinet_id RAM8(cabinet_id_ADDRESS)
 #define isdn_mode_ADDRESS 0x20E623u
-#define isdn_mode RAM8(isdn_mode_ADDRESS)
 #define steering_wheel_reaction_ADDRESS 0x20E624u
-#define steering_wheel_reaction RAM8(steering_wheel_reaction_ADDRESS)
 #define game_difficulty_ADDRESS 0x20E630u
-#define game_difficulty RAM8(game_difficulty_ADDRESS)
 #define time_difficulty_ADDRESS 0x20E632u
-#define time_difficulty ((int8_t *)ram(time_difficulty_ADDRESS))
 #define volume_ranges_ADDRESS 0x20E638u
-#define volume_ranges RAM8(volume_ranges_ADDRESS)
 #define backup_settings_checksum_ADDRESS 0x20E644u
-#define backup_settings_checksum RAM16(backup_settings_checksum_ADDRESS)
 #define backup_eeprom_write_count_ADDRESS 0x20E646u
-#define backup_eeprom_write_count RAM16(backup_eeprom_write_count_ADDRESS)
 #define test_mode_on_ADDRESS 0x20E700u
-#define test_mode_on RAM8(test_mode_on_ADDRESS)
 #define test_mode_flags_ADDRESS 0x20E701u
-#define test_mode_flags RAM8(test_mode_flags_ADDRESS)
 #define test_mode_cursor_ADDRESS 0x20E702u
-#define test_mode_cursor RAM8(test_mode_cursor_ADDRESS)
 #define test_mode_page_cursor_ADDRESS 0x20E703u
-#define test_mode_page_cursor RAM8(test_mode_page_cursor_ADDRESS)
 #define test_mode_routine_ADDRESS 0x20E704u
-#define test_mode_routine RAM32(test_mode_routine_ADDRESS)
 #define test_mode_blink_address_ADDRESS 0x20E708u
-#define test_mode_blink_address RAM32(test_mode_blink_address_ADDRESS)
 #define test_mode_buttons_ADDRESS 0x20E70Cu
-#define test_mode_buttons RAM8(test_mode_buttons_ADDRESS)
 #define test_mode_buttons_previous_ADDRESS 0x20E70Du
-#define test_mode_buttons_previous RAM8(test_mode_buttons_previous_ADDRESS)
 #define test_mode_buttons_pressed_ADDRESS 0x20E70Eu
-#define test_mode_buttons_pressed RAM8(test_mode_buttons_pressed_ADDRESS)
 #define test_mode_buttons_released_ADDRESS 0x20E70Fu
-#define test_mode_buttons_released RAM8(test_mode_buttons_released_ADDRESS)
 #define test_mode_analog_inputs_ADDRESS 0x20E710u
-#define test_mode_analog_inputs RAM8(test_mode_analog_inputs_ADDRESS)
 #define memory_test_results_ADDRESS 0x20E716u
-#define memory_test_results ((uint8_t *)ram(memory_test_results_ADDRESS))
 #define test_mode_blink_timer_ADDRESS 0x20E72Fu
-#define test_mode_blink_timer RAM8S(test_mode_blink_timer_ADDRESS)
 #define sound_test_number_a_ADDRESS 0x20E730u
-#define sound_test_number_a RAM8(sound_test_number_a_ADDRESS)
 #define sound_test_number_b_ADDRESS 0x20E731u
-#define sound_test_number_b RAM8(sound_test_number_b_ADDRESS)
 #define test_mode_sound_queue_write_ADDRESS 0x20E732u
-#define test_mode_sound_queue_write RAM8(test_mode_sound_queue_write_ADDRESS)
 #define test_mode_sound_queue_read_ADDRESS 0x20E733u
-#define test_mode_sound_queue_read RAM8(test_mode_sound_queue_read_ADDRESS)
 #define test_mode_sound_queue_ADDRESS 0x20E734u
-#define test_mode_sound_queue ((uint16_t *)ram(test_mode_sound_queue_ADDRESS))
 #define test_mode_privilege_mode_ADDRESS 0x20E754u
-#define test_mode_privilege_mode RAM8(test_mode_privilege_mode_ADDRESS)
 #define master_time_difficulty_ADDRESS 0x20FC0Bu
-#define master_time_difficulty ((int8_t *)ram(master_time_difficulty_ADDRESS))
 #define race_copy_window_segments_ADDRESS 0x20FC46u
-#define race_copy_window_segments ((uint16_t *)ram(race_copy_window_segments_ADDRESS))
-#define unk_218F20_ADDRESS 0x218F20u
-#define unk_218F20 RAM16(unk_218F20_ADDRESS)
 
 /* work RAM as one family of functions uses it (their scratch variables) */
 #define test_mode_prompt_text_ADDRESS 0x20E708u
-#define test_mode_prompt_text RAM32(test_mode_prompt_text_ADDRESS)
 
 /* data in the program ROM the code reads */
 #define boot_e80000_bytes_ADDRESS 0x0000B4u
@@ -2110,25 +1970,17 @@ struct object
 			uint8_t car;
 			uint8_t car_colour;
 			uint8_t state;
-			uint8_t unk_0D;
-			uint8_t unk_0E;
-			uint8_t unk_0F;
-			uint16_t unk_10;
-			uint8_t unk_12;
-			uint8_t unk_13;
+			uint8_t pad_0D[0x7];
 			uint32_t parent;
 			uint32_t parameter;
 			int16_t position;
-			uint8_t unk_1E;
-			uint8_t pad_1F[0x1];
+			uint8_t pad_1E[0x2];
 			int16_t x_offset;
 			uint8_t pad_22[0x2];
 			int16_t y_offset;
 			uint8_t pad_26[0x2];
 			uint16_t position_fraction;
-			uint8_t pad_2A[0x2];
-			uint16_t unk_2C;
-			uint16_t unk_2E;
+			uint8_t pad_2A[0x6];
 			uint16_t x;
 			uint16_t y;
 			uint16_t width_scale;
@@ -2143,71 +1995,11 @@ struct object
 			int8_t frame_countdown;
 			uint8_t size_step;
 			uint8_t scale_shift;
-			uint8_t unk_45;
-			uint8_t pad_46[0xA];
+			uint8_t pad_45[0xB];
 			uint32_t previous_place;
-			uint32_t unk_54;
-			uint16_t unk_58;
-			uint8_t pad_5A[0x2];
-			uint32_t unk_5C;
-			uint32_t unk_60;
-			uint32_t unk_64;
-			uint16_t unk_68;
-			uint16_t unk_6A;
-			uint32_t unk_6C;
-			uint32_t unk_70;
-			uint32_t unk_74;
-			uint32_t unk_78;
-			uint32_t unk_7C;
+			uint8_t pad_54[0x2C];
 			uint32_t list_data;
-			uint16_t unk_84;
-			uint8_t unk_86;
-			uint8_t unk_87;
-			uint32_t unk_88;
-			uint32_t unk_8C;
-			uint32_t unk_90;
-			uint32_t unk_94;
-			uint32_t unk_98;
-			uint32_t unk_9C;
-			uint32_t unk_A0;
-			uint32_t unk_A4;
-			uint32_t unk_A8;
-			uint32_t unk_AC;
-			uint32_t unk_B0;
-			uint32_t unk_B4;
-			uint16_t unk_B8;
-			uint16_t unk_BA;
-			uint8_t unk_BC;
-			uint8_t unk_BD;
-			uint8_t pad_BE[0x1];
-			uint8_t unk_BF;
-			uint32_t unk_C0;
-			uint32_t unk_C4;
-			uint32_t unk_C8;
-			uint16_t unk_CC;
-			uint16_t unk_CE;
-			uint8_t unk_D0;
-			uint8_t unk_D1;
-			uint8_t unk_D2;
-			uint8_t pad_D3[0x1];
-			uint32_t unk_D4;
-			uint32_t unk_D8;
-			uint8_t unk_DC;
-			uint8_t unk_DD;
-			uint8_t pad_DE[0x2];
-			uint8_t unk_E0;
-			uint8_t unk_E1;
-			uint16_t unk_E2;
-			uint8_t unk_E4;
-			uint8_t pad_E5[0xB];
-			uint8_t unk_F0;
-			uint8_t pad_F1[0x1];
-			uint16_t unk_F2;
-			uint16_t unk_F4;
-			uint8_t unk_F6;
-			uint8_t unk_F7;
-			uint8_t unk_F8;
-			uint8_t pad_F9[0x7];
+			uint8_t pad_84[0x7C];
 		};
 		struct
 		{
@@ -4252,7 +4044,7 @@ struct screen
 	};
 	int16_t kanji_text_tens;
 	int16_t kanji_text_hundreds;
-	uint8_t pad_5808[0x27F8];
+	uint8_t pad_5808[0x7F8];
 };
 
 struct object_area
@@ -5523,7 +5315,7 @@ struct course_record_copy
 
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
 _Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
-_Static_assert(sizeof(struct screen) == 0x8000, "struct screen has the size of the game's blocks");
+_Static_assert(sizeof(struct screen) == 0x6000, "struct screen has the size of the game's blocks");
 _Static_assert(sizeof(struct object_area) == 0x8000, "struct object_area has the size of the game's blocks");
 _Static_assert(sizeof(struct race) == 0x80, "struct race has the size of the game's blocks");
 _Static_assert(sizeof(struct object_list) == 0x100, "struct object_list has the size of the game's blocks");
@@ -6069,5 +5861,241 @@ extern const void *road_row_size_step_lists_data;
 #define road_row_size_shift_lists_ADDRESS 0x159AFCu
 extern const void *road_row_size_shift_lists_data;
 #define road_row_size_shift_lists ((const uint32_t *)(road_row_size_shift_lists_data))
+
+/* The game's state: the work RAM (128 KB at 200000 on the board), laid out as the original had it,
+   so that each frame's state compares byte for byte with the original's. The code reaches it
+   through game: game->game_frame_count; the runtime keeps one (runtime/src/game.c). The stacks are
+   the V70's, which the decompiled program does not use */
+#pragma pack(push, 1)
+struct game
+{
+	struct object_area object_area_1;
+	struct screen screen_1;
+	uint32_t waiting_task_frame;
+	uint32_t waiting_task_stack;
+	uint8_t pad_20E008[0x2];
+	uint16_t vblanks_since_start;
+	uint8_t pad_20E00C[0x2];
+	uint8_t debug_timer_rounds;
+	uint8_t pad_20E00F[0x11];
+	uint16_t sprite_list_buffers;
+	uint8_t sprite_lists_set_up;
+	uint8_t frame_ready;
+	uint8_t single_task;
+	uint8_t pad_20E025[0x1];
+	uint8_t game_frame_count;
+	uint8_t send_video_registers;
+	uint8_t task_swapping;
+	uint8_t pad_20E029[0x2];
+	uint8_t second_task_waiting;
+	uint8_t timer_interrupts_left;
+	uint8_t vblank_counter;
+	uint8_t cleared_on_race_over;
+	uint8_t pad_20E02F[0x1];
+	uint8_t car_numbers[0x8];
+	uint16_t link_wait_frames_start;
+	uint16_t total_time_count;
+	uint8_t pad_20E03C[0x4];
+	uint8_t machine_count;
+	uint8_t player_count;
+	uint8_t link_off;
+	uint8_t link_failed;
+	uint8_t pad_20E044[0x2];
+	uint16_t link_wait_frames;
+	uint16_t network_check_blink_counter;
+	uint8_t isdn_players_this_side;
+	uint8_t isdn_players_other_side;
+	uint8_t pad_20E04C[0x14];
+	uint32_t link_wait_count;
+	uint8_t pad_20E064[0x1C];
+	uint8_t coin_meters;
+	uint8_t pad_20E081[0xB];
+	uint8_t seat1_coin_sounds;
+	uint8_t seat2_coin_sounds;
+	uint8_t seat1_service_sounds;
+	uint8_t seat2_service_sounds;
+	uint8_t pad_20E090[0x1];
+	uint8_t chute_entry_offset;
+	uint8_t port_d_outputs[0x2];
+	uint8_t port_g_outputs[0x2];
+	uint8_t pad_20E096[0xA];
+	uint8_t seat1_credits;
+	uint8_t seat1_coin_units;
+	uint8_t pad_20E0A2[0x2];
+	uint8_t seat1_bookkeeping_byte;
+	uint8_t pad_20E0A5[0x3];
+	uint8_t seat2_credits;
+	uint8_t seat2_coin_units;
+	uint8_t pad_20E0AA[0x2];
+	uint8_t seat2_bookkeeping_byte;
+	uint8_t pad_20E0AD[0x13];
+	union
+	{
+		uint8_t checkpoint_lamp[0x8];
+		struct
+		{
+			uint8_t pad_to_checkpoint_lamp_blinks[0x1];
+			uint8_t checkpoint_lamp_blinks;
+			uint8_t checkpoint_lamp_period;
+			uint8_t checkpoint_lamp_timer;
+			uint8_t checkpoint_lamp_2;
+			uint8_t checkpoint_lamp_2_blinks;
+			uint8_t checkpoint_lamp_2_period;
+			uint8_t checkpoint_lamp_2_timer;
+		};
+	};
+	union
+	{
+		uint8_t leader_lamp[0x8];
+		struct
+		{
+			uint8_t pad_to_leader_lamp_blinks[0x1];
+			uint8_t leader_lamp_blinks;
+			uint8_t leader_lamp_period;
+			uint8_t leader_lamp_timer;
+			uint8_t leader_lamp_2;
+			uint8_t leader_lamp_2_blinks;
+			uint8_t leader_lamp_2_period;
+			uint8_t leader_lamp_2_timer;
+		};
+	};
+	uint8_t wheel_motor[0x2];
+	uint8_t pad_20E0D2[0x2A];
+	uint8_t screen_2_vblanks;
+	uint8_t screen_2_vblanks_high;
+	uint8_t screen_1_vblanks;
+	uint8_t screen_1_vblanks_high;
+	uint8_t switches;
+	uint8_t previous_switches;
+	uint8_t switches_pressed;
+	uint8_t switches_released;
+	uint8_t second_io_chip_port_f;
+	uint8_t pad_20E105[0xB];
+	uint8_t analog_raw;
+	uint8_t pad_20E111[0x5];
+	uint8_t analog_inputs;
+	uint8_t analog_gas_1;
+	uint8_t analog_brake_1;
+	uint8_t analog_wheel_2;
+	uint8_t analog_gas_2;
+	uint8_t analog_brake_2;
+	uint8_t pad_20E11C[0x4];
+	uint8_t seat_1_player;
+	uint8_t seat_1_buttons;
+	uint8_t seat_1_wheel;
+	uint8_t seat_1_gas;
+	uint8_t seat_1_brake;
+	uint8_t seat_2_player;
+	uint8_t seat_2_buttons;
+	uint8_t seat_2_wheel;
+	uint8_t seat_2_gas;
+	uint8_t seat_2_brake;
+	uint8_t pad_20E12A[0xD6];
+	uint16_t video_registers[0x48];
+	uint32_t scroll_targets[0x8];
+	uint8_t tile_banks[0x4];
+	uint8_t pad_20E2B4[0x4C];
+	union
+	{
+		uint8_t course_records[0x3C];
+		struct
+		{
+			uint8_t pad_to_course_record_times[0x4];
+			uint16_t course_record_times[0x1C];
+		};
+	};
+	uint8_t pad_20E33C[0x84];
+	uint8_t lcd_send_buffer_1[0x10];
+	uint8_t lcd_send_buffer_2[0x10];
+	uint8_t pad_20E3E0[0x10];
+	uint16_t lcd_restart_frames;
+	uint8_t lcd_send_step;
+	uint8_t lcd_busy;
+	uint8_t lcd_init_step;
+	uint8_t pad_20E3F5[0x20B];
+	uint32_t settings_magic;
+	uint16_t settings_signature;
+	uint8_t pad_20E606[0x2];
+	uint16_t settings_checksum;
+	uint16_t eeprom_write_count;
+	uint8_t flip_screen;
+	uint8_t advertise_sound;
+	uint8_t pad_20E60E[0x2];
+	uint8_t coins_per_credit;
+	uint8_t first_chute_multiplier;
+	uint8_t second_chute_multiplier;
+	uint8_t bonus_adder;
+	uint8_t coin_setting;
+	uint8_t free_play;
+	uint8_t pad_20E616[0xA];
+	uint8_t stand_alone;
+	uint8_t link_master;
+	uint8_t cabinet_id;
+	uint8_t isdn_mode;
+	uint8_t steering_wheel_reaction;
+	uint8_t pad_20E625[0xB];
+	uint8_t game_difficulty;
+	uint8_t pad_20E631[0x1];
+	int8_t time_difficulty[0x6];
+	uint8_t volume_ranges;
+	uint8_t pad_20E639[0xB];
+	uint16_t backup_settings_checksum;
+	uint16_t backup_eeprom_write_count;
+	uint8_t pad_20E648[0xB8];
+	uint8_t test_mode_on;
+	uint8_t test_mode_flags;
+	uint8_t test_mode_cursor;
+	uint8_t test_mode_page_cursor;
+	uint32_t test_mode_routine;
+	union
+	{
+		uint32_t test_mode_blink_address;
+		uint32_t test_mode_prompt_text;
+	};
+	uint8_t test_mode_buttons;
+	uint8_t test_mode_buttons_previous;
+	uint8_t test_mode_buttons_pressed;
+	uint8_t test_mode_buttons_released;
+	uint8_t test_mode_analog_inputs;
+	uint8_t pad_20E711[0x5];
+	uint8_t memory_test_results[0x19];
+	int8_t test_mode_blink_timer;
+	uint8_t sound_test_number_a;
+	uint8_t sound_test_number_b;
+	uint8_t test_mode_sound_queue_write;
+	uint8_t test_mode_sound_queue_read;
+	uint16_t test_mode_sound_queue[0x10];
+	uint8_t test_mode_privilege_mode;
+	uint8_t pad_20E755[0x13AB];
+	struct race races[2];
+	union
+	{
+		struct race race_copies[2];
+		struct
+		{
+			uint8_t pad_to_master_time_difficulty[0xB];
+			int8_t master_time_difficulty[0x6];
+			uint8_t pad_to_race_copy_window_segments[0x35];
+			uint16_t race_copy_window_segments[0x5D];
+		};
+	};
+	uint8_t pad_20FD00[0x300];
+	struct object_area object_area_2;
+	struct screen screen_2;
+	struct race isdn_races[8];
+	uint8_t pad_21E400[0xC00];
+	uint8_t stacks[0x1000];
+};
+#pragma pack(pop)
+_Static_assert(sizeof(struct game) == 0x20000, "struct game is the work RAM");
+_Static_assert(offsetof(struct game, object_area_1) == 0x0, "object_area_1 at its place in the work RAM");
+_Static_assert(offsetof(struct game, screen_1) == 0x8000, "screen_1 at its place in the work RAM");
+_Static_assert(offsetof(struct game, races) == 0xFB00, "races at its place in the work RAM");
+_Static_assert(offsetof(struct game, race_copies) == 0xFC00, "race_copies at its place in the work RAM");
+_Static_assert(offsetof(struct game, object_area_2) == 0x10000, "object_area_2 at its place in the work RAM");
+_Static_assert(offsetof(struct game, screen_2) == 0x18000, "screen_2 at its place in the work RAM");
+_Static_assert(offsetof(struct game, isdn_races) == 0x1E000, "isdn_races at its place in the work RAM");
+_Static_assert(offsetof(struct game, stacks) == 0x1F000, "stacks at its place in the work RAM");
+extern struct game *game;
 
 #endif

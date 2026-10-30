@@ -21,6 +21,8 @@ memory test, the checksum and the copy reach by its address, whatever is there (
 `tools/game_profile.py`, each with why). Without counting those (`faithful`), all 762 functions and all
 26,933 lines of code are clean, the goal before the ports.
 
+Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 141 of the game's 696 functions (20.3%) and 14,234 of their 23,043 lines of code (61.8%) touch none of it; taking the rest out is the next phase.
+
 - [x] ROM set verification (MAME set `orunners`, World), by CRC32 and SHA-1 of every file
 - [x] Multi 32 board model in C (`runtime/`): memory map, interrupt controller and timers, the two I/O
       chips, EEPROM, the A/D converter of the wheels and pedals, and the link board with no other cabinet
@@ -330,6 +332,25 @@ memory test, the checksum and the copy reach by its address, whatever is there (
       `stripe`, the EEPROM's `eeprom_port`...), and locals (`first_segment`, `handling`, `next_segment`).
       R12 and R14's uses 720 -> 347, in 104 -> 74 functions; partial writes 140 -> 132; clean 592 -> 601
       functions
+- [x] The board's memory model counted (`python tools/noise_report.py`): the structures the code reaches by
+      casting an address of the work RAM, the variables at fixed addresses, the addresses of the work RAM,
+      of code and of tables used as values, the places worked out within a page, and the memory moved,
+      filled or searched through its address, which nothing counted before (106: `move_halfwords`,
+      `move_string`, `set_bytes`...), with how much of the game's C touches none of it. No name made up of an
+      address or an offset is left: 17 functions' comments gave fields by their offset, from before the
+      fields had names (`the car object's unk_10`, its `timer`), `struct object`'s view of every object
+      declared 64 such fields that no code reads (now padding), and one place of screen 2's block went by a
+      name made up of its address that the meter did not see (`made_up_names` 86 -> 0)
+- [x] The game's state as one structure, the first step out of the board's memory model: `struct game`
+      (`src/ram.h`) is the work RAM laid out as the original had it, its blocks by name (`object_area_1`,
+      `screen_1`, `races`, `race_copies`, `object_area_2`, `screen_2`, `isdn_races`, `stacks`) and its
+      variables at their places, the names that share bytes in a union (`checkpoint_lamp[8]` and the names
+      of its bytes: each screen's lamp a record of four). The code reaches it through `game`
+      (`game->game_frame_count++`); the runtime keeps one world's (`runtime/src/game.c`) and the board
+      reads the same bytes, so each frame's state still compares byte for byte with the original's. The
+      arrays the code indexes have their counts in `symbols.txt` (`course_records[60]`, the ten records of
+      six bytes), so that no index runs past one, and a screen's block is the 0x6000 bytes its fields take
+      (the game's variables follow screen 1's). Variables at fixed addresses (`ram_variables`) 139 -> 0
 
 ## What is left, and why
 
@@ -351,8 +372,9 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 | ROM addresses printed as numbers (`raw_rom_addresses`) | 0 | Every ROM address the code uses as a value has a name; the last four were `car_radio_update`'s switch going on at its own jump targets, which now runs the switch again or calls `car_radio_talk` |
 | Fields named after their offset (`unk_fields`) | 0 | The objects' fields 09, 0A and 0B that the code that starts an object sets alike for any family: `number` (its place in its start list, a choice flag's player), `car`, `car_colour` (5 before) |
 | A function the board puts its own in place of (`board_replaced`) | 1 | The memory test's sums of the ROM chips (`runtime/replaced.txt`): the game has no ROM chips to sum, so the board hands back the sums the program keeps for them (at 03FFF8 and 03FFFC), as good chips give |
-| Work RAM addresses printed as numbers | 27 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (screen 2's car `0x219000u`, the sprite places `0x20C000u`) and the coin meters after the first: the decompiler names a constant only when it is a variable's own address |
-| Unused names in `src/ram.h` | 50 | Places of the screens' blocks and the race records that the code reaches by their own address, which the C reads as fields, and two places of the ROM (`rom_000001`, `rom_000002`): each named after its address (`unk_208001`), and nothing uses the names |
+| Work RAM addresses printed as numbers | 28 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (screen 2's car `0x219000u`, the sprite places `0x20C000u`, one past screen 2's LCD text `0x218F20u`, where `test_mode_start` leaves R12) and the coin meters after the first: the decompiler names a constant only when it is a variable's own address. The memory model's `ram_addresses` counts them |
+| Names made up of an address or an offset (`unk_names`, `made_up_names`) | 0 | None in the code, none in a comment, none declared for nothing: 17 functions' comments gave fields by their offset, written before the fields had names (`the car object's unk_10`, its `timer`), `struct object`'s view of every object declared 64 fields named after their offset that no code reads, as the families' views name those bytes (86 before, now padding), and `test_mode_start` gave a place of screen 2's block by a name made up of its address (`unk_218F20_ADDRESS`), now its number |
+| The game's state in the board's memory model (`ram_structures`, `ram_variables`, `ram_addresses`, `code_addresses`, `table_addresses`, `page_links`, `ram_blocks`) | 9,034, 0, 296, 206, 1,283, 94 and 106 | The game's state is one structure, `struct game`, laid out as the board's work RAM (128 KB at 200000), at the places the original had it, so that each frame's state compares byte for byte with the original's; the code reaches its variables as its fields (`game->game_frame_count`; 139 macros over fixed addresses before). Its other structures are still reached by casting an address (`OBJECT(current_object)->handler`), its pointers are 32-bit addresses, an object's handler is a code address that `call_code` runs, the tables are reached through the addresses they hold (`data_at`), a link is an address's low halfword in its 64 KB page (`LINKED`), and memory is moved, filled and searched through its address as the V60's string instructions do (`move_halfwords(object, zero_block_ADDRESS, 0x80u)` clears an object; the others clear lists, race records and tables, copy the settings, the LCD's texts, the sprite entries and the video and mixer registers' values, and the memory test keeps the work RAM in the sprite RAM while it tests it). Taking the game's state out of that model, with real pointers and plain C variables, is the next phase; the board's own memories (the video and sprite RAM, the palettes, the sound and link boards' RAM) stay, being how the game talks to the board |
 | Data without a name of its own | 186 pieces, 1 to 6 bytes | The `data_XXXXXX` sections of `assets/data/`: the alignment between the code and the tables (zeros), the V60's `nop`s at 000000-000005, and dead code bytes in two places (00E8D9, after `halt`s) that the code reaches by no way. Every table has a name, and every piece with a structure a format of its own |
 | Board registers without a name | 6 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the bytes boot writes to E00000 and E80000-E80003, where the board maps nothing |
 | Calls through a slot that holds a function's address | 11 wrappers | `src/table.c`: how `call_code()` runs a function from a code address it reads (`call_0006B0` runs `second_task`), named after that address |

@@ -3,7 +3,7 @@
  *    Description: the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -113,11 +113,11 @@ uint16_t init_video(void)
 	clear_video_ram();
 	load_text_font();
 	VIDEO_CONTROL = video_control_default;
-	video_registers[0] = video_control_default;
-	if (flip_screen != 0u)
+	game->video_registers[0] = video_control_default;
+	if (game->flip_screen != 0u)
 	{
 		VIDEO_CONTROL |= 0x200u;
-		video_registers[0] |= 0x200u;
+		game->video_registers[0] |= 0x200u;
 	}
 	move_halfwords(scroll_targets_ADDRESS, zero_block_ADDRESS, 0x10u);
 	move_halfwords(VIDEO_RAM + 0x1FF02u, video_register_defaults_ADDRESS, 0x47u);
@@ -134,14 +134,14 @@ uint16_t reset_tile_layers(void)
 	uint32_t index = 0;
 
 	VIDEO_CONTROL &= 0xFFFu;
-	video_registers[0] &= 0xFFFu;
+	game->video_registers[0] &= 0xFFFu;
 	index = SCREEN(screen)->index;
-	AS32(video_registers[32 + index * 2u]) = 0u;
-	AS32(video_registers[36 + index * 2u]) = 0u;
-	scroll_targets[index * 2u] = 0u;
-	scroll_targets[1 + index * 2u] = 0u;
-	scroll_targets[4 + index * 2u] = 0u;
-	scroll_targets[5 + index * 2u] = 0u;
+	AS32(game->video_registers[32 + index * 2u]) = 0u;
+	AS32(game->video_registers[36 + index * 2u]) = 0u;
+	game->scroll_targets[index * 2u] = 0u;
+	game->scroll_targets[1 + index * 2u] = 0u;
+	game->scroll_targets[4 + index * 2u] = 0u;
+	game->scroll_targets[5 + index * 2u] = 0u;
 	return index;
 }
 
@@ -214,7 +214,7 @@ void init_sprite_chip(void)
 	control_register = SPRITE_CONTROL + 0x4u;
 	control_flip = sprite_control_flip;
 	control_values = sprite_control_rest_ADDRESS;
-	if (flip_screen != 0u)
+	if (game->flip_screen != 0u)
 		control_flip = control_flip ^ 3u;
 	io_write16(control_register, control_flip);
 	control_register += 2u;
@@ -250,8 +250,8 @@ void init_sprite_lists(void)
 	SPRITE_LIST_2_A_HALFWAY = 0xFFFFu;
 	SPRITE_LIST_2_B = 0xFFFFu;
 	SPRITE_LIST_2_B_HALFWAY = 0xFFFFu;
-	sprite_lists_set_up = 1u;
-	sprite_list_buffers = 0u;
+	game->sprite_lists_set_up = 1u;
+	game->sprite_list_buffers = 0u;
 	SCREEN(SCREEN_1)->sprite_groups &= 0xFF00u;
 	SCREEN(SCREEN_2)->sprite_groups &= 0xFF00u;
 }

@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,22 +20,22 @@
    off, sea_colour 7EE0; 3 zooms in (zoom + 20 a frame for 9 frames, 200 being 1:1), then the close-up
    map (pages route_map_close_up_pages) at its start (x scroll route_map_start_scroll_xs by first_branch,
    y 8C), starts route_map_car and the 32 route_map_landmark objects; 4 checkpoint_legs_left from the
-   car's unk_D0, unk_12 from screen current_stage_level, stage 0; 5-14 the car drives the route leg by
-   leg (leg_frames frames each): 22 frames up from the start to the first checkpoint (the car moves, the
-   map stands), then 6 frames of 8 pixels sideways (first_branch picks the side), 11 of 5, then for each
-   stage 10 frames of 4 up or down by the branch taken (screen route_branches + stage - 1) and 15 of 7
-   sideways; on these legs the map scrolls under the car (the object's x and y move the other way, for
-   the objects on the map), screen route_map_signals telling the car its way (bits 0 down, 1 up, 2 right,
-   3 left, 5 the map at its edge, 7 standing); a stage_result_line starts where each stage begins (5, 7,
-   11), a route_map_sign (C.P) and stage + 1 where a checkpoint leg ends; when its count of legs (unk_12
-   for the first leg of a stage, checkpoint_legs_left for the others) is 0 at a leg's start, the race
-   ended on it: last_leg_progress and leg_frames are worked out from the race_copy record's segment, the
-   car's reached_stage_start and the stage lengths at 700 of the screen, and screen route_map_signals bit
-   6 ends the drive after it; at the end (stage 6 or a cut leg) the car stands (bit 7), FINISH
-   (route_map_sign 1) if the goal was reached (race_copy finished), 60 frames; 15 the routes (pages
-   route_map_routes_pages) at zoom 2x where the close-up map was, the steps of the zoom out into x and y,
-   screen route_map_signals bit 4 (the car, the landmarks and the signs end); 16 zooms out over 9 frames
-   to 1:1 and the whole route (x scroll route_map_whole_scroll_xs by first_branch, y 70), then the
+   car's forks_taken, first_legs_left from screen current_stage_level, stage 0; 5-14 the car drives the
+   route leg by leg (leg_frames frames each): 22 frames up from the start to the first checkpoint (the
+   car moves, the map stands), then 6 frames of 8 pixels sideways (first_branch picks the side), 11 of 5,
+   then for each stage 10 frames of 4 up or down by the branch taken (screen route_branches + stage - 1)
+   and 15 of 7 sideways; on these legs the map scrolls under the car (the object's x and y move the other
+   way, for the objects on the map), screen route_map_signals telling the car its way (bits 0 down, 1 up,
+   2 right, 3 left, 5 the map at its edge, 7 standing); a stage_result_line starts where each stage
+   begins (5, 7, 11), a route_map_sign (C.P) and stage + 1 where a checkpoint leg ends; when its count of
+   legs (first_legs_left for the first leg of a stage, checkpoint_legs_left for the others) is 0 at a
+   leg's start, the race ended on it: last_leg_progress and leg_frames are worked out from the race_copy
+   record's segment, the car's reached_stage_start and the stage lengths at 700 of the screen, and screen
+   route_map_signals bit 6 ends the drive after it; at the end (stage 6 or a cut leg) the car stands (bit
+   7), FINISH (route_map_sign 1) if the goal was reached (race_copy finished), 60 frames; 15 the routes
+   (pages route_map_routes_pages) at zoom 2x where the close-up map was, the steps of the zoom out into x
+   and y, screen route_map_signals bit 4 (the car, the landmarks and the signs end); 16 zooms out over 9
+   frames to 1:1 and the whole route (x scroll route_map_whole_scroll_xs by first_branch, y 70), then the
    world's tilemap again (pages route_map_world_pages); 17 sea_colour black, starts 00463C and an 004240
    for each leg (stage + 1, at most 6), DJ message 38, 90 frames; 18 DJ message 39 once the DJ is quiet
    (screen dj_mouth_shapes); 19 when the 90 frames are over sets the game's next step (screen game_mode
@@ -110,7 +110,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0] = 0u;
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_x_address)[0] = 0xF8u;
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_y_address)[0] = 0u;
-			send_video_registers = 0xFFu;
+			game->send_video_registers = 0xFFu;
 			OBJECT(current_object)->route_map.timer = 0x1Eu;
 			OBJECT(current_object)->state++;
 			return;
@@ -130,7 +130,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(zoom_x_address)[0] += 0x20u;
 			zoom_y_address = OBJECT(current_object)->route_map.zoom_y_address;
 			VIDEO_REGISTER_WORDS(zoom_y_address)[0] += 0x20u;
-			send_video_registers = 0xFFu;
+			game->send_video_registers = 0xFFu;
 			timer_2 = OBJECT(current_object)->route_map.timer;
 			OBJECT(current_object)->route_map.timer = timer_2 - 1u;
 			if (timer_2 != 1u)
@@ -144,7 +144,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0] = 0x8Cu;
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_x_address)[0];
 			VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
-			send_video_registers = 0xFFu;
+			game->send_video_registers = 0xFFu;
 			SCREEN(screen)->skip_scroll_update = 0xFFu;
 			object = start_object();
 			OBJECT(object)->handler = route_map_car_update_ADDRESS;
@@ -565,7 +565,7 @@ void route_map_update(void)
 				OBJECT(current_object)->y -= VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.scroll_y_address)[0];
 				OBJECT(current_object)->x = (int16_t)OBJECT(current_object)->x >> 3;
 				OBJECT(current_object)->y = (int16_t)OBJECT(current_object)->y >> 3;
-				send_video_registers = 0xFFu;
+				game->send_video_registers = 0xFFu;
 				SCREEN(screen)->skip_scroll_update = 0xFFu;
 				SCREEN(screen)->route_map_signals |= 0x10u;
 				OBJECT(current_object)->route_map.timer = 9u;
@@ -581,7 +581,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(scroll_x_address_13)[0] += OBJECT(current_object)->x;
 			scroll_y_address_6 = OBJECT(current_object)->route_map.scroll_y_address;
 			VIDEO_REGISTER_WORDS(scroll_y_address_6)[0] += OBJECT(current_object)->y;
-			send_video_registers = 0xFFu;
+			game->send_video_registers = 0xFFu;
 			timer_4 = OBJECT(current_object)->route_map.timer;
 			OBJECT(current_object)->route_map.timer = timer_4 - 1u;
 			if (timer_4 == 1u)
@@ -601,7 +601,7 @@ void route_map_update(void)
 				VIDEO_REGISTER_WORDS(second_scroll_y_address)[0] -= 0x70u;
 				VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_x_address)[0];
 				VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(OBJECT(current_object)->route_map.second_scroll_y_address)[0];
-				send_video_registers = 0xFFu;
+				game->send_video_registers = 0xFFu;
 				OBJECT(current_object)->state++;
 			}
 			return;

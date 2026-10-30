@@ -3,7 +3,7 @@
  *    Description: Multi 32 memory map, interrupt controller, timers, video registers and link board
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -631,9 +631,12 @@ void s32_init(const uint8_t *program)
 	uint8_t (*pcm_at)(uint32_t) = s32_board.pcm_at;
 	const bool frame_timing = s32_board.frame_timing;
 	const uint8_t *(*program_at)(uint32_t) = s32_board.program_at;
+	/* the work RAM: the world a program keeps its state in (the decompiled game's), or the board's own */
+	static uint8_t own_work_ram[S32_WORK_RAM_SIZE];
+	uint8_t *work_ram = s32_board.work_ram ? s32_board.work_ram : own_work_ram;
 
-	/* callbacks, the sound chips, the sound ROMs and the timing survive; everything else starts from
-	   power-on. A saved EEPROM is loaded after this. */
+	/* callbacks, the sound chips, the sound ROMs, the timing and where the work RAM is survive; everything
+	   else starts from power-on, the work RAM's contents too. A saved EEPROM is loaded after this. */
 	memset(&s32_board, 0, sizeof(s32_board));
 	s32_board.irq_changed = irq_changed;
 	s32_board.controls_update = controls_update;
@@ -651,6 +654,8 @@ void s32_init(const uint8_t *program)
 	s32_board.frame_timing = frame_timing;
 	s32_board.program = program;
 	s32_board.program_at = program_at;
+	s32_board.work_ram = work_ram;
+	memset(work_ram, 0, S32_WORK_RAM_SIZE);
 	memset(s32_board.eeprom.data, 0xff, sizeof(s32_board.eeprom.data));
 
 	/* power-on contents, as in MAME's video start */

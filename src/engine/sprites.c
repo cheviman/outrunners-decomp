@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -791,9 +791,9 @@ void finish_sprite_list(void)
 
 	switch_index = SCREEN(screen)->index;
 	switch_index = (uint8_t)(switch_index * 2u);
-	switch_index = switch_index | (uint8_t)sprite_list_buffers;
+	switch_index = switch_index | (uint8_t)game->sprite_list_buffers;
 	switch_index = (uint8_t)(switch_index * 2u);
-	sprite_list_switch = sprite_list_switches[switch_index | (uint8_t)(sprite_list_buffers >> 8u)];
+	sprite_list_switch = sprite_list_switches[switch_index | (uint8_t)(game->sprite_list_buffers >> 8u)];
 	chain_tail = SPRITE_LIST_SWITCH(sprite_list_switch)->list;
 	sprite_list_switch += 4u;
 	if (SCREEN(screen)->sprite_groups != 0u)
@@ -904,7 +904,7 @@ void finish_sprite_list(void)
 	sprite_list_switch += 2u;
 	SPRITE_SCREEN_2_LIST_JUMP = SPRITE_LIST_SWITCH(sprite_list_switch - 0x8u)->entry_3_jump;
 	sprite_list_switch += 2u;
-	sprite_list_buffers = SPRITE_LIST_SWITCH(sprite_list_switch - 0xAu)->next_buffers;
+	game->sprite_list_buffers = SPRITE_LIST_SWITCH(sprite_list_switch - 0xAu)->next_buffers;
 	sprite_list_switch += 2u;
 	SCREEN(screen)->sprite_list_last = SPRITE_LIST_SWITCH(sprite_list_switch - 0xCu)->next_list;
 	SCREEN(screen)->sprite_list_limit = SPRITE_LIST_SWITCH(sprite_list_switch - 0xCu)->next_limit;

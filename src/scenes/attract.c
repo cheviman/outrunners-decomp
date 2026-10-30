@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -145,15 +145,15 @@ void attract_lamps_update(void)
 {
 	uint32_t attract_lamp_step = 0, screen_index = 0;
 
-	attract_lamp_step = vblank_counter;
+	attract_lamp_step = game->vblank_counter;
 	attract_lamp_step = attract_lamp_step >> 3;
 	attract_lamp_step = (uint8_t)(attract_lamp_step * 2u);
 	screen_index = SCREEN(screen)->index;
 	attract_lamp_step = attract_lamp_steps_ADDRESS + (uint8_t)(attract_lamp_step + screen_index) * 2u;
 	screen_index = (uint8_t)(screen_index * 2u);
 	screen_index = (uint8_t)(screen_index * 2u);
-	checkpoint_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->checkpoint;
-	leader_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->leader;
+	game->checkpoint_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->checkpoint;
+	game->leader_lamp[screen_index] = ATTRACT_LAMP_STEP(attract_lamp_step)->leader;
 }
 
 /* The presentation of a car in the attract mode (game mode 3, car_presentation_object_handlers): the
@@ -536,8 +536,8 @@ void demo_captions_head_to_head(void)
 	first_record = 0u;
 	demo_captions_start(first_record, record_count);
 	record = 3u;
-	if (stand_alone == 0u)
-		record += machine_count;
+	if (game->stand_alone == 0u)
+		record += game->machine_count;
 	else
 		record++;
 	object = start_object();

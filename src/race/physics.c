@@ -3,7 +3,7 @@
  *    Description: the car's physics: the gears and torque curves, the controls, driving along the road, the engine, the road's drag and its edges, the wheels' effects
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -12,8 +12,8 @@
 #include "game.h"
 
 /* Loads the car's model and transmission: its handling record (car handling), its torque curves
-   (torque_curves), its gear ratios (unk_54) and top gear (top_gear), the first gear's ratio (unk_64),
-   and the roadside surfaces of the first stage (player_car_next_surfaces). */
+   (torque_curves), its gear ratios (gear_ratios) and top gear (top_gear), the first gear's ratio
+   (gear_ratio), and the roadside surfaces of the first stage (player_car_next_surfaces). */
 void player_car_load_gears(void)
 {
 	uint32_t gear_list = 0, handling = 0, model = 0, model_transmission = 0;
@@ -180,10 +180,10 @@ void player_car_read_controls(void)
    pushes it out (less with catch-up, car catch_up); beyond the model's grip it skids (car skidding,
    slide, tyre noise 3, smoke on both sides); sideways_speed and sideways_push move it across (car
    road_x, within the road's half width + 60); the speed along (less its sideways angle, vector_angle)
-   plus a catch-up bonus by the distance to the car ahead (car catch_up_target, unk_6A; not once
-   finished) moves it along, passing segments (car window_segment, segment, segment_offset, unk_A4,
-   segment_progress, segment_fraction); then player_car_world_position. In ISDN mode (isdn_mode) the race
-   record the link brings in gives all this. */
+   plus a catch-up bonus by the distance to the car ahead (car catch_up_target, catch_up; not once
+   finished) moves it along, passing segments (car window_segment, segment, segment_offset,
+   window_offset, segment_progress, segment_fraction); then player_car_world_position. In ISDN mode
+   (isdn_mode) the race record the link brings in gives all this. */
 void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint32_t *p_road_x, uint32_t *p_segment_fraction, uint32_t *p_segment_length)
 {
 	uint32_t segment_record = *p_segment_record;
@@ -231,7 +231,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	drive_force = (int32_t)((uint32_t)gas_pedal_curve[gas] * TORQUE_CURVE_FORCES(gear_curve)[speed >> 8]) >> 6;
 	gear_ratio = CAR(player_car)->gear_ratio;
 	player_car_engine(road_force, drive_force, brake_force, car_handling, gear_ratio);
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 		CAR(player_car)->speed = RACE(SCREEN(screen)->race_copy)->speed;
 	new_speed = CAR(player_car)->speed;
 	OBJECT(current_object)->player_car.speed = new_speed;
@@ -308,7 +308,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 			}
 		}
 	}
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 	{
 		drift = (uint16_t)RACE(SCREEN(screen)->race_copy)->sideways_speed;
 		OBJECT(current_object)->player_car.sideways_speed = drift;
@@ -346,7 +346,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		CAR(player_car)->catch_up = catch_up;
 		segment_fraction += (catch_up * forward_speed) >> 7;
 	}
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 	{
 		segment_fraction = RACE(SCREEN(screen)->race_copy)->segment_fraction;
 		segment_then_offset = RACE(SCREEN(screen)->race_copy)->segment;
@@ -396,7 +396,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		segment_length = (int32_t)segment_length >> 8;
 		CAR(player_car)->segment_fraction = segment_fraction;
 	}
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		max_road_x = ROAD_SEGMENT(segment_record)->half_width;
 		min_road_x = (uint16_t)(0u - max_road_x);
@@ -443,7 +443,7 @@ void player_car_world_position(uint32_t segment_record, uint32_t next_segment, u
 	uint16_t heading = 0;
 	uint32_t world_y = 0;
 
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		offset_y = 0u;
 		offset_x = road_x << 7;
@@ -1131,7 +1131,7 @@ void player_car_off_road_shake(void)
 	uint32_t model = 0;
 
 	model = CAR(player_car)->model;
-	wheel_motor[SCREEN(screen)->index] = car_model_off_road_shakes[model];
+	game->wheel_motor[SCREEN(screen)->index] = car_model_off_road_shakes[model];
 	tyre_noise = car_model_off_road_noises[model];
 	set_tyre_noise(tyre_noise);
 }

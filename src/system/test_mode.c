@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -13,10 +13,10 @@
 
 /* Enters the test mode (reset calls it once when test_mode_on says the test mode is on): turns the link
    board off, clears the tilemaps and the sprite lists (init_video, init_sprite_lists), clears both
-   screens' pending tile unpacking (screen unpack_state), demo flag (unk_90 bit 8) and flags bit 0, the
-   mixers' registers 40-4A, turns both screens on (the I/O chips' CNT), sets up the test mode's palettes
-   and font (test_mode_set_up_colours), test_mode_flags 0 (INDIVIDUAL) and the cursor on EXIT, stops both
-   monitors' sounds (command 1F through the sound command queue, test_mode_queue_sound and
+   screens' pending tile unpacking (screen unpack_state), demo flag (demo_flags bit 8) and flags bit 0,
+   the mixers' registers 40-4A, turns both screens on (the I/O chips' CNT), sets up the test mode's
+   palettes and font (test_mode_set_up_colours), test_mode_flags 0 (INDIVIDUAL) and the cursor on EXIT,
+   stops both monitors' sounds (command 1F through the sound command queue, test_mode_queue_sound and
    test_mode_queue_sound_screen_2), turns the lamps and the wheel motor off
    (checkpoint_lamp-wheel_motor[1], screen button_lamps, port_d_outputs, port_g_outputs), writes " LCD
    status OK! " on both cabinets' LCDs (the 16 bytes at F10 of each screen's block), sets
@@ -50,10 +50,10 @@ uint32_t test_mode_start(void)
 	io_write8(IO_1_CNT, 6u);
 	io_write8(IO_2_CNT, 0x86u);
 	test_mode_set_up_colours();
-	test_mode_flags = 0u;
-	test_mode_cursor = 0xCu;
-	test_mode_sound_queue_write = 0u;
-	test_mode_sound_queue_read = 0u;
+	game->test_mode_flags = 0u;
+	game->test_mode_cursor = 0xCu;
+	game->test_mode_sound_queue_write = 0u;
+	game->test_mode_sound_queue_read = 0u;
 	sound = 0x1Fu;
 	test_mode_queue_sound(sound);
 	test_mode_queue_sound_screen_2(sound);
@@ -61,32 +61,32 @@ uint32_t test_mode_start(void)
 	SOUND_ENGINE_REQUESTS_1[0] |= 0x20u;
 	SOUND_ENGINE_REVS_2 = 0u;
 	SOUND_ENGINE_REQUESTS_2 |= 0x20u;
-	wheel_motor[0] = 0u;
-	wheel_motor[1] = 0u;
-	checkpoint_lamp[0] = 0u;
-	checkpoint_lamp_blinks = 0u;
-	checkpoint_lamp_period = 0u;
-	checkpoint_lamp_timer = 0u;
-	checkpoint_lamp_2 = 0u;
-	checkpoint_lamp_2_blinks = 0u;
-	checkpoint_lamp_2_period = 0u;
-	checkpoint_lamp_2_timer = 0u;
-	leader_lamp[0] = 0u;
-	leader_lamp_blinks = 0u;
-	leader_lamp_period = 0u;
-	leader_lamp_timer = 0u;
-	leader_lamp_2 = 0u;
-	leader_lamp_2_blinks = 0u;
-	leader_lamp_2_period = 0u;
-	leader_lamp_2_timer = 0u;
+	game->wheel_motor[0] = 0u;
+	game->wheel_motor[1] = 0u;
+	game->checkpoint_lamp[0] = 0u;
+	game->checkpoint_lamp_blinks = 0u;
+	game->checkpoint_lamp_period = 0u;
+	game->checkpoint_lamp_timer = 0u;
+	game->checkpoint_lamp_2 = 0u;
+	game->checkpoint_lamp_2_blinks = 0u;
+	game->checkpoint_lamp_2_period = 0u;
+	game->checkpoint_lamp_2_timer = 0u;
+	game->leader_lamp[0] = 0u;
+	game->leader_lamp_blinks = 0u;
+	game->leader_lamp_period = 0u;
+	game->leader_lamp_timer = 0u;
+	game->leader_lamp_2 = 0u;
+	game->leader_lamp_2_blinks = 0u;
+	game->leader_lamp_2_period = 0u;
+	game->leader_lamp_2_timer = 0u;
 	SCREEN(SCREEN_1)->button_lamps = 0u;
 	SCREEN(SCREEN_2)->button_lamps = 0u;
-	port_d_outputs_0_halfword = (port_d_outputs[0] | ((uint32_t)port_d_outputs[1] << 8u)) & 0xE0E1u;
-	port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
-	port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
-	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
-	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
-	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
+	port_d_outputs_0_halfword = (game->port_d_outputs[0] | ((uint32_t)game->port_d_outputs[1] << 8u)) & 0xE0E1u;
+	game->port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
+	game->port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
+	port_g_outputs_0_halfword = (game->port_g_outputs[0] | ((uint32_t)game->port_g_outputs[1] << 8u)) & ~0x403u;
+	game->port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
+	game->port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
 	text_0_to = test_mode_lcd_text;
 	text_4_to = test_mode_lcd_text_4_to_7;
 	AS32(SCREEN(SCREEN_1)->lcd_text[0]) = text_0_to;
@@ -99,8 +99,8 @@ uint32_t test_mode_start(void)
 	AS32(SCREEN(SCREEN_1)->lcd_text[12]) = text_12_to;
 	AS32(SCREEN(SCREEN_2)->lcd_text[8]) = text_8_to;
 	AS32(SCREEN(SCREEN_2)->lcd_text[12]) = text_12_to;
-	test_mode_routine = test_mode_menu_ADDRESS;
-	lcd_place = unk_218F20_ADDRESS;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
+	lcd_place = 0x218F20u;
 	test_mode_read_controls();
 	return lcd_place;
 }
@@ -112,7 +112,7 @@ void test_mode_frame(void)
 {
 	test_mode_read_controls();
 	test_mode_send_sound();
-	call_code(test_mode_routine);
+	call_code(game->test_mode_routine);
 }
 
 /* Shows the test mode's menu, where every page returns: in CONTINUE mode (test_mode_flags bit 0) the
@@ -127,26 +127,26 @@ void test_mode_menu(void)
 	uint16_t cell_value = 0;
 	uint32_t cursor_cell = 0, heading = 0, text = 0;
 
-	if (test_mode_cursor == 0u)
+	if (game->test_mode_cursor == 0u)
 	{
-		test_mode_routine = test_mode_menu_run_ADDRESS;
+		game->test_mode_routine = test_mode_menu_run_ADDRESS;
 		test_mode_menu_run();
 		return;
 	}
-	if ((test_mode_flags & 1u) != 0u)
-		test_mode_cursor++;
+	if ((game->test_mode_flags & 1u) != 0u)
+		game->test_mode_cursor++;
 	cell_value = test_mode_clear_text();
 	cell_value = test_mode_menu_show_write_count(cell_value);
 	text = test_mode_menu_text_ADDRESS;
 	test_mode_draw_texts(cell_value, text);
-	carry = (test_mode_flags & 1u) != 0u;
+	carry = (game->test_mode_flags & 1u) != 0u;
 	heading = carry;
 	text = test_mode_menu_headings[heading];
 	heading = test_mode_draw_texts((uint16_t)heading, text);
 	test_mode_draw_instructions(heading);
-	cursor_cell = 0x310000u | test_mode_menu_cursor_cells[test_mode_cursor];
+	cursor_cell = 0x310000u | test_mode_menu_cursor_cells[game->test_mode_cursor];
 	test_mode_set_cursor(heading, cursor_cell);
-	test_mode_routine = test_mode_menu_run_ADDRESS;
+	game->test_mode_routine = test_mode_menu_run_ADDRESS;
 	test_mode_menu_run();
 }
 
@@ -165,29 +165,29 @@ void test_mode_menu_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		cursor = test_mode_cursor;
+		cursor = game->test_mode_cursor;
 		cursor = (uint8_t)(cursor + 1u);
 		if ((int8_t)cursor >= 0xD)
 			cursor = 0u;
-		test_mode_cursor = cursor;
+		game->test_mode_cursor = cursor;
 		cursor_cell = 0x310000u | test_mode_menu_cursor_cells[cursor];
 		test_mode_set_cursor(cursor, cursor_cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_page_jumps[test_mode_cursor];
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_page_jumps[game->test_mode_cursor];
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -197,12 +197,12 @@ uint16_t test_mode_menu_show_write_count(uint16_t cell_value)
 {
 	uint32_t attribute = 0, cell = 0, digits = 0, text = 0, write_count = 0;
 
-	if ((test_mode_buttons & 1u) == 0u)
+	if ((game->test_mode_buttons & 1u) == 0u)
 		return cell_value;
 	text = test_mode_write_count_text_ADDRESS;
 	test_mode_draw_texts(cell_value, text);
 	cell = TEXT_CELL(27, 26);
-	write_count = eeprom_write_count;
+	write_count = game->eeprom_write_count;
 	attribute = 0x64u;
 	digits = 5u;
 	test_mode_draw_number(digits, &write_count, &attribute, &cell);
@@ -218,17 +218,17 @@ void test_mode_menu_toggle_continue(void)
 	uint32_t heading = 0, text = 0;
 	uint32_t mode_flags = 0, test_mode_flags_long = 0;
 
-	mode_flags = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
+	mode_flags = (game->test_mode_flags | ((uint32_t)game->test_mode_cursor << 8u) | ((uint32_t)game->test_mode_page_cursor << 16u) | ((uint32_t)(game->test_mode_routine & 0xFFu) << 24u));
 	carry = (mode_flags & 1u) != 0u;
 	test_mode_flags_long = mode_flags ^ 1u;
-	test_mode_flags = (uint8_t)test_mode_flags_long;
-	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
-	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
-	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
+	game->test_mode_flags = (uint8_t)test_mode_flags_long;
+	game->test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	game->test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	game->test_mode_routine = (game->test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	heading = 0u - (0xFFFFFFFFu + carry);
 	text = test_mode_menu_headings[heading];
 	test_mode_draw_texts((uint16_t)heading, text);
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* The MEMORY TEST, all at once with the interrupts off and the sound program held in its wait loop
@@ -257,7 +257,7 @@ void test_mode_memory_test(void)
 	current_object = memory_test_results_ADDRESS;
 	blank_result = 0u;
 	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
-	AS16(memory_test_results[0]) = 0x101u;
+	AS16(game->memory_test_results[0]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0u;
 	rom_check = LOW_ROM_TESTED_BYTES;
@@ -266,14 +266,14 @@ void test_mode_memory_test(void)
 	rom_check = (rom_check & ~0xFFu) | 2u;
 	if (ic37_checksum != low_rom_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
-	memory_test_results[0] = rom_check;
+	game->memory_test_results[0] = rom_check;
 	rom_check = (rom_check & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic40_checksum != odd_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
-	memory_test_results[1] = rom_check;
+	game->memory_test_results[1] = rom_check;
 	current_object = current_object + 1u;
-	AS16(memory_test_results[2]) = 0x101u;
+	AS16(game->memory_test_results[2]) = 0x101u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x100000u;
 	rom_check = HIGH_ROM_TESTED_BYTES;
@@ -282,14 +282,14 @@ void test_mode_memory_test(void)
 	rom_check = (rom_check & ~0xFFu) | 2u;
 	if (ic36_checksum != high_rom_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
-	memory_test_results[2] = rom_check;
+	game->memory_test_results[2] = rom_check;
 	rom_check = (rom_check & ~0xFFu) | 2u;
 	current_object = current_object + 1u;
 	if (ic39_checksum != odd_check)
 		rom_check = (rom_check & ~0xFFu) | 3u;
-	memory_test_results[3] = rom_check;
+	game->memory_test_results[3] = rom_check;
 	current_object = current_object + 1u;
-	AS32(memory_test_results[4]) = 0x1010101u;
+	AS32(game->memory_test_results[4]) = 0x1010101u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x300000u;
 	failures = 0x20000u;
@@ -298,27 +298,27 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if (video_lane_0_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[4] = chip_result;
+	game->memory_test_results[4] = chip_result;
 	video_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (video_lane_1_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[5] = chip_result;
+	game->memory_test_results[5] = chip_result;
 	video_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (video_lane_2_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[6] = chip_result;
+	game->memory_test_results[6] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & ~0xFFFu) != 0u)
 		chip_result = 3u;
-	memory_test_results[7] = chip_result;
+	game->memory_test_results[7] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = init_video();
-	AS32(memory_test_results[8]) = 0x1010101u;
+	AS32(game->memory_test_results[8]) = 0x1010101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x400000u;
 	failures = 0x20000u;
@@ -327,27 +327,27 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if (sprite_lane_0_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[8] = chip_result;
+	game->memory_test_results[8] = chip_result;
 	sprite_lane_1_failures = failures & 0xF0u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (sprite_lane_1_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[9] = chip_result;
+	game->memory_test_results[9] = chip_result;
 	sprite_lane_2_failures = failures & 0xF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (sprite_lane_2_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[10] = chip_result;
+	game->memory_test_results[10] = chip_result;
 	sprite_lane_3_failures = failures & ~0xFFFu;
 	failures = sprite_lane_3_failures;
 	chip_result = 2u;
 	current_object = current_object + 1u;
-	memory_test_results[11] = chip_result;
+	game->memory_test_results[11] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	AS16(memory_test_results[12]) = 0x101u;
+	AS16(game->memory_test_results[12]) = 0x101u;
 	test_mode_memory_test_draw(&failures, &r12);
 	memory_start = 0x600000u;
 	failures = 0x4000u;
@@ -355,15 +355,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[12] = chip_result;
+	game->memory_test_results[12] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
-	memory_test_results[13] = chip_result;
+	game->memory_test_results[13] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	AS16(memory_test_results[14]) = 0x101u;
+	AS16(game->memory_test_results[14]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = PALETTE_RAM + 0x4000u;
 	failures = 0x4000u;
@@ -371,15 +371,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[14] = chip_result;
+	game->memory_test_results[14] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
-	memory_test_results[15] = chip_result;
+	game->memory_test_results[15] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	AS16(memory_test_results[16]) = 0x101u;
+	AS16(game->memory_test_results[16]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x680000u;
 	failures = 0x4000u;
@@ -387,15 +387,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[16] = chip_result;
+	game->memory_test_results[16] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
-	memory_test_results[17] = chip_result;
+	game->memory_test_results[17] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	AS16(memory_test_results[18]) = 0x101u;
+	AS16(game->memory_test_results[18]) = 0x101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x684000u;
 	failures = 0x4000u;
@@ -403,15 +403,15 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[18] = chip_result;
+	game->memory_test_results[18] = chip_result;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if ((failures & ~0xFFu) != 0u)
 		chip_result = 3u;
-	memory_test_results[19] = chip_result;
+	game->memory_test_results[19] = chip_result;
 	current_object = current_object + 1u;
 	cell_value = test_mode_set_up_colours();
-	AS32(memory_test_results[20]) = 0x1010101u;
+	AS32(game->memory_test_results[20]) = 0x1010101u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	move_halfwords(SPRITE_RAM, WORK_RAM, 0x10000u);
 	memory_start = 0x200000u;
@@ -421,29 +421,29 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[20] = chip_result;
+	game->memory_test_results[20] = chip_result;
 	work_byte_1_failures = failures & 0xFF00u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_1_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[21] = chip_result;
+	game->memory_test_results[21] = chip_result;
 	work_byte_2_failures = failures & 0xFF0000u;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_2_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[22] = chip_result;
+	game->memory_test_results[22] = chip_result;
 	work_byte_3_failures = failures & ~0xFFFFFFu;
 	failures = work_byte_3_failures;
 	chip_result = 2u;
 	current_object = current_object + 1u;
 	if (work_byte_3_failures != 0u)
 		chip_result = 3u;
-	memory_test_results[23] = chip_result;
+	game->memory_test_results[23] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
-	memory_test_results[24] = 1u;
+	game->memory_test_results[24] = 1u;
 	test_mode_memory_test_draw(&failures, &r12);
 	move_halfwords(SPRITE_RAM, SOUND_RAM, 0x1000u);
 	memory_start = 0x700000u;
@@ -453,14 +453,14 @@ void test_mode_memory_test(void)
 	chip_result = 2u;
 	if ((uint8_t)failures != 0u)
 		chip_result = 3u;
-	memory_test_results[24] = chip_result;
+	game->memory_test_results[24] = chip_result;
 	current_object = current_object + 1u;
 	init_sprite_lists();
 	test_mode_memory_test_draw(&failures, &r12);
 	SOUND_PROGRAM_HOLD = 0u;
 	interrupts_on();
 	test_mode_show_exit_prompt();
-	test_mode_routine = test_mode_memory_test_run_ADDRESS;
+	game->test_mode_routine = test_mode_memory_test_run_ADDRESS;
 	test_mode_memory_test_run((uint16_t)failures);
 }
 
@@ -468,8 +468,8 @@ void test_mode_memory_test(void)
    (test_mode_blink_prompt). */
 void test_mode_memory_test_run(uint16_t character)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_menu_ADDRESS;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_menu_ADDRESS;
 	test_mode_blink_prompt(character);
 }
 
@@ -1028,10 +1028,10 @@ void test_mode_volume_adjustment(void)
 	text = volume_adjustment_controls_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_draw_instructions(character);
-	test_mode_page_cursor = 1u;
+	game->test_mode_page_cursor = 1u;
 	cell = 0x310000u | volume_adjustment_cancel_cell;
 	character = test_mode_set_cursor(character, cell);
-	test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
+	game->test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
 	test_mode_volume_adjustment_select(character);
 }
 
@@ -1049,30 +1049,30 @@ void test_mode_volume_adjustment_select(uint32_t character)
 	uint32_t blink_cell = 0;
 
 	test_mode_volume_adjustment_draw(&character, &r12);
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor ^ 1u;
-		test_mode_page_cursor = page_cursor;
+		page_cursor = game->test_mode_page_cursor ^ 1u;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | volume_adjustment_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) == 0u)
+	if ((game->test_mode_buttons_pressed & 2u) == 0u)
 	{
-		blink_timer = test_mode_blink_timer - 1u;
-		test_mode_blink_timer = blink_timer;
+		blink_timer = game->test_mode_blink_timer - 1u;
+		game->test_mode_blink_timer = blink_timer;
 		if ((int8_t)blink_timer < 0)
 		{
-			test_mode_blink_timer = 5;
-			blink_cell = test_mode_blink_address;
+			game->test_mode_blink_timer = 5;
+			blink_cell = game->test_mode_blink_address;
 			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
-				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+				game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 		}
 		return;
 	}
-	if (test_mode_page_cursor == 0u)
+	if (game->test_mode_page_cursor == 0u)
 	{
 		drawn_character = test_mode_clear_text();
 		text = volume_adjusting_text_ADDRESS;
@@ -1093,20 +1093,20 @@ void test_mode_volume_adjustment_select(uint32_t character)
 			analog_input++;
 			range++;
 		} while (controls_left != 0u);
-		test_mode_routine = test_mode_volume_adjustment_adjust_ADDRESS;
+		game->test_mode_routine = test_mode_volume_adjustment_adjust_ADDRESS;
 		return;
 	}
-	test_mode_routine = test_mode_menu_ADDRESS;
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -1134,10 +1134,10 @@ void test_mode_volume_adjustment_adjust(void)
 		controls_left--;
 	} while (controls_left != 0u);
 	test_mode_volume_adjustment_draw(&position, &r12);
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		test_mode_flags |= 2u;
-		test_mode_routine = test_mode_menu_ADDRESS;
+		game->test_mode_flags |= 2u;
+		game->test_mode_routine = test_mode_menu_ADDRESS;
 	}
 	test_mode_blink_prompt((uint16_t)position);
 }
@@ -1232,7 +1232,7 @@ void test_mode_input_test(void)
 	text = input_test_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
-	test_mode_routine = test_mode_input_test_run_ADDRESS;
+	game->test_mode_routine = test_mode_input_test_run_ADDRESS;
 	test_mode_input_test_run(character);
 }
 
@@ -1242,12 +1242,12 @@ void test_mode_input_test(void)
 void test_mode_input_test_run(uint32_t character)
 {
 	test_mode_input_test_draw(&character, &r12, &r14);
-	if ((test_mode_buttons_pressed & 2u) == 0u)
+	if ((game->test_mode_buttons_pressed & 2u) == 0u)
 	{
 		test_mode_blink_prompt((uint16_t)character);
 		return;
 	}
-	test_mode_routine = test_mode_input_test_release_ADDRESS;
+	game->test_mode_routine = test_mode_input_test_release_ADDRESS;
 	test_mode_blink_prompt((uint16_t)character);
 }
 
@@ -1258,12 +1258,12 @@ void test_mode_input_test_release(void)
 	uint32_t test_switches = 0;
 
 	test_mode_input_test_draw(&test_switches, &r12, &r14);
-	if ((test_mode_buttons_released & 2u) == 0u)
+	if ((game->test_mode_buttons_released & 2u) == 0u)
 	{
 		test_mode_blink_prompt((uint16_t)test_switches);
 		return;
 	}
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 	test_mode_blink_prompt((uint16_t)test_switches);
 }
 
@@ -1368,11 +1368,11 @@ void test_mode_output_test(void)
 	text = output_test_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_draw_instructions(character);
-	test_mode_page_cursor = 0xAu;
+	game->test_mode_page_cursor = 0xAu;
 	cell = 0x310000u | output_test_exit_cell;
 	test_mode_set_cursor(character, cell);
 	r12 = test_mode_output_test_draw();
-	test_mode_routine = test_mode_output_test_run_ADDRESS;
+	game->test_mode_routine = test_mode_output_test_run_ADDRESS;
 	test_mode_output_test_run();
 }
 
@@ -1387,9 +1387,9 @@ void test_mode_output_test_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 		case 1:
@@ -1409,9 +1409,9 @@ void test_mode_output_test_run(void)
 		}
 		r12 = test_mode_output_test_draw();
 	}
-	if ((test_mode_buttons_released & 2u) != 0u)
+	if ((game->test_mode_buttons_released & 2u) != 0u)
 	{
-		page_cursor = test_mode_page_cursor;
+		page_cursor = game->test_mode_page_cursor;
 		if (page_cursor != 0xAu)
 		{
 			switch (page_cursor)
@@ -1435,39 +1435,39 @@ void test_mode_output_test_run(void)
 			r12 = test_mode_output_test_draw();
 		}
 	}
-	if ((test_mode_buttons_pressed & 1u) == 0u || (test_mode_buttons & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) == 0u || (game->test_mode_buttons & 2u) != 0u)
 	{
-		blink_timer = test_mode_blink_timer - 1u;
-		test_mode_blink_timer = blink_timer;
+		blink_timer = game->test_mode_blink_timer - 1u;
+		game->test_mode_blink_timer = blink_timer;
 		if ((int8_t)blink_timer < 0)
 		{
-			test_mode_blink_timer = 5;
-			blink_cell = test_mode_blink_address;
+			game->test_mode_blink_timer = 5;
+			blink_cell = game->test_mode_blink_address;
 			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
-				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+				game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 		}
 		return;
 	}
 	test_mode_clear_cursor();
-	page_cursor = test_mode_page_cursor;
+	page_cursor = game->test_mode_page_cursor;
 	page_cursor = (uint8_t)(page_cursor + 1u);
 	if ((int8_t)page_cursor >= 0xB)
 		page_cursor = 0u;
-	test_mode_page_cursor = page_cursor;
+	game->test_mode_page_cursor = page_cursor;
 	cell = 0x310000u | output_test_cursor_cells[page_cursor];
 	test_mode_set_cursor(page_cursor, cell);
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -1502,7 +1502,7 @@ void test_mode_output_test_toggle(void)
 {
 	uint32_t output = 0, output_variable = 0;
 
-	output = output_test_outputs_ADDRESS + 0x2u + test_mode_page_cursor * 4u;
+	output = output_test_outputs_ADDRESS + 0x2u + game->test_mode_page_cursor * 4u;
 	output_variable = OUTPUT_TEST_OUTPUT(output - 0x2u)->variable + GAME_VARIABLES;
 	OUTPUT_BITS(output_variable)[0] ^= shl32(1u, (int)(OUTPUT_TEST_OUTPUT(output - 0x2u)->bit));
 }
@@ -1514,13 +1514,13 @@ void test_mode_output_test_exit(void)
 {
 	uint32_t port_d_outputs_0_halfword = 0, port_g_outputs_0_halfword = 0;
 
-	port_d_outputs_0_halfword = (port_d_outputs[0] | ((uint32_t)port_d_outputs[1] << 8u)) & 0xE0E1u;
-	port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
-	port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
-	port_g_outputs_0_halfword = (port_g_outputs[0] | ((uint32_t)port_g_outputs[1] << 8u)) & ~0x403u;
-	port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
-	port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
-	test_mode_routine = test_mode_menu_ADDRESS;
+	port_d_outputs_0_halfword = (game->port_d_outputs[0] | ((uint32_t)game->port_d_outputs[1] << 8u)) & 0xE0E1u;
+	game->port_d_outputs[0] = (uint8_t)port_d_outputs_0_halfword;
+	game->port_d_outputs[1] = (uint8_t)(port_d_outputs_0_halfword >> 8u);
+	port_g_outputs_0_halfword = (game->port_g_outputs[0] | ((uint32_t)game->port_g_outputs[1] << 8u)) & ~0x403u;
+	game->port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
+	game->port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* Starts the SOUND TEST: MONITOR A No., MONITOR B No. (the numbers of the next sounds, both 0:
@@ -1535,13 +1535,13 @@ void test_mode_sound_test(void)
 	text = sound_test_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_draw_instructions(character);
-	test_mode_page_cursor = 2u;
+	game->test_mode_page_cursor = 2u;
 	cell = 0x310000u | sound_test_exit_cell;
 	test_mode_set_cursor(character, cell);
-	sound_test_number_a = 0u;
-	sound_test_number_b = 0u;
+	game->sound_test_number_a = 0u;
+	game->sound_test_number_b = 0u;
 	test_mode_sound_test_draw();
-	test_mode_routine = test_mode_sound_test_run_ADDRESS;
+	game->test_mode_routine = test_mode_sound_test_run_ADDRESS;
 	test_mode_sound_test_run();
 }
 
@@ -1557,23 +1557,23 @@ void test_mode_sound_test_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor;
+		page_cursor = game->test_mode_page_cursor;
 		page_cursor = (uint8_t)(page_cursor + 1u);
 		if ((int8_t)page_cursor >= 3)
 			page_cursor = 0u;
-		test_mode_page_cursor = page_cursor;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | sound_test_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		stop_request = 0x1Fu;
 		test_mode_queue_sound(stop_request);
 		test_mode_queue_sound_screen_2(stop_request);
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 			test_mode_sound_test_play_a();
@@ -1587,16 +1587,16 @@ void test_mode_sound_test_run(void)
 		}
 		test_mode_sound_test_draw();
 	}
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -1606,12 +1606,12 @@ void test_mode_sound_test_draw(void)
 	uint32_t cell = 0, colour = 0, digit_count = 0, number = 0;
 
 	cell = TEXT_CELL(28, 11);
-	number = sound_test_number_a;
+	number = game->sound_test_number_a;
 	colour = 0x64u;
 	digit_count = 3u;
 	test_mode_draw_number(digit_count, &number, &colour, &cell);
 	cell = (cell & ~0xFFFFu) | 0xF6B8u;
-	number = sound_test_number_b;
+	number = game->sound_test_number_b;
 	colour = 0x64u;
 	digit_count = 3u;
 	test_mode_draw_number(digit_count, &number, &colour, &cell);
@@ -1627,16 +1627,16 @@ void test_mode_sound_test_play_a(void)
 	uint32_t sound_code = 0, sound_number = 0;
 	uint32_t saved_sound_number = 0;
 
-	sound_number = sound_test_number_a;
+	sound_number = game->sound_test_number_a;
 	if (sound_number < 0x40u)
 	{
 		sound_code = sound_test_codes[sound_number];
 		if (sound_code == 0u)
 		{
-			sound_test_number_a = 0u;
+			game->sound_test_number_a = 0u;
 			return;
 		}
-		sound_test_number_a = sound_number + 1u;
+		game->sound_test_number_a = sound_number + 1u;
 		test_mode_queue_sound((uint16_t)sound_code);
 		return;
 	}
@@ -1653,10 +1653,10 @@ void test_mode_sound_test_play_a(void)
 	sound_code = sound_test_codes[sound_number];
 	if (sound_code == 0u)
 	{
-		sound_test_number_a = 0u;
+		game->sound_test_number_a = 0u;
 		return;
 	}
-	sound_test_number_a = sound_number + 1u;
+	game->sound_test_number_a = sound_number + 1u;
 	test_mode_queue_sound((uint16_t)sound_code);
 }
 
@@ -1668,16 +1668,16 @@ void test_mode_sound_test_play_b(void)
 	uint32_t sound_code = 0, sound_number = 0;
 	uint32_t saved_sound_number = 0;
 
-	sound_number = sound_test_number_b;
+	sound_number = game->sound_test_number_b;
 	if (sound_number < 0x40u)
 	{
 		sound_code = sound_test_codes[sound_number];
 		if (sound_code == 0u)
 		{
-			sound_test_number_b = 0u;
+			game->sound_test_number_b = 0u;
 			return;
 		}
-		sound_test_number_b = sound_number + 1u;
+		game->sound_test_number_b = sound_number + 1u;
 		test_mode_queue_sound_screen_2((uint16_t)sound_code);
 		return;
 	}
@@ -1694,17 +1694,17 @@ void test_mode_sound_test_play_b(void)
 	sound_code = sound_test_codes[sound_number];
 	if (sound_code == 0u)
 	{
-		sound_test_number_b = 0u;
+		game->sound_test_number_b = 0u;
 		return;
 	}
-	sound_test_number_b = sound_number + 1u;
+	game->sound_test_number_b = sound_number + 1u;
 	test_mode_queue_sound_screen_2((uint16_t)sound_code);
 }
 
 /* The sound test's EXIT: back to the menu. */
 void test_mode_sound_test_exit(void)
 {
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* Starts the C.R.T. TEST's first page: a black background (the background colour of both palettes,
@@ -1722,7 +1722,7 @@ void test_mode_crt_test(void)
 	test_mode_draw_texts(character, text);
 	character = test_mode_crt_test_draw_bars(character);
 	test_mode_show_continue_prompt();
-	test_mode_routine = test_mode_crt_test_bars_run_ADDRESS;
+	game->test_mode_routine = test_mode_crt_test_bars_run_ADDRESS;
 	test_mode_crt_test_bars_run(character);
 }
 
@@ -1730,8 +1730,8 @@ void test_mode_crt_test(void)
    blinks. */
 void test_mode_crt_test_bars_run(uint16_t character)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_crt_test_grid_ADDRESS;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_crt_test_grid_ADDRESS;
 	test_mode_blink_prompt(character);
 }
 
@@ -1746,7 +1746,7 @@ void test_mode_crt_test_grid(void)
 	text = crt_test_second_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
-	test_mode_routine = test_mode_crt_test_grid_run_ADDRESS;
+	game->test_mode_routine = test_mode_crt_test_grid_run_ADDRESS;
 	test_mode_crt_test_grid_run(character);
 }
 
@@ -1754,12 +1754,12 @@ void test_mode_crt_test_grid(void)
    goes back to the menu; the message blinks. */
 void test_mode_crt_test_grid_run(uint16_t character)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		character = test_mode_clear_text();
 		io_write16(BACKGROUND_COLOUR_1, 0x733u);
 		io_write16(BACKGROUND_COLOUR_2, 0x733u);
-		test_mode_routine = test_mode_menu_ADDRESS;
+		game->test_mode_routine = test_mode_menu_ADDRESS;
 	}
 	test_mode_blink_prompt(character);
 }
@@ -1898,10 +1898,10 @@ void test_mode_game_assignments(void)
 	test_mode_draw_texts(character, text);
 	test_mode_game_assignments_draw(&character_2, &r12);
 	test_mode_draw_instructions(character_2);
-	test_mode_page_cursor = 9u;
+	game->test_mode_page_cursor = 9u;
 	cell = 0x310000u | game_assignments_exit_cell;
 	test_mode_set_cursor(character_2, cell);
-	test_mode_routine = test_mode_game_assignments_run_ADDRESS;
+	game->test_mode_routine = test_mode_game_assignments_run_ADDRESS;
 	test_mode_game_assignments_run();
 }
 
@@ -1917,21 +1917,21 @@ void test_mode_game_assignments_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor;
+		page_cursor = game->test_mode_page_cursor;
 		page_cursor = (uint8_t)(page_cursor + 1u);
 		if ((int8_t)page_cursor >= 0xA)
 			page_cursor = 0u;
-		test_mode_page_cursor = page_cursor;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | game_assignments_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		current_object = settings_magic_ADDRESS;
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 			test_mode_game_assignments_difficulty();
@@ -1955,16 +1955,16 @@ void test_mode_game_assignments_run(void)
 			break;
 		}
 	}
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -1981,10 +1981,10 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 	cell = TEXT_CELL(32, 5);
 	colour = 0x64u;
 	digit_count = 2u;
-	number = game_difficulty + 1u;
+	number = game->game_difficulty + 1u;
 	test_mode_draw_number(digit_count, &number, &colour, &cell);
 	cell = LINKED(cell, 0xF3A8u);
-	bar_length = game_difficulty * 2u;
+	bar_length = game->game_difficulty * 2u;
 	bar_cells_left = bar_length;
 	if (bar_length != 0u)
 	{
@@ -2040,11 +2040,11 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 		stages_left--;
 		row_cell += 0x80u;
 	} while (stages_left != 0u);
-	steering_on = steering_wheel_reaction;
+	steering_on = game->steering_wheel_reaction;
 	steering_on = steering_on & 1u;
 	text = steering_wheel_reaction_texts[steering_on];
 	test_mode_draw_texts((uint16_t)steering_on, text);
-	advertise_on = advertise_sound;
+	advertise_on = game->advertise_sound;
 	advertise_on = advertise_on & 1u;
 	text = advertise_sound_texts[advertise_on];
 	advertise_on = test_mode_draw_texts((uint16_t)advertise_on, text);
@@ -2057,7 +2057,7 @@ void test_mode_game_assignments_difficulty(void)
 {
 	uint32_t ignored = 0;
 
-	game_difficulty = (game_difficulty + 1u) & 7u;
+	game->game_difficulty = (game->game_difficulty + 1u) & 7u;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2068,11 +2068,11 @@ void test_mode_game_assignments_time(void)
 	uint8_t seconds = 0;
 	uint32_t ignored = 0, stage_item = 0;
 
-	stage_item = test_mode_page_cursor;
-	seconds = (uint8_t)(time_difficulty[stage_item - 1u] + 1u);
+	stage_item = game->test_mode_page_cursor;
+	seconds = (uint8_t)(game->time_difficulty[stage_item - 1u] + 1u);
 	if ((int8_t)seconds > 5)
 		seconds = 0xFBu;
-	time_difficulty[stage_item - 1u] = seconds;
+	game->time_difficulty[stage_item - 1u] = seconds;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2082,8 +2082,8 @@ void test_mode_game_assignments_steering(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = steering_wheel_reaction > 0u;
-	steering_wheel_reaction = 1u - carry;
+	carry = game->steering_wheel_reaction > 0u;
+	game->steering_wheel_reaction = 1u - carry;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2093,8 +2093,8 @@ void test_mode_game_assignments_advertise(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = advertise_sound > 0u;
-	advertise_sound = 1u - carry;
+	carry = game->advertise_sound > 0u;
+	game->advertise_sound = 1u - carry;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2114,19 +2114,19 @@ void test_mode_game_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
-			test_mode_routine = test_mode_menu_ADDRESS;
+			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
 	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
-	test_mode_flags |= 2u;
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_flags |= 2u;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* Starts the COIN ASSIGNMENTS with the cursor on EXIT (test_mode_page_cursor 2):
    test_mode_coin_assignments_show. */
 void test_mode_coin_assignments(void)
 {
-	test_mode_page_cursor = 2u;
+	game->test_mode_page_cursor = 2u;
 	test_mode_coin_assignments_show();
 }
 
@@ -2144,9 +2144,9 @@ void test_mode_coin_assignments_show(void)
 	test_mode_draw_texts(character, text);
 	test_mode_coin_assignments_draw(&character_2, &colours, &r12);
 	test_mode_draw_instructions(character_2);
-	cell = 0x310000u | coin_assignments_cursor_cells[test_mode_page_cursor];
+	cell = 0x310000u | coin_assignments_cursor_cells[game->test_mode_page_cursor];
 	test_mode_set_cursor(character_2, cell);
-	test_mode_routine = test_mode_coin_assignments_run_ADDRESS;
+	game->test_mode_routine = test_mode_coin_assignments_run_ADDRESS;
 	test_mode_coin_assignments_run(colours);
 }
 
@@ -2162,23 +2162,23 @@ void test_mode_coin_assignments_run(uint32_t item_count)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor;
+		page_cursor = game->test_mode_page_cursor;
 		page_cursor = (uint8_t)(page_cursor + 1u);
 		item_count = (item_count & ~0xFFu) | 0xCu;
 		item_count = (item_count & ~0xFFu) | ((uint8_t)item_count >> 2);
 		if ((int8_t)item_count <= (int8_t)page_cursor)
 			page_cursor = 0u;
-		test_mode_page_cursor = page_cursor;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | coin_assignments_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		current_object = settings_magic_ADDRESS;
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 			test_mode_coin_assignments_next_setting();
@@ -2203,16 +2203,16 @@ void test_mode_coin_assignments_run(uint32_t item_count)
 			break;
 		}
 	}
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -2229,9 +2229,9 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours,
 	cell = TEXT_CELL(32, 9);
 	colours = 0x64u;
 	digit_count = 2u;
-	number = coin_setting + 1u;
+	number = game->coin_setting + 1u;
 	test_mode_draw_number(digit_count, &number, &colours, &cell);
-	description = coin_setting_descriptions[coin_setting];
+	description = coin_setting_descriptions[game->coin_setting];
 	blank_cell = 0u;
 	line_cell = TEXT_CELL(17, 10);
 	lines_left = 5u;
@@ -2302,30 +2302,30 @@ void test_mode_coin_assignments_next_setting(void)
 
 	do
 	{
-		setting_number = coin_setting;
+		setting_number = game->coin_setting;
 		setting_number = (uint8_t)(setting_number + 1u);
 		if ((int8_t)setting_number >= 0x1A)
 			setting_number = 0u;
-		coin_setting = setting_number;
+		game->coin_setting = setting_number;
 		setting = coin_setting_records_ADDRESS + setting_number * 4u;
 		if ((int8_t)COIN_SETTING_RECORD(setting)->coins < 0)
 		{
-			coins_per_credit = 1u;
-			bonus_adder = 0xFFu;
-			first_chute_multiplier = 1u;
-			second_chute_multiplier = 1u;
-			free_play = 0xFFu;
+			game->coins_per_credit = 1u;
+			game->bonus_adder = 0xFFu;
+			game->first_chute_multiplier = 1u;
+			game->second_chute_multiplier = 1u;
+			game->free_play = 0xFFu;
 			test_mode_coin_assignments_draw(&ignored, &ignored_2, &r12);
 			return;
 		}
-	} while (setting_number != 0u && coins_per_credit == COIN_SETTING_RECORD(setting)->coins && bonus_adder == COIN_SETTING_RECORD(setting)->bonus && first_chute_multiplier == COIN_SETTING_RECORD(setting)->first_multiplier);
-	coins_per_credit = COIN_SETTING_RECORD(setting)->coins;
+	} while (setting_number != 0u && game->coins_per_credit == COIN_SETTING_RECORD(setting)->coins && game->bonus_adder == COIN_SETTING_RECORD(setting)->bonus && game->first_chute_multiplier == COIN_SETTING_RECORD(setting)->first_multiplier);
+	game->coins_per_credit = COIN_SETTING_RECORD(setting)->coins;
 	setting++;
-	bonus_adder = COIN_SETTING_RECORD(setting - 0x1u)->bonus;
+	game->bonus_adder = COIN_SETTING_RECORD(setting - 0x1u)->bonus;
 	setting++;
-	first_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->first_multiplier;
-	second_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->second_multiplier;
-	free_play = 0u;
+	game->first_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->first_multiplier;
+	game->second_chute_multiplier = COIN_SETTING_RECORD(setting - 0x2u)->second_multiplier;
+	game->free_play = 0u;
 	test_mode_coin_assignments_draw(&ignored, &ignored_2, &r12);
 }
 
@@ -2343,10 +2343,10 @@ void test_mode_coin_assignments_manual_start(uint32_t item_count)
 	test_mode_draw_texts(character, text);
 	coins_for_credit = test_mode_coin_assignments_manual_draw(item_count);
 	test_mode_draw_instructions(coins_for_credit);
-	test_mode_page_cursor = 3u;
+	game->test_mode_page_cursor = 3u;
 	cell = 0x310000u | coin_manual_exit_cell;
 	test_mode_set_cursor(coins_for_credit, cell);
-	test_mode_routine = test_mode_coin_assignments_manual_run_ADDRESS;
+	game->test_mode_routine = test_mode_coin_assignments_manual_run_ADDRESS;
 }
 
 /* Each frame of the MANUAL SETTING page: SERVICE moves the cursor down its four lines
@@ -2361,23 +2361,23 @@ void test_mode_coin_assignments_manual_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor;
+		page_cursor = game->test_mode_page_cursor;
 		page_cursor = (uint8_t)(page_cursor + 1u);
 		item_count = 0x10u;
 		item_count = item_count >> 2;
 		if ((int8_t)item_count <= (int8_t)page_cursor)
 			page_cursor = 0u;
-		test_mode_page_cursor = page_cursor;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | coin_manual_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		current_object = settings_magic_ADDRESS;
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 			test_mode_coin_assignments_step_coin_to_credit(item_count);
@@ -2393,16 +2393,16 @@ void test_mode_coin_assignments_manual_run(void)
 			break;
 		}
 	}
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -2419,12 +2419,12 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 
 	current_object = settings_magic_ADDRESS;
 	cell = TEXT_CELL(23, 8);
-	coins_for_credit = coins_per_credit;
+	coins_for_credit = game->coins_per_credit;
 	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
 	test_mode_draw_count(coins_for_credit, digit_count, plural_offset, &item_count, &cell);
-	shown_bonus = bonus_adder;
+	shown_bonus = game->bonus_adder;
 	if ((int8_t)shown_bonus > 0)
 	{
 		cell = LINKED(cell, 0xF51Eu);
@@ -2445,15 +2445,15 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
 	cell = TEXT_CELL(32, 12);
-	shown_multiplier = first_chute_multiplier;
+	shown_multiplier = game->first_chute_multiplier;
 	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
 	test_mode_draw_count(shown_multiplier, digit_count, plural_offset, &item_count, &cell);
 	cell = LINKED(cell, 0xF784u);
-	coins_for_credit = coins_per_credit;
-	coins_for_bonus = (int8_t)bonus_adder;
-	multiplier = first_chute_multiplier;
+	coins_for_credit = game->coins_per_credit;
+	coins_for_bonus = (int8_t)game->bonus_adder;
+	multiplier = game->first_chute_multiplier;
 	counted_coins = 0u;
 	toward_bonus = 0u;
 	rows_left = 9u;
@@ -2540,8 +2540,8 @@ void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t ite
 	if ((uint8_t)item_count >= 0xAu)
 		item_count = (item_count & ~0xFFu) | 1u;
 	RAM8(settings_magic_ADDRESS + setting_offset) = item_count;
-	if (free_play == 0u)
-		coin_setting = 0x1Au;
+	if (game->free_play == 0u)
+		game->coin_setting = 0x1Au;
 	test_mode_coin_assignments_manual_draw(item_count);
 }
 
@@ -2552,17 +2552,17 @@ void test_mode_coin_assignments_step_bonus_adder(uint32_t item_count)
 	uint8_t bonus = 0;
 	uint8_t next_bonus = 0;
 
-	bonus = bonus_adder;
+	bonus = game->bonus_adder;
 	if (bonus == 0u)
 		bonus++;
 	next_bonus = bonus + 1u;
 	bonus = next_bonus;
 	if (next_bonus == 0u)
-		free_play = 0u;
+		game->free_play = 0u;
 	if (bonus >= 0xAu)
 		bonus = 0u;
-	bonus_adder = bonus;
-	coin_setting = 0x1Au;
+	game->bonus_adder = bonus;
+	game->coin_setting = 0x1Au;
 	test_mode_coin_assignments_manual_draw(item_count);
 }
 
@@ -2580,8 +2580,8 @@ void test_mode_coin_assignments_step_multiplier(uint32_t item_count)
    (test_mode_page_cursor 1). */
 void test_mode_coin_assignments_manual_exit(void)
 {
-	test_mode_page_cursor = 1u;
-	test_mode_routine = test_mode_coin_assignments_show_ADDRESS;
+	game->test_mode_page_cursor = 1u;
+	game->test_mode_routine = test_mode_coin_assignments_show_ADDRESS;
 }
 
 /* EXIT of the coin assignments page: when coins_per_credit, first_chute_multiplier, bonus_adder,
@@ -2599,13 +2599,13 @@ void test_mode_coin_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
-			test_mode_routine = test_mode_menu_ADDRESS;
+			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
 	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
-	test_mode_flags |= 2u;
+	game->test_mode_flags |= 2u;
 	r12 = bookkeeping_clear_credits();
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* Opens the NETWORK ASSIGNMENTS page: its texts, with PRIVILEGE MODE and CABINET ID hidden (colour 6E)
@@ -2621,7 +2621,7 @@ void test_mode_network_assignments_start(void)
 	text = network_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
 	current_object = settings_magic_ADDRESS;
-	if (stand_alone != 0u)
+	if (game->stand_alone != 0u)
 	{
 		cell = TEXT_CELL(8, 12);
 		hidden_colour = 0x6Eu;
@@ -2630,13 +2630,13 @@ void test_mode_network_assignments_start(void)
 		hidden_colour = 0x6Eu;
 		test_mode_colour_line(hidden_colour, cell);
 	}
-	test_mode_privilege_mode = link_master & 1u;
+	game->test_mode_privilege_mode = game->link_master & 1u;
 	character = test_mode_network_assignments_draw();
 	test_mode_draw_instructions(character);
-	test_mode_page_cursor = 3u;
+	game->test_mode_page_cursor = 3u;
 	cell = 0x310000u | network_assignments_exit_cell;
 	test_mode_set_cursor(character, cell);
-	test_mode_routine = test_mode_network_assignments_run_ADDRESS;
+	game->test_mode_routine = test_mode_network_assignments_run_ADDRESS;
 	test_mode_network_assignments_run();
 }
 
@@ -2653,11 +2653,11 @@ void test_mode_network_assignments_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		page_cursor = test_mode_page_cursor;
-		if (stand_alone == 0u)
+		page_cursor = game->test_mode_page_cursor;
+		if (game->stand_alone == 0u)
 		{
 			page_cursor = (uint8_t)(page_cursor + 1u);
 			if ((int8_t)page_cursor >= 4)
@@ -2665,14 +2665,14 @@ void test_mode_network_assignments_run(void)
 		}
 		else
 			page_cursor = page_cursor ^ 3u;
-		test_mode_page_cursor = page_cursor;
+		game->test_mode_page_cursor = page_cursor;
 		cell = 0x310000u | network_assignments_cursor_cells[page_cursor];
 		test_mode_set_cursor(page_cursor, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		current_object = settings_magic_ADDRESS;
-		switch (test_mode_page_cursor)
+		switch (game->test_mode_page_cursor)
 		{
 		case 0:
 			test_mode_network_assignments_toggle_communication();
@@ -2688,16 +2688,16 @@ void test_mode_network_assignments_run(void)
 			break;
 		}
 	}
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
@@ -2710,19 +2710,19 @@ uint16_t test_mode_network_assignments_draw(void)
 	uint32_t cabinet_number_then_colour = 0, cell = 0, colour = 0, digit_count = 0, privilege = 0, stand_alone_bit = 0, text = 0;
 
 	current_object = settings_magic_ADDRESS;
-	stand_alone_bit = stand_alone;
+	stand_alone_bit = game->stand_alone;
 	stand_alone_bit = stand_alone_bit & 1u;
 	text = communication_texts[stand_alone_bit];
 	test_mode_draw_texts((uint16_t)stand_alone_bit, text);
-	privilege = test_mode_privilege_mode;
+	privilege = game->test_mode_privilege_mode;
 	text = privilege_mode_texts[privilege];
 	test_mode_draw_texts((uint16_t)privilege, text);
 	cell = TEXT_CELL(33, 14);
 	colour = 0x64u;
 	digit_count = 1u;
-	cabinet_number_then_colour = cabinet_id + 1u;
+	cabinet_number_then_colour = game->cabinet_id + 1u;
 	test_mode_draw_number(digit_count, &cabinet_number_then_colour, &colour, &cell);
-	if (stand_alone != 0u)
+	if (game->stand_alone != 0u)
 	{
 		cell = TEXT_CELL(28, 12);
 		cabinet_number_then_colour_2 = 0x6Eu;
@@ -2744,11 +2744,11 @@ void test_mode_network_assignments_toggle_communication(void)
 	uint32_t cell = 0;
 	uint32_t saved_colour = 0;
 
-	carry = stand_alone > 0u;
-	stand_alone = 1u - carry;
-	link_master = 1u;
-	isdn_mode = 0u;
-	test_mode_privilege_mode = 1u;
+	carry = game->stand_alone > 0u;
+	game->stand_alone = 1u - carry;
+	game->link_master = 1u;
+	game->isdn_mode = 0u;
+	game->test_mode_privilege_mode = 1u;
 	stand_alone_then_colour = 0x60u;
 	if (1u != carry)
 		stand_alone_then_colour = 0x6Eu;
@@ -2769,22 +2769,22 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 	uint32_t privilege = 0, setting = 0;
 	uint8_t stepped_privilege = 0;
 
-	privilege = test_mode_privilege_mode;
+	privilege = game->test_mode_privilege_mode;
 	stepped_privilege = privilege - 1u;
 	privilege = stepped_privilege;
 	if ((int8_t)stepped_privilege < 0)
 		privilege = 1u;
-	test_mode_privilege_mode = privilege;
+	game->test_mode_privilege_mode = privilege;
 	setting = privilege_mode_settings_ADDRESS + privilege * 2u;
-	link_master = PRIVILEGE_MODE_SETTING(setting)->master;
-	isdn_mode = PRIVILEGE_MODE_SETTING(setting)->isdn;
+	game->link_master = PRIVILEGE_MODE_SETTING(setting)->master;
+	game->isdn_mode = PRIVILEGE_MODE_SETTING(setting)->isdn;
 	test_mode_network_assignments_draw();
 }
 
 /* CABINET ID: steps cabinet_id through 0-3 (shown 1-4); redraws. */
 void test_mode_network_assignments_step_cabinet_id(void)
 {
-	cabinet_id = (cabinet_id + 1u) & 3u;
+	game->cabinet_id = (game->cabinet_id + 1u) & 3u;
 	test_mode_network_assignments_draw();
 }
 
@@ -2802,12 +2802,12 @@ void test_mode_network_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)current_object == 0u)
 		{
-			test_mode_routine = test_mode_menu_ADDRESS;
+			game->test_mode_routine = test_mode_menu_ADDRESS;
 			return;
 		}
 	} while (BACKED_UP_SETTING(current_object)->backup == BACKED_UP_SETTING(current_object)->value);
-	test_mode_flags |= 2u;
-	test_mode_routine = test_mode_menu_ADDRESS;
+	game->test_mode_flags |= 2u;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
 }
 
 /* Opens the first BOOKKEEPING page (1/2): its texts, its numbers (test_mode_bookkeeping_draw_totals) and
@@ -2823,7 +2823,7 @@ void test_mode_bookkeeping_start(void)
 	test_mode_draw_texts(character, text);
 	character = test_mode_bookkeeping_draw_totals();
 	test_mode_show_continue_prompt();
-	test_mode_routine = test_mode_bookkeeping_wait_ADDRESS;
+	game->test_mode_routine = test_mode_bookkeeping_wait_ADDRESS;
 	test_mode_bookkeeping_wait(character);
 }
 
@@ -2831,8 +2831,8 @@ void test_mode_bookkeeping_start(void)
    (test_mode_bookkeeping_second_page_start). */
 void test_mode_bookkeeping_wait(uint16_t character)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_bookkeeping_second_page_start_ADDRESS;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_bookkeeping_second_page_start_ADDRESS;
 	test_mode_blink_prompt(character);
 }
 
@@ -2849,15 +2849,15 @@ void test_mode_bookkeeping_second_page_start(void)
 	test_mode_draw_texts(character, text);
 	test_mode_bookkeeping_draw_histogram(&character_2, &r12);
 	test_mode_show_exit_prompt();
-	test_mode_routine = test_mode_bookkeeping_second_page_wait_ADDRESS;
+	game->test_mode_routine = test_mode_bookkeeping_second_page_wait_ADDRESS;
 	test_mode_bookkeeping_second_page_wait((uint16_t)character_2);
 }
 
 /* Blinks the prompt until TEST, then back to the menu. */
 void test_mode_bookkeeping_second_page_wait(uint16_t character)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_menu_ADDRESS;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_menu_ADDRESS;
 	test_mode_blink_prompt(character);
 }
 
@@ -3167,10 +3167,10 @@ void test_mode_backup_data_clear_start(void)
 	text = backup_data_clear_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_draw_instructions(character);
-	test_mode_page_cursor = 1u;
+	game->test_mode_page_cursor = 1u;
 	cell = 0x310000u | backup_data_clear_no_cell;
 	test_mode_set_cursor(character, cell);
-	test_mode_routine = test_mode_backup_data_clear_run_ADDRESS;
+	game->test_mode_routine = test_mode_backup_data_clear_run_ADDRESS;
 	test_mode_backup_data_clear_run();
 }
 
@@ -3187,32 +3187,32 @@ void test_mode_backup_data_clear_run(void)
 	uint16_t cursor_character = 0;
 	uint32_t blink_cell = 0;
 
-	if ((test_mode_buttons_pressed & 1u) != 0u)
+	if ((game->test_mode_buttons_pressed & 1u) != 0u)
 	{
 		test_mode_clear_cursor();
-		character = test_mode_page_cursor ^ 1u;
-		test_mode_page_cursor = character;
+		character = game->test_mode_page_cursor ^ 1u;
+		game->test_mode_page_cursor = character;
 		cell = 0x310000u | backup_data_clear_cursor_cells[character];
 		test_mode_set_cursor(character, cell);
 	}
-	if ((test_mode_buttons_pressed & 2u) == 0u)
+	if ((game->test_mode_buttons_pressed & 2u) == 0u)
 	{
-		blink_timer = test_mode_blink_timer - 1u;
-		test_mode_blink_timer = blink_timer;
+		blink_timer = game->test_mode_blink_timer - 1u;
+		game->test_mode_blink_timer = blink_timer;
 		if ((int8_t)blink_timer < 0)
 		{
-			test_mode_blink_timer = 5;
-			blink_cell = test_mode_blink_address;
+			game->test_mode_blink_timer = 5;
+			blink_cell = game->test_mode_blink_address;
 			cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 			TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 			if (cursor_character != 0u)
-				test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+				game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 		}
 		return;
 	}
-	if (test_mode_page_cursor == 0u)
+	if (game->test_mode_page_cursor == 0u)
 	{
-		TEXT_LAYER_CELLS(test_mode_blink_address)[0] = 0x6A7Fu;
+		TEXT_LAYER_CELLS(game->test_mode_blink_address)[0] = 0x6A7Fu;
 		character = bookkeeping_reset(character);
 		text = backup_data_clear_completed_text_ADDRESS;
 		test_mode_draw_texts((uint16_t)character, text);
@@ -3220,28 +3220,28 @@ void test_mode_backup_data_clear_run(void)
 		hidden_colour = 0x6Eu;
 		test_mode_colour_line(hidden_colour, instructions_cell);
 		test_mode_show_exit_prompt();
-		test_mode_routine = test_mode_backup_data_clear_wait_ADDRESS;
+		game->test_mode_routine = test_mode_backup_data_clear_wait_ADDRESS;
 		return;
 	}
-	test_mode_routine = test_mode_menu_ADDRESS;
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	game->test_mode_routine = test_mode_menu_ADDRESS;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
 	{
-		test_mode_blink_timer = 5;
-		blink_cell = test_mode_blink_address;
+		game->test_mode_blink_timer = 5;
+		blink_cell = game->test_mode_blink_address;
 		cursor_character = TEXT_LAYER_CELLS(blink_cell)[0] ^ 0x6A7Fu;
 		TEXT_LAYER_CELLS(blink_cell)[0] = cursor_character;
 		if (cursor_character != 0u)
-			test_mode_blink_timer = (uint32_t)test_mode_blink_timer << 1;
+			game->test_mode_blink_timer = (uint32_t)game->test_mode_blink_timer << 1;
 	}
 }
 
 /* After the clear: blinks the prompt until TEST, then back to the menu. */
 void test_mode_backup_data_clear_wait(void)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
-		test_mode_routine = test_mode_menu_ADDRESS;
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
+		game->test_mode_routine = test_mode_menu_ADDRESS;
 	test_mode_blink_prompt(0u);
 }
 
@@ -3257,18 +3257,18 @@ void test_mode_exit(void)
 	uint32_t text = 0;
 	uint32_t flags_before = 0, test_mode_flags_long = 0;
 
-	flags_before = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
+	flags_before = (game->test_mode_flags | ((uint32_t)game->test_mode_cursor << 8u) | ((uint32_t)game->test_mode_page_cursor << 16u) | ((uint32_t)(game->test_mode_routine & 0xFFu) << 24u));
 	test_mode_flags_long = flags_before & ~2u;
-	test_mode_flags = (uint8_t)test_mode_flags_long;
-	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
-	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
-	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
+	game->test_mode_flags = (uint8_t)test_mode_flags_long;
+	game->test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	game->test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	game->test_mode_routine = (game->test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	if ((flags_before & 2u) != 0u)
 	{
 		save_settings();
-		if (eeprom_write_count < EEPROM_WRITE_LIMIT)
+		if (game->eeprom_write_count < EEPROM_WRITE_LIMIT)
 		{
-			test_mode_on = 0u;
+			game->test_mode_on = 0u;
 			io_write8(IO_1_CNT, 4u);
 			io_write8(IO_2_CNT, 0x80u);
 			return;
@@ -3277,10 +3277,10 @@ void test_mode_exit(void)
 		text = eeprom_caution_text_ADDRESS;
 		test_mode_draw_texts(character, text);
 		test_mode_show_exit_prompt();
-		test_mode_routine = test_mode_exit_caution_wait_ADDRESS;
+		game->test_mode_routine = test_mode_exit_caution_wait_ADDRESS;
 		return;
 	}
-	test_mode_on = 0u;
+	game->test_mode_on = 0u;
 	io_write8(IO_1_CNT, 4u);
 	io_write8(IO_2_CNT, 0x80u);
 }
@@ -3289,9 +3289,9 @@ void test_mode_exit(void)
    test_mode_exit does. */
 void test_mode_exit_caution_wait(void)
 {
-	if ((test_mode_buttons_pressed & 2u) != 0u)
+	if ((game->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		test_mode_on = 0u;
+		game->test_mode_on = 0u;
 		io_write8(IO_1_CNT, 4u);
 		io_write8(IO_2_CNT, 0x80u);
 		return;
@@ -3379,16 +3379,16 @@ void test_mode_draw_instructions(uint32_t character)
    blinks (test_mode_blink_address), from the next frame. */
 void test_mode_show_exit_prompt(void)
 {
-	test_mode_blink_address = exit_prompt_text_ADDRESS;
-	test_mode_blink_timer = 0;
+	game->test_mode_blink_address = exit_prompt_text_ADDRESS;
+	game->test_mode_blink_timer = 0;
 }
 
 /* Makes PUSH TEST BUTTON TO CONTINUE (the text record at 01F2DE) the prompt test_mode_blink_prompt
    blinks, from the next frame. */
 void test_mode_show_continue_prompt(void)
 {
-	test_mode_blink_address = continue_prompt_text_ADDRESS;
-	test_mode_blink_timer = 0;
+	game->test_mode_blink_address = continue_prompt_text_ADDRESS;
+	game->test_mode_blink_timer = 0;
 }
 
 /* Blinks the prompt whose text record test_mode_blink_address holds: when test_mode_blink_timer runs
@@ -3398,16 +3398,16 @@ void test_mode_blink_prompt(uint16_t character)
 	uint32_t cell = 0, text = 0;
 	uint8_t blink_timer = 0;
 
-	blink_timer = test_mode_blink_timer - 1u;
-	test_mode_blink_timer = blink_timer;
+	blink_timer = game->test_mode_blink_timer - 1u;
+	game->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer >= 0)
 		return;
-	text = test_mode_prompt_text;
+	text = game->test_mode_prompt_text;
 	cell = 0x310000u | AS16(TEST_MODE_TEXT_BYTES(text)[0]);
 	if (TEXT_LAYER_CELLS(cell)[0] == 0u)
 	{
 		test_mode_draw_texts(character, text);
-		test_mode_blink_timer = 0x14;
+		game->test_mode_blink_timer = 0x14;
 		return;
 	}
 	do
@@ -3415,7 +3415,7 @@ void test_mode_blink_prompt(uint16_t character)
 		TEXT_LAYER_CELLS(cell)[0] = 0u;
 		cell += 2u;
 	} while (TEXT_LAYER_CELLS(cell)[0] != 0u);
-	test_mode_blink_timer = 0xA;
+	game->test_mode_blink_timer = 0xA;
 }
 
 /* Puts the cursor at text cell R10, the cell two before a menu line: test_mode_blink_address = R10 (the
@@ -3425,8 +3425,8 @@ uint16_t test_mode_set_cursor(uint32_t character, uint32_t cell)
 {
 	uint32_t colour = 0;
 
-	test_mode_blink_address = cell;
-	test_mode_blink_timer = 0;
+	game->test_mode_blink_address = cell;
+	game->test_mode_blink_timer = 0;
 	cell += 4u;
 	colour = 0x6Au;
 	return test_mode_colour_line((uint16_t)colour, cell);
@@ -3438,7 +3438,7 @@ void test_mode_clear_cursor(void)
 {
 	uint32_t cell = 0, colour = 0;
 
-	cell = test_mode_blink_address;
+	cell = game->test_mode_blink_address;
 	TEXT_LAYER_CELLS(cell)[0] = 0u;
 	cell += 4u;
 	colour = 0x60u;
@@ -3613,18 +3613,18 @@ void test_mode_read_controls(void)
 	port_f_b = io_read8(IO_2_PORT_F);
 	port_f_pressed = (uint8_t)(~port_f_a | ~port_f_b);
 	buttons = ((~port_e_a | ~port_e_b) & 0x33u) | ((((uint32_t)port_f_pressed << 4) | (port_f_pressed >> 4)) & 3u);
-	previous_buttons = test_mode_buttons;
-	test_mode_buttons = buttons;
-	test_mode_buttons_previous = previous_buttons;
-	test_mode_buttons_pressed = ~previous_buttons & buttons;
-	test_mode_buttons_released = previous_buttons & ~buttons;
-	flags_before = (test_mode_flags | ((uint32_t)test_mode_cursor << 8u) | ((uint32_t)test_mode_page_cursor << 16u) | ((uint32_t)(test_mode_routine & 0xFFu) << 24u));
+	previous_buttons = game->test_mode_buttons;
+	game->test_mode_buttons = buttons;
+	game->test_mode_buttons_previous = previous_buttons;
+	game->test_mode_buttons_pressed = ~previous_buttons & buttons;
+	game->test_mode_buttons_released = previous_buttons & ~buttons;
+	flags_before = (game->test_mode_flags | ((uint32_t)game->test_mode_cursor << 8u) | ((uint32_t)game->test_mode_page_cursor << 16u) | ((uint32_t)(game->test_mode_routine & 0xFFu) << 24u));
 	carry = (flags_before & 4u) != 0u;
 	test_mode_flags_long = flags_before ^ 4u;
-	test_mode_flags = (uint8_t)test_mode_flags_long;
-	test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
-	test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
-	test_mode_routine = (test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
+	game->test_mode_flags = (uint8_t)test_mode_flags_long;
+	game->test_mode_cursor = (uint8_t)(test_mode_flags_long >> 8u);
+	game->test_mode_page_cursor = (uint8_t)(test_mode_flags_long >> 16u);
+	game->test_mode_routine = (game->test_mode_routine & 0xFFFFFF00u) | ((test_mode_flags_long >> 24u) & 0xFFu);
 	bank_then_count = carry;
 	converter_input = ANALOG_INPUTS + bank_then_count * 4u;
 	analog_input = test_mode_analog_inputs_ADDRESS + bank_then_count * 4u;
@@ -3648,7 +3648,7 @@ void test_mode_read_controls(void)
 		analog_input++;
 		converter_input += 2u;
 	} while (bank_then_count != 0u);
-	carry = (test_mode_flags & 4u) != 0u;
+	carry = (game->test_mode_flags & 4u) != 0u;
 	io_write8(ANALOG_BANK, carry);
 }
 
@@ -3661,16 +3661,16 @@ void test_mode_send_sound(void)
 	uint32_t read_index = 0;
 	uint16_t inverted_request = 0;
 
-	read_index = test_mode_sound_queue_read;
-	if (test_mode_sound_queue_write == read_index)
+	read_index = game->test_mode_sound_queue_read;
+	if (game->test_mode_sound_queue_write == read_index)
 		return;
-	inverted_request = ~test_mode_sound_queue[read_index];
+	inverted_request = ~game->test_mode_sound_queue[read_index];
 	inverted_command = (uint8_t)inverted_request;
 	if ((int16_t)inverted_request >= 0)
 		SOUND_COMMAND_2 = ~inverted_command;
 	else
 		SOUND_COMMAND_1[0] = ~inverted_command;
-	test_mode_sound_queue_read = (read_index + 1u) & 0xFu;
+	game->test_mode_sound_queue_read = (read_index + 1u) & 0xFu;
 }
 
 /* test_mode_queue_sound for screen 2's sound CPU commands (the high byte set). */
@@ -3687,7 +3687,7 @@ void test_mode_queue_sound(uint16_t request)
 {
 	uint32_t write_index = 0;
 
-	write_index = test_mode_sound_queue_write;
-	test_mode_sound_queue[write_index] = request;
-	test_mode_sound_queue_write = (write_index + 1u) & 0xFu;
+	write_index = game->test_mode_sound_queue_write;
+	game->test_mode_sound_queue[write_index] = request;
+	game->test_mode_sound_queue_write = (write_index + 1u) & 0xFu;
 }

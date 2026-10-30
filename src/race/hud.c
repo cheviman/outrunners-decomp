@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -505,7 +505,7 @@ void stage_indicator_draw(void)
 
 /* The start's messages in the middle of the screen: state 0 shows YOU'RE IN CAR NUMBER n! (animation 28F
    + the screen's car number, screen car_number, with DJ message 21 + it); when the start's countdown
-   (the car object's unk_10) is at 30 frames, Ready (animation 31, DJ message 31); at 0, Go! (animation
+   (the car object's timer) is at 30 frames, Ready (animation 31, DJ message 31); at 0, Go! (animation
    32, DJ message 32), 30 frames, then it ends. */
 void start_message_update(void)
 {
@@ -1384,7 +1384,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	place = checkpoint_board_number_places_ADDRESS + OBJECT(current_object)->checkpoint_board.row * 4u;
 	OBJECT(current_object)->x = CHECKPOINT_BOARD_PLACE(place)->x + OBJECT(current_object)->checkpoint_board.row_offsets[(int32_t)player];
 	OBJECT(current_object)->y = CHECKPOINT_BOARD_PLACE(place)->y;
-	animation = checkpoint_board_number_animations[car_numbers[player]];
+	animation = checkpoint_board_number_animations[game->car_numbers[player]];
 	OBJECT(current_object)->palette = 0x27u;
 	OBJECT(current_object)->depth_layer = 0x19Eu;
 	OBJECT(current_object)->draw_mode = 8u;

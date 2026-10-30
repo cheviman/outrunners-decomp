@@ -5,7 +5,7 @@
  *                 moves and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -29,6 +29,11 @@
 
 uint32_t psw;
 void (*program_frame_done)(void);
+
+/* the game's state (ram.h's struct game): the work RAM of the one world the program runs, which the board
+   reads too (program_reset hands it over) */
+static uint64_t first_world[S32_WORK_RAM_SIZE / sizeof(uint64_t)];
+struct game *game = (struct game *)first_world;
 
 static uint32_t privileged[PRIVILEGED];
 static bool irq_line;
@@ -579,6 +584,9 @@ void divux_pair(uint32_t divisor, uint32_t *low, uint32_t *high)
 
 void program_reset(void)
 {
+	/* the board's work RAM is the game's state from here on (s32_init left it cleared, as the world is
+	   before its first run; from then on s32_init clears the world) */
+	s32_board.work_ram = (uint8_t *)game;
 	for (int number = 0; number < PRIVILEGED; number++)
 		privileged[number] = 0;
 	privileged[9] = 0x00006000;     /* PIR */

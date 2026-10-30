@@ -3,7 +3,7 @@
  *    Description: the traffic: its cars, convoys, people and their hits
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -37,7 +37,7 @@ void traffic_spawner_update(void)
 		built_stage = SCREEN(screen)->built_stage;
 		OBJECT(current_object)->traffic_spawner.stage = built_stage;
 		OBJECT(current_object)->traffic_spawner.list = stage_road_object_lists[built_stage];
-		OBJECT(current_object)->traffic_spawner.traffic_level = (uint8_t)(8u - RACE(SCREEN(screen)->host_record)->racer_count + game_difficulty);
+		OBJECT(current_object)->traffic_spawner.traffic_level = (uint8_t)(8u - RACE(SCREEN(screen)->host_record)->racer_count + game->game_difficulty);
 		SCREEN(screen)->traffic_draw_distance = SCREEN(screen)->draw_distance >> 7;
 		SCREEN(screen)->traffic_racer_list = SCREEN(screen)->host_record + 0x1Fu;
 		SCREEN(screen)->traffic_count = 0u;

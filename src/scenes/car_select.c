@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -78,7 +78,7 @@ void car_select_run(void)
 		background = CAR_SELECT_TILEMAP_SETUP(setup - 0x18u)->background;
 		setup_bits = setup + 4u;
 		set_up_background(background);
-		video_registers[2] |= CAR_SELECT_TILEMAP_SETUP(setup_bits - 0x1Cu)->video_register_bits;
+		game->video_registers[2] |= CAR_SELECT_TILEMAP_SETUP(setup_bits - 0x1Cu)->video_register_bits;
 		VIDEO_REGISTER_WORDS(OBJECT(current_object)->car_select.second_scroll_y_address)[0] = 0xE0u;
 		object = start_object();
 		OBJECT(object)->handler = welcome_letter_start_ADDRESS;
@@ -505,7 +505,7 @@ uint32_t car_select_update_rowscroll(void)
 	uint16_t line_scroll = 0;
 	uint32_t far_page = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, scroll_place = 0;
 
-	near_page = (uint8_t)(video_registers[2] >> 8u);
+	near_page = (uint8_t)(game->video_registers[2] >> 8u);
 	far_page = near_page;
 	near_page = (uint8_t)(near_page + 4u);
 	far_page = (uint8_t)(far_page + 8u);
@@ -577,7 +577,7 @@ void car_select_skew_floor(uint16_t skew_step)
 	uint16_t far_offset = 0, near_offset = 0, skew = 0;
 	uint32_t far_page = 0, far_scroll_place = 0, line_offsets = 0, lines_left = 0, near_page = 0, near_scroll_place = 0, rowscroll_address = 0;
 
-	near_page = (uint8_t)(video_registers[2] >> 8u);
+	near_page = (uint8_t)(game->video_registers[2] >> 8u);
 	far_page = near_page;
 	near_page = (uint8_t)(near_page + 4u);
 	far_page = (uint8_t)(far_page + 8u);
@@ -1729,13 +1729,13 @@ void car_select_entries_run(void)
 		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
 		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
-		players_left = player_count;
+		players_left = game->player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[car_numbers[players_left - 1u]] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[game->car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
-		own_car_number = car_numbers[SCREEN(screen)->player];
+		own_car_number = game->car_numbers[SCREEN(screen)->player];
 		OBJECT(current_object)->car_select_entries.own_number = own_car_number;
 		OBJECT(current_object)->car_select_entries.digit_toggle = (own_car_number + 0x31u) ^ 0x5Fu;
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
@@ -1745,13 +1745,13 @@ void car_select_entries_run(void)
 		if (SCREEN(screen)->lcd_scroll != 0u)
 			return;
 		move_string(entry_lcd_text_ADDRESS, 3u, screen + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
-		players_left = player_count;
+		players_left = game->player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[car_numbers[players_left - 1u]] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[game->car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
-		own_car_number = car_numbers[SCREEN(screen)->player];
+		own_car_number = game->car_numbers[SCREEN(screen)->player];
 		OBJECT(current_object)->car_select_entries.own_number = own_car_number;
 		OBJECT(current_object)->car_select_entries.digit_toggle = (own_car_number + 0x31u) ^ 0x5Fu;
 		OBJECT(current_object)->car_select_entries.blink_timer = 8u;
@@ -1777,7 +1777,7 @@ void car_select_entries_run(void)
 		racer_place++;
 		if (SCREEN(screen)->player != racer && (OBJECT(current_object)->car_select_entries.shown_players & shl32(1u, (int)(racer))) == 0u)
 		{
-			racer_car_number = car_numbers[racer];
+			racer_car_number = game->car_numbers[racer];
 			SCREEN(screen)->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
 			car_choice = RACE(RACE_COPY_1)[racer].car_choice - 1u;
 			chosen_car = car_choice;
@@ -1932,7 +1932,7 @@ void choice_flag_number_start(void)
 
 	OBJECT(current_object)->draw_mode = 0xAu;
 	OBJECT(current_object)->depth_layer = 0xEFu;
-	animation = choice_flag_number_animations[car_numbers[OBJECT(OBJECT(current_object)->choice_flag_number.flag)->choice_flag.player]];
+	animation = choice_flag_number_animations[game->car_numbers[OBJECT(OBJECT(current_object)->choice_flag_number.flag)->choice_flag.player]];
 	animation_start(animation);
 	OBJECT(current_object)->palette = 0x27u;
 	OBJECT(current_object)->handler = choice_flag_number_follow_ADDRESS;
@@ -2084,9 +2084,9 @@ uint32_t car_select_wait_confirm(void)
 
 /* Sets up the invitation to join, on a seat with no player while the entry time of a game runs: the
    screen (set_up_background, start_palette_fades), clears the LCD (clear_lcd) with the DJ's face, the
-   music (sound F, Mega Driver) and DJ message 3B, marks the screen (unk_E2) so the car select does not
-   start them again, starts the WAITING YOUR ENTRY banner (entry_banner), the ring of cars
-   (entry_car_ring, in car_ring) and the traffic behind it (entry_traffic_run), and goes on to
+   music (sound F, Mega Driver) and DJ message 3B, marks the screen (entry_countdown_shown) so the car
+   select does not start them again, starts the WAITING YOUR ENTRY banner (entry_banner), the ring of
+   cars (entry_car_ring, in car_ring) and the traffic behind it (entry_traffic_run), and goes on to
    entry_countdown_count. */
 void entry_countdown_start(void)
 {
@@ -2124,8 +2124,8 @@ void entry_countdown_start(void)
 
 /* Shows the entry time left (RACE_COPY_1's entry_frames, frames): the seconds as the big number (its
    frame), the frames into the second to the ring of cars, and on the LCD a shrinking bar
-   (entry_countdown_lcd_texts) with the seconds; when it is over clears the screen's unk_E2,
-   fade_out_music, and goes on to entry_countdown_done. */
+   (entry_countdown_lcd_texts) with the seconds; when it is over clears the screen's
+   entry_countdown_shown, fade_out_music, and goes on to entry_countdown_done. */
 void entry_countdown_count(void)
 {
 	uint32_t zero = 0;

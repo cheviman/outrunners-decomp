@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -31,10 +31,14 @@
 extern "C" {
 #endif
 
-/* Work RAM holds the game's variables, at the addresses the original program used, so its state compares
-   byte for byte with the original. A variable is an lvalue of its type at its address; ram.h (written
-   by tools/decompile.py) names them. The V60 is little endian and lets a halfword or word sit at any
-   address, like the targets this runs on; the build turns strict aliasing off for this code. */
+/* The game's state is its work RAM, laid out as the original program had it, so it compares byte for byte
+   with the original's: ram.h's struct game (written by tools/decompile.py), which the code reaches through
+   game (game->game_frame_count) and runtime/src/game.c keeps, the board reading the same bytes. A place the
+   code works out by its address is the byte there (ram()). The V60 is little endian and lets a halfword or
+   word sit at any address, like the targets this runs on; the build turns strict aliasing off for this
+   code. */
+struct game;
+extern struct game *game;
 /* Functions that stop the game: the C compiler knows they do not come back */
 #if defined(_MSC_VER)
 #define GAME_NORETURN __declspec(noreturn)
@@ -55,7 +59,7 @@ static inline uint8_t *ram(uint32_t address)
 {
 	if ((address & 0xf00000) != 0x200000)
 		return ram_outside(address);
-	return &s32_board.work_ram[address & 0x1ffff];
+	return &((uint8_t *)game)[address & 0x1ffff];
 }
 
 #define RAM8(address)   (*(uint8_t *)ram(address))

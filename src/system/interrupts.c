@@ -3,7 +3,7 @@
  *    Description: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -32,11 +32,11 @@ void int_vector_40(void)
 
 	saved_screen = screen;
 	saved_r12 = r12;
-	vblank_counter++;
-	vblanks_since_start++;
+	game->vblank_counter++;
+	game->vblanks_since_start++;
 	io_write16(IRQ_TIMER_0, vblank_timer_period);
-	timer_interrupts_left = 0x22u;
-	debug_timer_rounds--;
+	game->timer_interrupts_left = 0x22u;
+	game->debug_timer_rounds--;
 	if (SCREEN(screen)->index != 0u)
 	{
 		saved_screen_2 = screen;
@@ -45,20 +45,20 @@ void int_vector_40(void)
 		screen = SCREEN_2;
 		vblank_update_mixer();
 		screen = saved_screen_2;
-		if (send_video_registers == 0u)
+		if (game->send_video_registers == 0u)
 		{
 			move_halfwords(NBG2_SCROLL_X_ADDRESS, video_registers_ADDRESS + 0x20u, 8u);
 			move_halfwords(VIDEO_RAM + 0x1FF40u, video_registers_ADDRESS + 0x40u, 8u);
 		}
 		else
 		{
-			send_video_registers = 0u;
+			game->send_video_registers = 0u;
 			move_halfwords(VIDEO_CONTROL_ADDRESS, video_registers_ADDRESS, 0x48u);
 		}
-		tile_bank_bits = tile_banks[0];
-		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[1]);
-		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[2]);
-		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | tile_banks[3]);
+		tile_bank_bits = game->tile_banks[0];
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | game->tile_banks[1]);
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | game->tile_banks[2]);
+		tile_bank_bits = (uint8_t)(((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2) | game->tile_banks[3]);
 		io_write8(IO_1_PORT_H, ((uint32_t)tile_bank_bits << 6) | (tile_bank_bits >> 2));
 	}
 	finish_sprite_list();
@@ -66,7 +66,7 @@ void int_vector_40(void)
 	if (SCREEN(screen)->skip_scroll_update == 0u)
 		vblank_update_scrolls();
 	SCREEN(screen)->skip_scroll_update = 0u;
-	if (test_mode_on == 0u)
+	if (game->test_mode_on == 0u)
 	{
 		read_switches_and_analog();
 		switch (SCREEN(screen)->index)
@@ -79,14 +79,14 @@ void int_vector_40(void)
 			break;
 		}
 		check_test_button();
-		if (free_play == 0u)
+		if (game->free_play == 0u)
 			update_coins();
 	}
 	update_lamps();
 	lcd_refresh();
 	count_total_time();
-	frame_ready = 0xFFu;
-	if (single_task == 0u && ((test_mode_on != 0u && SCREEN(screen)->index == 0u) || task_swapping != 0u))
+	game->frame_ready = 0xFFu;
+	if (game->single_task == 0u && ((game->test_mode_on != 0u && SCREEN(screen)->index == 0u) || game->task_swapping != 0u))
 		swap_tasks();
 	screen_vblank_counter = screen_vblank_counters[SCREEN(screen)->index];
 	VBLANK_COUNT(screen_vblank_counter)[0]++;
@@ -144,34 +144,34 @@ void vblank_update_scrolls(void)
 	uint32_t new_scroll = 0, old_scroll = 0, other_layer = 0, running_layer = 0;
 
 	running_layer = SCREEN(screen)->index * 2u;
-	NBG0_SCROLL_X[running_layer] = AS32(video_registers[8 + running_layer * 2u]);
-	NBG0_SCROLL_Y[running_layer] = AS32(video_registers[10 + running_layer * 2u]);
+	NBG0_SCROLL_X[running_layer] = AS32(game->video_registers[8 + running_layer * 2u]);
+	NBG0_SCROLL_Y[running_layer] = AS32(game->video_registers[10 + running_layer * 2u]);
 	other_layer = 0u - running_layer + 2u;
-	old_scroll = AS32(video_registers[8 + other_layer * 2u]);
-	new_scroll = scroll_targets[other_layer];
-	AS32(video_registers[8 + other_layer * 2u]) = new_scroll;
+	old_scroll = AS32(game->video_registers[8 + other_layer * 2u]);
+	new_scroll = game->scroll_targets[other_layer];
+	AS32(game->video_registers[8 + other_layer * 2u]) = new_scroll;
 	new_scroll = new_scroll << 6;
 	NBG0_SCROLL_X[other_layer] = (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6;
-	old_scroll = AS32(video_registers[10 + other_layer * 2u]);
-	new_scroll = scroll_targets[1 + other_layer];
-	AS32(video_registers[10 + other_layer * 2u]) = new_scroll;
+	old_scroll = AS32(game->video_registers[10 + other_layer * 2u]);
+	new_scroll = game->scroll_targets[1 + other_layer];
+	AS32(game->video_registers[10 + other_layer * 2u]) = new_scroll;
 	new_scroll = new_scroll << 7;
 	NBG0_SCROLL_Y[other_layer] = (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7;
-	NBG2_SCROLL_X[running_layer] = AS32(video_registers[16 + running_layer * 2u]);
-	NBG2_SCROLL_Y[running_layer] = AS32(video_registers[18 + running_layer * 2u]);
-	old_scroll = AS32(video_registers[16 + other_layer * 2u]);
-	new_scroll = scroll_targets[4 + other_layer];
-	AS32(video_registers[16 + other_layer * 2u]) = new_scroll;
+	NBG2_SCROLL_X[running_layer] = AS32(game->video_registers[16 + running_layer * 2u]);
+	NBG2_SCROLL_Y[running_layer] = AS32(game->video_registers[18 + running_layer * 2u]);
+	old_scroll = AS32(game->video_registers[16 + other_layer * 2u]);
+	new_scroll = game->scroll_targets[4 + other_layer];
+	AS32(game->video_registers[16 + other_layer * 2u]) = new_scroll;
 	new_scroll = new_scroll << 6;
 	NBG2_SCROLL_X[other_layer] = (((int32_t)((old_scroll << 6) - new_scroll) >> 1) + new_scroll) >> 6;
-	old_scroll = AS32(video_registers[18 + other_layer * 2u]);
-	new_scroll = scroll_targets[5 + other_layer];
-	AS32(video_registers[18 + other_layer * 2u]) = new_scroll;
+	old_scroll = AS32(game->video_registers[18 + other_layer * 2u]);
+	new_scroll = game->scroll_targets[5 + other_layer];
+	AS32(game->video_registers[18 + other_layer * 2u]) = new_scroll;
 	new_scroll = new_scroll << 7;
 	NBG2_SCROLL_Y[other_layer] = (((int32_t)((old_scroll << 7) - new_scroll) >> 1) + new_scroll) >> 7;
-	control_byte = (uint8_t)(video_registers[2] >> 8u);
+	control_byte = (uint8_t)(game->video_registers[2] >> 8u);
 	VIDEO_LINE_CONTROL_HIGH = control_byte;
-	video_registers[2] = (video_registers[2] & 0xFFu) | (((control_byte + 4u) & 0xECu & 0xFFu) << 8u);
+	game->video_registers[2] = (game->video_registers[2] & 0xFFu) | (((control_byte + 4u) & 0xECu & 0xFFu) << 8u);
 }
 
 /* The end of the vertical blank (IRQ 1): only acknowledged. */
@@ -195,8 +195,8 @@ void int_vector_43(void)
 {
 	uint8_t interrupts_left = 0;
 
-	interrupts_left = timer_interrupts_left;
-	timer_interrupts_left = interrupts_left - 1u;
+	interrupts_left = game->timer_interrupts_left;
+	game->timer_interrupts_left = interrupts_left - 1u;
 	if (interrupts_left != 1u)
 		io_write16(IRQ_TIMER_0, lcd_timer_period);
 	lcd_send_next_nibble();
@@ -215,12 +215,12 @@ void int_vector_44(void)
 	uint32_t message_kind = 0;
 	uint8_t received_kind = 0;
 
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		io_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 		return;
 	}
-	link_wait_count++;
+	game->link_wait_count++;
 	timer_period = 1u;
 	received_kind = io_read8(LINK_MESSAGE_KIND);
 	message_kind = received_kind;
@@ -232,7 +232,7 @@ void int_vector_44(void)
 		case 3:
 			link_isdn_receive_records();
 			timer_period = 0x168u;
-			link_wait_count = 0u;
+			game->link_wait_count = 0u;
 			break;
 		case 0:
 		case 1:
@@ -281,8 +281,8 @@ void int_vector_02(void)
    the inputs newly pressed); the boot task's loop then runs the test mode. */
 void check_test_button(void)
 {
-	if ((switches_pressed & 0x80u) != 0u)
-		test_mode_on = 0xFFu;
+	if ((game->switches_pressed & 0x80u) != 0u)
+		game->test_mode_on = 0xFFu;
 }
 
 /* In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32
@@ -326,18 +326,18 @@ void count_total_time(void)
 	uint16_t time_count = 0;
 	uint32_t total_time = 0;
 
-	if (test_mode_on != 0u)
+	if (game->test_mode_on != 0u)
 		return;
-	time_count = (uint16_t)(total_time_count + 0x11u);
+	time_count = (uint16_t)(game->total_time_count + 0x11u);
 	if (time_count < 0x3E8u)
 	{
-		total_time_count = time_count;
+		game->total_time_count = time_count;
 		return;
 	}
 	total_time = BOOKKEEPING_TOTAL_TIME_ADDRESS;
 	if (BOOKKEEPING_TOTAL_TIME % 0x49u != 0u)
 	{
-		total_time_count = time_count - 0x3E8u;
+		game->total_time_count = time_count - 0x3E8u;
 		if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
 		{
 			BOOKKEEPING_COUNT32(total_time)->value++;
@@ -348,11 +348,11 @@ void count_total_time(void)
 	}
 	if (time_count < 0x7D0u)
 	{
-		total_time_count = time_count;
+		game->total_time_count = time_count;
 		return;
 	}
 	time_count -= 0x3E8u;
-	total_time_count = time_count - 0x3E8u;
+	game->total_time_count = time_count - 0x3E8u;
 	if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
 	{
 		BOOKKEEPING_COUNT32(total_time)->value++;
@@ -375,57 +375,57 @@ void update_lamps(void)
 	uint32_t port_g = 0, screen_block = 0;
 	uint8_t checkpoint_timer = 0, leader_timer = 0, checkpoint_2_timer = 0, leader_2_timer = 0;
 
-	if (checkpoint_lamp_blinks != 0u)
+	if (game->checkpoint_lamp_blinks != 0u)
 	{
-		checkpoint_timer = checkpoint_lamp_timer;
-		checkpoint_lamp_timer = checkpoint_timer - 1u;
+		checkpoint_timer = game->checkpoint_lamp_timer;
+		game->checkpoint_lamp_timer = checkpoint_timer - 1u;
 		if (checkpoint_timer == 1u)
 		{
-			checkpoint_lamp_timer = checkpoint_lamp_period;
-			checkpoint_lamp[0] ^= 2u;
-			checkpoint_lamp_blinks--;
+			game->checkpoint_lamp_timer = game->checkpoint_lamp_period;
+			game->checkpoint_lamp[0] ^= 2u;
+			game->checkpoint_lamp_blinks--;
 		}
 	}
-	if (leader_lamp_blinks != 0u)
+	if (game->leader_lamp_blinks != 0u)
 	{
-		leader_timer = leader_lamp_timer;
-		leader_lamp_timer = leader_timer - 1u;
+		leader_timer = game->leader_lamp_timer;
+		game->leader_lamp_timer = leader_timer - 1u;
 		if (leader_timer == 1u)
 		{
-			leader_lamp_timer = leader_lamp_period;
-			leader_lamp[0] ^= 8u;
-			leader_lamp_blinks--;
+			game->leader_lamp_timer = game->leader_lamp_period;
+			game->leader_lamp[0] ^= 8u;
+			game->leader_lamp_blinks--;
 		}
 	}
-	port_d = port_d_outputs[0] | checkpoint_lamp[0] | leader_lamp[0];
-	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
-		port_d |= wheel_motor[0];
+	port_d = game->port_d_outputs[0] | game->checkpoint_lamp[0] | game->leader_lamp[0];
+	if ((SCREEN(SCREEN_1)->demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+		port_d |= game->wheel_motor[0];
 	io_write8(IO_1_PORT_D, port_d);
-	if (checkpoint_lamp_2_blinks != 0u)
+	if (game->checkpoint_lamp_2_blinks != 0u)
 	{
-		checkpoint_2_timer = checkpoint_lamp_2_timer;
-		checkpoint_lamp_2_timer = checkpoint_2_timer - 1u;
+		checkpoint_2_timer = game->checkpoint_lamp_2_timer;
+		game->checkpoint_lamp_2_timer = checkpoint_2_timer - 1u;
 		if (checkpoint_2_timer == 1u)
 		{
-			checkpoint_lamp_2_timer = checkpoint_lamp_2_period;
-			checkpoint_lamp_2 ^= 2u;
-			checkpoint_lamp_2_blinks--;
+			game->checkpoint_lamp_2_timer = game->checkpoint_lamp_2_period;
+			game->checkpoint_lamp_2 ^= 2u;
+			game->checkpoint_lamp_2_blinks--;
 		}
 	}
-	if (leader_lamp_2_blinks != 0u)
+	if (game->leader_lamp_2_blinks != 0u)
 	{
-		leader_2_timer = leader_lamp_2_timer;
-		leader_lamp_2_timer = leader_2_timer - 1u;
+		leader_2_timer = game->leader_lamp_2_timer;
+		game->leader_lamp_2_timer = leader_2_timer - 1u;
 		if (leader_2_timer == 1u)
 		{
-			leader_lamp_2_timer = leader_lamp_2_period;
-			leader_lamp_2 ^= 8u;
-			leader_lamp_2_blinks--;
+			game->leader_lamp_2_timer = game->leader_lamp_2_period;
+			game->leader_lamp_2 ^= 8u;
+			game->leader_lamp_2_blinks--;
 		}
 	}
-	port_d = port_d_outputs[1] | checkpoint_lamp_2 | leader_lamp_2;
-	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && steering_wheel_reaction != 0u)
-		port_d |= wheel_motor[1];
+	port_d = game->port_d_outputs[1] | game->checkpoint_lamp_2 | game->leader_lamp_2;
+	if ((SCREEN(SCREEN_2)->demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+		port_d |= game->wheel_motor[1];
 	io_write8(IO_2_PORT_D, port_d);
 	screen_block = SCREEN_1;
 	port_g = port_g_outputs_ADDRESS;

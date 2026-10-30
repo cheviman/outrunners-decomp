@@ -4,7 +4,7 @@ Description: what the shared decompiler core (tools/core) needs to know of OutRu
              its ROM set, and its settings
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    27-10-2026
+Modified:    30-10-2026
 Author:      Sebastian Toyos
 
 The core (arcade-decomp: the decompiler, the V60 and Z80 frontends, the analysis, the checks) is the same
@@ -37,7 +37,7 @@ BINARY = "orunners"                             # its executables: orunners_game
 GUARD = "ORUNNERS"                           # the generated headers' include guards: ORUNNERS_GAME_H...
 
 # the program's structures, registers and variables (decompiler/pointers.py, memory.py, signatures.py)
-pointers.STRUCTS = {"object": 0x100, "car": 0x200, "screen": 0x8000, "object_area": 0x8000}
+pointers.STRUCTS = {"object": 0x100, "car": 0x200, "screen": 0x6000, "object_area": 0x8000}
 pointers.VARIABLES = 0x20E000
 pointers.PLAYERS = (0, 0, 0)
 pointers.CONTEXT_KINDS = {20: ("object", 0), 23: ("car", 0), 25: ("screen", 0)}
@@ -79,9 +79,22 @@ memory.CANONICAL = rom.canonical_address
 memory.NAMED_COPIES = False     # a constant in a mirror of the code ROM may be no address (the memory test's counts)
 memory.NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2", 0x20FB00: "RACE_1", 0x20FB80: "RACE_2",
                       0x20FC00: "RACE_COPY_1", 0x20FC80: "RACE_COPY_2"}
+# the game's state, struct game, which the C reaches through game (game->game_frame_count): the work RAM, a
+# 64 KB page for each screen, its objects' area below its block; the game's variables after screen 1's block,
+# then the race records; after screen 2's the race records the ISDN link brings in, and the stacks
+memory.STATE = "game"
+memory.STATE_BLOCKS = ((0x200000, "object_area_1", "object_area", 1), (0x208000, "screen_1", "screen", 1),
+                       (0x20FB00, "races", "race", 2), (0x20FC00, "race_copies", "race", 2),
+                       (0x210000, "object_area_2", "object_area", 1), (0x218000, "screen_2", "screen", 1),
+                       (0x21E000, "isdn_races", "race", 8), (0x21F000, "stacks", None, 0x1000))
 memory.NOTES = {
-    "variables": ["/* the game's variables in work RAM; SCREEN_1 and SCREEN_2 are the blocks of the two screens,",
-                  "   which the code reaches through screen (R25 of the task that runs each) */"],
+    "variables": ["/* the game's variables in work RAM, by their addresses (the fields of struct game, at the end);",
+                  "   SCREEN_1 and SCREEN_2 are the blocks of the two screens, which the code reaches through screen",
+                  "   (R25 of the task that runs each) */"],
+    "state": ["/* The game's state: the work RAM (128 KB at 200000 on the board), laid out as the original had it,",
+              "   so that each frame's state compares byte for byte with the original's. The code reaches it",
+              "   through game: game->game_frame_count; the runtime keeps one (runtime/src/game.c). The stacks are",
+              "   the V70's, which the decompiled program does not use */"],
     "scoped": ["/* work RAM as one family of functions uses it (their scratch variables) */"],
     "tables": ["/* data in the program ROM the code reads */"],
     "hardware": ["/* the board's registers (read and written through the bus: io_read8, io_write8...) */"],

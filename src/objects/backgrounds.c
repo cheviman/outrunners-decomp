@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -21,12 +21,12 @@
    a fork's new stage (the car's new_branch; background 2 * screen built_stage + the branch, car branch)
    or the road's events 4 and 5 (screen stage_background_change; background 2A + built_stage): screen
    background_changing set, the new background's pages queued into the other half of the pages
-   (page_half; queue_tile_pages); 2 changes over as the view turns away and back (the car's unk_2E;
+   (page_half; queue_tile_pages); 2 changes over as the view turns away and back (the car's view_yaw;
    change_step): when it starts its palettes, tile bank and the first page word (next_page_words), at 2A0
    (off the screen) the fades of background_leaving_fades and of the road (background_road_palettes, into
    screen road_palette_fades) and the next, the new stage's objects (screen route_stage), at 160 its
    palette fades (race_background_fade_palettes) and the next, at 60 the last, at 0 back to state 1 with
-   the animation of backgrounds 5, 7, 8, 25 and 26. Each frame scrolls it: x by the car's unk_2E (a
+   the animation of backgrounds 5, 7, 8, 25 and 26. Each frame scrolls it: x by the car's view_yaw (a
    quarter of it, all of it during a change) less A0, y by the slope (the car's road_pitch) and screen
    horizon_line, kept between 0 and 180 less the road's top line (screen road_top_line; also into screen
    background_scroll_y). */
@@ -439,8 +439,8 @@ void set_up_background(uint32_t background_setup)
 	background_registers += 4u;
 	VIDEO_REGISTER_WORDS(BACKGROUND_REGISTERS(background_registers - 0x24u)->second_scroll_y_address)[0] = 0u;
 	background_registers += 4u;
-	video_registers[2] &= BACKGROUND_REGISTERS(background_registers - 0x28u)->video_mask;
-	send_video_registers = 0xFFu;
+	game->video_registers[2] &= BACKGROUND_REGISTERS(background_registers - 0x28u)->video_mask;
+	game->send_video_registers = 0xFFu;
 	mixer_address = BACKGROUND_REGISTERS(background_registers - 0x28u)->mixer_address;
 	mixer_bits = MIXER_VALUE_PAIRS(mixer_address)[0];
 	mixer_bits = mixer_bits & ~0xFu;

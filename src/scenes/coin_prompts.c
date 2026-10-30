@@ -3,7 +3,7 @@
  *    Description: the prompts for coins and the ignition key, and the credits shown
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -58,7 +58,7 @@ void coin_prompt_update(void)
 	OBJECT(object)->car_colour = OBJECT(current_object)->coin_prompt.next_car;
 	OBJECT(current_object)->coin_prompt.next_car++;
 	OBJECT(current_object)->coin_prompt.next_car &= 7u;
-	if (free_play != 0u)
+	if (game->free_play != 0u)
 	{
 		message = 2u;
 		piece_count = 2u;
@@ -70,12 +70,12 @@ void coin_prompt_update(void)
 		switch (SCREEN(screen)->index)
 		{
 		case 0:
-			credits = seat1_credits;
-			coin_units = seat1_coin_units;
+			credits = game->seat1_credits;
+			coin_units = game->seat1_coin_units;
 			break;
 		case 1:
-			credits = seat2_credits;
-			coin_units = seat2_coin_units;
+			credits = game->seat2_credits;
+			coin_units = game->seat2_coin_units;
 			break;
 		}
 		if (credits != 0u)
@@ -306,7 +306,7 @@ void credit_display_update(void)
 			OBJECT(current_object)->flags = 0u;
 			OBJECT(current_object)->flags_high = 0u;
 		}
-		if (free_play != 0u)
+		if (game->free_play != 0u)
 		{
 			OBJECT(current_object)->state++;
 			text = credit_free_play_text_ADDRESS;
@@ -325,12 +325,12 @@ void credit_display_update(void)
 	switch (SCREEN(screen)->index)
 	{
 	case 0:
-		credits = seat1_credits;
-		coin_units = seat1_coin_units;
+		credits = game->seat1_credits;
+		coin_units = game->seat1_coin_units;
 		break;
 	case 1:
-		credits = seat2_credits;
-		coin_units = seat2_coin_units;
+		credits = game->seat2_credits;
+		coin_units = game->seat2_coin_units;
 		break;
 	}
 	if (credits < 2u)
@@ -368,7 +368,7 @@ void credit_display_update(void)
 		OBJECT(current_object)->x = 0xC0u;
 		credit_display_digit();
 		OBJECT(current_object)->credit_display.digit_kind = 2u;
-		OBJECT(current_object)->credit_display.digit = coins_per_credit;
+		OBJECT(current_object)->credit_display.digit = game->coins_per_credit;
 		OBJECT(current_object)->x = 0xC8u;
 		credit_display_digit();
 	}

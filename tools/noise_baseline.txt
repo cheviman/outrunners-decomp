@@ -5,6 +5,7 @@ sub_functions 0
 unk_names 0
 rom_names 0
 unk_fields 0
+made_up_names 0
 register_names 0
 temp_names 0
 stack_names 0
@@ -20,6 +21,13 @@ uncommented 0
 rom_reads 0
 rom_table_reads 0
 board_replaced 1
+ram_structures 9034
+ram_variables 0
+ram_addresses 296
+code_addresses 206
+table_addresses 1283
+page_links 94
+ram_blocks 106
 functions 762
 lines 39629
 casts 2698

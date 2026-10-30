@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by

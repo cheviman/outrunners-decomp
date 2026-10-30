@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -279,7 +279,7 @@ void game_mode_ranking(void)
 		return;
 	}
 	SCREEN(screen)->demo_flags &= ~0x100u;
-	wheel_motor[SCREEN(screen)->index] = 0u;
+	game->wheel_motor[SCREEN(screen)->index] = 0u;
 	reset_screen_sound();
 	clear_objects();
 	reset_tile_layers();
@@ -350,7 +350,7 @@ void game_mode_play(void)
 		sound_code = 0x21u;
 		queue_sound(sound_code);
 		SCREEN(screen)->button_lamps = 0xFFFFu;
-		lcd_restart_frames = 0u;
+		game->lcd_restart_frames = 0u;
 		SCREEN(screen)->fade_kind = 0u;
 		SCREEN(screen)->flags |= 1u;
 		SCREEN(screen)->game_step++;
@@ -374,7 +374,7 @@ void game_mode_play(void)
 			} while ((racers_left != 0u) & (racer != player));
 			if (zero)
 			{
-				if (SCREEN(screen)->player == SCREEN(screen)->host_player && isdn_mode == 0u)
+				if (SCREEN(screen)->player == SCREEN(screen)->host_player && game->isdn_mode == 0u)
 					io_write8(LINK_ENTRIES_CLOSED, 1u);
 				SCREEN(screen)->game_step++;
 			}
@@ -382,7 +382,7 @@ void game_mode_play(void)
 		return;
 	case 2:
 		SCREEN(screen)->demo_flags &= ~0x100u;
-		wheel_motor[SCREEN(screen)->index] = 0u;
+		game->wheel_motor[SCREEN(screen)->index] = 0u;
 		SCREEN(screen)->game_start_time = BOOKKEEPING_TOTAL_TIME;
 		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + SCREEN(screen)->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);

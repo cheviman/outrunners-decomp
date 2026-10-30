@@ -3,7 +3,7 @@
  *    Description: the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -136,8 +136,8 @@ void boot(void)
 	} while (block_count != 0u);
 	move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
 	player_car = 0x219000u;
-	waiting_task_frame = 0x21FF84u;
-	waiting_task_stack = 0x21F800u;
+	game->waiting_task_frame = 0x21FF84u;
+	game->waiting_task_stack = 0x21F800u;
 	initialise_game();
 	lcd_start();
 	io_write8(IRQ_ACKNOWLEDGE, 0u);
@@ -225,17 +225,17 @@ void second_task(uint32_t entry_point)
 	case 0:
 		for (;;)
 		{
-			second_task_waiting = 0xFFu;
+			game->second_task_waiting = 0xFFu;
 			link_send_records();
 			wait_for_frame();
-			second_task_waiting = 0u;
-			if (test_mode_on != 0u)
+			game->second_task_waiting = 0u;
+			if (game->test_mode_on != 0u)
 				break;
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
 			r12 = course_records_update(r12);
-			game_frame_count++;
+			game->game_frame_count++;
 			screen = SCREEN_1;
 			input_changes = take_screen_inputs();
 			mode = SCREEN(screen)->game_mode;
@@ -273,7 +273,7 @@ void second_task(uint32_t entry_point)
 			}
 			run_objects();
 			lcd_update();
-			if (single_task != 0u)
+			if (game->single_task != 0u)
 			{
 				second_task_frames();
 				break;
@@ -284,13 +284,13 @@ void second_task(uint32_t entry_point)
 		link_take_master_settings();
 		io_write16(IRQ_TIMER_0, 0x39u);
 		io_write16(IRQ_TIMER_1, 1u);
-		screen_2_vblanks_high = 0u;
-		screen_2_vblanks = 0u;
-		screen_1_vblanks_high = 0u;
-		screen_1_vblanks = 0u;
-		vblanks_since_start = 0u;
-		task_swapping = 0xFFu;
-		attract_car_list = first_attract_car_lists[machine_count];
+		game->screen_2_vblanks_high = 0u;
+		game->screen_2_vblanks = 0u;
+		game->screen_1_vblanks_high = 0u;
+		game->screen_1_vblanks = 0u;
+		game->vblanks_since_start = 0u;
+		game->task_swapping = 0xFFu;
+		attract_car_list = first_attract_car_lists[game->machine_count];
 		input_changes = SCREEN(SCREEN_2)->car_number;
 		SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
 		SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
@@ -301,14 +301,14 @@ void second_task(uint32_t entry_point)
 	}
 	for (;;)
 	{
-		task_swapping = 0u;
+		game->task_swapping = 0u;
 		wait_for_frame();
 		r12 = test_mode_start();
 		do
 		{
 			wait_for_frame();
 			test_mode_frame();
-		} while (test_mode_on != 0u);
+		} while (game->test_mode_on != 0u);
 		interrupts_off();
 		io_write8(IO_1_CNT, 4u);
 		io_write8(IO_2_CNT, 0x80u);
@@ -334,8 +334,8 @@ void second_task(uint32_t entry_point)
 		} while (block_count != 0u);
 		move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
 		player_car = 0x219000u;
-		waiting_task_frame = 0x21FF84u;
-		waiting_task_stack = 0x21F800u;
+		game->waiting_task_frame = 0x21FF84u;
+		game->waiting_task_stack = 0x21F800u;
 		initialise_game();
 		lcd_reset();
 		SCREEN(SCREEN_1)->game_mode = 1u;
@@ -351,13 +351,13 @@ void second_task(uint32_t entry_point)
 		link_take_master_settings();
 		io_write16(IRQ_TIMER_0, 0x39u);
 		io_write16(IRQ_TIMER_1, 1u);
-		screen_2_vblanks_high = 0u;
-		screen_2_vblanks = 0u;
-		screen_1_vblanks_high = 0u;
-		screen_1_vblanks = 0u;
-		vblanks_since_start = 0u;
-		task_swapping = 0xFFu;
-		attract_car_list = first_attract_car_lists[machine_count];
+		game->screen_2_vblanks_high = 0u;
+		game->screen_2_vblanks = 0u;
+		game->screen_1_vblanks_high = 0u;
+		game->screen_1_vblanks = 0u;
+		game->vblanks_since_start = 0u;
+		game->task_swapping = 0xFFu;
+		attract_car_list = first_attract_car_lists[game->machine_count];
 		input_changes = SCREEN(SCREEN_2)->car_number;
 		SCREEN(SCREEN_1)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[SCREEN(SCREEN_1)->car_number];
 		SCREEN(SCREEN_2)->next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[(int32_t)input_changes];
@@ -378,12 +378,12 @@ void second_task_frames(void)
 
 	for (;;)
 	{
-		if (second_task_waiting == 0u)
+		if (game->second_task_waiting == 0u)
 			link_send_records();
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 			break;
-		if (second_task_waiting == 0u)
+		if (game->second_task_waiting == 0u)
 			link_receive_records();
 		r14 = race_entries_update(r14);
 		race_progress_update(&r12, &r14);
@@ -425,21 +425,21 @@ void second_task_frames(void)
 		}
 		run_objects();
 		lcd_update();
-		if (single_task == 0u)
+		if (game->single_task == 0u)
 			continue;
 		do
 		{
-			second_task_waiting = 0xFFu;
+			game->second_task_waiting = 0xFFu;
 			link_send_records();
 			wait_for_frame();
-			second_task_waiting = 0u;
-			if (test_mode_on != 0u)
+			game->second_task_waiting = 0u;
+			if (game->test_mode_on != 0u)
 				return;
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
 			r12 = course_records_update(r12);
-			game_frame_count++;
+			game->game_frame_count++;
 			screen = SCREEN_1;
 			input_changes = take_screen_inputs();
 			mode = SCREEN(screen)->game_mode;
@@ -477,7 +477,7 @@ void second_task_frames(void)
 			}
 			run_objects();
 			lcd_update();
-		} while (single_task == 0u);
+		} while (game->single_task == 0u);
 	}
 }
 
@@ -495,20 +495,20 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 	if (mode == 0u || mode == 6u)
 		return mode;
 	index = SCREEN(screen)->index;
-	if (free_play != 0u)
+	if (game->free_play != 0u)
 	{
 		lamp_blink = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
 		SCREEN(screen)->start_lamp_blink = lamp_blink;
-		port_d_outputs[index] = (port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
+		game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
 		if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
 			return mode;
-		if (free_play == 0u)
+		if (game->free_play == 0u)
 		{
 			SEAT_CREDITS(seat_credits)->credits--;
 			SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 		}
 		SCREEN(screen)->start_lamp_blink = 0u;
-		port_d_outputs[index] &= ~4u;
+		game->port_d_outputs[index] &= ~4u;
 		play_mode = 6u;
 		AS32(SCREEN(screen)->game_mode) = 6u;
 		SCREEN(screen)->link_event = 1u;
@@ -521,16 +521,16 @@ uint32_t check_game_start(uint32_t mode, uint32_t seat_credits)
 		return mode;
 	lamp_blink = (uint8_t)(SCREEN(screen)->start_lamp_blink + 1u);
 	SCREEN(screen)->start_lamp_blink = lamp_blink;
-	port_d_outputs[index] = (port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
+	game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
 	if ((SCREEN(screen)->buttons_pressed & 0x40u) == 0u)
 		return mode;
-	if (free_play == 0u)
+	if (game->free_play == 0u)
 	{
 		SEAT_CREDITS(seat_credits)->credits--;
 		SEAT_CREDITS(seat_credits)->bonus_units = 0u;
 	}
 	SCREEN(screen)->start_lamp_blink = 0u;
-	port_d_outputs[index] &= ~4u;
+	game->port_d_outputs[index] &= ~4u;
 	play_mode = 6u;
 	AS32(SCREEN(screen)->game_mode) = 6u;
 	SCREEN(screen)->link_event = 1u;
@@ -552,15 +552,15 @@ void wait_for_frame(void)
 			{
 				frame_wait(frame_ready_ADDRESS);
 				take_interrupts();
-			} while (frame_ready == 0u);
+			} while (game->frame_ready == 0u);
 			frame_end();
-			frame_ready = 0u;
+			game->frame_ready = 0u;
 			break;
 		}
 		unpack_queued_step();
-		if (frame_ready != 0u)
+		if (game->frame_ready != 0u)
 		{
-			frame_ready = 0u;
+			game->frame_ready = 0u;
 			break;
 		}
 	}

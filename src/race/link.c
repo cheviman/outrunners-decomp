@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,11 +20,11 @@ void isdn_count_players(void)
 
 	players_this_side = RACE(SCREEN(screen)->race_copy)->players_this_side;
 	player_sum = RACE(SCREEN(screen)->race_copy)->players_other_side;
-	isdn_players_this_side = players_this_side;
-	isdn_players_other_side = player_sum;
+	game->isdn_players_this_side = players_this_side;
+	game->isdn_players_other_side = player_sum;
 	player_sum += players_this_side;
-	player_count = player_sum;
-	machine_count = player_sum >> 1;
+	game->player_count = player_sum;
+	game->machine_count = player_sum >> 1;
 }
 
 /* Game mode 8, on ISDN only (never in the scenarios; take_screen_inputs goes to it while link_status
@@ -118,7 +118,7 @@ void game_mode_isdn_connection(void)
    from the list at 000F70), on the text layer (print_text_layer), by state: 0 by link_status: bit 0 ISDN
    SUCCESS, THIS SIDE, OTHER SIDE and TOTAL with the players (race_copy players_this_side,
    players_other_side and their sum, print_hex_byte), then 1; bits 2-3 clear ISDN FAILED, then 1; else
-   ISDN CONECTING (sic) blinking every 8 frames (its unk_10 counting); 1 nothing more. */
+   ISDN CONECTING (sic) blinking every 8 frames (its blink_counter counting); 1 nothing more. */
 void isdn_status_update(void)
 {
 	uint8_t link_status = 0, other_side_count = 0, players_other_side = 0, players_this_side = 0, this_side_count = 0, total_players = 0;
@@ -180,7 +180,7 @@ void network_check_again(void)
 {
 	uint32_t delay = 0;
 
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		network_check();
 		return;
@@ -223,17 +223,17 @@ void network_check(void)
 	move_halfwords(r12, zero_block_ADDRESS, 8u);
 	move_halfwords(RACE_1, zero_block_ADDRESS, 0x80u);
 	move_halfwords(RACE_COPY_1, zero_block_ADDRESS, 0x200u);
-	link_off = stand_alone;
-	if (link_off != 0u)
+	game->link_off = game->stand_alone;
+	if (game->link_off != 0u)
 	{
 		network_check_stand_alone();
 		return;
 	}
 	io_write8(LINK_BOARD_ON, 0u);
 	text = network_check_master_text_ADDRESS;
-	if (link_master == 0u)
+	if (game->link_master == 0u)
 		text = network_check_slave_text_ADDRESS;
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 		text = network_check_isdn_text_ADDRESS;
 	print_text_layer(text);
 	text = board_check_text_ADDRESS;
@@ -268,12 +268,12 @@ void network_check(void)
 	left_caller = network_check_four_ics(left_caller);
 	if (left_caller != 0u)
 		return;
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 	{
 		network_check_isdn();
 		return;
 	}
-	io_write8(r12 + 4u, link_master);
+	io_write8(r12 + 4u, game->link_master);
 	board_flags_role = io_read32(LINK_BOARD_FLAGS);
 	io_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
 	wait_for_frame();
@@ -290,9 +290,9 @@ void network_check(void)
 	do
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 		{
-			link_failed = 0xFFu;
+			game->link_failed = 0xFFu;
 			return;
 		}
 		current_object = check_network_status_text_ADDRESS;
@@ -306,9 +306,9 @@ void network_check(void)
 	print_text_layer(text);
 	do
 	{
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 		{
-			link_failed = 0xFFu;
+			game->link_failed = 0xFFu;
 			return;
 		}
 		if (io_read8(r12 + 0xCu) != 0u)
@@ -318,7 +318,7 @@ void network_check(void)
 		}
 	} while (io_read8(r12 + 8u) == 0u);
 	network_check_clear_status_line();
-	link_wait_frames = 0u;
+	game->link_wait_frames = 0u;
 	network_check_join();
 }
 
@@ -333,17 +333,17 @@ void network_check_join(void)
 	uint32_t machine = 0;
 
 	count = io_read8(r12);
-	machine_count = count;
+	game->machine_count = count;
 	count = (uint8_t)(count * 2u);
-	player_count = count;
+	game->player_count = count;
 	machine = io_read8(r12 + 2u);
 	io_write8(r12 + 0x1002u, 1u);
-	if (isdn_mode == 0u && count < 2u)
+	if (game->isdn_mode == 0u && count < 2u)
 	{
 		network_check_stand_alone();
 		return;
 	}
-	car_number = (uint8_t)(cabinet_id * 2u);
+	car_number = (uint8_t)(game->cabinet_id * 2u);
 	SCREEN(SCREEN_1)->car_number = car_number;
 	RACE(RACE_1)->car_number = car_number;
 	car_number++;
@@ -379,7 +379,7 @@ void network_check_isdn(void)
    for 128 frames). */
 void link_lost(void)
 {
-	link_failed = 1u;
+	game->link_failed = 1u;
 	network_check_stand_alone();
 }
 
@@ -390,10 +390,10 @@ void network_check_stand_alone(void)
 {
 	uint32_t machine = 0;
 
-	link_off = 1u;
+	game->link_off = 1u;
 	machine = 1u;
-	player_count = 2u;
-	machine_count = 1u;
+	game->player_count = 2u;
+	game->machine_count = 1u;
 	SCREEN(SCREEN_1)->car_number = 0u;
 	RACE(RACE_1)->car_number = 0u;
 	SCREEN(SCREEN_2)->car_number = 1u;
@@ -432,23 +432,23 @@ void network_check_result(uint32_t machine)
 	SCREEN(SCREEN_2)->race = RACE_2;
 	if (machine == 0u)
 	{
-		RACE(race)->master_advertise_sound = advertise_sound;
-		RACE(race)->master_steering_wheel_reaction = steering_wheel_reaction;
-		RACE(race)->master_coins_per_credit = coins_per_credit;
-		RACE(race)->master_first_chute_multiplier = first_chute_multiplier;
-		RACE(race)->master_bonus_adder = bonus_adder;
-		RACE(race)->master_coin_setting = coin_setting;
-		RACE(race)->master_free_play = free_play;
-		RACE(race)->master_game_difficulty = game_difficulty;
-		RACE(race)->master_time_difficulty_0 = time_difficulty[0];
-		RACE(race)->master_time_difficulty_1 = time_difficulty[1];
-		RACE(race)->master_time_difficulty_2_5 = ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u));
+		RACE(race)->master_advertise_sound = game->advertise_sound;
+		RACE(race)->master_steering_wheel_reaction = game->steering_wheel_reaction;
+		RACE(race)->master_coins_per_credit = game->coins_per_credit;
+		RACE(race)->master_first_chute_multiplier = game->first_chute_multiplier;
+		RACE(race)->master_bonus_adder = game->bonus_adder;
+		RACE(race)->master_coin_setting = game->coin_setting;
+		RACE(race)->master_free_play = game->free_play;
+		RACE(race)->master_game_difficulty = game->game_difficulty;
+		RACE(race)->master_time_difficulty_0 = game->time_difficulty[0];
+		RACE(race)->master_time_difficulty_1 = game->time_difficulty[1];
+		RACE(race)->master_time_difficulty_2_5 = ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u));
 		move_halfwords(race + 0x30u, BOOKKEEPING_COURSE_RECORDS_ADDRESS, 0x1Eu);
 	}
 	clear_text_layer();
 	text = network_check_text_ADDRESS;
 	print_text_layer(text);
-	if (link_failed != 0u)
+	if (game->link_failed != 0u)
 	{
 		text = communication_failed_text_ADDRESS;
 		print_text_layer(text);
@@ -462,7 +462,7 @@ void network_check_result(uint32_t machine)
 		clear_text_layer();
 		return;
 	}
-	if (isdn_mode != 0u)
+	if (game->isdn_mode != 0u)
 	{
 		text = isdn_machine_text_ADDRESS;
 		print_text_layer(text);
@@ -482,7 +482,7 @@ void network_check_result(uint32_t machine)
 		clear_text_layer();
 		return;
 	}
-	if (link_off != 0u)
+	if (game->link_off != 0u)
 	{
 		text = stand_alone_machine_text_ADDRESS;
 		print_text_layer(text);
@@ -669,20 +669,20 @@ uint32_t network_check_wait_board(uint32_t left_caller)
 	uint16_t frames_left = 0;
 	uint32_t board_flags = 0;
 
-	link_wait_frames = 0xE10u;
+	game->link_wait_frames = 0xE10u;
 	do
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 		{
-			link_failed = 0xFFu;
+			game->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
-		frames_left = link_wait_frames;
-		link_wait_frames = frames_left - 1u;
+		frames_left = game->link_wait_frames;
+		game->link_wait_frames = frames_left - 1u;
 		if (frames_left == 1u)
 		{
 			io_write8(IO_1_CNT, 4u);
@@ -708,9 +708,9 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 	do
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 		{
-			link_failed = 0xFFu;
+			game->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
@@ -718,20 +718,20 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 		network_check_blink_text();
 		board_machines = io_read8(0x800000u);
 	} while (board_machines == 0u);
-	link_wait_frames = 0x3Cu;
+	game->link_wait_frames = 0x3Cu;
 	do
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 		{
-			link_failed = 0xFFu;
+			game->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
 		current_object = wait_text_ADDRESS;
 		network_check_blink_text();
-		frames_left = link_wait_frames;
-		link_wait_frames = frames_left - 1u;
+		frames_left = game->link_wait_frames;
+		game->link_wait_frames = frames_left - 1u;
 	} while (frames_left != 1u);
 	network_check_clear_status_line();
 	return left_caller;
@@ -855,8 +855,8 @@ void network_check_blink_text(void)
 	uint16_t character = 0;
 	uint32_t cell = 0;
 
-	network_check_blink_counter++;
-	if ((network_check_blink_counter & 0xFu) != 0u)
+	game->network_check_blink_counter++;
+	if ((game->network_check_blink_counter & 0xFu) != 0u)
 		return;
 	cell = 0x310000u | 0xF000u | TEXT_LAYER_RECORD(current_object)->cell;
 	current_object = current_object + 2u;
@@ -922,12 +922,12 @@ uint32_t network_check_error(uint32_t error_texts)
 	for (;;)
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 			break;
 		current_object = network_error_text_ADDRESS;
 		network_check_blink_text();
 	}
-	link_failed = 0xFFu;
+	game->link_failed = 0xFFu;
 	left_caller = 1u;
 	return left_caller;
 }
@@ -941,12 +941,12 @@ uint32_t network_check_halt(void)
 	for (;;)
 	{
 		wait_for_frame();
-		if (test_mode_on != 0u)
+		if (game->test_mode_on != 0u)
 			break;
 		current_object = network_error_text_ADDRESS;
 		network_check_blink_text();
 	}
-	link_failed = 0xFFu;
+	game->link_failed = 0xFFu;
 	left_caller = 1u;
 	return left_caller;
 }
@@ -966,7 +966,7 @@ void link_take_master_settings(void)
 	uint8_t isdn_records_ready = 0;
 	uint32_t time_difficulty_2_long = 0;
 
-	if (test_mode_on != 0u)
+	if (game->test_mode_on != 0u)
 		return;
 	link_send_records();
 	wait_for_frame();
@@ -977,7 +977,7 @@ void link_take_master_settings(void)
 	for (;;)
 	{
 		wait_for_frame();
-		if (isdn_mode == 0u)
+		if (game->isdn_mode == 0u)
 			break;
 		isdn_records_ready = io_read8(LINK_ISDN_RECORDS_READY);
 		if (isdn_records_ready != 0u)
@@ -989,7 +989,7 @@ void link_take_master_settings(void)
 	link_receive_records();
 	record_car_number = 0x20FC02u;
 	car_number_slot = car_numbers_ADDRESS;
-	players_left = player_count;
+	players_left = game->player_count;
 	record_size = 0x80u;
 	do
 	{
@@ -1004,29 +1004,29 @@ void link_take_master_settings(void)
 	r12 = load_course_records();
 	race = RACE_COPY_1;
 	coins_changed = 0u;
-	if (coin_setting != RACE(RACE_COPY_1)->master_coin_setting || coins_per_credit != RACE(race)->master_coins_per_credit || first_chute_multiplier != RACE(race)->master_first_chute_multiplier || bonus_adder != RACE(race)->master_bonus_adder || free_play != RACE(race)->master_free_play)
+	if (game->coin_setting != RACE(RACE_COPY_1)->master_coin_setting || game->coins_per_credit != RACE(race)->master_coins_per_credit || game->first_chute_multiplier != RACE(race)->master_first_chute_multiplier || game->bonus_adder != RACE(race)->master_bonus_adder || game->free_play != RACE(race)->master_free_play)
 	{
 		coins_changed = 0xFFFFFFFFu;
-		coin_setting = RACE(race)->master_coin_setting;
-		coins_per_credit = RACE(race)->master_coins_per_credit;
-		first_chute_multiplier = RACE(race)->master_first_chute_multiplier;
-		bonus_adder = RACE(race)->master_bonus_adder;
-		free_play = RACE(race)->master_free_play;
+		game->coin_setting = RACE(race)->master_coin_setting;
+		game->coins_per_credit = RACE(race)->master_coins_per_credit;
+		game->first_chute_multiplier = RACE(race)->master_first_chute_multiplier;
+		game->bonus_adder = RACE(race)->master_bonus_adder;
+		game->free_play = RACE(race)->master_free_play;
 		init_coins();
 		r12 = bookkeeping_clear_credits();
 	}
-	if (advertise_sound == RACE(race)->master_advertise_sound && steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game_difficulty == RACE(race)->master_game_difficulty && ((uint8_t)time_difficulty[0] | ((uint32_t)(uint8_t)time_difficulty[1] << 8u)) == ((uint8_t)RACE(race)->master_time_difficulty_0 | ((uint32_t)RACE(race)->master_time_difficulty_1 << 8u)) && ((uint8_t)time_difficulty[2] | ((uint32_t)(uint8_t)time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)time_difficulty[5] << 24u)) == RACE(race)->master_time_difficulty_2_5 && coins_changed == 0u)
+	if (game->advertise_sound == RACE(race)->master_advertise_sound && game->steering_wheel_reaction == RACE(race)->master_steering_wheel_reaction && game->game_difficulty == RACE(race)->master_game_difficulty && ((uint8_t)game->time_difficulty[0] | ((uint32_t)(uint8_t)game->time_difficulty[1] << 8u)) == ((uint8_t)RACE(race)->master_time_difficulty_0 | ((uint32_t)RACE(race)->master_time_difficulty_1 << 8u)) && ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u)) == RACE(race)->master_time_difficulty_2_5 && coins_changed == 0u)
 		return;
-	advertise_sound = RACE(race)->master_advertise_sound;
-	steering_wheel_reaction = RACE(race)->master_steering_wheel_reaction;
-	game_difficulty = RACE(race)->master_game_difficulty;
-	time_difficulty[0] = RACE(race)->master_time_difficulty_0;
-	time_difficulty[1] = RACE(race)->master_time_difficulty_1;
+	game->advertise_sound = RACE(race)->master_advertise_sound;
+	game->steering_wheel_reaction = RACE(race)->master_steering_wheel_reaction;
+	game->game_difficulty = RACE(race)->master_game_difficulty;
+	game->time_difficulty[0] = RACE(race)->master_time_difficulty_0;
+	game->time_difficulty[1] = RACE(race)->master_time_difficulty_1;
 	time_difficulty_2_long = RACE(race)->master_time_difficulty_2_5;
-	time_difficulty[2] = (uint8_t)time_difficulty_2_long;
-	time_difficulty[3] = (uint8_t)(time_difficulty_2_long >> 8u);
-	time_difficulty[4] = (uint8_t)(time_difficulty_2_long >> 16u);
-	time_difficulty[5] = (uint8_t)(time_difficulty_2_long >> 24u);
+	game->time_difficulty[2] = (uint8_t)time_difficulty_2_long;
+	game->time_difficulty[3] = (uint8_t)(time_difficulty_2_long >> 8u);
+	game->time_difficulty[4] = (uint8_t)(time_difficulty_2_long >> 16u);
+	game->time_difficulty[5] = (uint8_t)(time_difficulty_2_long >> 24u);
 	save_settings();
 }
 
@@ -1056,7 +1056,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 	race_2 = RACE_COPY_1;
 	if (SCREEN(screen)->player == 0u)
 	{
-		players_left = player_count;
+		players_left = game->player_count;
 		record_size = 0x80u;
 		entry_serial = RACE(race)->entry_serial;
 		other_race = race_2 + 0x1Cu;
@@ -1071,11 +1071,11 @@ uint32_t race_entries_update(uint32_t entry_place)
 			if (entry_frames == 0u)
 			{
 				machines = 0u;
-				if (stand_alone == 0u)
-					machines = machine_count;
+				if (game->stand_alone == 0u)
+					machines = game->machine_count;
 				next_entry_frames = entry_frames_by_machines[machines];
 				request = race_2 + 0x19u;
-				players_left = player_count;
+				players_left = game->player_count;
 				player = 0u;
 				for (;;)
 				{
@@ -1092,7 +1092,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 					RACE(race)->entrant = player;
 					RACE(race)->entry_serial++;
 					entry_frames = next_entry_frames;
-					if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || entry_frames <= 0x28u)
+					if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != game->player_count || entry_frames <= 0x28u)
 						break;
 					entry_frames = 0x28u;
 					break;
@@ -1106,7 +1106,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 				if (old_entry_frames != 1u)
 				{
 					request = race_2 + 0x19u;
-					players_left = player_count;
+					players_left = game->player_count;
 					player = 0u;
 					for (;;)
 					{
@@ -1123,7 +1123,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 						RACE(race)->entrant = player;
 						RACE(race)->entry_serial++;
 						entry_frames = next_entry_frames;
-						if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != player_count || entry_frames <= 0x28u)
+						if ((uint8_t)(SCREEN(screen)->entrant_count + 1u) != game->player_count || entry_frames <= 0x28u)
 							break;
 						entry_frames = 0x28u;
 						break;
@@ -1143,7 +1143,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 		}
 		RACE(race)->entry_frames = entry_frames;
 	}
-	players_left = player_count;
+	players_left = game->player_count;
 	other_race = race_2 + 0x28u;
 	do
 	{
@@ -1160,7 +1160,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 	else if (SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
 	{
 		AS32(SCREEN(screen)->game_mode) = 5u;
-		cleared_on_race_over = 0u;
+		game->cleared_on_race_over = 0u;
 		if (RACE(race_2)->entry_frames != 0u && SCREEN(screen)->game_mode != 0u && SCREEN(screen)->game_mode <= 5u)
 			AS32(SCREEN(screen)->game_mode) = 7u;
 	}
@@ -1279,7 +1279,7 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 						fork_index = RACE(passing_race)->stage;
 						fork_index = (uint8_t)(fork_index * 2u);
 						fork_index = (uint8_t)(fork_index + branch);
-						RACE(race)->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + master_time_difficulty[checkpoint]) * 0x1Eu;
+						RACE(race)->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + game->master_time_difficulty[checkpoint]) * 0x1Eu;
 					}
 				}
 			}
@@ -1386,8 +1386,8 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
    by screen game_mode's byte 2: 0 screen fade_kind = 0 and flags bit 0; 1 once that bit has cleared: the
    seat's sound channel (012004), the screen's objects (011C60), layers (01070C), sprite count (010889)
    and text layer (01076A) set afresh, its race record's race part cleared (race_record_clear), not the
-   demo (unk_90 bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking (bytes C0-C3
-   and C8-CB of its entry at checkpoint_lamp); 2 starts entry_invitation_object_handlers
+   demo (demo_flags bit 8), the wheel motor off (wheel_motor), both of the seat's lamps blinking (bytes
+   C0-C3 and C8-CB of its entry at checkpoint_lamp); 2 starts entry_invitation_object_handlers
    (entry_countdown_start, credit_display_update, coin_prompt_update): the invitation to join with the
    entry time left; 3 the seat's screen on (its I/O chip's CNT, 6 or 86), fade_kind = 1, flags bit 0; 4
    once player 0's entry_frames is over: the sound channel again (012004), step 2, the lamps off, the LCD
@@ -1441,7 +1441,7 @@ void entry_invitation_step(void)
 		race_record_clear();
 		SCREEN(screen)->demo_flags &= ~0x100u;
 		index = SCREEN(screen)->index;
-		wheel_motor[index] = 0u;
+		game->wheel_motor[index] = 0u;
 		lamp = GAME_VARIABLES + index * 4u;
 		SCREEN_LAMPS(lamp)->checkpoint = 2u;
 		SCREEN_LAMPS(lamp)->leader = 8u;
@@ -1461,7 +1461,7 @@ void race_record_clear(void)
 	move_halfwords(SCREEN(screen)->race + 0x30u, zero_block_ADDRESS, 0x28u);
 }
 
-/* Marks the screen's player ready in its race record (unk_5C), after its selections. */
+/* Marks the screen's player ready in its race record (ready), after its selections. */
 void set_player_ready(void)
 {
 	RACE(SCREEN(screen)->race)->ready = 0xFFu;
@@ -1500,7 +1500,7 @@ uint32_t course_records_update(uint32_t record_entry)
 	uint8_t seen_serial = 0;
 
 	seen_serials = screen + 0x328u;
-	players_left = player_count;
+	players_left = game->player_count;
 	race = RACE_2;
 	do
 	{
@@ -1544,9 +1544,9 @@ void link_receive_records(void)
 	uint8_t board_error = 0, second_buffer = 0;
 	uint32_t block_F0 = 0, bytes_F4 = 0, block_F8 = 0, bytes_FC = 0;
 
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
-		if (link_failed == 0u && link_off == 0u)
+		if (game->link_failed == 0u && game->link_off == 0u)
 		{
 			board_error = io_read8(LINK_BOARD_ERROR);
 			if (board_error != 0u)
@@ -1638,10 +1638,10 @@ void link_send_records(void)
 	uint32_t board_records = 0, race = 0, record_count = 0;
 	uint8_t board_error = 0;
 
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
-		link_wait_frames = link_wait_frames_start;
-		if (link_failed != 0u || link_off != 0u)
+		game->link_wait_frames = game->link_wait_frames_start;
+		if (game->link_failed != 0u || game->link_off != 0u)
 			return;
 		board_error = io_read8(LINK_BOARD_ERROR);
 		if (board_error != 0u)

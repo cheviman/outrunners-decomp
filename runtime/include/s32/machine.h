@@ -4,7 +4,7 @@
  *                 timers, I/O
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -143,7 +143,9 @@ typedef struct s32_machine
 	const uint8_t *program;                        /* V70 program image (2 MB), owned by the caller, or NULL */
 	const uint8_t *(*program_at)(uint32_t address);  /* without an image: the bytes at an address of the
 	                                                  program's chips (the game's assets: data_at) */
-	uint8_t work_ram[S32_WORK_RAM_SIZE];
+	uint8_t *work_ram;                              /* S32_WORK_RAM_SIZE bytes: the state of the world the
+	                                                  program runs (the game's, runtime/src/game.c), or the
+	                                                  board's own; s32_init keeps it and clears it */
 	uint8_t video_ram[S32_VIDEO_RAM_SIZE];          /* 16-bit words, little endian */
 	uint8_t sprite_ram[S32_SPRITE_RAM_SIZE];        /* 16-bit words, little endian */
 	uint16_t palette[S32_SCREENS][S32_PALETTE_ENTRIES];    /* stored as xBBBBBGGGGGRRRRR */

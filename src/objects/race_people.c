@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -331,8 +331,8 @@ void race_opening_sounds_done(void)
 /* The sounds as the car nears the end of a stage (before each fork's checkpoint and each goal): sound
    24, then sound 53 20 frames later (the list at 01466F: a delay, then sounds and delays closed by 0);
    when the race record's stage count (race_copy stage_count) changes (the checkpoint or the goal
-   passed), sound 24 if this screen's player leads the race (screen player = unk_70), else 28, and it
-   ends. */
+   passed), sound 24 if this screen's player leads the race (screen player = leader_player), else 28, and
+   it ends. */
 void stage_end_sounds_update(void)
 {
 	uint8_t end_sound = 0, sound = 0;

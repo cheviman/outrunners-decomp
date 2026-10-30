@@ -3,7 +3,7 @@
  *    Description: the car radio: the songs, the DJ and his messages, the songs' titles
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -35,11 +35,11 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		OBJECT(current_object)->car_radio.car_models[car_numbers[player]] = RACE(RACE_COPY_1)[player].model;
+		OBJECT(current_object)->car_radio.car_models[game->car_numbers[player]] = RACE(RACE_COPY_1)[player].model;
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);
-	OBJECT(current_object)->car_radio.car_number = car_numbers[SCREEN(screen)->player];
+	OBJECT(current_object)->car_radio.car_number = game->car_numbers[SCREEN(screen)->player];
 	SCREEN(screen)->nearing_fork = 0u;
 	CAR(player_car)->song = car_model_songs[CAR(player_car)->model];
 	OBJECT(current_object)->car_radio.stage = SCREEN(screen)->route_stage;
@@ -47,7 +47,7 @@ void car_radio_start(void)
 	car_radio_wait_start();
 }
 
-/* Waits for the start (the car object's unk_10, the frames to it, down to 0), then goes on to
+/* Waits for the start (the car object's timer, the frames to it, down to 0), then goes on to
    car_radio_read_buttons. */
 void car_radio_wait_start(void)
 {
@@ -423,7 +423,7 @@ void car_radio_dj_leader(void)
 {
 	uint8_t message = 0;
 
-	message = (uint8_t)(car_numbers[RACE(SCREEN(screen)->host_record)->race_order] + 0x11u);
+	message = (uint8_t)(game->car_numbers[RACE(SCREEN(screen)->host_record)->race_order] + 0x11u);
 	start_dj_message(message);
 }
 

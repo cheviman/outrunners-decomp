@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -26,7 +26,7 @@ uint32_t course_record_beaten(void)
 		course_number = (uint8_t)(course_number - 0x15u);
 		SCREEN(screen)->record_course = course_number;
 		player = SCREEN(screen)->player;
-		if (SCREEN(screen)->places[(int32_t)player] == 0u && SCREEN(screen)->checkpoint_times_by_player[(int32_t)(player + 0x28u)] < course_record_times[course_number * 3u])
+		if (SCREEN(screen)->places[(int32_t)player] == 0u && SCREEN(screen)->checkpoint_times_by_player[(int32_t)(player + 0x28u)] < game->course_record_times[course_number * 3u])
 		{
 			zero = 1u == 0u;
 			return zero;
@@ -62,7 +62,7 @@ void name_entry_update(void)
 	{
 	case 0:
 		SCREEN(screen)->button_lamps = 0xFFFFu;
-		lcd_restart_frames = 0u;
+		game->lcd_restart_frames = 0u;
 		object = start_object();
 		OBJECT(object)->handler = name_entry_lcd_update_ADDRESS;
 		OBJECT(object)->name_entry_lcd.name_entry = current_object;
@@ -287,7 +287,7 @@ void name_entry_choose(void)
 				OBJECT(current_object)->name_entry.gas_step--;
 				name_place = OBJECT(current_object)->name_entry.place;
 				letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
-				if ((game_frame_count & 4u) == 0u)
+				if ((game->game_frame_count & 4u) == 0u)
 					letter_character = 0u;
 				OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
 				timer = OBJECT(current_object)->name_entry.timer;
@@ -361,7 +361,7 @@ void name_entry_choose(void)
 	}
 	name_place = OBJECT(current_object)->name_entry.place;
 	letter_character = name_entry_letters[OBJECT(current_object)->name_entry.letter];
-	if ((game_frame_count & 4u) == 0u)
+	if ((game->game_frame_count & 4u) == 0u)
 		letter_character = 0u;
 	OBJECT(current_object)->name_entry.name[(int32_t)name_place] = letter_character;
 	timer = OBJECT(current_object)->name_entry.timer;
@@ -533,7 +533,7 @@ void name_entry_letter_update(void)
 	letter_palette = 0x34u;
 	if (OBJECT(object)->name_entry.letter == OBJECT(current_object)->name_entry_letter.index)
 	{
-		if ((game_frame_count & 4u) == 0u)
+		if ((game->game_frame_count & 4u) == 0u)
 		{
 			OBJECT(current_object)->flags &= 0xDFu;
 			return;

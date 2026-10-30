@@ -3,7 +3,7 @@
  *    Description: a viewer of kanji texts nothing starts (unused)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -33,14 +33,14 @@ void kanji_text_viewer_update(void)
 	case 0:
 		SCREEN(screen)->unpack_state &= 0xFF00u;
 		init_video();
-		video_registers_0_long = (video_registers[0] | ((uint32_t)video_registers[1] << 16u)) & ~0x800u;
-		video_registers[0] = (uint16_t)video_registers_0_long;
-		video_registers[1] = (uint16_t)(video_registers_0_long >> 16u);
-		video_registers[1] = 0xFu;
-		video_registers[70] = 0xFFu;
-		video_registers[68] = 0u;
-		video_registers[69] = 0u;
-		send_video_registers = 0xFFu;
+		video_registers_0_long = (game->video_registers[0] | ((uint32_t)game->video_registers[1] << 16u)) & ~0x800u;
+		game->video_registers[0] = (uint16_t)video_registers_0_long;
+		game->video_registers[1] = (uint16_t)(video_registers_0_long >> 16u);
+		game->video_registers[1] = 0xFu;
+		game->video_registers[70] = 0xFFu;
+		game->video_registers[68] = 0u;
+		game->video_registers[69] = 0u;
+		game->send_video_registers = 0xFFu;
 		SCREEN(screen)->kanji_text_number = 0u;
 		SCREEN(screen)->kanji_text_units = 0;
 		SCREEN(screen)->kanji_text_tens = 0;

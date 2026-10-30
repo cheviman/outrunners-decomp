@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -42,7 +42,7 @@ void player_car_update(void)
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
 	uint32_t stage_count_place = 0;
 
-	wheel_motor[SCREEN(screen)->index] = 0u;
+	game->wheel_motor[SCREEN(screen)->index] = 0u;
 	player_car_check_place();
 	player_car_read_controls();
 	player_car_build_hit_boxes();
@@ -55,7 +55,7 @@ void player_car_update(void)
 			draw_distances = screen_view_defaults[0].draw_distances;
 			distance_index = RACE(SCREEN(screen)->host_record)->racer_count;
 			screen_view_default = screen_view_defaults_ADDRESS + 0x4u;
-			if (isdn_mode != 0u)
+			if (game->isdn_mode != 0u)
 				distance_index = 0u;
 			SCREEN(screen)->draw_distance = DRAW_DISTANCE_LIST(draw_distances)[(int32_t)distance_index];
 			SCREEN(screen)->eye_distance = SCREEN_VIEW_DEFAULT(screen_view_default - 0x4u)->eye_distance;
@@ -561,12 +561,12 @@ void player_car_steer_to_stop(void)
 	OBJECT(current_object)->player_car.wheel = stop_wheel;
 }
 
-/* Keeps the race order around the screen's car: screen leader_record-6C the race records (unk_70-73 the
-   players) of the leader, the last, the car just ahead and the car just behind (all itself in the demo),
-   screen leader_window_segment and leader_stage the leader's race window_segment and stage. When its
-   place (screen 320 + player, kept in place) changes during the race: sound 37 when the car it passed or
-   that passed it is within 160 across, else 3A. While first, blinks one of the screen's lamps (the
-   count, period and timer bytes C9-CB of its entry at checkpoint_lamp). */
+/* Keeps the race order around the screen's car: screen leader_record-6C the race records (leader_player
+   to behind_player the players) of the leader, the last, the car just ahead and the car just behind (all
+   itself in the demo), screen leader_window_segment and leader_stage the leader's race window_segment
+   and stage. When its place (screen 320 + player, kept in place) changes during the race: sound 37 when
+   the car it passed or that passed it is within 160 across, else 3A. While first, blinks one of the
+   screen's lamps (the count, period and timer bytes C9-CB of its entry at checkpoint_lamp). */
 void player_car_check_place(void)
 {
 	uint32_t zero = 0, carry = 0;
@@ -648,18 +648,18 @@ void player_car_check_place(void)
 }
 
 /* Hands the car's state on: this frame's view into the screen's ring of eight (screen + 600, slot
-   unk_D4, also race view_slot) and the view of the slot race_copy view_slot names back into the car and
-   screen shown_view, so that both screens draw the view of the same frame; and the car's world position,
-   animation, palette, frame, wheel effects, speed, sideways speed, flags, segments, place across the
-   road and bounce into its race record (race published set), from which race_car draws it on both
-   screens. Not in ISDN mode (isdn_mode), which reads them back instead. */
+   view_ring_slot, also race view_slot) and the view of the slot race_copy view_slot names back into the
+   car and screen shown_view, so that both screens draw the view of the same frame; and the car's world
+   position, animation, palette, frame, wheel effects, speed, sideways speed, flags, segments, place
+   across the road and bounce into its race record (race published set), from which race_car draws it on
+   both screens. Not in ISDN mode (isdn_mode), which reads them back instead. */
 uint32_t player_car_publish(void)
 {
 	uint32_t race = 0, race_copy = 0, shown_view = 0, view = 0, view_ring_slot = 0, view_slot = 0;
 
 	race = SCREEN(screen)->race;
 	race_copy = SCREEN(screen)->race_copy;
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		view_ring_slot = SCREEN(screen)->view_ring_slot;
 		view_ring_slot = (uint8_t)(view_ring_slot + 1u);
@@ -691,7 +691,7 @@ uint32_t player_car_publish(void)
 	VIEW(view)->segment_remaining = CAR(player_car)->segment_remaining;
 	VIEW(view)->horizon_line = SCREEN(screen)->horizon_line;
 	SCREEN(screen)->horizon_line = VIEW(shown_view)->horizon_line;
-	if (isdn_mode == 0u)
+	if (game->isdn_mode == 0u)
 	{
 		RACE(race)->world_x = OBJECT(current_object)->player_car.world_x;
 		RACE(race)->world_y = OBJECT(current_object)->player_car.world_y;
@@ -1165,8 +1165,8 @@ void player_car_move_view(void)
 }
 
 /* Whether a rival is close (rival_near): at speed 6000 or more (5000 to stay on), the car just ahead
-   (screen ahead_record) a little slower and within reach, or the car just behind (unk_6C) a little
-   faster and close; once on it stays for 30 frames (rival_hold) after the rival has gone. */
+   (screen ahead_record) a little slower and within reach, or the car just behind (behind_record) a
+   little faster and close; once on it stays for 30 frames (rival_hold) after the rival has gone. */
 void player_car_check_rivals(void)
 {
 	uint32_t ahead_race = 0, gap = 0, position = 0, race = 0, race_2 = 0, speed = 0, speed_gap = 0;
@@ -1397,7 +1397,7 @@ void player_car_crash_step(void)
 		player_car_move();
 		return;
 	}
-	wheel_motor[SCREEN(screen)->index] = 0x10u;
+	game->wheel_motor[SCREEN(screen)->index] = 0x10u;
 	if (CAR(player_car)->crash_sound_delay != 0u)
 	{
 		crash_sound_delay = CAR(player_car)->crash_sound_delay;

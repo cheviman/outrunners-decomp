@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -146,14 +146,14 @@ void road_surface_start(void)
 	uint32_t line_select_table = 0, mixer_address = 0, mixer_bits = 0, palettes = 0, road_surface_layer_setup = 0;
 
 	road_surface_layer_setup = road_surface_layer_setups_ADDRESS + ((uint32_t)SCREEN(screen)->index << 3) * 4u;
-	video_bits = video_registers[2] & ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup)->video_mask;
+	video_bits = game->video_registers[2] & ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup)->video_mask;
 	road_surface_layer_setup += 2u;
-	video_registers[2] = video_bits | ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x2u)->video_bits;
+	game->video_registers[2] = video_bits | ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x2u)->video_bits;
 	road_surface_layer_setup += 2u;
 	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x4u)->scroll_x_address)[0] = 0x160u;
 	road_surface_layer_setup += 4u;
 	VIDEO_REGISTER_WORDS(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0x8u)->scroll_y_address)[0] = 0u;
-	send_video_registers = 0xFFu;
+	game->send_video_registers = 0xFFu;
 	road_surface_layer_setup += 4u;
 	TILE_BANK_VALUES(ROAD_SURFACE_LAYER_SETUP(road_surface_layer_setup - 0xCu)->tile_bank_address)[0] = 0u;
 	road_surface_layer_setup += 4u;
@@ -208,7 +208,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
 
 	view_segment = screen + 0x3000u;
-	table_offset = (uint8_t)(video_registers[2] >> 8u);
+	table_offset = (uint8_t)(game->video_registers[2] >> 8u);
 	table_offset = (uint8_t)(table_offset + 8u);
 	table_offset = (table_offset & 0xCu) << 7;
 	scroll_place = OBJECT(current_object)->road_surface.line_scroll_table + table_offset * 4u;
@@ -453,7 +453,7 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	uint16_t last_frame_segment = 0, last_depth = 0, last_x = 0, last_line = 0;
 	uint32_t line_reached = 0, line_reached_first = 0, pairs_left = 0;
 
-	table_offset = (uint8_t)(video_registers[2] >> 8u);
+	table_offset = (uint8_t)(game->video_registers[2] >> 8u);
 	table_offset = (uint8_t)(table_offset + 4u);
 	table_offset = (table_offset & 0xCu) << 7;
 	scroll_place = OBJECT(current_object)->road_surface.line_scroll_table + table_offset * 4u;

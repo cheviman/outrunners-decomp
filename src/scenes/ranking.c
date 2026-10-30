@@ -3,7 +3,7 @@
  *    Description: the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    29-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -320,7 +320,7 @@ void ranking_record_start(void)
 	text_place = current_object + 0x80u;
 	record_offset = OBJECT(current_object)->ranking_record.course;
 	record_offset = (uint8_t)(record_offset * 6u);
-	initial_place = 0x20E301u + record_offset;
+	initial_place = course_records_ADDRESS + 0x1u + record_offset;
 	initial = COURSE_RECORD_BYTES(initial_place)[0];
 	initial_place++;
 	if (initial == 0x2Du)
@@ -340,7 +340,7 @@ void ranking_record_start(void)
 	OBJECT(text_place - 0x82u)->ranking_record.text[2] = initial;
 	text_place++;
 	OBJECT(text_place - 0x83u)->ranking_record.text[3] = 0u;
-	record_time = course_record_times[record_offset >> 1];
+	record_time = game->course_record_times[record_offset >> 1];
 	text_place++;
 	time_to_text(record_time, text_place);
 	characters_left = 0xBu;
@@ -402,7 +402,7 @@ void ranking_record_character_update(void)
 		if (colour_delay == 1u)
 		{
 			character_index = OBJECT(current_object)->ranking_record_character.course;
-			OBJECT(current_object)->palette = ranking_record_character_palettes[course_records[(uint8_t)(character_index * 6u)]];
+			OBJECT(current_object)->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
 			OBJECT(current_object)->state++;
 		}
 		break;
@@ -412,7 +412,7 @@ void ranking_record_character_update(void)
 		if (colour_delay == 1u)
 		{
 			character_index = OBJECT(current_object)->ranking_record_character.course;
-			OBJECT(current_object)->palette = ranking_record_character_palettes[course_records[(uint8_t)(character_index * 6u)]];
+			OBJECT(current_object)->palette = ranking_record_character_palettes[game->course_records[(uint8_t)(character_index * 6u)]];
 			OBJECT(current_object)->state++;
 		}
 		frames_left = OBJECT(current_object)->ranking_record_character.frames_left;
@@ -476,7 +476,7 @@ void ranking_record_car_update(void)
 		OBJECT(current_object)->ranking_record_car.wait_frames = 0xFu;
 		OBJECT(current_object)->draw_mode = 0xAu;
 		course = OBJECT(current_object)->ranking_record_car.course;
-		car_model = course_records[(uint8_t)(course * 6u)];
+		car_model = game->course_records[(uint8_t)(course * 6u)];
 		animation = car_model_turn_animations[car_model];
 		OBJECT(current_object)->palette = car_model_palettes[car_model];
 		animation_start(animation);
@@ -756,7 +756,7 @@ void ranking_background_load(void)
 	ranking_background_registers += 4u;
 	OBJECT(current_object)->ranking_background.second_scroll_x_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_x_address;
 	OBJECT(current_object)->ranking_background.second_scroll_y_address = RANKING_BACKGROUND_REGISTERS(ranking_background_registers - 0x28u)->second_scroll_y_address;
-	send_video_registers = 0xFFu;
+	game->send_video_registers = 0xFFu;
 	background_number = course_backgrounds[SCREEN(screen)->record_course];
 	TILE_BANK_VALUES(OBJECT(current_object)->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
 	saved_fades = background_palette_fades[background_number];
