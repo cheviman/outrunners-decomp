@@ -207,7 +207,7 @@ void write_bookkeeping_credits(uint32_t bookkeeping_place)
 	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = AS16(game->seat1_bookkeeping_byte);
 	bookkeeping_place += 2u;
 	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = (game->seat2_credits | ((uint32_t)game->seat2_coin_units << 8u));
-	BOOKKEEPING_HALFWORDS(bookkeeping_place)[1] = AS16(game->seat2_bookkeeping_byte);
+	BOOKKEEPING_HALFWORDS(bookkeeping_place + 0x2u)[0] = AS16(game->seat2_bookkeeping_byte);
 }
 
 /* A service credit for the seat whose credits are at R10 (seat1_credits or seat2_credits): one credit

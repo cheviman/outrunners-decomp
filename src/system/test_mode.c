@@ -818,7 +818,7 @@ uint16_t test_mode_memory_test_bytes(uint32_t size_then_wrong_bits, uint32_t ram
 			if (read_byte != pattern)
 			{
 				size_then_wrong_bits = size_then_wrong_bits ^ pattern;
-				size_then_wrong_bits = size_then_wrong_bits ^ TESTED_SOUND_RAM_BYTES(tested_address)[-1];
+				size_then_wrong_bits = size_then_wrong_bits ^ TESTED_SOUND_RAM_BYTES(tested_address - 0x1u)[0];
 			}
 			turn = 6u;
 			checked_address_low_15 = tested_address * 2u;
@@ -1779,7 +1779,7 @@ uint16_t test_mode_crt_test_draw_bars(uint32_t character)
 	cells_left = 0x26u;
 	do
 	{
-		TEXT_LAYER_CELLS(cell)[1728] = drawn_character;
+		TEXT_LAYER_CELLS(cell + 0xD80u)[0] = drawn_character;
 		TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 		cell += 2u;
 		cells_left--;
@@ -1789,7 +1789,7 @@ uint16_t test_mode_crt_test_draw_bars(uint32_t character)
 	rows_left = 0x1Au;
 	do
 	{
-		TEXT_LAYER_CELLS(cell)[39] = drawn_character;
+		TEXT_LAYER_CELLS(cell + 0x4Eu)[0] = drawn_character;
 		TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 		rows_left--;
 		cell += 0x80u;
@@ -1798,10 +1798,10 @@ uint16_t test_mode_crt_test_draw_bars(uint32_t character)
 	drawn_character++;
 	TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 	drawn_character++;
-	TEXT_LAYER_CELLS(cell)[39] = drawn_character;
+	TEXT_LAYER_CELLS(cell + 0x4Eu)[0] = drawn_character;
 	drawn_character++;
-	TEXT_LAYER_CELLS(cell)[1728] = drawn_character;
-	TEXT_LAYER_CELLS(cell)[1767] = drawn_character + 1u;
+	TEXT_LAYER_CELLS(cell + 0xD80u)[0] = drawn_character;
+	TEXT_LAYER_CELLS(cell + 0xDCEu)[0] = drawn_character + 1u;
 	cell = LINKED(cell, 0xF208u);
 	drawn_character = 0x8001u;
 	cell = test_mode_crt_test_draw_bar(drawn_character, cell);
@@ -1826,10 +1826,10 @@ uint32_t test_mode_crt_test_draw_bar(uint16_t character, uint32_t cell)
 	columns_left = 0x20u;
 	do
 	{
-		TEXT_LAYER_CELLS(column_cell)[256] = column_character;
-		TEXT_LAYER_CELLS(column_cell)[192] = column_character;
-		TEXT_LAYER_CELLS(column_cell)[128] = column_character;
-		TEXT_LAYER_CELLS(column_cell)[64] = column_character;
+		TEXT_LAYER_CELLS(column_cell + 0x200u)[0] = column_character;
+		TEXT_LAYER_CELLS(column_cell + 0x180u)[0] = column_character;
+		TEXT_LAYER_CELLS(column_cell + 0x100u)[0] = column_character;
+		TEXT_LAYER_CELLS(column_cell + 0x80u)[0] = column_character;
 		TEXT_LAYER_CELLS(column_cell)[0] = column_character;
 		column_character += 0x200u;
 		columns_left--;
@@ -1852,7 +1852,7 @@ uint16_t test_mode_crt_test_draw_grid(uint32_t character)
 	rows_left = 0x1Au;
 	do
 	{
-		TEXT_LAYER_CELLS(cell)[39] = far_edge_character;
+		TEXT_LAYER_CELLS(cell + 0x4Eu)[0] = far_edge_character;
 		TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 		rows_left--;
 		cell += 0x80u;
@@ -1864,7 +1864,7 @@ uint16_t test_mode_crt_test_draw_grid(uint32_t character)
 	cells_left = 0x26u;
 	do
 	{
-		TEXT_LAYER_CELLS(cell)[1728] = far_edge_character;
+		TEXT_LAYER_CELLS(cell + 0xD80u)[0] = far_edge_character;
 		TEXT_LAYER_CELLS(cell)[0] = drawn_character;
 		cell += 2u;
 		cells_left--;
@@ -2019,7 +2019,7 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 			TEXT_LAYER_CELLS(cell)[0] = 0x644Du;
 			cell += 2u;
 			TEXT_LAYER_CELLS(cell)[0] = 0x6441u;
-			TEXT_LAYER_CELLS(cell)[1] = 0x644Cu;
+			TEXT_LAYER_CELLS(cell + 0x2u)[0] = 0x644Cu;
 		}
 		else
 		{
@@ -2038,7 +2038,7 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 			TEXT_LAYER_CELLS(cell)[0] = 0x6653u;
 			cell += 2u;
 			TEXT_LAYER_CELLS(cell)[0] = 0x6645u;
-			TEXT_LAYER_CELLS(cell)[1] = 0x6643u;
+			TEXT_LAYER_CELLS(cell + 0x2u)[0] = 0x6643u;
 		}
 		stages_left--;
 		row_cell += 0x80u;

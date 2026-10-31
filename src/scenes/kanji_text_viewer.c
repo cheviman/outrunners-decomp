@@ -221,5 +221,5 @@ void kanji_text_viewer_draw_number(uint32_t cell, uint16_t number)
 	TEXT_LAYER_CELLS(cell)[0] = hundreds + 0x6030u;
 	cell += 2u;
 	TEXT_LAYER_CELLS(cell)[0] = tens + 0x6030u;
-	TEXT_LAYER_CELLS(cell)[1] = number + 0x6030u;
+	TEXT_LAYER_CELLS(cell + 0x2u)[0] = number + 0x6030u;
 }

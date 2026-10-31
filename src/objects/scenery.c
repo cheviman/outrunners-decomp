@@ -1941,7 +1941,7 @@ void fork_branch_draw(void)
 			if (screen->sprite_list_limit <= sprite)
 				break;
 			rows_to_fill = 0u;
-			AS32(SPRITE_WORDS(sprite)[6144]) = 0u;
+			AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = 0u;
 			AS32(SPRITE_WORDS(sprite)[0]) = r12;
 			sprite += 4u;
 			SPRITE_WORDS(sprite)[0] = height_word;
@@ -1966,7 +1966,7 @@ void fork_branch_draw(void)
 				{
 					if (screen->sprite_list_limit <= sprite)
 						return;
-					AS32(SPRITE_WORDS(sprite)[6144]) = 0u;
+					AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = 0u;
 					AS32(SPRITE_WORDS(sprite)[0]) = r12;
 					sprite += 4u;
 					SPRITE_WORDS(sprite)[0] = height_word;
@@ -1995,7 +1995,7 @@ void fork_branch_draw(void)
 		first_sprite = screen->sprite_list_last + 0x10u;
 		layer_head = depth_list->head;
 		AS32(SPRITE_WORDS(sprite)[0]) = layer_head;
-		AS32(SPRITE_WORDS(sprite)[6144]) = (uint16_t)(layer_head + 0x300u);
+		AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = (uint16_t)(layer_head + 0x300u);
 		screen->sprite_list_last = sprite;
 		depth_list->head = (first_sprite >> 4) | 0x8000u;
 		screen->sprite_groups++;

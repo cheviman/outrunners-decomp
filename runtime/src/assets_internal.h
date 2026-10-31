@@ -3,7 +3,7 @@
  *    Description: what the loaders of the game's assets share (assets.c, assets_media.c)
  *    Version:     0.1.0
  *    Created:     27-10-2026
- *    Modified:    27-10-2026
+ *    Modified:    30-10-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -14,7 +14,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define ASSETS_PROBLEM_SIZE 512
+/* (room for the longest path assets_path makes, 1023 characters, with what is said of it) */
+#define ASSETS_PROBLEM_SIZE 2048
 
 /* What failed, for assets_load to hand back */
 extern char assets_problem[ASSETS_PROBLEM_SIZE];

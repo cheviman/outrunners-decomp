@@ -427,7 +427,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	screen->road_top_line = point_line;
 	ROAD_POINTS(point_entry)[0] = 0xFFFFu;
 	road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &previous_x, &previous_depth, &select_place, &stripe);
-	current_object->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom)[-1];
+	current_object->road_surface.near_scroll = LINE_SCROLL_VALUES(scroll_bottom - 0x2u)[0];
 	*p_previous_line = previous_line;
 	*p_previous_x = previous_x;
 	*p_previous_depth = previous_depth;
