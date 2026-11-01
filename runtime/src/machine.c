@@ -1,9 +1,9 @@
 /**
  *    Name:        machine.c
  *    Description: Multi 32 memory map, interrupt controller, timers, video registers and link board
- *    Version:     0.1.0
+ *    Version:     0.1.1
  *    Created:     11-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    01-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -370,9 +370,16 @@ static uint16_t unmapped_read(uint32_t address)
 	return 0xffff;
 }
 
+/* What boot writes where the board maps nothing, on every run: 16 bytes to E00000 and 4 to E80000
+   (boot_register_values, boot_e80000_bytes). Counted, not logged */
+static bool boot_write(uint32_t address)
+{
+	return (address >= 0xe00000u && address < 0xe00010u) || (address >= 0xe80000u && address < 0xe80004u);
+}
+
 static void unmapped_write(uint32_t address, uint16_t data, uint16_t mask)
 {
-	if (s32_board.unmapped_writes++ < 64)
+	if (s32_board.unmapped_writes++ < 64 && !boot_write(address))
 		s32_log("unmapped write %06X = %04X & %04X at PC %06X", address, data, mask, s32_board.pc);
 }
 
