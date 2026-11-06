@@ -3,7 +3,7 @@
  *    Description: the sound program's ports, variables, tables, structures and functions
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -40,6 +40,8 @@
 #define sample_or_patch SOUND_RAM8(sample_or_patch_ADDRESS)
 #define drum_timeout_wait_ADDRESS 0xE010u
 #define drum_timeout_wait SOUND_RAM8(drum_timeout_wait_ADDRESS)
+#define drum_timeout_spare_ADDRESS 0xE011u
+#define drum_timeout_spare SOUND_RAM8(drum_timeout_spare_ADDRESS)
 #define note_code_ADDRESS 0xE012u
 #define note_code SOUND_RAM8(note_code_ADDRESS)
 #define note_level_ADDRESS 0xE013u
@@ -475,16 +477,8 @@ struct sequence_player
 {
 	uint8_t flags;
 	uint8_t pad_01[0x1];
-	union
-	{
-		uint16_t position;
-		uint8_t position_low;
-		struct
-		{
-			uint8_t pad_02[0x1];
-			uint8_t position_high;
-		};
-	};
+	uint8_t position_low;
+	uint8_t position_high;
 	uint8_t pad_04[0x2];
 	uint8_t delta_time_high;
 	uint8_t delta_time_low;
@@ -499,16 +493,8 @@ struct sequence_player
 	uint8_t fade_channel_volume;
 	uint8_t bank;
 	uint8_t pad_1C[0x4];
-	union
-	{
-		uint16_t playlist;
-		uint8_t playlist_low;
-		struct
-		{
-			uint8_t pad_20[0x1];
-			uint8_t playlist_high;
-		};
-	};
+	uint8_t playlist_low;
+	uint8_t playlist_high;
 	uint8_t pad_22[0xDE];
 };
 

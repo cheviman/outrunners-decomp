@@ -64,7 +64,12 @@ void game_mode_title(void)
 		return;
 	case 3:
 		if ((screen->flags & 1u) == 0u)
-			AS32(screen->game_mode) = 3u;
+		{
+			screen->game_mode = 3u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 		return;
 	}
 }
@@ -72,7 +77,10 @@ void game_mode_title(void)
 /* Game mode 0 (the first frame after start-up): game mode 2 and its first step (game_mode_title). */
 void game_mode_power_on(void)
 {
-	AS32(screen->game_mode) = 2u;
+	screen->game_mode = 2u;
+	screen->mode_step = 0u;
+	screen->game_step = 0u;
+	screen->game_mode_spare = 0u;
 	game_mode_title();
 }
 
@@ -80,7 +88,10 @@ void game_mode_power_on(void)
    step (game_mode_title). */
 void game_mode_restart(void)
 {
-	AS32(screen->game_mode) = 2u;
+	screen->game_mode = 2u;
+	screen->mode_step = 0u;
+	screen->game_step = 0u;
+	screen->game_mode_spare = 0u;
 	game_mode_title();
 }
 
@@ -121,7 +132,10 @@ void game_mode_car_presentation(void)
 		if ((screen->flags & 1u) == 0u)
 		{
 			screen->link_event = 3u;
-			AS32(screen->game_mode) = 4u;
+			screen->game_mode = 4u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
 		}
 		return;
 	}
@@ -241,7 +255,10 @@ uint32_t demo_race_end(uint32_t left_caller)
 
 	if ((screen->flags & 1u) != 0u)
 		return left_caller;
-	AS32(screen->game_mode) = 5u;
+	screen->game_mode = 5u;
+	screen->mode_step = 0u;
+	screen->game_step = 0u;
+	screen->game_mode_spare = 0u;
 	race_record_clear();
 	left_caller_2 = 1u;
 	return left_caller_2;
@@ -277,7 +294,12 @@ void game_mode_ranking(void)
 		return;
 	case 3:
 		if ((screen->flags & 1u) == 0u)
-			AS32(screen->game_mode) = 1u;
+		{
+			screen->game_mode = 1u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 		return;
 	}
 	screen->demo_flags &= ~0x100u;
@@ -408,8 +430,14 @@ void game_mode_play(void)
 		screen->route_stage = 0u;
 		screen->built_stage_level = 0u;
 		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
-		lamp_place->checkpoint_all = 2u;
-		lamp_place->leader_all = 8u;
+		lamp_place->checkpoint = 2u;
+		lamp_place->checkpoint_blinks = 0u;
+		lamp_place->checkpoint_period = 0u;
+		lamp_place->checkpoint_timer = 0u;
+		lamp_place->leader = 8u;
+		lamp_place->leader_blinks = 0u;
+		lamp_place->leader_period = 0u;
+		lamp_place->leader_timer = 0u;
 		object = start_object();
 		object->handler = car_select_start_ADDRESS;
 		screen->fade_kind = 1u;
@@ -428,8 +456,14 @@ void game_mode_play(void)
 		screen->game_step++;
 		screen->entry_countdown_shown = 0u;
 		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
-		lamp_place->checkpoint_all = 2u;
-		lamp_place->leader_all = 8u;
+		lamp_place->checkpoint = 2u;
+		lamp_place->checkpoint_blinks = 0u;
+		lamp_place->checkpoint_period = 0u;
+		lamp_place->checkpoint_timer = 0u;
+		lamp_place->leader = 8u;
+		lamp_place->leader_blinks = 0u;
+		lamp_place->leader_period = 0u;
+		lamp_place->leader_timer = 0u;
 		return;
 	case 10:
 		silence_and_clear_screen();
@@ -540,8 +574,14 @@ void game_mode_play(void)
 		if ((screen->flags & 1u) == 0u)
 		{
 			lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
-			lamp_place->checkpoint_all = 2u;
-			lamp_place->leader_all = 8u;
+			lamp_place->checkpoint = 2u;
+			lamp_place->checkpoint_blinks = 0u;
+			lamp_place->checkpoint_period = 0u;
+			lamp_place->checkpoint_timer = 0u;
+			lamp_place->leader = 8u;
+			lamp_place->leader_blinks = 0u;
+			lamp_place->leader_period = 0u;
+			lamp_place->leader_timer = 0u;
 			screen->game_step++;
 		}
 		return;
@@ -667,12 +707,21 @@ void game_mode_play(void)
 		screen->game_step = 0x1Cu;
 		RACE(screen->race)->game_over = 0xFFu;
 		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
-		lamp_place->checkpoint_all = 0u;
-		lamp_place->leader_all = 0u;
+		lamp_place->checkpoint = 0u;
+		lamp_place->checkpoint_blinks = 0u;
+		lamp_place->checkpoint_period = 0u;
+		lamp_place->checkpoint_timer = 0u;
+		lamp_place->leader = 0u;
+		lamp_place->leader_blinks = 0u;
+		lamp_place->leader_period = 0u;
+		lamp_place->leader_timer = 0u;
 		clear_lcd();
 		return;
 	case 28:
-		AS32(screen->game_mode) = 5u;
+		screen->game_mode = 5u;
+		screen->mode_step = 0u;
+		screen->game_step = 0u;
+		screen->game_mode_spare = 0u;
 		return;
 	}
 }

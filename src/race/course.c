@@ -313,7 +313,7 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 	struct road_segment *ring_segment = NULL;
 	uint8_t projected = 0;
 	uint16_t last_y = 0;
-	uint32_t copied_x_y = 0, copied_road_bytes = 0, width_code_halfword = 0, width_code_halfword_2 = 0;
+	uint32_t copied_x_y = 0, copied_road_bytes = 0;
 
 	view_pitch = VIEW(screen->shown_view)->pitch;
 	view_yaw = VIEW(screen->shown_view)->yaw;
@@ -377,9 +377,8 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 			copied_road_bytes = AS32(previous_projected->width_code);
 			AS32(projected_segment->depth_layer) = AS32(previous_projected->depth_layer);
 			AS32(projected_segment->width_code) = copied_road_bytes;
-			width_code_halfword = ring_segment->width_code_and_event;
-			projected_segment->width_code = (uint8_t)width_code_halfword;
-			projected_segment->road_event = (uint8_t)(width_code_halfword >> 8u);
+			projected_segment->width_code = ring_segment->width_code;
+			projected_segment->road_event = ring_segment->road_event;
 			segments_left--;
 			if (segments_left == 0u)
 			{
@@ -421,9 +420,8 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 		scale = scale * ring_segment->width;
 		carry = (scale >> 11) & 1u;
 		projected_segment->width = ((int32_t)scale >> 12) + carry;
-		width_code_halfword_2 = ring_segment->width_code_and_event;
-		projected_segment->width_code = (uint8_t)width_code_halfword_2;
-		projected_segment->road_event = (uint8_t)(width_code_halfword_2 >> 8u);
+		projected_segment->width_code = ring_segment->width_code;
+		projected_segment->road_event = ring_segment->road_event;
 		projected_segment->x = x;
 		segment_y = (uint16_t)(0u - segment_y);
 		projected_segment->y = segment_y;

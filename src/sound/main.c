@@ -3,7 +3,7 @@
  *    Description: the sound program's frame: the reset, the timer interrupt, sound_init and the chips set up and written
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -170,7 +170,8 @@ void sound_init(void)
 	screen_2_midi_read = 0xFFu;
 	next_voice = VOICE_ADDRESS(0);
 	screen_1_tick_countdown = 1u;
-	AS16(drum_timeout_wait) = 0x8Cu;
+	drum_timeout_wait = 0x8Cu;
+	drum_timeout_spare = 0u;
 	screen_1_music_volume = 0xFFu;
 	screen_2_music_volume = 0xFFu;
 	init_voice_channels();

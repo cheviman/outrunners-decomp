@@ -28,6 +28,7 @@ void road_surface_update(void)
 	uint32_t event = 0, fraction_shift = 0, ignored = 0, ignored_2 = 0, ignored_3 = 0, ignored_4 = 0, ignored_5 = 0, ignored_6 = 0, ignored_7 = 0, max_depth = 0, near_scroll = 0, previous_depth = 0, previous_line = 0, previous_x = 0, road_palette_fades = 0, rounding = 0, stripe_count = 0;
 	struct object *object = NULL;
 	uint8_t first_flag = 0, first_tiles_flag = 0, second_tiles_flag = 0;
+	uint32_t page_select_long = 0;
 
 	switch (current_object->state)
 	{
@@ -71,7 +72,9 @@ void road_surface_update(void)
 	}
 	near_scroll = current_object->road_surface.near_scroll;
 	near_scroll = (uint16_t)(near_scroll + 0x4FFu);
-	PAGE_SELECT(current_object->road_surface.page_register)[0] = current_object->road_surface.page_table[(int32_t)((near_scroll >> 9) + (current_object->road_surface.page_set - 3u) * 5u)];
+	page_select_long = current_object->road_surface.page_table[(int32_t)((near_scroll >> 9) + (current_object->road_surface.page_set - 3u) * 5u)];
+	PAGE_SELECT(current_object->road_surface.page_register)[0] = (uint16_t)page_select_long;
+	PAGE_SELECT(current_object->road_surface.page_register)[1] = (uint16_t)(page_select_long >> 16u);
 	if (current_object->road_surface.segment <= current_object->road_surface.last_segment)
 		return;
 	current_object->road_surface.last_segment = current_object->road_surface.segment;
@@ -145,9 +148,10 @@ void road_surface_start(void)
 {
 	uint16_t video_bits = 0;
 	uint32_t line_select_table = 0, mixer_bits = 0;
-	uint32_t *mixer_address = NULL;
+	uint16_t *mixer_address = NULL;
 	const uint32_t *palettes = NULL;
 	const struct road_surface_layer_setup *road_surface_layer_setup = NULL;
+	uint32_t mixer_address_0_long = 0;
 
 	road_surface_layer_setup = rom_pointer(road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
 	video_bits = game->video_registers[2] & road_surface_layer_setup->video_mask;
@@ -158,9 +162,11 @@ void road_surface_start(void)
 	TILE_BANK_VALUES(road_surface_layer_setup->tile_bank_address)[0] = 0u;
 	current_object->road_surface.page_register = road_surface_layer_setup->page_register;
 	mixer_address = pointer_to(road_surface_layer_setup->mixer_address);
-	mixer_bits = mixer_address[0];
+	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;
-	mixer_address[0] = mixer_bits | 8u;
+	mixer_address_0_long = mixer_bits | 8u;
+	mixer_address[0] = (uint16_t)mixer_address_0_long;
+	mixer_address[1] = (uint16_t)(mixer_address_0_long >> 16u);
 	screen->flags |= 4u;
 	current_object->road_surface.line_scroll_table = road_surface_layer_setup->line_scroll_table;
 	line_select_table = road_surface_layer_setup->line_select_table;

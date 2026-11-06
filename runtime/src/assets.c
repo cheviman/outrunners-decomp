@@ -991,21 +991,28 @@ const uint8_t *data_at(uint32_t address)
 	return found;
 }
 
-const uint8_t *data_byte_at(uint32_t address)
+/* The byte a region's chips hold where 'found' (what find() gave, which leaves the region's last at the piece
+   it found) points: on a big-endian processor a value's bytes lie the other way round in its piece */
+static const uint8_t *chip_byte(const data_region *region, const uint8_t *found)
 {
-	const uint8_t *found = data_at(address);
 #if S32_HOST_BIG_ENDIAN
-	/* (find() leaves program.last at the piece it found) */
-	const piece *holder = program.last < program.count ? &program.pieces[program.last] : NULL;
+	const piece *holder = region->last < region->count ? &region->pieces[region->last] : NULL;
 	uint8_t unit;
 
-	if (!holder || !holder->units || (uintptr_t)found - (uintptr_t)holder->data >= holder->size)
-		return found;    /* (a byte only, or the work RAM) */
+	if (!found || !holder || !holder->units || (uintptr_t)found - (uintptr_t)holder->data >= holder->size)
+		return found;    /* (a byte only, the work RAM, or no data) */
 	unit = holder->units[found - holder->data];
 	if (UNIT_WIDTH(unit) > 1)
 		return found - UNIT_PLACE(unit) + (UNIT_WIDTH(unit) - 1 - UNIT_PLACE(unit));
+#else
+	(void)region;
 #endif
 	return found;
+}
+
+const uint8_t *data_byte_at(uint32_t address)
+{
+	return chip_byte(&program, data_at(address));
 }
 
 /* the pieces of the program's data by where their bytes are, for program_data_address (made once the
@@ -1063,6 +1070,11 @@ const uint8_t *data_if_any(uint32_t address)
 const uint8_t *assets_sound_data(uint32_t offset)
 {
 	return find(&sound, offset);
+}
+
+const uint8_t *assets_sound_byte(uint32_t offset)
+{
+	return chip_byte(&sound, find(&sound, offset));
 }
 
 const char *assets_load(const char *folder)

@@ -135,7 +135,7 @@ void vblank_update_mixer(void)
 /* In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was
    running from video_registers[8] and video_registers[16] as they are; those of the other screen
    half-way between the values they have (video_registers[8], video_registers[16] by screen) and the new
-   ones (scroll_targets, scroll_targets[4]), which become their values: the in-between frame of the
+   ones (scroll_targets, scroll_targets[8]), which become their values: the in-between frame of the
    screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05
    from video_registers[2]'s second byte, which steps by 4 (bits 2-3). */
 void vblank_update_scrolls(void)
@@ -151,7 +151,7 @@ void vblank_update_scrolls(void)
 	NBG0_SCROLL_Y[running_layer * 2u + 1] = game->video_registers[11 + running_layer * 2u];
 	other_layer = 0u - running_layer + 2u;
 	old_scroll = (game->video_registers[8 + other_layer * 2u] | ((uint32_t)game->video_registers[9 + other_layer * 2u] << 16u));
-	new_scroll = game->scroll_targets[other_layer];
+	new_scroll = (game->scroll_targets[other_layer * 2u] | ((uint32_t)game->scroll_targets[other_layer * 2u + 1] << 16u));
 	game->video_registers[8 + other_layer * 2u] = (uint16_t)new_scroll;
 	game->video_registers[9 + other_layer * 2u] = (uint16_t)(new_scroll >> 16u);
 	new_scroll = new_scroll << 6;
@@ -159,7 +159,7 @@ void vblank_update_scrolls(void)
 	NBG0_SCROLL_X[other_layer * 2u] = (uint16_t)nbg0_scroll_x_long;
 	NBG0_SCROLL_X[other_layer * 2u + 1] = (uint16_t)(nbg0_scroll_x_long >> 16u);
 	old_scroll = (game->video_registers[10 + other_layer * 2u] | ((uint32_t)game->video_registers[11 + other_layer * 2u] << 16u));
-	new_scroll = game->scroll_targets[1 + other_layer];
+	new_scroll = (game->scroll_targets[2 + other_layer * 2u] | ((uint32_t)game->scroll_targets[3 + other_layer * 2u] << 16u));
 	game->video_registers[10 + other_layer * 2u] = (uint16_t)new_scroll;
 	game->video_registers[11 + other_layer * 2u] = (uint16_t)(new_scroll >> 16u);
 	new_scroll = new_scroll << 7;
@@ -171,7 +171,7 @@ void vblank_update_scrolls(void)
 	NBG2_SCROLL_Y[running_layer * 2u] = game->video_registers[18 + running_layer * 2u];
 	NBG2_SCROLL_Y[running_layer * 2u + 1] = game->video_registers[19 + running_layer * 2u];
 	old_scroll = (game->video_registers[16 + other_layer * 2u] | ((uint32_t)game->video_registers[17 + other_layer * 2u] << 16u));
-	new_scroll = game->scroll_targets[4 + other_layer];
+	new_scroll = (game->scroll_targets[8 + other_layer * 2u] | ((uint32_t)game->scroll_targets[9 + other_layer * 2u] << 16u));
 	game->video_registers[16 + other_layer * 2u] = (uint16_t)new_scroll;
 	game->video_registers[17 + other_layer * 2u] = (uint16_t)(new_scroll >> 16u);
 	new_scroll = new_scroll << 6;
@@ -179,7 +179,7 @@ void vblank_update_scrolls(void)
 	NBG2_SCROLL_X[other_layer * 2u] = (uint16_t)nbg2_scroll_x_long;
 	NBG2_SCROLL_X[other_layer * 2u + 1] = (uint16_t)(nbg2_scroll_x_long >> 16u);
 	old_scroll = (game->video_registers[18 + other_layer * 2u] | ((uint32_t)game->video_registers[19 + other_layer * 2u] << 16u));
-	new_scroll = game->scroll_targets[5 + other_layer];
+	new_scroll = (game->scroll_targets[10 + other_layer * 2u] | ((uint32_t)game->scroll_targets[11 + other_layer * 2u] << 16u));
 	game->video_registers[18 + other_layer * 2u] = (uint16_t)new_scroll;
 	game->video_registers[19 + other_layer * 2u] = (uint16_t)(new_scroll >> 16u);
 	new_scroll = new_scroll << 7;

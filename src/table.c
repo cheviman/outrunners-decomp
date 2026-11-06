@@ -373,6 +373,7 @@ const void *unused_attract_car_caption_palettes_data;
 const void *car_name_letter_state_jumps_data;
 const void *attract_car_picture_animations_data;
 const void *attract_car_scene_palettes_data;
+const void *car_presentation_backgrounds_data;
 const void *car_presentation_palette_cycle_data;
 const void *staff_credits_code_sequence_data;
 const void *attract_car_names_data;
@@ -417,6 +418,7 @@ const void *ranking_course_banner_animations_data;
 const void *ranking_course_banner_palettes_data;
 const void *certificate_course_animations_data;
 const void *certificate_course_palettes_data;
+const void *name_entry_backgrounds_data;
 const void *game_step_jumps_data;
 const void *game_start_c00074_bytes_data;
 const void *game_end_c00074_bytes_data;
@@ -440,6 +442,7 @@ const void *route_map_direction_sign_state_jumps_data;
 const void *route_map_wait_banner_state_jumps_data;
 const void *game_over_banner_state_jumps_data;
 const void *route_map_register_sets_data;
+const void *route_map_backgrounds_data;
 const void *route_map_close_up_pages_data;
 const void *route_map_routes_pages_data;
 const void *route_map_world_pages_data;
@@ -483,6 +486,7 @@ const void *entry_traffic_car_state_jumps_data;
 const void *car_pass_sounds_data;
 const void *traffic_path_data;
 const void *car_select_tilemap_setups_data;
+const void *entry_countdown_backgrounds_data;
 const void *car_select_default_cars_data;
 const void *turntable_car_looks_data;
 const void *turntable_car_frames_data;
@@ -921,6 +925,7 @@ const game_table game_tables[] =
 	{ "car_name_letter_state_jumps", 0x0019CCu, &car_name_letter_state_jumps_data },
 	{ "attract_car_picture_animations", 0x001A88u, &attract_car_picture_animations_data },
 	{ "attract_car_scene_palettes", 0x001A98u, &attract_car_scene_palettes_data },
+	{ "car_presentation_backgrounds", 0x001AA0u, &car_presentation_backgrounds_data },
 	{ "car_presentation_palette_cycle", 0x001AC8u, &car_presentation_palette_cycle_data },
 	{ "staff_credits_code_sequence", 0x001ADCu, &staff_credits_code_sequence_data },
 	{ "attract_car_names", 0x001CECu, &attract_car_names_data },
@@ -965,6 +970,7 @@ const game_table game_tables[] =
 	{ "ranking_course_banner_palettes", 0x002E10u, &ranking_course_banner_palettes_data },
 	{ "certificate_course_animations", 0x002E24u, &certificate_course_animations_data },
 	{ "certificate_course_palettes", 0x002E38u, &certificate_course_palettes_data },
+	{ "name_entry_backgrounds", 0x002E4Cu, &name_entry_backgrounds_data },
 	{ "game_step_jumps", 0x002E80u, &game_step_jumps_data },
 	{ "game_start_c00074_bytes", 0x003463u, &game_start_c00074_bytes_data },
 	{ "game_end_c00074_bytes", 0x003465u, &game_end_c00074_bytes_data },
@@ -988,6 +994,7 @@ const game_table game_tables[] =
 	{ "route_map_wait_banner_state_jumps", 0x0046C8u, &route_map_wait_banner_state_jumps_data },
 	{ "game_over_banner_state_jumps", 0x00477Cu, &game_over_banner_state_jumps_data },
 	{ "route_map_register_sets", 0x0047E8u, &route_map_register_sets_data },
+	{ "route_map_backgrounds", 0x004868u, &route_map_backgrounds_data },
 	{ "route_map_close_up_pages", 0x0048B8u, &route_map_close_up_pages_data },
 	{ "route_map_routes_pages", 0x0048C0u, &route_map_routes_pages_data },
 	{ "route_map_world_pages", 0x0048C8u, &route_map_world_pages_data },
@@ -1031,6 +1038,7 @@ const game_table game_tables[] =
 	{ "car_pass_sounds", 0x0067A9u, &car_pass_sounds_data },
 	{ "traffic_path", 0x0067B2u, &traffic_path_data },
 	{ "car_select_tilemap_setups", 0x006920u, &car_select_tilemap_setups_data },
+	{ "entry_countdown_backgrounds", 0x006988u, &entry_countdown_backgrounds_data },
 	{ "car_select_default_cars", 0x0069B0u, &car_select_default_cars_data },
 	{ "turntable_car_looks", 0x0069B8u, &turntable_car_looks_data },
 	{ "turntable_car_frames", 0x0069D8u, &turntable_car_frames_data },
@@ -1437,7 +1445,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 544;
+const size_t game_table_count = 548;
 
 /* the code at the reset vector */
 void game_entry(void)

@@ -319,7 +319,7 @@ uint32_t draw_text(const struct sprite_text_record *text_record)
 	sprite_copy = sprite + 0x3000u;
 	sprite_words_0 = text_sprite_words_0_1;
 	sprite_size = text_sprite_size | ((uint32_t)screen->sprite_screen_bit << 16);
-	place = text_record->place;
+	place = (text_record->x | ((uint32_t)text_record->y << 16u));
 	place = (place << 16) | (place >> 16);
 	font = text_sprite_font;
 	attribute = text_sprite_palette | text_record->attribute;

@@ -202,6 +202,15 @@ static uint64_t hash_bytes(const void *data, size_t size, uint64_t hash)
 	return hash;
 }
 
+/* 32-bit samples hashed by their bytes low first, as the PC holds them, on a processor of either order */
+static uint64_t hash_samples(const int32_t *samples, size_t count, uint64_t hash)
+{
+	for (size_t index = 0; index < count; index++)
+		for (int shift = 0; shift < 32; shift += 8)
+			hash = (hash ^ (uint8_t)((uint32_t)samples[index] >> shift)) * 0x100000001b3ull;
+	return hash;
+}
+
 /* the samples before sample number 'due': hashed and moved to the frame's list 'which' */
 static uint64_t take(sample_buffer *buffer, uint64_t due, uint64_t hash, int which)
 {
@@ -220,7 +229,7 @@ static uint64_t take(sample_buffer *buffer, uint64_t due, uint64_t hash, int whi
 	memmove(buffer->data, buffer->data + values, (buffer->count - values) * sizeof(int32_t));
 	buffer->count -= values;
 	buffer->first += values / 2;
-	return hash_bytes(sound.frame[which], values * sizeof(int32_t), hash);
+	return hash_samples(sound.frame[which], values, hash);
 }
 
 static int16_t clamp16(double value)

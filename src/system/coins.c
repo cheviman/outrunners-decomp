@@ -151,7 +151,7 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter, uint32_t meter_bit
 	uint32_t meter_frames = 0;
 	uint8_t frames_on = 0;
 
-	meter_frames = COIN_METER(coin_meter)->frames;
+	meter_frames = (COIN_METER(coin_meter)->frames_on | ((uint32_t)COIN_METER(coin_meter)->frames_off << 8u));
 	coin_meter += 2u;
 	if (meter_frames == 0u)
 	{
@@ -159,7 +159,8 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter, uint32_t meter_bit
 		{
 			COIN_METER(coin_meter - 0x2u)->pulses_owed--;
 			PORT_OUTPUT_BITS(meter_bits)[0] |= shift_by(1u, meter_bit, 8);
-			COIN_METER(coin_meter - 0x2u)->frames = 0x606u;
+			COIN_METER(coin_meter - 0x2u)->frames_on = 6u;
+			COIN_METER(coin_meter - 0x2u)->frames_off = 6u;
 		}
 		meter_bits = BOOKKEEPING_SEAT_1_CREDITS_ADDRESS;
 		write_bookkeeping_credits(meter_bits);
@@ -306,7 +307,12 @@ uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t
 void show_title_on_credit(struct screen *screen_block)
 {
 	if ((int8_t)screen_block->game_mode > 0 && (int8_t)screen_block->game_mode < 6)
-		AS32(screen_block->game_mode) = 2u;
+	{
+		screen_block->game_mode = 2u;
+		screen_block->mode_step = 0u;
+		screen_block->game_step = 0u;
+		screen_block->game_mode_spare = 0u;
+	}
 }
 
 /* Adds one to the 16-bit bookkeeping counter at R7 (and its backup's, 7C on) unless it is at FFFF, with

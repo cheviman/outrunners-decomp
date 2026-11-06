@@ -419,6 +419,7 @@ int main(int argc, char **argv)
 		s32_board.pcm_rom = game_pcm;
 #else
 		s32_board.sound_at = assets_sound_data;
+		s32_board.sound_byte_at = assets_sound_byte;
 		s32_board.pcm_at = assets_pcm_byte;
 #endif
 		sound_chips_attach();

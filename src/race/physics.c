@@ -217,12 +217,12 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	RACE(screen->race)->segment_pitch = segment_pitch;
 	road_force = ((int32_t)sine_table[segment_pitch] >> 1) - (drag + 0x1800u);
 	gas = current_object->player_car.gas;
-	AS16(player_car->brake_lights) = 0u;
+	player_car->brake_lights = 0u;
 	brake_force = brake_pedal_curve[current_object->player_car.brake];
 	if (brake_force != 0u)
 	{
 		gas = 0u;
-		AS16(player_car->brake_lights) = 2u;
+		player_car->brake_lights = 2u;
 	}
 	current_object->player_car.brake_force = brake_force;
 	brake_force = brake_force * car_handling->brake_factor;

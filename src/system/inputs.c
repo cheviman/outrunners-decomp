@@ -214,6 +214,7 @@ void queue_seat_inputs(void)
 void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_record, uint32_t io_chip)
 {
 	uint32_t input_write_place = 0, inputs = 0, seat_inputs = 0;
+	uint32_t wheel_long = 0;
 
 	if (game->isdn_mode != 0u)
 		seat_record = pointer_to(seat_screen->race_copy + 0x2Cu);
@@ -222,7 +223,11 @@ void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_re
 	input_write_place = seat_screen->input_write_place;
 	seat_screen->input_ring[(int32_t)input_write_place] = (uint16_t)(inputs << 8) | (uint8_t)seat_inputs;
 	seat_screen->input_write_place = (input_write_place + 1u) & 7u;
-	AS32(seat_screen->wheel) = seat_inputs >> 8;
+	wheel_long = seat_inputs >> 8;
+	seat_screen->wheel = (uint8_t)wheel_long;
+	seat_screen->gas = (uint8_t)(wheel_long >> 8u);
+	seat_screen->brake = (uint8_t)(wheel_long >> 16u);
+	seat_screen->controls_spare = (uint8_t)(wheel_long >> 24u);
 }
 
 /* Takes the screen's inputs for the frame from its ring (input_read_place; both frame loops, before
@@ -262,7 +267,12 @@ uint32_t take_screen_inputs(void)
 		input_changes = input_changes | status_cleared;
 		screen->link_status_changed = input_changes;
 		if (screen->game_mode != 8u && (new_link_status & 0xCu) != 0u)
-			AS32(screen->game_mode) = 8u;
+		{
+			screen->game_mode = 8u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 	}
 	return input_changes;
 }

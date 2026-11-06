@@ -512,7 +512,10 @@ uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits)
 		screen->start_lamp_blink = 0u;
 		game->port_d_outputs[index] &= ~4u;
 		play_mode = 6u;
-		AS32(screen->game_mode) = 6u;
+		screen->game_mode = 6u;
+		screen->mode_step = 0u;
+		screen->game_step = 0u;
+		screen->game_mode_spare = 0u;
 		screen->link_event = 1u;
 		race_record_clear();
 		RACE(screen->race)->entry_request = 0xFFu;
@@ -534,7 +537,10 @@ uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits)
 	screen->start_lamp_blink = 0u;
 	game->port_d_outputs[index] &= ~4u;
 	play_mode = 6u;
-	AS32(screen->game_mode) = 6u;
+	screen->game_mode = 6u;
+	screen->mode_step = 0u;
+	screen->game_step = 0u;
+	screen->game_mode_spare = 0u;
 	screen->link_event = 1u;
 	race_record_clear();
 	RACE(screen->race)->entry_request = 0xFFu;

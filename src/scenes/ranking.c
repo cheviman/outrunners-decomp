@@ -49,7 +49,10 @@ uint32_t load_course_records(void)
 				return address_of(record_copy);
 			continue;
 		}
-		record_copy->model_and_name = course_record->model_and_name;
+		record_copy->model = course_record->model;
+		record_copy->name[0] = course_record->name[0];
+		record_copy->name[1] = course_record->name[1];
+		record_copy->name[2] = course_record->name[2];
 		record_copy->time = course_record->time;
 		record_copy++;
 		backup_record += 6u;
@@ -729,11 +732,12 @@ void passing_car_update(void)
 void ranking_background_load(void)
 {
 	uint32_t background_number = 0, colour_list = 0, index = 0, mixer_priority = 0, page_numbers = 0, pages_to_copy = 0, palette_fades = 0, queued_pages = 0;
-	uint32_t *mixer_place = NULL;
+	uint16_t *mixer_place = NULL;
 	uint32_t *page_place = NULL;
 	const struct ranking_background_registers *ranking_background_registers = NULL;
 	const uint32_t *background_pages = NULL;
 	uint32_t saved_fades = 0;
+	uint32_t page_select_long = 0, mixer_place_0_long = 0, mixer_place_0_long_2 = 0;
 
 	ranking_background_registers = rom_pointer(ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u);
 	current_object->ranking_background.tile_bank_address = ranking_background_registers->tile_bank_address;
@@ -780,15 +784,21 @@ void ranking_background_load(void)
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.second_scroll_x_address)[0] = 0u;
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.second_scroll_y_address)[0] = 0u;
 	index = screen->index;
-	PAGE_SELECT(current_object->ranking_background.pages_address)[0] = byte_swap32(ranking_background_page_numbers[index]);
+	page_select_long = byte_swap32(ranking_background_page_numbers[index]);
+	PAGE_SELECT(current_object->ranking_background.pages_address)[0] = (uint16_t)page_select_long;
+	PAGE_SELECT(current_object->ranking_background.pages_address)[1] = (uint16_t)(page_select_long >> 16u);
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_x_address)[0] = ranking_background_scroll_xs[index];
 	VIDEO_REGISTER_WORDS(current_object->ranking_background.scroll_y_address)[0] = 0x60u;
 	mixer_place = pointer_to(ranking_mixer_addresses[index]);
-	mixer_priority = mixer_place[0];
+	mixer_priority = (mixer_place[0] | ((uint32_t)mixer_place[1] << 16u));
 	mixer_priority = mixer_priority & ~0xFu;
-	mixer_place[0] = mixer_priority | 1u;
-	mixer_place++;
-	mixer_priority = mixer_place[0];
-	mixer_place[0] = mixer_priority & ~0xFu;
+	mixer_place_0_long = mixer_priority | 1u;
+	mixer_place[0] = (uint16_t)mixer_place_0_long;
+	mixer_place[1] = (uint16_t)(mixer_place_0_long >> 16u);
+	mixer_place += 2;
+	mixer_priority = (mixer_place[0] | ((uint32_t)mixer_place[1] << 16u));
+	mixer_place_0_long_2 = mixer_priority & ~0xFu;
+	mixer_place[0] = (uint16_t)mixer_place_0_long_2;
+	mixer_place[1] = (uint16_t)(mixer_place_0_long_2 >> 16u);
 	screen->flags |= 4u;
 }

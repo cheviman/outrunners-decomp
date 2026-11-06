@@ -67,7 +67,7 @@ void name_entry_update(void)
 		object = start_object();
 		object->handler = name_entry_lcd_update_ADDRESS;
 		object->name_entry_lcd.name_entry = address_of(current_object);
-		background_setup = 0x2E4Cu + screen->index * 5u * 4u;
+		background_setup = name_entry_backgrounds_ADDRESS + screen->index * 5u * 4u;
 		set_up_background(background_setup);
 		palette_fades = name_entry_palette_fades_ADDRESS;
 		start_palette_fades(palette_fades);

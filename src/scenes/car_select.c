@@ -2104,7 +2104,7 @@ void entry_countdown_start(void)
 	uint32_t animation = 0, background_setup = 0, palette_fades = 0;
 	struct object *object = NULL;
 
-	background_setup = 0x6988u + screen->index * 5u * 4u;
+	background_setup = entry_countdown_backgrounds_ADDRESS + screen->index * 5u * 4u;
 	set_up_background(background_setup);
 	palette_fades = entry_countdown_palette_fades_ADDRESS;
 	start_palette_fades(palette_fades);

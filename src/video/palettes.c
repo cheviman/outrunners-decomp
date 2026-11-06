@@ -157,7 +157,7 @@ void upload_palette_list(uint32_t colour_list)
 
 	palette_address = screen->index;
 	palette_address = (palette_address << 19) | (palette_address >> 13) | 0x600000u;
-	entries_left = PALETTE_BLOCK_LIST(colour_list)->length >> 3;
+	entries_left = (PALETTE_BLOCK_LIST(colour_list)->length | ((uint32_t)PALETTE_BLOCK_LIST(colour_list)->length_high << 16u)) >> 3;
 	colour_list += 4u;
 	do
 	{
@@ -262,7 +262,7 @@ void step_screen_fade(void)
 	level = (uint8_t)(screen->fade_level + screen->fade_step) & 0x3Fu;
 	screen->fade_level = (uint8_t)level;
 	mixer_register = address_of(screen) + 0x19Fu;
-	SCREEN(mixer_register - 0x19Fu)->colour_offset_mode = 0xC0u;
+	SCREEN(mixer_register - 0x19Fu)->colour_offset_select = (SCREEN(mixer_register - 0x19Fu)->colour_offset_select & 0xFFu) | 0xC000u;
 	channels = screen->fade_channels;
 	channels_left = 3u;
 	mixer_register++;

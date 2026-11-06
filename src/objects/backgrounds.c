@@ -37,7 +37,7 @@ void race_background_update(void)
 	uint16_t scroll_x = 0, scroll_y = 0, scroll_y_limit = 0, view_turn = 0;
 	uint32_t animation = 0, background = 0, background_inverted = 0, first_stage = 0, index = 0, mixer_bits = 0, new_background = 0, page_count = 0, page_half = 0, page_number = 0, page_word_set = 0, palettes = 0, route_stage = 0, tile_page_list = 0;
 	const uint32_t *next_page_words = NULL;
-	uint32_t *mixer_address = NULL;
+	uint16_t *mixer_address = NULL;
 	const struct race_background_layer_setup *race_background_layer_setup = NULL;
 	const struct road_palette_record *fades = NULL;
 	const uint32_t *tile_pages = NULL;
@@ -45,6 +45,7 @@ void race_background_update(void)
 	uint32_t view_turn_kept = 0;
 	uint8_t first_background = 0;
 	uint16_t signed_turn = 0, turn_back = 0, slope_scroll_y = 0;
+	uint32_t upper_pages_long = 0, mixer_address_0_long = 0, upper_pages_long_2 = 0, upper_pages_long_3 = 0, upper_pages_long_4 = 0, upper_pages_long_5 = 0, upper_pages_long_6 = 0;
 
 	switch (current_object->state)
 	{
@@ -57,11 +58,15 @@ void race_background_update(void)
 		current_object->race_background.tile_bank_address = race_background_layer_setup->tile_bank_address;
 		page_word_address = pointer_to(race_background_layer_setup->page_word_address);
 		current_object->race_background.page_word_address = address_of(page_word_address);
-		page_word_address->pages = background_page_words[(uint32_t)current_object->race_background.page_half << 3];
+		upper_pages_long = background_page_words[(uint32_t)current_object->race_background.page_half << 3];
+		page_word_address->upper_pages = (uint16_t)upper_pages_long;
+		page_word_address->lower_pages = (uint16_t)(upper_pages_long >> 16u);
 		mixer_address = pointer_to(race_background_layer_setup->mixer_address);
-		mixer_bits = mixer_address[0];
+		mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 		mixer_bits = mixer_bits & ~0xFu;
-		mixer_address[0] = mixer_bits | 4u;
+		mixer_address_0_long = mixer_bits | 4u;
+		mixer_address[0] = (uint16_t)mixer_address_0_long;
+		mixer_address[1] = (uint16_t)(mixer_address_0_long >> 16u);
 		screen->flags |= 4u;
 		background_inverted = screen->first_stage;
 		if (background_inverted != 0u)
@@ -188,7 +193,9 @@ void race_background_update(void)
 			queue_palette_list(palettes);
 			TILEMAP_BANKS(current_object->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
 			next_page_words = rom_pointer(current_object->race_background.next_page_words);
-			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = next_page_words[0];
+			upper_pages_long_2 = next_page_words[0];
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_2;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_2 >> 16u);
 			current_object->race_background.next_page_words = address_of(next_page_words + 1);
 			current_object->race_background.change_step++;
 			break;
@@ -202,7 +209,9 @@ void race_background_update(void)
 			if (fades == NULL)
 			{
 				next_page_words = rom_pointer(current_object->race_background.next_page_words);
-				TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = next_page_words[0];
+				upper_pages_long_3 = next_page_words[0];
+				TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_3;
+				TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_3 >> 16u);
 				current_object->race_background.next_page_words = address_of(next_page_words + 1);
 				current_object->race_background.change_step++;
 				break;
@@ -211,7 +220,9 @@ void race_background_update(void)
 			fades = fades + 1;
 			start_palette_fades(address_of(fades));
 			next_page_words = rom_pointer(current_object->race_background.next_page_words);
-			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = next_page_words[0];
+			upper_pages_long_4 = next_page_words[0];
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_4;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_4 >> 16u);
 			current_object->race_background.next_page_words = address_of(next_page_words + 1);
 			current_object->race_background.change_step++;
 			break;
@@ -229,7 +240,9 @@ void race_background_update(void)
 			fades = rom_pointer(background_palette_fades[current_object->race_background.background]);
 			race_background_fade_palettes(address_of(fades));
 			next_page_words = rom_pointer(current_object->race_background.next_page_words);
-			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = next_page_words[0];
+			upper_pages_long_5 = next_page_words[0];
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_5;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_5 >> 16u);
 			current_object->race_background.next_page_words = address_of(next_page_words + 1);
 			current_object->race_background.change_step++;
 			break;
@@ -237,7 +250,9 @@ void race_background_update(void)
 			if ((int16_t)view_turn > 0x60)
 				break;
 			next_page_words = rom_pointer(current_object->race_background.next_page_words);
-			TILEMAP_PAGES(current_object->race_background.page_word_address)->pages = next_page_words[0];
+			upper_pages_long_6 = next_page_words[0];
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_6;
+			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_6 >> 16u);
 			current_object->race_background.next_page_words = address_of(next_page_words + 1);
 			current_object->race_background.change_step++;
 			break;
@@ -409,20 +424,22 @@ void set_up_background(uint32_t background_setup)
 {
 	uint32_t mixer_bits = 0, palette_list = 0, tile_pages = 0;
 	const struct background_registers *background_registers = NULL;
-	uint32_t *mixer_address = NULL;
+	uint16_t *mixer_address = NULL;
 	struct tilemap_banks *tile_banks_address = NULL;
 	struct tilemap_pages *pages_address = NULL;
 	uint8_t tile_bank = 0, second_tile_bank = 0;
-	uint32_t pages = 0, second_pages = 0;
+	uint32_t pages = 0, second_pages = 0, mixer_address_0_long = 0, mixer_address_0_long_2 = 0;
 
 	background_registers = rom_pointer(background_register_lists[screen->index]);
 	pages_address = pointer_to(background_registers->pages_address);
 	pages = BACKGROUND_SETUP(background_setup)->pages;
 	background_setup += 4u;
-	pages_address->pages = pages;
+	pages_address->upper_pages = (uint16_t)pages;
+	pages_address->lower_pages = (uint16_t)(pages >> 16u);
 	second_pages = BACKGROUND_SETUP(background_setup - 0x4u)->second_pages;
 	background_setup += 4u;
-	pages_address->second_pages = second_pages;
+	pages_address->second_upper_pages = (uint16_t)second_pages;
+	pages_address->second_lower_pages = (uint16_t)(second_pages >> 16u);
 	tile_banks_address = pointer_to(background_registers->tile_banks_address);
 	tile_bank = BACKGROUND_SETUP(background_setup - 0x8u)->tile_bank;
 	background_setup++;
@@ -441,14 +458,18 @@ void set_up_background(uint32_t background_setup)
 	game->video_registers[2] &= background_registers->video_mask;
 	game->send_video_registers = 0xFFu;
 	mixer_address = pointer_to(background_registers->mixer_address);
-	mixer_bits = mixer_address[0];
+	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;
-	mixer_address[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority;
-	mixer_address++;
-	mixer_bits = mixer_address[0];
+	mixer_address_0_long = mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority;
+	mixer_address[0] = (uint16_t)mixer_address_0_long;
+	mixer_address[1] = (uint16_t)(mixer_address_0_long >> 16u);
+	mixer_address += 2;
+	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;
 	background_setup++;
-	mixer_address[0] = mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority;
+	mixer_address_0_long_2 = mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority;
+	mixer_address[0] = (uint16_t)mixer_address_0_long_2;
+	mixer_address[1] = (uint16_t)(mixer_address_0_long_2 >> 16u);
 	screen->flags |= 4u;
 	background_setup++;
 	tile_pages = BACKGROUND_SETUP(background_setup - 0xCu)->tile_pages;

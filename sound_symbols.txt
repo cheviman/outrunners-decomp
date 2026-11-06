@@ -769,6 +769,7 @@ E002  var  screen_1_midi_read            u8
 E008  var  screen_1_midi_status          u8
 E00D  var  sample_or_patch               u8
 E010  var  drum_timeout_wait             u8
+E011  var  drum_timeout_spare            u8   # the byte after drum_timeout_wait, which sound_init's "ld ($E010),hl" (01D4, HL 008C) clears with it; nothing reads it
 E012  var  note_code                     u8
 E013  var  note_level                    u8
 E014  var  pitch_bend                    s16
@@ -863,7 +864,7 @@ field  voice  06  allocation_order      u8
 field  voice  07  tune                  u8
 field  voice  08  octave_shift          u8
 field  sequence_player  00  flags              u8
-field  sequence_player  02  position           u16
+# sequence_player 02: the position, as position_low and position_high (the code reads and writes it a byte and a halfword at a time)
 field  sequence_player  02  position_low       u8
 field  sequence_player  03  position_high      u8
 field  sequence_player  06  delta_time_high    u8
@@ -875,7 +876,7 @@ field  sequence_player  18  fade_speed         u8
 field  sequence_player  19  fade_wait          u8
 field  sequence_player  1A  fade_channel_volume  u8
 field  sequence_player  1B  bank               u8
-field  sequence_player  20  playlist           u16
+# sequence_player 20: the playlist, as playlist_low and playlist_high (a byte and a halfword at a time)
 field  sequence_player  20  playlist_low       u8
 field  sequence_player  21  playlist_high      u8
 field  screen_page  00  command            u8

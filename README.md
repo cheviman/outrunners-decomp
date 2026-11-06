@@ -12,16 +12,16 @@ the tools verify it, extract the assets and build your own executable.
 ## Status
 
 How much of the C reads as C written by hand, measured on every run of `python tools/noise_report.py`
-(`clean`): 624 of the 762 functions (81.9%) and 26,512 of their 26,966 lines of code (98.3%) hold nothing
+(`clean`): 642 of the 762 functions (84.3%) and 26,719 of their 27,143 lines of code (98.4%) hold nothing
 of what the table under "What is left, and why" counts. Some of that the C has to keep to do what the
 original does: R12 and R14 where a value goes from one object's handler to the next through them, several fields
 moved in one access as the original's one instruction moves them, a byte or halfword of a value changed
 with the rest of it kept, as the original's byte and halfword instructions change it, and the memory the
 memory test, the checksum and the copy reach by its address, whatever is there (`MEMORY_ROUTINES` in
 `tools/game_profile.py`, each with why). Without counting those (`faithful`), all 762 functions and all
-26,966 lines of code are clean, the goal before the ports.
+27,143 lines of code are clean, the goal before the ports.
 
-Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 255 of the game's 696 functions (36.6%) and 20,666 of their 23,076 lines of code (89.6%) touch none of it; taking the rest out comes once the C no longer leans on the processor it runs on (the last entries of the list below).
+Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 255 of the game's 696 functions (36.6%) and 20,815 of their 23,250 lines of code (89.5%) touch none of it; taking the rest out comes once the C no longer leans on the processor it runs on (the last entries of the list below).
 
 - [x] ROM set verification (MAME set `orunners`, World), by CRC32 and SHA-1 of every file
 - [x] Multi 32 board model in C (`runtime/`): memory map, interrupt controller and timers, the two I/O
@@ -473,14 +473,72 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       fields that fit, where the piece ends first), an array of values and a record whose array goes on past
       it up to what comes next, a table of addresses ends where the first record it points at in its own
       piece starts, and the rest of the piece keeps its own type from the piece's start (`car_handlings`'
-      records by their fields, `steering` to `slide_factor`). The assets build the ROM back byte for byte.
-      22 tables are left (49,994 reads, in 31 functions), whose pointers `symbols.txt` gives no type yet:
-      the animations' frames (`sprite_animation`'s `frames`, pointers to `sprite_frame`s and their pieces,
-      which the size lists before them run on over), the palette lists (`no_background_palettes`: a
-      `palette_block_list`, its length then its entries), the palette fades, the crash physics, the torque
-      curves, the road objects' streams. On PowerPC, `coin_start` runs 136 frames with the picture and the
-      sound's samples identical (the sound RAM's hash is the host's own: its values at the programs'
-      widths), and stops at the next of them, the title car's frames (`draw_object_smoothed`)
+      records by their fields, `steering` to `slide_factor`). An array of addresses past a record is followed
+      up to its first mark (`sprite_animation`'s `frames`, each a `sprite_frame`, then 0, -1 or -2), and a
+      record followed by records of another structure says so (`field STRUCT OFFSET NAME STRUCT2[]`, which
+      only the assets read: a `palette_block_list`'s length, then its `palette_block_entry`s; a
+      `palette_fade_list`'s, then its `palette_fade_entry`s, whose `from` and `to` are colours; a
+      `road_palette_record`'s road fades, then the fades it starts), and the records the formats that walk
+      their own pieces read (the stages' background objects: `palette_cycle_record`, `sunset_fade_record`)
+      have their pointers followed too. The assets build the ROM back byte for byte. What is left of the data
+      read across its values: 4,528 reads in 17 tables (the crash physics, the torque curves, the roadside
+      surfaces, a few palettes and texts). On PowerPC, `coin_start` runs 608 frames with the sound's samples
+      identical all the way (the sound RAM's hash is the host's own: its values at the programs' widths) and
+      the picture up to frame 139, where the work RAM shows: the palette RAM is the same there, but the
+      mixer's fade and a few sprite and tilemap words are not, written in the work RAM at one width and read
+      at another (the census's first part); it stopped at frame 608, where the sound program read its data at
+      0 (the next entry)
+- [x] Each value at its own width on a big-endian processor, found by comparing the state there with the
+      PC's (`tools/state_diff.py`, over the headless game's `--dump-frame` dumps of one frame on both): each
+      place `symbols.txt` names is compared as a value of its width (a variable, a field of the state's
+      structures, a family's field where no other family has bytes of it at another place or width), the
+      bytes nothing names by 32-bit words in either order, and a value that holds the PC's bytes as they
+      are says so (bytes moved there a halfword at a time: the backup's course records in a race record the
+      link sends). What it found, each fixed in `symbols.txt` so that the decompiler writes each field at
+      its own width:
+      a wide store over bytes with no name, which now have one: the game mode's 32-bit writes clear the
+      byte after `game_step` (`game_mode_spare`), the controls' the byte after `brake` (`controls_spare`),
+      the traffic's and a road crosser's offsets their sign in the halfword after (`x_offset_sign`,
+      `y_offset_sign`: the object code reads the offsets as 16 bits), and the sound program's drum time-out
+      the byte after it (`drum_timeout_spare`); the brake lights are a halfword.
+      Names of two widths at one place, a union that the host lays out in its own order and a big-endian
+      processor aliases the other way round: the wide name goes where its bytes have names of their own
+      (`sprite_place`'s `size` and `place`, `coin_meter`'s `frames`, `screen_lamps`' `checkpoint_all` and
+      `leader_all`, `road_segment`'s `width_code_and_event`, `tilemap_pages`' `pages`, `sprite_text_record`'s
+      `place`, the sound program's `position` and `playlist`), and a byte written into a register is a part
+      of it (`colour_offset_select`, mixer register 3E, whose high byte the fade sets).
+      A view at another width than what it reaches: the mixer's copies (`mixer_register_copies`, halfwords
+      the code reads two at a time), the scroll targets (`scroll_targets[16]`, halfwords), a tilemap's page
+      word in the registers' copy (`page_select`, the road's each frame), the sprite places' blank words, and
+      a palette list's length (`length` and `length_high`: a fade's own list in its object has only the low
+      half written, `upload_palette_list` reads both).
+      The program's data laid out at another width than the code reads it: the tile pages' lists, the
+      background setups (`background_setup`'s `tile_pages`, the car select's, and four tables by screen the
+      code reached by number: `car_presentation_backgrounds`, `name_entry_backgrounds`,
+      `route_map_backgrounds`, `entry_countdown_backgrounds`), the LCD's texts a move copies
+      (`lcd_text_characters`), the transmission choice's and the car presentation's palette lists, a stage's
+      road palettes (`stage_road_palette_record`: the road's fades, then a palette list to upload, where a
+      change of background's record has a fade list), the crash table after each crash physics record, and
+      the arrays a pointer reaches: a torque curve's points, a model's rider places, a stage's roadside
+      surfaces (`u32 STRUCT[]`, which the extractor lays out as records up to what comes next; the C reads
+      STRUCT). The census's data read across its values: 4,528
+      reads in 17 tables -> 1,169 in 7.
+      Besides the names: the sound program's emitter splits a store over named fields as the V60's does
+      (`SEQUENCE_PLAYER(player)->position_low = (uint8_t)position;` and the high byte); the Z80's bus takes
+      the sound program's data as its chip holds it (`assets_sound_byte`, `s32_board.sound_byte_at`), as the
+      V60's does (`data_byte_at`), where the C's tables read it in the host's order; and the sound's hash
+      takes each sample low byte first, as the PC holds it (a big-endian processor's bytes in memory gave
+      another hash for the same sound). `wide_access` 38 -> 8, clean 624 -> 642 functions (84.3%); the
+      memory model's casts go up where a value goes into its fields through the same cast
+      (`TILEMAP_PAGES(...)->upper_pages` and `->lower_pages`, `PAGE_SELECT`, `SPRITE_PLACE`, `COIN_METER`:
+      `ram_structures` 813 -> 832), where the code reads the course's entries a byte at a time (`COURSE_BYTES`, 6) and names
+      the background tables it gave as numbers (4: `table_addresses` 586 -> 595), and in `road_row_draw`,
+      where the split stores made the decompiler copy the loop's step into the branch that skips an item
+      rather than the end into the loop (`page_links` 97 -> 102, `pointer_conversions` 1,060 -> 1,062). On
+      PowerPC `coin_start` runs its 2,401 frames, the sound identical all the way and the picture up to frame
+      2,058 (139 and 608 before): from 2,059 two clip entries of the sprite list and screen 2's tyre noise (a
+      byte of the RAM the sound program shares) differ, which the code writes from data the work RAM does not
+      keep; on the PC the 16 scenarios identical
 - [ ] After the decompilation, before the state leaves the board's memory model (Sebas, 05-11-2026): a C that
       does not lean on the processor it runs on, so that the game builds for one unlike the PC's: big endian,
       and taking a halfword or a word only at an address of its width (the Saturn's SH-2). The C counts on a
@@ -495,11 +553,13 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       other way round; and the structures are packed at the V70's offsets (`#pragma pack(1)`), with no count
       yet of the places the code reaches at an address that is not a multiple of the width. The steps, each
       checked by the 16 scenarios: what leans on the host counted (`width_census.py`), the board's memories in
-      one order on both sides and the accesses of several elements as the elements are done (the entries
-      above). Left: the 37 accesses over bytes with no name of their own (`wide_access` under "What is left,
-      and why"); the 22 tables the census finds read in parts of their values (the entry above), each typed
-      in its asset as the C reads it (a record by its structure's fields, a stream of bytes as bytes, apart
-      from the table it follows);
+      one order on both sides, the accesses of several elements as the elements, and each value at its own
+      width where `coin_start` reaches it on PowerPC are done (the entries above). Left: the rest of
+      `coin_start` and the other 15 scenarios on PowerPC (`tools/state_diff.py` at the first frame that
+      differs finds the place); the 7 tables the census still finds read in parts of their values (the
+      road objects' streams, the unfinished ending's actors, a few palettes and the test mode's texts), each
+      typed in its asset as the C reads it; the ends of the
+      road objects' lists, a 32-bit mark whose first halfword the code reads (negative either way round);
       the other places of the data read at more than one width (the census: 4,867 in 10 functions); what the
       census finds out of line read as its parts; and the work RAM's hash and what the window port saves by
       each value's width. It is done
@@ -559,7 +619,7 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 |---|---|---|
 | R12 and R14 named after the register (`context_registers`) | 347 uses | Scratch registers whose last value the next handler reads: `race_cars_start` puts the car's address together from R12's high half, which the handler before it left (the screen's page), and the road rows' and the scenery's drawing keep the height of the last size step in R14 and skip reloading it when the object's step is the same. The C keeps them as globals, a copy for each task, only in the functions where they have to be (74, 104 before the twelfth round): the boundary functions (an object's handler, an interrupt, a task), the two that call through a memory slot (`run_objects`, `test_mode_frame`), `wait_for_frame` (the vertical blank's interrupt writes R12), the ones a value only goes through on its way to the next handler, and their callers. In the others they are registers like the rest: parameters and results with names of their own (`race_car_put_sprite(..., &last_piece, ..., &last_size_step)`, `eeprom_read_word(command, eeprom_port, ...)`), and locals; a value stays a local where nothing reads it after the function (the hit boxes' `first_segment`), and the C keeps the parts of the global a function only takes through (a halfword it writes keeps the page above it). 932 uses before the eighth round, 720 before the twelfth. R27 and R28 are locals: the one function that would read them before setting them, `player_car_project_road`, does so only if its projection pattern skipped every segment, and it starts with a 1 (`symbols.txt`'s `unread` lines) |
 | Memory reached through a computed address (`mem_access`) | 21 | The routines that work on memory by its address, whatever is there (`MEMORY_ROUTINES` in `tools/game_profile.py`, faithful): the memory test (6), `unrolled_copy`, a copy from any address to any other (8), what boot writes where the board maps nothing (E00000, E80000: 6), the checksum of the settings (1). Nothing else: the last 4 went in the eleventh round (the car numbers one before the array by a count that goes down, the road's page table by page sets counted from 3, the body's frame by the steering from the middle of its table); 149 before the second round, 48 before the seventh |
-| Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 38 | The original moves them in one instruction; where the access runs on from an element of an array into the next ones, or over named fields, the C moves each as its own (the entry under "Status" for the elements; 204 before): what is left runs over bytes with no name of their own, after a field: the game mode with its two steps and the byte after them (`AS32(screen->game_mode) = 2u`: 17), the car's brake lights and the byte after (4), the traffic's and a road crosser's offsets (5), the projected segments' width code and depth layer (3), a backup course record's model and name, the seats' bookkeeping bytes, their credits in the backup, the sound queue's read and write places with its first requests, the wheel's inputs (8), and the sound program's one |
+| Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 8 | The original moves them in one instruction; where the access runs on from an element of an array into the next ones, or over named fields, the C moves each as its own (the entries under "Status"; 204, then 38 before): what is left moves bytes as they are or writes zeros, which comes out the same on a processor of either order: a projected segment's width code, road event and depth layer copied onto the next one's (4), the seats' bookkeeping bytes read as the halfword the backup keeps (2), and their credits in the backup cleared (2) |
 | Jumps through a table with an index it does not have (`invalid_jump`) | 0 | The original jumps through its tables of code without checking the index, and so does the C: its switch has the cases the table holds and no `default:` (191 before). `python tools/decompile.py --checks` (and `decompile_sound.py --checks`) writes the C for a build where an index the table does not hold stops the game with the address the original would have jumped to (`invalid_jump`, 192 places); the 16 scenarios are identical in that build too. Three functions end in such a switch whose every case returns: the C says nothing goes on past it (`unreachable()`, C23's), as nothing does in the original |
 | Results written back before an early return (`copy_backs`) | 0 | A function hands back what it leaves in registers through pointers (`p_leftover`): kept in a local, it is written back as the function ends, once where the ways out meet at the end (`vector_angles`), straight through the pointer where the function only passes it on, and before the call that hands it on (`*p_leftover = x; draw_object_at_scale(..., p_leftover, ...);`). None left: `road_surface_lines`' 9, at three returns out of the loops its control flags left, went with them in the ninth round (64 before the sixth round) |
 | Functions with `bool` control flags (`control_variables`) | 0 | Where the original's jumps join paths that no nesting of ifs and loops can, a flag would say which way to go instead of a goto (59 functions had them before the sixth round). None is left: the decompiler writes what C can say: a small block several jump to written for each, a jump into a state's case right after storing its number written as the switch running again (`state = 3u; continue;`), a larger piece of a loop entered at two places copied for the second way in, a large piece several states jump to is a function of its own (`car_radio_talk`, `player_car_crash_step` and the ninth round's: `func` lines), a loop entered at more than two places gets a copy of the rest of the round those ways start (`palette_fade_step`), a test made again with nothing changed between goes straight to its side (`race_car_draw`), a short way out several blocks of a loop lead to is written where each is (`road_surface_lines`), and code two nested loops both leave to is where a function of their own goes back to its caller (`second_task_frames`, an `exit` line) |
@@ -571,7 +631,7 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 | A function the board puts its own in place of (`board_replaced`) | 1 | The memory test's sums of the ROM chips (`runtime/replaced.txt`): the game has no ROM chips to sum, so the board hands back the sums the program keeps for them (at 03FFF8 and 03FFFC), as good chips give |
 | Work RAM addresses printed as numbers | 25 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (the sprite places `0x20C000u`, one past screen 2's LCD text `0x218F20u`, where `test_mode_start` leaves R12) and the coin meters after the first: the decompiler names a constant only when it is a variable's own address. The memory model's `ram_addresses` counts them |
 | Names made up of an address or an offset (`unk_names`, `made_up_names`) | 0 | None in the code, none in a comment, none declared for nothing: 17 functions' comments gave fields by their offset, written before the fields had names (`the car object's unk_10`, its `timer`), `struct object`'s view of every object declared 64 fields named after their offset that no code reads, as the families' views name those bytes (86 before, now padding), and `test_mode_start` gave a place of screen 2's block by a name made up of its address (`unk_218F20_ADDRESS`), now its number |
-| The game's state in the board's memory model (`ram_structures`, `ram_variables`, `ram_addresses`, `code_addresses`, `table_addresses`, `page_links`, `ram_blocks`, `pointer_conversions`) | 813, 0, 154, 206, 586, 97, 106 and 1,060 | The game's state is one structure, `struct game`, laid out as the board's work RAM (128 KB at 200000), at the places the original had it, so that each frame's state compares byte for byte with the original's; the code reaches its variables as its fields (`game->game_frame_count`; 139 macros over fixed addresses before), and its blocks where the code reaches them at their fixed addresses (`game->screen_1.unpack_state`); the registers the whole program shares, and a function's own variables, parameters and results, that point at a structure are C pointers (`current_object->state`, `object->flags`). A field that holds an address is still read by casting it (`RACE(screen->race_copy)->stage_count`), the other pointers are 32-bit addresses, the C turns a pointer back into the address the original holds where it still needs it (`address_of(screen)`) and makes one from an address it holds (`pointer_to`, `rom_pointer`), an object's handler is a code address that `call_code` runs, the tables are reached through the addresses they hold (`data_at`), a link is an address's low halfword in its 64 KB page (`LINKED`), and memory is moved, filled and searched through its address as the V60's string instructions do (`move_halfwords(object, zero_block_ADDRESS, 0x80u)` clears an object; the others clear lists, race records and tables, copy the settings, the LCD's texts, the sprite entries and the video and mixer registers' values, and the memory test keeps the work RAM in the sprite RAM while it tests it). Taking the game's state out of that model, with real pointers and plain C variables, comes once the C no longer leans on the processor it runs on; the board's own memories (the video and sprite RAM, the palettes, the sound and link boards' RAM) stay, being how the game talks to the board |
+| The game's state in the board's memory model (`ram_structures`, `ram_variables`, `ram_addresses`, `code_addresses`, `table_addresses`, `page_links`, `ram_blocks`, `pointer_conversions`) | 832, 0, 154, 206, 595, 102, 106 and 1,062 | The game's state is one structure, `struct game`, laid out as the board's work RAM (128 KB at 200000), at the places the original had it, so that each frame's state compares byte for byte with the original's; the code reaches its variables as its fields (`game->game_frame_count`; 139 macros over fixed addresses before), and its blocks where the code reaches them at their fixed addresses (`game->screen_1.unpack_state`); the registers the whole program shares, and a function's own variables, parameters and results, that point at a structure are C pointers (`current_object->state`, `object->flags`). A field that holds an address is still read by casting it (`RACE(screen->race_copy)->stage_count`), the other pointers are 32-bit addresses, the C turns a pointer back into the address the original holds where it still needs it (`address_of(screen)`) and makes one from an address it holds (`pointer_to`, `rom_pointer`), an object's handler is a code address that `call_code` runs, the tables are reached through the addresses they hold (`data_at`), a link is an address's low halfword in its 64 KB page (`LINKED`), and memory is moved, filled and searched through its address as the V60's string instructions do (`move_halfwords(object, zero_block_ADDRESS, 0x80u)` clears an object; the others clear lists, race records and tables, copy the settings, the LCD's texts, the sprite entries and the video and mixer registers' values, and the memory test keeps the work RAM in the sprite RAM while it tests it). Taking the game's state out of that model, with real pointers and plain C variables, comes once the C no longer leans on the processor it runs on; the board's own memories (the video and sprite RAM, the palettes, the sound and link boards' RAM) stay, being how the game talks to the board |
 | Data without a name of its own | 186 pieces, 1 to 6 bytes | The `data_XXXXXX` sections of `assets/data/`: the alignment between the code and the tables (zeros), the V60's `nop`s at 000000-000005, and dead code bytes in two places (00E8D9, after `halt`s) that the code reaches by no way. Every table has a name, and every piece with a structure a format of its own |
 | Board registers without a name | 6 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the bytes boot writes to E00000 and E80000-E80003, where the board maps nothing |
 | Calls through a slot that holds a function's address | 11 wrappers | `src/table.c`: how `call_code()` runs a function from a code address it reads (`call_0006B0` runs `second_task`), named after that address |
@@ -738,7 +798,7 @@ translator, the checks and the data and asset formats. `tools/game_profile.py` t
 OutRunners (its ROM set, `orunners_rom.py`; its structures, the registers the program shares, its board),
 and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, `recompile.py`,
 `disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`, `check_scenarios.py`,
-`verify_rom.py`, `render_state.py`, `memory_census.py`, `width_census.py`) run the core's. A change to the decompiler or those
+`verify_rom.py`, `render_state.py`, `memory_census.py`, `width_census.py`, `state_diff.py`) run the core's. A change to the decompiler or those
 tools goes to arcade-decomp, checked on OutRunners, and comes here as a newer commit of the submodule
 (`git submodule update --remote tools/core`). The reference the scenarios compare the game with is the core's
 too (`tools/core/system32/reference/`: `s32ref` on MAME's cores, the disassemblers' oracles, `pcmcheck`),
@@ -749,7 +809,9 @@ with `ORUNNERS_MEMORY_CENSUS=ON` into `build/bin-census` (`ORUNNERS_BIN_DIR`); `
 `--access-widths`, which lists every access the original makes of memory as data and follows the work RAM as
 a big-endian processor running the C would hold it; `report` writes `build/access_widths/report.txt`: the
 reads that processor gives another value, the program's data read at more than one width, and the accesses
-out of line with their width, each by the place and the function. The rest of `tools/` is
+out of line with their width, each by the place and the function. `state_diff.py LITTLE_DIR BIG_DIR`
+compares the headless game's `--dump-frame` dumps of one frame on the PC and on a big-endian processor:
+each place `symbols.txt` names as a value of its width, the rest by words. The rest of `tools/` is
 OutRunners' own: the ROM set (`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets'
 censuses, cuts and formats (`tilesets.py`, `pcm_samples.py`, `sprite_sheets.py`, `palette_census.py`,
 `read_crossings.py`, `formats/`).

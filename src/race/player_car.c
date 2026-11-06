@@ -290,7 +290,7 @@ void player_car_update(void)
 					player_car->wheel_effect_1 = 2u;
 					player_car->wheel_effect_2 = 2u;
 					player_car->wheel_effect_sides = 3u;
-					AS16(player_car->brake_lights) = 2u;
+					player_car->brake_lights = 2u;
 					player_car_place_view(pointer_to(segment_record), r12, road_x, segment_fraction, segment_length);
 					player_car_move_view();
 					player_car_set_horizon();

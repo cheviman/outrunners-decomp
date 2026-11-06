@@ -181,7 +181,7 @@ void car_presentation_update(void)
 		object->staff_credits_code.presentation = address_of(current_object);
 		current_object->car_presentation.staff_credits_code = address_of(object);
 		current_object->state++;
-		background_setup = 0x1AA0u + screen->index * 5u * 4u;
+		background_setup = car_presentation_backgrounds_ADDRESS + screen->index * 5u * 4u;
 		set_up_background(background_setup);
 		current_object->draw_mode = 0u;
 		current_object->x = 0xA0u;

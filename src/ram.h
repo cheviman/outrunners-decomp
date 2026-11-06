@@ -1590,21 +1590,6 @@ extern const void *text_sprite_font_data;
 #define text_sprite_palette_ADDRESS 0x122B66u
 extern const void *text_sprite_palette_data;
 #define text_sprite_palette (*(const uint16_t *)text_sprite_palette_data)
-#define entry_countdown_palette_fades_ADDRESS 0x13F66Cu
-extern const void *entry_countdown_palette_fades_data;
-#define entry_countdown_palette_fades (*(const uint32_t *)entry_countdown_palette_fades_data)
-#define name_entry_palette_fades_ADDRESS 0x13F6C0u
-extern const void *name_entry_palette_fades_data;
-#define name_entry_palette_fades (*(const uint32_t *)name_entry_palette_fades_data)
-#define manual_picked_palettes_ADDRESS 0x13F95Cu
-extern const void *manual_picked_palettes_data;
-#define manual_picked_palettes (*(const uint32_t *)manual_picked_palettes_data)
-#define automatic_picked_palettes_ADDRESS 0x13F998u
-extern const void *automatic_picked_palettes_data;
-#define automatic_picked_palettes (*(const uint32_t *)automatic_picked_palettes_data)
-#define no_background_palettes_ADDRESS 0x13F9D4u
-extern const void *no_background_palettes_data;
-#define no_background_palettes (*(const uint32_t *)no_background_palettes_data)
 #define race_car_rider_places_ADDRESS 0x18D25Cu
 extern const void *race_car_rider_places_data;
 #define race_car_rider_places ((const uint32_t *)race_car_rider_places_data)
@@ -2990,7 +2975,8 @@ struct object
 			int16_t x_offset;
 			uint8_t pad_22[0x2];
 			int16_t y_offset;
-			uint8_t pad_26[0xA];
+			int16_t y_offset_sign;
+			uint8_t pad_28[0x8];
 			int16_t screen_x;
 			uint8_t pad_32[0xD];
 			int8_t side;
@@ -3553,9 +3539,9 @@ struct object
 			int16_t position;
 			uint8_t pad_1E[0x2];
 			int16_t x_offset;
-			uint8_t pad_22[0x2];
+			int16_t x_offset_sign;
 			int16_t y_offset;
-			uint8_t pad_26[0x2];
+			int16_t y_offset_sign;
 			uint16_t position_fraction;
 			uint8_t pad_2A[0x2];
 			int16_t speed;
@@ -3727,8 +3713,7 @@ struct car
 	uint8_t pad_76[0x6];
 	uint8_t off_road;
 	uint8_t pad_7D[0x1];
-	uint8_t brake_lights;
-	uint8_t pad_7F[0x1];
+	uint16_t brake_lights;
 	uint32_t next_x;
 	uint32_t next_y;
 	uint32_t next_z;
@@ -3838,16 +3823,8 @@ struct road_segment
 	uint32_t y;
 	uint16_t width;
 	uint16_t half_width;
-	union
-	{
-		uint16_t width_code_and_event;
-		uint8_t width_code;
-		struct
-		{
-			uint8_t pad_14[0x1];
-			uint8_t road_event;
-		};
-	};
+	uint8_t width_code;
+	uint8_t road_event;
 	uint8_t pad_16[0xA];
 };
 
@@ -3911,7 +3888,8 @@ struct screen
 	uint8_t game_mode;
 	uint8_t mode_step;
 	uint8_t game_step;
-	uint8_t pad_83[0x5];
+	uint8_t game_mode_spare;
+	uint8_t pad_84[0x4];
 	uint16_t mode_timer;
 	uint8_t pad_8A[0x6];
 	uint32_t demo_flags;
@@ -3947,7 +3925,8 @@ struct screen
 	uint8_t wheel;
 	uint8_t gas;
 	uint8_t brake;
-	uint8_t pad_103[0x5];
+	uint8_t controls_spare;
+	uint8_t pad_104[0x4];
 	uint8_t input_write_place;
 	uint8_t input_read_place;
 	uint8_t pad_10A[0x6];
@@ -3964,8 +3943,7 @@ struct screen
 	uint8_t fade_channels;
 	uint8_t pad_155[0xB];
 	uint16_t mixer_values[0x1F];
-	uint8_t pad_19E[0x1];
-	uint8_t colour_offset_mode;
+	uint16_t colour_offset_select;
 	uint8_t pad_1A0[0x10];
 	uint16_t mixer_defaults[0x1F];
 	uint8_t pad_1EE[0x12];
@@ -4717,16 +4695,8 @@ struct bar_picture_bar
 
 struct course_record
 {
-	union
-	{
-		uint32_t model_and_name;
-		uint8_t model;
-		struct
-		{
-			uint8_t pad_00[0x1];
-			uint8_t name[0x3];
-		};
-	};
+	uint8_t model;
+	uint8_t name[0x3];
 	uint16_t time;
 };
 
@@ -4964,16 +4934,8 @@ struct seat_credits
 
 struct coin_meter
 {
-	union
-	{
-		uint16_t frames;
-		uint8_t frames_on;
-		struct
-		{
-			uint8_t pad_00[0x1];
-			uint8_t frames_off;
-		};
-	};
+	uint8_t frames_on;
+	uint8_t frames_off;
 	uint8_t pulses_owed;
 };
 
@@ -5030,11 +4992,8 @@ struct text_layer_record
 
 struct sprite_text_record
 {
-	union
-	{
-		uint32_t place;
-		uint16_t x;
-	};
+	uint16_t x;
+	uint16_t y;
 	uint16_t attribute;
 	uint8_t characters[];
 };
@@ -5048,7 +5007,8 @@ struct palette_block
 
 struct palette_block_list
 {
-	uint32_t length;
+	uint16_t length;
+	uint16_t length_high;
 };
 
 struct palette_block_entry
@@ -5080,31 +5040,15 @@ struct turntable_scenery_item
 struct screen_lamps
 {
 	uint8_t pad_00[0xC0];
-	union
-	{
-		uint32_t checkpoint_all;
-		uint8_t checkpoint;
-		struct
-		{
-			uint8_t pad_C0[0x1];
-			uint8_t checkpoint_blinks;
-			uint8_t checkpoint_period;
-			uint8_t checkpoint_timer;
-		};
-	};
+	uint8_t checkpoint;
+	uint8_t checkpoint_blinks;
+	uint8_t checkpoint_period;
+	uint8_t checkpoint_timer;
 	uint8_t pad_C4[0x4];
-	union
-	{
-		uint32_t leader_all;
-		uint8_t leader;
-		struct
-		{
-			uint8_t pad_C8[0x1];
-			uint8_t leader_blinks;
-			uint8_t leader_period;
-			uint8_t leader_timer;
-		};
-	};
+	uint8_t leader;
+	uint8_t leader_blinks;
+	uint8_t leader_period;
+	uint8_t leader_timer;
 };
 
 struct car_hit_box
@@ -5161,26 +5105,10 @@ struct checkpoint_pass
 
 struct sprite_place
 {
-	union
-	{
-		uint32_t size;
-		uint16_t height;
-		struct
-		{
-			uint8_t pad_00[0x2];
-			uint16_t width;
-		};
-	};
-	union
-	{
-		uint32_t place;
-		uint16_t y;
-		struct
-		{
-			uint8_t pad_04[0x2];
-			uint16_t x;
-		};
-	};
+	uint16_t height;
+	uint16_t width;
+	uint16_t y;
+	uint16_t x;
 	uint16_t rom_offset;
 	uint16_t mirror_x;
 	uint8_t pad_0C[0x4];
@@ -5193,18 +5121,11 @@ struct object_start_list
 
 struct tilemap_pages
 {
-	union
-	{
-		uint32_t pages;
-		uint16_t upper_pages;
-		struct
-		{
-			uint8_t pad_00[0x2];
-			uint16_t lower_pages;
-		};
-	};
+	uint16_t upper_pages;
+	uint16_t lower_pages;
 	uint8_t pad_04[0x4];
-	uint32_t second_pages;
+	uint16_t second_upper_pages;
+	uint16_t second_lower_pages;
 };
 
 struct tilemap_banks
@@ -5215,6 +5136,11 @@ struct tilemap_banks
 };
 
 struct road_palette_record
+{
+	uint32_t road_fades;
+};
+
+struct stage_road_palette_record
 {
 	uint32_t road_fades;
 };
@@ -5320,16 +5246,8 @@ struct course_record_entry
 
 struct course_record_copy
 {
-	union
-	{
-		uint32_t model_and_name;
-		uint8_t model;
-		struct
-		{
-			uint8_t pad_00[0x1];
-			uint8_t name[0x3];
-		};
-	};
+	uint8_t model;
+	uint8_t name[0x3];
 	uint16_t time;
 };
 
@@ -5458,6 +5376,7 @@ _Static_assert(sizeof(struct object_start_list) == 0x4, "struct object_start_lis
 _Static_assert(sizeof(struct tilemap_pages) == 0xC, "struct tilemap_pages has the size of the game's blocks");
 _Static_assert(sizeof(struct tilemap_banks) == 0x3, "struct tilemap_banks has the size of the game's blocks");
 _Static_assert(sizeof(struct road_palette_record) == 0x4, "struct road_palette_record has the size of the program ROM's records");
+_Static_assert(sizeof(struct stage_road_palette_record) == 0x4, "struct stage_road_palette_record has the size of the program ROM's records");
 _Static_assert(sizeof(struct backup_course_record) == 0x6, "struct backup_course_record has the size of the board's memory");
 _Static_assert(sizeof(struct race_car_rider) == 0x10, "struct race_car_rider has the size of the game's blocks");
 _Static_assert(sizeof(struct race_car_spray) == 0x10, "struct race_car_spray has the size of the game's blocks");
@@ -5506,6 +5425,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define WELCOME_LETTER_PLACE(address) ((const struct welcome_letter_place *)data_at(address))
 #define SELECT_INSTRUCTION_PIECE(address) ((const struct select_instruction_piece *)data_at(address))
 #define TRAFFIC_PATH_STEP(address) ((const struct traffic_path_step *)data_at(address))
+#define LCD_TEXT_CHARACTERS(address) ((const uint8_t *)data_at(address))
 #define GOAL_ACTOR_SCRIPT_WORDS(address) ((const uint16_t *)data_at(address))
 #define PALETTE_CYCLE_RECORD(address) ((const struct palette_cycle_record *)data_at(address))
 #define PALETTE_CYCLE_STEPS(address) ((const uint32_t *)data_at(address))
@@ -5652,12 +5572,13 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define PORT_OUTPUT_BITS(address) ((uint8_t *)ram(address))
 #define VBLANK_COUNT(address) ((uint8_t *)ram(address))
 #define SPRITE_PLACE(address) ((struct sprite_place *)ram(address))
-#define SPRITE_PLACE_WORDS(address) ((uint32_t *)ram(address))
+#define SPRITE_PLACE_WORDS(address) ((uint16_t *)ram(address))
 #define OBJECT_LINKS(address) ((uint16_t *)ram(address))
 #define OBJECT_START_LIST(address) ((const struct object_start_list *)data_at(address))
 #define TILEMAP_PAGES(address) ((struct tilemap_pages *)ram(address))
 #define TILEMAP_BANKS(address) ((struct tilemap_banks *)ram(address))
 #define ROAD_PALETTE_RECORD(address) ((const struct road_palette_record *)data_at(address))
+#define STAGE_ROAD_PALETTE_RECORD(address) ((const struct stage_road_palette_record *)data_at(address))
 #define FADE_OBJECTS(address) ((uint32_t *)ram(address))
 #define STRETCH_ENDS(address) ((uint16_t *)ram(address))
 #define LINE_SELECTS(address) ((uint16_t *)board(address))
@@ -5680,10 +5601,10 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define TILE_PAGE_PLACES(address) ((uint32_t *)ram(address))
 #define ROAD_PAGE_TABLE_BYTES(address) ((uint8_t *)ram(address))
 #define TILES_CHANGE_FLAGS(address) ((uint8_t *)ram(address))
-#define PAGE_SELECT(address) ((uint32_t *)ram(address))
+#define PAGE_SELECT(address) ((uint16_t *)ram(address))
 #define VIDEO_REGISTER_WORDS(address) ((uint16_t *)ram(address))
 #define TILE_BANK_VALUES(address) ((uint8_t *)ram(address))
-#define MIXER_VALUE_PAIRS(address) ((uint32_t *)ram(address))
+#define MIXER_REGISTER_COPIES(address) ((uint16_t *)ram(address))
 #define ROAD_PALETTE_LISTS(address) ((const uint32_t *)data_at(address))
 #define RACE_CAR_RIDER(address) ((struct race_car_rider *)ram(address))
 #define RACE_CAR_SPRAY(address) ((struct race_car_spray *)ram(address))
@@ -5722,6 +5643,9 @@ extern const void *bar_picture_bars_data;
 #define attract_lamp_steps_ADDRESS 0x001607u
 extern const void *attract_lamp_steps_data;
 #define attract_lamp_steps ((const struct attract_lamp_step *)(attract_lamp_steps_data))
+#define car_presentation_backgrounds_ADDRESS 0x001AA0u
+extern const void *car_presentation_backgrounds_data;
+#define car_presentation_backgrounds ((const struct background_setup *)(car_presentation_backgrounds_data))
 #define staff_credits_code_sequence_ADDRESS 0x001ADCu
 extern const void *staff_credits_code_sequence_data;
 #define staff_credits_code_sequence ((const uint8_t *)(staff_credits_code_sequence_data))
@@ -5734,12 +5658,18 @@ extern const void *default_course_records_data;
 #define name_entry_rejected_names_ADDRESS 0x002D7Cu
 extern const void *name_entry_rejected_names_data;
 #define name_entry_rejected_names ((const uint32_t *)(name_entry_rejected_names_data))
+#define name_entry_backgrounds_ADDRESS 0x002E4Cu
+extern const void *name_entry_backgrounds_data;
+#define name_entry_backgrounds ((const struct background_setup *)(name_entry_backgrounds_data))
 #define attract_demo_races_ADDRESS 0x0034F4u
 extern const void *attract_demo_races_data;
 #define attract_demo_races ((const struct demo_race_choice *)(attract_demo_races_data))
 #define route_map_register_sets_ADDRESS 0x0047E8u
 extern const void *route_map_register_sets_data;
 #define route_map_register_sets ((const struct route_map_registers *)(route_map_register_sets_data))
+#define route_map_backgrounds_ADDRESS 0x004868u
+extern const void *route_map_backgrounds_data;
+#define route_map_backgrounds ((const struct background_setup *)(route_map_backgrounds_data))
 #define route_map_start_leg_car_places_ADDRESS 0x004964u
 extern const void *route_map_start_leg_car_places_data;
 #define route_map_start_leg_car_places ((const struct route_map_leg_car_place *)(route_map_start_leg_car_places_data))
@@ -5767,6 +5697,9 @@ extern const void *traffic_path_data;
 #define car_select_tilemap_setups_ADDRESS 0x006920u
 extern const void *car_select_tilemap_setups_data;
 #define car_select_tilemap_setups ((const struct car_select_tilemap_setup *)(car_select_tilemap_setups_data))
+#define entry_countdown_backgrounds_ADDRESS 0x006988u
+extern const void *entry_countdown_backgrounds_data;
+#define entry_countdown_backgrounds ((const struct background_setup *)(entry_countdown_backgrounds_data))
 #define turntable_car_looks_ADDRESS 0x0069B8u
 extern const void *turntable_car_looks_data;
 #define turntable_car_looks ((const struct animation_palette *)(turntable_car_looks_data))
@@ -5887,6 +5820,21 @@ extern const void *stage_courses_data;
 #define sprite_size_steps_ADDRESS 0x122B74u
 extern const void *sprite_size_steps_data;
 #define sprite_size_steps ((const struct sprite_size_step *)(sprite_size_steps_data))
+#define entry_countdown_palette_fades_ADDRESS 0x13F66Cu
+extern const void *entry_countdown_palette_fades_data;
+#define entry_countdown_palette_fades ((const struct palette_fade_list *)(entry_countdown_palette_fades_data))
+#define name_entry_palette_fades_ADDRESS 0x13F6C0u
+extern const void *name_entry_palette_fades_data;
+#define name_entry_palette_fades ((const struct palette_fade_list *)(name_entry_palette_fades_data))
+#define manual_picked_palettes_ADDRESS 0x13F95Cu
+extern const void *manual_picked_palettes_data;
+#define manual_picked_palettes ((const struct palette_block_list *)(manual_picked_palettes_data))
+#define automatic_picked_palettes_ADDRESS 0x13F998u
+extern const void *automatic_picked_palettes_data;
+#define automatic_picked_palettes ((const struct palette_block_list *)(automatic_picked_palettes_data))
+#define no_background_palettes_ADDRESS 0x13F9D4u
+extern const void *no_background_palettes_data;
+#define no_background_palettes ((const struct palette_block_list *)(no_background_palettes_data))
 #define road_row_size_step_lists_ADDRESS 0x1598CCu
 extern const void *road_row_size_step_lists_data;
 #define road_row_size_step_lists ((const uint32_t *)(road_row_size_step_lists_data))
@@ -6024,7 +5972,7 @@ struct game
 	uint8_t seat_2_brake;
 	uint8_t pad_20E12A[0xD6];
 	uint16_t video_registers[0x48];
-	uint32_t scroll_targets[0x8];
+	uint16_t scroll_targets[0x10];
 	uint8_t tile_banks[0x4];
 	uint8_t pad_20E2B4[0x4C];
 	union

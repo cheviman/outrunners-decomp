@@ -64,8 +64,14 @@ void game_mode_isdn_connection(void)
 		colour_block = black_background_palette_ADDRESS;
 		queue_palette(colour_block);
 		lamp_place = pointer_to(GAME_VARIABLES + screen->index * 4u);
-		lamp_place->checkpoint_all = 0u;
-		lamp_place->leader_all = 0u;
+		lamp_place->checkpoint = 0u;
+		lamp_place->checkpoint_blinks = 0u;
+		lamp_place->checkpoint_period = 0u;
+		lamp_place->checkpoint_timer = 0u;
+		lamp_place->leader = 0u;
+		lamp_place->leader_blinks = 0u;
+		lamp_place->leader_period = 0u;
+		lamp_place->leader_timer = 0u;
 		clear_lcd();
 		handler_list = isdn_connection_objects_ADDRESS;
 		start_object_list(handler_list);
@@ -96,7 +102,12 @@ void game_mode_isdn_connection(void)
 		return;
 	case 6:
 		if ((screen->flags & 1u) == 0u)
-			AS32(screen->game_mode) = 2u;
+		{
+			screen->game_mode = 2u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 		return;
 	}
 	link_status = screen->link_status;
@@ -1168,14 +1179,27 @@ uint32_t race_entries_update(uint32_t entry_place)
 	if (zero)
 	{
 		if (race_2->entry_frames != 0u && screen->game_mode != 0u && screen->game_mode <= 5u)
-			AS32(screen->game_mode) = 7u;
+		{
+			screen->game_mode = 7u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 	}
 	else if (screen->game_mode != 0u && screen->game_mode <= 5u)
 	{
-		AS32(screen->game_mode) = 5u;
+		screen->game_mode = 5u;
+		screen->mode_step = 0u;
+		screen->game_step = 0u;
+		screen->game_mode_spare = 0u;
 		game->cleared_on_race_over = 0u;
 		if (race_2->entry_frames != 0u && screen->game_mode != 0u && screen->game_mode <= 5u)
-			AS32(screen->game_mode) = 7u;
+		{
+			screen->game_mode = 7u;
+			screen->mode_step = 0u;
+			screen->game_step = 0u;
+			screen->game_mode_spare = 0u;
+		}
 	}
 	if (race_2->entry_serial == race->entry_serial_seen)
 		return entry_place;
@@ -1436,10 +1460,19 @@ void entry_invitation_step(void)
 		if (game->race_copies[0].entry_frames != 0u)
 			return;
 		reset_screen_sound();
-		AS32(screen->game_mode) = 2u;
+		screen->game_mode = 2u;
+		screen->mode_step = 0u;
+		screen->game_step = 0u;
+		screen->game_mode_spare = 0u;
 		lamp = pointer_to(GAME_VARIABLES + screen->index * 4u);
-		lamp->checkpoint_all = 0u;
-		lamp->leader_all = 0u;
+		lamp->checkpoint = 0u;
+		lamp->checkpoint_blinks = 0u;
+		lamp->checkpoint_period = 0u;
+		lamp->checkpoint_timer = 0u;
+		lamp->leader = 0u;
+		lamp->leader_blinks = 0u;
+		lamp->leader_period = 0u;
+		lamp->leader_timer = 0u;
 		clear_lcd();
 		return;
 	}
@@ -1513,6 +1546,7 @@ struct course_record_entry *course_records_update(struct course_record_entry *re
 	struct race *race = NULL;
 	uint8_t *seen_serials = NULL;
 	uint8_t seen_serial = 0;
+	uint32_t model_long = 0, model_long_2 = 0;
 
 	seen_serials = &screen->name_entries_seen;
 	players_left = game->player_count;
@@ -1536,11 +1570,19 @@ struct course_record_entry *course_records_update(struct course_record_entry *re
 				record_entry->name = race->record_name;
 				record_entry->name_rest = race->record_name_rest;
 				backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS + record_offset;
-				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				model_long = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				BACKUP_COURSE_RECORD(backup_record)->model = (uint8_t)model_long;
+				BACKUP_COURSE_RECORD(backup_record)->name[0] = (uint8_t)(model_long >> 8u);
+				BACKUP_COURSE_RECORD(backup_record)->name[1] = (uint8_t)(model_long >> 16u);
+				BACKUP_COURSE_RECORD(backup_record)->name[2] = (uint8_t)(model_long >> 24u);
 				BACKUP_COURSE_RECORD(backup_record)->time = record_entry->time;
 				bookkeeping_update_checksum((uint16_t)ignored);
 				backup_record = SOUND_RAM + 0x1FAEu + record_offset;
-				AS32(BACKUP_COURSE_RECORD(backup_record)->model) = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				model_long_2 = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				BACKUP_COURSE_RECORD(backup_record)->model = (uint8_t)model_long_2;
+				BACKUP_COURSE_RECORD(backup_record)->name[0] = (uint8_t)(model_long_2 >> 8u);
+				BACKUP_COURSE_RECORD(backup_record)->name[1] = (uint8_t)(model_long_2 >> 16u);
+				BACKUP_COURSE_RECORD(backup_record)->name[2] = (uint8_t)(model_long_2 >> 24u);
 				BACKUP_COURSE_RECORD(backup_record)->time = record_entry->time;
 			}
 		}

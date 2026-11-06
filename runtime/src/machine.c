@@ -724,6 +724,7 @@ void s32_init(const uint8_t *program)
 	const s32_sound_chips chips = s32_board.chips;
 	const uint8_t *sound_rom = s32_board.sound_rom;
 	const uint8_t *(*sound_at)(uint32_t) = s32_board.sound_at;
+	const uint8_t *(*sound_byte_at)(uint32_t) = s32_board.sound_byte_at;
 	const uint8_t *pcm_rom = s32_board.pcm_rom;
 	uint8_t (*pcm_at)(uint32_t) = s32_board.pcm_at;
 	const bool frame_timing = s32_board.frame_timing;
@@ -746,6 +747,7 @@ void s32_init(const uint8_t *program)
 	s32_board.chips = chips;
 	s32_board.sound_rom = sound_rom;
 	s32_board.sound_at = sound_at;
+	s32_board.sound_byte_at = sound_byte_at;
 	s32_board.pcm_rom = pcm_rom;
 	s32_board.pcm_at = pcm_at;
 	s32_board.frame_timing = frame_timing;

@@ -46,7 +46,7 @@ void route_map_update(void)
 	uint32_t background_setup = 0, branch_road_length = 0, colour_block = 0, landmarks_left = 0, leg_distance = 0, legs_left = 0, lengths_place = 0, route_branches = 0, route_map_registers = 0, setup_base = 0, stage_length = 0, stage_lengths = 0;
 	struct object *object = NULL;
 	uint8_t timer = 0, timer_2 = 0, start_leg_frames = 0, turn_leg_frames = 0, approach_leg_frames = 0, branch_leg_frames = 0, stage_leg_frames = 0, timer_3 = 0, timer_4 = 0, timer_5 = 0;
-	uint32_t zoom_x_address = 0, zoom_y_address = 0, scroll_x_address = 0, scroll_x_address_2 = 0, scroll_x_address_3 = 0, scroll_x_address_4 = 0, scroll_y_address = 0, scroll_x_address_5 = 0, scroll_y_address_2 = 0, scroll_x_address_6 = 0, scroll_x_address_7 = 0, scroll_x_address_8 = 0, scroll_x_address_9 = 0, scroll_x_address_10 = 0, scroll_y_address_3 = 0, scroll_x_address_11 = 0, scroll_y_address_4 = 0, scroll_x_address_12 = 0, scroll_y_address_5 = 0, zoom_x_address_2 = 0, zoom_y_address_2 = 0, scroll_x_address_13 = 0, scroll_y_address_6 = 0, second_scroll_x_address = 0, second_scroll_y_address = 0;
+	uint32_t zoom_x_address = 0, zoom_y_address = 0, page_select_long = 0, scroll_x_address = 0, scroll_x_address_2 = 0, scroll_x_address_3 = 0, scroll_x_address_4 = 0, scroll_y_address = 0, scroll_x_address_5 = 0, scroll_y_address_2 = 0, scroll_x_address_6 = 0, scroll_x_address_7 = 0, scroll_x_address_8 = 0, page_select_long_2 = 0, scroll_x_address_9 = 0, scroll_x_address_10 = 0, scroll_y_address_3 = 0, scroll_x_address_11 = 0, scroll_y_address_4 = 0, scroll_x_address_12 = 0, scroll_y_address_5 = 0, zoom_x_address_2 = 0, zoom_y_address_2 = 0, scroll_x_address_13 = 0, scroll_y_address_6 = 0, page_select_long_3 = 0, second_scroll_x_address = 0, second_scroll_y_address = 0;
 
 	if ((screen->lcd_scroll | screen->lcd_scroll_request) == 0u)
 		screen->lcd_scroll_request = thank_you_lcd_text_ADDRESS;
@@ -90,7 +90,7 @@ void route_map_update(void)
 			setup_base = screen->index * 5u * 2u;
 			route_branches = screen->route_branches[0];
 			current_object->route_map.first_branch = route_branches;
-			background_setup = 0x4868u + (setup_base + route_branches * 5u) * 4u;
+			background_setup = route_map_backgrounds_ADDRESS + (setup_base + route_branches * 5u) * 4u;
 			set_up_background(background_setup);
 			colour_block = route_map_background_palette;
 			queue_palette(colour_block);
@@ -121,6 +121,7 @@ void route_map_update(void)
 			if (timer == 1u)
 			{
 				PAGE_SELECT(current_object->route_map.second_pages_address)[0] = 0u;
+				PAGE_SELECT(current_object->route_map.second_pages_address)[1] = 0u;
 				io_write16(current_object->route_map.sea_colour_address, 0x7EE0u);
 				current_object->route_map.timer = 9u;
 				current_object->state++;
@@ -136,7 +137,9 @@ void route_map_update(void)
 			current_object->route_map.timer = timer_2 - 1u;
 			if (timer_2 != 1u)
 				return;
-			PAGE_SELECT(current_object->route_map.pages_address)[0] = route_map_close_up_pages[screen->index];
+			page_select_long = route_map_close_up_pages[screen->index];
+			PAGE_SELECT(current_object->route_map.pages_address)[0] = (uint16_t)page_select_long;
+			PAGE_SELECT(current_object->route_map.pages_address)[1] = (uint16_t)(page_select_long >> 16u);
 			VIDEO_REGISTER_WORDS(current_object->route_map.zoom_x_address)[0] = 0x200u;
 			VIDEO_REGISTER_WORDS(current_object->route_map.zoom_y_address)[0] = 0x200u;
 			VIDEO_REGISTER_WORDS(current_object->route_map.zoom_center_x_address)[0] = 0u;
@@ -539,7 +542,9 @@ void route_map_update(void)
 			current_object->route_map.timer = timer_3 - 1u;
 			if (timer_3 == 1u)
 			{
-				PAGE_SELECT(current_object->route_map.pages_address)[0] = route_map_routes_pages[screen->index];
+				page_select_long_2 = route_map_routes_pages[screen->index];
+				PAGE_SELECT(current_object->route_map.pages_address)[0] = (uint16_t)page_select_long_2;
+				PAGE_SELECT(current_object->route_map.pages_address)[1] = (uint16_t)(page_select_long_2 >> 16u);
 				VIDEO_REGISTER_WORDS(current_object->route_map.zoom_x_address)[0] = 0x400u;
 				VIDEO_REGISTER_WORDS(current_object->route_map.zoom_y_address)[0] = 0x400u;
 				scroll_x_address_9 = current_object->route_map.scroll_x_address;
@@ -593,7 +598,9 @@ void route_map_update(void)
 				VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0] = 0x70u;
 				VIDEO_REGISTER_WORDS(current_object->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_x_address)[0];
 				VIDEO_REGISTER_WORDS(current_object->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0];
-				PAGE_SELECT(current_object->route_map.second_pages_address)[0] = route_map_world_pages[screen->index];
+				page_select_long_3 = route_map_world_pages[screen->index];
+				PAGE_SELECT(current_object->route_map.second_pages_address)[0] = (uint16_t)page_select_long_3;
+				PAGE_SELECT(current_object->route_map.second_pages_address)[1] = (uint16_t)(page_select_long_3 >> 16u);
 				VIDEO_REGISTER_WORDS(current_object->route_map.second_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_x_address)[0];
 				VIDEO_REGISTER_WORDS(current_object->route_map.second_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0];
 				second_scroll_x_address = current_object->route_map.second_scroll_x_address;

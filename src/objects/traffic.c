@@ -199,6 +199,7 @@ void traffic_car_start(void)
 	const struct traffic_sprite_record *traffic_sprite_record = NULL;
 	uint8_t passing_sound = 0, hit_sound = 0;
 	uint16_t animation = 0, palette = 0, weight = 0;
+	uint32_t x_offset_long = 0;
 
 	record = rom_pointer(current_object->traffic.record);
 	traffic_sprite_record = rom_pointer(record->sprite);
@@ -216,7 +217,9 @@ void traffic_car_start(void)
 	current_object->traffic.weight = weight;
 	current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 	current_object->side = (uint8_t)record->side;
-	AS32(current_object->traffic.x_offset) = record->x_offset;
+	x_offset_long = record->x_offset;
+	current_object->x_offset = (uint16_t)x_offset_long;
+	current_object->traffic.x_offset_sign = (uint16_t)(x_offset_long >> 16u);
 	current_object->traffic.speed = record->speed;
 	current_object->traffic.passed = 0u;
 	current_object->state++;
@@ -476,6 +479,7 @@ void traffic_figure_update(void)
 	const struct traffic_record *record = NULL;
 	const struct traffic_sprite_record *traffic_sprite_record = NULL;
 	uint16_t stop_distance = 0, speed = 0;
+	uint32_t x_offset_long = 0, x_offset_long_2 = 0, y_offset_long = 0;
 
 	switch (current_object->state)
 	{
@@ -496,7 +500,9 @@ void traffic_figure_update(void)
 			current_object->traffic.weight = traffic_sprite_record->weight;
 			current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 			current_object->side = (uint8_t)record->side;
-			AS32(current_object->traffic.x_offset) = record->x_offset;
+			x_offset_long = record->x_offset;
+			current_object->x_offset = (uint16_t)x_offset_long;
+			current_object->traffic.x_offset_sign = (uint16_t)(x_offset_long >> 16u);
 			current_object->traffic.speed = record->speed;
 			current_object->state++;
 			animation_start(animation);
@@ -510,9 +516,13 @@ void traffic_figure_update(void)
 		current_object->traffic.weight = traffic_sprite_record->weight;
 		current_object->traffic.hit_box = address_of(&traffic_sprite_record->hit_box[0]);
 		current_object->side = (uint8_t)record->side;
-		AS32(current_object->traffic.x_offset) = record->x_offset;
+		x_offset_long_2 = record->x_offset;
+		current_object->x_offset = (uint16_t)x_offset_long_2;
+		current_object->traffic.x_offset_sign = (uint16_t)(x_offset_long_2 >> 16u);
 		current_object->traffic.speed = record->speed;
-		AS32(current_object->traffic.y_offset) = (int16_t)0xFD40u;
+		y_offset_long = (int16_t)0xFD40u;
+		current_object->y_offset = (uint16_t)y_offset_long;
+		current_object->traffic.y_offset_sign = (uint16_t)(y_offset_long >> 16u);
 		current_object->state++;
 		animation_start(animation);
 		return;

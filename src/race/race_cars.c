@@ -194,7 +194,7 @@ void race_car_draw(void)
 		current_object->race_car.wheel_turn = (current_object->race_car.wheel_turn & 0xFFFFFFu) | ((palette & 0xFFu) << 24u);
 		current_object->race_car.wheel_turn &= 0xFFFF0000u;
 	}
-	palette = (uint16_t)(palette + AS16(player_car->brake_lights));
+	palette = (uint16_t)(palette + player_car->brake_lights);
 	palette = (uint16_t)(palette + race->palette);
 	r12 = race->animation;
 	r14 = race->frame;

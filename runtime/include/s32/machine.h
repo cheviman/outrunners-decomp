@@ -204,7 +204,9 @@ typedef struct s32_machine
 	const uint8_t *(*sound_at)(uint32_t offset);    /* without sound_rom: the sound program's data at an offset
 	                                                   of its chip, NULL where it has none (the game's assets:
 	                                                   assets_sound_data) */
-	const uint8_t *pcm_rom;                         /* 4 MB, owned by the caller; set after s32_init */
+	const uint8_t *(*sound_byte_at)(uint32_t offset);    /* the same for the Z80's bus: the byte as the chip
+	                                                   holds it (assets_sound_byte); none, sound_at's */
+	const uint8_t *pcm_rom;                        /* 4 MB, owned by the caller; set after s32_init */
 	uint8_t (*pcm_at)(uint32_t place);              /* without pcm_rom: a byte of the 4 MB at a place (the
 	                                                   game's samples: assets_pcm_byte) */
 	uint8_t sound_bank;                             /* the 8 KB page of the sound ROM at Z80 0xA000 */

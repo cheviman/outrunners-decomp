@@ -170,9 +170,14 @@ def declare(out, keyword, structure, extra=()):
                [typed.column(name, kind) for name, _, kind in columns] + list(extra))
 
 
+RECORDS = []    # (address, structure) of the records the walks read (typed.pointed_segments follows their pointers)
+
+
 def record_cells(walk, offset, structure, pointers=()):
     """The cells of the structure's record at 'offset': its values, the u32 columns named in 'pointers' (the
     ones that hold addresses) as places."""
+    if walk.base is not None:
+        RECORDS.append((walk.base + offset, structure))
     cells = []
     for name, at, kind in record_columns(structure):
         value = struct.unpack_from("<" + typed.VALUE_TYPES[kind], walk.data, offset + at)[0]

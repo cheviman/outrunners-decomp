@@ -619,6 +619,7 @@ scoped object road_crosser 18 record u32 road_crosser_record
 scoped object road_crosser 1C position s16
 scoped object road_crosser 20 x_offset s16
 scoped object road_crosser 24 y_offset s16
+scoped object road_crosser 26 y_offset_sign s16   # the upper half of the 32-bit stores of y_offset (its sign); the object code reads y_offset as 16 bits and nothing reads this
 scoped object road_crosser 30 screen_x s16
 scoped object road_crosser 3F side s8
 scoped object road_crosser 56 appear_position s16
@@ -696,10 +697,11 @@ field car_select_tilemap_setup 08 second_scroll_x_address u32
 field car_select_tilemap_setup 0C second_scroll_y_address u32
 field car_select_tilemap_setup 10 rowscroll_address u32
 field car_select_tilemap_setup 14 rowselect_address u32
-field car_select_tilemap_setup 18 background u32 rom
+field car_select_tilemap_setup 18 background u32 background_setup
 field car_select_tilemap_setup 1C video_register_bits u16
 local car_select_run 0050BB r10 setup car_select_tilemap_setup
 006920  table car_select_tilemap_setups car_select_tilemap_setup
+006988  table entry_countdown_backgrounds  background_setup   # by screen: entry_countdown_start 00635E "movea.w 6988[PC](R0), R19" (R0 = index x 20), for set_up_background
 # A sprite's animation and palette, a record of a table by car (0056D5 turntable_car_show, 0065E9
 # entry_car_ring_draw, 006680 entry_traffic_car_drive "movea.w 69B8[PC](R0), R10" by the car; 005D24
 # driver_couple_start "movea.w 6E58[PC](R0), R10" by the car's model), then "movz.hw [R10+], R9"
@@ -781,13 +783,15 @@ field traffic_path_step 04 y u16
 006DA4  table car_select_wheel_transmissions u8   # car_select_run 005359 "mov.b 6DA4[PC](R0), 61[R23]" by the wheel >> 5: the car's transmission, 01 01 01 00 00 00 00 00 (1 manual, 0 automatic)
 006DEE  table car_select_car_sounds u8   # car_select_run 005319 "mov.b 6DEE[PC](R0), R0", request_sound's, by the chosen model: 62 66 61 65 60 64 63 67
 006DDE  table car_caption_palettes u16   # car_caption_show 005DDF "mov.h 6DDE[PC](R0), 3A[R20]": the caption's palette by the model in front: 29B-2A2
-006E30  table automatic_panel_palette_lists u32   # transmission_choice_run 005B28 "mov.w 6E30[PC](R0), R19" by automatic_cycle >> 1: the palette lists for queue_palette_list that cycle the AUTOMATIC panel's colours (13F968 13F974 13F980 13F98C), closed by 0
-006E44  table manual_panel_palette_lists u32   # transmission_choice_run 005B03 "mov.w 6E44[PC](R0), R19" by manual_cycle >> 1: the same for the MANUAL panel (13F9A4 13F9B0 13F9BC 13F9C8), closed by 0
+006E30  table automatic_panel_palette_lists u32 palette_block_list   # transmission_choice_run 005B28 "mov.w 6E30[PC](R0), R19" by automatic_cycle >> 1: the palette lists for queue_palette_list that cycle the AUTOMATIC panel's colours (13F968 13F974 13F980 13F98C), closed by 0
+006E44  table manual_panel_palette_lists u32 palette_block_list   # transmission_choice_run 005B03 "mov.w 6E44[PC](R0), R19" by manual_cycle >> 1: the same for the MANUAL panel (13F9A4 13F9B0 13F9BC 13F9C8), closed by 0
 006E78  table car_gears_caption_frames u8   # car_gears_caption_show (005E83) and transmission_label_start_manual (005CC1) "mov.b 6E78[PC](R0), 40[R20]" by the model: the frame of the gearbox caption (04 00 03 00 00 01 02 01)
 006E80  table choice_flag_palettes u16   # choice_flag_start (00608B) and stacked_choice_flag_start (006120) "mov.h 6E80[PC](R0), 3A[R20]" by the car chosen: 2A 28 29 2C 27 2D 2E 2B
 006E90  table choice_flag_number_animations u16   # choice_flag_number_start 006189 "movz.hw 6E90[PC](R9), R9" by the player's car number (car_numbers): animations 1D-24
 006EA0  table car_select_entries_flag_blink u8   # car_select_entries_run 006067 "mov.b 6EA0[PC](R0), 12[R20]" by frames >> 1 & F: flags_visible, 01 01 01 00 01 01 01 00 then 0
-006464  table entry_countdown_lcd_texts u32   # entry_countdown_count 006423 "mov.w 6464[PC](R1), R1" by the frames left in the second (+ 2) / 5: the LCD's 7 texts (006480-0064D4, 14 bytes apart) moved to screen + F12
+# An LCD text of the program's data, a character a byte, as a move copies it into the screen's lcd_text (move_halfwords from entry_countdown_lcd_texts in entry_countdown_count, from lcd_countdown_bars in lcd_race_info_update)
+elements lcd_text_characters u8
+006464  table entry_countdown_lcd_texts u32 lcd_text_characters   # entry_countdown_count 006423 "mov.w 6464[PC](R1), R1" by the frames left in the second (+ 2) / 5: the LCD's 7 texts (006480-0064D4, 14 bytes apart) moved to screen + F12
 0067A9  table car_pass_sounds  u8                    # the sound of a car going by, by its model: passing_car_update 0029D0 "mov.b 67A9(R0), R0" (request_sound), entry_traffic_car_drive 00679A "mov.b 67A9[PC](R0), R0"; census ROM 0067A9-0067B0: 3A 37 36 39 38 39 36 37
 031E7C  table car_select_palette  u32                # scene_palettes[28]: game_mode_play's step 2 (002FBD "movz.bw #28, R19", 002FC1); 03283C
 0068FE  func  step_palette
@@ -816,7 +820,7 @@ field traffic_path_step 04 y u16
 018F48  table lcd_maximum_label  u8   # "Max.:     km/h", lcd_race_info_update (018D90)
 018F56  table lcd_average_label  u8   # "Ave.:     km/h", lcd_race_info_average_page (018DBC)
 018F64  table lcd_finish_label  u8   # "### FINISH ###", lcd_race_info_finish (018E50)
-018EA0  table lcd_countdown_bars  u32  # lcd_race_info_update "mov.w 18EA0[PC](R1), R1" (018BF9) by (the frames to the start mod 30 + 2) / 5: a bar of 14 characters, for move_string into the LCD's text; census ROM 018EA0-018EBB (018EBC-018F10, 14 bytes apart)
+018EA0  table lcd_countdown_bars  u32 lcd_text_characters  # lcd_race_info_update "mov.w 18EA0[PC](R1), R1" (018BF9) by (the frames to the start mod 30 + 2) / 5: a bar of 14 characters, for move_string into the LCD's text; census ROM 018EA0-018EBB (018EBC-018F10, 14 bytes apart)
 018C8C  func  lcd_race_info_time_page
 018C99  func  lcd_race_info_time
 018DBC  func  lcd_race_info_average_page
@@ -1036,12 +1040,12 @@ local goal_actor_run 01498B t0 command
 struct palette_cycle_record C rom
 field palette_cycle_record 00 delay u16          # "mov.h [R10+], 10[R20]" (017C1D)
 field palette_cycle_record 02 frames_left u16    # "mov.h [R10+], 12[R20]" (017C22)
-field palette_cycle_record 04 palette_list u32   # "mov.w [R10+], 38[R20]" (017C27)
+field palette_cycle_record 04 palette_list u32 palette_cycle_steps   # "mov.w [R10+], 38[R20]" (017C27)
 field palette_cycle_record 08 step_frames u32    # "mov.w [R10+], R0" (017C2C), its low half into 14 and 16
 # The steps of a palette_cycle's list (palette_cycle palette_list, 38): the address of a palette list for
 # queue_palette_list, or a negative number of bytes to go back: "mov.w [R10+], R19" (017C8E, 017C98), "test.w
 # R19" (bp), "add.w R19, R10" (017C95)
-elements palette_cycle_steps u32
+elements palette_cycle_steps u32 palette_block_list
 017CAA  func  sunset_fade_start
 017CB8  table sunset_fade_state_jumps  u32   # sunset_fade_start (017CB3 "jmp [R0]") jumps through it by state: 017CC4 017CDB 017CE4
 # A sunset_fade's data (sunset_fade data, 80; stage_background_object_lists): sunset_fade_start reads it with [R10+] from
@@ -1049,19 +1053,20 @@ elements palette_cycle_steps u32
 # (258 1417A4)
 struct sunset_fade_record 8 rom
 field sunset_fade_record 00 delay u32       # "mov.w [R10+], 10[R20]" (017CC9: count)
-field sunset_fade_record 04 fade_list u32   # "mov.w [R10+], 38[R20]" (017CCE)
+field sunset_fade_record 04 fade_list u32 palette_fade_list   # "mov.w [R10+], 38[R20]" (017CCE)
 # A list of palette fades (start_palette_fades, road_surface_fade_back, race_background_fade_palettes and
 # sunset_fade_start read them): a length, which divided by 12 is the number of the palette_fade_entry records
 # after it (the lists say 12 n + 2): sunset_fade_start "mov.w [R19+], R18; divu.w #C, R18" (017CEF, 017CF2);
 # census ROM 14152C (6E: 9 records), 141700 (3E: 5), 141740 (62: 8), 1417A4 (62: 8)
 struct palette_fade_list 4 rom
 field palette_fade_list 00 length u32
+field palette_fade_list 04 fades palette_fade_entry[]   # the list's fades, its length's bytes of them (start_palette_fades)
 # A palette fade of such a list (12 bytes), for start_palette_fade: sunset_fade_start reads it with [R19+]:
 # "mov.d [R19+], R10" (017CFF: R10 and R11), "mov.h [R19+], R12" (017D02), "mov.b [R19+], R0" (017D05), "mov.b
 # [R19+], R1" (017D08); census ROM 141530-141809 (sunset_fade's lists: 143154 143274 2DA0 01 08, ...)
 struct palette_fade_entry C rom
-field palette_fade_entry 00 from u32           # the palette faded from (R10), the to one (R11) next
-field palette_fade_entry 04 to u32
+field palette_fade_entry 00 from u32 palette_colours           # the palette faded from (R10), the to one (R11) next
+field palette_fade_entry 04 to u32 palette_colours
 field palette_fade_entry 08 palette_offset u16 # R12
 field palette_fade_entry 0A blocks u8          # R0
 field palette_fade_entry 0B period u8          # R1
@@ -1151,7 +1156,9 @@ scoped object traffic 14 leader u32 object
 scoped object traffic 18 record u32 rom
 scoped object traffic 1C position s16
 scoped object traffic 20 x_offset s16
+scoped object traffic 22 x_offset_sign s16   # the upper half of the 32-bit stores of x_offset (its sign); the object code reads x_offset as 16 bits and nothing reads this
 scoped object traffic 24 y_offset s16
+scoped object traffic 26 y_offset_sign s16   # the upper half of the 32-bit stores of y_offset (its sign); the object code reads y_offset as 16 bits and nothing reads this
 scoped object traffic 28 position_fraction u16
 scoped object traffic 2C speed s16
 scoped object traffic 30 screen_x s16
@@ -1373,6 +1380,7 @@ field crash_physics 00 bounce_damping u16
 field crash_physics 02 speed_change_decay u16
 field crash_physics 04 push_decay u16
 field crash_physics 06 gravity u16
+field crash_physics 08 crash_entries crash_entry[]   # its crash table, whose address player_car_load_crash_physics keeps (car crash_table: the address after gravity)
 00804A  table car_crash_physics u32 crash_physics
 # Handling of a model (player_car_load_gears 00A010 "mov.w ADCC(R0), R12" by the model -> car handling;
 # 28 bytes a model from 00ADEC): the steering by the wheel (player_car_drive 00A21F "movs.bw [0[R12]](R0),
@@ -1409,7 +1417,7 @@ field gear_list 01 first_ratio u8
 struct torque_point 4 rom
 field torque_point 00 speed s16
 field torque_point 02 force u16
-00B0C0  table car_torque_curves u32 torque_point
+00B0C0  table car_torque_curves u32 torque_point[]   # by model: the address of its torque curve, its points up to one of negative speed (player_car_build_torque_curves)
 # A stretch of a roadside surface (player_car_road_drag: 00B55E "movz.hw [R13], R6" where it ends, from the
 # stage's start, FFFF to its end; 00B5E1-00B5ED "mov.h 2[R13]/4[R13]" its inner and outer edges across the
 # road; wheel_effect_* 00B666 "mov.b 6[R13], 141[R23]" and 00B674 "mov.b 7[R13]" the wheel effect inside and
@@ -1423,8 +1431,8 @@ field roadside_surface 04 outer_edge u16
 field roadside_surface 06 inner_effect u8
 field roadside_surface 07 outer_effect u8
 struct stage_roadside_surfaces 8 rom
-field stage_roadside_surfaces 00 first u32 roadside_surface
-field stage_roadside_surfaces 04 second u32 roadside_surface
+field stage_roadside_surfaces 00 first u32 roadside_surface[]   # a list of the stage's surfaces, the next one taken as the car passes each one's end (player_car_road_drag)
+field stage_roadside_surfaces 04 second u32 roadside_surface[]
 00B78C  table stage_roadside_surface_lists stage_roadside_surfaces
 local player_car_next_surfaces 00B51A R7 stage_then_surfaces stage_roadside_surfaces
 # the player's car's jumps
@@ -1465,7 +1473,7 @@ local player_car_next_surfaces 00B51A R7 stage_then_surfaces stage_roadside_surf
 009E2C  table race_car_passenger_palettes u16   # -> passenger_palette (AE B2 B1 B0 AF B5 B3 B4)
 009E3C  table race_car_driver_frame_counts u8   # -> driver_frames (03 03 03 08 08 03 03 03)
 009E44  table race_car_passenger_frame_counts u8   # -> passenger_frames (03 05 03 03 08 03 03 06)
-18D25C  table race_car_rider_places u32   # race_cars_start 009636 "mov.w 18D25C(R2), R3" (and 01431F): a model's places of the driver, the passenger and the two sprays, 16 bytes a view (-> driver_places, passenger_places + 4, spray_2_places + 8, spray_1_places + C; 18D27C...)
+18D25C  table race_car_rider_places u32 car_part_place[]   # race_cars_start 009636 "mov.w 18D25C(R2), R3" (and 01431F): a model's places of the driver, the passenger and the two sprays, 16 bytes a view (-> driver_places, passenger_places + 4, spray_2_places + 8, spray_1_places + C; 18D27C...)
 009EBC  table race_car_driver_handlers u32   # race_cars_start 0096C4 "mov.w 9EBC[PC](R3), 4[R21]": the handler of the car's driver (014108 for all)
 009EDC  table race_car_passenger_handlers u32   # race_cars_start 0096E1 "mov.w 9EDC[PC](R3), 4[R21]": the passenger's (014108 for all)
 009F7C  table race_car_tag_palettes u16   # race_cars_start 009695 -> tag_palette (2A 28 29 2C 27 2D 2E 2B)
@@ -1479,7 +1487,7 @@ local player_car_next_surfaces 00B51A R7 stage_then_surfaces stage_roadside_surf
 elements object_palette_steps s16                 # an object's palettes to step through, a word each; a negative one goes back that many bytes (branch_arrow_update 00CB7D "movs.hw [R10+], R0", a negative one added to R10 at 00CB84: 5D 5D 5E 5E 5F 5F -14 at D0A0)
 struct sprite_animation 4 rom
 field sprite_animation 00 frame_time u8           # animation_start (00F372 "mov.b [R9], R9") -> object 41, 42
-field sprite_animation 04 frames s32[]           # the frames' entries: 00EF66 "mov.w 4[R12](R26), R12" (by object 40); animation_advance 00F335-00F361 tests them (0 hold, -1 back to frame 0, -2 the animation the next entry names)
+field sprite_animation 04 frames s32[] sprite_frame   # the frames' entries: 00EF66 "mov.w 4[R12](R26), R12" (by object 40); animation_advance 00F335-00F361 tests them (0 hold, -1 back to frame 0, -2 the animation the next entry names)
 elements sprite_animation_pointer u32 sprite_animation
 034138  table  sprite_animations  sprite_animation_pointer  # by object 38: animation_start (00F36A "mov.w 34138(R9), R9"), put_object_sprites (00EF5A), animation_advance, the road rows
 struct sprite_frame 2 rom
@@ -1967,7 +1975,7 @@ field car 6A catch_up u16
 field car 70 revs u16
 field car 74 speed u16
 field car 7C off_road u8
-field car 7E brake_lights u8
+field car 7E brake_lights u16
 field car 80 next_x u32
 field car 84 next_y u32
 field car 88 next_z u32
@@ -2096,7 +2104,7 @@ field background_registers 1C scroll_y_address u32 video_register_words
 field background_registers 20 second_scroll_x_address u32 video_register_words
 field background_registers 24 second_scroll_y_address u32 video_register_words
 field background_registers 28 video_mask u32               # its low half and-ed into video_registers[2]
-field background_registers 2C mixer_address u32 mixer_value_pairs   # the two priorities into the low four bits of it and the next
+field background_registers 2C mixer_address u32 mixer_register_copies   # the two priorities into the low four bits of it and the next
 # A picture on a screen's two tilemaps, for set_up_background (R19: title_background_setups and the records
 # car_presentation, name_entry, route_map, car_select_run and entry_countdown_start pass): "mov.w [R19+], [R11]"
 # (0179B9), "mov.w [R19+], 8[R11]" (0179BD), "mov.b [R19+], [R11]" (0179C5), "mov.b [R19+], 2[R11]" (0179C9),
@@ -2109,8 +2117,8 @@ field background_setup 08 tile_bank u8
 field background_setup 09 second_tile_bank u8
 field background_setup 0A priority u8             # 0: off
 field background_setup 0B second_priority u8
-field background_setup 0C tile_pages u32          # the list of tile pages for queue_tile_pages
-field background_setup 10 palette_list u32        # for queue_palette_list
+field background_setup 0C tile_pages u32 tile_page_entries        # the list of tile pages for queue_tile_pages
+field background_setup 10 palette_list u32 palette_block_list        # for queue_palette_list
 param set_up_background R19 background_setup background_setup
 comment car_name_letter_update A letter of the presented car's name (font 346 at size A0, its colours cycling through 001D70 with step_palette, at y 14). By state: 0 sets itself up (its character from character, x + 8); 1 hidden until delay runs out; 2 slides in from the right, 24 pixels a frame for 14 frames (slide_frames); 3 stays until 120 frames after its start (frames_left); 4 slides out to the left, 24 pixels a frame, and ends once x is negative.
 comment name_entry_update The name entry after a race won at the goal under the course's record time (game step 18, when course_record_beaten says so): the certificate (CONGRATULATIONS!, the course, BEST RUNNER OF THE RACE.) with the time and the name, a drum of letters to pick from. By state: 0 lights the screen's two lamps (button_lamps) and clears lcd_restart_frames, starts name_entry_lcd, the background (set_up_background with 002E4C by screen; start_palette_fades with 13F6C0), the countdown number (time_digits_start), name_entry_object_handlers (name_entry_car, name_entry_drivers, name_entry_course_name, passing_traffic) and the 32 name_entry_letter objects; open, timer 600 frames, wheel_angle A80, the name's text record at x F8, y 54 and the time's at x A8, y 54 (time_to_text of the player's time, screen 410 + 2 * player); 1 the drum spins in (wheel_angle + 20 a frame for 40 frames, spin_frames; a letter is 80 of the turn's 1000), with the seconds left (name_entry_draw_time); 2 the wheel turns the drum a letter at a time, 4 frames a letter (turn_steps; a turn under way turns back if the wheel goes the other way), name_entry_read_wheel takes the next turn when none is under way and name_entry_choose the letter in front, the entry and the time; 3 name_entry_store_record; 4 nothing. Every frame it draws the time and the name (draw_text).
@@ -2328,8 +2336,9 @@ local bar_picture_start 0010E0 R19 bar
 031E88  table title_palette  u32                     # scene_palettes[2B]: game_mode_title (00103C, 001040) and the demo race's set-up (game_mode_play step 10, 0030EA, 0030EE); 159768
 031E8C  table route_map_background_palette  u32      # scene_palettes[2C]: route_map_update's state 0 (00362E, 003632); 031E90
 001A98  table attract_car_scene_palettes  u8         # game_mode_car_presentation 001499 "movz.bw 1A98[PC](R0), R19" by screen attract_car: its scene's number in scene_palettes; census ROM 001A98-001A9F: 27 23 26 25 22 20 24 21
+001AA0  table car_presentation_backgrounds  background_setup   # by screen: car_presentation_update 0016CD "movea.w 1AA0[PC](R0), R19" (R0 = index x 20), for set_up_background
 001A88  table attract_car_picture_animations  u16    # car_presentation_update 0016F6 "movz.hw 1A88[PC](R0), R9" by screen attract_car (animation_start); census ROM 001A88-001A97: 0345 0341 0344 0343 0340 033E 0342 033F
-001AC8  table car_presentation_palette_cycle  u32    # car_presentation_update 001719 "mov.w 1AC8[PC](R0), R19" by palette_step, 001723 its first when it reads 0 (queue_palette_list); census ROM 001AC8-001ADB: 13F724 13F730 13F73C 13F748 0
+001AC8  table car_presentation_palette_cycle  u32 palette_block_list    # car_presentation_update 001719 "mov.w 1AC8[PC](R0), R19" by palette_step, 001723 its first when it reads 0 (queue_palette_list); census ROM 001AC8-001ADB: 13F724 13F730 13F73C 13F748 0
 # The secret code of the car presentation (the controls' bits of staff_credits_code_read_controls, closed by 0):
 # staff_credits_code_watch 0018AD "cmp.b R0, [R10+]", 0018BB "test.b [R10]" through its code_place, which starts here
 # (001894, and again at 0018B2 "movea.b 1ADC[PC], R10" on a wrong one); census ROM 001ADC-001AE6: 02 02 01 01 08 04 08 04 10 20 00
@@ -2362,6 +2371,7 @@ elements rejected_names u32
 002DCC  table certificate_driver_palettes  u16       # name_entry_drivers_update 0023EE "mov.h 2DCC[PC](R0), 3A[R20]" by the car's model; census ROM 002DCC-002DDB: 00B6-00BD
 002E24  table certificate_course_animations  u16     # name_entry_course_name_update 002445 "movz.hw 2E24[PC](R0), R9" by the course (screen built_stage - 15); census ROM 002E24-002E37: 02DF-02E8
 002E38  table certificate_course_palettes  u16       # name_entry_course_name_update 00243D "mov.h 2E38[PC](R0), 3A[R20]" by the course; census ROM 002E38-002E4B: 000E-0017
+002E4C  table name_entry_backgrounds  background_setup   # by screen: name_entry_update 001F09 "movea.w 2E4C[PC](R0), R19" (R0 = index x 20), for set_up_background
 002DFC  table ranking_course_banner_animations  u16  # ranking_course_banner_update 0026D4 "movz.hw 2DFC[PC](R0), R9" by course; census ROM 002DFC-002E0F: 02D4-02DD
 002E10  table ranking_course_banner_palettes  u16    # ranking_course_banner_update 0026CC "mov.h 2E10[PC](R0), 3A[R20]" by course; census ROM 002E10-002E23: 0004-000D
 002D2A  table ranking_record_character_xs  u16       # ranking_record_character_update 0027E8 "mov.h 2D2A[PC](R0), 30[R20]" by index (where it slides in from); census ROM 002D2A-002D3F: FF60 FF70 ... FFF0 0000
@@ -2433,6 +2443,7 @@ field route_map_registers 38 second_register_scroll_y_address u32
 field route_map_registers 3C second_tile_bank_address u32
 0047E8  table route_map_register_sets  route_map_registers
 0048B8  table route_map_close_up_pages  u32          # by screen: route_map_update 0036FE "mov.w 48B8[PC](R0), [80[R20]]" (the close-up map's page numbers); census ROM 0048B8-0048BF: 08070605 1211100F
+004868  table route_map_backgrounds  background_setup   # by screen x 2 + its first branch (screen route_branches): route_map_update 003622 "movea.w 4868[PC](R0), R19", for set_up_background
 0048C0  table route_map_routes_pages  u32            # by screen: route_map_update 003C37 "mov.w 48C0[PC](R0), [80[R20]]" (the routes' pages); census ROM 0048C0-0048C7: 0403 0E0D
 0048C8  table route_map_world_pages  u32             # by screen: route_map_update 003D52 "mov.w 48C8[PC](R0), [A8[R20]]" (the world's pages); census ROM 0048C8-0048CF: 0201 0C0B
 0048D0  table route_map_start_scroll_xs  u16         # by first_branch: route_map_update 003727 "mov.h 48D0[PC](R0), [84[R20]]"; census ROM 0048D0-0048D3: 00E0 01E0
@@ -2667,13 +2678,13 @@ field road_surface_layer_setup 04 scroll_x_address u32 video_register_words    #
 field road_surface_layer_setup 08 scroll_y_address u32 video_register_words    # "mov.w [R10+], R0; mov.h #0, [R0]" (016C49)
 field road_surface_layer_setup 0C tile_bank_address u32 tile_bank_values   # "mov.w [R10+], R11; mov.b #0, [R11]" (016C55)
 field road_surface_layer_setup 10 page_register u32 page_select       # "mov.w [R10+], 54[R20]" (016C5C)
-field road_surface_layer_setup 14 mixer_address u32 mixer_value_pairs       # "mov.w [R10+], R11" (016C61), then its low bits 8
+field road_surface_layer_setup 14 mixer_address u32 mixer_register_copies       # "mov.w [R10+], R11" (016C61), then its low bits 8
 field road_surface_layer_setup 18 line_scroll_table u32   # "mov.w [R10+], 58[R20]" (016C78)
 field road_surface_layer_setup 1C line_select_table u32   # "mov.w [R10], R10" (016C7D) -> 5C[R20]
 01710C  table road_surface_layer_setups  road_surface_layer_setup   # census ROM 01710C-01714B (screen 1: 03FA E005 20E2A2 20E2A6 20E2B2 20E248 208186 31C1C0 31C5C0; screen 2: 03F5 E00A 20E2AA 20E2AE 20E2B3 20E24C 218188 31C3C0 31C7C0)
 03CC80  table stage_road_page_sets  u8   # road_surface_start "mov.b 3CC80(R0), D[R20]" (016CB4) by screen first_stage: page_set; census ROM 03CC80-03CC9F (05 for all 32)
 01714C  table road_surface_page_words  u32   # the road's page words, five (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_start copies them into its page_table (18) with "movcu.h 1714C[PC], R0, 18[R20], R0" (016CDE, 1E halfwords); census ROM 01714C-017187 (36332C29 36332C29 34332A29 34352A2B 34352A2B, ...)
-031C38  table stage_road_palettes  u32  # road_surface_start "mov.w 31C38(R0), R19" (016CEC) by screen first_stage: a record of the road's palettes, the address of its fade list first ("mov.w [R19+], 208[R25]" 016CF4: screen road_palette_fades), then its palette list (queue_palette_list); census ROM 031C38-031CB7 (32 stages, 146054-1472BC)
+031C38  table stage_road_palettes  u32 stage_road_palette_record  # road_surface_start "mov.w 31C38(R0), R19" (016CEC) by screen first_stage: a record of the road's palettes, the address of its fade list first ("mov.w [R19+], 208[R25]" 016CF4: screen road_palette_fades), then its palette list (queue_palette_list); census ROM 031C38-031CB7 (32 stages, 146054-1472BC)
 016D00  func  road_surface_lines
 016E8C  func  road_surface_halfway_lines
 016FEB  func  road_surface_fill_lines
@@ -2702,30 +2713,30 @@ field race_background_layer_setup 00 scroll_x_address u32 video_register_words  
 field race_background_layer_setup 04 scroll_y_address u32 video_register_words   # "mov.w [R10+], 1C[R20]" (017553)
 field race_background_layer_setup 08 tile_bank_address u32 tilemap_banks   # "mov.w [R10+], 24[R20]" (017558)
 field race_background_layer_setup 0C page_word_address u32 tilemap_pages   # "mov.w [R10+], R11" (01755D) -> 20[R20], the first page word into it
-field race_background_layer_setup 10 mixer_address u32 mixer_value_pairs   # "mov.w [R10], R10" (017572), then its low bits 4
+field race_background_layer_setup 10 mixer_address u32 mixer_register_copies   # "mov.w [R10], R10" (017572), then its low bits 4
 017A50  table race_background_layer_setups  race_background_layer_setup   # census ROM 017A50-017A77 (screen 1: 20E292 20E296 20E2B0 20E240 208182; screen 2: 20E29A 20E29E 20E2B1 20E244 218184)
 017AE0  table background_page_words  u32   # the background's page words, four a set (16 bytes) by page half x 2 + branch: race_background_update "mov.w 17AE0[PC](R0), [R11]" (01756B: R0 = page_half << 3, the set's first) and "movea.w 17AE0[PC](R0), 28[R20]" (017707: the set into next_page_words); census ROM 017AE0-017B5F (8 sets: 04030201 04070209 08070609 08070605, ...)
 # The page words a background change puts into the tilemap one at a time (race_background next_page_words, 28,
 # four from a set of background_page_words): "mov.w [R10+], [20[R20]]" (01783F), "mov.w R10, 28[R20]"
 elements background_page_word_steps u32
 109684  table no_background_tile_pages  u32   # the tile pages race_background_update unpacks for a stage without a background of its own (stage 0: stage_backgrounds FF), "movea.b 109684, R11" (0175A0), four words before background_tile_page_lists; census ROM 109684-109693 (110F67 1111BB 11135F 1114BD)
-13F9D4  table no_background_palettes  u32   # the palette list race_background_update queues then (queue_palette_list), "movea.b 13F9D4, R19" (01761D)
+13F9D4  table no_background_palettes  palette_block_list   # the palette list race_background_update queues then (queue_palette_list), "movea.b 13F9D4, R19" (01761D)
 017B60  table stage_backgrounds  u8  # race_background_update "not.b 17B60[PC](R0), R0" (017592) by screen first_stage (not read for stage 0: none): background; census ROM 017B60-017B7E (FF, then 00-29)
 017B7F  table background_tile_banks  u8   # race_background_update "mov.b 17B7F[PC](R0), [24[R20]]" (01776B) by background, at a change; census ROM 017B7F-017BA8 (42 backgrounds, 0-3)
 017BA9  table stage_tile_banks  u8   # race_background_update "mov.b 17BA9[PC](R0), [24[R20]]" (0175EC) by screen first_stage, at the start; census ROM 017BA9-017BC7 (31 stages, 0-3)
-109694  table background_tile_page_lists  u32   # by background: the address of its list of tile pages (nine words, 36 bytes apart), "mov.w 109694(R0), R11" (race_background_update 0175AC, + 10: the last four at the start; 0176AC: all nine at a change), then "or.w [R11+], R1" into page_list (0175D1, 0176D1); ranking_background_load too (002B36); census ROM 109694-10973B (42 lists, 1097B8-109D7C)
+109694  table background_tile_page_lists  u32 tile_page_entries   # by background: the address of its list of tile pages (nine words, 36 bytes apart), "mov.w 109694(R0), R11" (race_background_update 0175AC, + 10: the last four at the start; 0176AC: all nine at a change), then "or.w [R11+], R1" into page_list (0175D1, 0176D1); ranking_background_load too (002B36); census ROM 109694-10973B (42 lists, 1097B8-109D7C)
 109E0C  table background_packed_tile_pages  u8   # the tile pages' packed data, to 12297B, which unpack and unpack_queued_step read a byte at a time (and halfwords of it) from the addresses the lists of background_tile_page_lists give
-0318CC  table background_palettes  u32   # by background: its palette list for queue_palette_list, "mov.w 318CC(R0), R19" (race_background_update 01763E, 01775D; ranking_background_load 002B48); census ROM 0318CC-031973 (42, 13FA50-14063C)
-0319F0  table background_leaving_fades  u32   # by background: the fades started as the old background leaves the screen (change_step 1, at 2A0): race_background_update "mov.w 319F0(R0), R19" (017788) for start_palette_fades; census ROM 0319F0-031A97 (42, 1406FC-140B68)
-031B14  table background_palette_fades  u32   # by background: its palette fades (race_background_fade_palettes), "mov.w 31B14(R0), R19" (race_background_update 01762C, 0177DF; ranking_background_load 002B3E, with start_palette_fades); census ROM 031B14-031BBB (42, 140C50-14145C)
+0318CC  table background_palettes  u32 palette_block_list   # by background: its palette list for queue_palette_list, "mov.w 318CC(R0), R19" (race_background_update 01763E, 01775D; ranking_background_load 002B48); census ROM 0318CC-031973 (42, 13FA50-14063C)
+0319F0  table background_leaving_fades  u32 palette_fade_list   # by background: the fades started as the old background leaves the screen (change_step 1, at 2A0): race_background_update "mov.w 319F0(R0), R19" (017788) for start_palette_fades; census ROM 0319F0-031A97 (42, 1406FC-140B68)
+031B14  table background_palette_fades  u32 palette_fade_list   # by background: its palette fades (race_background_fade_palettes), "mov.w 31B14(R0), R19" (race_background_update 01762C, 0177DF; ranking_background_load 002B3E, with start_palette_fades); census ROM 031B14-031BBB (42, 140C50-14145C)
 031CB8  table background_road_palettes  u32 road_palette_record   # by background: as stage_road_palettes, at a change: race_background_update "mov.w 31CB8(R0), R19" (01779A; "test.w R19", 0 none), the fade list's address first ("mov.w [R19+], 208[R25]" 0177A7: screen road_palette_fades), then the fades to start (start_palette_fades); census ROM 031CB8-031D5F (42, 1472BC-14ADAC: no 0)
 01789C  func  race_background_start_lower_animation
-017904  table background_lower_animation_tile_pages  u32   # race_background_start_lower_animation "mov.w 17904[PC](R0), R10" (0178A0) by screen index: the tile pages of the lower animation, for queue_tile_pages; census ROM 017904-01790B (1095FC 109610)
+017904  table background_lower_animation_tile_pages  u32 tile_page_entries   # race_background_start_lower_animation "mov.w 17904[PC](R0), R10" (0178A0) by screen index: the tile pages of the lower animation, for queue_tile_pages; census ROM 017904-01790B (1095FC 109610)
 0178C9  func  race_background_lower_animation_wait
 0178D5  func  race_background_lower_animation_cycle
 01790C  table background_lower_animation_page_pairs  u16   # race_background_lower_animation_cycle "mov.h 1790C[PC](R0), 2[20[R20]]" (0178F3) by step (0-7, two on each time): the lower half of the page word; census ROM 01790C-01791B (3131 5959 3B3B 5A5A 4545 5B5B 4F4F 5C5C)
 01791C  func  race_background_start_upper_animation
-017988  table background_upper_animation_tile_pages  u32   # race_background_start_upper_animation "mov.w 17988[PC](R0), R10" (017923) by animation x 2 + screen index: the tile pages for queue_tile_pages; census ROM 017988-01799F (109624 109654 109634 109664 109644 109674)
+017988  table background_upper_animation_tile_pages  u32 tile_page_entries   # race_background_start_upper_animation "mov.w 17988[PC](R0), R10" (017923) by animation x 2 + screen index: the tile pages for queue_tile_pages; census ROM 017988-01799F (109624 109654 109634 109664 109644 109674)
 01794C  func  race_background_upper_animation_wait
 017958  func  race_background_upper_animation_cycle
 0179A0  table background_upper_animation_page_pairs  u16   # race_background_upper_animation_cycle "mov.h 179A0[PC](R0), [20[R20]]" (01797B) by step (0, 2, 4 and the screen's 1, 3, 5): the upper half of the page word; census ROM 0179A0-0179AB (3131 5959 3B3B 5A5A 4545 5B5B)
@@ -3132,6 +3143,7 @@ field screen 48 link_status_changed u8
 field screen 80 game_mode u8
 field screen 81 mode_step u8
 field screen 82 game_step u8
+field screen 83 game_mode_spare u8   # the byte after game_step, which the game mode's 32-bit writes clear with it (game_mode_power_on, \"mov.w #2, 80[R25]\"); nothing reads it
 field screen 88 mode_timer u16
 field screen 90 demo_flags u32
 field screen 94 flags u32
@@ -3143,6 +3155,7 @@ field screen E2 entry_countdown_shown u8
 field screen 100 wheel u8
 field screen 101 gas u8
 field screen 102 brake u8
+field screen 103 controls_spare u8   # the byte after brake, which queue_screen_inputs writes with the controls (always 0); nothing reads it
 field screen 108 input_write_place u8
 field screen 109 input_read_place u8
 field screen 110 buttons u32
@@ -3488,7 +3501,7 @@ comment init_mixer Sets the screen's mixer (registers 00-4E at mixer) and its tw
 comment init_io_chips Sets up the two I/O chips at boot: ports D, G and H outputs and cleared (the coin meters, lamps, LCD, the tile bank and the EEPROM's lines), each chip's screen on and the sound CPU out of reset (CNT 6 and 86), and the first bank of the wheels' and pedals' A/D inputs (C00060).
 comment upload_boot_palettes Uploads three blocks of colours straight into the screen's palette RAM at boot (upload_palette): 256 colours at 9E00 (03153C), 16 at 9C00 (031740) and 2560 at 8000 (153904).
 comment init_video Sets up video RAM: cleared (clear_video_ram), the text font (load_text_font), the video control register 31FF00 (0800; 0A00 flipped, flip_screen) and the registers 31FF02-31FF8F from 010B12, with their copy at video_registers, the four tile layers' scroll targets (scroll_targets-20E2AF) cleared, then reset_tile_layers.
-comment reset_tile_layers Puts the screen's two tile layers (NBG0 and NBG2 for screen 1, NBG1 and NBG3 for screen 2) back at page 0 and scroll 0: their page selects (video_registers[32], video_registers[36]) and scroll targets (scroll_targets, scroll_targets[4]) cleared, and bits 12-15 of the video control register (31FF00, video_registers) cleared. Used as the game modes start.
+comment reset_tile_layers Puts the screen's two tile layers (NBG0 and NBG2 for screen 1, NBG1 and NBG3 for screen 2) back at page 0 and scroll 0: their page selects (video_registers[32], video_registers[36]) and scroll targets (scroll_targets, scroll_targets[8]) cleared, and bits 12-15 of the video control register (31FF00, video_registers) cleared. Used as the game modes start.
 comment clear_video_ram Clears video RAM below its registers (300000-31FEFF): the tilemap pages, the text layer and its font, the bitmap and the line tables.
 comment clear_text_layer Clears the text layer's first 30 rows (64 cells each, 31F000-31FEFF).
 comment load_text_font Copies the text layer's characters (3000 bytes, 384 characters of 8x8 pixels) from 104020 into video RAM at 318000.
@@ -3805,7 +3818,7 @@ comment test_mode_send_sound Sends the test mode's next queued sound request (te
 comment test_mode_queue_sound_screen_2 test_mode_queue_sound for screen 2's sound CPU commands (the high byte set).
 comment test_mode_queue_sound Puts sound request R0 in the test mode's ring of 16 (test_mode_sound_queue at test_mode_sound_queue_write) for test_mode_send_sound: screen 1's, or screen 2's with the high byte set (test_mode_queue_sound_screen_2).
 comment vblank_update_mixer In the vertical blank, a screen's mixer and colours: while the screen's flags bit 0 is set, a step of its colour offsets (step_screen_fade) into the mixer's colour offset registers (3E-4B); flags bit 2 (cleared) sends the mixer settings at 160 of the screen (registers 00-3D and 4C-4F); flags bit 3 (cleared) makes the set at 1B0 the current one and sends it; then the queued palettes (upload_queued_palettes).
-comment vblank_update_scrolls In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was running from video_registers[8] and video_registers[16] as they are; those of the other screen half-way between the values they have (video_registers[8], video_registers[16] by screen) and the new ones (scroll_targets, scroll_targets[4]), which become their values: the in-between frame of the screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05 from video_registers[2]'s second byte, which steps by 4 (bits 2-3).
+comment vblank_update_scrolls In the vertical blank, the tilemaps' scrolls (two per screen): those of the screen whose task was running from video_registers[8] and video_registers[16] as they are; those of the other screen half-way between the values they have (video_registers[8], video_registers[16] by screen) and the new ones (scroll_targets, scroll_targets[8]), which become their values: the in-between frame of the screen whose task did not run (each task's scrolls change every other frame); and the byte at 31FF05 from video_registers[2]'s second byte, which steps by 4 (bits 2-3).
 comment check_test_button Turns the test mode on (test_mode_on FF) when TEST has just been pressed (bit 7 of switches_pressed, the inputs newly pressed); the boot task's loop then runs the test mode.
 comment send_sound_requests In the vertical blank, sends the screen's next sound request to the sound CPU: one from its ring of 32 (queue_sound's: sound_queue_read, sound_queue_write, the requests after them) to its command byte (SOUND_COMMAND_1 for screen 1, SOUND_COMMAND_2 for screen 2), and one from its second ring at 840 (second_sound_queue_read, second_sound_queue_write; only the unused request_second_sound fills it) to the byte 8 after it, which the sound program never reads.
 comment count_total_time Counts the bookkeeping's TOTAL TIME (701F10, seconds, kept with its copy and checksum), outside the test mode only: total_time_count gains 17 every vertical blank and a second passes at each 1000 (2000 for every 73rd second).
@@ -4249,7 +4262,7 @@ field screen_sound_page 18 tyre_noise u8
 field screen 10 eye_distance u16
 field screen 12 draw_distance u16
 field screen 18 view_pitch_base u16
-field screen 19F colour_offset_mode u8
+field screen 19E colour_offset_select u16   # mixer register 3E as the screen keeps it: which colour offset each layer takes (bit 15, and a bit for each layer); init_mixer and the vertical blank copy it with 40-4A as halfwords, step_screen_fade sets its high byte to C0 ("mov.b #C0, [R19+]" 011713, at 19F)
 field screen 200 road_top_line u16
 field screen 202 background_changing u8
 field screen 203 stage_background_change u8
@@ -4374,7 +4387,7 @@ field race 5E finished u8
 20E0FD  var  screen_2_vblanks_high u8
 20E0FF  var  screen_1_vblanks_high u8
 20E104  var  second_io_chip_port_f u8
-20E290  var  scroll_targets[8] u32
+20E290  var  scroll_targets[16] u16   # the four tile layers' scroll targets, x and y two halfwords each (the scroll in the second: 20E292 NBG0's x), written a halfword at a time (video_register_words: title_screen_layer_setups, road_surface_start) and read as one word (vblank_update_scrolls)
 20E2B0  var  tile_banks[4] u8
 20FC0B  var  master_time_difficulty[6] s8
 20FC46  var  race_copy_window_segments u16
@@ -4836,7 +4849,7 @@ local ranking_background_load 002B5D,002B79 R0 page_numbers
 local ranking_background_load 002BF5,002BF8,002C03 R0 mixer_priority
 local ranking_background_load 002B50,002B66 R10 background_pages tile_page_entries
 local ranking_background_load 002B84 R10 queued_pages
-local ranking_background_load 002BEF,002C00 R10 mixer_place mixer_value_pairs
+local ranking_background_load 002BEF,002C00 R10 mixer_place mixer_register_copies
 local ranking_background_load 002B54,002B76 R11 page_place object_tile_pages
 local ranking_background_load 002B63,002B7C R9 pages_to_copy
 local ranking_background_load 002B48 R19 colour_list
@@ -5124,10 +5137,10 @@ constant boot 16000 BOARD_OFF_LOOPS                    # the busy wait after the
 109420  table  boot_tile_pages_5d  u32                 # a list of tile pages for unpack_tile_pages (initialise_board 0009C5 "movea.b 109420, R10"): page 5D (packed at 10B439), closed by FFFFFFFF
 109428  table  boot_tile_pages_5e  u32                 # the same (0009D2): page 5E (10B57F)
 109578  table  boot_tile_pages_29_to_4e  u32           # the same (0009DF): pages 29-30, 33-3A, 3D-44, 47-4E (10C072...), closed by FFFFFFFF at 1095F8
-13F66C  table  entry_countdown_palette_fades  u32      # a palette fade list (palette_fade_list: length 26, three palette_fade_entry records) for start_palette_fades: entry_countdown_start 00636A "movea.b 13F66C, R19"
-13F6C0  table  name_entry_palette_fades  u32           # the same (length 26, three fades): name_entry_update 001F15 "movea.b 13F6C0, R19"
-13F95C  table  manual_picked_palettes  u32             # a palette list for queue_palette_list (length 0A: one entry, 142054 to 21C0): transmission_choice_run 005A9E when the wheel picks manual (car transmission 1)
-13F998  table  automatic_picked_palettes  u32          # the same (one entry, 142074 to 21E0): transmission_choice_run 005A93 when the wheel picks automatic
+13F66C  table  entry_countdown_palette_fades  palette_fade_list      # a palette fade list (palette_fade_list: length 26, three palette_fade_entry records) for start_palette_fades: entry_countdown_start 00636A "movea.b 13F66C, R19"
+13F6C0  table  name_entry_palette_fades  palette_fade_list           # the same (length 26, three fades): name_entry_update 001F15 "movea.b 13F6C0, R19"
+13F95C  table  manual_picked_palettes  palette_block_list             # a palette list for queue_palette_list (length 0A: one entry, 142054 to 21C0): transmission_choice_run 005A9E when the wheel picks manual (car transmission 1)
+13F998  table  automatic_picked_palettes  palette_block_list   # the same (one entry, 142074 to 21E0): transmission_choice_run 005A93 when the wheel picks automatic
 # ======== locals (batch L2) ========
 # the player's car's physics and course, the race's display, the race's logic and the link between cabinets:
 # their parameters, locals and values worked out once by name, and the ROM addresses they use as numbers
@@ -7931,7 +7944,7 @@ field seat_credits 01 coin_units u8       # the coin units toward the next credi
 field seat_credits 02 bonus_units u8      # the coin units toward the next bonus unit: one unit more each bonus_adder (insert_coin)
 field seat_credits 04 bookkeeping_byte u8      # seat1_bookkeeping_byte, seat2_bookkeeping_byte (check_game_start takes a credit: "dec.b [R2]" 00089B, "mov.b #0, 2[R2]" 00089D)
 struct coin_meter 3            # a coin meter's pulse: coin_meters (20E080), 3 bytes for each chute's meter (seat 1's first and second, then seat 2's); pulse_coin_meter drives it
-field coin_meter 00 frames u16            # the vertical blanks its bit stays on (low byte), then off (high byte): 6 and 6 at a pulse; pulse_coin_meter reads and writes the two as one halfword
+# coin_meter 00: the vertical blanks its bit stays on (low byte), then off (high byte): 6 and 6 at a pulse; pulse_coin_meter reads and writes the two as one halfword (the C reads and writes its two bytes)
 field coin_meter 00 frames_on u8          # the first of them, counted down first
 field coin_meter 01 frames_off u8         # then the second
 field coin_meter 02 pulses_owed u8        # the pulses still owed: insert_coin adds one a coin (coin_chute_variant pulses_owed)
@@ -8040,8 +8053,8 @@ local network_check_blink_text 00D702,00D708 R20 current_object text_characters 
 # 00D04C-212C80: the program ROM's (the HUD's, the credits line's, staff_credits_texts) and work RAM's (the
 # objects' own: lap_timer_update's at 80, name_entry_update's at 9A and A4)
 struct sprite_text_record 6 rom
-field sprite_text_record 00 place u32
 field sprite_text_record 00 x u16            # place's low half: staff_credits_texts end at a negative one (staff_credits_code_show "test.h [R18]" 0018FA)
+field sprite_text_record 02 y u16            # the place's high half: draw_text reads the two as one word ("mov.w [R19+], R3" 011A62, then "rot.w #10, R3") and turns it round (y, x)
 field sprite_text_record 04 attribute u16
 field sprite_text_record 06 characters u8[]
 local draw_text 011A32 R18 text text_characters
@@ -8058,7 +8071,9 @@ local upload_palette 011627 R19 colour_block palette_colours
 # [R19+], R9; shl.w #FD, R9" 011652: 8 a block), then the blocks (palette_block_entry); census 01AD64-214B28:
 # the program ROM's and work RAM's (a palette_fade's own at 28)
 struct palette_block_list 4 rom
-field palette_block_list 00 length u32
+field palette_block_list 00 length u16
+field palette_block_list 02 length_high u16   # the length's high half, 0 in every list: upload_palette_list reads the two as one word ("mov.w [R19+], R9" 011652), where a fade's own list (palette_fade upload_length, "mov.h #8, 28[R21]" 01858E) has only its low half written
+field palette_block_list 04 entries palette_block_entry[]   # the list's blocks, its length's bytes of them (upload_palette_list)
 # One of them: the colours' address ("mov.w [R19+], R17" 011659), their place in the palette (the low half of the
 # address, "mov.h [R19+], R18" 01165C) and how many blocks of 16 colours ("movz.hw [R19+], R8" 01165F; the copy
 # reads the same 32 bytes for each: "mov.d [R17], [R18+]" 011662 to "mov.d 18[R17], [R18+]" 011670)
@@ -8143,12 +8158,12 @@ field turntable_scenery_item 04 height s16
 # ("mov.w #2, C0[R10]", "mov.w #8, C8[R10]"): each byte has its field, and the four together theirs
 # (checkpoint_all, leader_all), which those 32-bit stores write
 struct screen_lamps CC
-field screen_lamps C0 checkpoint_all u32      # the checkpoint lamp's four bytes, which game_mode_play and entry_invitation_step set at once
+# screen_lamps C0: the checkpoint lamp's four bytes, which game_mode_play and entry_invitation_step set at once (the C writes its four bytes)
 field screen_lamps C0 checkpoint u8           # its state (checkpoint_lamp, checkpoint_lamp_2)
 field screen_lamps C1 checkpoint_blinks u8    # checkpoint_lamp_blinks: FF blinks for good
 field screen_lamps C2 checkpoint_period u8    # checkpoint_lamp_period
 field screen_lamps C3 checkpoint_timer u8     # checkpoint_lamp_timer
-field screen_lamps C8 leader_all u32          # the race leader lamp's four bytes
+# screen_lamps C8: the race leader lamp's four bytes (the C writes its four bytes)
 field screen_lamps C8 leader u8               # its state (leader_lamp, leader_lamp_2)
 field screen_lamps C9 leader_blinks u8
 field screen_lamps CA leader_period u8
@@ -8380,10 +8395,10 @@ elements vblank_count u8 ram                        # the vertical blanks a scre
 # the four places after the last (blank_sprite_places, 00F8ED "mov.w R26, [R27+]"); 00F726 "mov.w #F800F800, 4[R27]"
 # marks an item off the screen
 struct sprite_place 10
-field sprite_place 00 size u32            # height and width at once (the blank after a row's last item)
+# sprite_place 00: height and width at once (the blank after a row's last item), which the C writes as its two fields
 field sprite_place 00 height u16          # draw_object_smoothed: height_scale; the road rows: the sprite's height (word 2 less its bits)
 field sprite_place 02 width u16           # width_scale; the sprite's width (word 3 less its bits)
-field sprite_place 04 place u32           # y and x at once: F800F800 off the screen
+# sprite_place 04: y and x at once: F800F800 off the screen, which the C writes as its two fields
 field sprite_place 04 y u16
 field sprite_place 06 x u16
 field sprite_place 08 rom_offset u16      # the road rows: the graphics' offset (word 6): the halfway copy is drawn only when it is the same sprite as last frame's
@@ -8391,7 +8406,7 @@ field sprite_place 0A mirror_x u16        # road_row_pair_draw: the mirrored ite
 # The same places a word at a time, as the road rows blank the four after their last item (00F8ED-00F8FF,
 # 00FC9E-00FCB0 "mov.w R26, [R27+]; and.h R21, R27": moved within the ring's page, which the record's type does not
 # follow)
-elements sprite_place_words u32 ram
+elements sprite_place_words u16 ram
 # A frame of an animation (sprite_animation frames): its piece count, then its pieces (sprite_piece, 8 bytes each),
 # a halfword at a time: fork_branch_sprite reads its first piece's attributes and sprite straight from the frame
 # (014072 "mov.h 2[R26], R27", 014076 "movz.hw 4[R26], R26")
@@ -8417,10 +8432,10 @@ local race_background_start_objects 017BD2 R10 object_list object_start_list   #
 # 01756B "mov.w 17AE0[PC](R0), [R11]", 01783F "mov.w [R10+], [20[R20]]"; race_background_lower_animation_cycle 0178F3
 # "mov.h ..., 2[20[R20]]", race_background_upper_animation_cycle 01797B "mov.h ..., [20[R20]]"
 struct tilemap_pages C
-field tilemap_pages 00 pages u32
 field tilemap_pages 00 upper_pages u16
 field tilemap_pages 02 lower_pages u16
-field tilemap_pages 08 second_pages u32
+field tilemap_pages 08 second_upper_pages u16
+field tilemap_pages 0A second_lower_pages u16
 local race_background_update 01755D R11 page_word_address   # "mov.w [R10+], R11": the tilemap's page selects (race_background_layer_setup page_word_address): named here, or the C names it after its type
 local set_up_background 0179B6 R11 pages_address   # "mov.w [R10+], R11": background_registers pages_address: named here, or the C names it after its type
 # A screen's two tilemaps' tile banks (tile_banks, 20E2B0 for screen 1: NBG0, NBG2 2 on; 20E2B1 for screen 2: NBG1,
@@ -8443,7 +8458,14 @@ local set_up_background 0179C2 R11 tile_banks_address   # "mov.w [R10+], R11": b
 # (into screen road_palette_fades), then the fades to start (start_palette_fades, a palette_fade_list):
 # race_background_update 0177A7 "mov.w [R19+], 208[R25]"
 struct road_palette_record 4 rom
-field road_palette_record 00 road_fades u32
+field road_palette_record 00 road_fades u32 palette_fade_list   # the road's fades (screen road_palette_fades)
+field road_palette_record 04 fades palette_fade_list[]   # then the fades to start, a palette_fade_list (start_palette_fades)
+# A stage's road palettes (stage_road_palettes): the address of the road's fade list (into screen
+# road_palette_fades), then its palette list: road_surface_start 016CF4 "mov.w [R19+], 208[R25]", then
+# queue_palette_list with what follows
+struct stage_road_palette_record 4 rom
+field stage_road_palette_record 00 road_fades u32 palette_fade_list   # the road's fades (screen road_palette_fades)
+field stage_road_palette_record 04 palettes palette_block_list[]   # then the palette list to upload (queue_palette_list)
 # The palette fades a sunset_fade started, an object each from its + 18 (sunset_fade fades, count of them):
 # sunset_fade_start 017D11 "mov.w R21, [R17+]", sunset_fade_wait 017D2A "mov.w [R10+], R1", 017D3C "mov.w #0, -4[R10]"
 elements fade_objects u32 ram object
@@ -8507,10 +8529,10 @@ param road_surface_fill_lines R11 line_scroll_place line_scroll_values   # the l
 elements tile_page_places u32 ram             # road_tiles_change's lists of the four tile pages it copies from (object 18) and to (object 28): their addresses in the video RAM (300000 + 400 * page; "mov.w R0, [R10+]" 0171F8-017220)
 elements road_page_table_bytes u8 ram         # the road's page table (road_surface 18), every other byte from table_half: road_tiles_change_update writes its half a byte at a time ("mov.b [R12+], [R11]" then 2 on, 017280-017292)
 elements tiles_change_flags u8 ram            # the road's flag a road_tiles_change goes by (road_tiles_change flag: road_surface first_tiles_flag 0A or second_tiles_flag 0B), read until it turns off (017319 "test.b [3C[R20]]")
-elements page_select u32 ram             # a tilemap's page word in video_registers (20E248 for screen 1's road, 20E24C screen 2's: road_surface_layer_setup page_register), its four pages a byte each; road_surface_update writes it each frame (016B8A "mov.w -24[R20](R0), [54[R20]]")
+elements page_select u16 ram             # a tilemap's page word in video_registers, as its two halfwords (20E248 for screen 1's road, 20E24C screen 2's: road_surface_layer_setup page_register), its four pages a byte each; road_surface_update writes it each frame (016B8A "mov.w -24[R20](R0), [54[R20]]")
 elements video_register_words u16 ram         # the copy of a tilemap's scroll register in the game's variables (scroll_targets: 20E2A2, 20E2A6 for screen 1's road), which the VBLANK sends (road_surface_start "mov.h #160, [R0]" 016C40, "mov.h #0, [R0]" 016C49)
 elements tile_bank_values u8 ram              # a tilemap's tile bank in tile_banks (20E2B2, 20E2B3: road_surface_start "mov.b #0, [R11]" 016C55)
-elements mixer_value_pairs u32 ram            # two of a screen's mixer register copies (screen mixer_values: 186 for screen 1's road, 188 screen 2's), read and written as one word (road_surface_start 016C64-016C6E: the road's priority 8 into the low four bits)
+elements mixer_register_copies u16 ram        # a screen's mixer register copies (screen mixer_values: 186 for screen 1's road, 188 screen 2's), two of them read and written as one word (road_surface_start 016C64-016C6E: the road's priority 8 into the low four bits)
 elements road_palette_lists u32               # a stage's road palettes (stage_road_palettes): the address of its fade list ("mov.w [R19+], 208[R25]" 016CF4: screen road_palette_fades), then its palette list (queue_palette_list)
 # The race cars' riders and sprays (race_car_draw, race_car_draw_spray): 16 bytes each in the race car, from 90
 struct race_car_rider 10      # a rider of the car, 16 bytes in the race car: the driver at 90, the passenger at A0 (race_cars_start 0095C8-009643, race_car_draw first_rider and second_rider)
@@ -8577,7 +8599,7 @@ field time_digit 01 digit u8              # the digit shown
 field time_digit 02 width u16             # its width (object width_scale), 40 a frame from 100
 field time_digit 04 remaining u32         # the digits from it up when it last changed (0: a leading zero, left out)
 # The road's segments (player_car_project_road copies the width code and the road event as one halfword: "mov.h 14[R18], C[R19]" 0101F1)
-field road_segment 14 width_code_and_event u16   # the width code (low byte) and the road event (high byte) at once
+# road_segment 14: the width code (low byte) and the road event (high byte) at once (the C reads and writes its two bytes)
 
 # ======== memory reached through pointers (batch P1) ========
 # The system's files (test_mode.c, sound.c, main.c, interrupts.c, coins.c, lcd.c) and the video's (video.c,
@@ -8641,7 +8663,8 @@ param pulse_coin_meter R12 meter_bits
 struct course_entry 6 rom            # an entry of a course's stream (car course): a section's length, or a command when negative (FFFF goes on at the address after it; FFFE a fork and FFFA end the road; FFFC, a stage's command, is 4 bytes long)
 field course_entry 00 length u16                 # init_screen "movz.hw [R12], R0" 013D7B, then "add.w #6, R12"
 field course_entry 02 jump u32 course_entry      # FFFF's: where the course goes on ("mov.w [-R12], R12" 013DAC)
-local init_screen 013D6F,013D7E,013DAC,013DB1 R12 course_entry course_entry   # the road's first entry (stage_courses, "mov.w [R10+], R12"), the next one ("add.w #6, R12"), where an FFFF entry goes on ("mov.w [-R12], R12" 013DAC), and the one after a stage's 4-byte command ("sub.w #2, R12" 013DB1)
+local init_screen 013D6F,013D7E,013DAC,013DB1 R12 course_place course_bytes   # the road's first entry (stage_courses, "mov.w [R10+], R12"), the next one ("add.w #6, R12"), where an FFFF entry goes on ("mov.w [-R12], R12" 013DAC), and the one after a stage's 4-byte command ("sub.w #2, R12" 013DB1)
+local init_screen 013D7B R0 length   # the entry's first halfword: a section's length, or a command when negative
 # The unused unpack_list carries its list's next entry in R12 across unpack
 local unpack_list 010F6C R12 r12 packed_block_entry   # "xch.w R10, R12": the next entry (8 bytes on)
 # ======== memory reached through pointers (batch P2) ========
@@ -8734,8 +8757,6 @@ struct course_record_copy 6   # a course's record in course_records (20E300 + 6 
 field course_record_copy 00 model u8
 field course_record_copy 01 name u8[3]
 field course_record_copy 04 time u16      # in hundredths
-field course_record_copy 00 model_and_name u32   # the model and the name's three letters at once (load_course_records 001D9C "mov.w [R11+], [R12+]" from default_course_records)
-field course_record 00 model_and_name u32        # (load_course_records 001D9C "mov.w [R11+], [R12+]")
 local load_course_records 001D93,001DA0,001DC0 R12 record_copy course_record_copy   # "movea.b 300[R24], R12": the first course's; after a record's time ("mov.h [R11+], [R12+]" 001DA0, "mov.h [R10+], [R12+]" 001DC0) the next one's
 local load_course_records 001D9C R12 record_copy course_record_copy+4   # "mov.w [R11+], [R12+]": past the model and the name
 local load_course_records 001DB0 R12 record_copy course_record_copy+1   # "and.b #7, [R12+]": past the model

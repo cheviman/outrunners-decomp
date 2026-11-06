@@ -67,12 +67,29 @@ const uint8_t *s32_sound_rom_at(uint32_t offset)
 	return found;
 }
 
+/* A byte of the sound program's chip for the Z80's bus: as the chip holds it (sound_byte_at), where the C's
+   own reads of its tables take the data in the host's order (s32_sound_rom_at) */
+static uint8_t sound_rom_byte(uint32_t offset)
+{
+	const uint8_t *found;
+
+	offset %= S32_SOUND_ROM_SIZE;
+	if (s32_board.sound_rom || !s32_board.sound_byte_at)
+		return *s32_sound_rom_at(offset);
+	if (!(found = s32_board.sound_byte_at(offset)))
+	{
+		fprintf(stderr, "Sound program data read at %05X, where no asset has data\n", offset);
+		exit(3);
+	}
+	return *found;
+}
+
 uint8_t s32_z80_read(uint16_t address)
 {
 	if (address < 0xa000)
-		return *s32_sound_rom_at(address);
+		return sound_rom_byte(address);
 	if (address < 0xc000)
-		return *s32_sound_rom_at((uint32_t)s32_board.sound_bank * 0x2000 + (address & 0x1fff));
+		return sound_rom_byte((uint32_t)s32_board.sound_bank * 0x2000 + (address & 0x1fff));
 	if (address < 0xe000)
 		return s32_board.chips.pcm_read(address & 0x1fff);
 	return s32_board.shared_ram[address & 0x1fff];

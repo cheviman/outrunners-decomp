@@ -17,7 +17,10 @@
    main loop run. */
 void start_sound_program(void)
 {
-	AS32(screen->sound_queue_read) = 0x100u;
+	screen->sound_queue_read = 0u;
+	screen->sound_queue_write = 1u;
+	screen->sound_queue[0] = 0u;
+	screen->sound_queue[1] = 0u;
 	io_write8(IO_1_CNT, 6u);
 	screen->sound_start_cleared = 0u;
 	SOUND_PROGRAM_HOLD = 0u;

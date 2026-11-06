@@ -541,6 +541,7 @@ void road_crosser_update(void)
 	uint16_t draw_distance = 0, position = 0;
 	uint32_t animation = 0, crossing_animation = 0;
 	const struct road_crosser_record *road_crosser_record = NULL;
+	uint32_t y_offset_long = 0;
 
 	switch (current_object->state)
 	{
@@ -549,7 +550,11 @@ void road_crosser_update(void)
 		road_crosser_record = rom_pointer(current_object->road_crosser.record);
 		animation = road_crosser_record->animation;
 		if (animation == SWORDFISH)
-			AS32(current_object->road_crosser.y_offset) = (int16_t)0xFF00u;
+		{
+			y_offset_long = (int16_t)0xFF00u;
+			current_object->y_offset = (uint16_t)y_offset_long;
+			current_object->road_crosser.y_offset_sign = (uint16_t)(y_offset_long >> 16u);
+		}
 		current_object->road_crosser.crossing_animation = road_crosser_record->crossing_animation;
 		current_object->palette = road_crosser_record->palette;
 		current_object->flags |= road_crosser_record->flags;

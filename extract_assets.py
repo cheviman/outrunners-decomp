@@ -288,6 +288,23 @@ def write_names(folder):
     return 1
 
 
+def walked_records(places, data, start, kept):
+    """The records the formats that walk their pieces (tools/formats' program_ formats: the road objects'
+    streams, the stages' background objects...) read in them: (address, structure), for the typed pointers'
+    walk to follow theirs"""
+    from formats import program_walk
+    chosen, _, _ = data_formats.load_formats(ROOT / "data_formats.json")
+    bounds = sorted({address for address, _ in places} | {begin for begin, _ in kept} | {start + len(data)})
+    program_walk.RECORDS.clear()
+    for address, name in places:
+        kind = chosen.get(name)
+        if kind not in data_formats.FORMATS or not kind.startswith("program_"):
+            continue
+        end = next(bound for bound in bounds if bound > address)
+        data_formats.FORMATS[kind][1](data[address - start:end - start])
+    return list(program_walk.RECORDS)
+
+
 def extract(asset, data, region_of):
     path = ROOT / asset["path"]
     kind = asset["type"]
@@ -305,7 +322,8 @@ def extract(asset, data, region_of):
         # the chips' mirrors are no data of their own: kept, as the code is
         mirrors = [tuple(int(value, 0) for value in pair) for pair in asset.get("mirrors", [])]
         # what the typed pointers point at, laid out in its piece as its structure, as the code reads it
-        segments = typed.pointed_segments(places, data, start, sorted(code + mirrors))
+        segments = typed.pointed_segments(places, data, start, sorted(code + mirrors),
+                                          walked_records(places, data, start, sorted(code + mirrors)))
         game_c = sorted(source for source in (ROOT / "src").rglob("*.c")
                         if "sound" not in source.parts and source.name != "table.c")
         files = data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),

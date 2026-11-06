@@ -67,6 +67,10 @@ int program_data_address(const void *pointer, uint32_t *address);
    the C replaces it). For the board's sound: s32_board.sound_at */
 const uint8_t *assets_sound_data(uint32_t offset);
 
+/* The byte at an offset of the sound program's chip as the chip holds it, for the Z80's bus
+   (s32_board.sound_byte_at): on a big-endian processor a value's bytes lie the other way round in its piece */
+const uint8_t *assets_sound_byte(uint32_t offset);
+
 /* The number of the loaded pieces of the programs' data, and the bytes they hold */
 size_t assets_piece_count(void);
 size_t assets_data_bytes(void);

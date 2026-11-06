@@ -3,7 +3,7 @@
  *    Description: the sequence players and the playlist: their tick, their events into the MIDI queues, the sound commands, the music's fade
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the Z80 sound program decompiled into C by
@@ -268,7 +268,7 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 	{
 		z80_block(68, 7);
 		port_out(ROM_BANK, SEQUENCE_PLAYER(player)->bank);
-		position = SEQUENCE_PLAYER(player)->position;
+		position = (SEQUENCE_PLAYER(player)->position_low | ((uint32_t)SEQUENCE_PLAYER(player)->position_high << 8u));
 		for (;;)
 		{
 			z80_block(48, 6);
@@ -521,7 +521,8 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 			}
 			z80_block(86, 9);
 			SEQUENCE_PLAYER(player)->delta_time_low = delta_byte;
-			SEQUENCE_PLAYER(player)->position = position;
+			SEQUENCE_PLAYER(player)->position_low = (uint8_t)position;
+			SEQUENCE_PLAYER(player)->position_high = (uint8_t)(position >> 8u);
 			SCREEN_PAGE(page)->midi_write = write_index;
 			queue_pointer = (queue_pointer & ~0xFFu) | write_index;
 			return queue_pointer;
@@ -542,7 +543,7 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 			return queue_pointer;
 		}
 		z80_block(62, 6);
-		playlist = SEQUENCE_PLAYER(player)->playlist;
+		playlist = (SEQUENCE_PLAYER(player)->playlist_low | ((uint32_t)SEQUENCE_PLAYER(player)->playlist_high << 8u));
 		playlist_byte = z80_read8(playlist);
 		playlist = next_sequence_byte(playlist, player);
 		z80_block(17, 2);
@@ -567,7 +568,8 @@ uint16_t step_player(uint16_t queue_pointer, uint16_t player_address, uint16_t p
 			return queue_pointer;
 		}
 		z80_block(104, 11);
-		SEQUENCE_PLAYER(player)->playlist = playlist;
+		SEQUENCE_PLAYER(player)->playlist_low = (uint8_t)playlist;
+		SEQUENCE_PLAYER(player)->playlist_high = (uint8_t)(playlist >> 8u);
 		queue_page = queue_pointer >> 8;
 		saved_write_index = write_index;
 		saved_player = player;
