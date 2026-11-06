@@ -3,7 +3,7 @@
  *    Description: unpacking the tile pages and the lists of packed blocks, a step each frame
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -55,7 +55,7 @@ void unpack(uint32_t source, uint32_t destination)
 		flags = (uint8_t)(flags * 2u);
 		if (carry)
 		{
-			copy_source = 0xFFFF0000u | AS16(PACKED_BYTES(source)[0]);
+			copy_source = 0xFFFF0000u | (PACKED_BYTES(source)[0] | ((uint32_t)PACKED_BYTES(source)[1] << 8u));
 			length_byte = (uint8_t)copy_source;
 			copy_source = (int32_t)copy_source >> 3;
 			length_bits = length_byte & 7u;
@@ -196,7 +196,7 @@ void unpack_queued_step(void)
 		flags = (uint8_t)(flags * 2u);
 		if (carry == 0u)
 			break;
-		copy_source = 0xFFFF0000u | AS16(PACKED_BYTES(source)[0]);
+		copy_source = 0xFFFF0000u | (PACKED_BYTES(source)[0] | ((uint32_t)PACKED_BYTES(source)[1] << 8u));
 		length_byte = (uint8_t)copy_source;
 		copy_source = (int32_t)copy_source >> 3;
 		length_bits = length_byte & 7u;

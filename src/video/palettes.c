@@ -3,7 +3,7 @@
  *    Description: the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -121,26 +121,26 @@ void upload_palette(uint32_t colour_block)
 	{
 		colours_0_place = palette_address;
 		palette_address += 8u;
-		colours_2 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		io_write32(colours_0_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		colours_2 = (PALETTE_COLOURS(colour_block)[2] | ((uint32_t)PALETTE_COLOURS(colour_block)[3] << 16u));
+		io_write32(colours_0_place, (PALETTE_COLOURS(colour_block)[0] | ((uint32_t)PALETTE_COLOURS(colour_block)[1] << 16u)));
 		io_write32(colours_0_place + 4u, colours_2);
 		colour_block += 8u;
 		colours_4_place = palette_address;
 		palette_address += 8u;
-		colours_6 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		io_write32(colours_4_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		colours_6 = (PALETTE_COLOURS(colour_block)[2] | ((uint32_t)PALETTE_COLOURS(colour_block)[3] << 16u));
+		io_write32(colours_4_place, (PALETTE_COLOURS(colour_block)[0] | ((uint32_t)PALETTE_COLOURS(colour_block)[1] << 16u)));
 		io_write32(colours_4_place + 4u, colours_6);
 		colour_block += 8u;
 		colours_8_place = palette_address;
 		palette_address += 8u;
-		colours_10 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		io_write32(colours_8_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		colours_10 = (PALETTE_COLOURS(colour_block)[2] | ((uint32_t)PALETTE_COLOURS(colour_block)[3] << 16u));
+		io_write32(colours_8_place, (PALETTE_COLOURS(colour_block)[0] | ((uint32_t)PALETTE_COLOURS(colour_block)[1] << 16u)));
 		io_write32(colours_8_place + 4u, colours_10);
 		colour_block += 8u;
 		colours_12_place = palette_address;
 		palette_address += 8u;
-		colours_14 = AS32(PALETTE_COLOURS(colour_block)[2]);
-		io_write32(colours_12_place, AS32(PALETTE_COLOURS(colour_block)[0]));
+		colours_14 = (PALETTE_COLOURS(colour_block)[2] | ((uint32_t)PALETTE_COLOURS(colour_block)[3] << 16u));
+		io_write32(colours_12_place, (PALETTE_COLOURS(colour_block)[0] | ((uint32_t)PALETTE_COLOURS(colour_block)[1] << 16u)));
 		io_write32(colours_12_place + 4u, colours_14);
 		blocks_left--;
 		colour_block += 8u;
@@ -169,20 +169,20 @@ void upload_palette_list(uint32_t colour_list)
 		colour_list += 2u;
 		do
 		{
-			colours_2 = AS32(colour_source[2]);
-			io_write32(palette_address, AS32(colour_source[0]));
+			colours_2 = (colour_source[2] | ((uint32_t)colour_source[3] << 16u));
+			io_write32(palette_address, (colour_source[0] | ((uint32_t)colour_source[1] << 16u)));
 			io_write32(palette_address + 4u, colours_2);
 			palette_address += 8u;
-			colours_6 = AS32(colour_source[6]);
-			io_write32(palette_address, AS32(colour_source[4]));
+			colours_6 = (colour_source[6] | ((uint32_t)colour_source[7] << 16u));
+			io_write32(palette_address, (colour_source[4] | ((uint32_t)colour_source[5] << 16u)));
 			io_write32(palette_address + 4u, colours_6);
 			palette_address += 8u;
-			colours_10 = AS32(colour_source[10]);
-			io_write32(palette_address, AS32(colour_source[8]));
+			colours_10 = (colour_source[10] | ((uint32_t)colour_source[11] << 16u));
+			io_write32(palette_address, (colour_source[8] | ((uint32_t)colour_source[9] << 16u)));
 			io_write32(palette_address + 4u, colours_10);
 			palette_address += 8u;
-			colours_14 = AS32(colour_source[14]);
-			io_write32(palette_address, AS32(colour_source[12]));
+			colours_14 = (colour_source[14] | ((uint32_t)colour_source[15] << 16u));
+			io_write32(palette_address, (colour_source[12] | ((uint32_t)colour_source[13] << 16u)));
 			io_write32(palette_address + 4u, colours_14);
 			blocks_left--;
 			palette_address += 8u;

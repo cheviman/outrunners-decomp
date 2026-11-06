@@ -5,7 +5,7 @@ Description: extracts the game's assets from the user's own ROM set, driven by a
              n64decomp/sm64)
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    29-10-2026
+Modified:    06-11-2026
 Author:      Sebastian Toyos
 
 Usage:
@@ -304,12 +304,14 @@ def extract(asset, data, region_of):
         code = data_formats.v60_code(region_of("program"), ROOT / "symbols.txt", start, end)
         # the chips' mirrors are no data of their own: kept, as the code is
         mirrors = [tuple(int(value, 0) for value in pair) for pair in asset.get("mirrors", [])]
+        # what the typed pointers point at, laid out in its piece as its structure, as the code reads it
+        segments = typed.pointed_segments(places, data, start, sorted(code + mirrors))
         game_c = sorted(source for source in (ROOT / "src").rglob("*.c")
                         if "sound" not in source.parts and source.name != "table.c")
         files = data_formats.export(data, start, places, ROOT / asset["formats"], path, sorted(code + mirrors),
                                     default_group=subjects_of(places, ROOT / "symbols.txt", game_c, ROOT / "src",
                                                               0x40000),
-                                    choose=typed.format_for)
+                                    choose=typed.format_for, segments=segments)
         # the layout says which names are inside another piece, and where
         layout = json.loads((path / "layout.json").read_text(encoding="ascii"))
         layout["inside"] = [{"address": f"{address:06X}", "name": name} for address, name in sorted(inner)]

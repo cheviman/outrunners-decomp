@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -467,8 +467,10 @@ void race_car_draw_link(uint32_t depth_layer, uint32_t sprite_entry)
 		depth_list->tail = sprite_entry;
 	group = screen->sprite_list_last + 0x10u;
 	older_group = depth_list->head;
-	AS32(SPRITE_WORDS(sprite_entry)[0]) = older_group;
-	AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = (uint16_t)(older_group + 0x300u);
+	SPRITE_WORDS(sprite_entry)[0] = (uint16_t)older_group;
+	SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(older_group >> 16u);
+	SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)(older_group + 0x300u);
+	SPRITE_WORDS(sprite_entry + 0x3000u)[1] = 0u;
 	depth_list->head = (group >> 4) | 0x8000u;
 	screen->sprite_list_last = sprite_entry;
 }

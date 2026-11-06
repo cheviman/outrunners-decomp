@@ -4,7 +4,7 @@
  *                 reaches (game/assets.h)
  *    Version:     0.1.0
  *    Created:     27-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -28,12 +28,21 @@
 #include <string.h>
 
 
+/* A piece of the program's data: its values in the host's order at the width the asset gives each (a 24-bit
+   value and the byte after it one 32-bit word, as the C reads them), and where each one lies (units: for each
+   byte its value's width and its place in it as the V70 holds it, low byte first, UNIT(); 0 for a byte; NULL
+   when the piece is bytes only) */
 typedef struct
 {
 	uint32_t address;
 	uint32_t size;
 	uint8_t *data;
+	uint8_t *units;
 } piece;
+
+#define UNIT(width, place) ((uint8_t)((width) << 4 | (place)))
+#define UNIT_WIDTH(unit) ((unit) >> 4)
+#define UNIT_PLACE(unit) ((unit) & 0xf)
 
 typedef struct
 {
@@ -291,8 +300,11 @@ typedef struct
 	uint32_t size;
 	uint32_t at;
 	const char *piece;
+	uint8_t *units;    /* the piece's (piece's units), made at its first value wider than a byte */
 } writer;
 
+/* A value of 'bytes' as the V70 holds it, the low byte first (the piece goes to the host's order once it is
+   whole: host_order) */
 static int put(writer *into, uint64_t value, int bytes)
 {
 	if (into->at + (uint32_t)bytes > into->size)
@@ -300,9 +312,45 @@ static int put(writer *into, uint64_t value, int bytes)
 		snprintf(assets_problem, sizeof(assets_problem), "the asset %s holds more than its %u bytes", into->piece, into->size);
 		return 0;
 	}
+	if (bytes > 1 && !into->units && !(into->units = calloc((size_t)into->size + 1u, 1)))
+	{
+		snprintf(assets_problem, sizeof(assets_problem), "no memory for the asset %s", into->piece);
+		return 0;
+	}
 	for (int index = 0; index < bytes; index++)
+	{
+		if (bytes > 1)
+			into->units[into->at] = UNIT(bytes, index);
 		into->out[into->at++] = (uint8_t)(value >> (8 * index));
+	}
 	return 1;
+}
+
+/* A piece once its values are in: a 24-bit value and the byte after it are one 32-bit word, as the C reads
+   them (dj_messages, radio_songs: an address and a byte); on a big-endian processor each value's bytes go the
+   other way round, as the C reads them there */
+static void host_order(piece *into)
+{
+	if (!into->units)
+		return;
+	for (uint32_t at = 0; at + 3 < into->size; at++)
+		if (into->units[at] == UNIT(3, 0) && into->units[at + 3] == 0)
+			for (int index = 0; index < 4; index++)
+				into->units[at + index] = UNIT(4, index);
+#if S32_HOST_BIG_ENDIAN
+	for (uint32_t at = 0; at < into->size; at++)
+	{
+		const int width = UNIT_WIDTH(into->units[at]);
+		if (width < 2 || UNIT_PLACE(into->units[at]) != 0 || at + (uint32_t)width > into->size)
+			continue;
+		for (int low = 0, high = width - 1; low < high; low++, high--)
+		{
+			const uint8_t byte = into->data[at + low];
+			into->data[at + low] = into->data[at + high];
+			into->data[at + high] = byte;
+		}
+	}
+#endif
 }
 
 static int hex_values(writer *into, const char *body, int bytes, int keyword)
@@ -482,9 +530,12 @@ static int read_column(writer *into, char *text, typed_column *column)
 	if (equals)
 	{
 		/* (the fixed value: the bytes typed_value writes, kept aside) */
-		writer aside = { column->value, FIXED_BYTES, 0u, into->piece };
+		writer aside = { column->value, FIXED_BYTES, 0u, into->piece, NULL };
+		int read;
 
-		if (strcmp(column->type, "text") == 0 || !typed_value(&aside, equals + 1, column->type))
+		read = strcmp(column->type, "text") != 0 && typed_value(&aside, equals + 1, column->type);
+		free(aside.units);    /* (where its bytes lie is the record's, when they go into it) */
+		if (!read)
 			return 0;
 		column->fixed = 1;
 	}
@@ -540,9 +591,14 @@ static int typed_record(writer *into, const char **at, const typed_shape *shape,
 
 		if (current->fixed)
 		{
-			for (int index = 0; index < type_bytes(current->type); index++)
-				if (!put(into, current->value[index], 1))
-					return 0;
+			/* (its bytes as typed_value wrote them, the low one first: one value of the column's width) */
+			const int width = type_bytes(current->type);
+			uint64_t value = 0;
+
+			for (int index = 0; index < width; index++)
+				value |= (uint64_t)current->value[index] << (8 * index);
+			if (!put(into, value, width))
+				return 0;
 			continue;
 		}
 		if (!have && !next_token(at, token, sizeof(token)))
@@ -789,7 +845,7 @@ static int read_piece(const char *folder, const data_region *region, const json_
 		snprintf(assets_problem, ASSETS_PROBLEM_SIZE, "%s has no section %s", file, section);
 		return 0;
 	}
-	output = (writer){ into->data, into->size, 0u, name };
+	output = (writer){ into->data, into->size, 0u, name, NULL };
 	if (strcmp(format, "words") == 0)
 		read = hex_values(&output, body, 2, 0);
 	else if (strcmp(format, "bytes") == 0)
@@ -798,6 +854,9 @@ static int read_piece(const char *folder, const data_region *region, const json_
 		read = hex_values(&output, body, 1, 1);
 	else
 		read = typed_values(&output, body);    /* (every other text format is the typed one) */
+	into->units = output.units;
+	if (read)
+		host_order(into);
 	if (!read)
 	{
 		if (!assets_problem[0])
@@ -932,6 +991,23 @@ const uint8_t *data_at(uint32_t address)
 	return found;
 }
 
+const uint8_t *data_byte_at(uint32_t address)
+{
+	const uint8_t *found = data_at(address);
+#if S32_HOST_BIG_ENDIAN
+	/* (find() leaves program.last at the piece it found) */
+	const piece *holder = program.last < program.count ? &program.pieces[program.last] : NULL;
+	uint8_t unit;
+
+	if (!holder || !holder->units || (uintptr_t)found - (uintptr_t)holder->data >= holder->size)
+		return found;    /* (a byte only, or the work RAM) */
+	unit = holder->units[found - holder->data];
+	if (UNIT_WIDTH(unit) > 1)
+		return found - UNIT_PLACE(unit) + (UNIT_WIDTH(unit) - 1 - UNIT_PLACE(unit));
+#endif
+	return found;
+}
+
 /* the pieces of the program's data by where their bytes are, for program_data_address (made once the
    pieces are loaded) */
 static const piece **by_place;
@@ -1028,6 +1104,27 @@ size_t assets_piece_count(void)
 size_t assets_data_bytes(void)
 {
 	return program.bytes + sound.bytes;
+}
+
+int assets_dump_units(const char *path)
+{
+	FILE *output = fopen(path, "w");
+	int written = output != NULL;
+
+	if (written)
+		fprintf(output, "# ADDRESS WIDTH: the values of the program's data wider than a byte, as the loader lays them\n"
+			"# out (ORUNNERS_DUMP_UNITS); every other byte is a byte of its own\n");
+	for (size_t index = 0; index < program.count && written; index++)
+	{
+		const piece *each = &program.pieces[index];
+
+		for (uint32_t at = 0; each->units && at < each->size && written; at++)
+			if (UNIT_WIDTH(each->units[at]) > 1 && UNIT_PLACE(each->units[at]) == 0)
+				written = fprintf(output, "%06X %d\n", each->address + at, UNIT_WIDTH(each->units[at])) > 0;
+	}
+	if (output && fclose(output) != 0)
+		written = 0;
+	return written;
 }
 
 int assets_dump(const char *path)

@@ -3,7 +3,7 @@
  *    Description: the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -137,8 +137,10 @@ uint16_t reset_tile_layers(void)
 	VIDEO_CONTROL &= 0xFFFu;
 	game->video_registers[0] &= 0xFFFu;
 	index = screen->index;
-	AS32(game->video_registers[32 + index * 2u]) = 0u;
-	AS32(game->video_registers[36 + index * 2u]) = 0u;
+	game->video_registers[32 + index * 2u] = 0u;
+	game->video_registers[33 + index * 2u] = 0u;
+	game->video_registers[36 + index * 2u] = 0u;
+	game->video_registers[37 + index * 2u] = 0u;
 	game->scroll_targets[index * 2u] = 0u;
 	game->scroll_targets[1 + index * 2u] = 0u;
 	game->scroll_targets[4 + index * 2u] = 0u;

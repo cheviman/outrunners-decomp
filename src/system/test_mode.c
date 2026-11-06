@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -89,16 +89,40 @@ uint32_t test_mode_start(void)
 	game->port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
 	text_0_to = test_mode_lcd_text;
 	text_4_to = test_mode_lcd_text_4_to_7;
-	AS32(game->screen_1.lcd_text[0]) = text_0_to;
-	AS32(game->screen_1.lcd_text[4]) = text_4_to;
-	AS32(game->screen_2.lcd_text[0]) = text_0_to;
-	AS32(game->screen_2.lcd_text[4]) = text_4_to;
+	game->screen_1.lcd_text[0] = (uint8_t)text_0_to;
+	game->screen_1.lcd_text[1] = (uint8_t)(text_0_to >> 8u);
+	game->screen_1.lcd_text[2] = (uint8_t)(text_0_to >> 16u);
+	game->screen_1.lcd_text[3] = (uint8_t)(text_0_to >> 24u);
+	game->screen_1.lcd_text[4] = (uint8_t)text_4_to;
+	game->screen_1.lcd_text[5] = (uint8_t)(text_4_to >> 8u);
+	game->screen_1.lcd_text[6] = (uint8_t)(text_4_to >> 16u);
+	game->screen_1.lcd_text[7] = (uint8_t)(text_4_to >> 24u);
+	game->screen_2.lcd_text[0] = (uint8_t)text_0_to;
+	game->screen_2.lcd_text[1] = (uint8_t)(text_0_to >> 8u);
+	game->screen_2.lcd_text[2] = (uint8_t)(text_0_to >> 16u);
+	game->screen_2.lcd_text[3] = (uint8_t)(text_0_to >> 24u);
+	game->screen_2.lcd_text[4] = (uint8_t)text_4_to;
+	game->screen_2.lcd_text[5] = (uint8_t)(text_4_to >> 8u);
+	game->screen_2.lcd_text[6] = (uint8_t)(text_4_to >> 16u);
+	game->screen_2.lcd_text[7] = (uint8_t)(text_4_to >> 24u);
 	text_8_to = test_mode_lcd_text_8_to_11;
 	text_12_to = test_mode_lcd_text_12_to_15;
-	AS32(game->screen_1.lcd_text[8]) = text_8_to;
-	AS32(game->screen_1.lcd_text[12]) = text_12_to;
-	AS32(game->screen_2.lcd_text[8]) = text_8_to;
-	AS32(game->screen_2.lcd_text[12]) = text_12_to;
+	game->screen_1.lcd_text[8] = (uint8_t)text_8_to;
+	game->screen_1.lcd_text[9] = (uint8_t)(text_8_to >> 8u);
+	game->screen_1.lcd_text[10] = (uint8_t)(text_8_to >> 16u);
+	game->screen_1.lcd_text[11] = (uint8_t)(text_8_to >> 24u);
+	game->screen_1.lcd_text[12] = (uint8_t)text_12_to;
+	game->screen_1.lcd_text[13] = (uint8_t)(text_12_to >> 8u);
+	game->screen_1.lcd_text[14] = (uint8_t)(text_12_to >> 16u);
+	game->screen_1.lcd_text[15] = (uint8_t)(text_12_to >> 24u);
+	game->screen_2.lcd_text[8] = (uint8_t)text_8_to;
+	game->screen_2.lcd_text[9] = (uint8_t)(text_8_to >> 8u);
+	game->screen_2.lcd_text[10] = (uint8_t)(text_8_to >> 16u);
+	game->screen_2.lcd_text[11] = (uint8_t)(text_8_to >> 24u);
+	game->screen_2.lcd_text[12] = (uint8_t)text_12_to;
+	game->screen_2.lcd_text[13] = (uint8_t)(text_12_to >> 8u);
+	game->screen_2.lcd_text[14] = (uint8_t)(text_12_to >> 16u);
+	game->screen_2.lcd_text[15] = (uint8_t)(text_12_to >> 24u);
 	game->test_mode_routine = test_mode_menu_ADDRESS;
 	lcd_place = 0x218F20u;
 	test_mode_read_controls();
@@ -257,7 +281,8 @@ void test_mode_memory_test(void)
 	current_object = pointer_to(memory_test_results_ADDRESS);
 	blank_result = 0u;
 	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
-	AS16(game->memory_test_results[0]) = 0x101u;
+	game->memory_test_results[0] = 1u;
+	game->memory_test_results[1] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0u;
 	rom_check = LOW_ROM_TESTED_BYTES;
@@ -273,7 +298,8 @@ void test_mode_memory_test(void)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[1] = rom_check;
 	current_object = pointer_to(address_of(current_object) + 1u);
-	AS16(game->memory_test_results[2]) = 0x101u;
+	game->memory_test_results[2] = 1u;
+	game->memory_test_results[3] = 1u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x100000u;
 	rom_check = HIGH_ROM_TESTED_BYTES;
@@ -289,7 +315,10 @@ void test_mode_memory_test(void)
 		rom_check = (rom_check & ~0xFFu) | 3u;
 	game->memory_test_results[3] = rom_check;
 	current_object = pointer_to(address_of(current_object) + 1u);
-	AS32(game->memory_test_results[4]) = 0x1010101u;
+	game->memory_test_results[4] = 1u;
+	game->memory_test_results[5] = 1u;
+	game->memory_test_results[6] = 1u;
+	game->memory_test_results[7] = 1u;
 	test_mode_memory_test_draw(&rom_check, &r12);
 	memory_start = 0x300000u;
 	failures = 0x20000u;
@@ -318,7 +347,10 @@ void test_mode_memory_test(void)
 	game->memory_test_results[7] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = init_video();
-	AS32(game->memory_test_results[8]) = 0x1010101u;
+	game->memory_test_results[8] = 1u;
+	game->memory_test_results[9] = 1u;
+	game->memory_test_results[10] = 1u;
+	game->memory_test_results[11] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x400000u;
 	failures = 0x20000u;
@@ -347,7 +379,8 @@ void test_mode_memory_test(void)
 	game->memory_test_results[11] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	init_sprite_lists();
-	AS16(game->memory_test_results[12]) = 0x101u;
+	game->memory_test_results[12] = 1u;
+	game->memory_test_results[13] = 1u;
 	test_mode_memory_test_draw(&failures, &r12);
 	memory_start = 0x600000u;
 	failures = 0x4000u;
@@ -363,7 +396,8 @@ void test_mode_memory_test(void)
 	game->memory_test_results[13] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
-	AS16(game->memory_test_results[14]) = 0x101u;
+	game->memory_test_results[14] = 1u;
+	game->memory_test_results[15] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = PALETTE_RAM + 0x4000u;
 	failures = 0x4000u;
@@ -379,7 +413,8 @@ void test_mode_memory_test(void)
 	game->memory_test_results[15] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
-	AS16(game->memory_test_results[16]) = 0x101u;
+	game->memory_test_results[16] = 1u;
+	game->memory_test_results[17] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x680000u;
 	failures = 0x4000u;
@@ -395,7 +430,8 @@ void test_mode_memory_test(void)
 	game->memory_test_results[17] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
-	AS16(game->memory_test_results[18]) = 0x101u;
+	game->memory_test_results[18] = 1u;
+	game->memory_test_results[19] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	memory_start = 0x684000u;
 	failures = 0x4000u;
@@ -411,7 +447,10 @@ void test_mode_memory_test(void)
 	game->memory_test_results[19] = chip_result;
 	current_object = pointer_to(address_of(current_object) + 1u);
 	cell_value = test_mode_set_up_colours();
-	AS32(game->memory_test_results[20]) = 0x1010101u;
+	game->memory_test_results[20] = 1u;
+	game->memory_test_results[21] = 1u;
+	game->memory_test_results[22] = 1u;
+	game->memory_test_results[23] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
 	move_halfwords(SPRITE_RAM, WORK_RAM, 0x10000u);
 	memory_start = 0x200000u;
@@ -1282,6 +1321,7 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 	uint8_t colour = 0, test_switches_b = 0;
 	uint16_t range_high = 0, range_low = 0, test_switches = 0;
 	uint32_t analog_input = 0, bar_cells = 0, bit = 0, cell = 0, controls_left = 0, digit_count = 0, item = 0, port_a = 0, port_b = 0, position = 0, range = 0, text = 0;
+	uint32_t text_layer_cells_long = 0, text_layer_cells_long_2 = 0, text_layer_cells_long_3 = 0, text_layer_cells_long_4 = 0, text_layer_cells_long_5 = 0;
 
 	text = input_test_bars_text_ADDRESS;
 	test_mode_draw_texts(character, text);
@@ -1313,7 +1353,7 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 		TEXT_LAYER_CELLS(cell)[(uint8_t)position >> 4] = 0x6403u;
 		colour = 0x64u;
 		digit_count = 2u;
-		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
+		cell = LINKED(cell, (INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)));
 		bar_cells += 2u;
 		item += 2u;
 		cell = test_mode_draw_hex_number(position, colour, digit_count, cell);
@@ -1328,15 +1368,19 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 		bit = INPUT_TEST_BYTES(item)[0];
 		carry = (io_read32(port_a) & shl32(1u, (int)(bit))) != 0u;
 		item++;
-		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
-		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
+		cell = LINKED(cell, (INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)));
+		text_layer_cells_long = input_test_on_off_cells[carry];
+		TEXT_LAYER_CELLS(cell)[0] = (uint16_t)text_layer_cells_long;
+		TEXT_LAYER_CELLS(cell)[1] = (uint16_t)(text_layer_cells_long >> 16u);
 		port_b = IN_PAGE(port_b, (uint8_t)port_a);
 		carry = (io_read32(port_b) & shl32(1u, (int)(bit))) != 0u;
 		item += 2u;
-		cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
-		AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
+		cell = LINKED(cell, (INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)));
+		text_layer_cells_long_2 = input_test_on_off_cells[carry];
+		TEXT_LAYER_CELLS(cell)[0] = (uint16_t)text_layer_cells_long_2;
+		TEXT_LAYER_CELLS(cell)[1] = (uint16_t)(text_layer_cells_long_2 >> 16u);
 		item += 2u;
-	} while ((int16_t)AS16(INPUT_TEST_BYTES(item)[0]) >= 0);
+	} while ((int16_t)(INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)) >= 0);
 	port_a = IN_PAGE(port_a, 8u);
 	port_b = IN_PAGE(port_b, (uint8_t)port_a);
 	test_switches = io_read8(port_a);
@@ -1345,15 +1389,21 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 	test_switches_b = io_read8(port_b) & (io_read8(IN_PAGE(port_b, (uint8_t)port_a)) >> 4);
 	carry = (test_switches & 1u) != 0u;
 	item += 2u;
-	cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
-	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
+	cell = LINKED(cell, (INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)));
+	text_layer_cells_long_3 = input_test_on_off_cells[carry];
+	TEXT_LAYER_CELLS(cell)[0] = (uint16_t)text_layer_cells_long_3;
+	TEXT_LAYER_CELLS(cell)[1] = (uint16_t)(text_layer_cells_long_3 >> 16u);
 	carry = (test_switches_b & 1u) != 0u;
 	item += 2u;
-	cell = LINKED(cell, AS16(INPUT_TEST_BYTES(item)[0]));
-	AS32(TEXT_LAYER_CELLS(cell)[0]) = input_test_on_off_cells[carry];
+	cell = LINKED(cell, (INPUT_TEST_BYTES(item)[0] | ((uint32_t)INPUT_TEST_BYTES(item)[1] << 8u)));
+	text_layer_cells_long_4 = input_test_on_off_cells[carry];
+	TEXT_LAYER_CELLS(cell)[0] = (uint16_t)text_layer_cells_long_4;
+	TEXT_LAYER_CELLS(cell)[1] = (uint16_t)(text_layer_cells_long_4 >> 16u);
 	test_switches = test_switches & test_switches_b;
 	carry = (test_switches & 2u) != 0u;
-	AS32(TEXT_LAYER_CELLS(LINKED(cell, AS16(INPUT_TEST_BYTES(item)[2])))[0]) = input_test_on_off_cells[carry];
+	text_layer_cells_long_5 = input_test_on_off_cells[carry];
+	TEXT_LAYER_CELLS(LINKED(cell, (INPUT_TEST_BYTES(item)[2] | ((uint32_t)INPUT_TEST_BYTES(item)[3] << 8u))))[0] = (uint16_t)text_layer_cells_long_5;
+	TEXT_LAYER_CELLS(LINKED(cell, (INPUT_TEST_BYTES(item)[2] | ((uint32_t)INPUT_TEST_BYTES(item)[3] << 8u))))[1] = (uint16_t)(text_layer_cells_long_5 >> 16u);
 	*p_character = test_switches;
 	*p_last_port = port_a;
 	*p_last_bar_cells = bar_cells;
@@ -1483,6 +1533,7 @@ uint32_t test_mode_output_test_draw(void)
 	uint32_t carry = 0;
 	uint32_t cell = 0, output_bits = 0;
 	const struct output_test_output *output = NULL;
+	uint32_t text_layer_cells_long = 0;
 
 	cell = TEXT_CELL(0, 0);
 	output = output_test_outputs;
@@ -1492,7 +1543,9 @@ uint32_t test_mode_output_test_draw(void)
 		output_bits = output->variable;
 		output_bits += 0x20E000u;
 		carry = (OUTPUT_BITS(output_bits)[0] & shl32(1u, (int)(output->bit))) != 0u;
-		AS32(TEXT_LAYER_CELLS(cell)[0]) = output_test_on_off_cells[carry];
+		text_layer_cells_long = output_test_on_off_cells[carry];
+		TEXT_LAYER_CELLS(cell)[0] = (uint16_t)text_layer_cells_long;
+		TEXT_LAYER_CELLS(cell)[1] = (uint16_t)(text_layer_cells_long >> 16u);
 		output++;
 	} while (output->cell != 0u);
 	return output_bits;
@@ -2490,7 +2543,8 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 		}
 		else
 		{
-			AS32(TEXT_LAYER_CELLS(cell)[0]) = 0x200020u;
+			TEXT_LAYER_CELLS(cell)[0] = 0x20u;
+			TEXT_LAYER_CELLS(cell)[1] = 0x20u;
 			cell += 4u;
 		}
 		rows_left--;
@@ -3360,7 +3414,8 @@ uint16_t test_mode_set_up_colours(void)
 		rows_left = 8u;
 		do
 		{
-			TILE_PIXEL_ROWS(tile_place)[0] = tile_row;
+			TILE_PIXEL_WORDS(tile_place)[0] = (uint16_t)tile_row;
+			TILE_PIXEL_WORDS(tile_place)[1] = (uint16_t)(tile_row >> 16u);
 			tile_place += 4u;
 			rows_left--;
 		} while (rows_left != 0u);
@@ -3407,7 +3462,7 @@ void test_mode_blink_prompt(uint16_t character)
 	if ((int8_t)blink_timer >= 0)
 		return;
 	text = rom_pointer(game->test_mode_prompt_text);
-	cell = 0x310000u | AS16(text[0]);
+	cell = 0x310000u | (text[0] | ((uint32_t)text[1] << 8u));
 	if (TEXT_LAYER_CELLS(cell)[0] == 0u)
 	{
 		test_mode_draw_texts(character, address_of(text));
@@ -3459,7 +3514,7 @@ uint16_t test_mode_draw_texts(uint16_t character, uint32_t text)
 	cell = TEXT_CELL(0, 0);
 	for (;;)
 	{
-		cell = LINKED(cell, AS16(TEST_MODE_TEXT_BYTES(text)[0]));
+		cell = LINKED(cell, (TEST_MODE_TEXT_BYTES(text)[0] | ((uint32_t)TEST_MODE_TEXT_BYTES(text)[1] << 8u)));
 		text += 2u;
 		if ((uint16_t)cell == 0u)
 			break;

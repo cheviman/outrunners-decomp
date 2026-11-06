@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1941,8 +1941,10 @@ void fork_branch_draw(void)
 			if (screen->sprite_list_limit <= sprite)
 				break;
 			rows_to_fill = 0u;
-			AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = 0u;
-			AS32(SPRITE_WORDS(sprite)[0]) = r12;
+			SPRITE_WORDS(sprite + 0x3000u)[0] = 0u;
+			SPRITE_WORDS(sprite + 0x3000u)[1] = 0u;
+			SPRITE_WORDS(sprite)[0] = (uint16_t)r12;
+			SPRITE_WORDS(sprite)[1] = (uint16_t)(r12 >> 16u);
 			sprite += 4u;
 			SPRITE_WORDS(sprite)[0] = height_word;
 			sprite += 2u;
@@ -1952,7 +1954,8 @@ void fork_branch_draw(void)
 			sprite += 2u;
 			SPRITE_WORDS(sprite)[0] = piece_x;
 			sprite += 2u;
-			AS32(SPRITE_WORDS(sprite)[0]) = offset_palette;
+			SPRITE_WORDS(sprite)[0] = (uint16_t)offset_palette;
+			SPRITE_WORDS(sprite)[1] = (uint16_t)(offset_palette >> 16u);
 			sprite += 4u;
 		}
 		else
@@ -1966,8 +1969,10 @@ void fork_branch_draw(void)
 				{
 					if (screen->sprite_list_limit <= sprite)
 						return;
-					AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = 0u;
-					AS32(SPRITE_WORDS(sprite)[0]) = r12;
+					SPRITE_WORDS(sprite + 0x3000u)[0] = 0u;
+					SPRITE_WORDS(sprite + 0x3000u)[1] = 0u;
+					SPRITE_WORDS(sprite)[0] = (uint16_t)r12;
+					SPRITE_WORDS(sprite)[1] = (uint16_t)(r12 >> 16u);
 					sprite += 4u;
 					SPRITE_WORDS(sprite)[0] = height_word;
 					sprite += 2u;
@@ -1978,7 +1983,8 @@ void fork_branch_draw(void)
 					sprite += 2u;
 					SPRITE_WORDS(sprite)[0] = divide_s32(piece_x * rows_left + last_x * rows_done, row_span);
 					sprite += 2u;
-					AS32(SPRITE_WORDS(sprite)[0]) = offset_palette;
+					SPRITE_WORDS(sprite)[0] = (uint16_t)offset_palette;
+					SPRITE_WORDS(sprite)[1] = (uint16_t)(offset_palette >> 16u);
 					sprite += 4u;
 				}
 				rows_left--;
@@ -1994,8 +2000,10 @@ void fork_branch_draw(void)
 			depth_list->tail = sprite;
 		first_sprite = screen->sprite_list_last + 0x10u;
 		layer_head = depth_list->head;
-		AS32(SPRITE_WORDS(sprite)[0]) = layer_head;
-		AS32(SPRITE_WORDS(sprite + 0x3000u)[0]) = (uint16_t)(layer_head + 0x300u);
+		SPRITE_WORDS(sprite)[0] = (uint16_t)layer_head;
+		SPRITE_WORDS(sprite)[1] = (uint16_t)(layer_head >> 16u);
+		SPRITE_WORDS(sprite + 0x3000u)[0] = (uint16_t)(layer_head + 0x300u);
+		SPRITE_WORDS(sprite + 0x3000u)[1] = 0u;
 		screen->sprite_list_last = sprite;
 		depth_list->head = (first_sprite >> 4) | 0x8000u;
 		screen->sprite_groups++;

@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -344,6 +344,7 @@ const game_code_entry game_code[] =
 const size_t game_code_count = 244;
 
 const void *boot_e80000_bytes_data;
+const void *boot_interrupt_control_bytes_data;
 const void *seat_credits_addresses_data;
 const void *game_mode_jumps_data;
 const void *analog_calibration_addresses_data;
@@ -596,6 +597,7 @@ const void *animation_order_jumps_data;
 const void *smoothed_flip_x_signs_data;
 const void *smoothed_flip_signs_data;
 const void *sprite_list_switches_data;
+const void *sprite_list_switch_records_data;
 const void *course_command_jumps_data;
 const void *unused_segment_steps_data;
 const void *unused_segment_shifts_data;
@@ -867,6 +869,7 @@ const void *boot_tile_pages_5e_data;
 const void *boot_tile_pages_29_to_4e_data;
 const void *no_background_tile_pages_data;
 const void *background_tile_page_lists_data;
+const void *background_packed_tile_pages_data;
 const void *text_sprite_words_0_1_data;
 const void *text_sprite_size_data;
 const void *text_sprite_font_data;
@@ -889,6 +892,7 @@ const void *kanji_font_data;
 const game_table game_tables[] =
 {
 	{ "boot_e80000_bytes", 0x0000B4u, &boot_e80000_bytes_data },
+	{ "boot_interrupt_control_bytes", 0x0000B8u, &boot_interrupt_control_bytes_data },
 	{ "seat_credits_addresses", 0x0008C4u, &seat_credits_addresses_data },
 	{ "game_mode_jumps", 0x0008CCu, &game_mode_jumps_data },
 	{ "analog_calibration_addresses", 0x000B0Cu, &analog_calibration_addresses_data },
@@ -1141,6 +1145,7 @@ const game_table game_tables[] =
 	{ "smoothed_flip_x_signs", 0x00F4E8u, &smoothed_flip_x_signs_data },
 	{ "smoothed_flip_signs", 0x00F4ECu, &smoothed_flip_signs_data },
 	{ "sprite_list_switches", 0x00F508u, &sprite_list_switches_data },
+	{ "sprite_list_switch_records", 0x00F528u, &sprite_list_switch_records_data },
 	{ "course_command_jumps", 0x00FF40u, &course_command_jumps_data },
 	{ "unused_segment_steps", 0x010309u, &unused_segment_steps_data },
 	{ "unused_segment_shifts", 0x010425u, &unused_segment_shifts_data },
@@ -1412,6 +1417,7 @@ const game_table game_tables[] =
 	{ "boot_tile_pages_29_to_4e", 0x109578u, &boot_tile_pages_29_to_4e_data },
 	{ "no_background_tile_pages", 0x109684u, &no_background_tile_pages_data },
 	{ "background_tile_page_lists", 0x109694u, &background_tile_page_lists_data },
+	{ "background_packed_tile_pages", 0x109E0Cu, &background_packed_tile_pages_data },
 	{ "text_sprite_words_0_1", 0x122B5Cu, &text_sprite_words_0_1_data },
 	{ "text_sprite_size", 0x122B60u, &text_sprite_size_data },
 	{ "text_sprite_font", 0x122B64u, &text_sprite_font_data },
@@ -1431,7 +1437,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 541;
+const size_t game_table_count = 544;
 
 /* the code at the reset vector */
 void game_entry(void)

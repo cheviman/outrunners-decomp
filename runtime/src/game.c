@@ -5,7 +5,7 @@
  *                 moves and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -440,6 +440,41 @@ static void write_element(uint32_t address, uint32_t value, uint32_t size)
 		mem_write16(address, (uint16_t)value);
 }
 
+/* The bytes of a place that keeps its values in the host's order at the width the program reaches them (the
+   work RAM, the RAM the sound program shares and, to read, the program's data: s32/machine.h, game/assets.h),
+   or NULL for the board's other memories, which a move reaches through the bus, value by value */
+static uint8_t *host_bytes(uint32_t address, int to)
+{
+	switch ((address >> 20) & 0xf)
+	{
+		case 0x2:
+			return ram(address);
+		case 0x7:
+			return board(address);
+		case 0x0: case 0x1: case 0xf:
+			return to ? NULL : (uint8_t *)data_at(address);
+		default:
+			return NULL;
+	}
+}
+
+/* An element moved: between places that keep their values in the host's order, its bytes as they are (a text
+   of the program's data into the LCD's, a table into the settings: they keep their order on any processor);
+   into or out of the board's other memories, its value through the bus */
+static void move_element(uint32_t dest, uint32_t source, uint32_t size)
+{
+	uint8_t *to = host_bytes(dest, 1);
+	const uint8_t *from = to ? host_bytes(source, 0) : NULL;
+
+	if (!from)
+	{
+		write_element(dest, read_element(source, size), size);
+		return;
+	}
+	for (uint32_t index = 0; index < size; index++)
+		to[index] = from[index];
+}
+
 void move_string(uint32_t source, uint32_t source_length, uint32_t dest, uint32_t dest_length, uint32_t element_size,
                  uint32_t fill_rest, uint32_t downward, uint32_t fill, uint32_t *dest_end, uint32_t *source_end)
 {
@@ -450,7 +485,7 @@ void move_string(uint32_t source, uint32_t source_length, uint32_t dest, uint32_
 	if (!downward)
 	{
 		for (i = 0; i < count; i++)
-			write_element(dest + i * step, read_element(source + i * step, element_size), element_size);
+			move_element(dest + i * step, source + i * step, element_size);
 		*source_end = source + i * step;
 		*dest_end = dest + i * step;
 		if (fill_rest && source_length < dest_length)
@@ -463,7 +498,7 @@ void move_string(uint32_t source, uint32_t source_length, uint32_t dest, uint32_
 	}
 
 	for (i = 0; i < count; i++)
-		write_element(dest + (count - i - 1) * step, read_element(source + (count - i - 1) * step, element_size), element_size);
+		move_element(dest + (count - i - 1) * step, source + (count - i - 1) * step, element_size);
 	*source_end = source + (source_length - i - 1) * step;
 	*dest_end = dest + (dest_length - i - 1) * step;
 	if (fill_rest && source_length < dest_length)

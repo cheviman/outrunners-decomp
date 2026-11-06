@@ -1641,6 +1641,7 @@ field sprite_list_switch 0C next_list u32         # -> screen sprite_list_last (
 field sprite_list_switch 10 next_limit u32        # -> screen sprite_list_limit
 elements sprite_list_switch_pointer u32 sprite_list_switch
 00F508  table  sprite_list_switches  sprite_list_switch_pointer  # F528 F53C F550 F564 F578 F58C F5A0 F5B4: 14 bytes apart
+00F528  table  sprite_list_switch_records  sprite_list_switch   # the eight records sprite_list_switches points at (by screen, buffer and list), 14 bytes each, to 00F5C7
 # The hit box of a road item (road_row: its record's 8 bytes at 10; traffic: its sprite record's last 8)
 struct item_hit_box 8 rom
 field item_hit_box 00 along_start u16             # road_row_hit_check 01236F "add.h [R10+], R6": along the road, from the item
@@ -2288,7 +2289,8 @@ scoped object stage_result_line 28 stage u32
 # (from 0000A4) and the interrupt controller's 12 (from 0000B8); census ROM 0000B4-0000B7: 01 04 01 01. One word here:
 # a record table this low would also take the structures' fields at these offsets (pointers.indexed_access)
 0000A4  data  boot_e00000_bytes                # the 16 bytes boot copies to E00000 (which the board does not map) a byte at a time (000026, 00002A); after a byte of padding
-0000B4  table boot_e80000_bytes  u32
+0000B4  table boot_e80000_bytes[4]  u8            # the 4 bytes boot writes to E80000-E80003 (which the board does not map), a byte at a time
+0000B8  table boot_interrupt_control_bytes[12]  u8   # the 12 bytes boot writes to the interrupt controller from D00000, a byte at a time: its five sources' vectors (0-4), D00005 0, the mask and the pending 0, the timers' counts (07D0, 1388)
 # Each seat's first car of the attract mode by its car number (second_task 00068B, 000694 "mov.b [R0](R1), 20809E": screen
 # next_attract_car), a list for each number of machines on the link (000675 "mov.w D14[PC](R0), R0" by machine_count);
 # census ROM 000D14-000D27: 000D28 000D28 000D2A 000D2E 000D34; the lists 000D28-000D3B: 00 04 | 00 02 04 06 | 00 01 02 04 05 06 | 00-07
@@ -2712,6 +2714,7 @@ elements background_page_word_steps u32
 017B7F  table background_tile_banks  u8   # race_background_update "mov.b 17B7F[PC](R0), [24[R20]]" (01776B) by background, at a change; census ROM 017B7F-017BA8 (42 backgrounds, 0-3)
 017BA9  table stage_tile_banks  u8   # race_background_update "mov.b 17BA9[PC](R0), [24[R20]]" (0175EC) by screen first_stage, at the start; census ROM 017BA9-017BC7 (31 stages, 0-3)
 109694  table background_tile_page_lists  u32   # by background: the address of its list of tile pages (nine words, 36 bytes apart), "mov.w 109694(R0), R11" (race_background_update 0175AC, + 10: the last four at the start; 0176AC: all nine at a change), then "or.w [R11+], R1" into page_list (0175D1, 0176D1); ranking_background_load too (002B36); census ROM 109694-10973B (42 lists, 1097B8-109D7C)
+109E0C  table background_packed_tile_pages  u8   # the tile pages' packed data, to 12297B, which unpack and unpack_queued_step read a byte at a time (and halfwords of it) from the addresses the lists of background_tile_page_lists give
 0318CC  table background_palettes  u32   # by background: its palette list for queue_palette_list, "mov.w 318CC(R0), R19" (race_background_update 01763E, 01775D; ranking_background_load 002B48); census ROM 0318CC-031973 (42, 13FA50-14063C)
 0319F0  table background_leaving_fades  u32   # by background: the fades started as the old background leaves the screen (change_step 1, at 2A0): race_background_update "mov.w 319F0(R0), R19" (017788) for start_palette_fades; census ROM 0319F0-031A97 (42, 1406FC-140B68)
 031B14  table background_palette_fades  u32   # by background: its palette fades (race_background_fade_palettes), "mov.w 31B14(R0), R19" (race_background_update 01762C, 0177DF; ranking_background_load 002B3E, with start_palette_fades); census ROM 031B14-031BBB (42, 140C50-14145C)
@@ -6423,7 +6426,7 @@ local step_screen_fade 011713,011725 R19 mixer_register mixer_colour_offsets
 local load_shadowed_text_font 011822,01182B,011831 R0 row_bits
 local load_shadowed_text_font 011845 R0 pixel_mask
 local load_shadowed_text_font 011819,011863 R1 characters_left
-local load_shadowed_text_font 011805,011854 R18 destination text_layer_font_rows
+local load_shadowed_text_font 011805,011854 R18 destination text_layer_font_words
 local load_shadowed_text_font 011825,011837 R2 pixel_pairs_left
 local load_shadowed_text_font 01181C,01185F R3 rows_left
 local load_shadowed_text_font 011828,01182E,011834,01183B,011848 R4 row_pixels   # a nibble a pixel
@@ -7736,7 +7739,7 @@ local test_mode_set_up_colours 01EFD2,01EFDE,01EFEA R1 level_colour   # the leve
 local test_mode_set_up_colours 01EFDB,01EFE7,01EFF3 R2 white
 local test_mode_set_up_colours 01EFC5,01EFD8,01EFE4 R10 screen_2_colour io
 local test_mode_set_up_colours 01EFCB,01EFD5,01EFE1 R11 screen_1_colour io
-local test_mode_set_up_colours 01F006,01F020 R10 tile_place tile_pixel_rows
+local test_mode_set_up_colours 01F006,01F020 R10 tile_place tile_pixel_words
 local test_mode_set_up_colours 01F01D,01F023 R8 rows_left
 local test_mode_set_up_colours 01EFC1,01F002 R9 levels_left
 local test_mode_set_up_colours 01F017,01F027 R9 tiles_left
@@ -8344,7 +8347,7 @@ elements palette_fade_differences s8 ram            # for each of the fade's 16 
 elements background_fades u32 ram object            # the palette fades a race_background_fade_watch keeps, a word each from its 80: race_background_fade_palettes "mov.w R21, [R17+]" 01853B; race_background_fade_watch_update "mov.w [R10+], R1" 018556, 0 once one has ended ("mov.w #0, -4[R10]" 018568)
 elements unpacked_bytes u8 board                    # what unpack and unpack_queued_step write a byte at a time, a tile page in video RAM (300000 + 400 * page; census 300400-317BFF): a packed byte ("mov.b [R10+], [R11+]" 010DCC, 010E6C) or one a match copies from further back in it ("mov.b [R2+], [R11+]" 010E1D); unpack_list, which takes any address, is unused
 elements text_layer_cells u16 board                 # cells of the text layer (31F000-31FEFF, 64 a row): the character in the low byte, the attribute (palette) in the high byte; print_text_layer "mov.h R9, [R18+]" 01188B, print_hex_digits "mov.h R0, [-R11]" 011950, the unused erases and print_text_layer_halfwords
-elements text_layer_font_rows u32 board             # the text layer's characters in video RAM (318000 on, 32 bytes each): a row of eight 4-bit pixels a word (load_shadowed_text_font "rvbyt R6, [R18+]" 011854)
+elements text_layer_font_words u16 board            # the text layer's characters in video RAM (318000 on, 32 bytes each), by the video RAM's 16-bit words: four 4-bit pixels a word, a row of eight two of them (load_shadowed_text_font "rvbyt R6, [R18+]" 011854 writes a row at a time, its two words)
 elements boot_register_values u8 rom                # the bytes the reset copies a byte at a time ("mov.b [R10+], [R11+]" 000026): 0000A4-0000B3 to E00000 (which the board does not map), 0000B8-0000C3 to the interrupt controller (D00000)
 elements cleared_ram_words u32 ram                  # work RAM the reset clears 8 bytes at a time ("mov.d R0, [R10+]" 000554 on: 21E000-21E3FF, 21F000-21FFFF, the game's variables 20E000-20FFFF), and second_task the variables again after the test mode (0007C2)
 elements port_output_bits u8 ram                    # a seat's image of an I/O chip's output port (port_d_outputs, port_g_outputs: a byte each screen): update_button_lamps sets the DJ/MUSIC and << >> lamps ("mov.b [R11], R0" 03FA54)
@@ -8354,10 +8357,10 @@ elements vblank_count u8 ram                        # the vertical blanks a scre
 # The tile layers' scroll registers in video RAM (MAME's segas32_v.cpp: 31FF10 + 8 * layer the x scroll, its
 # fraction in the first halfword and its integer part in the second, then the y scroll), which
 # vblank_update_scrolls writes from video_registers for NBG0 or NBG1 and NBG2 or NBG3 (+ 8 * the screen's index)
-31FF10 io NBG0_SCROLL_X u32
-31FF14 io NBG0_SCROLL_Y u32
-31FF20 io NBG2_SCROLL_X u32
-31FF24 io NBG2_SCROLL_Y u32
+31FF10 io NBG0_SCROLL_X u16    # NBG0's x scroll, and NBG1's 8 bytes on (vblank_update_scrolls by the screen's layer), by the video RAM's 16-bit words: the 16.16 the game keeps, the fraction's word first, which the chip does not read, then the pixels' (31FF12: the video's register 0x12)
+31FF14 io NBG0_SCROLL_Y u16    # NBG0's y scroll, and NBG1's 8 bytes on, the same way (the pixels at 31FF16)
+31FF20 io NBG2_SCROLL_X u16    # NBG2's x scroll, and NBG3's 8 bytes on, the same way (the pixels at 31FF22)
+31FF24 io NBG2_SCROLL_Y u16    # NBG2's y scroll, and NBG3's 8 bytes on, the same way (the pixels at 31FF26)
 # ======== memory reached through pointers (batch N3) ========
 # The sprite lists in sprite RAM (400000-41FFFF), a halfword at a time: entries of 8 words, as MAME's segas32_v.cpp
 # reads them: word 0 the command and its attributes (bits 15-14: 00 a sprite, 01 a clip, 10 a jump to entry n,
@@ -8481,7 +8484,7 @@ elements stage_game_counts u16 board  # how many games ended at a stage (701F24 
 struct backup_course_record 6 board   # a course's record as the backup keeps it (701F32 on, ten: AUSTRALIA to KENYA), laid out as course_record: load_course_records copies it into course_records, test_mode_bookkeeping_draw_histogram shows it; a negative model: none
 field backup_course_record 04 time u16        # in hundredths
 scoped global test_mode_blink_prompt 20E708 test_mode_prompt_text u32 test_mode_text_bytes   # test_mode_blink_address as the prompt pages use it: a text record of the ROM (test_mode_show_exit_prompt 01F2BC, test_mode_show_continue_prompt 01F2DE), not a cell
-elements tile_pixel_rows u32 board    # a row of a tile's eight pixels in video RAM, 4 bits each (test_mode_set_up_colours: the four solid tiles from 318020)
+elements tile_pixel_words u16 board   # a tile's pixels in video RAM, by its 16-bit words: four of 4 bits a word, a row of eight two of them (test_mode_set_up_colours writes the four solid tiles from 318020 a row at a time, its two words)
 # The scenes' own (route map, car select, ranking, name entry, attract)
 elements player_place u8 ram          # a player's place in the race (screen places, 0 first): stage_result_line place_address (screen + 320 + player), the final place it draws big
 elements racer_numbers u8 ram      # the race's order in its race record from racer_count (race 1F: the count, then the players at 20 on): car_select_entries race_order, which car_select_entries_run walks a byte at a time (005FD9 "movz.bw [R10+], R8", 005FE0 "movz.bw [R10+], R0")
@@ -8702,13 +8705,12 @@ local draw_object_from_road_edge_doubled 00EDA9 R12 r12 projected_segment
 # The road's line select table in the video RAM (road_surface line_select_table: 31C400 on for screen 1's road, a
 # halfword a line, the depth's tilemap row plus the stripe in r14), written from the bottom line up ("mov.h R0,
 # [-R12]"); the lines above the road's top are cleared two at a time
-elements line_select_pairs u32 board   # two lines' selects at once, as road_surface_lines and road_surface_halfway_lines clear the lines above the road ("test.w [-R12]" 016E51, 016FE2; "mov.w #0, [R12]" 016E4D, 016FDE)
 local road_surface_lines 016D1A,016DC2,016E1A,016E43 R12 select_place line_selects   # "movea.w [5C[R20]](R0), R12" (016D1A): the bottom line's place; "sub.w R9, R12" (016DC2) past skipped lines; "mov.h R0, [-R12]" (016E1A) a line's select; "mov.h #0, [-R12]" (016E43) the line above the road
-local road_surface_lines 016E51 R12 select_place line_select_pairs
+local road_surface_lines 016E51 R12 select_place line_selects   # two lines' selects at once, as it clears the lines above the road ("test.w [-R12]" 016E51; "mov.w #0, [R12]" 016E4D)
 param road_surface_lines R12 select_place
 param road_surface_lines R14 stripe
 local road_surface_halfway_lines 016E9F,016F4F,016FA7,016FD4 R12 select_place line_selects
-local road_surface_halfway_lines 016FE2 R12 select_place line_select_pairs
+local road_surface_halfway_lines 016FE2 R12 select_place line_selects   # two lines' selects at once ("test.w [-R12]" 016FE2; "mov.w #0, [R12]" 016FDE)
 param road_surface_halfway_lines R12 select_place
 param road_surface_halfway_lines R14 stripe
 local road_surface_fill_lines 017055,01709C R12 select_place line_selects   # "mov.h R0, [-R12]": a line's select, up from where road_surface_lines left R12
@@ -8741,7 +8743,7 @@ local load_course_records 001DB4 R12 record_copy course_record_copy+2
 local load_course_records 001DB8 R12 record_copy course_record_copy+3
 local load_course_records 001DBC R12 record_copy course_record_copy+4
 # The unused kanji text viewer's drawing on the bitmap layer (VIDEO_RAM + 1040 on, 100 bytes a row)
-elements bitmap_layer_words u32 board   # the bitmap layer's pixels in the video RAM, eight 4-bit pixels a word: kanji_text_viewer_draw_quarter writes a character's row at a time ("rvbyt 1A6340(R0), [R12]" 01B1ED)
+elements bitmap_layer_words u16 board   # the bitmap layer's pixels in the video RAM, by its 16-bit words: four 4-bit pixels a word, a character's row of eight two of them (kanji_text_viewer_draw_quarter writes a row at a time: "rvbyt 1A6340(R0), [R12]" 01B1ED)
 local kanji_text_viewer_draw_quarter entry R12 bitmap_place bitmap_layer_words   # the quarter's first row (kanji_text_viewer_draw_character: place, + 4, + 800, + 804)
 local kanji_text_viewer_draw_quarter 01B1F6 R12 bitmap_place bitmap_layer_words   # "movea.b 100[R12], R12": the next row
 param kanji_text_viewer_draw_quarter R12 bitmap_place

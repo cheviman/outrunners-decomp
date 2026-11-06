@@ -3,7 +3,7 @@
  *    Description: Multi 32 memory map, interrupt controller, timers, video registers and link board
  *    Version:     0.1.1
  *    Created:     11-10-2026
- *    Modified:    01-11-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -31,17 +31,83 @@ void s32_log(const char *format, ...)
 	s32_board.log(message);
 }
 
+/* A word of the video RAM or the sprite RAM, which the video reads by 16-bit words: in the host's order, its
+   low byte (the one at the even address) at S32_BYTE_LANE */
 static inline uint16_t load16(const uint8_t *source)
 {
-	return (uint16_t)(source[0] | (source[1] << 8));
+	uint16_t value;
+	memcpy(&value, source, sizeof(value));
+	return value;
 }
 
 static inline void store16(uint8_t *dest, uint16_t data, uint16_t mask)
 {
+	if (mask == 0xffff)
+	{
+		memcpy(dest, &data, sizeof(data));
+		return;
+	}
 	if (mask & 0x00ff)
-		dest[0] = (uint8_t)data;
+		dest[S32_BYTE_LANE] = (uint8_t)data;
 	if (mask & 0xff00)
-		dest[1] = (uint8_t)(data >> 8);
+		dest[1 ^ S32_BYTE_LANE] = (uint8_t)(data >> 8);
+}
+
+/* The work RAM and the RAM the sound program shares: each value in the host's order at the width the program
+   reaches it, as the C's structures over them keep it (a byte at its address, a halfword or a word at any
+   address; one at the end goes on at the start, as the memory repeats over its range). NULL elsewhere */
+static uint8_t *plain_memory(uint32_t address, uint32_t *mask)
+{
+	switch ((address >> 20) & 0xf)
+	{
+		case 0x2:
+			*mask = S32_WORK_RAM_SIZE - 1;
+			return s32_board.work_ram;
+		case 0x7:
+			*mask = S32_SHARED_RAM_SIZE - 1;
+			return s32_board.shared_ram;
+		default:
+			return NULL;
+	}
+}
+
+static bool plain_read(uint32_t address, unsigned size, uint32_t *value)
+{
+	uint32_t mask;
+	const uint8_t *memory = plain_memory(address, &mask);
+	uint8_t bytes[4];
+	uint16_t half;
+
+	if (!memory)
+		return false;
+	for (unsigned index = 0; index < size; index++)
+		bytes[index] = memory[(address + index) & mask];
+	if (size == 1)
+		*value = bytes[0];
+	else if (size == 2)
+	{
+		memcpy(&half, bytes, sizeof(half));
+		*value = half;
+	}
+	else
+		memcpy(value, bytes, sizeof(*value));
+	return true;
+}
+
+static bool plain_write(uint32_t address, unsigned size, uint32_t value)
+{
+	uint32_t mask;
+	uint8_t *memory = plain_memory(address, &mask);
+	uint8_t bytes[4];
+	const uint16_t half = (uint16_t)value;
+	const uint8_t byte = (uint8_t)value;
+
+	if (!memory)
+		return false;
+	memcpy(bytes, size == 1 ? (const void *)&byte : size == 2 ? (const void *)&half : (const void *)&value, size);
+	for (unsigned index = 0; index < size; index++)
+		memory[(address + index) & mask] = bytes[index];
+	return true;
 }
 
 /* ---- interrupt controller (0xD00000) ---- */
@@ -293,6 +359,23 @@ static uint64_t hash_bytes(const void *data, size_t size, uint64_t hash)
 	return hash;
 }
 
+/* the same over 16-bit words in the host's order, each as the V70 holds it: the low byte first */
+static uint64_t hash_words(const void *data, size_t size, uint64_t hash)
+{
+	const uint8_t *bytes = (const uint8_t *)data;
+	uint16_t word;
+	for (size_t index = 0; index + 1 < size; index += 2)
+	{
+		memcpy(&word, bytes + index, sizeof(word));
+		hash = (hash ^ (word & 0xffu)) * 0x100000001b3ull;
+		hash = (hash ^ (word >> 8)) * 0x100000001b3ull;
+	}
+	return hash;
+}
+
+/* The memories as the V70 holds them: the video RAM, the sprite RAM, the palettes and the mixers by their
+   16-bit words; the work RAM by its bytes, which on a big-endian processor are each value's at the width the
+   program reaches it, in that processor's order (the C's structures say the widths) */
 uint64_t s32_state_hash(void)
 {
 	uint64_t hash = 0xcbf29ce484222325ull;
@@ -300,15 +383,15 @@ uint64_t s32_state_hash(void)
 	hash = hash_bytes(s32_board.work_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
 	hash = hash_bytes(s32_board.work_ram + S32_STACK_END, S32_WORK_RAM_SIZE - S32_STACK_END, hash);
-	hash = hash_bytes(s32_board.video_ram, sizeof(s32_board.video_ram), hash);
-	hash = hash_bytes(s32_board.sprite_ram, S32_SOUND_STACK_COPY, hash);
-	hash = hash_bytes(s32_board.sprite_ram + S32_SOUND_STACK_COPY + S32_SOUND_STACK_COPY_SIZE,
+	hash = hash_words(s32_board.video_ram, sizeof(s32_board.video_ram), hash);
+	hash = hash_words(s32_board.sprite_ram, S32_SOUND_STACK_COPY, hash);
+	hash = hash_words(s32_board.sprite_ram + S32_SOUND_STACK_COPY + S32_SOUND_STACK_COPY_SIZE,
 		S32_TASK_STACKS - S32_SOUND_STACK_COPY - S32_SOUND_STACK_COPY_SIZE, hash);
-	hash = hash_bytes(s32_board.sprite_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
+	hash = hash_words(s32_board.sprite_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
-	hash = hash_bytes(s32_board.sprite_ram + S32_STACK_END, sizeof(s32_board.sprite_ram) - S32_STACK_END, hash);
-	hash = hash_bytes(s32_board.palette, sizeof(s32_board.palette), hash);
-	return hash_bytes(s32_board.mixer, sizeof(s32_board.mixer), hash);
+	hash = hash_words(s32_board.sprite_ram + S32_STACK_END, sizeof(s32_board.sprite_ram) - S32_STACK_END, hash);
+	hash = hash_words(s32_board.palette, sizeof(s32_board.palette), hash);
+	return hash_words(s32_board.mixer, sizeof(s32_board.mixer), hash);
 }
 
 /* ---- link board (0x800000) ---- */
@@ -396,7 +479,7 @@ static uint16_t program_read(uint32_t address, uint16_t mask)
 	uint16_t value = 0;
 
 	if (s32_board.program)
-		return load16(&s32_board.program[address]);
+		return (uint16_t)(s32_board.program[address] | (s32_board.program[address + 1] << 8));    /* as the chips hold it */
 	if (mask & 0x00ff)
 		value |= *s32_board.program_at(address);
 	if (mask & 0xff00)
@@ -404,6 +487,8 @@ static uint16_t program_read(uint32_t address, uint16_t mask)
 	return value;
 }
 
+/* (the work RAM and the RAM the sound program shares are taken before the bus, as the values they hold:
+   plain_read and plain_write) */
 static uint16_t bus_read(uint32_t address, uint16_t mask)
 {
 	address &= 0xfffffe;
@@ -411,8 +496,6 @@ static uint16_t bus_read(uint32_t address, uint16_t mask)
 	{
 		case 0x0: case 0x1:
 			return program_read(address, mask);
-		case 0x2:
-			return load16(&s32_board.work_ram[address & 0x1ffff]);
 		case 0x3:
 			return load16(&s32_board.video_ram[address & 0x1ffff]);
 		case 0x4:
@@ -427,8 +510,6 @@ static uint16_t bus_read(uint32_t address, uint16_t mask)
 				return s32_board.mixer[screen][(address >> 1) & 0x3f];
 			return palette_read(screen, (address >> 1) & 0x7fff);
 		}
-		case 0x7:
-			return load16(&s32_board.shared_ram[address & 0x1fff]);
 		case 0x8:
 			if (comm_mapped(address))
 				return 0xff00 | comm_read(address);
@@ -452,9 +533,6 @@ static void bus_write(uint32_t address, uint16_t data, uint16_t mask)
 	address &= 0xfffffe;
 	switch (address >> 20)
 	{
-		case 0x2:
-			store16(&s32_board.work_ram[address & 0x1ffff], data, mask);
-			break;
 		case 0x3:
 			store16(&s32_board.video_ram[address & 0x1ffff], data, mask);
 			break;
@@ -477,9 +555,6 @@ static void bus_write(uint32_t address, uint16_t data, uint16_t mask)
 				palette_write(screen, (address >> 1) & 0x7fff, data, mask);
 			break;
 		}
-		case 0x7:
-			store16(&s32_board.shared_ram[address & 0x1fff], data, mask);
-			break;
 		case 0x8:
 			if (!comm_mapped(address))
 				unmapped_write(address, data, mask);
@@ -512,6 +587,9 @@ static void bus_write(uint32_t address, uint16_t data, uint16_t mask)
 
 uint8_t s32_read8(uint32_t address)
 {
+	uint32_t value;
+	if (plain_read(address, 1, &value))
+		return (uint8_t)value;
 	if (address & 1)
 		return (uint8_t)(bus_read(address, 0xff00) >> 8);
 	return (uint8_t)bus_read(address, 0x00ff);
@@ -519,6 +597,9 @@ uint8_t s32_read8(uint32_t address)
 
 uint16_t s32_read16(uint32_t address)
 {
+	uint32_t value;
+	if (plain_read(address, 2, &value))
+		return (uint16_t)value;
 	if (address & 1)
 		return (uint16_t)(s32_read8(address) | (s32_read8(address + 1) << 8));
 	return bus_read(address, 0xffff);
@@ -526,6 +607,9 @@ uint16_t s32_read16(uint32_t address)
 
 uint32_t s32_read32(uint32_t address)
 {
+	uint32_t value;
+	if (plain_read(address, 4, &value))
+		return value;
 	if (address & 1)
 		return s32_read8(address) | ((uint32_t)s32_read16(address + 1) << 8) | ((uint32_t)s32_read8(address + 3) << 24);
 	return s32_read16(address) | ((uint32_t)s32_read16(address + 2) << 16);
@@ -533,6 +617,8 @@ uint32_t s32_read32(uint32_t address)
 
 void s32_write8(uint32_t address, uint8_t data)
 {
+	if (plain_write(address, 1, data))
+		return;
 	if (address & 1)
 		bus_write(address, (uint16_t)(data << 8), 0xff00);
 	else
@@ -541,6 +627,8 @@ void s32_write8(uint32_t address, uint8_t data)
 
 void s32_write16(uint32_t address, uint16_t data)
 {
+	if (plain_write(address, 2, data))
+		return;
 	if (address & 1)
 	{
 		s32_write8(address, (uint8_t)data);
@@ -552,6 +640,8 @@ void s32_write16(uint32_t address, uint16_t data)
 
 void s32_write32(uint32_t address, uint32_t data)
 {
+	if (plain_write(address, 4, data))
+		return;
 	if (address & 1)
 	{
 		s32_write8(address, (uint8_t)data);

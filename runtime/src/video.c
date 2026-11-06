@@ -5,7 +5,7 @@
  *                 memories
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -145,10 +145,18 @@ static int shift_down(int value, int count)
 	return value >= 0 ? value >> count : ~(~value >> count);
 }
 
+/* The video RAM and the sprite RAM are 16-bit words in the host's order (s32/machine.h): a word as it is,
+   a byte at S32_BYTE_LANE from its address */
 static uint16_t video_word(uint32_t index)
 {
-	const uint8_t *at = &s32_board.video_ram[(index & 0xffff) * 2];
-	return (uint16_t)(at[0] | at[1] << 8);
+	uint16_t word;
+	memcpy(&word, &s32_board.video_ram[(index & 0xffff) * 2], sizeof(word));
+	return word;
+}
+
+static uint8_t video_byte(uint32_t address)
+{
+	return s32_board.video_ram[(address ^ S32_BYTE_LANE) & (S32_VIDEO_RAM_SIZE - 1)];
 }
 
 /* A register of the tilemap chip, by its offset from 0x31FF00 */
@@ -165,8 +173,9 @@ static uint16_t mixer_register(int screen, uint32_t offset)
 
 static uint16_t sprite_word(uint32_t index)
 {
-	const uint8_t *at = &s32_board.sprite_ram[(index & 0xffff) * 2];
-	return (uint16_t)(at[0] | at[1] << 8);
+	uint16_t word;
+	memcpy(&word, &s32_board.sprite_ram[(index & 0xffff) * 2], sizeof(word));
+	return word;
 }
 
 static uint32_t big_endian_word(const uint8_t *at)
@@ -215,7 +224,7 @@ static uint16_t text_pixel(int y, int x)
 	const uint16_t control = video_register(0x5c);
 	const uint16_t cell = video_word((uint32_t)((control >> 4) & 0x1f) << 11 | (uint32_t)(y >> 3) << 6 | (uint32_t)(x >> 3));
 	const uint32_t character = (uint32_t)(control & 7) << 9 | (cell & 0x1ff);
-	const uint8_t value = s32_board.video_ram[character * 32 + (y & 7) * 4 + (x & 7) / 2];
+	const uint8_t value = video_byte(character * 32 + (uint32_t)(y & 7) * 4 + (uint32_t)(x & 7) / 2);
 	const int pen = (x & 1) ? (value & 0x0f) : (value >> 4);
 
 	return pen ? (uint16_t)(((cell >> 9) & 0x7f) << 4 | pen) : 0;
@@ -587,7 +596,7 @@ static uint16_t bitmap_pixel(const void *source, int x)
 
 	if (row->bits8)
 	{
-		pixel = s32_board.video_ram[row->start + (uint32_t)column] + row->color;
+		pixel = video_byte(row->start + (uint32_t)column) + row->color;
 		return (pixel & 0xff) ? (uint16_t)pixel : 0;
 	}
 	pixel = ((video_word(row->start + (uint32_t)column / 4) >> (4 * (column & 3))) & 0x0f) + row->color;
@@ -742,7 +751,13 @@ static void put_sprite_pixel(const sprite_drawing *sprite, int x, int pen, int s
 static uint32_t sprite_graphics(bool from_ram, uint32_t bank, uint32_t index)
 {
 	if (from_ram)
-		return big_endian_word(&s32_board.sprite_ram[(index & 0x7fff) * 4]);
+	{
+		/* the bytes in their order in sprite RAM, each at S32_BYTE_LANE in its word */
+		const uint8_t *at = &s32_board.sprite_ram[(index & 0x7fff) * 4];
+		const uint8_t bytes[4] = { at[0 ^ S32_BYTE_LANE], at[1 ^ S32_BYTE_LANE], at[2 ^ S32_BYTE_LANE],
+		                           at[3 ^ S32_BYTE_LANE] };
+		return big_endian_word(bytes);
+	}
 	return video.graphics.sprite_word((bank << 20) | (index & 0xfffff));
 }
 

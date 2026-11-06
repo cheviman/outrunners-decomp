@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -418,9 +418,10 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 		{
 			select_place -= 4u;
 			line--;
-			if (((line != 0u) & (LINE_SELECT_PAIRS(select_place)[0] != 0u)) == 0u)
+			if (((line != 0u) & ((LINE_SELECTS(select_place)[0] | LINE_SELECTS(select_place)[1]) != 0u)) == 0u)
 				break;
-			LINE_SELECT_PAIRS(select_place)[0] = 0u;
+			LINE_SELECTS(select_place)[0] = 0u;
+			LINE_SELECTS(select_place)[1] = 0u;
 		}
 		break;
 	}
@@ -650,9 +651,10 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 		{
 			select_place -= 4u;
 			line--;
-			if (((line != 0u) & (LINE_SELECT_PAIRS(select_place)[0] != 0u)) == 0u)
+			if (((line != 0u) & ((LINE_SELECTS(select_place)[0] | LINE_SELECTS(select_place)[1]) != 0u)) == 0u)
 				break;
-			LINE_SELECT_PAIRS(select_place)[0] = 0u;
+			LINE_SELECTS(select_place)[0] = 0u;
+			LINE_SELECTS(select_place)[1] = 0u;
 		}
 		*p_select_place = select_place;
 		road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &ignored_3, &ignored_4, p_select_place, p_stripe);
@@ -671,9 +673,10 @@ void road_surface_halfway_lines(uint32_t previous_line, uint32_t previous_x, uin
 	{
 		select_place -= 4u;
 		line--;
-		if (((line != 0u) & (LINE_SELECT_PAIRS(select_place)[0] != 0u)) == 0u)
+		if (((line != 0u) & ((LINE_SELECTS(select_place)[0] | LINE_SELECTS(select_place)[1]) != 0u)) == 0u)
 			break;
-		LINE_SELECT_PAIRS(select_place)[0] = 0u;
+		LINE_SELECTS(select_place)[0] = 0u;
+		LINE_SELECTS(select_place)[1] = 0u;
 	}
 	*p_select_place = select_place;
 	road_surface_fill_skipped_lines(fraction_shift, rounding, max_depth, &ignored_3, &ignored_4, p_select_place, p_stripe);

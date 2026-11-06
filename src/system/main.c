@@ -3,7 +3,7 @@
  *    Description: the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -41,13 +41,13 @@ void boot(void)
 		source++;
 		destination++;
 	} while (pair_count != 0u);
-	mem_write8(0xE80000u, (uint8_t)boot_e80000_bytes);
-	mem_write8(0xE80001u, (uint8_t)(boot_e80000_bytes >> 8u));
-	mem_write8(0xE80002u, (uint8_t)(boot_e80000_bytes >> 16u));
-	mem_write8(0xE80003u, (uint8_t)(boot_e80000_bytes >> 24u));
+	mem_write8(0xE80000u, boot_e80000_bytes[0]);
+	mem_write8(0xE80001u, boot_e80000_bytes[1]);
+	mem_write8(0xE80002u, boot_e80000_bytes[2]);
+	mem_write8(0xE80003u, boot_e80000_bytes[3]);
 	destination = INTERRUPT_CONTROL;
 	pair_count = 6u;
-	source = rom_pointer(0xB8u);
+	source = boot_interrupt_control_bytes;
 	do
 	{
 		io_write8(destination, source[0]);

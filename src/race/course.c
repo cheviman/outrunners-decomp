@@ -3,7 +3,7 @@
  *    Description: the course: its segments built ahead of the car, the road projected for the view
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -91,7 +91,7 @@ void player_car_extend_course(void)
 	{
 		player_car->course_records_read++;
 		course_place = rom_pointer(player_car->course);
-		run_length = (int16_t)AS16(course_place[0]);
+		run_length = (int16_t)(course_place[0] | ((uint32_t)course_place[1] << 8u));
 		course_place += 2;
 		if ((int16_t)run_length > 0)
 			break;
@@ -109,7 +109,7 @@ void player_car_extend_course(void)
 			player_car->course = address_of(course_place);
 			continue;
 		case 1:
-			player_car->course = AS32(course_place[0]);
+			player_car->course = (course_place[0] | ((uint32_t)course_place[1] << 8u) | ((uint32_t)course_place[2] << 16u) | ((uint32_t)course_place[3] << 24u));
 			continue;
 		case 2:
 			race = pointer_to(screen->race);
@@ -180,7 +180,7 @@ void player_car_build_segment(uint16_t ring_mask)
 		{
 			player_car->course_records_read++;
 			course_place = rom_pointer(player_car->course);
-			run_length = (int16_t)AS16(course_place[0]);
+			run_length = (int16_t)(course_place[0] | ((uint32_t)course_place[1] << 8u));
 			course_place += 2;
 			if ((int16_t)run_length > 0)
 				break;
@@ -198,7 +198,7 @@ void player_car_build_segment(uint16_t ring_mask)
 				player_car->course = address_of(course_place);
 				continue;
 			case 1:
-				player_car->course = AS32(course_place[0]);
+				player_car->course = (course_place[0] | ((uint32_t)course_place[1] << 8u) | ((uint32_t)course_place[2] << 16u) | ((uint32_t)course_place[3] << 24u));
 				continue;
 			case 2:
 				race = pointer_to(screen->race);

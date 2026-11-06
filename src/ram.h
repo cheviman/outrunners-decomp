@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -167,7 +167,10 @@
 /* data in the program ROM the code reads */
 #define boot_e80000_bytes_ADDRESS 0x0000B4u
 extern const void *boot_e80000_bytes_data;
-#define boot_e80000_bytes (*(const uint32_t *)boot_e80000_bytes_data)
+#define boot_e80000_bytes ((const uint8_t *)boot_e80000_bytes_data)
+#define boot_interrupt_control_bytes_ADDRESS 0x0000B8u
+extern const void *boot_interrupt_control_bytes_data;
+#define boot_interrupt_control_bytes ((const uint8_t *)boot_interrupt_control_bytes_data)
 #define seat_credits_addresses_ADDRESS 0x0008C4u
 extern const void *seat_credits_addresses_data;
 #define seat_credits_addresses ((const uint32_t *)seat_credits_addresses_data)
@@ -1572,6 +1575,9 @@ extern const void *no_background_tile_pages_data;
 #define background_tile_page_lists_ADDRESS 0x109694u
 extern const void *background_tile_page_lists_data;
 #define background_tile_page_lists ((const uint32_t *)background_tile_page_lists_data)
+#define background_packed_tile_pages_ADDRESS 0x109E0Cu
+extern const void *background_packed_tile_pages_data;
+#define background_packed_tile_pages (*(const uint8_t *)background_packed_tile_pages_data)
 #define text_sprite_words_0_1_ADDRESS 0x122B5Cu
 extern const void *text_sprite_words_0_1_data;
 #define text_sprite_words_0_1 (*(const uint32_t *)text_sprite_words_0_1_data)
@@ -1670,13 +1676,13 @@ extern const void *kanji_font_data;
 #define VIDEO_LINE_CONTROL_HIGH_ADDRESS 0x31FF05u
 #define VIDEO_LINE_CONTROL_HIGH BOARD8(VIDEO_LINE_CONTROL_HIGH_ADDRESS)
 #define NBG0_SCROLL_X_ADDRESS 0x31FF10u
-#define NBG0_SCROLL_X ((uint32_t *)board(NBG0_SCROLL_X_ADDRESS))
+#define NBG0_SCROLL_X ((uint16_t *)board(NBG0_SCROLL_X_ADDRESS))
 #define NBG0_SCROLL_Y_ADDRESS 0x31FF14u
-#define NBG0_SCROLL_Y ((uint32_t *)board(NBG0_SCROLL_Y_ADDRESS))
+#define NBG0_SCROLL_Y ((uint16_t *)board(NBG0_SCROLL_Y_ADDRESS))
 #define NBG2_SCROLL_X_ADDRESS 0x31FF20u
-#define NBG2_SCROLL_X ((uint32_t *)board(NBG2_SCROLL_X_ADDRESS))
+#define NBG2_SCROLL_X ((uint16_t *)board(NBG2_SCROLL_X_ADDRESS))
 #define NBG2_SCROLL_Y_ADDRESS 0x31FF24u
-#define NBG2_SCROLL_Y ((uint32_t *)board(NBG2_SCROLL_Y_ADDRESS))
+#define NBG2_SCROLL_Y ((uint16_t *)board(NBG2_SCROLL_Y_ADDRESS))
 #define SPRITE_SCREEN_1_LIST_JUMP_ADDRESS 0x400020u
 #define SPRITE_SCREEN_1_LIST_JUMP BOARD16(SPRITE_SCREEN_1_LIST_JUMP_ADDRESS)
 #define SPRITE_SCREEN_2_LIST_JUMP_ADDRESS 0x400030u
@@ -1698,17 +1704,17 @@ extern const void *kanji_font_data;
 #define SPRITE_LIST_2_B_HALFWAY_ADDRESS 0x41D000u
 #define SPRITE_LIST_2_B_HALFWAY BOARD16(SPRITE_LIST_2_B_HALFWAY_ADDRESS)
 #define SOUND_COMMAND_1_ADDRESS 0x700700u
-#define SOUND_COMMAND_1 ((uint8_t *)board(SOUND_COMMAND_1_ADDRESS))
+#define SOUND_COMMAND_1 ((uint8_t *)board_byte(SOUND_COMMAND_1_ADDRESS))
 #define SOUND_SECOND_COMMAND_1_ADDRESS 0x700708u
-#define SOUND_SECOND_COMMAND_1 ((uint8_t *)board(SOUND_SECOND_COMMAND_1_ADDRESS))
+#define SOUND_SECOND_COMMAND_1 ((uint8_t *)board_byte(SOUND_SECOND_COMMAND_1_ADDRESS))
 #define SOUND_ENGINE_REVS_1_ADDRESS 0x700710u
-#define SOUND_ENGINE_REVS_1 ((uint8_t *)board(SOUND_ENGINE_REVS_1_ADDRESS))
+#define SOUND_ENGINE_REVS_1 ((uint8_t *)board_byte(SOUND_ENGINE_REVS_1_ADDRESS))
 #define SOUND_ENGINE_REQUESTS_1_ADDRESS 0x700712u
-#define SOUND_ENGINE_REQUESTS_1 ((uint8_t *)board(SOUND_ENGINE_REQUESTS_1_ADDRESS))
+#define SOUND_ENGINE_REQUESTS_1 ((uint8_t *)board_byte(SOUND_ENGINE_REQUESTS_1_ADDRESS))
 #define SOUND_ENGINE_SAMPLE_1_ADDRESS 0x700713u
-#define SOUND_ENGINE_SAMPLE_1 ((uint8_t *)board(SOUND_ENGINE_SAMPLE_1_ADDRESS))
+#define SOUND_ENGINE_SAMPLE_1 ((uint8_t *)board_byte(SOUND_ENGINE_SAMPLE_1_ADDRESS))
 #define SOUND_ENGINE_LOUDNESS_1_ADDRESS 0x700714u
-#define SOUND_ENGINE_LOUDNESS_1 ((uint8_t *)board(SOUND_ENGINE_LOUDNESS_1_ADDRESS))
+#define SOUND_ENGINE_LOUDNESS_1 ((uint8_t *)board_byte(SOUND_ENGINE_LOUDNESS_1_ADDRESS))
 #define SOUND_TYRE_NOISE_1_ADDRESS 0x700718u
 #define SOUND_TYRE_NOISE_1 BOARD8(SOUND_TYRE_NOISE_1_ADDRESS)
 #define SOUND_COMMAND_2_ADDRESS 0x700800u
@@ -5638,9 +5644,9 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define PALETTE_FADE_COLOURS(address) ((uint16_t *)ram(address))
 #define PALETTE_FADE_DIFFERENCES(address) ((int8_t *)ram(address))
 #define BACKGROUND_FADES(address) ((uint32_t *)ram(address))
-#define UNPACKED_BYTES(address) ((uint8_t *)board(address))
+#define UNPACKED_BYTES(address) ((uint8_t *)board_byte(address))
 #define TEXT_LAYER_CELLS(address) ((uint16_t *)board(address))
-#define TEXT_LAYER_FONT_ROWS(address) ((uint32_t *)board(address))
+#define TEXT_LAYER_FONT_WORDS(address) ((uint16_t *)board(address))
 #define BOOT_REGISTER_VALUES(address) ((const uint8_t *)data_at(address))
 #define CLEARED_RAM_WORDS(address) ((uint32_t *)ram(address))
 #define PORT_OUTPUT_BITS(address) ((uint8_t *)ram(address))
@@ -5661,7 +5667,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define OUTPUT_BITS(address) ((uint32_t *)ram(address))
 #define STAGE_GAME_COUNTS(address) ((uint16_t *)board(address))
 #define BACKUP_COURSE_RECORD(address) ((struct backup_course_record *)board(address))
-#define TILE_PIXEL_ROWS(address) ((uint32_t *)board(address))
+#define TILE_PIXEL_WORDS(address) ((uint16_t *)board(address))
 #define PLAYER_PLACE(address) ((uint8_t *)ram(address))
 #define RACER_NUMBERS(address) ((uint8_t *)ram(address))
 #define OBJECT_TILE_PAGES(address) ((uint32_t *)ram(address))
@@ -5696,19 +5702,18 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define CHUTE_UNIT_SETTINGS(address) ((uint8_t *)ram(address))
 #define ANALOG_VALUES(address) ((uint8_t *)ram(address))
 #define ANALOG_CALIBRATION_BYTES(address) ((uint8_t *)ram(address))
-#define MUSIC_FADE_DELAYS(address) ((uint8_t *)board(address))
+#define MUSIC_FADE_DELAYS(address) ((uint8_t *)board_byte(address))
 #define LCD_CHARACTERS(address) ((uint8_t *)ram(address))
 #define SETTINGS_WORDS(address) ((uint16_t *)ram(address))
 #define TIME_DIGIT(address) ((struct time_digit *)ram(address))
-#define TESTED_SOUND_RAM_BYTES(address) ((uint8_t *)board(address))
+#define TESTED_SOUND_RAM_BYTES(address) ((uint8_t *)board_byte(address))
 #define TIME_DIFFICULTY_SECONDS(address) ((uint8_t *)ram(address))
 #define BACKED_UP_SETTING(address) ((struct backed_up_setting *)ram(address))
 #define BOOKKEEPING_BLOCK(address) ((struct bookkeeping_block *)board(address))
 #define COURSE_ENTRY(address) ((const struct course_entry *)data_at(address))
 #define COURSE_RECORD_ENTRY(address) ((struct course_record_entry *)ram(address))
-#define LINE_SELECT_PAIRS(address) ((uint32_t *)board(address))
 #define COURSE_RECORD_COPY(address) ((struct course_record_copy *)ram(address))
-#define BITMAP_LAYER_WORDS(address) ((uint32_t *)board(address))
+#define BITMAP_LAYER_WORDS(address) ((uint16_t *)board(address))
 
 /* the program ROM's tables of records, by name: name[i].field */
 #define bar_picture_bars_ADDRESS 0x0011B1u
@@ -5792,6 +5797,9 @@ extern const void *checkpoint_board_behind_places_data;
 #define sprite_list_switches_ADDRESS 0x00F508u
 extern const void *sprite_list_switches_data;
 #define sprite_list_switches ((const uint32_t *)(sprite_list_switches_data))
+#define sprite_list_switch_records_ADDRESS 0x00F528u
+extern const void *sprite_list_switch_records_data;
+#define sprite_list_switch_records ((const struct sprite_list_switch *)(sprite_list_switch_records_data))
 #define hidden_layer_pairs_ADDRESS 0x010B06u
 extern const void *hidden_layer_pairs_data;
 #define hidden_layer_pairs ((const struct hidden_layer_pair *)(hidden_layer_pairs_data))

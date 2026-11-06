@@ -3,7 +3,7 @@
  *    Description: a viewer of kanji texts nothing starts (unused)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -180,16 +180,21 @@ uint32_t kanji_text_viewer_draw_character(uint32_t place, uint32_t rows)
    table at 1A6340 into eight 4-bit pixels of pen 1. */
 void kanji_text_viewer_draw_quarter(uint32_t *p_bitmap_place, uint32_t *p_rows)
 {
+	uint32_t bitmap_place = *p_bitmap_place;
 	uint32_t rows_left = 0;
+	uint32_t bitmap_layer_words_long = 0;
 
 	rows_left = 8u;
 	do
 	{
-		BITMAP_LAYER_WORDS(*p_bitmap_place)[0] = byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(*p_rows)[0]]);
-		*p_bitmap_place += 0x100u;
+		bitmap_layer_words_long = byte_swap32(kanji_row_pixels[KANJI_CHARACTER_ROWS(*p_rows)[0]]);
+		BITMAP_LAYER_WORDS(bitmap_place)[0] = (uint16_t)bitmap_layer_words_long;
+		BITMAP_LAYER_WORDS(bitmap_place)[1] = (uint16_t)(bitmap_layer_words_long >> 16u);
+		bitmap_place += 0x100u;
 		rows_left--;
 		(*p_rows)++;
 	} while (rows_left != 0u);
+	*p_bitmap_place = bitmap_place;
 }
 
 /* Only unused code reaches it (kanji_text_viewer_draw_line): the address of character R13 of the kanji

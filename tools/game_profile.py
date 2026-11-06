@@ -4,7 +4,7 @@ Description: what the shared decompiler core (tools/core) needs to know of OutRu
              its ROM set, and its settings
 Version:     0.1.0
 Created:     25-10-2026
-Modified:    30-10-2026
+Modified:    06-11-2026
 Author:      Sebastian Toyos
 
 The core (arcade-decomp: the decompiler, the V60 and Z80 frontends, the analysis, the checks) is the same
@@ -104,6 +104,9 @@ memory.NOTES = {
               "   sound program shares), by name: lvalues through board() */"],
 }
 memory.PLAIN_HARDWARE = ("VIDEO", "SPRITE_RAM", "SOUND")
+# the video RAM and the sprite RAM are 16-bit words in the host's order (runtime/include/s32/machine.h): a byte
+# of the board's memories through board_byte, which finds its lane (game/support.h)
+memory.BOARD_BYTE_FUNCTION = pointers.BOARD_BYTE_FUNCTION = "board_byte"
 # the routines that work on memory by its address, whatever is there (noise_report.py: their mem_access is
 # the original's): function -> why
 MEMORY_ROUTINES = {
@@ -114,6 +117,14 @@ MEMORY_ROUTINES = {
     "unrolled_copy": "copies any number of bytes from any address to any other",
     "boot": "writes the register values at 0000A4 to E00000 and E80000, which this board does not map",
 }
+# the census of the program's access widths (width_census.py): the board's memories it looks at, as the bus
+# decodes them (first address, past the last, its name, the size that repeats in that range; the program's data
+# by rom.canonical_address), and the routines whose accesses say nothing of how the game lays out what they
+# reach: the memory test writes and reads back every element at one width, and a copy moves the bytes in order
+WIDTH_MEMORIES = ((0x200000, 0x300000, "work RAM", 0x20000), (0x300000, 0x400000, "video RAM", 0x20000),
+                  (0x400000, 0x500000, "sprite RAM", 0x20000), (0x700000, 0x800000, "sound RAM", 0x2000))
+WIDTH_ROUTINES = ("test_mode_memory_test_words", "test_mode_memory_test_nibbles", "test_mode_memory_test_bytes",
+                  "unrolled_copy")
 # (R27 and R28 are not: no function reads what another left in them; player_car_project_road could, were
 # its projection pattern to skip every segment, but segment_projection_pattern starts with a 1)
 signatures.CONTEXT = (12, 14, 20, 23, 25, 32)

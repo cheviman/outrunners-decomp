@@ -4,7 +4,7 @@
  *                 keeps the pace, around the same game and board the headless runs check
  *    Version:     0.1.0
  *    Created:     21-10-2026
- *    Modified:    28-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -590,7 +590,7 @@ int main(int argc, char **argv)
 	s32_board.controls_update = on_controls_update;
 	s32_board.log = on_log;
 	s32_board.frame_timing = true;
-	s32_board.program_at = data_at;
+	s32_board.program_at = data_byte_at;
 	s32_init(NULL);
 	s32_video_init_graphics(assets_graphics());
 	s32_board.frame_shown = on_frame_shown;

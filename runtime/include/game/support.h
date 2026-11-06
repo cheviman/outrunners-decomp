@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -36,7 +36,8 @@ extern "C" {
    game (game->game_frame_count) and runtime/src/game.c keeps, the board reading the same bytes. A place the
    code works out by its address is the byte there (ram()). The V60 is little endian and lets a halfword or
    word sit at any address, like the targets this runs on; the build turns strict aliasing off for this
-   code. */
+   code. On another processor the work RAM holds each value in that processor's order at the width the code
+   reaches it, and the board's memories as s32/machine.h says. */
 struct game;
 extern struct game *game;
 /* Functions that stop the game: the C compiler knows they do not come back */
@@ -122,11 +123,20 @@ static inline uint8_t *board(uint32_t address)
 	}
 }
 
+/* a byte of one: the video RAM and the sprite RAM are 16-bit words in the host's order, where the byte at an
+   address is at S32_BYTE_LANE in its word (s32/machine.h); the RAM the sound program shares keeps each byte at
+   its address */
+static inline uint8_t *board_byte(uint32_t address)
+{
+	const uint32_t memory = (address >> 20) & 0xf;
+	return board(memory == 0x3 || memory == 0x4 ? address ^ S32_BYTE_LANE : address);
+}
+
 /* the board's variables in those memories (the "io" lines of symbols.txt there): lvalues, as the work RAM's */
-#define BOARD8(address)   (*(uint8_t *)board(address))
+#define BOARD8(address)   (*(uint8_t *)board_byte(address))
 #define BOARD16(address)  (*(uint16_t *)board(address))
 #define BOARD32(address)  (*(uint32_t *)board(address))
-#define BOARD8S(address)  (*(int8_t *)board(address))
+#define BOARD8S(address)  (*(int8_t *)board_byte(address))
 #define BOARD16S(address) (*(int16_t *)board(address))
 #define BOARD32S(address) (*(int32_t *)board(address))
 

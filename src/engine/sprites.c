@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -75,8 +75,10 @@ uint16_t draw_object(uint32_t routine_then_layer)
 		depth_list->tail = sprite_entry;
 	r12 = screen->sprite_list_last + 0x10u;
 	layer_head = depth_list->head;
-	AS32(SPRITE_WORDS(sprite_entry)[0]) = layer_head;
-	AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = (uint16_t)(layer_head + 0x300u);
+	SPRITE_WORDS(sprite_entry)[0] = (uint16_t)layer_head;
+	SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(layer_head >> 16u);
+	SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)(layer_head + 0x300u);
+	SPRITE_WORDS(sprite_entry + 0x3000u)[1] = 0u;
 	screen->sprite_list_last = sprite_entry;
 	r12 = r12 >> 4;
 	r12 = r12 | 0x8000u;
@@ -808,8 +810,10 @@ void finish_sprite_list(void)
 				new_head = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -819,8 +823,10 @@ void finish_sprite_list(void)
 				new_head_2 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_2;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -830,8 +836,10 @@ void finish_sprite_list(void)
 				new_head_3 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_3;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -841,8 +849,10 @@ void finish_sprite_list(void)
 				new_head_4 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_4;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -852,8 +862,10 @@ void finish_sprite_list(void)
 				new_head_5 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_5;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -863,8 +875,10 @@ void finish_sprite_list(void)
 				new_head_6 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_6;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -874,8 +888,10 @@ void finish_sprite_list(void)
 				new_head_7 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_7;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -885,8 +901,10 @@ void finish_sprite_list(void)
 				new_head_8 = cleared_head;
 				layer_head = depth_list->head;
 				depth_list->head = new_head_8;
-				AS32(SPRITE_WORDS(chain_tail)[0]) = layer_head;
-				AS32(SPRITE_WORDS(chain_tail + 0x3000u)[0]) = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail)[0] = (uint16_t)layer_head;
+				SPRITE_WORDS(chain_tail)[1] = (uint16_t)(layer_head >> 16u);
+				SPRITE_WORDS(chain_tail + 0x3000u)[0] = (uint16_t)(layer_head + copy_distance);
+				SPRITE_WORDS(chain_tail + 0x3000u)[1] = 0u;
 				chain_tail = LINKED(chain_tail, depth_list->tail);
 				cleared_head = empty_head;
 			}
@@ -1043,8 +1061,10 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32
 						screen->next_sprite_place = (sprite_place + 4u) & (places_mask | 0xFFFF0000u);
 						return;
 					}
-					AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = attributes_and_size;
-					AS32(SPRITE_WORDS(sprite_entry)[0]) = attributes_and_size;
+					SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)attributes_and_size;
+					SPRITE_WORDS(sprite_entry + 0x3000u)[1] = (uint16_t)(attributes_and_size >> 16u);
+					SPRITE_WORDS(sprite_entry)[0] = (uint16_t)attributes_and_size;
+					SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(attributes_and_size >> 16u);
 					SPRITE_PLACE(sprite_place)->rom_offset = rom_offset_and_palette;
 					sprite_entry += 4u;
 					if (SPRITE_WORDS(previous_sprites + 0x8u)[0] == (uint16_t)rom_offset_and_palette)
@@ -1091,15 +1111,19 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32
 						SPRITE_WORDS(sprite_entry)[0] = x;
 						sprite_entry += 2u;
 					}
-					AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = rom_offset_and_palette;
-					AS32(SPRITE_WORDS(sprite_entry)[0]) = rom_offset_and_palette;
+					SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)rom_offset_and_palette;
+					SPRITE_WORDS(sprite_entry + 0x3000u)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
+					SPRITE_WORDS(sprite_entry)[0] = (uint16_t)rom_offset_and_palette;
+					SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
 					depth_list = pointer_to(address_of(screen) + 0x5000u + projected_segment->depth_layer * 4u);
 					sprite_entry += 4u;
 					if (depth_list->head == 0u)
 						depth_list->tail = sprite_entry;
 					layer_head = depth_list->head;
-					AS32(SPRITE_WORDS(sprite_entry)[0]) = layer_head;
-					AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = (uint16_t)(layer_head + 0x300u);
+					SPRITE_WORDS(sprite_entry)[0] = (uint16_t)layer_head;
+					SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(layer_head >> 16u);
+					SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)(layer_head + 0x300u);
+					SPRITE_WORDS(sprite_entry + 0x3000u)[1] = 0u;
 					depth_list->head = ((sprite_entry - 0x10u) >> 4) | 0x8000u;
 					screen->sprite_groups++;
 					sprite_entry += 0x10u;
@@ -1248,11 +1272,15 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, u
 			if (screen->sprite_list_limit <= sprite_entry)
 				break;
 			attributes_and_size = attributes_and_size ^ mirror_bits;
-			AS32(SPRITE_WORDS(sprite_entry + 0x3010u)[0]) = attributes_and_size;
-			AS32(SPRITE_WORDS(sprite_entry + 0x10u)[0]) = attributes_and_size;
+			SPRITE_WORDS(sprite_entry + 0x3010u)[0] = (uint16_t)attributes_and_size;
+			SPRITE_WORDS(sprite_entry + 0x3010u)[1] = (uint16_t)(attributes_and_size >> 16u);
+			SPRITE_WORDS(sprite_entry + 0x10u)[0] = (uint16_t)attributes_and_size;
+			SPRITE_WORDS(sprite_entry + 0x10u)[1] = (uint16_t)(attributes_and_size >> 16u);
 			attributes_and_size = attributes_and_size ^ mirror_bits;
-			AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = attributes_and_size;
-			AS32(SPRITE_WORDS(sprite_entry)[0]) = attributes_and_size;
+			SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)attributes_and_size;
+			SPRITE_WORDS(sprite_entry + 0x3000u)[1] = (uint16_t)(attributes_and_size >> 16u);
+			SPRITE_WORDS(sprite_entry)[0] = (uint16_t)attributes_and_size;
+			SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(attributes_and_size >> 16u);
 			SPRITE_PLACE(sprite_place)->rom_offset = rom_offset_and_palette;
 			sprite_entry += 4u;
 			if (SPRITE_WORDS(previous_sprites + 0x8u)[0] == (uint16_t)rom_offset_and_palette)
@@ -1325,17 +1353,23 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, u
 				SPRITE_WORDS(sprite_entry)[0] = pair_x;
 				sprite_entry += 2u;
 			}
-			AS32(SPRITE_WORDS(sprite_entry + 0x3010u)[0]) = rom_offset_and_palette;
-			AS32(SPRITE_WORDS(sprite_entry + 0x10u)[0]) = rom_offset_and_palette;
-			AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = rom_offset_and_palette;
-			AS32(SPRITE_WORDS(sprite_entry)[0]) = rom_offset_and_palette;
+			SPRITE_WORDS(sprite_entry + 0x3010u)[0] = (uint16_t)rom_offset_and_palette;
+			SPRITE_WORDS(sprite_entry + 0x3010u)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
+			SPRITE_WORDS(sprite_entry + 0x10u)[0] = (uint16_t)rom_offset_and_palette;
+			SPRITE_WORDS(sprite_entry + 0x10u)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
+			SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)rom_offset_and_palette;
+			SPRITE_WORDS(sprite_entry + 0x3000u)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
+			SPRITE_WORDS(sprite_entry)[0] = (uint16_t)rom_offset_and_palette;
+			SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(rom_offset_and_palette >> 16u);
 			sprite_entry += 0x14u;
 			depth_list = pointer_to(address_of(screen) + 0x5000u + projected_segment->depth_layer * 4u);
 			if (depth_list->head == 0u)
 				depth_list->tail = sprite_entry;
 			layer_head = depth_list->head;
-			AS32(SPRITE_WORDS(sprite_entry)[0]) = layer_head;
-			AS32(SPRITE_WORDS(sprite_entry + 0x3000u)[0]) = (uint16_t)(layer_head + 0x300u);
+			SPRITE_WORDS(sprite_entry)[0] = (uint16_t)layer_head;
+			SPRITE_WORDS(sprite_entry)[1] = (uint16_t)(layer_head >> 16u);
+			SPRITE_WORDS(sprite_entry + 0x3000u)[0] = (uint16_t)(layer_head + 0x300u);
+			SPRITE_WORDS(sprite_entry + 0x3000u)[1] = 0u;
 			depth_list->head = ((sprite_entry - 0x20u) >> 4) | 0x8000u;
 			screen->sprite_groups += 2u;
 			sprite_entry += 0x10u;

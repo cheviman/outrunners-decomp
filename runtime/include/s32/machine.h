@@ -4,7 +4,7 @@
  *                 timers, I/O
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -21,6 +21,13 @@
  *    Its devices sit on the byte lanes MAME's map gives them, so the board takes every access as 16-bit
  *    halves, as on the System 32: a 32-bit access is the two halves in order.
  *
+ *    The memories keep their values in the host's order, so that the C reads them as the processor it runs
+ *    on holds them: the work RAM and the RAM the sound program shares each value at the width the programs
+ *    reach it, as their structures over them say (a byte at its address, a halfword or a word at any
+ *    address); the video RAM and the sprite RAM, which the video reads by 16-bit words, as words, as MAME
+ *    keeps them, the byte of a word at an even address its low one (at S32_BYTE_LANE in the word), a 32-bit
+ *    access the two words in order. On a little-endian processor that is the V70's order, byte for byte.
+ *
  *    Time runs one of two ways. With cycle timing the caller advances s32_board.cycles as the CPU runs
  *    and calls the frame events itself (tools/core/system32/reference/s32ref, to follow the real CPU's pace). With
  *    frame timing the program takes no time at all: when it waits for the next frame it calls
@@ -35,6 +42,16 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/* whether the processor this runs on is big-endian, and where the byte at an address of the video RAM or the
+   sprite RAM is in its 16-bit word: 0 on a little-endian processor, 1 on a big-endian one */
+#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define S32_HOST_BIG_ENDIAN 1
+#define S32_BYTE_LANE 1u
+#else
+#define S32_HOST_BIG_ENDIAN 0
+#define S32_BYTE_LANE 0u
 #endif
 
 #define S32_CPU_CLOCK        20000000u    /* 40 MHz crystal / 2: the V70 */

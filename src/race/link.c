@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    30-10-2026
+ *    Modified:    06-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1057,7 +1057,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 	struct screen *entrant_list = NULL;
 	uint8_t game_over = 0;
 	uint16_t old_entry_frames = 0;
-	uint32_t entrants_2 = 0, race_order_long = 0;
+	uint32_t entrants_2 = 0;
 
 	race = pointer_to(screen->race);
 	race_2 = &game->race_copies[0];
@@ -1140,9 +1140,15 @@ uint32_t race_entries_update(uint32_t entry_place)
 				{
 					race->entry_serial++;
 					race->entrant = 0xFFu;
-					AS32(SCREEN(entry_place - 0x300u)->accepted_players[0]) = 0u;
+					SCREEN(entry_place - 0x300u)->accepted_players[0] = 0u;
+					SCREEN(entry_place - 0x300u)->accepted_players[1] = 0u;
+					SCREEN(entry_place - 0x300u)->accepted_players[2] = 0u;
+					SCREEN(entry_place - 0x300u)->accepted_players[3] = 0u;
 					entry_place += 4u;
-					AS32(SCREEN(entry_place - 0x304u)->accepted_players[4]) = 0u;
+					SCREEN(entry_place - 0x304u)->accepted_players[4] = 0u;
+					SCREEN(entry_place - 0x304u)->accepted_players[5] = 0u;
+					SCREEN(entry_place - 0x304u)->accepted_players[6] = 0u;
+					SCREEN(entry_place - 0x304u)->accepted_players[7] = 0u;
 					io_write8(LINK_ENTRIES_CLOSED, 1u);
 					entry_place += 4u;
 				}
@@ -1200,12 +1206,11 @@ uint32_t race_entries_update(uint32_t entry_place)
 		entry_place = address_of(race) + 0x1Fu;
 		RACE(entry_place - 0x1Fu)->racer_count = entrant_list->entrant_count;
 		entry_place++;
-		entrants_2 = AS32(entrant_list->entrants[4]);
-		race_order_long = AS32(entrant_list->entrants[0]);
-		RACE(entry_place - 0x20u)->race_order = (uint8_t)race_order_long;
-		RACE(entry_place - 0x20u)->race_order_1 = (uint8_t)(race_order_long >> 8u);
-		RACE(entry_place - 0x20u)->race_order_2 = (uint8_t)(race_order_long >> 16u);
-		RACE(entry_place - 0x20u)->race_order_3 = (uint8_t)(race_order_long >> 24u);
+		entrants_2 = (entrant_list->entrants[4] | ((uint32_t)entrant_list->entrants[5] << 8u) | ((uint32_t)entrant_list->entrants[6] << 16u) | ((uint32_t)entrant_list->entrants[7] << 24u));
+		RACE(entry_place - 0x20u)->race_order = entrant_list->entrants[0];
+		RACE(entry_place - 0x20u)->race_order_1 = entrant_list->entrants[1];
+		RACE(entry_place - 0x20u)->race_order_2 = entrant_list->entrants[2];
+		RACE(entry_place - 0x20u)->race_order_3 = entrant_list->entrants[3];
 		RACE(entry_place - 0x20u)->race_order_4_7 = entrants_2;
 		entry_place += 8u;
 	}
