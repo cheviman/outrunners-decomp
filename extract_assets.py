@@ -3,9 +3,9 @@
 Name:        extract_assets.py
 Description: extracts the game's assets from the user's own ROM set, driven by assets.json (as in
              n64decomp/sm64)
-Version:     0.1.0
+Version:     0.1.1
 Created:     25-10-2026
-Modified:    06-11-2026
+Modified:    10-11-2026
 Author:      Sebastian Toyos
 
 Usage:
@@ -19,6 +19,10 @@ assets.json holds positions only: every byte comes from the user's own ROM set w
 extracted, into assets/ (which, like the ROM, stays out of the repository). Each asset is in a format the
 usual tools open (indexed PNG, WAV, text), and --check builds the board's regions back from the files and
 compares them with the set, chip by chip.
+
+Nothing outside assets/ is written or deleted (outrunners-port's issue 24): an asset's path that is not
+inside it stops the tool where assets.json gives it, and is left alone, and said, where the state of the
+last extraction does (assets/.extracted, a file anything may have written).
 """
 import json
 import re
@@ -50,6 +54,16 @@ REGION_BUILDERS = {
 }
 
 
+def inside_assets(relative_path):
+    """Whether an asset's path, as assets.json or the last extraction's state gives it, is inside assets/ as
+    the file system has it (its dots and the links out of it followed); assets/ itself is not. Nothing else
+    is written or deleted."""
+    try:
+        return ASSETS.resolve() in (ROOT / relative_path).resolve().parents
+    except (OSError, RuntimeError, ValueError):    # (a path the system cannot follow: a loop of links, a NUL)
+        return False
+
+
 def load_manifest():
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     for asset in manifest["assets"]:
@@ -57,6 +71,8 @@ def load_manifest():
         asset["size"] = int(asset["size"], 0)
         if asset["region"] not in REGION_BUILDERS:
             raise SystemExit(f"assets.json: unknown region '{asset['region']}' for {asset['path']}")
+        if not inside_assets(asset["path"]):
+            raise SystemExit(f"assets.json: the path '{asset['path']}' is not inside assets/")
     return manifest
 
 
@@ -356,6 +372,10 @@ def extract(asset, data, region_of):
 
 
 def remove(relative_path):
+    """An extracted asset, gone: its folder or its file, a picture's or a sound's .json beside it, and the
+    folders it leaves empty. Inside assets/ alone, whoever asks."""
+    if not inside_assets(relative_path):
+        raise SystemExit(f"'{relative_path}' is not inside assets/: nothing removed")
     path = ROOT / relative_path
     if path.is_dir():
         shutil.rmtree(path)
@@ -447,6 +467,12 @@ def main():
     manifest = load_manifest()
     listed = [asset["path"] for asset in manifest["assets"]]
     saved_version, saved_paths = read_state()
+    # the state is a file in assets/ that anything may have written: what it lists outside assets/ is never
+    # touched, and goes from the state as it is written again
+    foreign = [path for path in saved_paths if not inside_assets(path)]
+    for path in foreign:
+        print(f"  assets/.extracted lists '{path}', which is not inside assets/: left alone")
+    saved_paths = [path for path in saved_paths if path not in foreign]
     if "--clean" in arguments:
         for path in dict.fromkeys(listed + saved_paths):
             remove(path)
@@ -485,7 +511,7 @@ def main():
         # the state keeps every type's paths: these types' as the manifest lists them now
         listed = [path for path in saved_paths if path not in listed] + listed
     if not todo:
-        if stale:
+        if stale or foreign:
             write_state(version, listed)
         print("Assets are up to date")
         return 0
