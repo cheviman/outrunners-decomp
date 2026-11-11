@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -122,7 +122,7 @@ void player_car_update(void)
 				player_car_publish();
 				return;
 			}
-			RACE(screen->race)->time_left = (game->race_copies[0].master_time_difficulty_0 + 0x28u) * 0x1Eu;
+			RACE(screen->race)->time_left = (game->race_copies[0].master_time_difficulty[0] + 0x28u) * 0x1Eu;
 			player_car_start_engine_sound();
 			player_car_animate();
 			player_car_publish();

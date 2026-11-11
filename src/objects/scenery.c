@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -221,9 +221,9 @@ void road_row_start(void)
 	current_object->y_offset = road_row_record->y_offset;
 	current_object->road_row.spacing = road_row_record->spacing;
 	current_object->road_row.count = road_row_record->count;
-	if (road_row_record->hit_box_along == 0u)
+	if ((road_row_record->hit_box[0] | road_row_record->hit_box[1]) == 0u)
 		current_object->state++;
-	current_object->road_row.hit_box = address_of(&road_row_record->hit_box_along);
+	current_object->road_row.hit_box = address_of(&road_row_record->hit_box[0]);
 	animation_start(animation);
 	position = (uint16_t)current_object->position;
 	row_length = (uint16_t)(current_object->road_row.spacing * (current_object->road_row.count - 1u) + 1u);
@@ -258,9 +258,9 @@ void flashing_scenery_update(void)
 		current_object->y_offset = record->y_offset;
 		current_object->flashing_scenery.spacing = record->spacing;
 		current_object->flashing_scenery.count = record->count;
-		if (record->hit_box_along == 0u)
+		if ((record->hit_box[0] | record->hit_box[1]) == 0u)
 			current_object->state++;
-		current_object->flashing_scenery.hit_box = address_of(&record->hit_box_along);
+		current_object->flashing_scenery.hit_box = address_of(&record->hit_box[0]);
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		row_length = (uint16_t)(current_object->flashing_scenery.spacing * (current_object->flashing_scenery.count - 1u) + 1u);
@@ -495,9 +495,9 @@ void road_row_start_copy(void)
 	current_object->y_offset = road_row_record->y_offset;
 	current_object->road_row.spacing = road_row_record->spacing;
 	current_object->road_row.count = road_row_record->count;
-	if (road_row_record->hit_box_along == 0u)
+	if ((road_row_record->hit_box[0] | road_row_record->hit_box[1]) == 0u)
 		current_object->state++;
-	current_object->road_row.hit_box = address_of(&road_row_record->hit_box_along);
+	current_object->road_row.hit_box = address_of(&road_row_record->hit_box[0]);
 	animation_start(animation);
 	position = (uint16_t)current_object->position;
 	row_length = (uint16_t)(current_object->road_row.spacing * (current_object->road_row.count - 1u) + 1u);
@@ -1025,9 +1025,9 @@ void start_gate_update(void)
 		current_object->y_offset = start_gate_record->y_offset;
 		current_object->start_gate.spacing = start_gate_record->spacing;
 		current_object->start_gate.count = start_gate_record->count;
-		if (start_gate_record->hit_box_along == 0u)
+		if ((start_gate_record->hit_box[0] | start_gate_record->hit_box[1]) == 0u)
 			current_object->state++;
-		current_object->start_gate.hit_box = address_of(&start_gate_record->hit_box_along);
+		current_object->start_gate.hit_box = address_of(&start_gate_record->hit_box[0]);
 		animation_start(animation);
 		position = (uint16_t)current_object->position;
 		row_length = (uint16_t)(current_object->start_gate.spacing * (current_object->start_gate.count - 1u) + 1u);

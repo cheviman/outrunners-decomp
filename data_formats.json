@@ -126,6 +126,8 @@
   "backup_data_clear_completed_text": "program_test_mode_texts",
   "eeprom_caution_text": "program_test_mode_texts",
   "exit_prompt_text": "program_test_mode_texts",
+  "test_mode_instructions_text": "program_test_mode_texts",
+  "game_assignments_value_texts": "program_test_mode_texts",
   "continue_prompt_text": "program_test_mode_texts",
   "test_mode_palettes_1": "program_alternate_colours",
   "test_mode_palettes_2": "program_alternate_colours",

@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -491,6 +491,7 @@ const void *car_select_default_cars_data;
 const void *turntable_car_looks_data;
 const void *turntable_car_frames_data;
 const void *turntable_scenery_groups_data;
+const void *turntable_scenery_items_data;
 const void *car_select_turn_delays_data;
 const void *car_select_wheel_transmissions_data;
 const void *welcome_letter_places_data;
@@ -681,6 +682,8 @@ const void *goal_actor_place_waits_data;
 const void *ending_actor_lists_data;
 const void *unfinished_ending_actor_count_data;
 const void *unfinished_ending_actors_data;
+const void *ending_actors_data;
+const void *goal_actor_scripts_data;
 const void *road_surface_state_jumps_data;
 const void *road_surface_event_jumps_data;
 const void *road_surface_layer_setups_data;
@@ -1043,6 +1046,7 @@ const game_table game_tables[] =
 	{ "turntable_car_looks", 0x0069B8u, &turntable_car_looks_data },
 	{ "turntable_car_frames", 0x0069D8u, &turntable_car_frames_data },
 	{ "turntable_scenery_groups", 0x006A18u, &turntable_scenery_groups_data },
+	{ "turntable_scenery_items", 0x006A78u, &turntable_scenery_items_data },
 	{ "car_select_turn_delays", 0x006D9Cu, &car_select_turn_delays_data },
 	{ "car_select_wheel_transmissions", 0x006DA4u, &car_select_wheel_transmissions_data },
 	{ "welcome_letter_places", 0x006DACu, &welcome_letter_places_data },
@@ -1233,6 +1237,8 @@ const game_table game_tables[] =
 	{ "ending_actor_lists", 0x014A20u, &ending_actor_lists_data },
 	{ "unfinished_ending_actor_count", 0x014A60u, &unfinished_ending_actor_count_data },
 	{ "unfinished_ending_actors", 0x014A64u, &unfinished_ending_actors_data },
+	{ "ending_actors", 0x014A7Cu, &ending_actors_data },
+	{ "goal_actor_scripts", 0x01500Cu, &goal_actor_scripts_data },
 	{ "road_surface_state_jumps", 0x016B0Cu, &road_surface_state_jumps_data },
 	{ "road_surface_event_jumps", 0x016BBCu, &road_surface_event_jumps_data },
 	{ "road_surface_layer_setups", 0x01710Cu, &road_surface_layer_setups_data },
@@ -1445,7 +1451,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 548;
+const size_t game_table_count = 551;
 
 /* the code at the reset vector */
 void game_entry(void)

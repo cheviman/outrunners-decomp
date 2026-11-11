@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1385,7 +1385,7 @@ void checkpoint_board_draw_row(uint32_t player)
 {
 	uint16_t row_x = 0, text_attribute = 0;
 	uint32_t animation = 0, row = 0, row_x_2 = 0, text_x = 0, time_text = 0;
-	struct board_car_sprite *car_sprite = NULL;
+	uint32_t *car_sprite = NULL;
 	const struct checkpoint_board_place *place = NULL;
 
 	place = rom_pointer(checkpoint_board_number_places_ADDRESS + current_object->checkpoint_board.row * 4u);
@@ -1401,8 +1401,8 @@ void checkpoint_board_draw_row(uint32_t player)
 	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
 	current_object->y = place->y;
 	car_sprite = pointer_to(address_of(current_object) + 0x80u + player * 4u);
-	animation = car_sprite->animation;
-	current_object->palette = car_sprite->palette;
+	animation = (uint16_t)car_sprite[0];
+	current_object->palette = (uint16_t)(car_sprite[0] >> 16u);
 	current_object->depth_layer = 0x19Du;
 	current_object->draw_mode = 0u;
 	animation_start(animation);

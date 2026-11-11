@@ -4,7 +4,7 @@
  *                 reaches (game/assets.h)
  *    Version:     0.1.0
  *    Created:     27-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -473,6 +473,15 @@ static int typed_value(writer *into, const char *token, const char *type)
 		snprintf(assets_problem, sizeof(assets_problem), "the asset %s has a value too large for its type: %s", into->piece, token);
 		return 0;
 	}
+	if (type[0] == 'b')
+	{
+		/* (b16: a value in a stream the code reads a byte at a time: each byte a value of its own, the low
+		   one first on any processor) */
+		for (int index = 0; index < bytes; index++)
+			if (!put(into, (uint64_t)value >> (8 * index) & 0xffu, 1))
+				return 0;
+		return 1;
+	}
 	return put(into, (uint64_t)value, bytes);
 }
 
@@ -595,6 +604,14 @@ static int typed_record(writer *into, const char **at, const typed_shape *shape,
 			const int width = type_bytes(current->type);
 			uint64_t value = 0;
 
+			if (current->type[0] == 'b')
+			{
+				/* (b16: each byte a value of its own) */
+				for (int index = 0; index < width; index++)
+					if (!put(into, current->value[index], 1))
+						return 0;
+				continue;
+			}
 			for (int index = 0; index < width; index++)
 				value |= (uint64_t)current->value[index] << (8 * index);
 			if (!put(into, value, width))

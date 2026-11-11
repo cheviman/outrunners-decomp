@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -453,9 +453,12 @@ void network_check_result(uint32_t machine)
 		race->master_coin_setting = game->coin_setting;
 		race->master_free_play = game->free_play;
 		race->master_game_difficulty = game->game_difficulty;
-		race->master_time_difficulty_0 = game->time_difficulty[0];
-		race->master_time_difficulty_1 = game->time_difficulty[1];
-		race->master_time_difficulty_2_5 = ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u));
+		race->master_time_difficulty[0] = game->time_difficulty[0];
+		race->master_time_difficulty[1] = game->time_difficulty[1];
+		race->master_time_difficulty[2] = game->time_difficulty[2];
+		race->master_time_difficulty[3] = game->time_difficulty[3];
+		race->master_time_difficulty[4] = game->time_difficulty[4];
+		race->master_time_difficulty[5] = game->time_difficulty[5];
 		move_halfwords(address_of(race) + 0x30u, BOOKKEEPING_COURSE_RECORDS_ADDRESS, 0x1Eu);
 	}
 	clear_text_layer();
@@ -980,7 +983,6 @@ void link_take_master_settings(void)
 	uint8_t *car_number_slot = NULL;
 	struct race *race = NULL, *record_car_number = NULL;
 	uint8_t isdn_records_ready = 0;
-	uint32_t time_difficulty_2_long = 0;
 
 	if (game->test_mode_on != 0u)
 		return;
@@ -1031,18 +1033,17 @@ void link_take_master_settings(void)
 		init_coins();
 		r12 = bookkeeping_clear_credits();
 	}
-	if (game->advertise_sound == race->master_advertise_sound && game->steering_wheel_reaction == race->master_steering_wheel_reaction && game->game_difficulty == race->master_game_difficulty && ((uint8_t)game->time_difficulty[0] | ((uint32_t)(uint8_t)game->time_difficulty[1] << 8u)) == ((uint8_t)race->master_time_difficulty_0 | ((uint32_t)race->master_time_difficulty_1 << 8u)) && ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u)) == race->master_time_difficulty_2_5 && coins_changed == 0u)
+	if (game->advertise_sound == race->master_advertise_sound && game->steering_wheel_reaction == race->master_steering_wheel_reaction && game->game_difficulty == race->master_game_difficulty && ((uint8_t)game->time_difficulty[0] | ((uint32_t)(uint8_t)game->time_difficulty[1] << 8u)) == ((uint8_t)race->master_time_difficulty[0] | ((uint32_t)(uint8_t)race->master_time_difficulty[1] << 8u)) && ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u)) == ((uint8_t)race->master_time_difficulty[2] | ((uint32_t)(uint8_t)race->master_time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)race->master_time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)race->master_time_difficulty[5] << 24u)) && coins_changed == 0u)
 		return;
 	game->advertise_sound = race->master_advertise_sound;
 	game->steering_wheel_reaction = race->master_steering_wheel_reaction;
 	game->game_difficulty = race->master_game_difficulty;
-	game->time_difficulty[0] = race->master_time_difficulty_0;
-	game->time_difficulty[1] = race->master_time_difficulty_1;
-	time_difficulty_2_long = race->master_time_difficulty_2_5;
-	game->time_difficulty[2] = (uint8_t)time_difficulty_2_long;
-	game->time_difficulty[3] = (uint8_t)(time_difficulty_2_long >> 8u);
-	game->time_difficulty[4] = (uint8_t)(time_difficulty_2_long >> 16u);
-	game->time_difficulty[5] = (uint8_t)(time_difficulty_2_long >> 24u);
+	game->time_difficulty[0] = race->master_time_difficulty[0];
+	game->time_difficulty[1] = race->master_time_difficulty[1];
+	game->time_difficulty[2] = race->master_time_difficulty[2];
+	game->time_difficulty[3] = race->master_time_difficulty[3];
+	game->time_difficulty[4] = race->master_time_difficulty[4];
+	game->time_difficulty[5] = race->master_time_difficulty[5];
 	save_settings();
 }
 
@@ -1315,7 +1316,7 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 						fork_index = passing_race->stage;
 						fork_index = (uint8_t)(fork_index * 2u);
 						fork_index = (uint8_t)(fork_index + branch);
-						race->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + game->master_time_difficulty[checkpoint]) * 0x1Eu;
+						race->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + game->race_copies[0].master_time_difficulty[(int32_t)checkpoint]) * 0x1Eu;
 					}
 				}
 			}
@@ -1904,17 +1905,17 @@ void link_send_records(void)
 			board_records -= 2u;
 			io_write16(board_records, race->record_serial);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->master_time_difficulty_2_5 >> 24u));
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[5]);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->master_time_difficulty_2_5 >> 16u));
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[4]);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->master_time_difficulty_2_5 >> 8u));
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[3]);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->master_time_difficulty_2_5);
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[2]);
 			board_records -= 2u;
-			io_write16(board_records, race->master_time_difficulty_1);
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[1]);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->master_time_difficulty_0);
+			io_write16(board_records, (uint8_t)race->master_time_difficulty[0]);
 			board_records -= 2u;
 			io_write16(board_records, race->master_game_difficulty);
 			board_records -= 2u;

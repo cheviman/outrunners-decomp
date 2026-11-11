@@ -4,7 +4,7 @@ Description: the program's texts as quoted strings: the test mode's pages, the t
              sprite texts, the song titles, the LCD's texts and the DJ's messages
 Version:     0.1.0
 Created:     27-10-2026
-Modified:    27-10-2026
+Modified:    11-11-2026
 Author:      Sebastian Toyos
 
 Every format writes the typed format of tools/core/formats/typed.py (from_text is typed.from_text): 'record'
@@ -101,8 +101,9 @@ def test_mode_texts_to_text(data):
     out.comment("test_mode_draw_texts' lists: 'text' CELL \"CHARACTERS\", CELL the low half of the text layer cell's")
     out.comment("address (F000 + (row * 64 + column) * 2); a character from 80 up (\\xNN) sets the attribute of the")
     out.comment("ones after it to its complement; 'end' closes a list")
-    out.record("text", 0, [typed.column("cell", "u16"), typed.column("characters", "text")])
-    out.record("end", 2, [typed.column("end", "u16", fixed=0)])
+    # (b16: test_mode_draw_texts reads the cell as the two bytes before the characters)
+    out.record("text", 0, [typed.column("cell", "b16"), typed.column("characters", "text")])
+    out.record("end", 2, [typed.column("end", "b16", fixed=0)])
     out.record("padding", 1, [typed.column("padding", "u8", fixed=0)])
     at = 0
     while at < len(data):

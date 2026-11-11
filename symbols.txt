@@ -84,10 +84,14 @@ field object_area 00 list u32 object_list            # this frame's list, which 
 field object_area 04 list_first u32 object_list      # its first object's place (nothing reads it)
 field object_area 08 next_list u32 object_list       # the next frame's list, where run_objects puts the live ones
 field object_area 0C list_end u32 object_list        # past this frame's list's last object (nothing reads it)
-# The structures inside a screen's block and an objects' area (member lines): the screen's ring of eight views
+# The structures inside a screen's block and an objects' area (member lines): the hit boxes of the race's cars
+# (up to eight, after hit_box_count) and the one of the screen's car from its own fields (player_car_build_hit_boxes
+# 012255-0122A9: 0x12 bytes each from 514; the last at 5AE, written from its record at 5B0 on), the screen's ring of eight views
 # (player_car_publish), its car (player_car), the course's ring of 128 road segments, the road's segments as the
 # screen shows them, the 416 depth layers' lists of sprite groups; the area's spare object, this frame's and the
 # next frame's object lists, and its 124 objects
+member screen 514 car_hit_boxes car_hit_box[8]
+member screen 5AE player_car_hit_box car_hit_box
 member screen 600 views view[8]
 member screen 1000 car car
 member screen 2000 road_segments road_segment[80]
@@ -112,8 +116,7 @@ field road_row_record 08 x_offset s16           # -> object 20
 field road_row_record 0A y_offset s16           # -> object 24
 field road_row_record 0C spacing u16            # -> object 10
 field road_row_record 0E count u16              # -> object 12
-field road_row_record 10 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 0128CA, 012B42 "test.w [R10]": none when its first 32 bits are 0; its address -> object 60, where road_row_hit_check reads it (two bounds along the road, two across: 020EBF 30 -30 50 250, decimal)
-field road_row_record 14 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
+field road_row_record 10 hit_box u16[4]             # its hit box, an item_hit_box: the bounds along the road (along_start, along_end), then across it (across_start, across_end), which the hit checks read a halfword each; the code that starts the object tests the first two as one word (0128CA, 012B42 "test.w [R10]"): none when both are 0; its address -> object 60, where road_row_hit_check reads it (020EBF: 30 -30 50 250, decimal)
 # The objects of a road's stream (road_object_streams), each a (position, command) halfword pair; command 0
 # goes on with the object's handler and its parameter (12 bytes in all; 1 and 2 are 4, 3 a fork: the table of
 # its branches' streams follows): road_object_stream_read 01273D "movz.hw [R10+], R0" (compared with car
@@ -139,8 +142,7 @@ field flashing_scenery_record 0A x_offset s16           # 012942 -> object 20
 field flashing_scenery_record 0C y_offset s16           # 012947 -> object 24
 field flashing_scenery_record 0E spacing u16            # 01294C -> object 10
 field flashing_scenery_record 10 count u16              # 012951 -> object 12
-field flashing_scenery_record 12 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 012956 "test.w [R10]": none when its first 32 bits are 0; its address -> object 60
-field flashing_scenery_record 16 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
+field flashing_scenery_record 12 hit_box u16[4]             # its hit box, an item_hit_box: the bounds along the road (along_start, along_end), then across it (across_start, across_end), which the hit checks read a halfword each; the code that starts the object tests the first two as one word (012956 "test.w [R10]"): none when both are 0; its address -> object 60
 # The palettes a flashing_scenery cycles through, one a frame (flashing_scenery_update 012990 "movs.hw [R10+],
 # R0"): a negative entry goes back that many bytes (012997 "add.w R0, R10") to the list's start (-8 after
 # three, -18 after eight, decimal: 021041, 022FF2, 023E56, 024C16, 0287AA, 02C444)
@@ -214,8 +216,7 @@ field start_gate_record 08 x_offset s16           # 012FFA -> object 20
 field start_gate_record 0A y_offset s16           # 012FFF -> object 24
 field start_gate_record 0C spacing u16            # 013004 -> object 10
 field start_gate_record 0E count u16              # 013009 -> object 12
-field start_gate_record 10 hit_box_along u32          # the box's two bounds along the road (item_hit_box along_start, along_end), which the code reads as one word: 01300E "test.w [R10]": none when its first 32 bits are 0; its address -> object 60
-field start_gate_record 14 hit_box_across u32         # the box's two bounds across the road (item_hit_box across_start, across_end), after hit_box_along: the hit checks read them through object 60
+field start_gate_record 10 hit_box u16[4]             # its hit box, an item_hit_box: the bounds along the road (along_start, along_end), then across it (across_start, across_end), which the hit checks read a halfword each; the code that starts the object tests the first two as one word (01300E "test.w [R10]"): none when both are 0; its address -> object 60
 # The record of a man with a chequered flag: the one at the start (start_flagman_update 01309B-0130B7, 020D14)
 # and the ones at the forks and the goal (flagman_update 01311C-013138, 02DA44 and 02DC07): the standing and
 # the waving animations (6E, 6F), the palette (7B), the side and the offsets
@@ -729,6 +730,7 @@ field turntable_scenery_group 04 size u16
 field turntable_scenery_group 06 item_list_offset u16
 local turntable_scenery_show 005784 r10 group turntable_scenery_group
 006A18  table turntable_scenery_groups turntable_scenery_group
+006A78  table turntable_scenery_items  u16   # the groups' items, which each group's item_list_offset reaches (turntable_scenery_show 0057BB "mov.w 18[R20], R10"): an angle, a radius and a height each (turntable_scenery_item), a list closed by a negative angle; halfwords up to 006D9B
 # A letter of WELCOME! (welcome_letter_show 0058BE "movea.w 6DAC[PC](R0), R10" by index: 4 bytes): its x
 # (0058C4 "mov.h [R10+], 30[R20]": 38 58 78 98 B8 D8 F8 118) and the letter, the frame of font 346 (0058D0
 # "mov.b [R10+], 40[R20]": W E L C O M E !)
@@ -793,7 +795,7 @@ field traffic_path_step 04 y u16
 elements lcd_text_characters u8
 006464  table entry_countdown_lcd_texts u32 lcd_text_characters   # entry_countdown_count 006423 "mov.w 6464[PC](R1), R1" by the frames left in the second (+ 2) / 5: the LCD's 7 texts (006480-0064D4, 14 bytes apart) moved to screen + F12
 0067A9  table car_pass_sounds  u8                    # the sound of a car going by, by its model: passing_car_update 0029D0 "mov.b 67A9(R0), R0" (request_sound), entry_traffic_car_drive 00679A "mov.b 67A9[PC](R0), R0"; census ROM 0067A9-0067B0: 3A 37 36 39 38 39 36 37
-031E7C  table car_select_palette  u32                # scene_palettes[28]: game_mode_play's step 2 (002FBD "movz.bw #28, R19", 002FC1); 03283C
+031E7C  table car_select_palette  u32 palette_block  # scene_palettes[28]: game_mode_play's step 2 (002FBD "movz.bw #28, R19", 002FC1); 03283C
 0068FE  func  step_palette
 00C553  func  stage_indicator_start
 00C585  func  stage_indicator_draw
@@ -1148,6 +1150,10 @@ scoped object crest_clip 80 clip_command u16
 scoped object crest_clip 82 clip_bottom u16
 scoped object crest_clip 84 clip_left u16
 scoped object crest_clip 86 clip_right u16
+# Draw modes 1 and 6 take the address of a ready 16-byte entry of the sprite list from the object's fields 38-3B,
+# which the object's own code writes as one word (crest_clip clip_entry); each is a family of its one function
+scoped object draw_object_entry 38 entry u32      # 00F104, 00F10B "movcu.h [38[R20]], #8, [R10], #8": the entry it copies into the list
+scoped object draw_object_command 38 entry u32    # 00F126, 00F12D "movcu.h [38[R20]], #8, [R10], #8"
 scoped object traffic_spawner 18 list u32 rom
 scoped object traffic_spawner 1C stage_start s16
 scoped object traffic_spawner 1E stage u8
@@ -1603,7 +1609,7 @@ local checkpoint_board_draw_row 00CD8F,00CDD5,00CE5C R10 place
 00CF68  table  checkpoint_board_car_places  checkpoint_board_place      # 00CDD5: the car's small image, x 60, y 48 58 ... B8
 00CF88  table  checkpoint_board_number_places  checkpoint_board_place   # 00CD8F: the car number, x 60, y 4B 5B ... BB
 00CFA8  table  checkpoint_board_behind_places  checkpoint_board_place   # 00CE5C: BEHIND, x 112, y 49 59 ... B9
-00CFC8  table  checkpoint_board_car_sprites  u32  # checkpoint_board_update (00CBF5 "mov.w CFC8[PC](R1), 80[R20](R0)") by the car chosen (byte 49 of the player's race_copy record): the small image's animation (low half) and palette (high half), 401/7E 475/7E 4E9/97 55D/97 5D1/7E 645/8D 6B9/97 72D/8D
+00CFC8  table  checkpoint_board_car_sprites  u32  # checkpoint_board_update (00CBF5 "mov.w CFC8[PC](R1), 80[R20](R0)") by the car chosen (byte 49 of the player's race_copy record): the small image's animation (low half) and palette (high half)
 00CFE8  table  checkpoint_board_number_animations  u16  # checkpoint_board_draw_row (00CDAC "movz.hw CFE8[PC](R9), R9") by car_numbers[player]: animations 1D-24 for car numbers 0-7
 00CFF8  table  checkpoint_board_time_places  u32  # checkpoint_board_draw_row (00CE28 "mov.w CFF8[PC](R0), R3", draw_text_at's place) by row: x (low half) C0, y (high half) 40 50 ... B0
 00E4D0  table  link_board_ic_texts  u32           # network_check_show_ics (00D6D7 "mov.w E4D0(R3), R19", print_text_layer) by 2 * IC + its bit: IC17 GOOD E514, BAD E524; IC23 E534, E544; IC11 E554, E564; IC10 E574, E584; IC9 E594, E5A4
@@ -1662,7 +1668,7 @@ elements course_pointer u32
 # A fork's command (-2) is followed by the stages of its two branches and their courses
 struct course_fork 0A rom
 field course_fork 00 branch_stages u8[2]          # player_car_extend_course 00FFCF "movz.bw [R11](R0), R1" (R0 the branch) -> screen route_stage
-field course_fork 02 branch_courses u32[2]        # 00FFD3 "mov.w 2[R11](R0), A0[R23]" -> car course
+field course_fork 02 branch_courses u8[8]         # 00FFD3 "mov.w 2[R11](R0), A0[R23]" -> car course: the two branches' courses, a 32-bit address each, as the bytes of the course's stream they lie in (course_bytes)
 local player_car_extend_course 00FFBF R11 course course_fork
 local player_car_start_course 00FCD2 R11 course course_start
 elements road_projection_pattern u8               # player_car_project_road 010150 "test.b [AP+]": a byte a segment out from the window, 1 projects it, 0 copies the one before
@@ -1913,7 +1919,7 @@ scoped object checkpoint_board 13 rows_left u8
 scoped object checkpoint_board 14 passing_order u32 checkpoint_pass
 scoped object checkpoint_board 18 checkpoint_count u32 checkpoint_counts
 scoped object checkpoint_board 1C leader_time u16
-scoped object checkpoint_board 80 car_sprites u32[8]   # each player's small car image (checkpoint_board_car_sprites by the car the player chose: state 0)
+scoped object checkpoint_board 80 car_sprites u32[8]   # each player's small car image (checkpoint_board_car_sprites by the car the player chose: state 0): its animation in the low half, its palette in the high one
 scoped object checkpoint_board A0 row_offsets u16[8]   # how far each row is slid, by its player (100 as it comes in, 10 less a frame)
 scoped object race_car_occupant 09 occupant u8
 scoped object race_car_occupant 0A body_back u8
@@ -2330,11 +2336,11 @@ local bar_picture_start 0010E0 R19 bar
 # (queue_stage_load by screen route_stage), 20-27 the scenes of the attract mode's cars (game_mode_car_presentation 00149F
 # by attract_car_scene_palettes), 28-2C by a constant number ("movz.bw #N, R19" before the read), which the C reads by
 # the entry's own address below; census ROM 031DDC-031E8F: 154D08-159768 and 032294-03283C, 031E90
-031DDC  table scene_palettes  u32  # queue_stage_load (0115B6 "mov.w 31DDC(R19), R19", queue_palette) by screen route_stage, and the game's code by palette number: colour blocks
-031E80  table ranking_palette  u32                   # scene_palettes[29]: game_mode_ranking (001E25, 001E29); 1596E0
-031E84  table route_map_palette  u32                 # scene_palettes[2A]: game_mode_play's step 12 (003245, 003249); 159724
-031E88  table title_palette  u32                     # scene_palettes[2B]: game_mode_title (00103C, 001040) and the demo race's set-up (game_mode_play step 10, 0030EA, 0030EE); 159768
-031E8C  table route_map_background_palette  u32      # scene_palettes[2C]: route_map_update's state 0 (00362E, 003632); 031E90
+031DDC  table scene_palettes  u32 palette_block  # queue_stage_load (0115B6 "mov.w 31DDC(R19), R19", queue_palette) by screen route_stage, and the game's code by palette number: colour blocks
+031E80  table ranking_palette  u32 palette_block     # scene_palettes[29]: game_mode_ranking (001E25, 001E29); 1596E0
+031E84  table route_map_palette  u32 palette_block   # scene_palettes[2A]: game_mode_play's step 12 (003245, 003249); 159724
+031E88  table title_palette  u32 palette_block       # scene_palettes[2B]: game_mode_title (00103C, 001040) and the demo race's set-up (game_mode_play step 10, 0030EA, 0030EE); 159768
+031E8C  table route_map_background_palette  u32 palette_block  # scene_palettes[2C]: route_map_update's state 0 (00362E, 003632); 031E90
 001A98  table attract_car_scene_palettes  u8         # game_mode_car_presentation 001499 "movz.bw 1A98[PC](R0), R19" by screen attract_car: its scene's number in scene_palettes; census ROM 001A98-001A9F: 27 23 26 25 22 20 24 21
 001AA0  table car_presentation_backgrounds  background_setup   # by screen: car_presentation_update 0016CD "movea.w 1AA0[PC](R0), R19" (R0 = index x 20), for set_up_background
 001A88  table attract_car_picture_animations  u16    # car_presentation_update 0016F6 "movz.hw 1A88[PC](R0), R9" by screen attract_car (animation_start); census ROM 001A88-001A97: 0345 0341 0344 0343 0340 033E 0342 033F
@@ -2683,7 +2689,7 @@ field road_surface_layer_setup 18 line_scroll_table u32   # "mov.w [R10+], 58[R2
 field road_surface_layer_setup 1C line_select_table u32   # "mov.w [R10], R10" (016C7D) -> 5C[R20]
 01710C  table road_surface_layer_setups  road_surface_layer_setup   # census ROM 01710C-01714B (screen 1: 03FA E005 20E2A2 20E2A6 20E2B2 20E248 208186 31C1C0 31C5C0; screen 2: 03F5 E00A 20E2AA 20E2AE 20E2B3 20E24C 218188 31C3C0 31C7C0)
 03CC80  table stage_road_page_sets  u8   # road_surface_start "mov.b 3CC80(R0), D[R20]" (016CB4) by screen first_stage: page_set; census ROM 03CC80-03CC9F (05 for all 32)
-01714C  table road_surface_page_words  u32   # the road's page words, five (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_start copies them into its page_table (18) with "movcu.h 1714C[PC], R0, 18[R20], R0" (016CDE, 1E halfwords); census ROM 01714C-017187 (36332C29 36332C29 34332A29 34352A2B 34352A2B, ...)
+01714C  table road_surface_page_words  u8   # the road's pages, a byte each as road_tiles_change_update writes them and four of them a page word, which road_surface_update takes whole: five words (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_start copies them into its page_table (18) with "movcu.h 1714C[PC], R0, 18[R20], R0" (016CDE, 1E halfwords); census ROM 01714C-017187 (36332C29 36332C29 34332A29 34352A2B 34352A2B, ...)
 031C38  table stage_road_palettes  u32 stage_road_palette_record  # road_surface_start "mov.w 31C38(R0), R19" (016CEC) by screen first_stage: a record of the road's palettes, the address of its fade list first ("mov.w [R19+], 208[R25]" 016CF4: screen road_palette_fades), then its palette list (queue_palette_list); census ROM 031C38-031CB7 (32 stages, 146054-1472BC)
 016D00  func  road_surface_lines
 016E8C  func  road_surface_halfway_lines
@@ -2976,7 +2982,7 @@ scoped object road_surface 12 event u8
 scoped object road_surface 13 last_event u8
 scoped object road_surface 14 segment u16
 scoped object road_surface 16 last_segment u16
-scoped object road_surface 18 page_table u32[F]   # five page words (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_page_words, copied in by road_surface_start
+scoped object road_surface 18 page_table u8[3C]   # the pages, four a page word: five page words (by the near scroll, 512 lines a step) for each of page sets 3-5: road_surface_page_words, copied in by road_surface_start
 scoped object road_surface 54 page_register u32 page_select
 scoped object road_surface 58 line_scroll_table u32
 scoped object road_surface 5C line_select_table u32
@@ -3485,8 +3491,8 @@ field race 6C race_time u32
 011FEA  func  fade_out_music_at
 012004  func  reset_screen_sound
 comment draw_object_one_piece Draw mode 8: the first piece of the animation's frame at its own size (no zoom, no flip), at x, y on the screen (less sprite_origin_x, sprite_origin_y), with the first word of its palette (sprite_palettes), into the sprite list and its halfway copy alike.
-comment draw_object_entry Draw mode 1: copies a ready 16-byte sprite entry, from the address in fields 38-3B (animation and palette read as one 32-bit address), into the sprite list and its halfway copy, with the screen's bit in its fourth word (sprite_screen_bit). Not run in the scenarios.
-comment draw_object_command Draw mode 6: copies a ready 16-byte entry from the address in fields 38-3B into the sprite list and its halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's clip.
+comment draw_object_entry Draw mode 1: copies a ready 16-byte sprite entry, from the address in entry (where the other objects keep animation and palette), into the sprite list and its halfway copy, with the screen's bit in its fourth word (sprite_screen_bit). Not run in the scenarios.
+comment draw_object_command Draw mode 6: copies a ready 16-byte entry from the address in entry into the sprite list and its halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's clip.
 comment draw_object_smoothed Draw mode A: every piece of the animation's frame at x, y on the screen (less sprite_origin_x, sprite_origin_y), zoomed by width_scale and height_scale, flipped by flags bits 6-7 (with bit 7 the pieces' offsets are negated, smoothed_flip_signs), each with its palette word; the halfway copy (+3000) is drawn from the averages of this frame's x, y, width_scale and height_scale and the last frame's, kept in the ring of sprite places (next_sprite_place, 16 bytes a record; the object's field 50 points at its record) when flags bit 5 says it was drawn the frame before. Keeps this frame's values in a new record and sets flags bit 5.
 comment finish_sprite_list Finishes the screen's sprite list in the vertical blank (int_vector_40): picks a record of sprite_list_switches by the screen (index) and sprite_list_buffers; when groups were drawn (sprite_groups), chains the depth lists from layer 0 to 415 (depth_lists: the list's start entry jumps to the first layer's newest group, each layer's tail to the next layer's head; the heads cleared), in the list and its halfway copy, and ends the chain with the record's word (a jump on to sprite entry 3, screen 2's list, after screen 1's; entry 4, the end, after screen 2's); points sprite RAM entries 2 and 3 (the jumps to each screen's list) at the halfway copy of the list just finished and at the other screen's finished list; then the next buffer (sprite_list_buffers, sprite_list_last, sprite_list_limit) and sprite_groups 0.
 comment init_sprite_chip Sets up the sprite chip at boot: its control registers 500000-50000C from 010B0A-010B0F (rendering every frame), the buffer's flip bits inverted when the screen is flipped (flip_screen), then init_sprite_lists.
@@ -4063,6 +4069,7 @@ local test_mode_output_test_toggle 01D4CC r10 output
 01DCE0  table  game_assignments_exit_cell  u16      # game_assignments_cursor_cells[9], where test_mode_game_assignments starts the cursor
 01DCE4  table  steering_wheel_reaction_texts  u32   # by steering_wheel_reaction ("mov.w 1DCE4[PC](R0), R10", 01DB3F): text records 01DCF4, 01DCFC
 01DCEC  table  advertise_sound_texts  u32           # by advertise_sound ("mov.w 1DCEC[PC](R0), R10", 01DB4F): text records 01DD04, 01DD0C
+01DCF4  data  game_assignments_value_texts   # the text records steering_wheel_reaction_texts and advertise_sound_texts point at, two each, lists for test_mode_draw_texts: the value's cell (F8C0 the steering wheel reaction's, F9C0 the advertise sound's) and the value in the test mode's characters (9B 13 14, 9B 11 12), each list closed by 0; 01DCF4-01DD13
 # The settings a page's EXIT checks, as the low bytes of their addresses in settings_magic's page, closed
 # by 0 ("movea.b TABLE[PC], R10", "mov.b [R10+], R20", "cmp.b [R20], 3C[R20]": the copy 3C bytes on):
 # 01DD14 (test_mode_game_assignments_exit 01DBA9: 30 32-37 24 0D), 01E44D (test_mode_coin_assignments_exit
@@ -4280,8 +4287,7 @@ field screen 500 own_hit_box u32 car_hit_box
 field screen 510 hit_box_count u32
 field screen 5678 text_depth_list_head u16
 field screen 567A text_depth_list_tail u16
-field screen 5800 route_map_signals u32
-field screen 5800 kanji_text_number u16
+field screen 5800 route_map_signals u32   # what the route map tells its car, its landmarks and its signs (route_map_update); the unused viewer of the Japanese texts keeps the number of its text in its low half (kanji_text_viewer_update)
 field screen 5801 title_logo_shine u8
 field screen 5802 kanji_text_units s16
 field screen 5804 kanji_text_tens s16
@@ -4336,8 +4342,6 @@ field race 07 master_bonus_adder u8
 field race 08 master_coin_setting u8
 field race 09 master_free_play u8
 field race 0A master_game_difficulty u8
-field race 0B master_time_difficulty_0 s8
-field race 0D master_time_difficulty_2_5 u32
 field race 14 record_name_rest u16
 field race 21 race_order_1 u8
 field race 22 race_order_2 u8
@@ -4389,7 +4393,6 @@ field race 5E finished u8
 20E104  var  second_io_chip_port_f u8
 20E290  var  scroll_targets[16] u16   # the four tile layers' scroll targets, x and y two halfwords each (the scroll in the second: 20E292 NBG0's x), written a halfword at a time (video_register_words: title_screen_layer_setups, road_surface_start) and read as one word (vblank_update_scrolls)
 20E2B0  var  tile_banks[4] u8
-20FC0B  var  master_time_difficulty[6] s8
 20FC46  var  race_copy_window_segments u16
 00E0A0  table  race_copy_offsets  u32  race@20E000   # by player: 1C00, 1C80 ... 1F80, a race_copy record's offset from the game's variables (GAME_VARIABLES + it: 20FC00 on)
 
@@ -5590,7 +5593,8 @@ local checkpoint_board_update 00CCA8 t3 gap
 local checkpoint_board_update 00CCEC t2 offset_before
 param checkpoint_board_draw_row R21 player
 local checkpoint_board_draw_row 00CD98,00CDCB,00CDDE,00CE1E,00CE65,00CE92 R0 row_x
-local checkpoint_board_draw_row 00CDED R10 car_sprite board_car_sprite
+elements board_car_images u32 ram   # the checkpoint board's car images in its object, by player from 80 (checkpoint_board car_sprites; checkpoint_board_update 00CBF5 "mov.w CFC8[PC](R1), 80[R20](R0)" from checkpoint_board_car_sprites): a word each, which checkpoint_board_draw_row (00CDED "movea.w 80[R20](R21), R10") reads a half at a time: the animation in the low one (00CDF3 "movz.hw [R10+], R9"), the palette in the high one (00CDF6 "mov.h [R10+], 3A[R20]")
+local checkpoint_board_draw_row 00CDED R10 car_sprite board_car_images
 local checkpoint_board_draw_row 00CE48 R18 time_text
 local checkpoint_board_draw_row 00CE28,00CE2E R3 text_x
 local checkpoint_board_draw_row 00CE34,00CE3D R5 text_attribute
@@ -6786,6 +6790,8 @@ local fork_branch_draw 013F6C,013FDE R8 rows_left
 local fork_branch_draw 013F80,013FC2 R0 row_y
 # ======== locals (batch L5) ========
 014A64  table  unfinished_ending_actors  u32   # race_car_start_ending 0146DB-0146E2 "movea.w 14A60[PC], R10; mov.w [R10+], R0": past unfinished_ending_actor_count's count, its (handler, script) pairs, read with [R10+] at 0146FA, 0146FF
+014A7C  table  ending_actors  u32   # the 16 lists ending_actor_lists points at, one after another: a 32-bit count, then its (handler, script) pairs (race_car_start_ending 0146E9-0146FF); 014A7C-01500B
+01500C  table  goal_actor_scripts  u16   # the actors' scripts, which the lists' pairs point at (goal_actor script): goal_actor_run reads them a halfword at a time (goal_actor_script_words; "movz.hw [R10+], R5", 01484B); 156 scripts, 01500C-016AFF
 param fork_branch_sprite R13 height_word      # sprite word 2 of fork_branch_draw's pieces: a height of 1 or-ed with the size step's height_bits (014092-014095)
 param fork_branch_sprite R15 offset_palette   # sprite words 6 and 7: the size step's rom_offset and the stage's palette word (0140A2-0140BE)
 local fork_branch_sprite 014095 R13 height_word
@@ -7912,7 +7918,7 @@ field object 02 flags_upper u16          # bits 16-31 of the object's flags word
 field object 14 parent u32 object        # the object that started it (race_background_start_objects; families name it presentation, panel, leader)
 field object 18 parameter u32            # what the list or the road's stream that starts it gives it (road_object_stream_start_object: the entry's parameter; families read their record there)
 field object 80 list_data u32            # the data the object list that starts it gives it (object_lists: data -> field 80)
-field race 0C master_time_difficulty_1 u8    # the time difficulty the master cabinet sends (link_send_records, link_take_master_settings)
+field race 0B master_time_difficulty s8[6]    # the time difficulty the master cabinet sends, a byte a checkpoint as time_difficulty holds them (link_send_records, link_take_master_settings, which move the last four as one word; race_progress_update reads them by checkpoint)
 field race 5A link_pad_5A u8             # sent with the record (link_send_records); nothing else reads or writes it
 field race 5B link_pad_5B u8
 local clear_published_car entry R20 car_object object.player_car   # the screen's car's object (player_car_update calls it)
@@ -8227,12 +8233,6 @@ struct car_part_place 4 rom
 field car_part_place 00 x u16
 field car_part_place 02 y u16
 local race_car_draw_part 009C77 R11 places car_part_place   # the place for the car's view
-# A car's small image on the checkpoint board, by player in the board's object from 80 (checkpoint_board_update
-# 00CBF5 "mov.w CFC8[PC](R1), 80[R20](R0)" from checkpoint_board_car_sprites; checkpoint_board_draw_row 00CDED
-# "movea.w 80[R20](R21), R10")
-struct board_car_sprite 4
-field board_car_sprite 00 animation u16    # 00CDF3 "movz.hw [R10+], R9"
-field board_car_sprite 02 palette u16      # 00CDF6 "mov.h [R10+], 3A[R20]"
 # A place in the order the cars passed a checkpoint (screen checkpoint_order, screen + 390, 8 a checkpoint):
 # checkpoint_board_update 00CC57 "movea.w 390[R25](R0), 14[R20]" (passing_order), 00CC5F "movz.bw [14[R20]], R21"
 struct checkpoint_pass 1

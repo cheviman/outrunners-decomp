@@ -4,7 +4,7 @@ Description: the objects along the roads: the courses' object streams and the re
              with, the stages' traffic lists and the traffic's records, the stages' background objects
 Version:     0.1.0
 Created:     27-10-2026
-Modified:    27-10-2026
+Modified:    11-11-2026
 Author:      Sebastian Toyos
 
 Every format writes the typed format of tools/core/formats/typed.py (from_text is typed.from_text), read by
@@ -30,7 +30,7 @@ The formats (one dictionary for every module of tools/formats, so their names st
   bytes it goes back (negative) to its start.
 - program_stage_road_object_lists (stage_road_object_lists): 'list' the traffic list of each stage, then
   the lists: 'traffic' a traffic_spawn_entry (position, level, handler, stop distance, record: the
-  traffic_record in traffic_records), 'end' (8000 FFFF) after the last.
+  traffic_record in traffic_records), 'end' (position 8000, level FFFF) after the last.
 - program_traffic_records (traffic_records): what the traffic lists' entries point at: 'sprite' a
   traffic_sprite_record (animation, palette, the sounds, weight, hit box), 'traffic' a traffic_record (its
   sprite record, side, x offset, speed, and two bytes nothing reads), 'line' a traffic leader's
@@ -208,7 +208,8 @@ def stage_road_object_lists_to_text(data, piece="stage_road_object_lists"):
     out.comment("position (segments from the stage's start, decimal) and level; +0xNN: a part's place in the piece")
     out.record("list", 4, [typed.column("list", "u32")])
     declare(out, "traffic", "traffic_spawn_entry")
-    out.record("end", 4, [typed.column("end", "u32", fixed=TRAFFIC_END)])
+    # (the end as the code reads it, a halfword each: traffic_spawner_update takes its position and level)
+    out.record("end", 4, [typed.column("position", "s16", fixed=-0x8000), typed.column("level", "u16", fixed=0xFFFF)])
     walk.want_offset(0, "traffic_lists")
     walk.run({"traffic_lists": address_table("list", "traffic_list"), "traffic_list": _traffic_list})
     walk.write(out)

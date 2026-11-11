@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -158,7 +158,6 @@
 #define test_mode_sound_queue_read_ADDRESS 0x20E733u
 #define test_mode_sound_queue_ADDRESS 0x20E734u
 #define test_mode_privilege_mode_ADDRESS 0x20E754u
-#define master_time_difficulty_ADDRESS 0x20FC0Bu
 #define race_copy_window_segments_ADDRESS 0x20FC46u
 
 /* work RAM as one family of functions uses it (their scratch variables) */
@@ -540,6 +539,9 @@ extern const void *car_select_default_cars_data;
 #define turntable_car_frames_ADDRESS 0x0069D8u
 extern const void *turntable_car_frames_data;
 #define turntable_car_frames ((const uint8_t *)turntable_car_frames_data)
+#define turntable_scenery_items_ADDRESS 0x006A78u
+extern const void *turntable_scenery_items_data;
+#define turntable_scenery_items (*(const uint16_t *)turntable_scenery_items_data)
 #define car_select_turn_delays_ADDRESS 0x006D9Cu
 extern const void *car_select_turn_delays_data;
 #define car_select_turn_delays ((const uint8_t *)car_select_turn_delays_data)
@@ -1065,6 +1067,12 @@ extern const void *unfinished_ending_actor_count_data;
 #define unfinished_ending_actors_ADDRESS 0x014A64u
 extern const void *unfinished_ending_actors_data;
 #define unfinished_ending_actors (*(const uint32_t *)unfinished_ending_actors_data)
+#define ending_actors_ADDRESS 0x014A7Cu
+extern const void *ending_actors_data;
+#define ending_actors (*(const uint32_t *)ending_actors_data)
+#define goal_actor_scripts_ADDRESS 0x01500Cu
+extern const void *goal_actor_scripts_data;
+#define goal_actor_scripts (*(const uint16_t *)goal_actor_scripts_data)
 #define road_surface_state_jumps_ADDRESS 0x016B0Cu
 extern const void *road_surface_state_jumps_data;
 #define road_surface_state_jumps ((const uint32_t *)road_surface_state_jumps_data)
@@ -1073,7 +1081,7 @@ extern const void *road_surface_event_jumps_data;
 #define road_surface_event_jumps ((const uint32_t *)road_surface_event_jumps_data)
 #define road_surface_page_words_ADDRESS 0x01714Cu
 extern const void *road_surface_page_words_data;
-#define road_surface_page_words (*(const uint32_t *)road_surface_page_words_data)
+#define road_surface_page_words (*(const uint8_t *)road_surface_page_words_data)
 #define road_tiles_change_state_jumps_ADDRESS 0x0171E0u
 extern const void *road_tiles_change_state_jumps_data;
 #define road_tiles_change_state_jumps ((const uint32_t *)road_tiles_change_state_jumps_data)
@@ -1847,6 +1855,7 @@ extern const void *kanji_font_data;
 #define crt_test_first_page_text_ADDRESS 0x01D9C7u
 #define crt_test_second_page_text_ADDRESS 0x01D9DCu
 #define game_assignments_page_text_ADDRESS 0x01DBF8u
+#define game_assignments_value_texts_ADDRESS 0x01DCF4u
 #define game_assignments_setting_places_ADDRESS 0x01DD14u
 #define coin_assignments_page_text_ADDRESS 0x01E0F4u
 #define coin_manual_page_text_ADDRESS 0x01E13Fu
@@ -2316,6 +2325,16 @@ struct object
 			uint8_t pad_14[0x6C];
 			uint32_t timeline;
 		} demo_captions;
+		struct
+		{
+			uint8_t pad_02[0x36];
+			uint32_t entry;
+		} draw_object_command;
+		struct
+		{
+			uint8_t pad_02[0x36];
+			uint32_t entry;
+		} draw_object_entry;
 		struct
 		{
 			uint8_t pad_02[0x7];
@@ -3037,7 +3056,7 @@ struct object
 			uint8_t last_event;
 			uint16_t segment;
 			uint16_t last_segment;
-			uint32_t page_table[0xF];
+			uint8_t page_table[0x3C];
 			uint32_t page_register;
 			uint32_t line_scroll_table;
 			uint32_t line_select_table;
@@ -3801,6 +3820,18 @@ struct car
 	uint8_t pad_183[0x7D];
 };
 
+struct car_hit_box
+{
+	uint16_t player;
+	uint32_t record;
+	uint16_t first_segment;
+	uint16_t last_segment;
+	uint16_t along_start;
+	uint16_t along_end;
+	uint16_t across_start;
+	uint16_t across_end;
+};
+
 struct view
 {
 	uint32_t x;
@@ -3999,7 +4030,10 @@ struct screen
 	uint32_t own_hit_box;
 	uint8_t pad_504[0xC];
 	uint32_t hit_box_count;
-	uint8_t pad_514[0xEC];
+	struct car_hit_box car_hit_boxes[0x8];
+	uint8_t pad_5A4[0xA];
+	struct car_hit_box player_car_hit_box;
+	uint8_t pad_5C0[0x40];
 	struct view views[0x8];
 	uint16_t stage_lengths[0x1F];
 	uint16_t branch_road_length;
@@ -4085,7 +4119,6 @@ struct screen
 	union
 	{
 		uint32_t route_map_signals;
-		uint16_t kanji_text_number;
 		struct
 		{
 			uint8_t pad_5800[0x1];
@@ -4130,9 +4163,7 @@ struct race
 	uint8_t master_coin_setting;
 	uint8_t master_free_play;
 	uint8_t master_game_difficulty;
-	int8_t master_time_difficulty_0;
-	uint8_t master_time_difficulty_1;
-	uint32_t master_time_difficulty_2_5;
+	int8_t master_time_difficulty[0x6];
 	uint8_t record_serial;
 	uint8_t record_model;
 	uint8_t record_name;
@@ -4222,8 +4253,7 @@ struct road_row_record
 	int16_t y_offset;
 	uint16_t spacing;
 	uint16_t count;
-	uint32_t hit_box_along;
-	uint32_t hit_box_across;
+	uint16_t hit_box[0x4];
 };
 
 struct road_object_stream_entry
@@ -4246,8 +4276,7 @@ struct flashing_scenery_record
 	int16_t y_offset;
 	uint16_t spacing;
 	uint16_t count;
-	uint32_t hit_box_along;
-	uint32_t hit_box_across;
+	uint16_t hit_box[0x4];
 };
 
 struct aurora_record
@@ -4318,8 +4347,7 @@ struct start_gate_record
 	int16_t y_offset;
 	uint16_t spacing;
 	uint16_t count;
-	uint32_t hit_box_along;
-	uint32_t hit_box_across;
+	uint16_t hit_box[0x4];
 };
 
 struct flagman_record
@@ -4616,7 +4644,7 @@ struct item_hit_box
 struct course_fork
 {
 	uint8_t branch_stages[0x2];
-	uint32_t branch_courses[0x2];
+	uint8_t branch_courses[0x8];
 };
 
 struct screen_hardware
@@ -5051,18 +5079,6 @@ struct screen_lamps
 	uint8_t leader_timer;
 };
 
-struct car_hit_box
-{
-	uint16_t player;
-	uint32_t record;
-	uint16_t first_segment;
-	uint16_t last_segment;
-	uint16_t along_start;
-	uint16_t along_end;
-	uint16_t across_start;
-	uint16_t across_end;
-};
-
 struct crash_entry
 {
 	uint16_t animation[0x2];
@@ -5090,12 +5106,6 @@ struct car_part_place
 {
 	uint16_t x;
 	uint16_t y;
-};
-
-struct board_car_sprite
-{
-	uint16_t animation;
-	uint16_t palette;
 };
 
 struct checkpoint_pass
@@ -5256,6 +5266,8 @@ struct course_record_copy
 _Static_assert(sizeof(struct object) == 0x100, "struct object has the size of the game's blocks");
 _Static_assert(sizeof(struct car) == 0x200, "struct car has the size of the game's blocks");
 _Static_assert(sizeof(struct screen) == 0x6000, "struct screen has the size of the game's blocks");
+_Static_assert(offsetof(struct screen, car_hit_boxes) == 0x514, "car_hit_boxes at its place in struct screen");
+_Static_assert(offsetof(struct screen, player_car_hit_box) == 0x5AE, "player_car_hit_box at its place in struct screen");
 _Static_assert(offsetof(struct screen, views) == 0x600, "views at its place in struct screen");
 _Static_assert(offsetof(struct screen, car) == 0x1000, "car at its place in struct screen");
 _Static_assert(offsetof(struct screen, road_segments) == 0x2000, "road_segments at its place in struct screen");
@@ -5369,7 +5381,6 @@ _Static_assert(sizeof(struct car_hit_box) == 0x12, "struct car_hit_box has the s
 _Static_assert(sizeof(struct crash_entry) == 0x10, "struct crash_entry has the size of the program ROM's records");
 _Static_assert(sizeof(struct course_start) == 0xA, "struct course_start has the size of the program ROM's records");
 _Static_assert(sizeof(struct car_part_place) == 0x4, "struct car_part_place has the size of the program ROM's records");
-_Static_assert(sizeof(struct board_car_sprite) == 0x4, "struct board_car_sprite has the size of the game's blocks");
 _Static_assert(sizeof(struct checkpoint_pass) == 0x1, "struct checkpoint_pass has the size of the game's blocks");
 _Static_assert(sizeof(struct sprite_place) == 0x10, "struct sprite_place has the size of the game's blocks");
 _Static_assert(sizeof(struct object_start_list) == 0x4, "struct object_start_list has the size of the program ROM's records");
@@ -5519,6 +5530,7 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define PRIVILEGE_MODE_SETTING(address) ((const struct privilege_mode_setting *)data_at(address))
 #define TIME_DIGIT_STEP(address) ((const struct time_digit_step *)data_at(address))
 #define SCREEN_SOUND_PAGE(address) ((struct screen_sound_page *)board(address))
+#define BOARD_CAR_IMAGES(address) ((uint32_t *)ram(address))
 #define ROAD_SEGMENT(address) ((struct road_segment *)ram(address))
 #define VIEW(address) ((struct view *)ram(address))
 #define PROJECTED_SEGMENT(address) ((struct projected_segment *)ram(address))
@@ -5550,7 +5562,6 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define CRASH_ENTRY(address) ((const struct crash_entry *)data_at(address))
 #define COURSE_START(address) ((const struct course_start *)data_at(address))
 #define CAR_PART_PLACE(address) ((const struct car_part_place *)data_at(address))
-#define BOARD_CAR_SPRITE(address) ((struct board_car_sprite *)ram(address))
 #define CHECKPOINT_PASS(address) ((struct checkpoint_pass *)ram(address))
 #define OBJECT_WORDS(address) ((uint32_t *)ram(address))
 #define OBJECT_SLOT_FLAGS(address) ((uint8_t *)ram(address))
@@ -6053,9 +6064,7 @@ struct game
 		struct race race_copies[8];
 		struct
 		{
-			uint8_t pad_to_master_time_difficulty[0xB];
-			int8_t master_time_difficulty[0x6];
-			uint8_t pad_to_race_copy_window_segments[0x35];
+			uint8_t pad_to_race_copy_window_segments[0x46];
 			uint16_t race_copy_window_segments[0x1DD];
 		};
 	};

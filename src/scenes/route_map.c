@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -295,7 +295,7 @@ void route_map_update(void)
 				current_object->state = 0xFu;
 				continue;
 			}
-			screen->kanji_text_number &= 0xFFF3u;
+			screen->route_map_signals &= 0xFFFFFFF3u;
 			current_object->route_map.first_legs_left--;
 			current_object->state++;
 		case 9:
@@ -351,7 +351,7 @@ void route_map_update(void)
 			object->handler = route_map_sign_update_ADDRESS;
 			object->route_map_sign.route_map = address_of(current_object);
 			object->route_map_sign.kind = 0u;
-			screen->kanji_text_number &= 0xFFF3u;
+			screen->route_map_signals &= 0xFFFFFFF3u;
 			current_object->route_map.checkpoint_legs_left--;
 			current_object->route_map.stage++;
 			current_object->state++;
@@ -452,7 +452,7 @@ void route_map_update(void)
 				current_object->state = 0xFu;
 				continue;
 			}
-			screen->kanji_text_number &= 0xFFFCu;
+			screen->route_map_signals &= 0xFFFFFFFCu;
 			current_object->route_map.first_legs_left--;
 			current_object->state++;
 		case 13:
@@ -514,7 +514,7 @@ void route_map_update(void)
 				current_object->state = 0xFu;
 				continue;
 			}
-			screen->kanji_text_number &= 0xFFF3u;
+			screen->route_map_signals &= 0xFFFFFFF3u;
 			current_object->route_map.checkpoint_legs_left--;
 			current_object->route_map.stage++;
 			if (current_object->route_map.stage != 6u)

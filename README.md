@@ -12,14 +12,14 @@ the tools verify it, extract the assets and build your own executable.
 ## Status
 
 How much of the C reads as C written by hand, measured on every run of `python tools/noise_report.py`
-(`clean`): 642 of the 762 functions (84.3%) and 26,719 of their 27,143 lines of code (98.4%) hold nothing
+(`clean`): 642 of the 762 functions (84.3%) and 26,720 of their 27,144 lines of code (98.4%) hold nothing
 of what the table under "What is left, and why" counts. Some of that the C has to keep to do what the
 original does: R12 and R14 where a value goes from one object's handler to the next through them, several fields
 moved in one access as the original's one instruction moves them, a byte or halfword of a value changed
 with the rest of it kept, as the original's byte and halfword instructions change it, and the memory the
 memory test, the checksum and the copy reach by its address, whatever is there (`MEMORY_ROUTINES` in
 `tools/game_profile.py`, each with why). Without counting those (`faithful`), all 762 functions and all
-27,143 lines of code are clean, the goal before the ports.
+27,144 lines of code are clean, the goal before the ports.
 
 Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 255 of the game's 696 functions (36.6%) and 20,815 of their 23,250 lines of code (89.5%) touch none of it; taking the rest out comes once the C no longer leans on the processor it runs on (the last entries of the list below).
 
@@ -539,6 +539,63 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       2,058 (139 and 608 before): from 2,059 two clip entries of the sprite list and screen 2's tyre noise (a
       byte of the RAM the sound program shares) differ, which the code writes from data the work RAM does not
       keep; on the PC the 16 scenarios identical
+- [x] `coin_start` identical on PowerPC, its 2,401 frames, picture and sound, and none of the program's data
+      the scenarios reach read across the values the loader lays out (the census: 1,169 reads in 7 tables
+      -> 0; the bytes read wider, 4,223 in 10 tables -> 4,190 in 8). Frame 2,059's clip entries: draw modes
+      1 and 6 take the address of a ready entry of the sprite list from the object's fields 38-3B, which
+      `crest_clip_update` writes as one word (`clip_entry`) and the C read as the two halfwords the other
+      objects keep there (`animation | palette << 16`), the halves a big-endian processor holds the other
+      way round; each is now a family of its one function with a field of its own
+      (`current_object->draw_object_command.entry`). The data, each typed in `symbols.txt` or in its format
+      as the code reads it: the hit boxes of the road rows', the flashing scenery's and the start gate's
+      records four halfwords (`hit_box u16[4]`, 812 records: two 32-bit words before, of which the code that
+      starts the object tests the first, now `(hit_box[0] | hit_box[1]) == 0u`); the end of a traffic list
+      its position and level; the endings' lists and their actors' scripts pieces of their own
+      (`ending_actors`, `goal_actor_scripts`: halfwords, 32-bit words before); `scene_palettes`' entries
+      colour blocks (`palette_block`: the four blocks in the table's own piece laid out as place, length and
+      colours); the test mode's instructions and two settings' values as texts
+      (`test_mode_instructions_text`, `game_assignments_value_texts`). The extractor's walk of the typed
+      pointers follows the records of a list that follows a record too (a road palette record's fades, a
+      stage's palette list), and a list that says its length holds that many bytes of records, where the
+      walk went on up to the first record that points nowhere: past a list's end it took a block's place
+      and count for an address (`0x00012040`) and laid colours out over other tables (`music_fade_addresses`'
+      second entry, `demo_sounds`, the endings' lists, 92 bytes of `road_row_size_shift_lists`), and the
+      palettes only such lists point at stayed bytes of a fade list (22 more palette lists and 185 more
+      runs of colours laid out as their own). The loader's layout before and after, compared value by value
+      (`ORUNNERS_DUMP_UNITS`), changes nowhere else, and the assets build the ROM back byte for byte. The
+      cars' hit boxes are members of `struct screen` (`car_hit_boxes`, `player_car_hit_box`), which
+      `state_diff.py` compares by their fields: at `coin_start`'s last frame the state on PowerPC is the
+      PC's but for the backup's checksum at 701F00 (the next entry). On the PC the 16
+      scenarios identical; `casts` 3,027 -> 3,023, the rest of the counts as they were
+- [x] The scenarios that cover the code on PowerPC: six of them (`coin_start`, `game_over`, `test_mode`,
+      `two_players`, `name_entry`, `sound_test`: 127,066 of the 16's 563,396 frames) run 98.6% of the
+      addresses the 16 run, the V70's and the Z80's (their `executed.txt`), and take 20 minutes at once
+      under qemu, picture and sound hashed every frame (23 ms a frame; `coin_start` 68 seconds). What they
+      found, each a value written at one width and read at another, which the PC does not show:
+      a fork's two courses, 32-bit addresses the code takes from the course's stream, which the C reads
+      everywhere else a byte at a time: the bytes they are (`course_fork` `branch_courses`, put together as
+      the stream's other values are); the checkpoint board's car images, a word each (the animation and the
+      palette) that the row's drawing read as two halfwords of a structure of its own: the two halves of
+      the word (`(uint16_t)car_sprite[0]`, `car_sprite[0] >> 16u`); the road's page table, whose words
+      `road_tiles_change_update` writes a byte at a time: bytes, four of them put together where
+      `road_surface_update` takes a page word (the decompiler writes an access by its number that runs on
+      over the elements of a family's array as those elements, as it did for a record's); the cells of the
+      test mode's texts and of the input test's items, halfwords in a stream the C reads a byte at a time:
+      a column type of the typed format, `b16`, a 16-bit value the loader lays out as its two bytes; the
+      last items of the turntable's scenery, bytes at the end of the groups' piece: a piece of their own
+      (`turntable_scenery_items`); the route map's signals, a word whose low half had a second name of 16
+      bits that the C cleared bits through (on a big-endian processor a union's narrower member is the
+      other half): one name, the whole word (`screen->route_map_signals &= 0xFFFFFFF3u`; the unused viewer
+      of the Japanese texts keeps its number in its low half); the time difficulty the master cabinet
+      sends, two bytes and a word in the race record and six bytes by another name over it: six bytes
+      (`race->master_time_difficulty[5]`), found by reading, as the scenarios leave them all 0. And one in
+      the tests themselves: the scripts hold the race's time up
+      with a byte poked into the high half of `time_left`, which a memory that keeps its values in its
+      processor's order holds in the other byte: a script's `poke` may name the halfword its byte is one
+      of (`poke 20FB6B 0A 20FB6A`). The census lists the texts' cells with the bytes the original reads
+      wider (4,190 reads in 8 tables -> 4,421 in 30: the C reads each as its bytes); `casts` 3,023 ->
+      3,038, the bytes put together. With these the six are identical on PowerPC, picture and sound, all
+      of their frames; on the PC the 16 scenarios identical, and the assets build the ROM back
 - [ ] After the decompilation, before the state leaves the board's memory model (Sebas, 05-11-2026): a C that
       does not lean on the processor it runs on, so that the game builds for one unlike the PC's: big endian,
       and taking a halfword or a word only at an address of its width (the Saturn's SH-2). The C counts on a
@@ -554,12 +611,9 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       yet of the places the code reaches at an address that is not a multiple of the width. The steps, each
       checked by the 16 scenarios: what leans on the host counted (`width_census.py`), the board's memories in
       one order on both sides, the accesses of several elements as the elements, and each value at its own
-      width where `coin_start` reaches it on PowerPC are done (the entries above). Left: the rest of
-      `coin_start` and the other 15 scenarios on PowerPC (`tools/state_diff.py` at the first frame that
-      differs finds the place); the 7 tables the census still finds read in parts of their values (the
-      road objects' streams, the unfinished ending's actors, a few palettes and the test mode's texts), each
-      typed in its asset as the C reads it; the ends of the
-      road objects' lists, a 32-bit mark whose first halfword the code reads (negative either way round);
+      width where `coin_start` reaches it on PowerPC, all of its frames, are done (the entries above). Left:
+      the other 10 scenarios on PowerPC, the attract mode and the races to each goal, which run the 1.4% of
+      the addresses the six do not (`tools/state_diff.py` at the first frame that differs finds the place);
       the other places of the data read at more than one width (the census: 4,867 in 10 functions); what the
       census finds out of line read as its parts; and the work RAM's hash and what the window port saves by
       each value's width. It is done

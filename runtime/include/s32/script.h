@@ -4,7 +4,7 @@
  *                 switches and memory pokes, applied when VBLANK starts in the frames a text script names
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -19,7 +19,10 @@
  *      gas PLAYER POSITION             the gas pedal (0 up, 255 down)
  *      brake PLAYER POSITION           the brake pedal
  *      dip SWITCH on|off               DIP switch 1-4
- *      poke ADDRESS VALUE              writes a byte through the bus (hexadecimal address and value)
+ *      poke ADDRESS VALUE [HALFWORD]   writes a byte through the bus (hexadecimal address and value); with
+ *                                      HALFWORD (ADDRESS or the one before), as a byte of the 16-bit value
+ *                                      there, which a memory that keeps its values in its processor's order
+ *                                      holds whole (the work RAM of the game in C)
  *      end                             the run ends with this frame
  *    INPUT: coin1 coin2 start1 start2 service test service2 test2, and for players 1 and 2 shift_upN
  *           shift_downN musicN previousN nextN (the DJ/music, << and >> buttons)

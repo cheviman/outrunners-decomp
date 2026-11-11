@@ -5,7 +5,7 @@ Description: the program's defaults and small tables: the settings' and the book
              test mode's cells and items, the time's digits, the signature
 Version:     0.1.0
 Created:     27-10-2026
-Modified:    27-10-2026
+Modified:    11-11-2026
 Author:      Sebastian Toyos
 
 Every format writes the typed format of tools/core/formats/typed.py (from_text is typed.from_text): a
@@ -292,11 +292,12 @@ def input_test_items_to_text(data):
     out.comment("CELL_A CELL_B, an input (the I/O port's offset, its bit in decimal, its On/Off cells on monitor A and")
     out.comment("B); 'end'")
     out.comment("(FFFF); then 'test' the cells of TEST's state")
-    out.record("number", 2, [typed.column("cell", "u16")])
-    out.record("switch", 6, [typed.column("port", "u8"), typed.column("bit", "u8"), typed.column("cell_a", "u16"),
-                             typed.column("cell_b", "u16")])
-    out.record("end", 2, [typed.column("end", "u16", fixed=0xFFFF)])
-    out.record("test", 2, [typed.column("cell", "u16")])
+    # (b16: the code walks the items a byte at a time, the cells as their two bytes)
+    out.record("number", 2, [typed.column("cell", "b16")])
+    out.record("switch", 6, [typed.column("port", "u8"), typed.column("bit", "u8"), typed.column("cell_a", "b16"),
+                             typed.column("cell_b", "b16")])
+    out.record("end", 2, [typed.column("end", "b16", fixed=0xFFFF)])
+    out.record("test", 2, [typed.column("cell", "b16")])
     at = 0
     for _ in range(INPUT_NUMBERS):
         if at + 2 > len(data):

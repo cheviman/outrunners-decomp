@@ -3,7 +3,7 @@
  *    Description: a viewer of kanji texts nothing starts (unused)
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -41,7 +41,7 @@ void kanji_text_viewer_update(void)
 		game->video_registers[68] = 0u;
 		game->video_registers[69] = 0u;
 		game->send_video_registers = 0xFFu;
-		screen->kanji_text_number = 0u;
+		screen->route_map_signals &= 0xFFFF0000u;
 		screen->kanji_text_units = 0;
 		screen->kanji_text_tens = 0;
 		screen->kanji_text_hundreds = 0;
@@ -93,7 +93,7 @@ void kanji_text_viewer_update(void)
 		if (screen->index == 0u)
 		{
 			text_number = (uint16_t)(screen->kanji_text_units + screen->kanji_text_tens * 0xAu + screen->kanji_text_hundreds * 0x64u);
-			screen->kanji_text_number = text_number;
+			screen->route_map_signals = (screen->route_map_signals & 0xFFFF0000u) | (text_number & 0xFFFFu);
 			cell = TEXT_CELL(5, 10);
 			kanji_text_viewer_draw_number(cell, text_number);
 			current_object->kanji_text_viewer.blink_count++;
@@ -107,7 +107,7 @@ void kanji_text_viewer_update(void)
 			return;
 		text_ended = 0u;
 		line = 0u;
-		text = kanji_texts[screen->kanji_text_number];
+		text = kanji_texts[(uint16_t)screen->route_map_signals];
 		do
 		{
 			line_place = VIDEO_RAM + 0x1040u + line * 0x1000u;
@@ -120,7 +120,7 @@ void kanji_text_viewer_update(void)
 			return;
 		text_ended = 0u;
 		line = 0u;
-		text = kanji_texts[screen->kanji_text_number];
+		text = kanji_texts[(uint16_t)screen->route_map_signals];
 		do
 		{
 			line_place = VIDEO_RAM + 0x1040u + line * 0x1000u;

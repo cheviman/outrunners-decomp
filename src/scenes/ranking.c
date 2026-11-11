@@ -3,7 +3,7 @@
  *    Description: the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by

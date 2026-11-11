@@ -3,7 +3,7 @@
  *    Description: scripted controls for test runs (format in s32/script.h)
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -86,6 +86,7 @@ typedef struct script_event
 	int target;            /* control index, analog input (0-7) or DIP switch (0-3) */
 	uint32_t frames;       /* press: frames held */
 	uint32_t address;      /* poke */
+	uint32_t halfword;     /* poke: the halfword the byte is one of, or ~0 for a byte of its own */
 	uint8_t value;         /* poke: byte; analog: position; dip: 1 = on */
 } script_event;
 
@@ -223,14 +224,18 @@ static bool parse_event(const char *line, uint64_t previous, script_event *event
 		uint64_t value;
 
 		event->action = ACTION_POKE;
-		if (fields != 4 || !parse_unsigned(words[2], 16, &number) || number > 0xffffff
-			|| !parse_unsigned(words[3], 16, &value) || value > 0xff)
+		uint64_t halfword = 0;
+
+		if (fields < 4 || !parse_unsigned(words[2], 16, &number) || number > 0xffffff
+			|| !parse_unsigned(words[3], 16, &value) || value > 0xff
+			|| (fields == 5 && (!parse_unsigned(words[4], 16, &halfword) || number - halfword > 1)))
 		{
-			snprintf(error, error_size, "expected 'poke ADDRESS VALUE' in hexadecimal, a 24-bit address and a byte");
+			snprintf(error, error_size, "expected 'poke ADDRESS VALUE [HALFWORD]' in hexadecimal: a 24-bit address, a byte, the halfword it is a byte of");
 			return false;
 		}
 		event->address = (uint32_t)number;
 		event->value = (uint8_t)value;
+		event->halfword = fields == 5 ? (uint32_t)halfword : ~0u;
 		return true;
 	}
 	if (strcmp(words[1], "end") == 0)
@@ -367,7 +372,17 @@ static void run_event(s32_script *script, const script_event *event, uint64_t fr
 				s32_board.input.port_f[0] |= (uint8_t)(1u << event->target);
 			break;
 		case ACTION_POKE:
-			s32_write8(event->address, event->value);
+			if (event->halfword != ~0u)
+			{
+				/* (a byte of a halfword: the halfword with that byte changed, as the memory keeps a value in
+				   its processor's order) */
+				const unsigned shift = 8u * (event->address - event->halfword);
+				const uint16_t whole = s32_read16(event->halfword);
+
+				s32_write16(event->halfword, (uint16_t)((whole & ~(0xffu << shift)) | (uint32_t)event->value << shift));
+			}
+			else
+				s32_write8(event->address, event->value);
 			break;
 	}
 }

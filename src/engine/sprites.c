@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -556,26 +556,25 @@ void draw_object_one_piece(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint3
 	*p_last_size_step = address_of(size_step);
 }
 
-/* Draw mode 1: copies a ready 16-byte sprite entry, from the address in fields 38-3B (animation and
-   palette read as one 32-bit address), into the sprite list and its halfway copy, with the screen's bit
-   in its fourth word (sprite_screen_bit). Not run in the scenarios. */
+/* Draw mode 1: copies a ready 16-byte sprite entry, from the address in entry (where the other objects
+   keep animation and palette), into the sprite list and its halfway copy, with the screen's bit in its
+   fourth word (sprite_screen_bit). Not run in the scenarios. */
 uint32_t draw_object_entry(uint32_t sprite_entry)
 {
-	move_halfwords(sprite_entry, (current_object->animation | ((uint32_t)current_object->palette << 16u)), 8u);
-	move_halfwords(sprite_entry + 0x3000u, (current_object->animation | ((uint32_t)current_object->palette << 16u)), 8u);
+	move_halfwords(sprite_entry, current_object->draw_object_entry.entry, 8u);
+	move_halfwords(sprite_entry + 0x3000u, current_object->draw_object_entry.entry, 8u);
 	SPRITE_WORDS(sprite_entry + 0x6u)[0] |= screen->sprite_screen_bit;
 	SPRITE_WORDS(sprite_entry + 0x3006u)[0] |= screen->sprite_screen_bit;
 	sprite_entry += 0x10u;
 	return sprite_entry;
 }
 
-/* Draw mode 6: copies a ready 16-byte entry from the address in fields 38-3B into the sprite list and
-   its halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's
-   clip. */
+/* Draw mode 6: copies a ready 16-byte entry from the address in entry into the sprite list and its
+   halfway copy as it is, without the screen's bit: for list commands such as crest_clip_update's clip. */
 uint32_t draw_object_command(uint32_t sprite_entry)
 {
-	move_halfwords(sprite_entry, (current_object->animation | ((uint32_t)current_object->palette << 16u)), 8u);
-	move_halfwords(sprite_entry + 0x3000u, (current_object->animation | ((uint32_t)current_object->palette << 16u)), 8u);
+	move_halfwords(sprite_entry, current_object->draw_object_command.entry, 8u);
+	move_halfwords(sprite_entry + 0x3000u, current_object->draw_object_command.entry, 8u);
 	sprite_entry += 0x10u;
 	return sprite_entry;
 }

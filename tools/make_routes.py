@@ -4,7 +4,7 @@ Description: writes control scripts that race a one-player game to the goal by a
              wheel before each fork the route takes off the way the wheel in the centre goes
 Version:     0.1.0
 Created:     20-10-2026
-Modified:    20-10-2026
+Modified:    11-11-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/make_routes.py NAME CHOICES [NAME CHOICES ...]
@@ -64,7 +64,7 @@ def script(windows, poke_until, end, description):
     lines += ["900 gas 1 255"]
     for start, stop, position in windows:
         lines += [f"{start} wheel 1 {position}", f"{stop} wheel 1 128"]
-    lines += [f"{frame} poke 20FB6B 0A" for frame in range(2500, poke_until + 1, 60)]
+    lines += [f"{frame} poke 20FB6B 0A 20FB6A" for frame in range(2500, poke_until + 1, 60)]
     lines += [f"{end} end"]
     return "\n".join(lines) + "\n"
 

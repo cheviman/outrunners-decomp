@@ -30,8 +30,8 @@ page_links 102
 ram_blocks 106
 pointer_conversions 1062
 functions 762
-lines 39874
-casts 3027
+lines 39880
+casts 3038
 partial_writes 130
 mixed_partial_writes 0
 board_registers 377

@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    11-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -72,7 +72,7 @@ void road_surface_update(void)
 	}
 	near_scroll = current_object->road_surface.near_scroll;
 	near_scroll = (uint16_t)(near_scroll + 0x4FFu);
-	page_select_long = current_object->road_surface.page_table[(int32_t)((near_scroll >> 9) + (current_object->road_surface.page_set - 3u) * 5u)];
+	page_select_long = (current_object->road_surface.page_table[(int32_t)(((near_scroll >> 9) + current_object->road_surface.page_set * 5u - 0xFu) * 4u)] | ((uint32_t)current_object->road_surface.page_table[(int32_t)(((near_scroll >> 9) + current_object->road_surface.page_set * 5u - 0xFu) * 4u) + 1] << 8u) | ((uint32_t)current_object->road_surface.page_table[(int32_t)(((near_scroll >> 9) + current_object->road_surface.page_set * 5u - 0xFu) * 4u) + 2] << 16u) | ((uint32_t)current_object->road_surface.page_table[(int32_t)(((near_scroll >> 9) + current_object->road_surface.page_set * 5u - 0xFu) * 4u) + 3] << 24u));
 	PAGE_SELECT(current_object->road_surface.page_register)[0] = (uint16_t)page_select_long;
 	PAGE_SELECT(current_object->road_surface.page_register)[1] = (uint16_t)(page_select_long >> 16u);
 	if (current_object->road_surface.segment <= current_object->road_surface.last_segment)
