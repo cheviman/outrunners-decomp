@@ -5,7 +5,7 @@
  *                 and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -35,8 +35,9 @@ extern "C" {
    with the original's: ram.h's struct game (written by tools/decompile.py), which the code reaches through
    game (game->game_frame_count) and runtime/src/game.c keeps, the board reading the same bytes. A place the
    code works out by its address is the byte there (ram()). The V60 is little endian and lets a halfword or
-   word sit at any address, like the targets this runs on; the build turns strict aliasing off for this
-   code. On another processor the work RAM holds each value in that processor's order at the width the code
+   word sit at any address; the C reads one the program keeps at an address that is not a multiple of its
+   width through a type that says so (unaligned_int16, below), and the build turns strict aliasing off for
+   this code. On another processor the work RAM holds each value in that processor's order at the width the code
    reaches it, and the board's memories as s32/machine.h says. */
 struct game;
 extern struct game *game;
@@ -45,6 +46,23 @@ extern struct game *game;
 #define GAME_NORETURN __declspec(noreturn)
 #else
 #define GAME_NORETURN _Noreturn
+#endif
+
+/* Values the program keeps at addresses that are not a multiple of their width and reads there whole (a list
+   of halfwords at an odd address in the middle of a table's piece: symbols.txt's "elements ... unaligned"):
+   their types with an alignment of 1, which a processor that takes a halfword or a word only at an address
+   of its width (the Saturn's SH-2) reads a byte at a time. MSVC's targets (x86, x64, ARM64) take any value
+   at any address. */
+#if defined(__GNUC__) || defined(__clang__)
+typedef int16_t unaligned_int16 __attribute__((aligned(1)));
+typedef uint16_t unaligned_uint16 __attribute__((aligned(1)));
+typedef int32_t unaligned_int32 __attribute__((aligned(1)));
+typedef uint32_t unaligned_uint32 __attribute__((aligned(1)));
+#else
+typedef int16_t unaligned_int16;
+typedef uint16_t unaligned_uint16;
+typedef int32_t unaligned_int32;
+typedef uint32_t unaligned_uint32;
 #endif
 
 /* A game function the board puts its own in place of (runtime/replaced.txt): tools/decompile.py writes

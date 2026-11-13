@@ -2,7 +2,7 @@
 # Description: build of the OutRunners runtime and its development tools
 # Version:     0.1.0
 # Created:     11-10-2026
-# Modified:    27-10-2026
+# Modified:    13-11-2026
 # Author:      Sebastian Toyos
 cmake_minimum_required(VERSION 3.20)
 project(outrunners C CXX)
@@ -33,6 +33,19 @@ if(ORUNNERS_ASAN)
 		add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g)
 		add_link_options(-fsanitize=address)
 	endif()
+endif()
+
+# A development aid for processors that take a halfword or a word only at an address of its width (the
+# Saturn's SH-2): GCC or Clang's UndefinedBehaviorSanitizer reports, once a place, every access the C makes
+# through a type at an address that is not a multiple of its alignment (on stderr, "misaligned address"). The
+# 16 scenarios report none
+option(ORUNNERS_ALIGNMENT_CHECK "Build with -fsanitize=alignment (GCC or Clang)" OFF)
+if(ORUNNERS_ALIGNMENT_CHECK)
+	if(MSVC)
+		message(FATAL_ERROR "ORUNNERS_ALIGNMENT_CHECK needs GCC or Clang")
+	endif()
+	add_compile_options(-fsanitize=alignment -fno-omit-frame-pointer -g)
+	add_link_options(-fsanitize=alignment)
 endif()
 
 if(MSVC)

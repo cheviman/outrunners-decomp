@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    11-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -240,7 +240,7 @@ void flashing_scenery_update(void)
 {
 	uint16_t position = 0, row_length = 0;
 	uint32_t along_distance = 0, animation = 0, element = 0, next_hit_box = 0;
-	const int16_t *palettes = NULL;
+	const unaligned_int16 *palettes = NULL;
 	const struct flashing_scenery_record *record = NULL;
 
 	switch (current_object->state)
@@ -415,7 +415,7 @@ void aurora_count_down(void)
 void aurora_next_animation(void)
 {
 	uint32_t animation = 0, element = 0;
-	const int16_t *animations = NULL;
+	const unaligned_int16 *animations = NULL;
 
 	animations = rom_pointer(current_object->aurora.animation_list);
 	element = animations[0];

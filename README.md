@@ -12,16 +12,16 @@ the tools verify it, extract the assets and build your own executable.
 ## Status
 
 How much of the C reads as C written by hand, measured on every run of `python tools/noise_report.py`
-(`clean`): 642 of the 762 functions (84.3%) and 26,720 of their 27,144 lines of code (98.4%) hold nothing
+(`clean`): 642 of the 762 functions (84.3%) and 26,725 of their 27,149 lines of code (98.4%) hold nothing
 of what the table under "What is left, and why" counts. Some of that the C has to keep to do what the
 original does: R12 and R14 where a value goes from one object's handler to the next through them, several fields
 moved in one access as the original's one instruction moves them, a byte or halfword of a value changed
 with the rest of it kept, as the original's byte and halfword instructions change it, and the memory the
 memory test, the checksum and the copy reach by its address, whatever is there (`MEMORY_ROUTINES` in
 `tools/game_profile.py`, each with why). Without counting those (`faithful`), all 762 functions and all
-27,144 lines of code are clean, the goal before the ports.
+27,149 lines of code are clean, the goal before the ports.
 
-Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 255 of the game's 696 functions (36.6%) and 20,815 of their 23,250 lines of code (89.5%) touch none of it; taking the rest out comes once the C no longer leans on the processor it runs on (the last entries of the list below).
+Apart from all that, the C keeps the game's state where the original had it, laid out as the board's work RAM (one structure, `struct game`, which the code reaches through `game`): structures reached by casting an address, addresses of the work RAM, of code and of tables used as values, links within a 64 KB page, memory moved and filled through its address (the memory model's row of the table under "What is left, and why"). 255 of the game's 696 functions (36.6%) and 20,821 of their 23,256 lines of code (89.5%) touch none of it; taking the rest out comes once the C no longer leans on the processor it runs on (the last entries of the list below).
 
 - [x] ROM set verification (MAME set `orunners`, World), by CRC32 and SHA-1 of every file
 - [x] Multi 32 board model in C (`runtime/`): memory map, interrupt controller and timers, the two I/O
@@ -601,6 +601,21 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       run the 1.4% of the addresses the six do not) needed nothing more, 25 minutes at once under qemu
       (`python tools/big_endian_scenarios.py`). `python tools/select_scenarios.py --big-endian` keeps that
       state as verified, so that a change runs again on PowerPC only the scenarios it can reach
+- [x] Nothing read at an address out of line with its type's alignment: a build with `-fsanitize=alignment`
+      (`-DORUNNERS_ALIGNMENT_CHECK=ON`, GCC or Clang) runs the 16 scenarios with no report, picture and sound
+      identical. Of the accesses the census finds out of line (2,290 to the program's data in 27 functions,
+      22 to the work RAM in 10), the C already read all but five places a byte at a time or as members of the
+      packed structures, which the compiler reads at any address. The five, in three functions: two lists of
+      halfwords at an odd address in the middle of `road_object_streams`' piece, the first of
+      `flashing_scenery_palettes` (021041) and the second of `aurora_animations` (02C481), which the code
+      reads there whole: `elements ... unaligned` in `symbols.txt`, which the C reads through a type of
+      alignment 1 (`const unaligned_int16 *palettes`, `game/support.h`: GCC and Clang read it a byte at a time
+      where the processor needs it, as PowerPC's `-mstrict-align` shows); and the output test's bits, which
+      `test1` and `not1` test and flip in the 32 bits from an output's byte (20E092 to 20E095): the four
+      bytes they are (`port_output_bits`), read and written in their order as the V70 does, where the C took
+      a word at an address out of line, which on a big-endian processor also tested and flipped a bit of
+      another byte (`test_mode_output_test_toggle` too, which no scenario runs). `ram_structures` 832 -> 835
+      and `casts` 3,038 -> 3,048, the bytes put together
 - [ ] After the decompilation, before the state leaves the board's memory model (Sebas, 05-11-2026): a C that
       does not lean on the processor it runs on, so that the game builds for one unlike the PC's: big endian,
       and taking a halfword or a word only at an address of its width (the Saturn's SH-2). The C counts on a
@@ -612,20 +627,17 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       order (`put` in `runtime/src/assets.c`), which the C reads in place in the host's (`data_at`,
       `rom_pointer`: 145 and 228 uses); several fields are read or written in one access (`AS16`, `AS32`:
       the 204 of `wide_access` under "What is left, and why"), whose halves a big-endian processor takes the
-      other way round; and the structures are packed at the V70's offsets (`#pragma pack(1)`), with no count
-      yet of the places the code reaches at an address that is not a multiple of the width. The steps, each
-      checked by the 16 scenarios: what leans on the host counted (`width_census.py`), the board's memories in
-      one order on both sides, the accesses of several elements as the elements, none of the program's data
-      read across a value the loader lays out, and each value at its own width wherever the 16 scenarios
-      reach it on PowerPC, all of their frames, picture and sound, are done (the entries above). Left: what
-      the census finds out of line with its width (2,290 accesses to the program's data in 27 functions, 22
-      to the work RAM in 10: the V70 takes a word at any address, the SH-2 only at a multiple of its width),
-      read as its parts; and the work RAM's hash and what the window port saves by each value's width, so
-      that the state compares in the V70's order on any processor (the scenarios on PowerPC compare the
-      picture and the sound; `tools/state_diff.py` found the state of `coin_start`'s last frame the PC's
-      but for the backup's checksum). It is done
-      when a big-endian build runs the 16 scenarios under QEMU with the state (in the V70's order), the
-      picture and the sound identical, and `-fsanitize=alignment` reports nothing. The tasks' stacks are the
+      other way round; and the structures are packed at the V70's offsets (`#pragma pack(1)`), and some of
+      what the code reads is at an address that is not a multiple of its width. The steps, each checked by
+      the 16 scenarios: what leans on the host counted (`width_census.py`), the board's memories in one order
+      on both sides, the accesses of several elements as the elements, none of the program's data read across
+      a value the loader lays out, each value at its own width wherever the 16 scenarios reach it on PowerPC,
+      all of their frames, picture and sound, and nothing read at an address out of line with its type's
+      alignment, are done (the entries above). Left: the work RAM's hash and what the window port saves by
+      each value's width, so that the state compares in the V70's order on any processor (the scenarios on
+      PowerPC compare the picture and the sound; `tools/state_diff.py` found the state of `coin_start`'s last
+      frame the PC's but for the backup's checksum). It is done when a big-endian build runs the 16 scenarios
+      under QEMU with the state (in the V70's order), the picture and the sound identical. The tasks' stacks are the
       port's: `runtime/src/tasks.c` takes fibers on Windows and ucontext elsewhere, and a machine with no
       system switches them its own way (`host/tasks.h`). The V60's arithmetic (a division by 0, a shift by a
       computed count), the status word and R12 and R14 are plain C that does what the V70 does on any
@@ -692,7 +704,7 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 | A function the board puts its own in place of (`board_replaced`) | 1 | The memory test's sums of the ROM chips (`runtime/replaced.txt`): the game has no ROM chips to sum, so the board hands back the sums the program keeps for them (at 03FFF8 and 03FFFC), as good chips give |
 | Work RAM addresses printed as numbers | 25 uses | The tasks' stacks and frames (`0x21F800u`, `0x21FF84u`), places in the screens' blocks (the sprite places `0x20C000u`, one past screen 2's LCD text `0x218F20u`, where `test_mode_start` leaves R12) and the coin meters after the first: the decompiler names a constant only when it is a variable's own address. The memory model's `ram_addresses` counts them |
 | Names made up of an address or an offset (`unk_names`, `made_up_names`) | 0 | None in the code, none in a comment, none declared for nothing: 17 functions' comments gave fields by their offset, written before the fields had names (`the car object's unk_10`, its `timer`), `struct object`'s view of every object declared 64 fields named after their offset that no code reads, as the families' views name those bytes (86 before, now padding), and `test_mode_start` gave a place of screen 2's block by a name made up of its address (`unk_218F20_ADDRESS`), now its number |
-| The game's state in the board's memory model (`ram_structures`, `ram_variables`, `ram_addresses`, `code_addresses`, `table_addresses`, `page_links`, `ram_blocks`, `pointer_conversions`) | 832, 0, 154, 206, 595, 102, 106 and 1,062 | The game's state is one structure, `struct game`, laid out as the board's work RAM (128 KB at 200000), at the places the original had it, so that each frame's state compares byte for byte with the original's; the code reaches its variables as its fields (`game->game_frame_count`; 139 macros over fixed addresses before), and its blocks where the code reaches them at their fixed addresses (`game->screen_1.unpack_state`); the registers the whole program shares, and a function's own variables, parameters and results, that point at a structure are C pointers (`current_object->state`, `object->flags`). A field that holds an address is still read by casting it (`RACE(screen->race_copy)->stage_count`), the other pointers are 32-bit addresses, the C turns a pointer back into the address the original holds where it still needs it (`address_of(screen)`) and makes one from an address it holds (`pointer_to`, `rom_pointer`), an object's handler is a code address that `call_code` runs, the tables are reached through the addresses they hold (`data_at`), a link is an address's low halfword in its 64 KB page (`LINKED`), and memory is moved, filled and searched through its address as the V60's string instructions do (`move_halfwords(object, zero_block_ADDRESS, 0x80u)` clears an object; the others clear lists, race records and tables, copy the settings, the LCD's texts, the sprite entries and the video and mixer registers' values, and the memory test keeps the work RAM in the sprite RAM while it tests it). Taking the game's state out of that model, with real pointers and plain C variables, comes once the C no longer leans on the processor it runs on; the board's own memories (the video and sprite RAM, the palettes, the sound and link boards' RAM) stay, being how the game talks to the board |
+| The game's state in the board's memory model (`ram_structures`, `ram_variables`, `ram_addresses`, `code_addresses`, `table_addresses`, `page_links`, `ram_blocks`, `pointer_conversions`) | 835, 0, 154, 206, 595, 102, 106 and 1,062 | The game's state is one structure, `struct game`, laid out as the board's work RAM (128 KB at 200000), at the places the original had it, so that each frame's state compares byte for byte with the original's; the code reaches its variables as its fields (`game->game_frame_count`; 139 macros over fixed addresses before), and its blocks where the code reaches them at their fixed addresses (`game->screen_1.unpack_state`); the registers the whole program shares, and a function's own variables, parameters and results, that point at a structure are C pointers (`current_object->state`, `object->flags`). A field that holds an address is still read by casting it (`RACE(screen->race_copy)->stage_count`), the other pointers are 32-bit addresses, the C turns a pointer back into the address the original holds where it still needs it (`address_of(screen)`) and makes one from an address it holds (`pointer_to`, `rom_pointer`), an object's handler is a code address that `call_code` runs, the tables are reached through the addresses they hold (`data_at`), a link is an address's low halfword in its 64 KB page (`LINKED`), and memory is moved, filled and searched through its address as the V60's string instructions do (`move_halfwords(object, zero_block_ADDRESS, 0x80u)` clears an object; the others clear lists, race records and tables, copy the settings, the LCD's texts, the sprite entries and the video and mixer registers' values, and the memory test keeps the work RAM in the sprite RAM while it tests it). Taking the game's state out of that model, with real pointers and plain C variables, comes once the C no longer leans on the processor it runs on; the board's own memories (the video and sprite RAM, the palettes, the sound and link boards' RAM) stay, being how the game talks to the board |
 | Data without a name of its own | 186 pieces, 1 to 6 bytes | The `data_XXXXXX` sections of `assets/data/`: the alignment between the code and the tables (zeros), the V60's `nop`s at 000000-000005, and dead code bytes in two places (00E8D9, after `halt`s) that the code reaches by no way. Every table has a name, and every piece with a structure a format of its own |
 | Board registers without a name | 6 uses | The interrupt controller's register 5 (`IRQ_D00005`, which MAME does not know either) and the bytes boot writes to E00000 and E80000-E80003, where the board maps nothing |
 | Calls through a slot that holds a function's address | 11 wrappers | `src/table.c`: how `call_code()` runs a function from a code address it reads (`call_0006B0` runs `second_task`), named after that address |

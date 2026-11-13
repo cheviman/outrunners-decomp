@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    11-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -5412,9 +5412,9 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define ROAD_OBJECT_STREAM_ENTRY(address) ((const struct road_object_stream_entry *)data_at(address))
 #define ROAD_OBJECT_STREAM_FORKS(address) ((const uint32_t *)data_at(address))
 #define FLASHING_SCENERY_RECORD(address) ((const struct flashing_scenery_record *)data_at(address))
-#define FLASHING_SCENERY_PALETTES(address) ((const int16_t *)data_at(address))
+#define FLASHING_SCENERY_PALETTES(address) ((const unaligned_int16 *)data_at(address))
 #define AURORA_RECORD(address) ((const struct aurora_record *)data_at(address))
-#define AURORA_ANIMATIONS(address) ((const int16_t *)data_at(address))
+#define AURORA_ANIMATIONS(address) ((const unaligned_int16 *)data_at(address))
 #define ROAD_CROSSER_RECORD(address) ((const struct road_crosser_record *)data_at(address))
 #define MOVING_SCENERY_RECORD(address) ((const struct moving_scenery_record *)data_at(address))
 #define SWOOPING_HELICOPTER_RECORD(address) ((const struct swooping_helicopter_record *)data_at(address))
@@ -5596,7 +5596,6 @@ _Static_assert(sizeof(struct course_record_copy) == 0x6, "struct course_record_c
 #define CHIP_TEST_RESULTS(address) ((uint8_t *)ram(address))
 #define PROGRAM_HALFWORDS(address) ((const uint16_t *)data_at(address))
 #define ANALOG_POSITIONS(address) ((uint8_t *)ram(address))
-#define OUTPUT_BITS(address) ((uint32_t *)ram(address))
 #define STAGE_GAME_COUNTS(address) ((uint16_t *)board(address))
 #define BACKUP_COURSE_RECORD(address) ((struct backup_course_record *)board(address))
 #define TILE_PIXEL_WORDS(address) ((uint16_t *)board(address))

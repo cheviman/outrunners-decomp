@@ -145,8 +145,10 @@ field flashing_scenery_record 10 count u16              # 012951 -> object 12
 field flashing_scenery_record 12 hit_box u16[4]             # its hit box, an item_hit_box: the bounds along the road (along_start, along_end), then across it (across_start, across_end), which the hit checks read a halfword each; the code that starts the object tests the first two as one word (012956 "test.w [R10]"): none when both are 0; its address -> object 60
 # The palettes a flashing_scenery cycles through, one a frame (flashing_scenery_update 012990 "movs.hw [R10+],
 # R0"): a negative entry goes back that many bytes (012997 "add.w R0, R10") to the list's start (-8 after
-# three, -18 after eight, decimal: 021041, 022FF2, 023E56, 024C16, 0287AA, 02C444)
-elements flashing_scenery_palettes s16
+# three, -18 after eight, decimal: 021041, 022FF2, 023E56, 024C16, 0287AA, 02C444). Halfwords at an odd address,
+# the first list (021041, in road_object_streams' piece), which the code reads there whole: unaligned (found by
+# -fsanitize=alignment on the 16 scenarios, flashing_scenery_update's two reads)
+elements flashing_scenery_palettes s16 unaligned
 # The record of the northern lights (aurora_update 012A3B-012A4D, from field 18; two, 02C44E and 02C470)
 struct aurora_record 08 rom
 field aurora_record 00 animations u32 aurora_animations   # 012A3F "mov.w [R10+], 18[R20]" (animation_list)
@@ -154,8 +156,10 @@ field aurora_record 04 palette u16              # 012A44 -> object 3A (25C)
 field aurora_record 06 flags u8                 # 012A49: or-ed into object 00 (0)
 field aurora_record 07 animation_frames u8      # 012A4D "mov.b [R10], 9[R20]": how long each animation shows (28: 40 frames)
 # The northern lights' animations, one after another (aurora_next_animation 012AAF "movs.hw [R10+], R0"): a
-# negative entry goes back that many bytes (012AB6) to the list's start (-18 decimal after eight: 02C45E, 02C481)
-elements aurora_animations s16
+# negative entry goes back that many bytes (012AB6) to the list's start (-18 decimal after eight: 02C45E, 02C481).
+# The second list is at an odd address (02C481, in road_object_streams' piece), which the code reads there
+# whole: unaligned (found by -fsanitize=alignment on the 16 scenarios, aurora_next_animation's two reads)
+elements aurora_animations s16 unaligned
 # What crosses the road when the car comes near (road_crosser_update 012BCF-012C0E, from field 18: the camels,
 # 12 records 02737C-02D8A8), and the kangaroos (kangaroo_update 012CCB-012CFC reads its record, 02AB8C, the
 # same way: hop_animation for crossing_animation)
@@ -7466,7 +7470,7 @@ local test_mode_output_test 01D406 R10 cell
 local test_mode_output_test_run 01D439,01D46B,01D470,01D47F R0 page_cursor
 local test_mode_output_test_run 01D48E R10 cell
 local test_mode_output_test_draw 01D49A,01D4A6 R10 cell text_layer_cells
-local test_mode_output_test_toggle 01D4D5 R11 output_variable output_bits   # the game's output byte the item's bit is in (port_d_outputs...)
+local test_mode_output_test_toggle 01D4D5 R11 output_variable port_output_bits   # the game's output byte the item's bit is in (port_d_outputs...)
 # The sound test
 01D7C6  table  sound_test_codes  u8          # the sound requests the sound test plays by number (test_mode_sound_test_play_a 01D711, test_mode_sound_test_play_b 01D756 "movz.bw 1D7C6[PC](R1), R0"): 121 codes (01 02 03 ... 8C 8D), closed by 0 at 01D83F
 local test_mode_sound_test 01D620 R0 character
@@ -8365,7 +8369,7 @@ elements text_layer_cells u16 board                 # cells of the text layer (3
 elements text_layer_font_words u16 board            # the text layer's characters in video RAM (318000 on, 32 bytes each), by the video RAM's 16-bit words: four 4-bit pixels a word, a row of eight two of them (load_shadowed_text_font "rvbyt R6, [R18+]" 011854 writes a row at a time, its two words)
 elements boot_register_values u8 rom                # the bytes the reset copies a byte at a time ("mov.b [R10+], [R11+]" 000026): 0000A4-0000B3 to E00000 (which the board does not map), 0000B8-0000C3 to the interrupt controller (D00000)
 elements cleared_ram_words u32 ram                  # work RAM the reset clears 8 bytes at a time ("mov.d R0, [R10+]" 000554 on: 21E000-21E3FF, 21F000-21FFFF, the game's variables 20E000-20FFFF), and second_task the variables again after the test mode (0007C2)
-elements port_output_bits u8 ram                    # a seat's image of an I/O chip's output port (port_d_outputs, port_g_outputs: a byte each screen): update_button_lamps sets the DJ/MUSIC and << >> lamps ("mov.b [R11], R0" 03FA54)
+elements port_output_bits u8 ram                    # a seat's image of an I/O chip's output port (port_d_outputs, port_g_outputs: a byte each screen): update_button_lamps sets the DJ/MUSIC and << >> lamps ("mov.b [R11], R0" 03FA54); the output test reads and flips an output's bit in the 32 bits from its byte ("test1 R0, [R12]" 01D4B2, "not1 R0, [R11]" 01D4DC; the bit below 8), which the C reads and writes as the four bytes they are, in their order and at any address (a 32-bit access from 20E093 or 20E095 before)
 elements vblank_count u8 ram                        # the vertical blanks a screen's task has had (screen_1_vblanks, screen_2_vblanks by screen_vblank_counters): int_vector_40 "inc.b [R0]" 03F618
 # A 32-bit value of the bookkeeping (in the RAM the sound program shares, 701F02-701F7D) and its backup 7C on:
 # count_total_time adds a second to TOTAL TIME ("cmp.w #FFFFFFFF, [R7]", "inc.w [R7]", "inc.w 7C[R7]" 011301-011310)
@@ -8500,7 +8504,6 @@ elements line_selects u16 board   # the tilemap row a line shows (car_select_run
 elements chip_test_results u8 ram     # the memory test's result for a chip (memory_test_results, 20E716 on, 25 chips): 0 not yet, 1 testing, 2 good, 3 bad (test_mode_memory_test_draw 01C958 "movz.bw [R10+], R0")
 elements program_halfwords u16        # the program ROM as test_mode_memory_test_checksum sums it, a halfword at a time (000000-03FFF7 and 100000-1FEFFF)
 elements analog_positions u8 ram      # a control's position as the test mode reads it from the A/D converter (test_mode_analog_inputs, 20E710 on: the two wheels, gas pedals and brakes): test_mode_read_controls writes them, the volume adjustment reads them
-elements output_bits u32 ram          # the game's output bits as the output test toggles them ("not1 R0, [R11]" 01D4DC: port_d_outputs or port_g_outputs, 32 bits from the byte, the bit below 8)
 # The bookkeeping in the RAM the sound program shares (701F00 on): the TIME HISTOGRAM's counts and the courses' records
 elements stage_game_counts u16 board  # how many games ended at a stage (701F24 on, seven: PRE-STAGE, STAGE 1-5, COMPLETE), which test_mode_bookkeeping_draw_histogram walks twice
 struct backup_course_record 6 board   # a course's record as the backup keeps it (701F32 on, ten: AUSTRALIA to KENYA), laid out as course_record: load_course_records copies it into course_records, test_mode_bookkeeping_draw_histogram shows it; a negative model: none
@@ -8626,7 +8629,7 @@ local test_mode_input_test_draw 01D165 R12 analog_input analog_positions   # "mo
 local test_mode_input_test_draw 01D1C4,01D1D2,01D209,01D215 R12 port_a io   # monitor A's I/O chip (C00000), then the port of the switch in its low byte (input_test_items), 8 (port E) and A (port F)
 param test_mode_input_test_draw R12 last_port
 param test_mode_input_test_draw R14 last_bar_cells
-local test_mode_output_test_draw 01D4AC R12 output_bits output_bits   # "add.w R24, R12": the output's byte in the game's variables (port_d_outputs, port_g_outputs), its bit tested ("test1 R0, [R12]" 01D4B2)
+local test_mode_output_test_draw 01D4AC R12 output_bits port_output_bits   # "add.w R24, R12": the output's byte in the game's variables (port_d_outputs, port_g_outputs), its bit tested ("test1 R0, [R12]" 01D4B2)
 # The game assignments: the time difficulty a byte a stage, and the settings' backup copy 3C bytes on
 elements time_difficulty_seconds u8 ram     # the seconds each stage's time gets, a byte each (time_difficulty, 20E632 on: PRE-STAGE, STAGE 1-4, FINAL STAGE), which test_mode_game_assignments_draw walks ("movz.bw [R12+], R0" 01DAD2)
 local test_mode_game_assignments_draw 01DAC8 R12 difficulty_seconds time_difficulty_seconds   # "movea.b 32[R20], R12": time_difficulty

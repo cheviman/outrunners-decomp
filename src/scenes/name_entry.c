@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    11-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
