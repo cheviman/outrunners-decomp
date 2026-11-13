@@ -596,6 +596,11 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       wider (4,190 reads in 8 tables -> 4,421 in 30: the C reads each as its bytes); `casts` 3,023 ->
       3,038, the bytes put together. With these the six are identical on PowerPC, picture and sound, all
       of their frames; on the PC the 16 scenarios identical, and the assets build the ROM back
+- [x] The 16 scenarios identical on PowerPC, picture and sound, all of their 563,396 frames: the other ten
+      (`attract`, `race_left`, `race_right`, `race_to_goal` and the six `route_*`: 436,330 frames, which
+      run the 1.4% of the addresses the six do not) needed nothing more, 25 minutes at once under qemu
+      (`python tools/big_endian_scenarios.py`). `python tools/select_scenarios.py --big-endian` keeps that
+      state as verified, so that a change runs again on PowerPC only the scenarios it can reach
 - [ ] After the decompilation, before the state leaves the board's memory model (Sebas, 05-11-2026): a C that
       does not lean on the processor it runs on, so that the game builds for one unlike the PC's: big endian,
       and taking a halfword or a word only at an address of its width (the Saturn's SH-2). The C counts on a
@@ -610,13 +615,15 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       other way round; and the structures are packed at the V70's offsets (`#pragma pack(1)`), with no count
       yet of the places the code reaches at an address that is not a multiple of the width. The steps, each
       checked by the 16 scenarios: what leans on the host counted (`width_census.py`), the board's memories in
-      one order on both sides, the accesses of several elements as the elements, and each value at its own
-      width where `coin_start` reaches it on PowerPC, all of its frames, are done (the entries above). Left:
-      the other 10 scenarios on PowerPC, the attract mode and the races to each goal, which run the 1.4% of
-      the addresses the six do not (`tools/state_diff.py` at the first frame that differs finds the place);
-      the other places of the data read at more than one width (the census: 4,867 in 10 functions); what the
-      census finds out of line read as its parts; and the work RAM's hash and what the window port saves by
-      each value's width. It is done
+      one order on both sides, the accesses of several elements as the elements, none of the program's data
+      read across a value the loader lays out, and each value at its own width wherever the 16 scenarios
+      reach it on PowerPC, all of their frames, picture and sound, are done (the entries above). Left: what
+      the census finds out of line with its width (2,290 accesses to the program's data in 27 functions, 22
+      to the work RAM in 10: the V70 takes a word at any address, the SH-2 only at a multiple of its width),
+      read as its parts; and the work RAM's hash and what the window port saves by each value's width, so
+      that the state compares in the V70's order on any processor (the scenarios on PowerPC compare the
+      picture and the sound; `tools/state_diff.py` found the state of `coin_start`'s last frame the PC's
+      but for the backup's checksum). It is done
       when a big-endian build runs the 16 scenarios under QEMU with the state (in the V70's order), the
       picture and the sound identical, and `-fsanitize=alignment` reports nothing. The tasks' stacks are the
       port's: `runtime/src/tasks.c` takes fibers on Windows and ucontext elsewhere, and a machine with no
@@ -671,7 +678,7 @@ names in brackets) or, for the ones it does not count, from the C as it is now.
 
 | What | Count | Why |
 |---|---|---|
-| R12 and R14 named after the register (`context_registers`) | 347 uses | Scratch registers whose last value the next handler reads: `race_cars_start` puts the car's address together from R12's high half, which the handler before it left (the screen's page), and the road rows' and the scenery's drawing keep the height of the last size step in R14 and skip reloading it when the object's step is the same. The C keeps them as globals, a copy for each task, only in the functions where they have to be (74, 104 before the twelfth round): the boundary functions (an object's handler, an interrupt, a task), the two that call through a memory slot (`run_objects`, `test_mode_frame`), `wait_for_frame` (the vertical blank's interrupt writes R12), the ones a value only goes through on its way to the next handler, and their callers. In the others they are registers like the rest: parameters and results with names of their own (`race_car_put_sprite(..., &last_piece, ..., &last_size_step)`, `eeprom_read_word(command, eeprom_port, ...)`), and locals; a value stays a local where nothing reads it after the function (the hit boxes' `first_segment`), and the C keeps the parts of the global a function only takes through (a halfword it writes keeps the page above it). 932 uses before the eighth round, 720 before the twelfth. R27 and R28 are locals: the one function that would read them before setting them, `player_car_project_road`, does so only if its projection pattern skipped every segment, and it starts with a 1 (`symbols.txt`'s `unread` lines) |
+| R12 and R14 named after the register (`context_registers`) | 349 uses | Scratch registers whose last value the next handler reads: `race_cars_start` puts the car's address together from R12's high half, which the handler before it left (the screen's page), and the road rows' and the scenery's drawing keep the height of the last size step in R14 and skip reloading it when the object's step is the same. The C keeps them as globals, a copy for each task, only in the functions where they have to be (74, 104 before the twelfth round): the boundary functions (an object's handler, an interrupt, a task), the two that call through a memory slot (`run_objects`, `test_mode_frame`), `wait_for_frame` (the vertical blank's interrupt writes R12), the ones a value only goes through on its way to the next handler, and their callers. In the others they are registers like the rest: parameters and results with names of their own (`race_car_put_sprite(..., &last_piece, ..., &last_size_step)`, `eeprom_read_word(command, eeprom_port, ...)`), and locals; a value stays a local where nothing reads it after the function (the hit boxes' `first_segment`), and the C keeps the parts of the global a function only takes through (a halfword it writes keeps the page above it). 932 uses before the eighth round, 720 before the twelfth. R27 and R28 are locals: the one function that would read them before setting them, `player_car_project_road`, does so only if its projection pattern skipped every segment, and it starts with a 1 (`symbols.txt`'s `unread` lines) |
 | Memory reached through a computed address (`mem_access`) | 21 | The routines that work on memory by its address, whatever is there (`MEMORY_ROUTINES` in `tools/game_profile.py`, faithful): the memory test (6), `unrolled_copy`, a copy from any address to any other (8), what boot writes where the board maps nothing (E00000, E80000: 6), the checksum of the settings (1). Nothing else: the last 4 went in the eleventh round (the car numbers one before the array by a count that goes down, the road's page table by page sets counted from 3, the body's frame by the steering from the middle of its table); 149 before the second round, 48 before the seventh |
 | Several fields read or written at once, `AS16`/`AS32` (`wide_access`) | 8 | The original moves them in one instruction; where the access runs on from an element of an array into the next ones, or over named fields, the C moves each as its own (the entries under "Status"; 204, then 38 before): what is left moves bytes as they are or writes zeros, which comes out the same on a processor of either order: a projected segment's width code, road event and depth layer copied onto the next one's (4), the seats' bookkeeping bytes read as the halfword the backup keeps (2), and their credits in the backup cleared (2) |
 | Jumps through a table with an index it does not have (`invalid_jump`) | 0 | The original jumps through its tables of code without checking the index, and so does the C: its switch has the cases the table holds and no `default:` (191 before). `python tools/decompile.py --checks` (and `decompile_sound.py --checks`) writes the C for a build where an index the table does not hold stops the game with the address the original would have jumped to (`invalid_jump`, 192 places); the 16 scenarios are identical in that build too. Three functions end in such a switch whose every case returns: the C says nothing goes on past it (`unreachable()`, C23's), as nothing does in the original |
@@ -852,7 +859,8 @@ translator, the checks and the data and asset formats. `tools/game_profile.py` t
 OutRunners (its ROM set, `orunners_rom.py`; its structures, the registers the program shares, its board),
 and `tools/`'s scripts of the same names (`decompile.py`, `decompile_sound.py`, `recompile.py`,
 `disassemble.py`, `check_structure.py`, `noise_report.py`, `coverage.py`, `check_scenarios.py`,
-`verify_rom.py`, `render_state.py`, `memory_census.py`, `width_census.py`, `state_diff.py`) run the core's. A change to the decompiler or those
+`verify_rom.py`, `render_state.py`, `memory_census.py`, `width_census.py`, `state_diff.py`,
+`select_scenarios.py`, `big_endian_scenarios.py`) run the core's. A change to the decompiler or those
 tools goes to arcade-decomp, checked on OutRunners, and comes here as a newer commit of the submodule
 (`git submodule update --remote tools/core`). The reference the scenarios compare the game with is the core's
 too (`tools/core/system32/reference/`: `s32ref` on MAME's cores, the disassemblers' oracles, `pcmcheck`),
@@ -865,7 +873,40 @@ a big-endian processor running the C would hold it; `report` writes `build/acces
 reads that processor gives another value, the program's data read at more than one width, and the accesses
 out of line with their width, each by the place and the function. `state_diff.py LITTLE_DIR BIG_DIR`
 compares the headless game's `--dump-frame` dumps of one frame on the PC and on a big-endian processor:
-each place `symbols.txt` names as a value of its width, the rest by words. The rest of `tools/` is
+each place `symbols.txt` names as a value of its width, the rest by words.
+
+`select_scenarios.py` says which scenarios a change has to run again, so that a correction does not take the
+16 every time:
+
+```bash
+python tools/select_scenarios.py
+python tools/select_scenarios.py --run
+python tools/select_scenarios.py --big-endian --run
+```
+
+It compares the working tree with the state last verified, a copy in `build/verified/` that `--save` writes
+(after a full `check_scenarios.py`) and that a `--run` that ends identical writes again; without one, with the
+last commit (`--base REV` for another). `src/` is compared function by function, comments and layout apart: a
+function is the same when its tokens are, or when they differ only in names, its own locals renamed one for
+one or a name `symbols.txt` renames; a macro, a prototype, a table's entry and each structure's members, by
+offset and type, are compared too, and a function that names one that changed counts as changed. A changed
+function needs the scenarios whose reference run executed an address of it (`executed.txt`,
+`sound_executed.txt`; a function's addresses go from its `func` line to the next). The game's loaded data
+(the headless game's dumps: every piece's bytes, and where the loader lays out the values wider than a byte,
+which matters to a big-endian processor alone) needs the scenarios in which the original read an address that
+changed (`build/access_widths/`, which `width_census.py run` writes). The runtime, the headless port, the
+build's files, the sound's timing model, the sound program's data and the pictures and samples are every
+scenario's; a control script is its own scenario's, whose reference runs again. Each scenario is listed with
+why. `--run` runs them (`check_scenarios.py NAMES --native-only --video --sound`); `--cover` picks, of those,
+the shortest that between them run every function that changed, a first check that leaves the state as it
+was. What it does not look at: the reference and the compiler (a change to either is a full
+`check_scenarios.py --video --sound`), and what a scenario executes is what its last reference run did.
+
+`--big-endian` does the same for the big-endian build, which has a verified state of its own, through
+`big_endian_scenarios.py [NAME ...]`: the scripts on `build/bin-ppc`'s game under `qemu-ppc` (through WSL on
+Windows), each frame's picture and sound samples compared with the reference's in `build/scenarios/`.
+
+The rest of `tools/` is
 OutRunners' own: the ROM set (`orunners_rom.py`), the scenarios' routes (`make_routes.py`), the assets'
 censuses, cuts and formats (`tilesets.py`, `pcm_samples.py`, `sprite_sheets.py`, `palette_census.py`,
 `read_crossings.py`, `formats/`).
