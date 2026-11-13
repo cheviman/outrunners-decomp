@@ -2987,13 +2987,13 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	plural_offset = 0xFFFFFFFDu;
 	test_mode_draw_count(games_b, digit_count, plural_offset, &colours, &cell);
 	time_cell = TEXT_CELL(20, 16);
-	total_time = BOOKKEEPING_BLOCK(address_of(current_object))->total_time;
+	total_time = (BOOKKEEPING_BLOCK(address_of(current_object))->total_time[0] | ((uint32_t)BOOKKEEPING_BLOCK(address_of(current_object))->total_time[1] << 16u));
 	time_cell = test_mode_draw_duration(total_time, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF8A8u;
-	play_time_a = BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a;
+	play_time_a = (BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a[0] | ((uint32_t)BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a[1] << 16u));
 	time_cell = test_mode_draw_duration(play_time_a, time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xF928u;
-	play_time_b = BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b;
+	play_time_b = (BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b[0] | ((uint32_t)BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b[1] << 16u));
 	time_cell = test_mode_draw_duration(play_time_b, time_cell);
 	games_a = BOOKKEEPING_BLOCK(address_of(current_object))->games_a;
 	game_count = BOOKKEEPING_BLOCK(address_of(current_object))->games_b + games_a;
@@ -3001,7 +3001,7 @@ uint16_t test_mode_bookkeeping_draw_totals(void)
 	if (game_count == 0u)
 		return games_a;
 	time_cell = (time_cell & ~0xFFFFu) | 0xFA34u;
-	average_time = divide_u32(BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a + BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b, total_games);
+	average_time = divide_u32((BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a[0] | ((uint32_t)BOOKKEEPING_BLOCK(address_of(current_object))->play_time_a[1] << 16u)) + (BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b[0] | ((uint32_t)BOOKKEEPING_BLOCK(address_of(current_object))->play_time_b[1] << 16u)), total_games);
 	test_mode_draw_minutes_seconds(&average_time, &time_cell);
 	time_cell = (time_cell & ~0xFFFFu) | 0xFAB4u;
 	longest_time = BOOKKEEPING_BLOCK(address_of(current_object))->longest_play;
@@ -3073,7 +3073,7 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 	records_left = 0xAu;
 	do
 	{
-		car_then_time = BACKUP_COURSE_RECORD(record)->model;
+		car_then_time = (uint8_t)BACKUP_COURSE_RECORD(record)->model_and_initial;
 		record++;
 		if ((int8_t)car_then_time < 0)
 			record += 5u;
@@ -3102,15 +3102,15 @@ void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *
 			character = (uint16_t)((character & ~0xFFu) | TEST_MODE_CHARACTERS(colour_name)[1]);
 			cell += 2u;
 			TEXT_LAYER_CELLS(cell)[0] = character;
-			character = (uint16_t)((character & ~0xFFu) | BACKUP_COURSE_RECORD(record - 0x1u)->name[0]);
+			character = (uint16_t)((character & ~0xFFu) | (uint8_t)(BACKUP_COURSE_RECORD(record - 0x1u)->model_and_initial >> 8u));
 			cell += 4u;
 			TEXT_LAYER_CELLS(cell)[0] = character;
 			record++;
-			character = (uint16_t)((character & ~0xFFu) | BACKUP_COURSE_RECORD(record - 0x2u)->name[1]);
+			character = (uint16_t)((character & ~0xFFu) | (uint8_t)BACKUP_COURSE_RECORD(record - 0x2u)->name_rest);
 			cell += 2u;
 			TEXT_LAYER_CELLS(cell)[0] = character;
 			record++;
-			character = (uint16_t)((character & ~0xFFu) | BACKUP_COURSE_RECORD(record - 0x3u)->name[2]);
+			character = (uint16_t)((character & ~0xFFu) | (uint8_t)(BACKUP_COURSE_RECORD(record - 0x3u)->name_rest >> 8u));
 			cell += 2u;
 			TEXT_LAYER_CELLS(cell)[0] = character;
 			record++;

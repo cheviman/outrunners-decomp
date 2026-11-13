@@ -4,7 +4,7 @@
  *                 interrupt controller
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    19-10-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -19,6 +19,7 @@
  *    vectors (0xD0-0xD2) and mask them (0xD3); 0xF1 a byte that reads back. The rest read 0xFF.
  */
 #include "internal.h"
+#include "s32/byte_order.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,7 +103,10 @@ void s32_z80_write(uint16_t address, uint8_t data)
 	if (address < 0xe000)
 		s32_board.chips.pcm_write(address & 0x1fff, data);
 	else
+	{
 		s32_board.shared_ram[address & 0x1fff] = data;
+		s32_order_bytes(&s32_board.shared_ram[address & 0x1fff], 1);
+	}
 }
 
 uint8_t s32_z80_in(uint8_t port)

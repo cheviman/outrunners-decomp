@@ -339,6 +339,7 @@ void count_total_time(void)
 {
 	uint16_t time_count = 0;
 	uint32_t total_time = 0;
+	uint32_t value_0_long = 0, backup_0_long = 0, value_0_long_2 = 0, backup_0_long_2 = 0;
 
 	if (game->test_mode_on != 0u)
 		return;
@@ -349,14 +350,18 @@ void count_total_time(void)
 		return;
 	}
 	total_time = BOOKKEEPING_TOTAL_TIME_ADDRESS;
-	if (BOOKKEEPING_TOTAL_TIME % 0x49u != 0u)
+	if ((BOOKKEEPING_TOTAL_TIME | ((uint32_t)BOOKKEEPING_TOTAL_TIME_HIGH << 16u)) % 0x49u != 0u)
 	{
 		game->total_time_count = time_count - 0x3E8u;
-		if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
+		if ((BOOKKEEPING_COUNT32(total_time)->value[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->value[1] << 16u)) != 0xFFFFFFFFu)
 		{
-			BOOKKEEPING_COUNT32(total_time)->value++;
+			value_0_long = (BOOKKEEPING_COUNT32(total_time)->value[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->value[1] << 16u)) + 1u;
+			BOOKKEEPING_COUNT32(total_time)->value[0] = (uint16_t)value_0_long;
+			BOOKKEEPING_COUNT32(total_time)->value[1] = (uint16_t)(value_0_long >> 16u);
 			bookkeeping_update_checksum(time_count);
-			BOOKKEEPING_COUNT32(total_time)->backup++;
+			backup_0_long = (BOOKKEEPING_COUNT32(total_time)->backup[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->backup[1] << 16u)) + 1u;
+			BOOKKEEPING_COUNT32(total_time)->backup[0] = (uint16_t)backup_0_long;
+			BOOKKEEPING_COUNT32(total_time)->backup[1] = (uint16_t)(backup_0_long >> 16u);
 		}
 		return;
 	}
@@ -367,11 +372,15 @@ void count_total_time(void)
 	}
 	time_count -= 0x3E8u;
 	game->total_time_count = time_count - 0x3E8u;
-	if (BOOKKEEPING_COUNT32(total_time)->value != 0xFFFFFFFFu)
+	if ((BOOKKEEPING_COUNT32(total_time)->value[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->value[1] << 16u)) != 0xFFFFFFFFu)
 	{
-		BOOKKEEPING_COUNT32(total_time)->value++;
+		value_0_long_2 = (BOOKKEEPING_COUNT32(total_time)->value[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->value[1] << 16u)) + 1u;
+		BOOKKEEPING_COUNT32(total_time)->value[0] = (uint16_t)value_0_long_2;
+		BOOKKEEPING_COUNT32(total_time)->value[1] = (uint16_t)(value_0_long_2 >> 16u);
 		bookkeeping_update_checksum(time_count);
-		BOOKKEEPING_COUNT32(total_time)->backup++;
+		backup_0_long_2 = (BOOKKEEPING_COUNT32(total_time)->backup[0] | ((uint32_t)BOOKKEEPING_COUNT32(total_time)->backup[1] << 16u)) + 1u;
+		BOOKKEEPING_COUNT32(total_time)->backup[0] = (uint16_t)backup_0_long_2;
+		BOOKKEEPING_COUNT32(total_time)->backup[1] = (uint16_t)(backup_0_long_2 >> 16u);
 	}
 }
 

@@ -5,7 +5,7 @@
  *                 moves and searches
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -14,6 +14,7 @@
  */
 #include "game/support.h"
 #include "host/tasks.h"
+#include "s32/byte_order.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -469,10 +470,28 @@ static void move_element(uint32_t dest, uint32_t source, uint32_t size)
 	if (!from)
 	{
 		write_element(dest, read_element(source, size), size);
+#ifdef S32_BYTE_ORDER_CHECK
+		if (to)
+			s32_order_in(to, source, size);
+		else if ((from = host_bytes(source, 0)) != NULL)
+			s32_order_out(from, dest, size);
+#endif
 		return;
 	}
 	for (uint32_t index = 0; index < size; index++)
 		to[index] = from[index];
+#ifdef S32_BYTE_ORDER_CHECK
+	if (((source >> 20) & 0xf) != 0x2 && ((source >> 20) & 0xf) != 0x7)
+	{
+		/* (from the program's data: each byte's place as the loader laid its value out, game/assets.h) */
+		int8_t places[2];
+		for (uint32_t index = 0; index < size; index++)
+			places[index] = (int8_t)(data_byte_at(source + index) - data_at(source + index));
+		s32_order_placed(to, places, size);
+		return;
+	}
+#endif
+	s32_order_moved(to, from, size);
 }
 
 void move_string(uint32_t source, uint32_t source_length, uint32_t dest, uint32_t dest_length, uint32_t element_size,

@@ -5,7 +5,7 @@
  *                 format tools/core/system32/reference/s32ref uses
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -22,12 +22,15 @@
  *    screens with the board's video (runtime/src/video.c): the hash of each frame, and frames as BMP, the
  *    left screen beside the right. --sound-hashes runs the sound board too (the decompiled sound program
  *    and the chips, runtime/src/sound_cpu.c and sound_chips.c), and writes for each frame the hash of its
- *    samples and of the sound board's memory. --sprite-census and --tile-census write what the sprites and
+ *    samples and of the sound board's memory. The state's hashes and --dump-frame's dumps of the work RAM and
+ *    the sound board's RAM are of them as the V70 holds them, which on a big-endian processor takes a build
+ *    with ORUNNERS_BYTE_ORDER_CHECK (s32/byte_order.h). --sprite-census and --tile-census write what the sprites and
  *    the tilemaps draw, with the colors each pen shows, for the asset extractor (tools/palette_census.py).
  *    --memory-census writes what memory each mem_read and mem_write of the game's C reached, by its line
  *    (runtime/src/memory_census.c), in a build with ORUNNERS_MEMORY_CENSUS (tools/memory_census.py).
  */
 #include "s32/bus.h"
+#include "s32/byte_order.h"
 #include "s32/machine.h"
 #include "s32/program.h"
 #include "s32/script.h"
@@ -151,14 +154,21 @@ static void write_file(const char *name, const void *data, size_t size)
 
 static void dump_state(void)
 {
-	write_file("work_ram.bin", s32_board.work_ram, S32_WORK_RAM_SIZE);
-	write_file("video_ram.bin", s32_board.video_ram, sizeof(s32_board.video_ram));
-	write_file("sprite_ram.bin", s32_board.sprite_ram, sizeof(s32_board.sprite_ram));
+	uint8_t eeprom[S32_EEPROM_WORDS * 2];
+
+	write_file("work_ram.bin", s32_order_v70(s32_board.work_ram), S32_WORK_RAM_SIZE);
+	write_file("video_ram.bin", s32_order_words(s32_board.video_ram), sizeof(s32_board.video_ram));
+	write_file("sprite_ram.bin", s32_order_words(s32_board.sprite_ram), sizeof(s32_board.sprite_ram));
 	write_file("palette.bin", s32_board.palette, sizeof(s32_board.palette));
 	write_file("mixer.bin", s32_board.mixer, sizeof(s32_board.mixer));
-	write_file("shared_ram.bin", s32_board.shared_ram, sizeof(s32_board.shared_ram));
+	write_file("shared_ram.bin", s32_order_v70(s32_board.shared_ram), sizeof(s32_board.shared_ram));
 	write_file("comm_ram.bin", s32_board.comm_ram, sizeof(s32_board.comm_ram));
-	write_file("eeprom.bin", s32_board.eeprom.data, sizeof(s32_board.eeprom.data));
+	for (int word = 0; word < S32_EEPROM_WORDS; word++)    /* (each word low byte first, on any processor) */
+	{
+		eeprom[word * 2] = (uint8_t)s32_board.eeprom.data[word];
+		eeprom[word * 2 + 1] = (uint8_t)(s32_board.eeprom.data[word] >> 8);
+	}
+	write_file("eeprom.bin", eeprom, sizeof(eeprom));
 }
 
 /* The last frames the video drew, as a 24-bit BMP: the left screen, then the right one */

@@ -4,7 +4,7 @@
  *                 keeps the pace, around the same game and board the headless runs check
  *    Version:     0.1.0
  *    Created:     21-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -19,7 +19,8 @@
  *    off is kept in two files, beside the executable on Windows and in the user's folder for the game
  *    elsewhere (saves_folder): orunners.eeprom the EEPROM (the settings and their copy), orunners.bookkeeping
  *    the part of the sound board's RAM the game keeps on the battery (the bookkeeping, the ten course records
- *    and the credits among it, its checksum and its copy).
+ *    and the credits among it, its checksum and its copy), each value low byte first as the V70 holds it, so
+ *    that the files are the same on a processor of either byte order.
  *
  *    The game's data is its assets (game/assets.h), the files extract_assets.py writes from the player's
  *    ROM set: --assets, or the folder 'assets' beside the executable, beside the .app on macOS, in the
@@ -86,7 +87,7 @@ static bool smooth;
 static uint64_t next_frame;           /* performance counter value the next frame waits for */
 static char eeprom_path[1024];
 static char backup_ram_path[1024];
-static uint8_t backup_ram_saved[BACKUP_RAM_SIZE];    /* as the file has it */
+static uint8_t backup_ram_saved[BACKUP_RAM_SIZE];    /* as the board's memory had it when it was saved or loaded */
 static s32_script *script;
 static bool fast;
 static FILE *hashes;
@@ -100,8 +101,10 @@ static int brake[PLAYERS];
 
 /* ---- files ---- */
 
+/* The EEPROM's 64 words, each low byte first: the file is the same on a processor of either byte order */
 static void save_eeprom(void)
 {
+	uint8_t bytes[S32_EEPROM_WORDS * 2];
 	FILE *output;
 
 	if (script || !s32_board.eeprom.dirty)    /* (a script starts from a blank EEPROM: the player's stays) */
@@ -109,7 +112,12 @@ static void save_eeprom(void)
 	output = fopen(eeprom_path, "wb");
 	if (!output)
 		return;
-	fwrite(s32_board.eeprom.data, 1, sizeof(s32_board.eeprom.data), output);
+	for (int word = 0; word < S32_EEPROM_WORDS; word++)
+	{
+		bytes[word * 2] = (uint8_t)s32_board.eeprom.data[word];
+		bytes[word * 2 + 1] = (uint8_t)(s32_board.eeprom.data[word] >> 8);
+	}
+	fwrite(bytes, 1, sizeof(bytes), output);
 	fclose(output);
 	s32_board.eeprom.dirty = false;
 }
@@ -117,22 +125,28 @@ static void save_eeprom(void)
 static void load_eeprom(void)
 {
 	FILE *input = fopen(eeprom_path, "rb");
-	uint16_t data[S32_EEPROM_WORDS];
+	uint8_t bytes[S32_EEPROM_WORDS * 2];
 
 	if (!input)
 		return;
-	if (fread(data, 1, sizeof(data), input) == sizeof(data))
-		memcpy(s32_board.eeprom.data, data, sizeof(data));
+	if (fread(bytes, 1, sizeof(bytes), input) == sizeof(bytes))
+		for (int word = 0; word < S32_EEPROM_WORDS; word++)
+			s32_board.eeprom.data[word] = (uint16_t)(bytes[word * 2] | bytes[word * 2 + 1] << 8);
 	fclose(input);
 }
 
 /* The sound board's 8 KB RAM is on the board's battery. The game keeps its bookkeeping in it (the checksum
    at 701F00, the block from 701F02 with the course records at 701F32 and the credits at 701F74, its copy
    from 701F7E: bookkeeping_check, load_course_records); the rest is the sound program's, which clears
-   E000-FDFF (700000-701DFF) when it starts, and the game clears 701FFF. MAME keeps none of it */
+   E000-FDFF (700000-701DFF) when it starts, and the game clears 701FFF. MAME keeps none of it. The
+   bookkeeping is halfwords (bookkeeping_checksum sums it so: symbols.txt), which the board's memory keeps in the
+   host's order; the file has each one low byte first, as the V70 holds it, the same on a processor of either
+   byte order */
 static void save_backup_ram(void)
 {
 	const uint8_t *kept = &s32_board.shared_ram[BACKUP_RAM_START];
+	uint8_t bytes[BACKUP_RAM_SIZE];
+	uint16_t halfword;
 	FILE *output;
 
 	if (script || memcmp(kept, backup_ram_saved, BACKUP_RAM_SIZE) == 0)    /* (a script's stays apart too) */
@@ -140,7 +154,13 @@ static void save_backup_ram(void)
 	output = fopen(backup_ram_path, "wb");
 	if (!output)
 		return;
-	if (fwrite(kept, 1, BACKUP_RAM_SIZE, output) == BACKUP_RAM_SIZE)
+	for (int at = 0; at < BACKUP_RAM_SIZE; at += 2)
+	{
+		memcpy(&halfword, &kept[at], sizeof(halfword));
+		bytes[at] = (uint8_t)halfword;
+		bytes[at + 1] = (uint8_t)(halfword >> 8);
+	}
+	if (fwrite(bytes, 1, BACKUP_RAM_SIZE, output) == BACKUP_RAM_SIZE)
 		memcpy(backup_ram_saved, kept, BACKUP_RAM_SIZE);
 	fclose(output);
 }
@@ -148,14 +168,19 @@ static void save_backup_ram(void)
 static void load_backup_ram(void)
 {
 	FILE *input = fopen(backup_ram_path, "rb");
-	uint8_t data[BACKUP_RAM_SIZE];
+	uint8_t *kept = &s32_board.shared_ram[BACKUP_RAM_START];
+	uint8_t bytes[BACKUP_RAM_SIZE];
 
 	if (!input)
 		return;
-	if (fread(data, 1, sizeof(data), input) == sizeof(data))
+	if (fread(bytes, 1, sizeof(bytes), input) == sizeof(bytes))
 	{
-		memcpy(&s32_board.shared_ram[BACKUP_RAM_START], data, sizeof(data));
-		memcpy(backup_ram_saved, data, sizeof(data));
+		for (int at = 0; at < BACKUP_RAM_SIZE; at += 2)
+		{
+			const uint16_t halfword = (uint16_t)(bytes[at] | bytes[at + 1] << 8);
+			memcpy(&kept[at], &halfword, sizeof(halfword));
+		}
+		memcpy(backup_ram_saved, kept, BACKUP_RAM_SIZE);
 	}
 	fclose(input);
 }

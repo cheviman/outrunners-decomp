@@ -3,7 +3,7 @@
  *    Description: runs the decompiled sound program on the board's time: the Z80's timing model
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -27,6 +27,7 @@
  */
 #include "sound/support.h"
 #include "sound/chips.h"
+#include "s32/byte_order.h"
 
 #include <stdio.h>
 
@@ -153,6 +154,8 @@ void move_block(uint16_t source, uint16_t destination, uint16_t count, bool upwa
 	for (uint32_t round = 0; round < rounds; round++)
 	{
 		s32_z80_write(destination, s32_z80_read(source));
+		if (source >= 0xe000 && destination >= 0xe000)    /* (a byte of the RAM to another: its place along) */
+			s32_order_moved(&s32_board.shared_ram[destination & 0x1fff], &s32_board.shared_ram[source & 0x1fff], 1);
 		source = (uint16_t)(upward ? source + 1 : source - 1);
 		destination = (uint16_t)(upward ? destination + 1 : destination - 1);
 	}

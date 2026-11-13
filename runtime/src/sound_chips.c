@@ -4,7 +4,7 @@
  *                 frame by frame
  *    Version:     0.1.0
  *    Created:     13-10-2026
- *    Modified:    21-10-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -20,6 +20,7 @@
 
 #include "s32/multipcm.h"
 #include "s32/ym3438.h"
+#include "s32/byte_order.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -289,10 +290,11 @@ uint64_t sound_chips_frame_hash(void)
 
 uint64_t sound_board_state_hash(void)
 {
+	const uint8_t *ram = s32_order_v70(s32_board.shared_ram);    /* (as the Z80 holds it: s32/byte_order.h) */
 	uint64_t hash = 0xcbf29ce484222325ull;
 
-	hash = hash_bytes(s32_board.shared_ram, STACK_START - 0xE000u, hash);
-	return hash_bytes(s32_board.shared_ram + (STACK_END - 0xE000u), 0x10000u - STACK_END, hash);
+	hash = hash_bytes(ram, STACK_START - 0xE000u, hash);
+	return hash_bytes(ram + (STACK_END - 0xE000u), 0x10000u - STACK_END, hash);
 }
 
 const int32_t *sound_chips_frame_samples(int chip, size_t *count)

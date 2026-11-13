@@ -3,7 +3,7 @@
  *    Description: Multi 32 memory map, interrupt controller, timers, video registers and link board
  *    Version:     0.1.1
  *    Created:     11-10-2026
- *    Modified:    06-11-2026
+ *    Modified:    13-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -11,6 +11,7 @@
  *    sega/s32comm.cpp (Ariane Fugmann) for the link board.
  */
 #include "internal.h"
+#include "s32/byte_order.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -82,6 +83,7 @@ static bool plain_read(uint32_t address, unsigned size, uint32_t *value)
 		return false;
 	for (unsigned index = 0; index < size; index++)
 		bytes[index] = memory[(address + index) & mask];
+	s32_order_loaded(&memory[address & mask], size);
 	if (size == 1)
 		*value = bytes[0];
 	else if (size == 2)
@@ -107,6 +109,7 @@ static bool plain_write(uint32_t address, unsigned size, uint32_t value)
 	memcpy(bytes, size == 1 ? (const void *)&byte : size == 2 ? (const void *)&half : (const void *)&value, size);
 	for (unsigned index = 0; index < size; index++)
 		memory[(address + index) & mask] = bytes[index];
+	s32_order_stored(&memory[address & mask], size);
 	return true;
 }
 
@@ -374,22 +377,27 @@ static uint64_t hash_words(const void *data, size_t size, uint64_t hash)
 }
 
 /* The memories as the V70 holds them: the video RAM, the sprite RAM, the palettes and the mixers by their
-   16-bit words; the work RAM by its bytes, which on a big-endian processor are each value's at the width the
-   program reaches it, in that processor's order (the C's structures say the widths) */
+   16-bit words; the work RAM by its bytes, which keep each value in the host's order at the width the C writes
+   it: on a big-endian processor, as the V70 holds them only through the places s32/byte_order.h keeps (and the
+   memory test's copies of the work RAM and the sound board's RAM in the sprite RAM, raw memory) */
 uint64_t s32_state_hash(void)
 {
+	const uint8_t *work_ram = s32_order_v70(s32_board.work_ram);
+	const uint8_t *sprite_ram;
 	uint64_t hash = 0xcbf29ce484222325ull;
-	hash = hash_bytes(s32_board.work_ram, S32_TASK_STACKS, hash);
-	hash = hash_bytes(s32_board.work_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
+
+	hash = hash_bytes(work_ram, S32_TASK_STACKS, hash);
+	hash = hash_bytes(work_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
-	hash = hash_bytes(s32_board.work_ram + S32_STACK_END, S32_WORK_RAM_SIZE - S32_STACK_END, hash);
-	hash = hash_words(s32_board.video_ram, sizeof(s32_board.video_ram), hash);
-	hash = hash_words(s32_board.sprite_ram, S32_SOUND_STACK_COPY, hash);
-	hash = hash_words(s32_board.sprite_ram + S32_SOUND_STACK_COPY + S32_SOUND_STACK_COPY_SIZE,
+	hash = hash_bytes(work_ram + S32_STACK_END, S32_WORK_RAM_SIZE - S32_STACK_END, hash);
+	hash = hash_words(s32_order_words(s32_board.video_ram), sizeof(s32_board.video_ram), hash);
+	sprite_ram = s32_order_words(s32_board.sprite_ram);
+	hash = hash_words(sprite_ram, S32_SOUND_STACK_COPY, hash);
+	hash = hash_words(sprite_ram + S32_SOUND_STACK_COPY + S32_SOUND_STACK_COPY_SIZE,
 		S32_TASK_STACKS - S32_SOUND_STACK_COPY - S32_SOUND_STACK_COPY_SIZE, hash);
-	hash = hash_words(s32_board.sprite_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
+	hash = hash_words(sprite_ram + S32_TASK_STACKS + S32_TASK_STACKS_SIZE,
 		S32_STACK_START - S32_TASK_STACKS - S32_TASK_STACKS_SIZE, hash);
-	hash = hash_words(s32_board.sprite_ram + S32_STACK_END, sizeof(s32_board.sprite_ram) - S32_STACK_END, hash);
+	hash = hash_words(sprite_ram + S32_STACK_END, sizeof(s32_board.sprite_ram) - S32_STACK_END, hash);
 	hash = hash_words(s32_board.palette, sizeof(s32_board.palette), hash);
 	return hash_words(s32_board.mixer, sizeof(s32_board.mixer), hash);
 }
@@ -755,6 +763,8 @@ void s32_init(const uint8_t *program)
 	s32_board.program_at = program_at;
 	s32_board.work_ram = work_ram;
 	memset(work_ram, 0, S32_WORK_RAM_SIZE);
+	s32_order_bytes(work_ram, S32_WORK_RAM_SIZE);
+	s32_order_bytes(s32_board.shared_ram, sizeof(s32_board.shared_ram));
 	memset(s32_board.eeprom.data, 0xff, sizeof(s32_board.eeprom.data));
 
 	/* power-on contents, as in MAME's video start */

@@ -48,6 +48,23 @@ if(ORUNNERS_ALIGNMENT_CHECK)
 	add_link_options(-fsanitize=alignment)
 endif()
 
+# A check of the C on a processor unlike the PC's (runtime/include/s32/byte_order.h): the compiler calls the
+# runtime before every read and write of the decompiled C (src/), which keeps where each byte of the work RAM
+# and of the sound board's RAM is in the V70's order, so that the state's hashes are of the memories as the V70
+# holds them on any processor. On PowerPC (cmake/powerpc-linux-gnu.cmake) the 16 scenarios compare their state
+# with the reference's too (tools/big_endian_scenarios.py --state)
+option(ORUNNERS_BYTE_ORDER_CHECK "Keep where each byte of the RAM is in the V70's order (GCC)" OFF)
+set(ORUNNERS_BYTE_ORDER_FLAGS "")
+if(ORUNNERS_BYTE_ORDER_CHECK)
+	if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
+		message(FATAL_ERROR "ORUNNERS_BYTE_ORDER_CHECK needs GCC")
+	endif()
+	add_compile_definitions(S32_BYTE_ORDER_CHECK)
+	# (ThreadSanitizer's calls, one before every read and every write, which runtime/src/byte_order.c has in
+	# place of its library, which is not linked)
+	set(ORUNNERS_BYTE_ORDER_FLAGS -fsanitize=thread --param=tsan-instrument-func-entry-exit=0)
+endif()
+
 if(MSVC)
 	add_compile_options(/W3 /utf-8)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
@@ -73,6 +90,9 @@ add_library(s32runtime STATIC
 	runtime/src/multipcm.c
 	runtime/src/sound_chips.c
 )
+if(ORUNNERS_BYTE_ORDER_CHECK)
+	target_sources(s32runtime PRIVATE runtime/src/byte_order.c)
+endif()
 target_include_directories(s32runtime PUBLIC runtime/include)
 if(UNIX AND NOT APPLE)
 	target_link_libraries(s32runtime PUBLIC m)    # (the C library's maths are apart there)
@@ -118,6 +138,7 @@ list(FILTER ORUNNERS_DECOMPILED EXCLUDE REGEX "/sound/[^/]*\\.c$")    # (the sou
 file(GLOB ORUNNERS_SOUND_DECOMPILED CONFIGURE_DEPENDS ${ORUNNERS_DECOMPILED_DIR}/sound/*.c)
 if(ORUNNERS_SOUND_DECOMPILED)
 	add_library(orunners_sound STATIC runtime/src/sound_cpu.c ${ORUNNERS_SOUND_DECOMPILED})
+	set_source_files_properties(${ORUNNERS_SOUND_DECOMPILED} PROPERTIES COMPILE_OPTIONS "${ORUNNERS_BYTE_ORDER_FLAGS}")
 	target_include_directories(orunners_sound PUBLIC runtime/include PRIVATE ${ORUNNERS_DECOMPILED_DIR}/sound)
 	target_link_libraries(orunners_sound PUBLIC s32runtime)
 	if(MSVC)
@@ -132,6 +153,7 @@ endif()
 if(ORUNNERS_DECOMPILED AND ORUNNERS_SOUND_DECOMPILED)
 	add_library(orunners_game STATIC runtime/src/game.c runtime/src/assets.c runtime/src/assets_media.c
 		runtime/src/assets_midi.c runtime/src/json.c runtime/src/png.c runtime/src/inflate.c ${ORUNNERS_DECOMPILED})
+	set_source_files_properties(${ORUNNERS_DECOMPILED} PROPERTIES COMPILE_OPTIONS "${ORUNNERS_BYTE_ORDER_FLAGS}")
 	target_include_directories(orunners_game PUBLIC runtime/include ${ORUNNERS_DECOMPILED_DIR})
 	target_link_libraries(orunners_game PUBLIC s32runtime)
 	if(MSVC)

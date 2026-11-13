@@ -8003,8 +8003,10 @@ C00060  io  ANALOG_BANK  u8               # the A/D converter's bank of inputs f
 701F76  io  BOOKKEEPING_SEAT_1_BYTE  u16      # the halfword at seat1_bookkeeping_byte (bytes 4-5 of the seat's credit record), kept the same way
 701F78  io  BOOKKEEPING_SEAT_2_CREDITS  u16
 701F7A  io  BOOKKEEPING_SEAT_2_BYTE  u16
-701FF0  io  BOOKKEEPING_BACKUP_SEAT_1_CREDITS  u32   # their copy in the bookkeeping's backup (7C on): seat 1's two halfwords (write_bookkeeping_credits, bookkeeping_clear_credits)
-701FF4  io  BOOKKEEPING_BACKUP_SEAT_2_CREDITS  u32
+701FF0  io  BOOKKEEPING_BACKUP_SEAT_1_CREDITS  u16   # their copy in the bookkeeping's backup (7C on): seat 1's two halfwords (write_bookkeeping_credits, bookkeeping_clear_credits)
+701FF2  io  BOOKKEEPING_BACKUP_SEAT_1_BYTE  u16
+701FF4  io  BOOKKEEPING_BACKUP_SEAT_2_CREDITS  u16
+701FF6  io  BOOKKEEPING_BACKUP_SEAT_2_BYTE  u16
 701FFF  io  SOUND_PROGRAM_HOLD  u8        # the sound program's main loop waits while it is not 0 (sound_main_loop); start_sound_program clears it
 # The link board (800000 on, a byte in each halfword; 801000 and 801002 its controls)
 801000  io  LINK_BOARD_ON  u8            # 1 the link board on, 0 off (network_check, network_check_isdn)
@@ -8118,7 +8120,8 @@ D0000A  io  IRQ_TIMER_1  u16           # timer 1's count, which starts it (the l
 # The link board (800000): its memory a byte in each halfword, then its registers at 801000
 800010  io  LINK_MESSAGE_KIND  u8      # in ISDN mode the kind of the board's message, cleared as it is taken (int_vector_44: 3 a message of race records); the board's greeting Z80 starts here at the network check
 # The bookkeeping in the RAM shared with the sound board (the block 701F02-701F7D, its backup 7C on)
-701F10  io  BOOKKEEPING_TOTAL_TIME  u32   # TOTAL TIME, in seconds (count_total_time; game_mode_play's game_start_time); its backup at 701F8C
+701F10  io  BOOKKEEPING_TOTAL_TIME  u16   # TOTAL TIME, in seconds, its low halfword (count_total_time; game_mode_play's game_start_time); its backup at 701F8C. The bookkeeping is kept as halfwords (bookkeeping_checksum sums it by halfwords): a word two of them, the low one first
+701F12  io  BOOKKEEPING_TOTAL_TIME_HIGH  u16   # its high halfword
 # ======== records reached through pointers (batch M3) ========
 struct depth_list 4        # a depth layer's list of sprite groups (screen depth_lists: screen + 5000 + 4 * layer, 416 layers; the object's depth_layer, the segment's projected_segment depth_layer): draw_object and the road rows link each group in at its head, finish_sprite_list chains the layers into the sprite list and empties them
 field depth_list 00 head u16             # a jump to the layer's newest group (8000 | its first entry's number), which jumps on to the one drawn before it; 0: the layer is empty (draw_object 00EB1C "movz.hw [R11], R2", 00EB3A "mov.h R12, [R11]"; finish_sprite_list 00F3D6 "xch.h R2, [R11]")
@@ -8341,9 +8344,12 @@ elements race_record_words u32 ram
 elements race_record_bytes u8 ram
 # A course's record in the backup, the sound program's RAM (701F32, ten of them, and the copy at 701FAE): as
 # course_record, the car's model, the name's three letters and the time; course_records_update 00DF4D "mov.w [R12],
-# [R13+]" copies the model and the name as one word (AS32), 00DF51 "mov.h 4[R12], [R13+]" the time
-field backup_course_record 00 model u8
-field backup_course_record 01 name u8[3]
+# [R13+]" copies the model and the name as one word, 00DF51 "mov.h 4[R12], [R13+]" the time. Kept as halfwords, as
+# the bookkeeping is (bookkeeping_checksum sums it by halfwords, the link moves the records by halfwords into the race
+# records, where the race's fields read them: a demo race's racer_copy segment, attract.txt frame 1657): the model
+# and the first letter are the first one's two halves, as the V70 holds them on any processor
+field backup_course_record 00 model_and_initial u16   # the car's model (its low byte: negative, none) and the name's first letter
+field backup_course_record 02 name_rest u16           # the name's other two letters
 # The link board's race records link_receive_records hands to link_copy_records_in (800020, or 800720): a device's
 # memory, untyped
 local link_receive_records 00E660,00E677 R10 source
@@ -8522,7 +8528,7 @@ elements item_place_words u16 ram     # a turntable scenery item's place as it w
 C00050 io ANALOG_INPUTS u8               # the A/D converter's first input, the rest a register every 2 bytes: a write starts the conversion and eight reads shift the reading out, bit 7 first (test_mode_read_controls, read_switches_and_analog: C00050 + 4 * the bank)
 701F14 io BOOKKEEPING_GAMES_A u16        # NUMBER OF GAME(S) A, B at 701F16: the games each seat started (game_mode_play by the screen's index, bookkeeping_increment16; test_mode_bookkeeping_draw_totals)
 701F24 io BOOKKEEPING_HISTOGRAM u16      # the TIME HISTOGRAM: how many games ended at PRE-STAGE, then STAGE 1-5 and COMPLETE, seven halfwords (stage_game_counts)
-701F32 io BOOKKEEPING_COURSE_RECORDS u8  # the courses' records, ten of 6 bytes (backup_course_record): the first one's model
+701F32 io BOOKKEEPING_COURSE_RECORDS u16 # the courses' records, ten of 6 bytes (backup_course_record): the first one's model and initial
 # ======== memory reached through pointers (batch N5) ========
 # The road's surface (road_surface_lines, road_surface_halfway_lines, road_surface_fill_lines,
 # road_surface_fill_skipped_lines, road_tiles_change_update, road_surface_start, road_surface_update)
@@ -8577,9 +8583,9 @@ elements torque_curve_forces u16 ram          # a gear's drive force by the spee
 struct bookkeeping_count16 7E board   # a 16-bit count of the bookkeeping (the coins by chute 701F06-701F0C, the games by seat, the longest and shortest play 701F20, 701F22) and its backup's
 field bookkeeping_count16 00 value u16
 field bookkeeping_count16 7C backup u16
-struct bookkeeping_count32 80 board   # a 32-bit count of the bookkeeping (the play time by seat, 701F18 + 4 * index) and its backup's
-field bookkeeping_count32 00 value u32
-field bookkeeping_count32 7C backup u32
+struct bookkeeping_count32 80 board   # a 32-bit count of the bookkeeping (the play time by seat, 701F18 + 4 * index) and its backup's: two halfwords, the low one first, as the bookkeeping is kept
+field bookkeeping_count32 00 value u16[2]
+field bookkeeping_count32 7C backup u16[2]
 struct bookkeeping_count8 7D board    # an 8-bit one (bookkeeping_increment8, bookkeeping_add8, bookkeeping_set8: none in use) and its backup's
 field bookkeeping_count8 00 value u8
 field bookkeeping_count8 7C backup u8
@@ -8649,11 +8655,11 @@ field bookkeeping_block 02 coin_credits u16      # COIN CREDIT: the credits the 
 field bookkeeping_block 04 service_credits u16   # SERVICE CREDIT
 field bookkeeping_block 06 chute_a_coins u16     # COIN CHUTE A (BOOKKEEPING_CHUTE_A_COINS: the coins of seat A's first chute)
 field bookkeeping_block 0A chute_b_coins u16     # COIN CHUTE B (seat B's first chute: coin_chute_variant counter 701F0A)
-field bookkeeping_block 10 total_time u32        # TOTAL TIME, seconds (BOOKKEEPING_TOTAL_TIME)
+field bookkeeping_block 10 total_time u16[2]     # TOTAL TIME, seconds (BOOKKEEPING_TOTAL_TIME): two halfwords, the low one first
 field bookkeeping_block 14 games_a u16           # NUMBER OF GAME(S) A (BOOKKEEPING_GAMES_A)
 field bookkeeping_block 16 games_b u16           # NUMBER OF GAME(S) B
-field bookkeeping_block 18 play_time_a u32       # GAME PLAY TIME A, seconds (bookkeeping_count32 by the screen's index)
-field bookkeeping_block 1C play_time_b u32       # GAME PLAY TIME B
+field bookkeeping_block 18 play_time_a u16[2]    # GAME PLAY TIME A, seconds (bookkeeping_count32 by the screen's index)
+field bookkeeping_block 1C play_time_b u16[2]    # GAME PLAY TIME B
 field bookkeeping_block 20 longest_play u16      # LONGEST (BOOKKEEPING_LONGEST_PLAY)
 field bookkeeping_block 22 shortest_play u16     # SHORTEST (BOOKKEEPING_SHORTEST_PLAY)
 local test_mode_bookkeeping_draw_totals 01E740 R20 current_object bookkeeping_block   # "movea.b 701F00, R20"

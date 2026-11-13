@@ -367,20 +367,26 @@ void bookkeeping_add16(uint32_t counter, uint16_t amount)
 void bookkeeping_add32(uint32_t counter, uint32_t amount)
 {
 	uint32_t carry = 0;
-	uint32_t count = 0;
+	uint32_t count = 0, value_0_long = 0, backup_0_long = 0;
 
-	count = BOOKKEEPING_COUNT32(counter)->value;
+	count = (BOOKKEEPING_COUNT32(counter)->value[0] | ((uint32_t)BOOKKEEPING_COUNT32(counter)->value[1] << 16u));
 	carry = count + amount < count;
-	BOOKKEEPING_COUNT32(counter)->value = count + amount;
+	value_0_long = count + amount;
+	BOOKKEEPING_COUNT32(counter)->value[0] = (uint16_t)value_0_long;
+	BOOKKEEPING_COUNT32(counter)->value[1] = (uint16_t)(value_0_long >> 16u);
 	if (carry)
 	{
-		BOOKKEEPING_COUNT32(counter)->value = 0xFFFFFFFFu;
+		BOOKKEEPING_COUNT32(counter)->value[0] = 0xFFFFu;
+		BOOKKEEPING_COUNT32(counter)->value[1] = 0xFFFFu;
 		bookkeeping_update_checksum(0u);
-		BOOKKEEPING_COUNT32(counter)->value = 0xFFFFFFFFu;
+		BOOKKEEPING_COUNT32(counter)->value[0] = 0xFFFFu;
+		BOOKKEEPING_COUNT32(counter)->value[1] = 0xFFFFu;
 		return;
 	}
 	bookkeeping_update_checksum(0u);
-	BOOKKEEPING_COUNT32(counter)->backup += amount;
+	backup_0_long = (BOOKKEEPING_COUNT32(counter)->backup[0] | ((uint32_t)BOOKKEEPING_COUNT32(counter)->backup[1] << 16u)) + amount;
+	BOOKKEEPING_COUNT32(counter)->backup[0] = (uint16_t)backup_0_long;
+	BOOKKEEPING_COUNT32(counter)->backup[1] = (uint16_t)(backup_0_long >> 16u);
 }
 
 /* Unused: adds R9 to the 8-bit bookkeeping counter at R7 and to its backup's (7C on), with the checksum;
@@ -417,9 +423,11 @@ void bookkeeping_set16(uint32_t counter, uint16_t amount)
 /* Unused: sets the 32-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
 void bookkeeping_set32(uint32_t counter, uint32_t amount)
 {
-	BOOKKEEPING_COUNT32(counter)->value = amount;
+	BOOKKEEPING_COUNT32(counter)->value[0] = (uint16_t)amount;
+	BOOKKEEPING_COUNT32(counter)->value[1] = (uint16_t)(amount >> 16u);
 	bookkeeping_update_checksum(0u);
-	BOOKKEEPING_COUNT32(counter)->backup = amount;
+	BOOKKEEPING_COUNT32(counter)->backup[0] = (uint16_t)amount;
+	BOOKKEEPING_COUNT32(counter)->backup[1] = (uint16_t)(amount >> 16u);
 }
 
 /* Unused: sets the 8-bit bookkeeping value at R7 and its backup's (7C on) to R9, with the checksum. */
@@ -436,11 +444,15 @@ uint32_t bookkeeping_clear_credits(void)
 {
 	uint32_t bookkeeping_place = 0;
 
-	AS32(BOOKKEEPING_SEAT_1_CREDITS) = 0u;
-	AS32(BOOKKEEPING_SEAT_2_CREDITS) = 0u;
+	BOOKKEEPING_SEAT_1_CREDITS = 0u;
+	BOOKKEEPING_SEAT_1_BYTE = 0u;
+	BOOKKEEPING_SEAT_2_CREDITS = 0u;
+	BOOKKEEPING_SEAT_2_BYTE = 0u;
 	bookkeeping_update_checksum(0u);
 	BOOKKEEPING_BACKUP_SEAT_1_CREDITS = 0u;
+	BOOKKEEPING_BACKUP_SEAT_1_BYTE = 0u;
 	BOOKKEEPING_BACKUP_SEAT_2_CREDITS = 0u;
+	BOOKKEEPING_BACKUP_SEAT_2_BYTE = 0u;
 	bookkeeping_place = SOUND_RAM + 0x1FF8u;
 	return bookkeeping_place;
 }

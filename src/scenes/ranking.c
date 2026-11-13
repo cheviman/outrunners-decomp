@@ -28,17 +28,17 @@ uint32_t load_course_records(void)
 	record_copy = pointer_to(course_records_ADDRESS);
 	for (;;)
 	{
-		if ((int8_t)BACKUP_COURSE_RECORD(backup_record)->model >= 0)
+		if ((int8_t)(uint8_t)BACKUP_COURSE_RECORD(backup_record)->model_and_initial >= 0)
 		{
-			record_copy->model = BACKUP_COURSE_RECORD(backup_record)->model;
+			record_copy->model = (uint8_t)BACKUP_COURSE_RECORD(backup_record)->model_and_initial;
 			model_place = address_of(record_copy);
 			COURSE_RECORD_COPY(model_place)->model &= 7u;
 			backup_record++;
-			record_copy->name[0] = BACKUP_COURSE_RECORD(backup_record - 0x1u)->name[0];
+			record_copy->name[0] = (uint8_t)(BACKUP_COURSE_RECORD(backup_record - 0x1u)->model_and_initial >> 8u);
 			backup_record++;
-			record_copy->name[1] = BACKUP_COURSE_RECORD(backup_record - 0x2u)->name[1];
+			record_copy->name[1] = (uint8_t)BACKUP_COURSE_RECORD(backup_record - 0x2u)->name_rest;
 			backup_record++;
-			record_copy->name[2] = BACKUP_COURSE_RECORD(backup_record - 0x3u)->name[2];
+			record_copy->name[2] = (uint8_t)(BACKUP_COURSE_RECORD(backup_record - 0x3u)->name_rest >> 8u);
 			backup_record++;
 			record_copy->time = BACKUP_COURSE_RECORD(backup_record - 0x4u)->time;
 			record_copy++;

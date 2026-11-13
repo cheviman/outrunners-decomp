@@ -410,7 +410,7 @@ void game_mode_play(void)
 	case 2:
 		screen->demo_flags &= ~0x100u;
 		game->wheel_motor[screen->index] = 0u;
-		screen->game_start_time = BOOKKEEPING_TOTAL_TIME;
+		screen->game_start_time = (BOOKKEEPING_TOTAL_TIME | ((uint32_t)BOOKKEEPING_TOTAL_TIME_HIGH << 16u));
 		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + screen->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
 		io_write8(EVENT_CODE, game_start_c00074_bytes[screen->index]);
@@ -674,7 +674,7 @@ void game_mode_play(void)
 	case 17:
 		if ((screen->flags & 1u) != 0u)
 			return;
-		time_played = BOOKKEEPING_TOTAL_TIME - screen->game_start_time;
+		time_played = (BOOKKEEPING_TOTAL_TIME | ((uint32_t)BOOKKEEPING_TOTAL_TIME_HIGH << 16u)) - screen->game_start_time;
 		bookkeeping_entry = SOUND_RAM + 0x1F18u + screen->index * 4u;
 		bookkeeping_add32(bookkeeping_entry, time_played);
 		if (BOOKKEEPING_LONGEST_PLAY < (uint16_t)time_played)

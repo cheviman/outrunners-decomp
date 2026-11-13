@@ -1547,7 +1547,7 @@ struct course_record_entry *course_records_update(struct course_record_entry *re
 	struct race *race = NULL;
 	uint8_t *seen_serials = NULL;
 	uint8_t seen_serial = 0;
-	uint32_t model_long = 0, model_long_2 = 0;
+	uint32_t model_and_initial_long = 0, model_and_initial_long_2 = 0;
 
 	seen_serials = &screen->name_entries_seen;
 	players_left = game->player_count;
@@ -1571,19 +1571,15 @@ struct course_record_entry *course_records_update(struct course_record_entry *re
 				record_entry->name = race->record_name;
 				record_entry->name_rest = race->record_name_rest;
 				backup_record = BOOKKEEPING_COURSE_RECORDS_ADDRESS + record_offset;
-				model_long = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
-				BACKUP_COURSE_RECORD(backup_record)->model = (uint8_t)model_long;
-				BACKUP_COURSE_RECORD(backup_record)->name[0] = (uint8_t)(model_long >> 8u);
-				BACKUP_COURSE_RECORD(backup_record)->name[1] = (uint8_t)(model_long >> 16u);
-				BACKUP_COURSE_RECORD(backup_record)->name[2] = (uint8_t)(model_long >> 24u);
+				model_and_initial_long = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				BACKUP_COURSE_RECORD(backup_record)->model_and_initial = (uint16_t)model_and_initial_long;
+				BACKUP_COURSE_RECORD(backup_record)->name_rest = (uint16_t)(model_and_initial_long >> 16u);
 				BACKUP_COURSE_RECORD(backup_record)->time = record_entry->time;
 				bookkeeping_update_checksum((uint16_t)ignored);
 				backup_record = SOUND_RAM + 0x1FAEu + record_offset;
-				model_long_2 = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
-				BACKUP_COURSE_RECORD(backup_record)->model = (uint8_t)model_long_2;
-				BACKUP_COURSE_RECORD(backup_record)->name[0] = (uint8_t)(model_long_2 >> 8u);
-				BACKUP_COURSE_RECORD(backup_record)->name[1] = (uint8_t)(model_long_2 >> 16u);
-				BACKUP_COURSE_RECORD(backup_record)->name[2] = (uint8_t)(model_long_2 >> 24u);
+				model_and_initial_long_2 = (record_entry->model | ((uint32_t)record_entry->name << 8u) | ((uint32_t)record_entry->name_rest << 16u));
+				BACKUP_COURSE_RECORD(backup_record)->model_and_initial = (uint16_t)model_and_initial_long_2;
+				BACKUP_COURSE_RECORD(backup_record)->name_rest = (uint16_t)(model_and_initial_long_2 >> 16u);
 				BACKUP_COURSE_RECORD(backup_record)->time = record_entry->time;
 			}
 		}
