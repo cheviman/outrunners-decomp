@@ -20,10 +20,10 @@ void isdn_count_players(void)
 
 	players_this_side = RACE(screen->race_copy)->players_this_side;
 	player_sum = RACE(screen->race_copy)->players_other_side;
-	game->isdn_players_this_side = players_this_side;
-	game->isdn_players_other_side = player_sum;
+	world->isdn_players_this_side = players_this_side;
+	world->isdn_players_other_side = player_sum;
 	player_sum += players_this_side;
-	game->player_count = player_sum;
+	world->player_count = player_sum;
 	game->machine_count = player_sum >> 1;
 }
 
@@ -235,8 +235,8 @@ void network_check(void)
 	move_halfwords(r12, zero_block_ADDRESS, 8u);
 	move_halfwords(RACE_1, zero_block_ADDRESS, 0x80u);
 	move_halfwords(RACE_COPY_1, zero_block_ADDRESS, 0x200u);
-	game->link_off = game->stand_alone;
-	if (game->link_off != 0u)
+	world->link_off = game->stand_alone;
+	if (world->link_off != 0u)
 	{
 		network_check_stand_alone();
 		return;
@@ -302,9 +302,9 @@ void network_check(void)
 	do
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 		{
-			game->link_failed = 0xFFu;
+			world->link_failed = 0xFFu;
 			return;
 		}
 		current_object = pointer_to(check_network_status_text_ADDRESS);
@@ -318,9 +318,9 @@ void network_check(void)
 	print_text_layer(text);
 	do
 	{
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 		{
-			game->link_failed = 0xFFu;
+			world->link_failed = 0xFFu;
 			return;
 		}
 		if (io_read8(r12 + 0xCu) != 0u)
@@ -330,7 +330,7 @@ void network_check(void)
 		}
 	} while (io_read8(r12 + 8u) == 0u);
 	network_check_clear_status_line();
-	game->link_wait_frames = 0u;
+	world->link_wait_frames = 0u;
 	network_check_join();
 }
 
@@ -347,7 +347,7 @@ void network_check_join(void)
 	count = io_read8(r12);
 	game->machine_count = count;
 	count = (uint8_t)(count * 2u);
-	game->player_count = count;
+	world->player_count = count;
 	machine = io_read8(r12 + 2u);
 	io_write8(r12 + 0x1002u, 1u);
 	if (game->isdn_mode == 0u && count < 2u)
@@ -391,7 +391,7 @@ void network_check_isdn(void)
    for 128 frames). */
 void link_lost(void)
 {
-	game->link_failed = 1u;
+	world->link_failed = 1u;
 	network_check_stand_alone();
 }
 
@@ -402,9 +402,9 @@ void network_check_stand_alone(void)
 {
 	uint32_t machine = 0;
 
-	game->link_off = 1u;
+	world->link_off = 1u;
 	machine = 1u;
-	game->player_count = 2u;
+	world->player_count = 2u;
 	game->machine_count = 1u;
 	game->screen_1.car_number = 0u;
 	game->races[0].car_number = 0u;
@@ -464,7 +464,7 @@ void network_check_result(uint32_t machine)
 	clear_text_layer();
 	text = network_check_text_ADDRESS;
 	print_text_layer(text);
-	if (game->link_failed != 0u)
+	if (world->link_failed != 0u)
 	{
 		text = communication_failed_text_ADDRESS;
 		print_text_layer(text);
@@ -498,7 +498,7 @@ void network_check_result(uint32_t machine)
 		clear_text_layer();
 		return;
 	}
-	if (game->link_off != 0u)
+	if (world->link_off != 0u)
 	{
 		text = stand_alone_machine_text_ADDRESS;
 		print_text_layer(text);
@@ -685,20 +685,20 @@ uint32_t network_check_wait_board(uint32_t left_caller)
 	uint16_t frames_left = 0;
 	uint32_t board_flags = 0;
 
-	game->link_wait_frames = 0xE10u;
+	world->link_wait_frames = 0xE10u;
 	do
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 		{
-			game->link_failed = 0xFFu;
+			world->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
 		current_object = pointer_to(wait_text_ADDRESS);
 		network_check_blink_text();
-		frames_left = game->link_wait_frames;
-		game->link_wait_frames = frames_left - 1u;
+		frames_left = world->link_wait_frames;
+		world->link_wait_frames = frames_left - 1u;
 		if (frames_left == 1u)
 		{
 			io_write8(IO_1_CNT, 4u);
@@ -724,9 +724,9 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 	do
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 		{
-			game->link_failed = 0xFFu;
+			world->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
@@ -734,20 +734,20 @@ uint32_t network_check_wait_isdn(uint32_t left_caller)
 		network_check_blink_text();
 		board_machines = io_read8(0x800000u);
 	} while (board_machines == 0u);
-	game->link_wait_frames = 0x3Cu;
+	world->link_wait_frames = 0x3Cu;
 	do
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 		{
-			game->link_failed = 0xFFu;
+			world->link_failed = 0xFFu;
 			left_caller_2 = 1u;
 			return left_caller_2;
 		}
 		current_object = pointer_to(wait_text_ADDRESS);
 		network_check_blink_text();
-		frames_left = game->link_wait_frames;
-		game->link_wait_frames = frames_left - 1u;
+		frames_left = world->link_wait_frames;
+		world->link_wait_frames = frames_left - 1u;
 	} while (frames_left != 1u);
 	network_check_clear_status_line();
 	return left_caller;
@@ -871,8 +871,8 @@ void network_check_blink_text(void)
 	uint16_t character = 0;
 	uint32_t cell = 0;
 
-	game->network_check_blink_counter++;
-	if ((game->network_check_blink_counter & 0xFu) != 0u)
+	world->network_check_blink_counter++;
+	if ((world->network_check_blink_counter & 0xFu) != 0u)
 		return;
 	cell = 0x310000u | 0xF000u | TEXT_LAYER_RECORD(address_of(current_object))->cell;
 	current_object = pointer_to(address_of(current_object) + 2u);
@@ -939,12 +939,12 @@ uint32_t network_check_error(uint32_t error_texts)
 	for (;;)
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 			break;
 		current_object = pointer_to(network_error_text_ADDRESS);
 		network_check_blink_text();
 	}
-	game->link_failed = 0xFFu;
+	world->link_failed = 0xFFu;
 	left_caller = 1u;
 	return left_caller;
 }
@@ -958,12 +958,12 @@ uint32_t network_check_halt(void)
 	for (;;)
 	{
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 			break;
 		current_object = pointer_to(network_error_text_ADDRESS);
 		network_check_blink_text();
 	}
-	game->link_failed = 0xFFu;
+	world->link_failed = 0xFFu;
 	left_caller = 1u;
 	return left_caller;
 }
@@ -984,7 +984,7 @@ void link_take_master_settings(void)
 	struct race *race = NULL, *record_car_number = NULL;
 	uint8_t isdn_records_ready = 0;
 
-	if (game->test_mode_on != 0u)
+	if (world->test_mode_on != 0u)
 		return;
 	link_send_records();
 	wait_for_frame();
@@ -1006,8 +1006,8 @@ void link_take_master_settings(void)
 	}
 	link_receive_records();
 	record_car_number = &game->race_copies[0];
-	car_number_slot = &game->car_numbers[0];
-	players_left = game->player_count;
+	car_number_slot = &world->car_numbers[0];
+	players_left = world->player_count;
 	record_size = 0x80u;
 	do
 	{
@@ -1075,7 +1075,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 	race_2 = &game->race_copies[0];
 	if (screen->player == 0u)
 	{
-		players_left = game->player_count;
+		players_left = world->player_count;
 		record_size = 0x80u;
 		entry_serial = race->entry_serial;
 		other_race = race_2;
@@ -1094,7 +1094,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 					machines = game->machine_count;
 				next_entry_frames = entry_frames_by_machines[machines];
 				request = race_2;
-				players_left = game->player_count;
+				players_left = world->player_count;
 				player = 0u;
 				for (;;)
 				{
@@ -1111,7 +1111,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 					race->entrant = player;
 					race->entry_serial++;
 					entry_frames = next_entry_frames;
-					if ((uint8_t)(screen->entrant_count + 1u) != game->player_count || entry_frames <= 0x28u)
+					if ((uint8_t)(screen->entrant_count + 1u) != world->player_count || entry_frames <= 0x28u)
 						break;
 					entry_frames = 0x28u;
 					break;
@@ -1125,7 +1125,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 				if (old_entry_frames != 1u)
 				{
 					request = race_2;
-					players_left = game->player_count;
+					players_left = world->player_count;
 					player = 0u;
 					for (;;)
 					{
@@ -1142,7 +1142,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 						race->entrant = player;
 						race->entry_serial++;
 						entry_frames = next_entry_frames;
-						if ((uint8_t)(screen->entrant_count + 1u) != game->player_count || entry_frames <= 0x28u)
+						if ((uint8_t)(screen->entrant_count + 1u) != world->player_count || entry_frames <= 0x28u)
 							break;
 						entry_frames = 0x28u;
 						break;
@@ -1168,7 +1168,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 		}
 		race->entry_frames = entry_frames;
 	}
-	players_left = game->player_count;
+	players_left = world->player_count;
 	other_race = race_2;
 	do
 	{
@@ -1193,7 +1193,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 		screen->mode_step = 0u;
 		screen->game_step = 0u;
 		screen->game_mode_spare = 0u;
-		game->cleared_on_race_over = 0u;
+		world->cleared_on_race_over = 0u;
 		if (race_2->entry_frames != 0u && screen->game_mode != 0u && screen->game_mode <= 5u)
 		{
 			screen->game_mode = 7u;
@@ -1488,7 +1488,7 @@ void entry_invitation_step(void)
 		race_record_clear();
 		screen->demo_flags &= ~0x100u;
 		index = screen->index;
-		game->wheel_motor[index] = 0u;
+		world->wheel_motor[index] = 0u;
 		lamp = pointer_to(GAME_VARIABLES + index * 4u);
 		lamp->checkpoint = 2u;
 		lamp->leader = 8u;
@@ -1550,7 +1550,7 @@ struct course_record_entry *course_records_update(struct course_record_entry *re
 	uint32_t model_and_initial_long = 0, model_and_initial_long_2 = 0;
 
 	seen_serials = &screen->name_entries_seen;
-	players_left = game->player_count;
+	players_left = world->player_count;
 	race = &game->races[1];
 	do
 	{
@@ -1600,7 +1600,7 @@ void link_receive_records(void)
 
 	if (game->isdn_mode == 0u)
 	{
-		if (game->link_failed == 0u && game->link_off == 0u)
+		if (world->link_failed == 0u && world->link_off == 0u)
 		{
 			board_error = io_read8(LINK_BOARD_ERROR);
 			if (board_error != 0u)
@@ -1695,8 +1695,8 @@ void link_send_records(void)
 
 	if (game->isdn_mode == 0u)
 	{
-		game->link_wait_frames = game->link_wait_frames_start;
-		if (game->link_failed != 0u || game->link_off != 0u)
+		world->link_wait_frames = world->link_wait_frames_start;
+		if (world->link_failed != 0u || world->link_off != 0u)
 			return;
 		board_error = io_read8(LINK_BOARD_ERROR);
 		if (board_error != 0u)

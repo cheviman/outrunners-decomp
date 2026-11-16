@@ -29,13 +29,13 @@ table_addresses 595
 page_links 102
 ram_blocks 106
 pointer_conversions 1067
-functions 762
-lines 39902
+functions 765
+lines 40065
 casts 3094
 partial_writes 130
 mixed_partial_writes 0
 board_registers 377
-clean_functions 843
+clean_functions 844
 clean_lines 984
 faithful_functions 1000
 faithful_lines 1000

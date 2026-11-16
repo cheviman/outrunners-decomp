@@ -257,8 +257,8 @@ void init_sprite_lists(void)
 	SPRITE_LIST_2_A_HALFWAY = 0xFFFFu;
 	SPRITE_LIST_2_B = 0xFFFFu;
 	SPRITE_LIST_2_B_HALFWAY = 0xFFFFu;
-	game->sprite_lists_set_up = 1u;
-	game->sprite_list_buffers = 0u;
+	world->sprite_lists_set_up = 1u;
+	world->sprite_list_buffers = 0u;
 	game->screen_1.sprite_groups &= 0xFF00u;
 	game->screen_2.sprite_groups &= 0xFF00u;
 }
@@ -329,6 +329,7 @@ void load_sprite_ram_tables(void)
    the data at 010AB5. */
 void unrolled_copy(uint16_t byte_count, uint32_t source, uint32_t destination)
 {
+	world_ram_begin();
 	uint32_t move_destination = 0, second_word = 0, second_word_64 = 0;
 
 	switch (0u - (((byte_count & 0x3F8u) >> 1) - 0x200u))
@@ -348,4 +349,5 @@ void unrolled_copy(uint16_t byte_count, uint32_t source, uint32_t destination)
 	second_word_64 = mem_read32(source + 4u);
 	mem_write32(destination, mem_read32(source));
 	mem_write32(destination + 4u, second_word_64);
+	world_ram_end();
 }

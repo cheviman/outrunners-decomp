@@ -72,11 +72,11 @@ void coin_prompt_update(void)
 		{
 		case 0:
 			credits = game->seat1_credits;
-			coin_units = game->seat1_coin_units;
+			coin_units = world->seat1_coin_units;
 			break;
 		case 1:
 			credits = game->seat2_credits;
-			coin_units = game->seat2_coin_units;
+			coin_units = world->seat2_coin_units;
 			break;
 		}
 		if (credits != 0u)
@@ -322,11 +322,11 @@ void credit_display_update(void)
 	{
 	case 0:
 		credits = game->seat1_credits;
-		coin_units = game->seat1_coin_units;
+		coin_units = world->seat1_coin_units;
 		break;
 	case 1:
 		credits = game->seat2_credits;
-		coin_units = game->seat2_coin_units;
+		coin_units = world->seat2_coin_units;
 		break;
 	}
 	if (credits < 2u)

@@ -46,7 +46,7 @@ void player_car_update(void)
 	uint16_t timer = 0, timer_2 = 0, timer_3 = 0, timer_4 = 0;
 	uint32_t stage_count_place = 0;
 
-	game->wheel_motor[screen->index] = 0u;
+	world->wheel_motor[screen->index] = 0u;
 	player_car_check_place();
 	player_car_read_controls();
 	player_car_build_hit_boxes();
@@ -1407,7 +1407,7 @@ void player_car_crash_step(void)
 		player_car_move();
 		return;
 	}
-	game->wheel_motor[screen->index] = 0x10u;
+	world->wheel_motor[screen->index] = 0x10u;
 	if (player_car->crash_sound_delay != 0u)
 	{
 		crash_sound_delay = player_car->crash_sound_delay;

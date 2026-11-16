@@ -23,45 +23,18 @@
 #define RACE_COPY_2 0x20FC80u
 #define SCREEN_2 0x218000u
 #define waiting_task_frame_ADDRESS 0x20E000u
-#define waiting_task_stack_ADDRESS 0x20E004u
-#define vblanks_since_start_ADDRESS 0x20E00Au
-#define debug_timer_rounds_ADDRESS 0x20E00Eu
-#define sprite_list_buffers_ADDRESS 0x20E020u
-#define sprite_lists_set_up_ADDRESS 0x20E022u
 #define frame_ready_ADDRESS 0x20E023u
-#define single_task_ADDRESS 0x20E024u
-#define game_frame_count_ADDRESS 0x20E026u
-#define send_video_registers_ADDRESS 0x20E027u
-#define task_swapping_ADDRESS 0x20E028u
-#define second_task_waiting_ADDRESS 0x20E02Bu
-#define timer_interrupts_left_ADDRESS 0x20E02Cu
-#define vblank_counter_ADDRESS 0x20E02Du
-#define cleared_on_race_over_ADDRESS 0x20E02Eu
-#define car_numbers_ADDRESS 0x20E030u
-#define link_wait_frames_start_ADDRESS 0x20E038u
-#define total_time_count_ADDRESS 0x20E03Au
 #define machine_count_ADDRESS 0x20E040u
-#define player_count_ADDRESS 0x20E041u
-#define link_off_ADDRESS 0x20E042u
-#define link_failed_ADDRESS 0x20E043u
-#define link_wait_frames_ADDRESS 0x20E046u
-#define network_check_blink_counter_ADDRESS 0x20E048u
-#define isdn_players_this_side_ADDRESS 0x20E04Au
-#define isdn_players_other_side_ADDRESS 0x20E04Bu
-#define link_wait_count_ADDRESS 0x20E060u
 #define coin_meters_ADDRESS 0x20E080u
 #define seat1_coin_sounds_ADDRESS 0x20E08Cu
 #define seat2_coin_sounds_ADDRESS 0x20E08Du
 #define seat1_service_sounds_ADDRESS 0x20E08Eu
 #define seat2_service_sounds_ADDRESS 0x20E08Fu
-#define chute_entry_offset_ADDRESS 0x20E091u
 #define port_d_outputs_ADDRESS 0x20E092u
 #define port_g_outputs_ADDRESS 0x20E094u
 #define seat1_credits_ADDRESS 0x20E0A0u
-#define seat1_coin_units_ADDRESS 0x20E0A1u
 #define seat1_bookkeeping_byte_ADDRESS 0x20E0A4u
 #define seat2_credits_ADDRESS 0x20E0A8u
-#define seat2_coin_units_ADDRESS 0x20E0A9u
 #define seat2_bookkeeping_byte_ADDRESS 0x20E0ACu
 #define checkpoint_lamp_ADDRESS 0x20E0C0u
 #define checkpoint_lamp_blinks_ADDRESS 0x20E0C1u
@@ -79,16 +52,10 @@
 #define leader_lamp_2_blinks_ADDRESS 0x20E0CDu
 #define leader_lamp_2_period_ADDRESS 0x20E0CEu
 #define leader_lamp_2_timer_ADDRESS 0x20E0CFu
-#define wheel_motor_ADDRESS 0x20E0D0u
 #define screen_2_vblanks_ADDRESS 0x20E0FCu
 #define screen_2_vblanks_high_ADDRESS 0x20E0FDu
 #define screen_1_vblanks_ADDRESS 0x20E0FEu
 #define screen_1_vblanks_high_ADDRESS 0x20E0FFu
-#define switches_ADDRESS 0x20E100u
-#define previous_switches_ADDRESS 0x20E101u
-#define switches_pressed_ADDRESS 0x20E102u
-#define switches_released_ADDRESS 0x20E103u
-#define second_io_chip_port_f_ADDRESS 0x20E104u
 #define analog_raw_ADDRESS 0x20E110u
 #define analog_inputs_ADDRESS 0x20E116u
 #define analog_gas_1_ADDRESS 0x20E117u
@@ -96,27 +63,13 @@
 #define analog_wheel_2_ADDRESS 0x20E119u
 #define analog_gas_2_ADDRESS 0x20E11Au
 #define analog_brake_2_ADDRESS 0x20E11Bu
-#define seat_1_player_ADDRESS 0x20E120u
 #define seat_1_buttons_ADDRESS 0x20E121u
-#define seat_1_wheel_ADDRESS 0x20E122u
-#define seat_1_gas_ADDRESS 0x20E123u
-#define seat_1_brake_ADDRESS 0x20E124u
-#define seat_2_player_ADDRESS 0x20E125u
 #define seat_2_buttons_ADDRESS 0x20E126u
-#define seat_2_wheel_ADDRESS 0x20E127u
-#define seat_2_gas_ADDRESS 0x20E128u
-#define seat_2_brake_ADDRESS 0x20E129u
 #define video_registers_ADDRESS 0x20E200u
 #define scroll_targets_ADDRESS 0x20E290u
 #define tile_banks_ADDRESS 0x20E2B0u
 #define course_records_ADDRESS 0x20E300u
 #define course_record_times_ADDRESS 0x20E304u
-#define lcd_send_buffer_1_ADDRESS 0x20E3C0u
-#define lcd_send_buffer_2_ADDRESS 0x20E3D0u
-#define lcd_restart_frames_ADDRESS 0x20E3F0u
-#define lcd_send_step_ADDRESS 0x20E3F2u
-#define lcd_busy_ADDRESS 0x20E3F3u
-#define lcd_init_step_ADDRESS 0x20E3F4u
 #define settings_magic_ADDRESS 0x20E600u
 #define settings_signature_ADDRESS 0x20E604u
 #define settings_checksum_ADDRESS 0x20E608u
@@ -139,25 +92,9 @@
 #define volume_ranges_ADDRESS 0x20E638u
 #define backup_settings_checksum_ADDRESS 0x20E644u
 #define backup_eeprom_write_count_ADDRESS 0x20E646u
-#define test_mode_on_ADDRESS 0x20E700u
-#define test_mode_flags_ADDRESS 0x20E701u
-#define test_mode_cursor_ADDRESS 0x20E702u
-#define test_mode_page_cursor_ADDRESS 0x20E703u
-#define test_mode_routine_ADDRESS 0x20E704u
 #define test_mode_blink_address_ADDRESS 0x20E708u
-#define test_mode_buttons_ADDRESS 0x20E70Cu
-#define test_mode_buttons_previous_ADDRESS 0x20E70Du
-#define test_mode_buttons_pressed_ADDRESS 0x20E70Eu
-#define test_mode_buttons_released_ADDRESS 0x20E70Fu
 #define test_mode_analog_inputs_ADDRESS 0x20E710u
 #define memory_test_results_ADDRESS 0x20E716u
-#define test_mode_blink_timer_ADDRESS 0x20E72Fu
-#define sound_test_number_a_ADDRESS 0x20E730u
-#define sound_test_number_b_ADDRESS 0x20E731u
-#define test_mode_sound_queue_write_ADDRESS 0x20E732u
-#define test_mode_sound_queue_read_ADDRESS 0x20E733u
-#define test_mode_sound_queue_ADDRESS 0x20E734u
-#define test_mode_privilege_mode_ADDRESS 0x20E754u
 #define race_copy_window_segments_ADDRESS 0x20FC46u
 
 /* work RAM as one family of functions uses it (their scratch variables) */
@@ -6089,5 +6026,78 @@ _Static_assert(offsetof(struct game, screen_2) == 0x18000, "screen_2 at its plac
 _Static_assert(offsetof(struct game, isdn_races) == 0x1E000, "isdn_races at its place in the work RAM");
 _Static_assert(offsetof(struct game, stacks) == 0x1F000, "stacks at its place in the work RAM");
 extern struct game *game;
+
+/* the game's variables the code reaches only by name, in the host's memory (their places in the work
+   RAM, struct game, are where world_project puts them) */
+struct world
+{
+	uint32_t waiting_task_stack;
+	uint16_t vblanks_since_start;
+	uint8_t debug_timer_rounds;
+	uint16_t sprite_list_buffers;
+	uint8_t sprite_lists_set_up;
+	uint8_t single_task;
+	uint8_t game_frame_count;
+	uint8_t send_video_registers;
+	uint8_t task_swapping;
+	uint8_t second_task_waiting;
+	uint8_t timer_interrupts_left;
+	uint8_t vblank_counter;
+	uint8_t cleared_on_race_over;
+	uint8_t car_numbers[0x8];
+	uint16_t link_wait_frames_start;
+	uint16_t total_time_count;
+	uint8_t player_count;
+	uint8_t link_off;
+	uint8_t link_failed;
+	uint16_t link_wait_frames;
+	uint16_t network_check_blink_counter;
+	uint8_t isdn_players_this_side;
+	uint8_t isdn_players_other_side;
+	uint32_t link_wait_count;
+	uint8_t chute_entry_offset;
+	uint8_t seat1_coin_units;
+	uint8_t seat2_coin_units;
+	uint8_t wheel_motor[0x2];
+	uint8_t switches;
+	uint8_t previous_switches;
+	uint8_t switches_pressed;
+	uint8_t switches_released;
+	uint8_t second_io_chip_port_f;
+	uint8_t seat_1_player;
+	uint8_t seat_1_wheel;
+	uint8_t seat_1_gas;
+	uint8_t seat_1_brake;
+	uint8_t seat_2_player;
+	uint8_t seat_2_wheel;
+	uint8_t seat_2_gas;
+	uint8_t seat_2_brake;
+	uint8_t lcd_send_buffer_1[0x10];
+	uint8_t lcd_send_buffer_2[0x10];
+	uint16_t lcd_restart_frames;
+	uint8_t lcd_send_step;
+	uint8_t lcd_busy;
+	uint8_t lcd_init_step;
+	uint8_t test_mode_on;
+	uint8_t test_mode_flags;
+	uint8_t test_mode_cursor;
+	uint8_t test_mode_page_cursor;
+	uint32_t test_mode_routine;
+	uint8_t test_mode_buttons;
+	uint8_t test_mode_buttons_previous;
+	uint8_t test_mode_buttons_pressed;
+	uint8_t test_mode_buttons_released;
+	int8_t test_mode_blink_timer;
+	uint8_t sound_test_number_a;
+	uint8_t sound_test_number_b;
+	uint8_t test_mode_sound_queue_write;
+	uint8_t test_mode_sound_queue_read;
+	uint16_t test_mode_sound_queue[0x10];
+	uint8_t test_mode_privilege_mode;
+};
+extern struct world *world;
+void world_project(void);
+void world_unproject(void);
+void world_clear(void);
 
 #endif

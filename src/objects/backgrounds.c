@@ -456,7 +456,7 @@ void set_up_background(uint32_t background_setup)
 	VIDEO_REGISTER_WORDS(background_registers->second_scroll_x_address)[0] = 0u;
 	VIDEO_REGISTER_WORDS(background_registers->second_scroll_y_address)[0] = 0u;
 	game->video_registers[2] &= background_registers->video_mask;
-	game->send_video_registers = 0xFFu;
+	world->send_video_registers = 0xFFu;
 	mixer_address = pointer_to(background_registers->mixer_address);
 	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;

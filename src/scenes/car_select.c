@@ -1736,13 +1736,13 @@ void car_select_entries_run(void)
 		if (screen->lcd_scroll != 0u)
 			return;
 		move_string(entry_lcd_text_ADDRESS, 3u, address_of(screen) + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
-		players_left = game->player_count;
+		players_left = world->player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[game->car_numbers[players_left - 1u]] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[world->car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
-		own_car_number = game->car_numbers[screen->player];
+		own_car_number = world->car_numbers[screen->player];
 		current_object->car_select_entries.own_number = own_car_number;
 		current_object->car_select_entries.digit_toggle = (own_car_number + 0x31u) ^ 0x5Fu;
 		current_object->car_select_entries.blink_timer = 8u;
@@ -1752,13 +1752,13 @@ void car_select_entries_run(void)
 		if (screen->lcd_scroll != 0u)
 			return;
 		move_string(entry_lcd_text_ADDRESS, 3u, address_of(screen) + 0xF12u, 7u, 2u, 0u, 0u, 0u, &lcd_text_end, &ignored);
-		players_left = game->player_count;
+		players_left = world->player_count;
 		do
 		{
-			LCD_CHARACTERS(lcd_text_end)[game->car_numbers[players_left - 1u]] = 0x5Fu;
+			LCD_CHARACTERS(lcd_text_end)[world->car_numbers[players_left - 1u]] = 0x5Fu;
 			players_left--;
 		} while (players_left != 0u);
-		own_car_number = game->car_numbers[screen->player];
+		own_car_number = world->car_numbers[screen->player];
 		current_object->car_select_entries.own_number = own_car_number;
 		current_object->car_select_entries.digit_toggle = (own_car_number + 0x31u) ^ 0x5Fu;
 		current_object->car_select_entries.blink_timer = 8u;
@@ -1784,7 +1784,7 @@ void car_select_entries_run(void)
 		racer_place++;
 		if (screen->player != racer && (current_object->car_select_entries.shown_players & shl32(1u, (int)(racer))) == 0u)
 		{
-			racer_car_number = game->car_numbers[racer];
+			racer_car_number = world->car_numbers[racer];
 			screen->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
 			car_choice = (uint8_t)game->race_copies[racer].car_choice_and_model - 1u;
 			chosen_car = car_choice;
@@ -1942,7 +1942,7 @@ void choice_flag_number_start(void)
 
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 0xEFu;
-	animation = choice_flag_number_animations[game->car_numbers[OBJECT(current_object->choice_flag_number.flag)->choice_flag.player]];
+	animation = choice_flag_number_animations[world->car_numbers[OBJECT(current_object->choice_flag_number.flag)->choice_flag.player]];
 	animation_start(animation);
 	current_object->palette = 0x27u;
 	current_object->handler = choice_flag_number_follow_ADDRESS;

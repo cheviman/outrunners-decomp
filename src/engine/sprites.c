@@ -790,9 +790,9 @@ void finish_sprite_list(void)
 
 	switch_index = screen->index;
 	switch_index = (uint8_t)(switch_index * 2u);
-	switch_index = switch_index | (uint8_t)game->sprite_list_buffers;
+	switch_index = switch_index | (uint8_t)world->sprite_list_buffers;
 	switch_index = (uint8_t)(switch_index * 2u);
-	sprite_list_switch = rom_pointer(sprite_list_switches[switch_index | (uint8_t)(game->sprite_list_buffers >> 8u)]);
+	sprite_list_switch = rom_pointer(sprite_list_switches[switch_index | (uint8_t)(world->sprite_list_buffers >> 8u)]);
 	chain_tail = sprite_list_switch->list;
 	if (screen->sprite_groups != 0u)
 	{
@@ -915,7 +915,7 @@ void finish_sprite_list(void)
 	SPRITE_WORDS(chain_tail + 0x3000u)[0] = sprite_list_switch->end_word;
 	SPRITE_SCREEN_1_LIST_JUMP = sprite_list_switch->entry_2_jump;
 	SPRITE_SCREEN_2_LIST_JUMP = sprite_list_switch->entry_3_jump;
-	game->sprite_list_buffers = sprite_list_switch->next_buffers;
+	world->sprite_list_buffers = sprite_list_switch->next_buffers;
 	screen->sprite_list_last = sprite_list_switch->next_list;
 	screen->sprite_list_limit = sprite_list_switch->next_limit;
 	screen->sprite_groups = 0u;

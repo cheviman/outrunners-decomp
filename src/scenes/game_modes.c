@@ -303,7 +303,7 @@ void game_mode_ranking(void)
 		return;
 	}
 	screen->demo_flags &= ~0x100u;
-	game->wheel_motor[screen->index] = 0u;
+	world->wheel_motor[screen->index] = 0u;
 	reset_screen_sound();
 	clear_objects();
 	reset_tile_layers();
@@ -377,7 +377,7 @@ void game_mode_play(void)
 		sound_code = 0x21u;
 		queue_sound(sound_code);
 		screen->button_lamps = 0xFFFFu;
-		game->lcd_restart_frames = 0u;
+		world->lcd_restart_frames = 0u;
 		screen->fade_kind = 0u;
 		screen->flags |= 1u;
 		screen->game_step++;
@@ -409,7 +409,7 @@ void game_mode_play(void)
 		return;
 	case 2:
 		screen->demo_flags &= ~0x100u;
-		game->wheel_motor[screen->index] = 0u;
+		world->wheel_motor[screen->index] = 0u;
 		screen->game_start_time = (BOOKKEEPING_TOTAL_TIME | ((uint32_t)BOOKKEEPING_TOTAL_TIME_HIGH << 16u));
 		bookkeeping_entry = BOOKKEEPING_GAMES_A_ADDRESS + screen->index * 2u;
 		bookkeeping_increment16(bookkeeping_entry);

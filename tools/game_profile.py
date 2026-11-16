@@ -89,6 +89,33 @@ memory.STATE_BLOCKS = ((0x200000, "object_area_1", "object_area", 1), (0x208000,
                        (0x20FB00, "races", "race", 2), (0x20FC00, "race_copies", "race", 8),
                        (0x210000, "object_area_2", "object_area", 1), (0x218000, "screen_2", "screen", 1),
                        (0x21E000, "isdn_races", "race", 8), (0x21F000, "stacks", None, 0x1000))
+# the game's variables the code reaches only by name, never by its address (63 of them: none an array the code indexes
+# past, none sharing bytes with another name, none read with the next ones at once; the ones it writes by their
+# address stay in the work RAM: the settings the EEPROM is read into, the screens' VBLANK counts, the analog inputs,
+# the coin sounds, the tile banks, and the seats' bookkeeping bytes, read as the halfword the backup keeps) live in
+# struct world in the host's memory. The work RAM keeps their places, where world_project puts them for the state's
+# hash each frame, and where they are while code reaches memory by its address (the memory test of the work RAM in
+# place, with the interrupts off; crc16; unrolled_copy; the runtime's string moves: world_ram_begin and world_ram_end)
+memory.HOST = "world"
+memory.HOST_VARIABLES = frozenset(("waiting_task_stack", "vblanks_since_start", "debug_timer_rounds",
+                                   "sprite_list_buffers", "sprite_lists_set_up", "single_task", "game_frame_count",
+                                   "send_video_registers", "task_swapping", "second_task_waiting",
+                                   "timer_interrupts_left", "vblank_counter", "cleared_on_race_over", "car_numbers",
+                                   "link_wait_frames_start", "total_time_count", "player_count", "link_off",
+                                   "link_failed", "link_wait_frames", "network_check_blink_counter",
+                                   "isdn_players_this_side", "isdn_players_other_side", "link_wait_count",
+                                   "chute_entry_offset", "seat1_coin_units", "seat2_coin_units", "wheel_motor",
+                                   "switches", "previous_switches", "switches_pressed", "switches_released",
+                                   "second_io_chip_port_f", "seat_1_player", "seat_1_wheel", "seat_1_gas",
+                                   "seat_1_brake", "seat_2_player", "seat_2_wheel", "seat_2_gas", "seat_2_brake",
+                                   "lcd_send_buffer_1", "lcd_send_buffer_2", "lcd_restart_frames", "lcd_send_step",
+                                   "lcd_busy", "lcd_init_step", "test_mode_on", "test_mode_flags", "test_mode_cursor",
+                                   "test_mode_page_cursor", "test_mode_routine", "test_mode_buttons",
+                                   "test_mode_buttons_previous", "test_mode_buttons_pressed",
+                                   "test_mode_buttons_released", "test_mode_blink_timer", "sound_test_number_a",
+                                   "sound_test_number_b", "test_mode_sound_queue_write", "test_mode_sound_queue_read",
+                                   "test_mode_sound_queue", "test_mode_privilege_mode"))
+memory.HOST_SYNCED = frozenset(("test_mode_memory_test_words", "crc16", "unrolled_copy"))
 memory.NOTES = {
     "variables": ["/* the game's variables in work RAM, by their addresses (the fields of struct game, at the end);",
                   "   SCREEN_1 and SCREEN_2 are the blocks of the two screens, which the code reaches through screen",
@@ -97,6 +124,8 @@ memory.NOTES = {
               "   so that each frame's state compares byte for byte with the original's. The code reaches it",
               "   through game: game->game_frame_count; the runtime keeps one (runtime/src/game.c). The stacks are",
               "   the V70's, which the decompiled program does not use */"],
+    "host": ["/* the game's variables the code reaches only by name, in the host's memory (their places in the work",
+             "   RAM, struct game, are where world_project puts them) */"],
     "scoped": ["/* work RAM as one family of functions uses it (their scratch variables) */"],
     "tables": ["/* data in the program ROM the code reads */"],
     "hardware": ["/* the board's registers (read and written through the bus: io_read8, io_write8...) */"],

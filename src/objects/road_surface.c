@@ -158,7 +158,7 @@ void road_surface_start(void)
 	game->video_registers[2] = video_bits | road_surface_layer_setup->video_bits;
 	VIDEO_REGISTER_WORDS(road_surface_layer_setup->scroll_x_address)[0] = 0x160u;
 	VIDEO_REGISTER_WORDS(road_surface_layer_setup->scroll_y_address)[0] = 0u;
-	game->send_video_registers = 0xFFu;
+	world->send_video_registers = 0xFFu;
 	TILE_BANK_VALUES(road_surface_layer_setup->tile_bank_address)[0] = 0u;
 	current_object->road_surface.page_register = road_surface_layer_setup->page_register;
 	mixer_address = pointer_to(road_surface_layer_setup->mixer_address);

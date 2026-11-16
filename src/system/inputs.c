@@ -39,11 +39,11 @@ void read_switches_and_analog(void)
 	chip_2_switches = (uint8_t)(~chip_2_port_e | ((((uint32_t)chip_2_port_f_on << 4) | (chip_2_port_f_on >> 4)) & 3u));
 	test_switch = (new_switches | chip_2_switches) & 2u;
 	new_switches = (uint8_t)((new_switches & 0xDu) | ((((chip_2_switches & 0xCu) * 2u) | (chip_2_switches & 1u)) * 2u) | ((uint32_t)test_switch << 6) | (test_switch >> 2));
-	old_switches = game->switches;
-	game->switches = new_switches;
-	game->previous_switches = old_switches;
-	game->switches_pressed = ~old_switches & new_switches;
-	game->switches_released = old_switches & ~new_switches;
+	old_switches = world->switches;
+	world->switches = new_switches;
+	world->previous_switches = old_switches;
+	world->switches_pressed = ~old_switches & new_switches;
+	world->switches_released = old_switches & ~new_switches;
 	screen_turn = screen->index;
 	screen_turn = screen_turn & 1u;
 	converter = ANALOG_INPUTS + screen_turn * 4u;
@@ -119,20 +119,20 @@ void pack_seat_inputs(void)
 		link_send_seat_inputs(seat_buttons, link_event_place, &analog_place, &link_place);
 		return;
 	}
-	game->seat_1_player = game->screen_1.player + 1u;
+	world->seat_1_player = game->screen_1.player + 1u;
 	game->seat_1_buttons = seat_buttons;
-	game->seat_1_wheel = ~game->analog_inputs;
+	world->seat_1_wheel = ~game->analog_inputs;
 	analog_place++;
-	game->seat_1_gas = game->analog_gas_1;
+	world->seat_1_gas = game->analog_gas_1;
 	analog_place++;
-	game->seat_1_brake = game->analog_brake_1;
-	game->seat_2_player = game->screen_2.player + 1u;
+	world->seat_1_brake = game->analog_brake_1;
+	world->seat_2_player = game->screen_2.player + 1u;
 	game->seat_2_buttons = other_seat_buttons;
 	analog_place++;
-	game->seat_2_wheel = ~game->analog_wheel_2;
+	world->seat_2_wheel = ~game->analog_wheel_2;
 	analog_place++;
-	game->seat_2_gas = game->analog_gas_2;
-	game->seat_2_brake = game->analog_brake_2;
+	world->seat_2_gas = game->analog_gas_2;
+	world->seat_2_brake = game->analog_brake_2;
 }
 
 /* Never runs in the scenarios (ISDN only): writes a seat's five bytes as halfwords on the link board at

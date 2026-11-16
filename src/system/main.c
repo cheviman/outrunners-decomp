@@ -139,7 +139,7 @@ void boot(void)
 	move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
 	player_car = &game->screen_2.car;
 	game->waiting_task_frame = 0x21FF84u;
-	game->waiting_task_stack = 0x21F800u;
+	world->waiting_task_stack = 0x21F800u;
 	initialise_game();
 	lcd_start();
 	io_write8(IRQ_ACKNOWLEDGE, 0u);
@@ -155,6 +155,7 @@ void boot(void)
    signature (signature_checksum). */
 uint16_t crc16(uint32_t bytes, uint32_t byte_count)
 {
+	world_ram_begin();
 	uint32_t carry = 0;
 	uint32_t bit_count = 0, crc = 0, polynomial = 0;
 
@@ -185,6 +186,7 @@ uint16_t crc16(uint32_t bytes, uint32_t byte_count)
 		bit_count--;
 	} while (bit_count != 0u);
 	crc = crc >> 16;
+	world_ram_end();
 	return crc;
 }
 
@@ -227,17 +229,17 @@ void second_task(uint32_t entry_point)
 	case 0:
 		for (;;)
 		{
-			game->second_task_waiting = 0xFFu;
+			world->second_task_waiting = 0xFFu;
 			link_send_records();
 			wait_for_frame();
-			game->second_task_waiting = 0u;
-			if (game->test_mode_on != 0u)
+			world->second_task_waiting = 0u;
+			if (world->test_mode_on != 0u)
 				break;
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
 			r12 = address_of(course_records_update(pointer_to(r12)));
-			game->game_frame_count++;
+			world->game_frame_count++;
 			screen = &game->screen_1;
 			input_changes = take_screen_inputs();
 			mode = screen->game_mode;
@@ -275,7 +277,7 @@ void second_task(uint32_t entry_point)
 			}
 			run_objects();
 			lcd_update();
-			if (game->single_task != 0u)
+			if (world->single_task != 0u)
 			{
 				second_task_frames();
 				break;
@@ -290,8 +292,8 @@ void second_task(uint32_t entry_point)
 		game->screen_2_vblanks = 0u;
 		game->screen_1_vblanks_high = 0u;
 		game->screen_1_vblanks = 0u;
-		game->vblanks_since_start = 0u;
-		game->task_swapping = 0xFFu;
+		world->vblanks_since_start = 0u;
+		world->task_swapping = 0xFFu;
 		attract_car_list = first_attract_car_lists[game->machine_count];
 		input_changes = game->screen_2.car_number;
 		game->screen_1.next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[game->screen_1.car_number];
@@ -303,14 +305,14 @@ void second_task(uint32_t entry_point)
 	}
 	for (;;)
 	{
-		game->task_swapping = 0u;
+		world->task_swapping = 0u;
 		wait_for_frame();
 		r12 = test_mode_start();
 		do
 		{
 			wait_for_frame();
 			test_mode_frame();
-		} while (game->test_mode_on != 0u);
+		} while (world->test_mode_on != 0u);
 		interrupts_off();
 		io_write8(IO_1_CNT, 4u);
 		io_write8(IO_2_CNT, 0x80u);
@@ -337,7 +339,7 @@ void second_task(uint32_t entry_point)
 		move_halfwords(WORK_RAM + 0x1FF84u, second_task_start_frame_ADDRESS, 0x3Eu);
 		player_car = &game->screen_2.car;
 		game->waiting_task_frame = 0x21FF84u;
-		game->waiting_task_stack = 0x21F800u;
+		world->waiting_task_stack = 0x21F800u;
 		initialise_game();
 		lcd_reset();
 		game->screen_1.game_mode = 1u;
@@ -357,8 +359,8 @@ void second_task(uint32_t entry_point)
 		game->screen_2_vblanks = 0u;
 		game->screen_1_vblanks_high = 0u;
 		game->screen_1_vblanks = 0u;
-		game->vblanks_since_start = 0u;
-		game->task_swapping = 0xFFu;
+		world->vblanks_since_start = 0u;
+		world->task_swapping = 0xFFu;
 		attract_car_list = first_attract_car_lists[game->machine_count];
 		input_changes = game->screen_2.car_number;
 		game->screen_1.next_attract_car = FIRST_ATTRACT_CARS(attract_car_list)[game->screen_1.car_number];
@@ -380,12 +382,12 @@ void second_task_frames(void)
 
 	for (;;)
 	{
-		if (game->second_task_waiting == 0u)
+		if (world->second_task_waiting == 0u)
 			link_send_records();
 		wait_for_frame();
-		if (game->test_mode_on != 0u)
+		if (world->test_mode_on != 0u)
 			break;
-		if (game->second_task_waiting == 0u)
+		if (world->second_task_waiting == 0u)
 			link_receive_records();
 		r14 = race_entries_update(r14);
 		race_progress_update(&r12, &r14);
@@ -427,21 +429,21 @@ void second_task_frames(void)
 		}
 		run_objects();
 		lcd_update();
-		if (game->single_task == 0u)
+		if (world->single_task == 0u)
 			continue;
 		do
 		{
-			game->second_task_waiting = 0xFFu;
+			world->second_task_waiting = 0xFFu;
 			link_send_records();
 			wait_for_frame();
-			game->second_task_waiting = 0u;
-			if (game->test_mode_on != 0u)
+			world->second_task_waiting = 0u;
+			if (world->test_mode_on != 0u)
 				return;
 			link_receive_records();
 			r14 = race_entries_update(r14);
 			race_progress_update(&r12, &r14);
 			r12 = address_of(course_records_update(pointer_to(r12)));
-			game->game_frame_count++;
+			world->game_frame_count++;
 			screen = &game->screen_1;
 			input_changes = take_screen_inputs();
 			mode = screen->game_mode;
@@ -479,7 +481,7 @@ void second_task_frames(void)
 			}
 			run_objects();
 			lcd_update();
-		} while (game->single_task == 0u);
+		} while (world->single_task == 0u);
 	}
 }
 

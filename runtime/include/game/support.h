@@ -41,6 +41,15 @@ extern "C" {
    reaches it, and the board's memories as s32/machine.h says. */
 struct game;
 extern struct game *game;
+/* the game's variables the code reaches only by name, in the host's memory (ram.h's struct world): cleared
+   with the work RAM, put into it at their places for the state's hash and the routines that reach memory by
+   its address (world_project), and taken back (world_unproject) */
+void world_clear(void);
+void world_project(void);
+void world_unproject(void);
+/* (runtime/src/game.c) while code reaches memory by its address: the variables in the work RAM */
+void world_ram_begin(void);
+void world_ram_end(void);
 /* Functions that stop the game: the C compiler knows they do not come back */
 #if defined(_MSC_VER)
 #define GAME_NORETURN __declspec(noreturn)

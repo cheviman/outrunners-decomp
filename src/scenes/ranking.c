@@ -752,7 +752,7 @@ void ranking_background_load(void)
 	current_object->ranking_background.cleared_scroll_y_address = ranking_background_registers->cleared_scroll_y_address;
 	current_object->ranking_background.second_scroll_x_address = ranking_background_registers->second_scroll_x_address;
 	current_object->ranking_background.second_scroll_y_address = ranking_background_registers->second_scroll_y_address;
-	game->send_video_registers = 0xFFu;
+	world->send_video_registers = 0xFFu;
 	background_number = course_backgrounds[screen->record_course];
 	TILE_BANK_VALUES(current_object->ranking_background.tile_bank_address)[0] = ranking_background_tile_banks[background_number];
 	saved_fades = background_palette_fades[background_number];

@@ -689,6 +689,22 @@ Apart from all that, the C keeps the game's state where the original had it, lai
       The V60's arithmetic (a division by 0, a shift by a computed count), the status word and R12 and R14 are
       plain C that does what the V70 does on any processor, and so are the addresses the state holds (the entry
       below), only slower than pointers
+- [x] The game's variables in the host's memory, the first step of the next entry: the 63 the code reaches only
+      by name (the tasks', the inputs', the LCD's, the link's, the test mode's, the coins') are fields of
+      `struct world` (`world->game_frame_count`; `memory.HOST` in `tools/game_profile.py`, the core's), which
+      the runtime keeps apart from the work RAM. `struct game` keeps their places, where the generated
+      `world_project` puts them at the end of every frame, for the state's hash, and `world_unproject` takes
+      them back; while code reaches memory by its address (the memory test of the work RAM in place, with the
+      interrupts off; `crc16`; `unrolled_copy`; the string moves) the runtime opens a window (`world_ram_begin`,
+      `world_ram_end`) in which the work RAM holds them, and a frame that ends inside it hashes them as that
+      code left them. Such a variable has no `NAME_ADDRESS`, so that a use of its address does not compile, and
+      the decompiler stops when one is read with the next ones at once. The census picked 93 (`struct game`'s
+      members that no constant and no `address_of` reaches); runs that reported every write over their places
+      outside the window left 30 in the work RAM: the settings the EEPROM is read into, the screens' VBLANK
+      counts, the analog inputs, the coin sounds and the tile banks, which the code writes by their address, and
+      the seats' bookkeeping bytes, read as the halfword the backup keeps (the sound board's RAM said so at
+      frame 2091). On the PC and on PowerPC the 16 scenarios identical, state, picture and sound, and the static
+      analysis finds all 16,103 addresses; `functions` 762 -> 765, the three the variables need
 - [ ] After the decompilation (Sebas, 28-10-2026): the game's state out of the board's memory model. The C
       keeps it laid out as the board's work RAM (128 KB at 200000), at the places the original had it: one
       structure since the first step (`struct game`, its variables `game->game_frame_count`), its

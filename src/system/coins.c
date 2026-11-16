@@ -21,10 +21,10 @@ void init_coins(void)
 	uint8_t chip_2_port_f = 0;
 
 	chip_2_port_f = io_read8(IO_2_PORT_F);
-	game->second_io_chip_port_f = ~chip_2_port_f & 0xFu;
-	game->chute_entry_offset = 0u;
+	world->second_io_chip_port_f = ~chip_2_port_f & 0xFu;
+	world->chute_entry_offset = 0u;
 	if (game->free_play == 0u && game->second_chute_multiplier == game->first_chute_multiplier)
-		game->chute_entry_offset = 0x14u;
+		world->chute_entry_offset = 0x14u;
 	game->seat1_credits = (uint8_t)BOOKKEEPING_SEAT_1_CREDITS;
 	game->seat1_bookkeeping_byte = (uint8_t)BOOKKEEPING_SEAT_1_BYTE;
 	game->seat2_credits = (uint8_t)BOOKKEEPING_SEAT_2_CREDITS;
@@ -79,7 +79,7 @@ void update_coins(void)
 		game->seat2_service_sounds--;
 	}
 	screen = pointer_to(saved_screen);
-	pressed_switches = game->switches_pressed;
+	pressed_switches = world->switches_pressed;
 	credits_given = 0u;
 	if ((pressed_switches & 1u) != 0u)
 	{
@@ -100,7 +100,7 @@ void update_coins(void)
 		counter = SOUND_RAM + 0x1F04u;
 		bookkeeping_add16(counter, credits_given);
 	}
-	released_chutes = game->switches_released & 0x3Cu;
+	released_chutes = world->switches_released & 0x3Cu;
 	released_switches = released_chutes;
 	if (released_chutes != 0u)
 	{
@@ -118,7 +118,7 @@ void update_coins(void)
 		counter = SOUND_RAM + 0x1F02u;
 		bookkeeping_add16(counter, credits_given);
 	}
-	if (game->chute_entry_offset == 0u)
+	if (world->chute_entry_offset == 0u)
 	{
 		coin_meter = 0x20E083u;
 		meter_bit = 1u;
@@ -129,7 +129,7 @@ void update_coins(void)
 	meter_bit = 0u;
 	r12 = port_d_outputs_ADDRESS;
 	pulse_coin_meter(meter_bit, coin_meter, r12);
-	if (game->chute_entry_offset == 0u)
+	if (world->chute_entry_offset == 0u)
 	{
 		coin_meter = 0x20E089u;
 		meter_bit = 1u;
@@ -203,11 +203,11 @@ void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter, uint32_t meter_bit
    seat2_bookkeeping_byte) at R12: 701F74 in the bookkeeping or 701FF0 in its backup. */
 void write_bookkeeping_credits(uint32_t bookkeeping_place)
 {
-	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = (game->seat1_credits | ((uint32_t)game->seat1_coin_units << 8u));
+	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = (game->seat1_credits | ((uint32_t)world->seat1_coin_units << 8u));
 	bookkeeping_place += 2u;
 	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = AS16(game->seat1_bookkeeping_byte);
 	bookkeeping_place += 2u;
-	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = (game->seat2_credits | ((uint32_t)game->seat2_coin_units << 8u));
+	BOOKKEEPING_HALFWORDS(bookkeeping_place)[0] = (game->seat2_credits | ((uint32_t)world->seat2_coin_units << 8u));
 	BOOKKEEPING_HALFWORDS(bookkeeping_place + 0x2u)[0] = AS16(game->seat2_bookkeeping_byte);
 }
 
@@ -260,7 +260,7 @@ uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t
 	if ((released_switches & shl32(1u, (int)(switch_bit))) == 0u)
 		return credits_given;
 	coin_sounds = pointer_to(COIN_CHUTE(chute_entry - 0x4u)->coin_sounds);
-	chute_entry = chute_entry + 4u + game->chute_entry_offset;
+	chute_entry = chute_entry + 4u + world->chute_entry_offset;
 	seat_credits = pointer_to(COIN_CHUTE_VARIANT(chute_entry)->credits);
 	io_write8(EVENT_CODE, COIN_CHUTE_VARIANT(chute_entry)->event_code);
 	owed_pulses = COIN_CHUTE_VARIANT(chute_entry)->pulses_owed;

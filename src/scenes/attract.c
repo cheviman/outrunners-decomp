@@ -147,7 +147,7 @@ void attract_lamps_update(void)
 	uint32_t screen_index = 0;
 	const struct attract_lamp_step *attract_lamp_step = NULL;
 
-	attract_lamp_step = rom_pointer(game->vblank_counter);
+	attract_lamp_step = rom_pointer(world->vblank_counter);
 	attract_lamp_step = rom_pointer(address_of(attract_lamp_step) >> 3);
 	attract_lamp_step = rom_pointer((uint8_t)(address_of(attract_lamp_step) * 2u));
 	screen_index = screen->index;

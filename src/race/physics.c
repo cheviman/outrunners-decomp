@@ -1134,7 +1134,7 @@ void player_car_off_road_shake(void)
 	uint32_t model = 0;
 
 	model = player_car->model;
-	game->wheel_motor[screen->index] = car_model_off_road_shakes[model];
+	world->wheel_motor[screen->index] = car_model_off_road_shakes[model];
 	tyre_noise = car_model_off_road_noises[model];
 	set_tyre_noise(tyre_noise);
 }

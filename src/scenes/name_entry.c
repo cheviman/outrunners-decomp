@@ -63,7 +63,7 @@ void name_entry_update(void)
 	{
 	case 0:
 		screen->button_lamps = 0xFFFFu;
-		game->lcd_restart_frames = 0u;
+		world->lcd_restart_frames = 0u;
 		object = start_object();
 		object->handler = name_entry_lcd_update_ADDRESS;
 		object->name_entry_lcd.name_entry = address_of(current_object);
@@ -288,7 +288,7 @@ void name_entry_choose(void)
 				current_object->name_entry.gas_step--;
 				name_place = current_object->name_entry.place;
 				letter_character = name_entry_letters[current_object->name_entry.letter];
-				if ((game->game_frame_count & 4u) == 0u)
+				if ((world->game_frame_count & 4u) == 0u)
 					letter_character = 0u;
 				current_object->name_entry.name[(int32_t)name_place] = letter_character;
 				timer = current_object->name_entry.timer;
@@ -362,7 +362,7 @@ void name_entry_choose(void)
 	}
 	name_place = current_object->name_entry.place;
 	letter_character = name_entry_letters[current_object->name_entry.letter];
-	if ((game->game_frame_count & 4u) == 0u)
+	if ((world->game_frame_count & 4u) == 0u)
 		letter_character = 0u;
 	current_object->name_entry.name[(int32_t)name_place] = letter_character;
 	timer = current_object->name_entry.timer;
@@ -537,7 +537,7 @@ void name_entry_letter_update(void)
 	letter_palette = 0x34u;
 	if (object->name_entry.letter == current_object->name_entry_letter.index)
 	{
-		if ((game->game_frame_count & 4u) == 0u)
+		if ((world->game_frame_count & 4u) == 0u)
 		{
 			current_object->flags &= 0xDFu;
 			return;

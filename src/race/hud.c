@@ -1391,7 +1391,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	place = rom_pointer(checkpoint_board_number_places_ADDRESS + current_object->checkpoint_board.row * 4u);
 	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
 	current_object->y = place->y;
-	animation = checkpoint_board_number_animations[game->car_numbers[player]];
+	animation = checkpoint_board_number_animations[world->car_numbers[player]];
 	current_object->palette = 0x27u;
 	current_object->depth_layer = 0x19Eu;
 	current_object->draw_mode = 8u;

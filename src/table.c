@@ -1453,6 +1453,163 @@ const game_table game_tables[] =
 
 const size_t game_table_count = 551;
 
+/* the game's variables the C keeps in the host's memory (struct world), the runtime's one world's */
+static struct world first_world;
+struct world *world = &first_world;
+
+/* cleared with the work RAM */
+void world_clear(void)
+{
+	memset(world, 0, sizeof *world);
+}
+
+/* into the work RAM at their places, where the state's hash and the code that reaches memory by its
+   address read them */
+void world_project(void)
+{
+	game->waiting_task_stack = world->waiting_task_stack;
+	game->vblanks_since_start = world->vblanks_since_start;
+	game->debug_timer_rounds = world->debug_timer_rounds;
+	game->sprite_list_buffers = world->sprite_list_buffers;
+	game->sprite_lists_set_up = world->sprite_lists_set_up;
+	game->single_task = world->single_task;
+	game->game_frame_count = world->game_frame_count;
+	game->send_video_registers = world->send_video_registers;
+	game->task_swapping = world->task_swapping;
+	game->second_task_waiting = world->second_task_waiting;
+	game->timer_interrupts_left = world->timer_interrupts_left;
+	game->vblank_counter = world->vblank_counter;
+	game->cleared_on_race_over = world->cleared_on_race_over;
+	for (size_t index = 0; index < 0x8; index++)
+		game->car_numbers[index] = world->car_numbers[index];
+	game->link_wait_frames_start = world->link_wait_frames_start;
+	game->total_time_count = world->total_time_count;
+	game->player_count = world->player_count;
+	game->link_off = world->link_off;
+	game->link_failed = world->link_failed;
+	game->link_wait_frames = world->link_wait_frames;
+	game->network_check_blink_counter = world->network_check_blink_counter;
+	game->isdn_players_this_side = world->isdn_players_this_side;
+	game->isdn_players_other_side = world->isdn_players_other_side;
+	game->link_wait_count = world->link_wait_count;
+	game->chute_entry_offset = world->chute_entry_offset;
+	game->seat1_coin_units = world->seat1_coin_units;
+	game->seat2_coin_units = world->seat2_coin_units;
+	for (size_t index = 0; index < 0x2; index++)
+		game->wheel_motor[index] = world->wheel_motor[index];
+	game->switches = world->switches;
+	game->previous_switches = world->previous_switches;
+	game->switches_pressed = world->switches_pressed;
+	game->switches_released = world->switches_released;
+	game->second_io_chip_port_f = world->second_io_chip_port_f;
+	game->seat_1_player = world->seat_1_player;
+	game->seat_1_wheel = world->seat_1_wheel;
+	game->seat_1_gas = world->seat_1_gas;
+	game->seat_1_brake = world->seat_1_brake;
+	game->seat_2_player = world->seat_2_player;
+	game->seat_2_wheel = world->seat_2_wheel;
+	game->seat_2_gas = world->seat_2_gas;
+	game->seat_2_brake = world->seat_2_brake;
+	for (size_t index = 0; index < 0x10; index++)
+		game->lcd_send_buffer_1[index] = world->lcd_send_buffer_1[index];
+	for (size_t index = 0; index < 0x10; index++)
+		game->lcd_send_buffer_2[index] = world->lcd_send_buffer_2[index];
+	game->lcd_restart_frames = world->lcd_restart_frames;
+	game->lcd_send_step = world->lcd_send_step;
+	game->lcd_busy = world->lcd_busy;
+	game->lcd_init_step = world->lcd_init_step;
+	game->test_mode_on = world->test_mode_on;
+	game->test_mode_flags = world->test_mode_flags;
+	game->test_mode_cursor = world->test_mode_cursor;
+	game->test_mode_page_cursor = world->test_mode_page_cursor;
+	game->test_mode_routine = world->test_mode_routine;
+	game->test_mode_buttons = world->test_mode_buttons;
+	game->test_mode_buttons_previous = world->test_mode_buttons_previous;
+	game->test_mode_buttons_pressed = world->test_mode_buttons_pressed;
+	game->test_mode_buttons_released = world->test_mode_buttons_released;
+	game->test_mode_blink_timer = world->test_mode_blink_timer;
+	game->sound_test_number_a = world->sound_test_number_a;
+	game->sound_test_number_b = world->sound_test_number_b;
+	game->test_mode_sound_queue_write = world->test_mode_sound_queue_write;
+	game->test_mode_sound_queue_read = world->test_mode_sound_queue_read;
+	for (size_t index = 0; index < 0x10; index++)
+		game->test_mode_sound_queue[index] = world->test_mode_sound_queue[index];
+	game->test_mode_privilege_mode = world->test_mode_privilege_mode;
+}
+
+/* back from the work RAM, after code that reaches memory by its address */
+void world_unproject(void)
+{
+	world->waiting_task_stack = game->waiting_task_stack;
+	world->vblanks_since_start = game->vblanks_since_start;
+	world->debug_timer_rounds = game->debug_timer_rounds;
+	world->sprite_list_buffers = game->sprite_list_buffers;
+	world->sprite_lists_set_up = game->sprite_lists_set_up;
+	world->single_task = game->single_task;
+	world->game_frame_count = game->game_frame_count;
+	world->send_video_registers = game->send_video_registers;
+	world->task_swapping = game->task_swapping;
+	world->second_task_waiting = game->second_task_waiting;
+	world->timer_interrupts_left = game->timer_interrupts_left;
+	world->vblank_counter = game->vblank_counter;
+	world->cleared_on_race_over = game->cleared_on_race_over;
+	for (size_t index = 0; index < 0x8; index++)
+		world->car_numbers[index] = game->car_numbers[index];
+	world->link_wait_frames_start = game->link_wait_frames_start;
+	world->total_time_count = game->total_time_count;
+	world->player_count = game->player_count;
+	world->link_off = game->link_off;
+	world->link_failed = game->link_failed;
+	world->link_wait_frames = game->link_wait_frames;
+	world->network_check_blink_counter = game->network_check_blink_counter;
+	world->isdn_players_this_side = game->isdn_players_this_side;
+	world->isdn_players_other_side = game->isdn_players_other_side;
+	world->link_wait_count = game->link_wait_count;
+	world->chute_entry_offset = game->chute_entry_offset;
+	world->seat1_coin_units = game->seat1_coin_units;
+	world->seat2_coin_units = game->seat2_coin_units;
+	for (size_t index = 0; index < 0x2; index++)
+		world->wheel_motor[index] = game->wheel_motor[index];
+	world->switches = game->switches;
+	world->previous_switches = game->previous_switches;
+	world->switches_pressed = game->switches_pressed;
+	world->switches_released = game->switches_released;
+	world->second_io_chip_port_f = game->second_io_chip_port_f;
+	world->seat_1_player = game->seat_1_player;
+	world->seat_1_wheel = game->seat_1_wheel;
+	world->seat_1_gas = game->seat_1_gas;
+	world->seat_1_brake = game->seat_1_brake;
+	world->seat_2_player = game->seat_2_player;
+	world->seat_2_wheel = game->seat_2_wheel;
+	world->seat_2_gas = game->seat_2_gas;
+	world->seat_2_brake = game->seat_2_brake;
+	for (size_t index = 0; index < 0x10; index++)
+		world->lcd_send_buffer_1[index] = game->lcd_send_buffer_1[index];
+	for (size_t index = 0; index < 0x10; index++)
+		world->lcd_send_buffer_2[index] = game->lcd_send_buffer_2[index];
+	world->lcd_restart_frames = game->lcd_restart_frames;
+	world->lcd_send_step = game->lcd_send_step;
+	world->lcd_busy = game->lcd_busy;
+	world->lcd_init_step = game->lcd_init_step;
+	world->test_mode_on = game->test_mode_on;
+	world->test_mode_flags = game->test_mode_flags;
+	world->test_mode_cursor = game->test_mode_cursor;
+	world->test_mode_page_cursor = game->test_mode_page_cursor;
+	world->test_mode_routine = game->test_mode_routine;
+	world->test_mode_buttons = game->test_mode_buttons;
+	world->test_mode_buttons_previous = game->test_mode_buttons_previous;
+	world->test_mode_buttons_pressed = game->test_mode_buttons_pressed;
+	world->test_mode_buttons_released = game->test_mode_buttons_released;
+	world->test_mode_blink_timer = game->test_mode_blink_timer;
+	world->sound_test_number_a = game->sound_test_number_a;
+	world->sound_test_number_b = game->sound_test_number_b;
+	world->test_mode_sound_queue_write = game->test_mode_sound_queue_write;
+	world->test_mode_sound_queue_read = game->test_mode_sound_queue_read;
+	for (size_t index = 0; index < 0x10; index++)
+		world->test_mode_sound_queue[index] = game->test_mode_sound_queue[index];
+	world->test_mode_privilege_mode = game->test_mode_privilege_mode;
+}
+
 /* the code at the reset vector */
 void game_entry(void)
 {

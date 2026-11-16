@@ -36,11 +36,11 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		current_object->car_radio.car_models[game->car_numbers[player]] = (uint8_t)(game->race_copies[player].car_choice_and_model >> 8u);
+		current_object->car_radio.car_models[world->car_numbers[player]] = (uint8_t)(game->race_copies[player].car_choice_and_model >> 8u);
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);
-	current_object->car_radio.car_number = game->car_numbers[screen->player];
+	current_object->car_radio.car_number = world->car_numbers[screen->player];
 	screen->nearing_fork = 0u;
 	player_car->song = car_model_songs[player_car->model];
 	current_object->car_radio.stage = screen->route_stage;
@@ -426,7 +426,7 @@ void car_radio_dj_leader(void)
 {
 	uint8_t message = 0;
 
-	message = (uint8_t)(game->car_numbers[RACE(screen->host_record)->race_order] + 0x11u);
+	message = (uint8_t)(world->car_numbers[RACE(screen->host_record)->race_order] + 0x11u);
 	start_dj_message(message);
 }
 

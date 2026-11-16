@@ -40,7 +40,7 @@ void kanji_text_viewer_update(void)
 		game->video_registers[70] = 0xFFu;
 		game->video_registers[68] = 0u;
 		game->video_registers[69] = 0u;
-		game->send_video_registers = 0xFFu;
+		world->send_video_registers = 0xFFu;
 		screen->route_map_signals &= 0xFFFF0000u;
 		screen->kanji_text_units = 0;
 		screen->kanji_text_tens = 0;

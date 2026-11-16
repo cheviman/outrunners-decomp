@@ -111,7 +111,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(current_object->route_map.second_scroll_y_address)[0] = 0u;
 			VIDEO_REGISTER_WORDS(current_object->route_map.second_register_scroll_x_address)[0] = 0xF8u;
 			VIDEO_REGISTER_WORDS(current_object->route_map.second_register_scroll_y_address)[0] = 0u;
-			game->send_video_registers = 0xFFu;
+			world->send_video_registers = 0xFFu;
 			current_object->route_map.timer = 0x1Eu;
 			current_object->state++;
 			return;
@@ -132,7 +132,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(zoom_x_address)[0] += 0x20u;
 			zoom_y_address = current_object->route_map.zoom_y_address;
 			VIDEO_REGISTER_WORDS(zoom_y_address)[0] += 0x20u;
-			game->send_video_registers = 0xFFu;
+			world->send_video_registers = 0xFFu;
 			timer_2 = current_object->route_map.timer;
 			current_object->route_map.timer = timer_2 - 1u;
 			if (timer_2 != 1u)
@@ -148,7 +148,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0] = 0x8Cu;
 			VIDEO_REGISTER_WORDS(current_object->route_map.register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_x_address)[0];
 			VIDEO_REGISTER_WORDS(current_object->route_map.register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0];
-			game->send_video_registers = 0xFFu;
+			world->send_video_registers = 0xFFu;
 			screen->skip_scroll_update = 0xFFu;
 			object = start_object();
 			object->handler = route_map_car_update_ADDRESS;
@@ -571,7 +571,7 @@ void route_map_update(void)
 				current_object->y -= VIDEO_REGISTER_WORDS(current_object->route_map.scroll_y_address)[0];
 				current_object->x = (int16_t)current_object->x >> 3;
 				current_object->y = (int16_t)current_object->y >> 3;
-				game->send_video_registers = 0xFFu;
+				world->send_video_registers = 0xFFu;
 				screen->skip_scroll_update = 0xFFu;
 				screen->route_map_signals |= 0x10u;
 				current_object->route_map.timer = 9u;
@@ -587,7 +587,7 @@ void route_map_update(void)
 			VIDEO_REGISTER_WORDS(scroll_x_address_13)[0] += current_object->x;
 			scroll_y_address_6 = current_object->route_map.scroll_y_address;
 			VIDEO_REGISTER_WORDS(scroll_y_address_6)[0] += current_object->y;
-			game->send_video_registers = 0xFFu;
+			world->send_video_registers = 0xFFu;
 			timer_4 = current_object->route_map.timer;
 			current_object->route_map.timer = timer_4 - 1u;
 			if (timer_4 == 1u)
@@ -609,7 +609,7 @@ void route_map_update(void)
 				VIDEO_REGISTER_WORDS(second_scroll_y_address)[0] -= 0x70u;
 				VIDEO_REGISTER_WORDS(current_object->route_map.second_register_scroll_x_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.second_scroll_x_address)[0];
 				VIDEO_REGISTER_WORDS(current_object->route_map.second_register_scroll_y_address)[0] = VIDEO_REGISTER_WORDS(current_object->route_map.second_scroll_y_address)[0];
-				game->send_video_registers = 0xFFu;
+				world->send_video_registers = 0xFFu;
 				current_object->state++;
 			}
 			return;
