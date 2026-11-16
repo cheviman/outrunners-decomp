@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -4204,8 +4204,7 @@ struct race
 	uint16_t segment;
 	int16_t road_x;
 	uint16_t window_segment;
-	uint8_t car_choice;
-	uint8_t model;
+	uint16_t car_choice_and_model;
 	uint8_t frame;
 	uint8_t view_slot;
 	uint16_t speed;

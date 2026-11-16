@@ -4367,8 +4367,10 @@ field race 40 segment_fraction u16
 field race 42 segment u16
 field race 44 road_x s16
 field race 46 window_segment u16
-field race 48 car_choice u8
-field race 49 model u8
+# The car chosen and its model are the two halves of one halfword, as the V70 holds them on any processor: the link
+# moves the bookkeeping's course records by halfwords into the race records (network_check_result), where record 4's
+# model_and_initial lands here, and a demo race's racer_copy model reads its higher half (attract.txt frame 1656)
+field race 48 car_choice_and_model u16   # the car chosen (its low byte: the model + 1, 0 none) and the car's model (its high byte)
 field race 4A frame u8
 field race 4B view_slot u8
 field race 4C speed u16
@@ -5354,6 +5356,7 @@ local race_cars_start 009636 R3 rider_places
 local race_cars_start 0096BB R3 driver_occupant
 local race_cars_start 0096FB R3 rider
 local race_cars_start 0095B8 R11 record
+local race_cars_start 0095C0 R2 model   # the racer's car model (its race record's car_choice_and_model, the high half)
 local race_car_draw 0098BD R0 body_attributes
 local race_car_draw 0099F9,009A0A,009A11 R0 hard_acceleration_frame
 local race_car_draw 00976D R1 far_segment
@@ -6817,6 +6820,7 @@ local rider_gesture_place 014339 R11 seat_place car_part_place                 #
 local rider_gesture_place 014353 R9 y
 local stage_end_sounds_update 014573,01457F R0 end_sound        # 24 when this screen's player leads, else 28
 local fork_camera_update 01460A,014619,014645 R0 next_pitch_lift   # the view's pitch lift for this frame (car view_pitch_lift)
+local fork_camera_update 0145BC R0 model   # the race copy's car model (car_choice_and_model, the high half)
 local race_car_start_ending 0146B3,0146B7,0146E7 R0 ending      # model * 2, + 1 when the car is not first: the list of ending_actor_lists
 local race_car_start_ending 0146E2,0146F1,014709 R0 actor_count
 local race_car_start_ending 0146E2,0146F1 R10 actor_list object_list_pair   # past the list's count (0146E2, 0146F1 "mov.w [R10+], R0"): its first (handler, script) pair

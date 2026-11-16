@@ -3,7 +3,7 @@
  *    Description: the car radio: the songs, the DJ and his messages, the songs' titles
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -36,7 +36,7 @@ void car_radio_start(void)
 	do
 	{
 		player = RACER_NUMBERS(race)[0];
-		current_object->car_radio.car_models[game->car_numbers[player]] = game->race_copies[player].model;
+		current_object->car_radio.car_models[game->car_numbers[player]] = (uint8_t)(game->race_copies[player].car_choice_and_model >> 8u);
 		racers_left--;
 		race++;
 	} while (racers_left != 0u);

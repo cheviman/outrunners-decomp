@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1216,7 +1216,7 @@ void checkpoint_board_update(void)
 		do
 		{
 			racer = RACE_ORDER_PLAYERS(race)[0];
-			current_object->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[game->race_copies[racer].model];
+			current_object->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[(uint8_t)(game->race_copies[racer].car_choice_and_model >> 8u)];
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);

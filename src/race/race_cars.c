@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -32,7 +32,7 @@ void race_cars_start(void)
 		object->race_car.player = player;
 		record = pointer_to(race_copy_offsets[player] + GAME_VARIABLES);
 		object->race_car.record = address_of(record);
-		model = record->model;
+		model = (uint8_t)(record->car_choice_and_model >> 8u);
 		object->race_car.model = model;
 		object->race_car.first_body_piece = race_car_first_body_pieces[model];
 		object->race_car.first_body_animation = race_car_first_body_animations[model];

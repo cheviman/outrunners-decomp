@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -439,7 +439,7 @@ void player_car_update(void)
 		impact = other_record->speed;
 		own_speed = own_speed >> 1;
 		impact = impact >> 1;
-		other_weight = car_weights[other_record->model];
+		other_weight = car_weights[(uint8_t)(other_record->car_choice_and_model >> 8u)];
 		break;
 	}
 	own_weight = car_weights[player_car->model];

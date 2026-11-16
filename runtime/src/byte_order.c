@@ -197,9 +197,15 @@ static void settle(void)
 		}
 		return;
 	}
+	/* a read narrower than the write after the one whose bytes it holds means the value was put together from
+	   parts, whatever bytes it came out as: write_bookkeeping_credits' credits and coin units, two bytes, came
+	   out as the bytes pulse_coin_meter had just read from a coin meter (two_players, frame 636); reads of the
+	   write's width in between are two copies the compiler interleaved */
 	for (unsigned back = 1; back <= READS; back++)
 	{
 		const struct read *read = &reads[(next_read - back) % READS];
+		if (read->width < width)
+			break;
 		if (read->width == width && memcmp(read->bytes, at, width) == 0)
 		{
 			copied = read;
@@ -372,6 +378,21 @@ void s32_order_in(const void *to, uint32_t address, size_t size)
 			return;
 	place(places_memory, memory_size, places, size, &out_places[memory][at], "as the bytes moved out there",
 		__builtin_return_address(0));
+}
+
+/* (the memory test writes its patterns and zeros over the sprite RAM it keeps a copy in: a zero where the copy
+   left a zero at that lane would otherwise be taken for the copy, test_mode at frame 5102) */
+void s32_order_bus_write(uint32_t address, uint16_t mask)
+{
+	const int memory = out_memory(address);
+	const size_t at = address & (sizeof(out_bytes[0]) - 2);
+
+	if (memory < 0)
+		return;
+	if (mask & 0x00ff)
+		out_kept[memory][at] = 0;
+	if (mask & 0xff00)
+		out_kept[memory][at + 1] = 0;
 }
 
 const uint8_t *s32_order_words(const uint8_t *memory)

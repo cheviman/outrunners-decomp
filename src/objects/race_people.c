@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -407,7 +407,7 @@ void fork_camera_update(void)
 		if (RACE(screen->race_copy)->segment < (uint16_t)current_object->position)
 			return;
 		current_object->state++;
-		model = RACE(screen->race_copy)->model;
+		model = (uint8_t)(RACE(screen->race_copy)->car_choice_and_model >> 8u);
 		current_object->fork_camera.lift_height = 0u - screen_view_defaults[0].view_pitch_bases[model] + 0x1E0u;
 		current_object->fork_camera.lift_step = fork_camera_lift_steps[model];
 		current_object->fork_camera.tilt_step = fork_camera_tilt_steps[model];

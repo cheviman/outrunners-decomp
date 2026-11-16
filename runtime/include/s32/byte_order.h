@@ -48,6 +48,9 @@ void s32_order_out(const void *from, uint32_t address, size_t size);
 /* 'size' bytes moved through the bus from 'address' of the video RAM or the sprite RAM to 'to': the bytes
    s32_order_out took there come back with their places */
 void s32_order_in(const void *to, uint32_t address, size_t size);
+/* a bus write at 'address' of the video RAM or the sprite RAM, over the lanes of 'mask': what s32_order_out
+   moved there is gone from them */
+void s32_order_bus_write(uint32_t address, uint16_t mask);
 /* 'size' bytes written there whose places the caller knows (from the program's data, as the loader laid it
    out: how far from each the V70's byte it holds is) */
 void s32_order_placed(const void *place, const int8_t *places, size_t size);
@@ -65,6 +68,7 @@ const uint8_t *s32_order_words(const uint8_t *memory);
 #define s32_order_placed(place, places, size) ((void)0)
 #define s32_order_out(from, address, size) ((void)0)
 #define s32_order_in(to, address, size) ((void)0)
+#define s32_order_bus_write(address, mask) ((void)0)
 #define s32_order_v70(memory) ((const uint8_t *)(memory))
 #define s32_order_words(memory) ((const uint8_t *)(memory))
 #endif

@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    13-11-2026
+ *    Modified:    16-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -288,8 +288,8 @@ void car_select_run(void)
 		current_object->car_select.car_chosen = 0xFFu;
 		race = pointer_to(screen->race);
 		model = player_car->model;
-		race->model = model;
-		race->car_choice = model + 1u;
+		race->car_choice_and_model = (race->car_choice_and_model & 0xFFu) | ((model & 0xFFu) << 8u);
+		race->car_choice_and_model = (race->car_choice_and_model & 0xFF00u) | (model + 1u & 0xFFu);
 		current_object->car_select.confirm_delay = 0x1Eu;
 		car_sound = car_select_car_sounds[model];
 		request_sound(car_sound);
@@ -1786,7 +1786,7 @@ void car_select_entries_run(void)
 		{
 			racer_car_number = game->car_numbers[racer];
 			screen->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
-			car_choice = game->race_copies[racer].car_choice - 1u;
+			car_choice = (uint8_t)game->race_copies[racer].car_choice_and_model - 1u;
 			chosen_car = car_choice;
 			if ((int32_t)car_choice >= 0)
 			{

@@ -543,9 +543,11 @@ static void bus_write(uint32_t address, uint16_t data, uint16_t mask)
 	{
 		case 0x3:
 			store16(&s32_board.video_ram[address & 0x1ffff], data, mask);
+			s32_order_bus_write(address, mask);
 			break;
 		case 0x4:
 			store16(&s32_board.sprite_ram[address & 0x1ffff], data, mask);
+			s32_order_bus_write(address, mask);
 			break;
 		case 0x5:
 			if (mask & 0x00ff)
