@@ -345,6 +345,60 @@ void (*const game_functions[])(void) =
 
 const size_t game_function_count = FUNCTION_COUNT;
 
+/* the program's tables of code, as the numbers of the functions they hold (enum game_function) */
+const uint32_t race_car_driver_handlers[8] =
+{
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+};
+
+const uint32_t race_car_passenger_handlers[8] =
+{
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_race_car_occupant_update,
+};
+
+const uint32_t race_car_ending_handlers[8] =
+{
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_race_car_start_ending,
+};
+
+const uint32_t test_mode_page_jumps[13] =
+{
+	FUNCTION_test_mode_menu_toggle_continue,
+	FUNCTION_test_mode_memory_test,
+	FUNCTION_test_mode_volume_adjustment,
+	FUNCTION_test_mode_input_test,
+	FUNCTION_test_mode_output_test,
+	FUNCTION_test_mode_sound_test,
+	FUNCTION_test_mode_crt_test,
+	FUNCTION_test_mode_game_assignments,
+	FUNCTION_test_mode_coin_assignments,
+	FUNCTION_test_mode_network_assignments_start,
+	FUNCTION_test_mode_bookkeeping_start,
+	FUNCTION_test_mode_backup_data_clear_start,
+	FUNCTION_test_mode_exit,
+};
+
 const void *boot_e80000_bytes_data;
 const void *boot_interrupt_control_bytes_data;
 const void *seat_credits_addresses_data;
@@ -540,8 +594,6 @@ const void *race_car_passenger_palettes_data;
 const void *race_car_driver_frame_counts_data;
 const void *race_car_passenger_frame_counts_data;
 const void *race_car_body_wheel_kinds_data;
-const void *race_car_driver_handlers_data;
-const void *race_car_passenger_handlers_data;
 const void *unused_car_animations_data;
 const void *race_car_spray_palettes_data;
 const void *race_car_spray_2_animations_data;
@@ -551,7 +603,6 @@ const void *race_car_tag_palettes_data;
 const void *race_car_tag_animations_data;
 const void *race_car_blink_starts_data;
 const void *race_car_tag_blink_data;
-const void *race_car_ending_handlers_data;
 const void *unused_numbers_009FE4_data;
 const void *player_car_heading_quadrant_jumps_data;
 const void *player_car_view_yaw_quadrant_jumps_data;
@@ -803,7 +854,6 @@ const void *test_mode_lcd_text_data;
 const void *test_mode_lcd_text_4_to_7_data;
 const void *test_mode_lcd_text_8_to_11_data;
 const void *test_mode_lcd_text_12_to_15_data;
-const void *test_mode_page_jumps_data;
 const void *test_mode_menu_headings_data;
 const void *test_mode_menu_cursor_cells_data;
 const void *memory_test_result_texts_data;
@@ -1095,8 +1145,6 @@ const game_table game_tables[] =
 	{ "race_car_driver_frame_counts", 0x009E3Cu, &race_car_driver_frame_counts_data },
 	{ "race_car_passenger_frame_counts", 0x009E44u, &race_car_passenger_frame_counts_data },
 	{ "race_car_body_wheel_kinds", 0x009E4Cu, &race_car_body_wheel_kinds_data },
-	{ "race_car_driver_handlers", 0x009EBCu, &race_car_driver_handlers_data },
-	{ "race_car_passenger_handlers", 0x009EDCu, &race_car_passenger_handlers_data },
 	{ "unused_car_animations", 0x009EFCu, &unused_car_animations_data },
 	{ "race_car_spray_palettes", 0x009F0Cu, &race_car_spray_palettes_data },
 	{ "race_car_spray_2_animations", 0x009F2Cu, &race_car_spray_2_animations_data },
@@ -1106,7 +1154,6 @@ const game_table game_tables[] =
 	{ "race_car_tag_animations", 0x009F8Cu, &race_car_tag_animations_data },
 	{ "race_car_blink_starts", 0x009F9Cu, &race_car_blink_starts_data },
 	{ "race_car_tag_blink", 0x009FA4u, &race_car_tag_blink_data },
-	{ "race_car_ending_handlers", 0x009FC4u, &race_car_ending_handlers_data },
 	{ "unused_numbers_009FE4", 0x009FE4u, &unused_numbers_009FE4_data },
 	{ "player_car_heading_quadrant_jumps", 0x00A5F4u, &player_car_heading_quadrant_jumps_data },
 	{ "player_car_view_yaw_quadrant_jumps", 0x00A798u, &player_car_view_yaw_quadrant_jumps_data },
@@ -1358,7 +1405,6 @@ const game_table game_tables[] =
 	{ "test_mode_lcd_text_4_to_7", 0x01C37Cu, &test_mode_lcd_text_4_to_7_data },
 	{ "test_mode_lcd_text_8_to_11", 0x01C380u, &test_mode_lcd_text_8_to_11_data },
 	{ "test_mode_lcd_text_12_to_15", 0x01C384u, &test_mode_lcd_text_12_to_15_data },
-	{ "test_mode_page_jumps", 0x01C45Cu, &test_mode_page_jumps_data },
 	{ "test_mode_menu_headings", 0x01C560u, &test_mode_menu_headings_data },
 	{ "test_mode_menu_cursor_cells", 0x01C588u, &test_mode_menu_cursor_cells_data },
 	{ "memory_test_result_texts", 0x01CDC8u, &memory_test_result_texts_data },
@@ -1453,7 +1499,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 551;
+const size_t game_table_count = 547;
 
 /* the code at the reset vector */
 void game_entry(void)

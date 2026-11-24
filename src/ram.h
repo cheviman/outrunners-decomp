@@ -585,12 +585,6 @@ extern const void *race_car_passenger_frame_counts_data;
 #define race_car_body_wheel_kinds_ADDRESS 0x009E4Cu
 extern const void *race_car_body_wheel_kinds_data;
 #define race_car_body_wheel_kinds ((const uint8_t *)race_car_body_wheel_kinds_data)
-#define race_car_driver_handlers_ADDRESS 0x009EBCu
-extern const void *race_car_driver_handlers_data;
-#define race_car_driver_handlers ((const uint32_t *)race_car_driver_handlers_data)
-#define race_car_passenger_handlers_ADDRESS 0x009EDCu
-extern const void *race_car_passenger_handlers_data;
-#define race_car_passenger_handlers ((const uint32_t *)race_car_passenger_handlers_data)
 #define unused_car_animations_ADDRESS 0x009EFCu
 extern const void *unused_car_animations_data;
 #define unused_car_animations (*(const uint16_t *)unused_car_animations_data)
@@ -618,9 +612,6 @@ extern const void *race_car_blink_starts_data;
 #define race_car_tag_blink_ADDRESS 0x009FA4u
 extern const void *race_car_tag_blink_data;
 #define race_car_tag_blink ((const uint8_t *)race_car_tag_blink_data)
-#define race_car_ending_handlers_ADDRESS 0x009FC4u
-extern const void *race_car_ending_handlers_data;
-#define race_car_ending_handlers ((const uint32_t *)race_car_ending_handlers_data)
 #define unused_numbers_009FE4_ADDRESS 0x009FE4u
 extern const void *unused_numbers_009FE4_data;
 #define unused_numbers_009FE4 (*(const uint32_t *)unused_numbers_009FE4_data)
@@ -1296,9 +1287,6 @@ extern const void *test_mode_lcd_text_8_to_11_data;
 #define test_mode_lcd_text_12_to_15_ADDRESS 0x01C384u
 extern const void *test_mode_lcd_text_12_to_15_data;
 #define test_mode_lcd_text_12_to_15 (*(const uint32_t *)test_mode_lcd_text_12_to_15_data)
-#define test_mode_page_jumps_ADDRESS 0x01C45Cu
-extern const void *test_mode_page_jumps_data;
-#define test_mode_page_jumps ((const uint32_t *)test_mode_page_jumps_data)
 #define test_mode_menu_headings_ADDRESS 0x01C560u
 extern const void *test_mode_menu_headings_data;
 #define test_mode_menu_headings ((const uint32_t *)test_mode_menu_headings_data)

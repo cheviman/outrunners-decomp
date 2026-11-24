@@ -201,7 +201,7 @@ void test_mode_menu_run(void)
 		test_mode_set_cursor(cursor, cursor_cell);
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = function_number(test_mode_page_jumps[world->test_mode_cursor]);
+		world->test_mode_routine = test_mode_page_jumps[world->test_mode_cursor];
 	blink_timer = world->test_mode_blink_timer - 1u;
 	world->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)

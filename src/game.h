@@ -273,6 +273,12 @@ enum game_function
 };
 uint32_t function_number(uint32_t address);     /* the number of the function at a V70 address read
                                                    out of the program ROM's tables (the projection's) */
+
+/* the program's tables of code: the numbers (enum game_function) of the functions they hold */
+extern const uint32_t race_car_driver_handlers[8];
+extern const uint32_t race_car_passenger_handlers[8];
+extern const uint32_t race_car_ending_handlers[8];
+extern const uint32_t test_mode_page_jumps[13];
 void call_second_task(void);
 void call_draw_object(void);
 void call_test_mode_memory_test_run(void);

@@ -64,12 +64,12 @@ void race_cars_start(void)
 		driver_occupant = model;
 		race++;
 		occupant = start_object();
-		occupant->handler = function_number(race_car_driver_handlers[driver_occupant]);
+		occupant->handler = race_car_driver_handlers[driver_occupant];
 		occupant->race_car_occupant.car = r12;
 		occupant->race_car_occupant.occupant = driver_occupant;
 		occupant->race_car_occupant.body_back = 0xFFu;
 		occupant = start_object();
-		occupant->handler = function_number(race_car_passenger_handlers[driver_occupant]);
+		occupant->handler = race_car_passenger_handlers[driver_occupant];
 		occupant->race_car_occupant.car = r12;
 		occupant->race_car_occupant.occupant = driver_occupant + 8u;
 		occupant->race_car_occupant.body_back = 0u;
@@ -123,7 +123,7 @@ void race_car_draw(void)
 	if (current_object->race_car.rival == 0u)
 	{
 		if ((screen->flags & 0x10u) != 0u)
-			current_object->handler = function_number(race_car_ending_handlers[current_object->race_car.model]);
+			current_object->handler = race_car_ending_handlers[current_object->race_car.model];
 		else if (far_segment <= segment)
 			return;
 	}

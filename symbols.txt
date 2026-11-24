@@ -1518,12 +1518,12 @@ local player_car_next_surfaces 00B51A R7 stage_then_surfaces stage_roadside_surf
 009E3C  table race_car_driver_frame_counts u8   # -> driver_frames (03 03 03 08 08 03 03 03)
 009E44  table race_car_passenger_frame_counts u8   # -> passenger_frames (03 05 03 03 08 03 03 06)
 18D25C  table race_car_rider_places u32 car_part_place[]   # race_cars_start 009636 "mov.w 18D25C(R2), R3" (and 01431F): a model's places of the driver, the passenger and the two sprays, 16 bytes a view (-> driver_places, passenger_places + 4, spray_2_places + 8, spray_1_places + C; 18D27C...)
-009EBC  table race_car_driver_handlers u32   # race_cars_start 0096C4 "mov.w 9EBC[PC](R3), 4[R21]": the handler of the car's driver (014108 for all)
-009EDC  table race_car_passenger_handlers u32   # race_cars_start 0096E1 "mov.w 9EDC[PC](R3), 4[R21]": the passenger's (014108 for all)
+009EBC  table race_car_driver_handlers[8] u32   # race_cars_start 0096C4 "mov.w 9EBC[PC](R3), 4[R21]": the handler of the car's driver (014108 for all)
+009EDC  table race_car_passenger_handlers[8] u32   # race_cars_start 0096E1 "mov.w 9EDC[PC](R3), 4[R21]": the passenger's (014108 for all)
 009F7C  table race_car_tag_palettes u16   # race_cars_start 009695 -> tag_palette (2A 28 29 2C 27 2D 2E 2B)
 009F8C  table race_car_tag_animations u16   # race_cars_start 00968A "mov.h 9F8C[PC](R1), BA[R21]" by the car number -> tag_animation (1D-24)
 009F9C  table race_car_blink_starts u8   # race_cars_start 0096A0 by the car number -> blink_counter (00 10 04 0C 02 0A 06 0E)
-009FC4  table race_car_ending_handlers u32   # race_car_draw 009799 "mov.w 9FC4[PC](R0), 4[R20]": what the car becomes once the race is over (014694, race_car_start_ending, for all)
+009FC4  table race_car_ending_handlers[8] u32   # race_car_draw 009799 "mov.w 9FC4[PC](R0), 4[R20]": what the car becomes once the race is over (014694, race_car_start_ending, for all)
 009E4C  table race_car_body_wheel_kinds u8   # race_car_draw 0098D7 "test.b 9E4C[PC](R1)", 00990C "cmp.b #2, 9E4C[PC](R1)" by the body animation less first_body_animation: 0 no wheels drawn (special_body), 1 wheels, 2 wheels the other way round
 009FA4  table race_car_tag_blink u8   # race_car_draw 009A56 "test.b 9FA4[PC](R0)" by blink_counter & 1F: the tag shown (01 x6, 00 00, 01 x6, then 0)
 009F6C  table race_car_spray_frame_counts u8   # race_car_draw_spray 009C4F "cmp.b 9F6C[PC](R0), R1" by the spray's kind: its number of frames (05 05 05 05 05 05 05 04 04 12...)
@@ -4009,7 +4009,7 @@ param kanji_text_viewer_draw_quarter r13 rows kanji_character_rows
 01C560  table  test_mode_menu_headings  u32       # by test_mode_flags bit 0 ("mov.w 1C560[PC](R0), R10", 01C3BE, 01C5C9): the text records INDIVIDUAL (01C568), CONTINUE (01C578)
 01C568  data  test_mode_menu_heading_texts      # INDIVIDUAL and CONTINUE, test_mode_draw_texts' lists, which test_mode_menu_headings points at
 01C588  table  test_mode_menu_cursor_cells  u16   # by test_mode_cursor (01C3D6, 01C414): F312 F412 ... F992, 13 items
-01C45C  table  test_mode_page_jumps  u32          # by test_mode_cursor ("mov.w 1C45C[PC](R0), 704[R24]", 01C42A: test_mode_routine, which test_mode_frame calls): 01C5BA test_mode_memory_test test_mode_volume_adjustment test_mode_input_test test_mode_output_test test_mode_sound_test test_mode_crt_test test_mode_game_assignments test_mode_coin_assignments test_mode_network_assignments_start test_mode_bookkeeping_start test_mode_backup_data_clear_start test_mode_exit
+01C45C  table  test_mode_page_jumps[13]  u32          # by test_mode_cursor ("mov.w 1C45C[PC](R0), 704[R24]", 01C42A: test_mode_routine, which test_mode_frame calls): 01C5BA test_mode_memory_test test_mode_volume_adjustment test_mode_input_test test_mode_output_test test_mode_sound_test test_mode_crt_test test_mode_game_assignments test_mode_coin_assignments test_mode_network_assignments_start test_mode_bookkeeping_start test_mode_backup_data_clear_start test_mode_exit
 # The sums of the program ROM's chips, at the top of the first chips' space (test_mode_memory_test sums
 # 000000-03FFF7, "mov.w #3FFF8, R0" at 01C60C, and 100000-1FEFFF: R0 the halfwords of IC37 and IC36, R1
 # those of IC40 and IC39): "cmp.h R0, FFFFFFF8" 01C616, "cmp.h R1, FFFFFFFA" 01C628, "cmp.h R0, FFFFFFFC"
