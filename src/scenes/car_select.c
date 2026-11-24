@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -74,7 +74,7 @@ void car_select_run(void)
 		current_object->car_select.rowselect_address = setup->rowselect_address;
 		background = setup->background;
 		setup_bits = address_of(&setup->video_register_bits);
-		set_up_background(background);
+		set_up_background(rom_pointer(background));
 		game->video_registers[2] |= CAR_SELECT_TILEMAP_SETUP(setup_bits - 0x1Cu)->video_register_bits;
 		VIDEO_REGISTER_WORDS(current_object->car_select.second_scroll_y_address)[0] = 0xE0u;
 		object = start_object();
@@ -288,8 +288,8 @@ void car_select_run(void)
 		current_object->car_select.car_chosen = 0xFFu;
 		race = pointer_to(screen->race);
 		model = player_car->model;
-		race->car_choice_and_model = (race->car_choice_and_model & 0xFFu) | ((model & 0xFFu) << 8u);
-		race->car_choice_and_model = (race->car_choice_and_model & 0xFF00u) | (model + 1u & 0xFFu);
+		race->state.car_choice_and_model = (race->state.car_choice_and_model & 0xFFu) | ((model & 0xFFu) << 8u);
+		race->state.car_choice_and_model = (race->state.car_choice_and_model & 0xFF00u) | (model + 1u & 0xFFu);
 		current_object->car_select.confirm_delay = 0x1Eu;
 		car_sound = car_select_car_sounds[model];
 		request_sound(car_sound);
@@ -1786,7 +1786,7 @@ void car_select_entries_run(void)
 		{
 			racer_car_number = world->car_numbers[racer];
 			screen->lcd_text[(int32_t)(racer_car_number + 8u)] = racer_car_number + 0x31u;
-			car_choice = (uint8_t)game->race_copies[racer].car_choice_and_model - 1u;
+			car_choice = (uint8_t)game->race_copies[racer].state.car_choice_and_model - 1u;
 			chosen_car = car_choice;
 			if ((int32_t)car_choice >= 0)
 			{
@@ -2105,7 +2105,7 @@ void entry_countdown_start(void)
 	struct object *object = NULL;
 
 	background_setup = entry_countdown_backgrounds_ADDRESS + screen->index * 5u * 4u;
-	set_up_background(background_setup);
+	set_up_background(rom_pointer(background_setup));
 	palette_fades = entry_countdown_palette_fades_ADDRESS;
 	start_palette_fades(palette_fades);
 	clear_lcd();

@@ -50,13 +50,17 @@ TEXT_LAYER_CELL = 0xF000
 
 
 def _names():
-    """symbols.txt's variables and hardware registers: {address: (name, type)} and {address: count}."""
+    """symbols.txt's variables, hardware registers, fields, members: {address: (name, type)}, {address: count},
+    {(struct, offset): (name, type)}, {(struct, offset): (name, inner, count)}."""
     if not _NAMES:
         import disassemble
         names = disassemble.load_names(Path(common.ROOT) / "symbols.txt")
         _NAMES["at"] = dict(names.hardware)
         _NAMES["at"].update(names.variables)
         _NAMES["counts"] = dict(names.counts)
+        _NAMES["fields"] = dict(names.fields)
+        _NAMES["members"] = dict(names.members)
+        _NAMES["field_arrays"] = dict(names.field_arrays)
     return _NAMES
 
 
@@ -152,17 +156,34 @@ def _bookkeeping_places():
 
 
 BOOKKEEPING = 0x701F00
-SETTINGS_BACKUP = 0x3C          # the backup copy of the settings, from backup_settings_checksum (20E644)
+SETTINGS_PAGE = 0x20E600
+
+
+def _settings_layout():
+    """[(page_offset, name, kind, count)] from eeprom_contents's fields and its members' fields;
+    volume_ranges 12 bytes (the format's fact, not the symbol's 1)."""
+    fields, members, arrays = _names()["fields"], _names()["members"], _names()["field_arrays"]
+    places = []
+    for (struct, offset), (name, kind) in sorted(fields.items(), key=lambda kv: kv[0][1]):
+        if struct != "eeprom_contents":
+            continue
+        places.append((offset, name, kind, arrays.get((struct, offset)) or 1))
+    for (struct, offset), (name, inner, count) in sorted(members.items(), key=lambda kv: kv[0][1]):
+        if struct != "eeprom_contents" or count != 1:
+            continue
+        for (inner_struct, foff), (fname, fkind) in sorted(fields.items(), key=lambda kv: kv[0][1]):
+            if inner_struct != inner:
+                continue
+            fcount = arrays.get((inner_struct, foff))
+            if fname == "volume_ranges":
+                fcount = 12
+            places.append((offset + foff, f"{name}.{fname}", fkind, fcount or 1))
+    return sorted(places, key=lambda p: p[0])
 
 
 def _settings_places():
-    """The controls' calibration ranges, and the backup copy's places by the settings they copy."""
-    names, counts = _names()["at"], _names()["counts"]
-    places = [(0x20E638, "volume_ranges", "u8", 12)]
-    for address, (name, kind) in sorted(names.items()):
-        if 0x20E60C <= address < 0x20E644 and kind in typed.VALUE_TYPES and address + SETTINGS_BACKUP not in names:
-            places.append((address + SETTINGS_BACKUP, "backup_" + name, kind, counts.get(address, 1) or 1))
-    return places + [(0x20E638 + SETTINGS_BACKUP, "backup_volume_ranges", "u8", 12)]
+    """The settings' and backup's places from eeprom_contents's layout."""
+    return [(SETTINGS_PAGE + offset, name, kind, count) for offset, name, kind, count in _settings_layout()]
 
 
 def _wrap(text, width=106):
@@ -325,24 +346,20 @@ SETTINGS_PAGE = 0x20E600
 
 
 def _setting_name(address):
-    """The variable at 'address', NAME[N] inside an array, or None."""
-    names, counts = _names()["at"], _names()["counts"]
-    for start in range(address, address - 0x20, -1):
-        found = names.get(start)
-        if found is None:
-            continue
-        width = typed.SIZES.get(found[1], 1)
-        index, extra = divmod(address - start, width)
-        if index == 0 and not extra:
-            return found[0]
-        return f"{found[0]}[{index}]" if not extra and index < (counts.get(start, 1) or 1) else None
+    """The field at 'address' in the settings page (member.field), NAME[N] inside an array, or None."""
+    offset = address - SETTINGS_PAGE
+    for place_offset, name, kind, count in _settings_layout():
+        size = typed.SIZES.get(kind, 1)
+        if place_offset <= offset < place_offset + size * count:
+            index = (offset - place_offset) // size
+            return name if index == 0 else f"{name}[{index}]"
     return None
 
 
 def setting_places_to_text(data):
     out = typed.Writer()
     out.comment("the settings a page's EXIT compares with their backup copy: 'setting' the low byte of the")
-    out.comment("setting's address in settings_magic's page (20E600), 'end' (0)")
+    out.comment("setting's address in eeprom_contents's page (20E600), 'end' (0)")
     out.record("setting", 1, [typed.column("place", "u8")])
     out.record("end", 1, [typed.column("end", "u8", fixed=0)])
     at = 0
@@ -426,7 +443,7 @@ def solid_colour_blocks_to_text(data):
 FORMATS = {
     "program_settings_defaults": variables_format(
         0x20E600, "the defaults load_settings copies over the settings (move_halfwords: 40 halfwords to 20E600), "
-        "and their backup copy from backup_settings_checksum (3C bytes on); volume_ranges: each control's "
+        "and their backup copy (3C bytes on); volume_ranges: each control's "
         "calibration, a low and a high byte", _settings_places),
     "program_bookkeeping_defaults": variables_format(
         BOOKKEEPING + 2, "the defaults bookkeeping_reset copies over the bookkeeping (bookkeeping_copy: 3E halfwords to "

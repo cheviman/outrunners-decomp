@@ -3,7 +3,7 @@
  *    Description: the settings in the EEPROM: loading, checking and saving them, and the EEPROM's serial lines
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -22,128 +22,128 @@ void load_settings(uint32_t checksum)
 {
 	uint16_t new_checksum = 0, write_count = 0;
 	uint32_t settings_length = 0;
-	struct settings_copy *settings = NULL;
+	struct settings *settings = NULL;
 
 	eeprom_read_settings(checksum);
-	if (game->settings_magic == 0x41474553u)
+	if (game->eeprom.magic == 0x41474553u)
 	{
 		bookkeeping_reset(checksum);
-		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		game->eeprom_write_count = 0x64u;
-		game->backup_eeprom_write_count = 0x64u;
+		move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
+		game->eeprom.settings.eeprom_write_count = 0x64u;
+		game->eeprom.backup_settings.eeprom_write_count = 0x64u;
 		new_checksum = signature_checksum();
-		game->settings_signature = new_checksum;
-		settings = pointer_to(eeprom_write_count_ADDRESS);
+		game->eeprom.signature = new_checksum;
+		settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		new_checksum = crc16(address_of(settings), settings_length);
-		game->settings_checksum = new_checksum;
-		game->backup_settings_checksum = new_checksum;
+		game->eeprom.settings.checksum = new_checksum;
+		game->eeprom.backup_settings.checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
-	if (game->settings_magic != 0x41323353u)
+	if (game->eeprom.magic != 0x41323353u)
 	{
 		bookkeeping_reset(checksum);
-		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
+		move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
 		new_checksum = signature_checksum();
-		game->settings_signature = new_checksum;
-		settings = pointer_to(eeprom_write_count_ADDRESS);
+		game->eeprom.signature = new_checksum;
+		settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		new_checksum = crc16(address_of(settings), settings_length);
-		game->settings_checksum = new_checksum;
-		game->backup_settings_checksum = new_checksum;
+		game->eeprom.settings.checksum = new_checksum;
+		game->eeprom.backup_settings.checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
 	new_checksum = signature_checksum();
-	if (game->settings_signature != new_checksum || game->settings_signature != new_checksum)
+	if (game->eeprom.signature != new_checksum || game->eeprom.signature != new_checksum)
 	{
-		game->settings_signature = new_checksum;
+		game->eeprom.signature = new_checksum;
 		bookkeeping_reset(new_checksum);
-		settings = pointer_to(eeprom_write_count_ADDRESS);
+		settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		new_checksum = crc16(address_of(settings), settings_length);
-		settings = pointer_to(settings_checksum_ADDRESS);
-		if (game->settings_checksum == new_checksum)
+		settings = &game->eeprom.settings;
+		if (game->eeprom.settings.checksum == new_checksum)
 		{
-			write_count = settings->write_count;
-			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-			game->eeprom_write_count = write_count;
-			game->backup_eeprom_write_count = write_count;
+			write_count = settings->eeprom_write_count;
+			move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
+			game->eeprom.settings.eeprom_write_count = write_count;
+			game->eeprom.backup_settings.eeprom_write_count = write_count;
 			new_checksum = signature_checksum();
-			game->settings_signature = new_checksum;
-			settings = pointer_to(eeprom_write_count_ADDRESS);
+			game->eeprom.signature = new_checksum;
+			settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 			settings_length = 0x3Au;
 			new_checksum = crc16(address_of(settings), settings_length);
-			game->settings_checksum = new_checksum;
-			game->backup_settings_checksum = new_checksum;
+			game->eeprom.settings.checksum = new_checksum;
+			game->eeprom.backup_settings.checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
-		settings = pointer_to(backup_eeprom_write_count_ADDRESS);
+		settings = pointer_to(address_of(&game->eeprom.backup_settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		checksum = crc16(address_of(settings), settings_length);
-		settings = pointer_to(backup_settings_checksum_ADDRESS);
-		if (game->backup_settings_checksum != checksum)
+		settings = &game->eeprom.backup_settings;
+		if (game->eeprom.backup_settings.checksum != checksum)
 		{
 			bookkeeping_reset(checksum);
-			move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
+			move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
 			new_checksum = signature_checksum();
-			game->settings_signature = new_checksum;
-			settings = pointer_to(eeprom_write_count_ADDRESS);
+			game->eeprom.signature = new_checksum;
+			settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 			settings_length = 0x3Au;
 			new_checksum = crc16(address_of(settings), settings_length);
-			game->settings_checksum = new_checksum;
-			game->backup_settings_checksum = new_checksum;
+			game->eeprom.settings.checksum = new_checksum;
+			game->eeprom.backup_settings.checksum = new_checksum;
 			eeprom_write_settings();
 			return;
 		}
-		write_count = settings->write_count;
-		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
-		game->eeprom_write_count = write_count;
-		game->backup_eeprom_write_count = write_count;
+		write_count = settings->eeprom_write_count;
+		move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
+		game->eeprom.settings.eeprom_write_count = write_count;
+		game->eeprom.backup_settings.eeprom_write_count = write_count;
 		new_checksum = signature_checksum();
-		game->settings_signature = new_checksum;
-		settings = pointer_to(eeprom_write_count_ADDRESS);
+		game->eeprom.signature = new_checksum;
+		settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		new_checksum = crc16(address_of(settings), settings_length);
-		game->settings_checksum = new_checksum;
-		game->backup_settings_checksum = new_checksum;
+		game->eeprom.settings.checksum = new_checksum;
+		game->eeprom.backup_settings.checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
-	settings = pointer_to(eeprom_write_count_ADDRESS);
+	settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 	settings_length = 0x3Au;
 	new_checksum = crc16(address_of(settings), settings_length);
-	if (game->settings_checksum != new_checksum)
+	if (game->eeprom.settings.checksum != new_checksum)
 	{
-		settings = pointer_to(backup_eeprom_write_count_ADDRESS);
+		settings = pointer_to(address_of(&game->eeprom.backup_settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		checksum = crc16(address_of(settings), settings_length);
-		if (game->backup_settings_checksum == checksum)
+		if (game->eeprom.backup_settings.checksum == checksum)
 		{
-			move_halfwords(settings_checksum_ADDRESS, backup_settings_checksum_ADDRESS, 0x1Eu);
+			game->eeprom.settings = game->eeprom.backup_settings;
 			eeprom_write_settings();
 			return;
 		}
 		bookkeeping_reset(checksum);
-		move_halfwords(settings_magic_ADDRESS, default_settings_ADDRESS, 0x40u);
+		move_halfwords(address_of(&game->eeprom), default_settings_ADDRESS, 0x40u);
 		new_checksum = signature_checksum();
-		game->settings_signature = new_checksum;
-		settings = pointer_to(eeprom_write_count_ADDRESS);
+		game->eeprom.signature = new_checksum;
+		settings = pointer_to(address_of(&game->eeprom.settings.eeprom_write_count));
 		settings_length = 0x3Au;
 		new_checksum = crc16(address_of(settings), settings_length);
-		game->settings_checksum = new_checksum;
-		game->backup_settings_checksum = new_checksum;
+		game->eeprom.settings.checksum = new_checksum;
+		game->eeprom.backup_settings.checksum = new_checksum;
 		eeprom_write_settings();
 		return;
 	}
-	settings = pointer_to(backup_eeprom_write_count_ADDRESS);
+	settings = pointer_to(address_of(&game->eeprom.backup_settings.eeprom_write_count));
 	settings_length = 0x3Au;
 	new_checksum = crc16(address_of(settings), settings_length);
-	if (game->settings_checksum != new_checksum || game->backup_settings_checksum != new_checksum)
+	if (game->eeprom.settings.checksum != new_checksum || game->eeprom.backup_settings.checksum != new_checksum)
 	{
-		move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
+		game->eeprom.backup_settings = game->eeprom.settings;
 		eeprom_write_settings();
 		return;
 	}
@@ -153,9 +153,9 @@ void load_settings(uint32_t checksum)
    EEPROM's limit of 10,000 writes is reached). */
 void count_eeprom_write(void)
 {
-	game->eeprom_write_count++;
-	if (game->eeprom_write_count >= 0x2710u)
-		game->eeprom_write_count = 0x2710u;
+	game->eeprom.settings.eeprom_write_count++;
+	if (game->eeprom.settings.eeprom_write_count >= 0x2710u)
+		game->eeprom.settings.eeprom_write_count = 0x2710u;
 }
 
 /* Locks the EEPROM against writes (command 00, the 93C46's write disable) and turns the interrupts back
@@ -199,7 +199,7 @@ void eeprom_read_settings(uint32_t eeprom_word)
 	uint32_t lines = 0, lines_port = 0, word_count = 0;
 	uint16_t *settings = NULL;
 
-	settings = pointer_to(settings_magic_ADDRESS);
+	settings = pointer_to(address_of(&game->eeprom));
 	command = 0x80u;
 	word_count = 0x40u;
 	eeprom_begin(&lines, &r12, &lines_port);
@@ -251,15 +251,15 @@ void eeprom_write_settings(void)
 	uint32_t lines = 0, lines_port = 0, settings_length = 0, word_count = 0;
 	uint16_t *settings = NULL;
 
-	settings = &game->eeprom_write_count;
+	settings = &game->eeprom.settings.eeprom_write_count;
 	settings_length = 0x3Au;
 	checksum = crc16(address_of(settings), settings_length);
-	game->settings_checksum = checksum;
-	move_halfwords(backup_settings_checksum_ADDRESS, settings_checksum_ADDRESS, 0x1Eu);
+	game->eeprom.settings.checksum = checksum;
+	game->eeprom.backup_settings = game->eeprom.settings;
 	command = 0x30u;
 	eeprom_begin(&lines, &r12, &lines_port);
 	eeprom_send_command((uint8_t)lines, command, lines_port);
-	settings = pointer_to(settings_magic_ADDRESS);
+	settings = pointer_to(address_of(&game->eeprom));
 	command = 0x40u;
 	word_count = 0x40u;
 	eeprom_begin(&lines, &r12, &lines_port);

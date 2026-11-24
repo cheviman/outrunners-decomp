@@ -3,7 +3,7 @@
  *    Description: the angles of a vector, the hit boxes and the checks of the car against the road's objects and the traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -142,10 +142,10 @@ void player_car_build_hit_boxes(void)
 		}
 		CAR_HIT_BOX(hit_box)->player = racer_player;
 		racer_copy = pointer_to(RACE_COPY_1 + (uint16_t)(racer_player << 7));
-		segment_fraction = racer_copy->segment_fraction;
-		road_x = (uint16_t)racer_copy->road_x;
-		segment = racer_copy->segment;
-		model = (uint8_t)(racer_copy->car_choice_and_model >> 8u);
+		segment_fraction = racer_copy->state.segment_fraction;
+		road_x = (uint16_t)racer_copy->state.road_x;
+		segment = racer_copy->state.segment;
+		model = (uint8_t)(racer_copy->state.car_choice_and_model >> 8u);
 		hit_box += 2u;
 		hit_box = player_car_write_hit_box(segment, model, hit_box, address_of(racer_copy), segment_fraction, road_x);
 		racers_left--;
@@ -463,7 +463,7 @@ void player_car_check_car_hits(void)
 		}
 		other_record = pointer_to(CAR_HIT_BOX(other_hit_box - 0x2u)->record);
 		other_hit_box += 4u;
-		if ((other_record->car_flags & 8u) != 0u)
+		if ((other_record->state.car_flags & 8u) != 0u)
 		{
 			other_hit_box += 0xCu;
 			boxes_left--;

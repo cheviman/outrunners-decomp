@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -420,7 +420,7 @@ void race_background_upper_animation_cycle(void)
    the record's +C (queue_tile_pages) and the palette record at +10 (queue_palette_list). Used by
    car_presentation, name_entry, route_map, car_select_run, entry_countdown_start and
    title_screen_update. */
-void set_up_background(uint32_t background_setup)
+void set_up_background(const struct background_setup *background_setup)
 {
 	uint32_t mixer_bits = 0, palette_list = 0, tile_pages = 0;
 	const struct background_registers *background_registers = NULL;
@@ -432,20 +432,16 @@ void set_up_background(uint32_t background_setup)
 
 	background_registers = rom_pointer(background_register_lists[screen->index]);
 	pages_address = pointer_to(background_registers->pages_address);
-	pages = BACKGROUND_SETUP(background_setup)->pages;
-	background_setup += 4u;
+	pages = background_setup->pages;
 	pages_address->upper_pages = (uint16_t)pages;
 	pages_address->lower_pages = (uint16_t)(pages >> 16u);
-	second_pages = BACKGROUND_SETUP(background_setup - 0x4u)->second_pages;
-	background_setup += 4u;
+	second_pages = background_setup->second_pages;
 	pages_address->second_upper_pages = (uint16_t)second_pages;
 	pages_address->second_lower_pages = (uint16_t)(second_pages >> 16u);
 	tile_banks_address = pointer_to(background_registers->tile_banks_address);
-	tile_bank = BACKGROUND_SETUP(background_setup - 0x8u)->tile_bank;
-	background_setup++;
+	tile_bank = background_setup->tile_bank;
 	tile_banks_address->tile_bank = tile_bank;
-	second_tile_bank = BACKGROUND_SETUP(background_setup - 0x9u)->second_tile_bank;
-	background_setup++;
+	second_tile_bank = background_setup->second_tile_bank;
 	tile_banks_address->second_tile_bank = second_tile_bank;
 	VIDEO_REGISTER_WORDS(background_registers->zoom_x_address)[0] = 0x200u;
 	VIDEO_REGISTER_WORDS(background_registers->zoom_y_address)[0] = 0x200u;
@@ -460,21 +456,19 @@ void set_up_background(uint32_t background_setup)
 	mixer_address = pointer_to(background_registers->mixer_address);
 	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;
-	mixer_address_0_long = mixer_bits | BACKGROUND_SETUP(background_setup - 0xAu)->priority;
+	mixer_address_0_long = mixer_bits | background_setup->priority;
 	mixer_address[0] = (uint16_t)mixer_address_0_long;
 	mixer_address[1] = (uint16_t)(mixer_address_0_long >> 16u);
 	mixer_address += 2;
 	mixer_bits = (mixer_address[0] | ((uint32_t)mixer_address[1] << 16u));
 	mixer_bits = mixer_bits & ~0xFu;
-	background_setup++;
-	mixer_address_0_long_2 = mixer_bits | BACKGROUND_SETUP(background_setup - 0xBu)->second_priority;
+	mixer_address_0_long_2 = mixer_bits | background_setup->second_priority;
 	mixer_address[0] = (uint16_t)mixer_address_0_long_2;
 	mixer_address[1] = (uint16_t)(mixer_address_0_long_2 >> 16u);
 	screen->flags |= 4u;
-	background_setup++;
-	tile_pages = BACKGROUND_SETUP(background_setup - 0xCu)->tile_pages;
+	tile_pages = background_setup->tile_pages;
 	queue_tile_pages(tile_pages);
-	palette_list = BACKGROUND_SETUP(background_setup - 0xCu)->palette_list;
+	palette_list = background_setup->palette_list;
 	queue_palette_list(palette_list);
 }
 

@@ -3,7 +3,7 @@
  *    Description: the traffic: its cars, convoys, people and their hits
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -41,7 +41,7 @@ void traffic_spawner_update(void)
 		built_stage = screen->built_stage;
 		current_object->traffic_spawner.stage = built_stage;
 		current_object->traffic_spawner.list = stage_road_object_lists[built_stage];
-		current_object->traffic_spawner.traffic_level = (uint8_t)(8u - RACE(screen->host_record)->racer_count + game->game_difficulty);
+		current_object->traffic_spawner.traffic_level = (uint8_t)(8u - RACE(screen->host_record)->racer_count + game->eeprom.settings.game_difficulty);
 		screen->traffic_draw_distance = screen->draw_distance >> 7;
 		screen->traffic_racer_list = screen->host_record + 0x1Fu;
 		screen->traffic_count = 0u;
@@ -49,10 +49,10 @@ void traffic_spawner_update(void)
 		return;
 	case 1:
 		entry = rom_pointer(current_object->traffic_spawner.list);
-		if ((screen->demo_flags & 0x100u) == 0u && current_object->traffic_spawner.stage != screen->leader_stage)
+		if ((screen->demo_flags & 0x100u) == 0u && current_object->traffic_spawner.stage != screen->progress.leader_stage)
 		{
-			current_object->traffic_spawner.stage_start = screen->leader_window_segment;
-			leader_stage = screen->leader_stage;
+			current_object->traffic_spawner.stage_start = screen->progress.leader_window_segment;
+			leader_stage = screen->progress.leader_stage;
 			current_object->traffic_spawner.stage = leader_stage;
 			entry = rom_pointer(stage_road_object_lists[leader_stage]);
 			current_object->traffic_spawner.list = address_of(entry);
@@ -68,7 +68,7 @@ void traffic_spawner_update(void)
 			if (negative ^ overflow)
 				break;
 			object_position = (uint16_t)spawn_position;
-			if ((int16_t)RACE(screen->leader_record)->window_segment < (int16_t)(spawn_position - screen->traffic_draw_distance))
+			if ((int16_t)RACE(screen->leader_record)->state.window_segment < (int16_t)(spawn_position - screen->traffic_draw_distance))
 				break;
 			level = entry->level;
 			if (current_object->traffic_spawner.traffic_level < level || screen->traffic_count >= 0x20u)
@@ -95,7 +95,7 @@ void traffic_spawner_update(void)
 		racer_list++;
 		do
 		{
-			view_bottom = game->race_copies[racer_list[0]].window_segment;
+			view_bottom = game->race_copies[racer_list[0]].state.window_segment;
 			view_top = (uint16_t)((uint32_t)view_bottom + traffic_draw_distance);
 			view_bottom -= traffic_draw_distance;
 			view_top++;
@@ -169,7 +169,7 @@ void traffic_car_update(void)
 	case 1:
 		break;
 	}
-	if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->window_segment)
+	if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->state.window_segment)
 	{
 		screen->traffic_count--;
 		current_object->flags = 0u;
@@ -257,7 +257,7 @@ void traffic_car_draw(uint16_t position_fraction)
 	}
 	race = pointer_to(screen->race_copy);
 	seen_from = (uint16_t)(position - screen->traffic_draw_distance);
-	segment = race->segment;
+	segment = race->state.segment;
 	if (current_object->traffic.passed != 0u)
 	{
 		if ((int16_t)segment < (int16_t)position)
@@ -281,7 +281,7 @@ void traffic_car_draw(uint16_t position_fraction)
 		seen_from = (uint16_t)saved_seen_from;
 		position = (uint16_t)saved_position;
 	}
-	window_segment = race->window_segment;
+	window_segment = race->state.window_segment;
 	if ((int16_t)position < (int16_t)window_segment || (int16_t)window_segment <= (int16_t)seen_from)
 		return;
 	car_segment_record = pointer_to(address_of(screen) + 0x2000u + player_car->segment_offset);
@@ -388,7 +388,7 @@ void traffic_stopping_car_update(void)
 	case 1:
 		break;
 	}
-	if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->window_segment)
+	if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->state.window_segment)
 	{
 		screen->traffic_count--;
 		current_object->flags = 0u;
@@ -527,7 +527,7 @@ void traffic_figure_update(void)
 		animation_start(animation);
 		return;
 	case 1:
-		if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->window_segment)
+		if (player_car->at_goal != 0u && (int16_t)(current_object->position - 8u) < (int16_t)RACE(screen->race_copy)->state.window_segment)
 		{
 			screen->traffic_count--;
 			current_object->flags = 0u;
@@ -568,7 +568,7 @@ void traffic_figure_update(void)
 		}
 		race = pointer_to(screen->race_copy);
 		seen_from = (uint16_t)(position - screen->traffic_draw_distance);
-		if ((int16_t)position < (int16_t)race->window_segment || (int16_t)race->window_segment <= (int16_t)seen_from)
+		if ((int16_t)position < (int16_t)race->state.window_segment || (int16_t)race->state.window_segment <= (int16_t)seen_from)
 			return;
 		if ((ITEM_HIT_BOX(current_object->traffic.hit_box)->along_start | ITEM_HIT_BOX(current_object->traffic.hit_box)->along_end) != 0u)
 		{

@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -412,7 +412,7 @@ void lap_timer_update(void)
 		object->lap_timer.text_x = 0xF8u;
 		object->lap_timer.text_y = 0xEu;
 		object->lap_timer.text_attribute = 0x90u;
-		current_object->lap_timer.checkpoints = RACE(screen->race_copy)->stage_count;
+		current_object->lap_timer.checkpoints = RACE(screen->race_copy)->state.stage_count;
 		current_object->state++;
 		return;
 	case 2:
@@ -433,14 +433,14 @@ void lap_timer_update(void)
 			text = address_of(current_object) + 0x80u;
 			time_text = text + 6u;
 			player = screen->player;
-			checkpoints = screen->checkpoints_passed[(int32_t)player];
+			checkpoints = screen->progress.checkpoints_passed[(int32_t)player];
 			if (current_object->lap_timer.checkpoints == checkpoints)
 				break;
 			current_object->lap_timer.checkpoints = checkpoints;
 			checkpoints = (uint8_t)(checkpoints - 1u);
 			current_object->state = lap_timer_checkpoint_states[checkpoints];
 			checkpoints = (uint8_t)(checkpoints << 3);
-			lap_time = screen->checkpoint_times_by_player[(uint8_t)(checkpoints + player)];
+			lap_time = screen->progress.checkpoint_times_by_player[(uint8_t)(checkpoints + player)];
 			checkpoint_time = player_car->checkpoint_time;
 			player_car->checkpoint_time = lap_time;
 			lap_time -= checkpoint_time;
@@ -601,7 +601,7 @@ void time_left_display_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		time_left = RACE(screen->host_record)->time_left;
+		time_left = RACE(screen->host_record)->state.time_left;
 		if (time_left == 0u)
 			return;
 		player_car->time_left = time_left;
@@ -613,18 +613,18 @@ void time_left_display_update(void)
 		{
 			current_object->state++;
 			time_left_display_check_extension();
-			if (RACE(screen->race_copy)->finished == 0u)
-				player_car->time_left = RACE(screen->host_record)->time_left;
+			if (RACE(screen->race_copy)->state.finished == 0u)
+				player_car->time_left = RACE(screen->host_record)->state.time_left;
 		}
 		break;
 	case 2:
 		time_left_display_check_extension();
-		if (RACE(screen->race_copy)->finished == 0u)
-			player_car->time_left = RACE(screen->host_record)->time_left;
+		if (RACE(screen->race_copy)->state.finished == 0u)
+			player_car->time_left = RACE(screen->host_record)->state.time_left;
 		break;
 	case 3:
 		time_left_display_check_extension();
-		shown_time = RACE(screen->host_record)->time_left;
+		shown_time = RACE(screen->host_record)->state.time_left;
 		if (shown_time != 0u)
 		{
 			player_car->time_left = shown_time;
@@ -644,7 +644,7 @@ void time_left_display_update(void)
 		current_object->state++;
 		player_car->time_up = 0xFFu;
 		time_left_display_check_extension();
-		shown_time = RACE(screen->host_record)->time_left;
+		shown_time = RACE(screen->host_record)->state.time_left;
 		if (shown_time != 0u)
 		{
 			player_car->time_left = shown_time;
@@ -793,9 +793,9 @@ void time_left_display_check_extension(void)
 {
 	struct object *object = NULL;
 
-	if (player_car->extensions_shown < screen->forks_decided)
+	if (player_car->extensions_shown < screen->progress.forks_decided)
 	{
-		player_car->extensions_shown = screen->forks_decided;
+		player_car->extensions_shown = screen->progress.forks_decided;
 		object = start_object();
 		object->handler = extend_time_message_start_ADDRESS;
 	}
@@ -902,7 +902,7 @@ void goal_update(void)
 		player_car->at_goal = 0xFFu;
 		current_object->state++;
 	case 1:
-		if (RACE(screen->race)->finished == 0u)
+		if (RACE(screen->race)->state.finished == 0u)
 			return;
 		player_car->at_goal = 0xFFu;
 		current_object->draw_mode = 8u;
@@ -918,7 +918,7 @@ void goal_update(void)
 		OBJECT(object - 0x82u)->goal.text_y = 0x30u;
 		object += 2u;
 		OBJECT(object - 0x84u)->goal.text_attribute = 0x90u;
-		finish_time = screen->checkpoint_times_by_player[screen->player + 0x28u];
+		finish_time = screen->progress.checkpoint_times_by_player[screen->player + 0x28u];
 		object += 2u;
 		time_to_text(finish_time, object);
 		dj_message = 0x34u;
@@ -1136,7 +1136,7 @@ void branch_arrow_update(void)
 		current_object->x = 0xA0u;
 		current_object->y = 0xD0u;
 		current_object->branch_arrow.palette_list = branch_arrow_palette_steps_ADDRESS;
-		current_object->branch_arrow.leave_segment = RACE(screen->race_copy)->segment + 0x39u;
+		current_object->branch_arrow.leave_segment = RACE(screen->race_copy)->state.segment + 0x39u;
 		current_object->state++;
 	case 1:
 		if (player_car->race_over != 0u)
@@ -1144,7 +1144,7 @@ void branch_arrow_update(void)
 			current_object->flags = 0u;
 			return;
 		}
-		if ((int16_t)RACE(screen->race_copy)->segment < (int16_t)current_object->branch_arrow.leave_segment)
+		if ((int16_t)RACE(screen->race_copy)->state.segment < (int16_t)current_object->branch_arrow.leave_segment)
 		{
 			palette_list = rom_pointer(current_object->branch_arrow.palette_list);
 			palette = palette_list[0];
@@ -1216,7 +1216,7 @@ void checkpoint_board_update(void)
 		do
 		{
 			racer = RACE_ORDER_PLAYERS(race)[0];
-			current_object->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[(uint8_t)(game->race_copies[racer].car_choice_and_model >> 8u)];
+			current_object->checkpoint_board.car_sprites[(int32_t)racer] = checkpoint_board_car_sprites[(uint8_t)(game->race_copies[racer].state.car_choice_and_model >> 8u)];
 			race++;
 			racers_left--;
 		} while (racers_left != 0u);
@@ -1239,7 +1239,7 @@ void checkpoint_board_update(void)
 	}
 	checkpoint = current_object->checkpoint_board.checkpoint;
 	current_object->checkpoint_board.row = 0u;
-	current_object->checkpoint_board.rows_left = screen->checkpoint_passes[(int32_t)checkpoint];
+	current_object->checkpoint_board.rows_left = screen->progress.checkpoint_passes[(int32_t)checkpoint];
 	current_object->checkpoint_board.passing_order = address_of(screen) + 0x390u + checkpoint * 2u * 4u;
 	do
 	{
@@ -1248,7 +1248,7 @@ void checkpoint_board_update(void)
 		{
 		case 0:
 			current_object->checkpoint_board.rows_shown++;
-			row_time = screen->checkpoint_times_by_player[(int32_t)(((uint32_t)current_object->checkpoint_board.checkpoint << 3) + row_player)];
+			row_time = screen->progress.checkpoint_times_by_player[(int32_t)(((uint32_t)current_object->checkpoint_board.checkpoint << 3) + row_player)];
 			player = row_player;
 			if (current_object->checkpoint_board.row != 0u)
 			{
@@ -1362,7 +1362,7 @@ void checkpoint_board_update(void)
 		current_object->checkpoint_board.rows_left = rows_left - 1u;
 	} while (rows_left != 1u);
 	leave_segment = current_object->checkpoint_board.leave_segment;
-	if (leave_segment != 0u && (int16_t)leave_segment <= (int16_t)RACE(screen->race_copy)->segment)
+	if (leave_segment != 0u && (int16_t)leave_segment <= (int16_t)RACE(screen->race_copy)->state.segment)
 		current_object->checkpoint_board.leave_segment = 0u;
 	if (current_object->checkpoint_board.rows_shown == 0u)
 	{

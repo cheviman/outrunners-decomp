@@ -3,7 +3,7 @@
  *    Description: the machine's main program: the boot and its checks, the second task, the frame wait, the start of a game, a screen and the board, the reset
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -72,7 +72,7 @@ void boot(void)
 	fill = 0u;
 	fill_high = 0u;
 	block_count = 0x20u;
-	clear_address = pointer_to(0x21E000u);
+	clear_address = pointer_to(address_of(&game->isdn_races[0]));
 	do
 	{
 		clear_address[0] = fill;
@@ -499,14 +499,14 @@ uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits)
 	if (mode == 0u || mode == 6u)
 		return mode;
 	index = screen->index;
-	if (game->free_play != 0u)
+	if (game->eeprom.settings.free_play != 0u)
 	{
 		lamp_blink = (uint8_t)(screen->start_lamp_blink + 1u);
 		screen->start_lamp_blink = lamp_blink;
 		game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
 		if ((screen->buttons_pressed & 0x40u) == 0u)
 			return mode;
-		if (game->free_play == 0u)
+		if (game->eeprom.settings.free_play == 0u)
 		{
 			seat_credits->credits--;
 			seat_credits->bonus_units = 0u;
@@ -531,7 +531,7 @@ uint32_t check_game_start(uint32_t mode, struct seat_credits *seat_credits)
 	game->port_d_outputs[index] = (game->port_d_outputs[index] & ~4u) | ((lamp_blink & 8u) >> 1);
 	if ((screen->buttons_pressed & 0x40u) == 0u)
 		return mode;
-	if (game->free_play == 0u)
+	if (game->eeprom.settings.free_play == 0u)
 	{
 		seat_credits->credits--;
 		seat_credits->bonus_units = 0u;

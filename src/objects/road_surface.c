@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -217,7 +217,7 @@ void road_surface_lines(uint32_t *p_previous_line, uint32_t *p_previous_x, uint3
 	scroll_place = current_object->road_surface.line_scroll_table + table_offset * 4u;
 	scroll_bottom = scroll_place;
 	select_place = current_object->road_surface.line_select_table + table_offset * 4u;
-	segment = RACE(screen->race_copy)->window_segment;
+	segment = RACE(screen->race_copy)->state.window_segment;
 	stripe &= ~0xFFFFu;
 	fraction_shift = 0xF4u;
 	rounding = 0x800u;

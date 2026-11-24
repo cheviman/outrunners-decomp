@@ -3,7 +3,7 @@
  *    Description: the interrupts: the VBLANK (the tasks, the mixer and scrolls, the test button, the sound requests, the lamps), the timers and the link
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -79,7 +79,7 @@ void int_vector_40(void)
 			break;
 		}
 		check_test_button();
-		if (game->free_play == 0u)
+		if (game->eeprom.settings.free_play == 0u)
 			update_coins();
 	}
 	update_lamps();
@@ -123,7 +123,7 @@ void vblank_update_mixer(void)
 	if ((flags_2 & 8u) != 0u)
 	{
 		mixer = screen->mixer;
-		move_halfwords(address_of(screen) + 0x160u, address_of(screen) + 0x1B0u, 0x1Fu);
+		memcpy(screen->mixer_values.registers, screen->mixer_defaults.registers, sizeof screen->mixer_values.registers);
 		move_halfwords(address_of(screen) + 0x1ACu, address_of(screen) + 0x1FCu, 2u);
 		move_halfwords(mixer, address_of(screen) + 0x1B0u, 0x1Fu);
 		move_halfwords(mixer + 0x4Cu, address_of(screen) + 0x1FCu, 2u);
@@ -232,7 +232,7 @@ void int_vector_44(void)
 	uint32_t message_kind = 0;
 	uint8_t received_kind = 0;
 
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		io_write8(IRQ_ACKNOWLEDGE, 0xEFu);
 		return;
@@ -395,7 +395,8 @@ void count_total_time(void)
 void update_lamps(void)
 {
 	uint8_t port_d = 0;
-	uint32_t port_g = 0, screen_block = 0;
+	uint32_t port_g = 0;
+	struct screen *screen_block = NULL;
 	uint8_t checkpoint_timer = 0, leader_timer = 0, checkpoint_2_timer = 0, leader_2_timer = 0;
 
 	if (game->checkpoint_lamp_blinks != 0u)
@@ -421,7 +422,7 @@ void update_lamps(void)
 		}
 	}
 	port_d = game->port_d_outputs[0] | game->checkpoint_lamp[0] | game->leader_lamp[0];
-	if ((game->screen_1.demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+	if ((game->screen_1.demo_flags & 0x100u) == 0u && game->eeprom.settings.steering_wheel_reaction != 0u)
 		port_d |= world->wheel_motor[0];
 	io_write8(IO_1_PORT_D, port_d);
 	if (game->checkpoint_lamp_2_blinks != 0u)
@@ -447,15 +448,15 @@ void update_lamps(void)
 		}
 	}
 	port_d = game->port_d_outputs[1] | game->checkpoint_lamp_2 | game->leader_lamp_2;
-	if ((game->screen_2.demo_flags & 0x100u) == 0u && game->steering_wheel_reaction != 0u)
+	if ((game->screen_2.demo_flags & 0x100u) == 0u && game->eeprom.settings.steering_wheel_reaction != 0u)
 		port_d |= world->wheel_motor[1];
 	io_write8(IO_2_PORT_D, port_d);
-	screen_block = SCREEN_1;
+	screen_block = &game->screen_1;
 	port_g = port_g_outputs_ADDRESS;
-	update_button_lamps(pointer_to(screen_block), port_g);
-	screen_block = SCREEN_2;
+	update_button_lamps(screen_block, port_g);
+	screen_block = &game->screen_2;
 	port_g = port_g_outputs_ADDRESS + 0x1u;
-	update_button_lamps(pointer_to(screen_block), port_g);
+	update_button_lamps(screen_block, port_g);
 }
 
 /* A screen's two button lamps, in its port G image (R11: port_g_outputs or port_g_outputs[1], which the

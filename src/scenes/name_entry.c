@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -20,13 +20,13 @@ uint32_t course_record_beaten(void)
 	uint32_t zero = 0;
 	uint32_t course_number = 0, player = 0;
 
-	if (RACE(screen->race_copy)->finished != 0u)
+	if (RACE(screen->race_copy)->state.finished != 0u)
 	{
 		course_number = screen->built_stage;
 		course_number = (uint8_t)(course_number - 0x15u);
 		screen->record_course = course_number;
 		player = screen->player;
-		if (screen->places[(int32_t)player] == 0u && screen->checkpoint_times_by_player[(int32_t)(player + 0x28u)] < game->course_record_times[course_number * 3u])
+		if (screen->places[(int32_t)player] == 0u && screen->progress.checkpoint_times_by_player[(int32_t)(player + 0x28u)] < game->course_record_times[course_number * 3u])
 		{
 			zero = 1u == 0u;
 			return zero;
@@ -68,7 +68,7 @@ void name_entry_update(void)
 		object->handler = name_entry_lcd_update_ADDRESS;
 		object->name_entry_lcd.name_entry = address_of(current_object);
 		background_setup = name_entry_backgrounds_ADDRESS + screen->index * 5u * 4u;
-		set_up_background(background_setup);
+		set_up_background(rom_pointer(background_setup));
 		palette_fades = name_entry_palette_fades_ADDRESS;
 		start_palette_fades(palette_fades);
 		time_digits_start();
@@ -89,7 +89,7 @@ void name_entry_update(void)
 		current_object->name_entry.spin_frames = 0x28u;
 		current_object->name_entry.wheel_angle = 0xA80u;
 		current_object->name_entry.letter = 0xFFu;
-		player_time = screen->checkpoint_times_by_player[screen->player + 0x28u];
+		player_time = screen->progress.checkpoint_times_by_player[screen->player + 0x28u];
 		text_field = address_of(current_object) + 0x9Au;
 		OBJECT(text_field - 0x9Au)->name_entry.name_x = 0xF8u;
 		text_field += 2u;
@@ -443,7 +443,7 @@ void name_entry_store_record(void)
 		screen->game_step = 0x15u;
 		race = pointer_to(screen->race);
 		race->record_serial++;
-		race->finish_time = screen->checkpoint_times_by_player[screen->player + 0x28u];
+		race->finish_time = screen->progress.checkpoint_times_by_player[screen->player + 0x28u];
 		race->record_model = player_car->model;
 		race->record_name = current_object->name_entry.name[0];
 		race->record_name_rest = (current_object->name_entry.name[1] | ((uint32_t)current_object->name_entry.name[2] << 8u));

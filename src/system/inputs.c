@@ -3,7 +3,7 @@
  *    Description: the controls: the switches and the analog inputs (wheel, pedals), each seat's inputs and the screens' new presses
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -109,12 +109,12 @@ void pack_seat_inputs(void)
 	port_a_on = (uint8_t)~chip_2_port_a;
 	other_seat_buttons = ((~chip_2_port_e * 2u * 2u) & 0x40u) | ((((uint32_t)port_a_on << 4) | (port_a_on >> 4)) & 0x3Fu);
 	analog_place = analog_inputs_ADDRESS;
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
 		link_place = 0x800020u;
-		link_event_place = 0x208040u;
+		link_event_place = address_of(&game->screen_1.link_event);
 		link_send_seat_inputs(seat_buttons, link_event_place, &analog_place, &link_place);
-		link_event_place = 0x218040u;
+		link_event_place = address_of(&game->screen_2.link_event);
 		seat_buttons = (uint8_t)other_seat_buttons;
 		link_send_seat_inputs(seat_buttons, link_event_place, &analog_place, &link_place);
 		return;
@@ -195,16 +195,17 @@ void link_send_seat_inputs(uint8_t seat_buttons, uint32_t link_event_place, uint
    the second): the VBLANK on screen 2's turn. */
 void queue_seat_inputs(void)
 {
-	uint32_t io_chip = 0, seat_record = 0, seat_screen = 0;
+	uint32_t io_chip = 0, seat_record = 0;
+	struct screen *seat_screen = NULL;
 
-	seat_screen = SCREEN_1;
+	seat_screen = &game->screen_1;
 	seat_record = seat_1_buttons_ADDRESS;
 	io_chip = 0xC00000u;
-	queue_screen_inputs(pointer_to(seat_screen), pointer_to(seat_record), io_chip);
-	seat_screen = SCREEN_2;
+	queue_screen_inputs(seat_screen, pointer_to(seat_record), io_chip);
+	seat_screen = &game->screen_2;
 	seat_record = seat_2_buttons_ADDRESS;
 	io_chip = 0xC80000u;
-	queue_screen_inputs(pointer_to(seat_screen), pointer_to(seat_record), io_chip);
+	queue_screen_inputs(seat_screen, pointer_to(seat_record), io_chip);
 }
 
 /* Puts a screen's inputs into its ring of eight (screen + 130, at input_write_place): the seat's buttons
@@ -216,7 +217,7 @@ void queue_screen_inputs(struct screen *seat_screen, struct seat_inputs *seat_re
 	uint32_t input_write_place = 0, inputs = 0, seat_inputs = 0;
 	uint32_t wheel_long = 0;
 
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 		seat_record = pointer_to(seat_screen->race_copy + 0x2Cu);
 	inputs = (uint8_t)~io_read8(io_chip + 2u);
 	seat_inputs = (seat_record->buttons | ((uint32_t)seat_record->wheel << 8u) | ((uint32_t)seat_record->gas << 16u) | ((uint32_t)seat_record->brake << 24u));
@@ -253,7 +254,7 @@ uint32_t take_screen_inputs(void)
 	input_changes = ~buttons & inputs;
 	buttons_place->buttons_pressed = input_changes;
 	buttons_place->buttons_released = buttons & ~inputs;
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
 		new_link_status = RACE(screen->race_copy)->link_status;
 		new_status = new_link_status;

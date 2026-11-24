@@ -3,7 +3,7 @@
  *    Description: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -99,7 +99,7 @@ void draw_object_between_segments(uint32_t *p_leftover, uint32_t *p_sprite_entry
 	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)current_object->position;
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
 	if ((int16_t)window_segment <= (int16_t)segment)
@@ -148,7 +148,7 @@ void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, 
 
 	position = (uint16_t)current_object->position;
 	ring_offset = position;
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
 	if ((int16_t)window_segment <= (int16_t)segment)
@@ -171,7 +171,7 @@ void draw_object_from_road_edge(uint32_t *p_leftover, uint32_t *p_sprite_entry, 
 				y = (uint16_t)((int32_t)((int16_t)projected_segment->y * near_weight + (int16_t)PROJECTED_SEGMENT(r12)->y * position_fraction) >> 7);
 				scale = (scale * near_weight + next_scale * position_fraction) >> 7;
 				*p_leftover = x;
-				draw_object_at_shifted_scale(y, scale, address_of(projected_segment), p_leftover, p_sprite_entry, p_left_caller);
+				draw_object_at_shifted_scale(y, scale, projected_segment, p_leftover, p_sprite_entry, p_left_caller);
 				return;
 			}
 		}
@@ -190,7 +190,7 @@ void draw_object_from_road_edge_unshifted(uint32_t *p_leftover, uint32_t *p_spri
 
 	position = (uint16_t)current_object->position;
 	ring_offset = position;
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
 	if ((int16_t)window_segment <= (int16_t)segment)
@@ -233,7 +233,7 @@ void draw_object_from_road_edge_doubled(uint32_t *p_leftover, uint32_t *p_sprite
 
 	position = (uint16_t)current_object->position;
 	ring_offset = position;
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
 	if ((int16_t)window_segment <= (int16_t)segment)
@@ -307,7 +307,7 @@ void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint
 	uint16_t window_segment = 0, segment = 0;
 
 	position = (uint16_t)current_object->position;
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	segment = position;
 	projected_offset = (uint16_t)(segment - window_segment);
 	if ((int16_t)window_segment <= (int16_t)segment)
@@ -366,18 +366,18 @@ void draw_object_at_segment_scale(uint16_t y, struct projected_segment *projecte
 	uint32_t scale = 0;
 
 	scale = projected_segment->scale;
-	draw_object_at_shifted_scale(y, scale, address_of(projected_segment), &x, p_sprite_entry, p_left_caller);
+	draw_object_at_shifted_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
 /* Draws the object at R0, R1 at the scale R2 shifted by its scale_shift (and >> 4)
    (draw_object_at_scale). */
-void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
+void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller)
 {
 	uint32_t x = *p_x;
 
 	scale = shift_by(scale, current_object->scale_shift, 32) >> 4;
-	draw_object_at_scale(y, scale, pointer_to(projected_segment), &x, p_sprite_entry, p_left_caller);
+	draw_object_at_scale(y, scale, projected_segment, &x, p_sprite_entry, p_left_caller);
 	*p_x = (*p_x & 0xFFFF0000u) | (x & 0xFFFFu);
 }
 
@@ -946,7 +946,7 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32
 
 	item_position = (uint16_t)current_object->road_row.first_position;
 	item_count = (uint16_t)current_object->road_row.end_position;
-	window_then_width_bits = RACE(screen->race_copy)->window_segment;
+	window_then_width_bits = RACE(screen->race_copy)->state.window_segment;
 	view_end = (uint16_t)(window_then_width_bits + (screen->draw_distance >> 7));
 	spacing = current_object->road_row.spacing;
 	if ((int16_t)item_count <= (int16_t)window_then_width_bits)
@@ -1176,7 +1176,7 @@ void road_row_pair_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, u
 	mirror_bits = 0x43u;
 	item_position = (uint16_t)current_object->road_row.first_position;
 	item_count = (uint16_t)current_object->road_row.end_position;
-	window_then_width_bits = RACE(screen->race_copy)->window_segment;
+	window_then_width_bits = RACE(screen->race_copy)->state.window_segment;
 	view_end = (uint16_t)(window_then_width_bits + (screen->draw_distance >> 7));
 	spacing = current_object->road_row.spacing;
 	if ((int16_t)item_count <= (int16_t)window_then_width_bits)

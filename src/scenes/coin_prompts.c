@@ -3,7 +3,7 @@
  *    Description: the prompts for coins and the ignition key, and the credits shown
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -59,7 +59,7 @@ void coin_prompt_update(void)
 	object->car_colour = current_object->coin_prompt.next_car;
 	current_object->coin_prompt.next_car++;
 	current_object->coin_prompt.next_car &= 7u;
-	if (game->free_play != 0u)
+	if (game->eeprom.settings.free_play != 0u)
 	{
 		message = 2u;
 		piece_count = 2u;
@@ -302,7 +302,7 @@ void credit_display_update(void)
 			current_object->flags = 0u;
 			current_object->flags_high = 0u;
 		}
-		if (game->free_play != 0u)
+		if (game->eeprom.settings.free_play != 0u)
 		{
 			current_object->state++;
 			text = credit_free_play_text_ADDRESS;
@@ -364,7 +364,7 @@ void credit_display_update(void)
 		current_object->x = 0xC0u;
 		credit_display_digit();
 		current_object->credit_display.digit_kind = 2u;
-		current_object->credit_display.digit = game->coins_per_credit;
+		current_object->credit_display.digit = game->eeprom.settings.coins_per_credit;
 		current_object->x = 0xC8u;
 		credit_display_digit();
 	}

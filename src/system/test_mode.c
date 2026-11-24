@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -124,7 +124,7 @@ uint32_t test_mode_start(void)
 	game->screen_2.lcd_text[14] = (uint8_t)(text_12_to >> 16u);
 	game->screen_2.lcd_text[15] = (uint8_t)(text_12_to >> 24u);
 	world->test_mode_routine = test_mode_menu_ADDRESS;
-	lcd_place = 0x218F20u;
+	lcd_place = address_of(&game->screen_2.button_lamps);
 	test_mode_read_controls();
 	return lcd_place;
 }
@@ -226,7 +226,7 @@ uint16_t test_mode_menu_show_write_count(uint16_t cell_value)
 	text = test_mode_write_count_text_ADDRESS;
 	test_mode_draw_texts(cell_value, text);
 	cell = TEXT_CELL(27, 26);
-	write_count = game->eeprom_write_count;
+	write_count = game->eeprom.settings.eeprom_write_count;
 	attribute = 0x64u;
 	digits = 5u;
 	test_mode_draw_number(digits, &write_count, &attribute, &cell);
@@ -280,7 +280,7 @@ void test_mode_memory_test(void)
 	SOUND_PROGRAM_HOLD = 1u;
 	current_object = pointer_to(memory_test_results_ADDRESS);
 	blank_result = 0u;
-	set_bytes(memory_test_results_ADDRESS, 0x19u, blank_result);
+	memset(game->memory_test_results, blank_result, sizeof game->memory_test_results);
 	game->memory_test_results[0] = 1u;
 	game->memory_test_results[1] = 1u;
 	test_mode_memory_test_draw(&cell_value, &r12);
@@ -1124,7 +1124,7 @@ void test_mode_volume_adjustment_select(uint32_t character)
 		text = volume_adjustment_controls_text_ADDRESS;
 		test_mode_draw_texts(drawn_character, text);
 		test_mode_show_exit_prompt();
-		range = pointer_to(volume_ranges_ADDRESS);
+		range = pointer_to(address_of(&game->eeprom.settings.volume_ranges));
 		analog_input = &game->test_mode_analog_inputs;
 		controls_left = 6u;
 		do
@@ -1164,7 +1164,7 @@ void test_mode_volume_adjustment_adjust(void)
 	struct volume_range *range = NULL;
 
 	analog_input = &game->test_mode_analog_inputs;
-	range = pointer_to(volume_ranges_ADDRESS);
+	range = pointer_to(address_of(&game->eeprom.settings.volume_ranges));
 	controls_left = 6u;
 	do
 	{
@@ -1199,7 +1199,7 @@ void test_mode_volume_adjustment_draw(uint32_t *p_character, uint32_t *p_last_an
 	test_mode_draw_texts(character, text);
 	cell = TEXT_CELL(0, 0);
 	bar_cells = volume_adjustment_bar_cells_ADDRESS;
-	calibration = volume_ranges_ADDRESS;
+	calibration = address_of(&game->eeprom.settings.volume_ranges);
 	controls_left = 3u;
 	do
 	{
@@ -1330,7 +1330,7 @@ void test_mode_input_test_draw(uint32_t *p_character, uint32_t *p_last_port, uin
 	cell = TEXT_CELL(0, 0);
 	item = input_test_items_ADDRESS;
 	analog_input = test_mode_analog_inputs_ADDRESS;
-	range = volume_ranges_ADDRESS;
+	range = address_of(&game->eeprom.settings.volume_ranges);
 	bar_cells = input_test_bar_cells_ADDRESS;
 	controls_left = 6u;
 	do
@@ -1993,7 +1993,7 @@ void test_mode_game_assignments_run(void)
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = pointer_to(settings_magic_ADDRESS);
+		current_object = pointer_to(address_of(&game->eeprom));
 		switch (world->test_mode_page_cursor)
 		{
 		case 0:
@@ -2040,14 +2040,14 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 	uint32_t advertise_on = 0, bar_cells_left = 0, cell = 0, colour = 0, difficulty_seconds = 0, digit_count = 0, number = 0, row_cell = 0, seconds = 0, stages_left = 0, steering_on = 0, text = 0;
 	uint32_t bar_length = 0;
 
-	current_object = pointer_to(settings_magic_ADDRESS);
+	current_object = pointer_to(address_of(&game->eeprom));
 	cell = TEXT_CELL(32, 5);
 	colour = 0x64u;
 	digit_count = 2u;
-	number = game->game_difficulty + 1u;
+	number = game->eeprom.settings.game_difficulty + 1u;
 	test_mode_draw_number(digit_count, &number, &colour, &cell);
 	cell = LINKED(cell, 0xF3A8u);
-	bar_length = game->game_difficulty * 2u;
+	bar_length = game->eeprom.settings.game_difficulty * 2u;
 	bar_cells_left = bar_length;
 	if (bar_length != 0u)
 	{
@@ -2103,11 +2103,11 @@ void test_mode_game_assignments_draw(uint32_t *p_character, uint32_t *p_difficul
 		stages_left--;
 		row_cell += 0x80u;
 	} while (stages_left != 0u);
-	steering_on = game->steering_wheel_reaction;
+	steering_on = game->eeprom.settings.steering_wheel_reaction;
 	steering_on = steering_on & 1u;
 	text = steering_wheel_reaction_texts[steering_on];
 	test_mode_draw_texts((uint16_t)steering_on, text);
-	advertise_on = game->advertise_sound;
+	advertise_on = game->eeprom.settings.advertise_sound;
 	advertise_on = advertise_on & 1u;
 	text = advertise_sound_texts[advertise_on];
 	advertise_on = test_mode_draw_texts((uint16_t)advertise_on, text);
@@ -2120,7 +2120,7 @@ void test_mode_game_assignments_difficulty(void)
 {
 	uint32_t ignored = 0;
 
-	game->game_difficulty = (game->game_difficulty + 1u) & 7u;
+	game->eeprom.settings.game_difficulty = (game->eeprom.settings.game_difficulty + 1u) & 7u;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2132,10 +2132,10 @@ void test_mode_game_assignments_time(void)
 	uint32_t ignored = 0, stage_item = 0;
 
 	stage_item = world->test_mode_page_cursor;
-	seconds = (uint8_t)(game->time_difficulty[stage_item - 1u] + 1u);
+	seconds = (uint8_t)(game->eeprom.settings.time_difficulty[(int32_t)(stage_item - 1u)] + 1u);
 	if ((int8_t)seconds > 5)
 		seconds = 0xFBu;
-	game->time_difficulty[stage_item - 1u] = seconds;
+	game->eeprom.settings.time_difficulty[(int32_t)(stage_item - 1u)] = seconds;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2145,8 +2145,8 @@ void test_mode_game_assignments_steering(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = game->steering_wheel_reaction > 0u;
-	game->steering_wheel_reaction = 1u - carry;
+	carry = game->eeprom.settings.steering_wheel_reaction > 0u;
+	game->eeprom.settings.steering_wheel_reaction = 1u - carry;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2156,8 +2156,8 @@ void test_mode_game_assignments_advertise(void)
 	uint32_t carry = 0;
 	uint32_t ignored = 0;
 
-	carry = game->advertise_sound > 0u;
-	game->advertise_sound = 1u - carry;
+	carry = game->eeprom.settings.advertise_sound > 0u;
+	game->eeprom.settings.advertise_sound = 1u - carry;
 	test_mode_game_assignments_draw(&ignored, &r12);
 }
 
@@ -2170,7 +2170,7 @@ void test_mode_game_assignments_exit(void)
 	const uint8_t *setting_places = NULL;
 
 	setting_places = rom_pointer(game_assignments_setting_places_ADDRESS);
-	current_object = pointer_to(settings_magic_ADDRESS);
+	current_object = pointer_to(address_of(&game->eeprom));
 	do
 	{
 		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));
@@ -2240,7 +2240,7 @@ void test_mode_coin_assignments_run(uint32_t item_count)
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = pointer_to(settings_magic_ADDRESS);
+		current_object = pointer_to(address_of(&game->eeprom));
 		switch (world->test_mode_page_cursor)
 		{
 		case 0:
@@ -2288,13 +2288,13 @@ void test_mode_coin_assignments_draw(uint32_t *p_character, uint32_t *p_colours,
 	uint16_t blank_cell = 0;
 	uint32_t cell = 0, colours = 0, credits = 0, description = 0, description_byte = 0, digit_count = 0, line_cell = 0, line_text = 0, lines_left = 0, number = 0, plural_offset = 0;
 
-	current_object = pointer_to(settings_magic_ADDRESS);
+	current_object = pointer_to(address_of(&game->eeprom));
 	cell = TEXT_CELL(32, 9);
 	colours = 0x64u;
 	digit_count = 2u;
-	number = game->coin_setting + 1u;
+	number = game->eeprom.settings.coin_setting + 1u;
 	test_mode_draw_number(digit_count, &number, &colours, &cell);
-	description = coin_setting_descriptions[game->coin_setting];
+	description = coin_setting_descriptions[game->eeprom.settings.coin_setting];
 	blank_cell = 0u;
 	line_cell = TEXT_CELL(17, 10);
 	lines_left = 5u;
@@ -2366,28 +2366,28 @@ void test_mode_coin_assignments_next_setting(void)
 
 	do
 	{
-		setting_number = game->coin_setting;
+		setting_number = game->eeprom.settings.coin_setting;
 		setting_number = (uint8_t)(setting_number + 1u);
 		if ((int8_t)setting_number >= 0x1A)
 			setting_number = 0u;
-		game->coin_setting = setting_number;
+		game->eeprom.settings.coin_setting = setting_number;
 		setting = rom_pointer(coin_setting_records_ADDRESS + setting_number * 4u);
 		if ((int8_t)setting->coins < 0)
 		{
-			game->coins_per_credit = 1u;
-			game->bonus_adder = 0xFFu;
-			game->first_chute_multiplier = 1u;
-			game->second_chute_multiplier = 1u;
-			game->free_play = 0xFFu;
+			game->eeprom.settings.coins_per_credit = 1u;
+			game->eeprom.settings.bonus_adder = 0xFFu;
+			game->eeprom.settings.first_chute_multiplier = 1u;
+			game->eeprom.settings.second_chute_multiplier = 1u;
+			game->eeprom.settings.free_play = 0xFFu;
 			test_mode_coin_assignments_draw(&ignored, &ignored_2, &r12);
 			return;
 		}
-	} while (setting_number != 0u && game->coins_per_credit == setting->coins && game->bonus_adder == setting->bonus && game->first_chute_multiplier == setting->first_multiplier);
-	game->coins_per_credit = setting->coins;
-	game->bonus_adder = setting->bonus;
-	game->first_chute_multiplier = setting->first_multiplier;
-	game->second_chute_multiplier = setting->second_multiplier;
-	game->free_play = 0u;
+	} while (setting_number != 0u && game->eeprom.settings.coins_per_credit == setting->coins && game->eeprom.settings.bonus_adder == setting->bonus && game->eeprom.settings.first_chute_multiplier == setting->first_multiplier);
+	game->eeprom.settings.coins_per_credit = setting->coins;
+	game->eeprom.settings.bonus_adder = setting->bonus;
+	game->eeprom.settings.first_chute_multiplier = setting->first_multiplier;
+	game->eeprom.settings.second_chute_multiplier = setting->second_multiplier;
+	game->eeprom.settings.free_play = 0u;
 	test_mode_coin_assignments_draw(&ignored, &ignored_2, &r12);
 }
 
@@ -2438,7 +2438,7 @@ void test_mode_coin_assignments_manual_run(void)
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = pointer_to(settings_magic_ADDRESS);
+		current_object = pointer_to(address_of(&game->eeprom));
 		switch (world->test_mode_page_cursor)
 		{
 		case 0:
@@ -2479,14 +2479,14 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 	uint32_t bonus_rest = 0, cell = 0, coins_for_bonus = 0, coins_for_credit = 0, counted_coins = 0, credits = 0, digit_count = 0, leftover_coins = 0, multiplier = 0, numerator = 0, plural_offset = 0, rows_left = 0, shown_bonus = 0, shown_multiplier = 0, text = 0, toward_bonus = 0;
 	uint32_t saved_leftover_coins = 0;
 
-	current_object = pointer_to(settings_magic_ADDRESS);
+	current_object = pointer_to(address_of(&game->eeprom));
 	cell = TEXT_CELL(23, 8);
-	coins_for_credit = game->coins_per_credit;
+	coins_for_credit = game->eeprom.settings.coins_per_credit;
 	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
 	test_mode_draw_count(coins_for_credit, digit_count, plural_offset, &item_count, &cell);
-	shown_bonus = game->bonus_adder;
+	shown_bonus = game->eeprom.settings.bonus_adder;
 	if ((int8_t)shown_bonus > 0)
 	{
 		cell = LINKED(cell, 0xF51Eu);
@@ -2507,15 +2507,15 @@ uint16_t test_mode_coin_assignments_manual_draw(uint32_t item_count)
 		test_mode_draw_texts((uint16_t)shown_bonus, text);
 	}
 	cell = TEXT_CELL(32, 12);
-	shown_multiplier = game->first_chute_multiplier;
+	shown_multiplier = game->eeprom.settings.first_chute_multiplier;
 	item_count = (item_count & ~0xFFFFu) | 0x6464u;
 	digit_count = 1u;
 	plural_offset = 6u;
 	test_mode_draw_count(shown_multiplier, digit_count, plural_offset, &item_count, &cell);
 	cell = LINKED(cell, 0xF784u);
-	coins_for_credit = game->coins_per_credit;
-	coins_for_bonus = (int8_t)game->bonus_adder;
-	multiplier = game->first_chute_multiplier;
+	coins_for_credit = game->eeprom.settings.coins_per_credit;
+	coins_for_bonus = (int8_t)game->eeprom.settings.bonus_adder;
+	multiplier = game->eeprom.settings.first_chute_multiplier;
 	counted_coins = 0u;
 	toward_bonus = 0u;
 	rows_left = 9u;
@@ -2598,13 +2598,13 @@ void test_mode_coin_assignments_step_coin_to_credit(uint32_t item_count)
    redraws (test_mode_coin_assignments_manual_draw). */
 void test_mode_coin_assignments_step_value(uint32_t setting_offset, uint32_t item_count)
 {
-	item_count = (item_count & ~0xFFu) | RAM8(settings_magic_ADDRESS + setting_offset);
+	item_count = (item_count & ~0xFFu) | AT8(game->eeprom, setting_offset);
 	item_count = (item_count & ~0xFFu) | (uint8_t)(item_count + 1u);
 	if ((uint8_t)item_count >= 0xAu)
 		item_count = (item_count & ~0xFFu) | 1u;
-	RAM8(settings_magic_ADDRESS + setting_offset) = item_count;
-	if (game->free_play == 0u)
-		game->coin_setting = 0x1Au;
+	AT8(game->eeprom, setting_offset) = item_count;
+	if (game->eeprom.settings.free_play == 0u)
+		game->eeprom.settings.coin_setting = 0x1Au;
 	test_mode_coin_assignments_manual_draw(item_count);
 }
 
@@ -2615,17 +2615,17 @@ void test_mode_coin_assignments_step_bonus_adder(uint32_t item_count)
 	uint8_t bonus = 0;
 	uint8_t next_bonus = 0;
 
-	bonus = game->bonus_adder;
+	bonus = game->eeprom.settings.bonus_adder;
 	if (bonus == 0u)
 		bonus++;
 	next_bonus = bonus + 1u;
 	bonus = next_bonus;
 	if (next_bonus == 0u)
-		game->free_play = 0u;
+		game->eeprom.settings.free_play = 0u;
 	if (bonus >= 0xAu)
 		bonus = 0u;
-	game->bonus_adder = bonus;
-	game->coin_setting = 0x1Au;
+	game->eeprom.settings.bonus_adder = bonus;
+	game->eeprom.settings.coin_setting = 0x1Au;
 	test_mode_coin_assignments_manual_draw(item_count);
 }
 
@@ -2683,8 +2683,8 @@ void test_mode_network_assignments_start(void)
 	character = test_mode_clear_text();
 	text = network_assignments_page_text_ADDRESS;
 	test_mode_draw_texts(character, text);
-	current_object = pointer_to(settings_magic_ADDRESS);
-	if (game->stand_alone != 0u)
+	current_object = pointer_to(address_of(&game->eeprom));
+	if (game->eeprom.settings.stand_alone != 0u)
 	{
 		cell = TEXT_CELL(8, 12);
 		hidden_colour = 0x6Eu;
@@ -2693,7 +2693,7 @@ void test_mode_network_assignments_start(void)
 		hidden_colour = 0x6Eu;
 		test_mode_colour_line(hidden_colour, cell);
 	}
-	world->test_mode_privilege_mode = game->link_master & 1u;
+	world->test_mode_privilege_mode = game->eeprom.settings.link_master & 1u;
 	character = test_mode_network_assignments_draw();
 	test_mode_draw_instructions(character);
 	world->test_mode_page_cursor = 3u;
@@ -2720,7 +2720,7 @@ void test_mode_network_assignments_run(void)
 	{
 		test_mode_clear_cursor();
 		page_cursor = world->test_mode_page_cursor;
-		if (game->stand_alone == 0u)
+		if (game->eeprom.settings.stand_alone == 0u)
 		{
 			page_cursor = (uint8_t)(page_cursor + 1u);
 			if ((int8_t)page_cursor >= 4)
@@ -2734,7 +2734,7 @@ void test_mode_network_assignments_run(void)
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
 	{
-		current_object = pointer_to(settings_magic_ADDRESS);
+		current_object = pointer_to(address_of(&game->eeprom));
 		switch (world->test_mode_page_cursor)
 		{
 		case 0:
@@ -2772,8 +2772,8 @@ uint16_t test_mode_network_assignments_draw(void)
 	uint16_t cabinet_number_then_colour_2 = 0;
 	uint32_t cabinet_number_then_colour = 0, cell = 0, colour = 0, digit_count = 0, privilege = 0, stand_alone_bit = 0, text = 0;
 
-	current_object = pointer_to(settings_magic_ADDRESS);
-	stand_alone_bit = game->stand_alone;
+	current_object = pointer_to(address_of(&game->eeprom));
+	stand_alone_bit = game->eeprom.settings.stand_alone;
 	stand_alone_bit = stand_alone_bit & 1u;
 	text = communication_texts[stand_alone_bit];
 	test_mode_draw_texts((uint16_t)stand_alone_bit, text);
@@ -2783,9 +2783,9 @@ uint16_t test_mode_network_assignments_draw(void)
 	cell = TEXT_CELL(33, 14);
 	colour = 0x64u;
 	digit_count = 1u;
-	cabinet_number_then_colour = game->cabinet_id + 1u;
+	cabinet_number_then_colour = game->eeprom.settings.cabinet_id + 1u;
 	test_mode_draw_number(digit_count, &cabinet_number_then_colour, &colour, &cell);
-	if (game->stand_alone != 0u)
+	if (game->eeprom.settings.stand_alone != 0u)
 	{
 		cell = TEXT_CELL(28, 12);
 		cabinet_number_then_colour_2 = 0x6Eu;
@@ -2807,10 +2807,10 @@ void test_mode_network_assignments_toggle_communication(void)
 	uint32_t cell = 0;
 	uint32_t saved_colour = 0;
 
-	carry = game->stand_alone > 0u;
-	game->stand_alone = 1u - carry;
-	game->link_master = 1u;
-	game->isdn_mode = 0u;
+	carry = game->eeprom.settings.stand_alone > 0u;
+	game->eeprom.settings.stand_alone = 1u - carry;
+	game->eeprom.settings.link_master = 1u;
+	game->eeprom.settings.isdn_mode = 0u;
 	world->test_mode_privilege_mode = 1u;
 	stand_alone_then_colour = 0x60u;
 	if (1u != carry)
@@ -2840,15 +2840,15 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 		privilege = 1u;
 	world->test_mode_privilege_mode = privilege;
 	setting = rom_pointer(privilege_mode_settings_ADDRESS + privilege * 2u);
-	game->link_master = setting->master;
-	game->isdn_mode = setting->isdn;
+	game->eeprom.settings.link_master = setting->master;
+	game->eeprom.settings.isdn_mode = setting->isdn;
 	test_mode_network_assignments_draw();
 }
 
 /* CABINET ID: steps cabinet_id through 0-3 (shown 1-4); redraws. */
 void test_mode_network_assignments_step_cabinet_id(void)
 {
-	game->cabinet_id = (game->cabinet_id + 1u) & 3u;
+	game->eeprom.settings.cabinet_id = (game->eeprom.settings.cabinet_id + 1u) & 3u;
 	test_mode_network_assignments_draw();
 }
 
@@ -3195,16 +3195,13 @@ void test_mode_draw_minutes_seconds(uint32_t *p_seconds, uint32_t *p_cell)
 
 /* Unused: turns a duration kept as five bytes at R10 (seconds, minutes and hours a byte each, then days
    a halfword) into seconds: ((days * 24 + hours) * 60 + minutes) * 60 + seconds, in R0 (R1 the carry). */
-uint32_t test_mode_duration_to_seconds(uint32_t duration)
+uint32_t test_mode_duration_to_seconds(struct stored_duration *duration)
 {
 	uint32_t seconds = 0;
 
-	duration = duration + 5u - 2u;
-	seconds = STORED_DURATION(duration - 0x3u)->days * 0x18u;
-	duration--;
-	seconds = (seconds + STORED_DURATION(duration - 0x2u)->hours) * 0x3Cu;
-	duration--;
-	seconds = (seconds + STORED_DURATION(duration - 0x1u)->minutes) * 0x3Cu + STORED_DURATION(duration - 0x1u)->seconds;
+	seconds = duration->days * 0x18u;
+	seconds = (seconds + duration->hours) * 0x3Cu;
+	seconds = (seconds + duration->minutes) * 0x3Cu + duration->seconds;
 	return seconds;
 }
 
@@ -3330,7 +3327,7 @@ void test_mode_exit(void)
 	if ((flags_before & 2u) != 0u)
 	{
 		save_settings();
-		if (game->eeprom_write_count < EEPROM_WRITE_LIMIT)
+		if (game->eeprom.settings.eeprom_write_count < EEPROM_WRITE_LIMIT)
 		{
 			world->test_mode_on = 0u;
 			io_write8(IO_1_CNT, 4u);

@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -285,7 +285,7 @@ void draw_object_at_car_window_segment(uint32_t *p_leftover, uint32_t *p_sprite_
 void draw_object_at_segment(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_car_window_segment_on_road(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_segment_scale(uint16_t y, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
-void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, uint32_t projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
+void draw_object_at_shifted_scale(uint16_t y, uint32_t scale, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_at_scale(uint16_t y, uint32_t scale, struct projected_segment *projected_segment, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_left_caller);
 void draw_object_on_screen(uint32_t *p_leftover, uint32_t *p_sprite_entry);
 void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale, uint32_t *p_x, uint32_t *p_sprite_entry, uint32_t *p_last_frame, uint32_t *p_last_size_step);
@@ -307,7 +307,7 @@ void race_background_lower_animation_cycle(void);
 void race_background_start_upper_animation(uint32_t animation);
 void race_background_upper_animation_wait(void);
 void race_background_upper_animation_cycle(void);
-void set_up_background(uint32_t background_setup);
+void set_up_background(const struct background_setup *background_setup);
 void race_background_start_objects(uint32_t stage);
 void palette_cycle_update(void);
 void sunset_fade_start(void);
@@ -747,7 +747,7 @@ void title_picture_draw(void);
 /* system/coins.c: the coins and credits, and the bookkeeping */
 void init_coins(void);
 void update_coins(void);
-void pulse_coin_meter(uint8_t meter_bit, uint32_t coin_meter, uint32_t meter_bits);
+void pulse_coin_meter(uint8_t meter_bit, struct coin_meter *coin_meter, uint32_t meter_bits);
 void write_bookkeeping_credits(uint32_t bookkeeping_place);
 uint16_t add_service_credit(uint16_t credits_given, struct seat_credits *seat_credits, uint32_t service_sounds);
 uint16_t insert_coin(uint8_t released_switches, uint16_t credits_given, uint32_t chute_entry);
@@ -937,7 +937,7 @@ uint16_t test_mode_bookkeeping_draw_totals(void);
 void test_mode_bookkeeping_draw_histogram(uint32_t *p_last_character, uint32_t *p_cell);
 uint32_t test_mode_draw_duration(uint32_t seconds, uint32_t cell);
 void test_mode_draw_minutes_seconds(uint32_t *p_seconds, uint32_t *p_cell);
-uint32_t test_mode_duration_to_seconds(uint32_t duration);
+uint32_t test_mode_duration_to_seconds(struct stored_duration *duration);
 void test_mode_split_minutes_seconds(uint32_t seconds, struct stored_duration *stored_time);
 void test_mode_backup_data_clear_start(void);
 void test_mode_backup_data_clear_run(void);
@@ -1002,7 +1002,7 @@ uint32_t draw_text_sprites(uint32_t sprite_words_0_1, uint32_t sprite_size, uint
 /* video/unpack.c: unpacking the tile pages and the lists of packed blocks, a step each frame */
 void unpack(uint32_t source, uint32_t destination);
 void unpack_queued_step(void);
-void unpack_list(uint32_t block_list);
+void unpack_list(const struct packed_block_entry *block_list);
 uint32_t unpack_tile_pages(uint32_t page_list, uint32_t list_next);
 void queue_unpack_list(const struct packed_block_entry *block_list);
 void queue_tile_pages(uint32_t page_list);

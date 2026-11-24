@@ -3,7 +3,7 @@
  *    Description: the link between the cabinets: the ISDN connection, the network check at boot, the race's entries and progress, the course records, the records sent and received
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -192,7 +192,7 @@ void network_check_again(void)
 {
 	uint32_t delay = 0;
 
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		network_check();
 		return;
@@ -207,8 +207,8 @@ void network_check_again(void)
 	move_halfwords(machine_count_ADDRESS, zero_block_ADDRESS, 0x20u);
 	move_halfwords(r12 + 4u, zero_block_ADDRESS, 0x10u);
 	move_halfwords(r12 + 0x600u, zero_block_ADDRESS, 0x400u);
-	move_halfwords(RACE_1, zero_block_ADDRESS, 0x80u);
-	move_halfwords(RACE_COPY_1, zero_block_ADDRESS, 0x200u);
+	memset(game->races, 0, sizeof game->races);
+	memset(game->race_copies, 0, sizeof game->race_copies);
 	network_check_isdn();
 }
 
@@ -233,9 +233,9 @@ void network_check(void)
 	r12 = 0x800000u;
 	move_halfwords(machine_count_ADDRESS, zero_block_ADDRESS, 0x20u);
 	move_halfwords(r12, zero_block_ADDRESS, 8u);
-	move_halfwords(RACE_1, zero_block_ADDRESS, 0x80u);
-	move_halfwords(RACE_COPY_1, zero_block_ADDRESS, 0x200u);
-	world->link_off = game->stand_alone;
+	memset(game->races, 0, sizeof game->races);
+	memset(game->race_copies, 0, sizeof game->race_copies);
+	world->link_off = game->eeprom.settings.stand_alone;
 	if (world->link_off != 0u)
 	{
 		network_check_stand_alone();
@@ -243,9 +243,9 @@ void network_check(void)
 	}
 	io_write8(LINK_BOARD_ON, 0u);
 	text = network_check_master_text_ADDRESS;
-	if (game->link_master == 0u)
+	if (game->eeprom.settings.link_master == 0u)
 		text = network_check_slave_text_ADDRESS;
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 		text = network_check_isdn_text_ADDRESS;
 	print_text_layer(text);
 	text = board_check_text_ADDRESS;
@@ -280,12 +280,12 @@ void network_check(void)
 	left_caller = network_check_four_ics(left_caller);
 	if (left_caller != 0u)
 		return;
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
 		network_check_isdn();
 		return;
 	}
-	io_write8(r12 + 4u, game->link_master);
+	io_write8(r12 + 4u, game->eeprom.settings.link_master);
 	board_flags_role = io_read32(LINK_BOARD_FLAGS);
 	io_write32(LINK_BOARD_FLAGS, board_flags_role & ~1u);
 	wait_for_frame();
@@ -350,12 +350,12 @@ void network_check_join(void)
 	world->player_count = count;
 	machine = io_read8(r12 + 2u);
 	io_write8(r12 + 0x1002u, 1u);
-	if (game->isdn_mode == 0u && count < 2u)
+	if (game->eeprom.settings.isdn_mode == 0u && count < 2u)
 	{
 		network_check_stand_alone();
 		return;
 	}
-	car_number = (uint8_t)(game->cabinet_id * 2u);
+	car_number = (uint8_t)(game->eeprom.settings.cabinet_id * 2u);
 	game->screen_1.car_number = car_number;
 	game->races[0].car_number = car_number;
 	car_number++;
@@ -445,20 +445,20 @@ void network_check_result(uint32_t machine)
 	game->screen_2.race = RACE_2;
 	if (machine == 0u)
 	{
-		race->master_advertise_sound = game->advertise_sound;
-		race->master_steering_wheel_reaction = game->steering_wheel_reaction;
-		race->master_coins_per_credit = game->coins_per_credit;
-		race->master_first_chute_multiplier = game->first_chute_multiplier;
-		race->master_bonus_adder = game->bonus_adder;
-		race->master_coin_setting = game->coin_setting;
-		race->master_free_play = game->free_play;
-		race->master_game_difficulty = game->game_difficulty;
-		race->master_time_difficulty[0] = game->time_difficulty[0];
-		race->master_time_difficulty[1] = game->time_difficulty[1];
-		race->master_time_difficulty[2] = game->time_difficulty[2];
-		race->master_time_difficulty[3] = game->time_difficulty[3];
-		race->master_time_difficulty[4] = game->time_difficulty[4];
-		race->master_time_difficulty[5] = game->time_difficulty[5];
+		race->master_advertise_sound = game->eeprom.settings.advertise_sound;
+		race->master_steering_wheel_reaction = game->eeprom.settings.steering_wheel_reaction;
+		race->master_coins_per_credit = game->eeprom.settings.coins_per_credit;
+		race->master_first_chute_multiplier = game->eeprom.settings.first_chute_multiplier;
+		race->master_bonus_adder = game->eeprom.settings.bonus_adder;
+		race->master_coin_setting = game->eeprom.settings.coin_setting;
+		race->master_free_play = game->eeprom.settings.free_play;
+		race->master_game_difficulty = game->eeprom.settings.game_difficulty;
+		race->master_time_difficulty[0] = game->eeprom.settings.time_difficulty[0];
+		race->master_time_difficulty[1] = game->eeprom.settings.time_difficulty[1];
+		race->master_time_difficulty[2] = game->eeprom.settings.time_difficulty[2];
+		race->master_time_difficulty[3] = game->eeprom.settings.time_difficulty[3];
+		race->master_time_difficulty[4] = game->eeprom.settings.time_difficulty[4];
+		race->master_time_difficulty[5] = game->eeprom.settings.time_difficulty[5];
 		move_halfwords(address_of(race) + 0x30u, BOOKKEEPING_COURSE_RECORDS_ADDRESS, 0x1Eu);
 	}
 	clear_text_layer();
@@ -478,7 +478,7 @@ void network_check_result(uint32_t machine)
 		clear_text_layer();
 		return;
 	}
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
 		text = isdn_machine_text_ADDRESS;
 		print_text_layer(text);
@@ -995,7 +995,7 @@ void link_take_master_settings(void)
 	for (;;)
 	{
 		wait_for_frame();
-		if (game->isdn_mode == 0u)
+		if (game->eeprom.settings.isdn_mode == 0u)
 			break;
 		isdn_records_ready = io_read8(LINK_ISDN_RECORDS_READY);
 		if (isdn_records_ready != 0u)
@@ -1016,34 +1016,34 @@ void link_take_master_settings(void)
 		car_number_slot++;
 		players_left--;
 	} while (players_left != 0u);
-	move_halfwords(BOOKKEEPING_COURSE_RECORDS_ADDRESS, WORK_RAM + 0xFC30u, 0x1Eu);
+	move_halfwords(BOOKKEEPING_COURSE_RECORDS_ADDRESS, address_of(&game->race_copies[0].state), 0x1Eu);
 	bookkeeping_update_checksum((uint16_t)players_left);
-	move_halfwords(SOUND_RAM + 0x1FAEu, WORK_RAM + 0xFC30u, 0x1Eu);
+	move_halfwords(SOUND_RAM + 0x1FAEu, address_of(&game->race_copies[0].state), 0x1Eu);
 	r12 = load_course_records();
 	race = &game->race_copies[0];
 	coins_changed = 0u;
-	if (game->coin_setting != game->race_copies[0].master_coin_setting || game->coins_per_credit != race->master_coins_per_credit || game->first_chute_multiplier != race->master_first_chute_multiplier || game->bonus_adder != race->master_bonus_adder || game->free_play != race->master_free_play)
+	if (game->eeprom.settings.coin_setting != game->race_copies[0].master_coin_setting || game->eeprom.settings.coins_per_credit != race->master_coins_per_credit || game->eeprom.settings.first_chute_multiplier != race->master_first_chute_multiplier || game->eeprom.settings.bonus_adder != race->master_bonus_adder || game->eeprom.settings.free_play != race->master_free_play)
 	{
 		coins_changed = 0xFFFFFFFFu;
-		game->coin_setting = race->master_coin_setting;
-		game->coins_per_credit = race->master_coins_per_credit;
-		game->first_chute_multiplier = race->master_first_chute_multiplier;
-		game->bonus_adder = race->master_bonus_adder;
-		game->free_play = race->master_free_play;
+		game->eeprom.settings.coin_setting = race->master_coin_setting;
+		game->eeprom.settings.coins_per_credit = race->master_coins_per_credit;
+		game->eeprom.settings.first_chute_multiplier = race->master_first_chute_multiplier;
+		game->eeprom.settings.bonus_adder = race->master_bonus_adder;
+		game->eeprom.settings.free_play = race->master_free_play;
 		init_coins();
 		r12 = bookkeeping_clear_credits();
 	}
-	if (game->advertise_sound == race->master_advertise_sound && game->steering_wheel_reaction == race->master_steering_wheel_reaction && game->game_difficulty == race->master_game_difficulty && ((uint8_t)game->time_difficulty[0] | ((uint32_t)(uint8_t)game->time_difficulty[1] << 8u)) == ((uint8_t)race->master_time_difficulty[0] | ((uint32_t)(uint8_t)race->master_time_difficulty[1] << 8u)) && ((uint8_t)game->time_difficulty[2] | ((uint32_t)(uint8_t)game->time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->time_difficulty[5] << 24u)) == ((uint8_t)race->master_time_difficulty[2] | ((uint32_t)(uint8_t)race->master_time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)race->master_time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)race->master_time_difficulty[5] << 24u)) && coins_changed == 0u)
+	if (game->eeprom.settings.advertise_sound == race->master_advertise_sound && game->eeprom.settings.steering_wheel_reaction == race->master_steering_wheel_reaction && game->eeprom.settings.game_difficulty == race->master_game_difficulty && ((uint8_t)game->eeprom.settings.time_difficulty[0] | ((uint32_t)(uint8_t)game->eeprom.settings.time_difficulty[1] << 8u)) == ((uint8_t)race->master_time_difficulty[0] | ((uint32_t)(uint8_t)race->master_time_difficulty[1] << 8u)) && ((uint8_t)game->eeprom.settings.time_difficulty[2] | ((uint32_t)(uint8_t)game->eeprom.settings.time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)game->eeprom.settings.time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)game->eeprom.settings.time_difficulty[5] << 24u)) == ((uint8_t)race->master_time_difficulty[2] | ((uint32_t)(uint8_t)race->master_time_difficulty[3] << 8u) | ((uint32_t)(uint8_t)race->master_time_difficulty[4] << 16u) | ((uint32_t)(uint8_t)race->master_time_difficulty[5] << 24u)) && coins_changed == 0u)
 		return;
-	game->advertise_sound = race->master_advertise_sound;
-	game->steering_wheel_reaction = race->master_steering_wheel_reaction;
-	game->game_difficulty = race->master_game_difficulty;
-	game->time_difficulty[0] = race->master_time_difficulty[0];
-	game->time_difficulty[1] = race->master_time_difficulty[1];
-	game->time_difficulty[2] = race->master_time_difficulty[2];
-	game->time_difficulty[3] = race->master_time_difficulty[3];
-	game->time_difficulty[4] = race->master_time_difficulty[4];
-	game->time_difficulty[5] = race->master_time_difficulty[5];
+	game->eeprom.settings.advertise_sound = race->master_advertise_sound;
+	game->eeprom.settings.steering_wheel_reaction = race->master_steering_wheel_reaction;
+	game->eeprom.settings.game_difficulty = race->master_game_difficulty;
+	game->eeprom.settings.time_difficulty[0] = race->master_time_difficulty[0];
+	game->eeprom.settings.time_difficulty[1] = race->master_time_difficulty[1];
+	game->eeprom.settings.time_difficulty[2] = race->master_time_difficulty[2];
+	game->eeprom.settings.time_difficulty[3] = race->master_time_difficulty[3];
+	game->eeprom.settings.time_difficulty[4] = race->master_time_difficulty[4];
+	game->eeprom.settings.time_difficulty[5] = race->master_time_difficulty[5];
 	save_settings();
 }
 
@@ -1090,7 +1090,7 @@ uint32_t race_entries_update(uint32_t entry_place)
 			if (entry_frames == 0u)
 			{
 				machines = 0u;
-				if (game->stand_alone == 0u)
+				if (game->eeprom.settings.stand_alone == 0u)
 					machines = game->machine_count;
 				next_entry_frames = entry_frames_by_machines[machines];
 				request = race_2;
@@ -1275,7 +1275,7 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 		{
 			host_order = address_of(race_2) + 0x1Fu;
 			host_racer_count = RACE(host_order - 0x1Fu)->racer_count;
-			host_pass_count = race->pass_count;
+			host_pass_count = race->state.pass_count;
 			host_order++;
 			order_entry = host_order;
 			racers_left = host_racer_count;
@@ -1284,8 +1284,8 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 				checked_race = pointer_to(race_copy_offsets[RACE_ORDER_PLAYERS(order_entry)[0]] + GAME_VARIABLES);
 				racers_left--;
 				order_entry++;
-			} while ((racers_left != 0u) & (checked_race->pass_seen == host_pass_count));
-			if (checked_race->pass_seen == host_pass_count)
+			} while ((racers_left != 0u) & (checked_race->state.pass_seen == host_pass_count));
+			if (checked_race->state.pass_seen == host_pass_count)
 			{
 				order_entry = host_order;
 				counted_stages = address_of(screen) + 0x330u;
@@ -1296,35 +1296,35 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 					passing_race = pointer_to(race_copy_offsets[racer] + GAME_VARIABLES);
 					racers_left--;
 					order_entry++;
-				} while ((racers_left != 0u) & (SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] == passing_race->stage_count));
-				if (SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] != passing_race->stage_count)
+				} while ((racers_left != 0u) & (SCREEN(counted_stages - 0x330u)->progress.counted_stages[(int32_t)racer] == passing_race->state.stage_count));
+				if (SCREEN(counted_stages - 0x330u)->progress.counted_stages[(int32_t)racer] != passing_race->state.stage_count)
 				{
-					checkpoint = passing_race->stage_count;
-					SCREEN(counted_stages - 0x330u)->counted_stages[(int32_t)racer] = checkpoint;
-					race->pass_player = racer;
+					checkpoint = passing_race->state.stage_count;
+					SCREEN(counted_stages - 0x330u)->progress.counted_stages[(int32_t)racer] = checkpoint;
+					race->state.pass_player = racer;
 					checkpoint = (uint8_t)(checkpoint - 1u);
-					race->pass_checkpoint = checkpoint;
-					order = screen->counted_passes[(int32_t)checkpoint];
-					screen->counted_passes[(int32_t)checkpoint]++;
-					race->pass_order = (uint8_t)order;
-					branch = (uint8_t)((uint16_t)passing_race->road_x >> 15);
-					race->pass_branch = branch;
-					race->pass_time = race->race_time / 0xAu + order;
-					race->pass_count++;
+					race->state.pass_checkpoint = checkpoint;
+					order = screen->progress.counted_passes[(int32_t)checkpoint];
+					screen->progress.counted_passes[(int32_t)checkpoint]++;
+					race->state.pass_order = (uint8_t)order;
+					branch = (uint8_t)((uint16_t)passing_race->state.road_x >> 15);
+					race->state.pass_branch = branch;
+					race->state.pass_time = race->state.race_time / 0xAu + order;
+					race->state.pass_count++;
 					if (order == 0u && checkpoint != 5u)
 					{
-						fork_index = passing_race->stage;
+						fork_index = passing_race->state.stage;
 						fork_index = (uint8_t)(fork_index * 2u);
 						fork_index = (uint8_t)(fork_index + branch);
-						race->time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + game->race_copies[0].master_time_difficulty[(int32_t)checkpoint]) * 0x1Eu;
+						race->state.time_left += (int8_t)(stage_start_times[fork_next_stages[fork_index]] + game->race_copies[0].master_time_difficulty[(int32_t)checkpoint]) * 0x1Eu;
 					}
 				}
 			}
 			if (screen->race_started != 0u)
 			{
-				race->race_time += 0x22u;
-				if (race->time_left != 0u)
-					race->time_left--;
+				race->state.race_time += 0x22u;
+				if (race->state.time_left != 0u)
+					race->state.time_left--;
 			}
 			sort_place = address_of(race) + 0x1Fu;
 			racer_count = RACE(sort_place - 0x1Fu)->racer_count;
@@ -1343,9 +1343,9 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 						next_player = RACE_ORDER_PLAYERS(sort_place)[0];
 						race_3 = pointer_to(race_copy_offsets[next_player] + GAME_VARIABLES);
 						sort_place++;
-						if (ahead_race->finished != 0u)
+						if (ahead_race->state.finished != 0u)
 						{
-							if (race_3->finished == 0u || ahead_race->finish_time <= race_3->finish_time)
+							if (race_3->state.finished == 0u || ahead_race->finish_time <= race_3->finish_time)
 							{
 								swapped_player = next_player;
 								next_player = ahead_player;
@@ -1353,7 +1353,7 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 								ahead_race = race_3;
 							}
 						}
-						else if ((race_3->segment_fraction | ((uint32_t)race_3->segment << 16u)) <= (ahead_race->segment_fraction | ((uint32_t)ahead_race->segment << 16u)))
+						else if ((race_3->state.segment_fraction | ((uint32_t)race_3->state.segment << 16u)) <= (ahead_race->state.segment_fraction | ((uint32_t)ahead_race->state.segment << 16u)))
 						{
 							swapped_player = next_player;
 							next_player = ahead_player;
@@ -1374,8 +1374,8 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 		racer = RACE(order_place - 0x20u)->race_order;
 		player = screen->player;
 		racer_copy = race_copy_offsets[racer] + GAME_VARIABLES;
-		screen->leader_window_segment = RACE(racer_copy)->window_segment;
-		screen->leader_stage = RACE(racer_copy)->stage;
+		screen->progress.leader_window_segment = RACE(racer_copy)->state.window_segment;
+		screen->progress.leader_stage = RACE(racer_copy)->state.stage;
 		order_place++;
 		do
 		{
@@ -1387,31 +1387,31 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
 			racers_left--;
 			order_place++;
 		} while (racers_left != 0u);
-		if (screen->pass_seen != race_2->pass_count)
+		if (screen->progress.pass_seen != race_2->state.pass_count)
 		{
-			pass_count = race_2->pass_count;
-			screen->pass_seen = pass_count;
-			race->pass_seen = pass_count;
-			pass_player = race_2->pass_player;
-			pass_checkpoint = race_2->pass_checkpoint;
-			pass_order = race_2->pass_order;
-			pass_branch = race_2->pass_branch;
-			pass_time = race_2->pass_time;
+			pass_count = race_2->state.pass_count;
+			screen->progress.pass_seen = pass_count;
+			race->state.pass_seen = pass_count;
+			pass_player = race_2->state.pass_player;
+			pass_checkpoint = race_2->state.pass_checkpoint;
+			pass_order = race_2->state.pass_order;
+			pass_branch = race_2->state.pass_branch;
+			pass_time = race_2->state.pass_time;
 			checkpoint_offset = pass_checkpoint * 2u;
-			screen->checkpoints_passed[(int32_t)pass_player]++;
-			screen->checkpoint_passes[(int32_t)pass_checkpoint]++;
-			screen->checkpoint_orders[(int32_t)(checkpoint_offset * 4u + pass_player)] = pass_order;
-			screen->checkpoint_order[(int32_t)(checkpoint_offset * 4u + pass_order)] = pass_player;
+			screen->progress.checkpoints_passed[(int32_t)pass_player]++;
+			screen->progress.checkpoint_passes[(int32_t)pass_checkpoint]++;
+			screen->progress.checkpoint_orders[(int32_t)(checkpoint_offset * 4u + pass_player)] = pass_order;
+			screen->progress.checkpoint_order[(int32_t)(checkpoint_offset * 4u + pass_order)] = pass_player;
 			checkpoint_offset = checkpoint_offset * 2u;
-			screen->checkpoint_times_by_player[(int32_t)(checkpoint_offset * 2u + pass_player)] = pass_time;
-			screen->checkpoint_times[(int32_t)(checkpoint_offset * 2u + pass_order)] = pass_time;
+			screen->progress.checkpoint_times_by_player[(int32_t)(checkpoint_offset * 2u + pass_player)] = pass_time;
+			screen->progress.checkpoint_times[(int32_t)(checkpoint_offset * 2u + pass_order)] = pass_time;
 			if (pass_order == 0u && pass_checkpoint != 5u)
 			{
-				screen->forks_decided++;
-				screen->route_branches[(int32_t)pass_checkpoint] = pass_branch;
-				fork_index = RACE(GAME_VARIABLES + race_copy_offsets[pass_player])->stage;
+				screen->progress.forks_decided++;
+				screen->progress.route_branches[(int32_t)pass_checkpoint] = pass_branch;
+				fork_index = RACE(GAME_VARIABLES + race_copy_offsets[pass_player])->state.stage;
 				fork_index = (uint8_t)(fork_index * 2u);
-				screen->route_stages[(int32_t)pass_checkpoint] = fork_next_stages[(uint8_t)(fork_index + pass_branch)];
+				screen->progress.route_stages[(int32_t)pass_checkpoint] = fork_next_stages[(uint8_t)(fork_index + pass_branch)];
 			}
 		}
 	}
@@ -1505,13 +1505,13 @@ void entry_invitation_step(void)
    checkpoint passes, the times), from the zeros at 100800. */
 void race_record_clear(void)
 {
-	move_halfwords(screen->race + 0x30u, zero_block_ADDRESS, 0x28u);
+	memset(&RACE(screen->race)->state, 0, sizeof RACE(screen->race)->state);
 }
 
 /* Marks the screen's player ready in its race record (ready), after its selections. */
 void set_player_ready(void)
 {
-	RACE(screen->race)->ready = 0xFFu;
+	RACE(screen->race)->state.ready = 0xFFu;
 }
 
 /* Whether a player of the race has not marked itself ready yet (zero set): byte 5C of each one's
@@ -1527,7 +1527,7 @@ uint32_t players_not_ready(void)
 	race++;
 	do
 	{
-		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[RACE_ORDER_PLAYERS(race)[0]])->ready;
+		ready = RACE(RACE_COPY_1 + race_copy_player_offsets[RACE_ORDER_PLAYERS(race)[0]])->state.ready;
 		zero = ready == 0u;
 		racers_left--;
 		race++;
@@ -1598,7 +1598,7 @@ void link_receive_records(void)
 	uint8_t board_error = 0, second_buffer = 0;
 	uint32_t block_F0 = 0, bytes_F4 = 0, block_F8 = 0, bytes_FC = 0;
 
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		if (world->link_failed == 0u && world->link_off == 0u)
 		{
@@ -1627,7 +1627,7 @@ void link_receive_records(void)
 	}
 	else
 	{
-		source = 0x21E000u;
+		source = address_of(&game->isdn_races[0]);
 		destination = RACE_COPY_1;
 		pairs_left = 4u;
 	}
@@ -1656,12 +1656,13 @@ void link_receive_records(void)
    link_receive_records takes them; the link interrupt (int_vector_44) does it on the board's command 3. */
 void link_isdn_receive_records(void)
 {
-	uint32_t board_records = 0, race_records = 0, record_count = 0;
+	uint32_t board_records = 0, record_count = 0;
+	struct race *race_records = NULL;
 
 	board_records = 0x800600u;
-	race_records = 0x21E000u;
+	race_records = &game->isdn_races[0];
 	record_count = 8u;
-	link_copy_records_in(record_count, board_records, race_records);
+	link_copy_records_in(record_count, board_records, address_of(race_records));
 }
 
 /* Copies R1 race records from the link board's memory at R10 (a byte in each halfword) to R11: their
@@ -1693,7 +1694,7 @@ void link_send_records(void)
 	struct race *race = NULL;
 	uint8_t board_error = 0;
 
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		world->link_wait_frames = world->link_wait_frames_start;
 		if (world->link_failed != 0u || world->link_off != 0u)
@@ -1711,133 +1712,133 @@ void link_send_records(void)
 		{
 			race--;
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->race_time >> 24u));
+			io_write16(board_records, (uint8_t)(race->state.race_time >> 24u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->race_time >> 16u));
+			io_write16(board_records, (uint8_t)(race->state.race_time >> 16u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->race_time >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.race_time >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->race_time);
+			io_write16(board_records, (uint8_t)race->state.race_time);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->time_left >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.time_left >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->time_left);
+			io_write16(board_records, (uint8_t)race->state.time_left);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->pass_time >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.pass_time >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->pass_time);
+			io_write16(board_records, (uint8_t)race->state.pass_time);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_branch);
+			io_write16(board_records, race->state.pass_branch);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_order);
+			io_write16(board_records, race->state.pass_order);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_checkpoint);
+			io_write16(board_records, race->state.pass_checkpoint);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_player);
+			io_write16(board_records, race->state.pass_player);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_count);
+			io_write16(board_records, race->state.pass_count);
 			board_records -= 2u;
-			io_write16(board_records, race->stage);
+			io_write16(board_records, race->state.stage);
 			board_records -= 2u;
-			io_write16(board_records, race->pass_seen);
+			io_write16(board_records, race->state.pass_seen);
 			board_records -= 2u;
-			io_write16(board_records, race->stage_count);
+			io_write16(board_records, race->state.stage_count);
 			board_records -= 2u;
-			io_write16(board_records, race->published);
+			io_write16(board_records, race->state.published);
 			board_records -= 2u;
-			io_write16(board_records, race->finished);
+			io_write16(board_records, race->state.finished);
 			board_records -= 2u;
-			io_write16(board_records, race->started);
+			io_write16(board_records, race->state.started);
 			board_records -= 2u;
-			io_write16(board_records, race->ready);
+			io_write16(board_records, race->state.ready);
 			board_records -= 2u;
-			io_write16(board_records, race->link_pad_5B);
+			io_write16(board_records, race->state.link_pad_5B);
 			board_records -= 2u;
-			io_write16(board_records, race->link_pad_5A);
+			io_write16(board_records, race->state.link_pad_5A);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->car_flags >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.car_flags >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->car_flags);
+			io_write16(board_records, (uint8_t)race->state.car_flags);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->bounce_height >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.bounce_height >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->bounce_height);
+			io_write16(board_records, (uint8_t)race->state.bounce_height);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->segment_pitch >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.segment_pitch >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->segment_pitch);
+			io_write16(board_records, (uint8_t)race->state.segment_pitch);
 			board_records -= 2u;
-			io_write16(board_records, race->hard_acceleration);
+			io_write16(board_records, race->state.hard_acceleration);
 			board_records -= 2u;
-			io_write16(board_records, race->wheel_effect_2);
+			io_write16(board_records, race->state.wheel_effect_2);
 			board_records -= 2u;
-			io_write16(board_records, race->wheel_effect_1);
+			io_write16(board_records, race->state.wheel_effect_1);
 			board_records -= 2u;
-			io_write16(board_records, race->wheel_effect_sides);
+			io_write16(board_records, race->state.wheel_effect_sides);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->sideways_speed >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.sideways_speed >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->sideways_speed);
+			io_write16(board_records, (uint8_t)race->state.sideways_speed);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->speed >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.speed >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->speed);
+			io_write16(board_records, (uint8_t)race->state.speed);
 			board_records -= 2u;
-			io_write16(board_records, race->view_slot);
+			io_write16(board_records, race->state.view_slot);
 			board_records -= 2u;
-			io_write16(board_records, race->frame);
+			io_write16(board_records, race->state.frame);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->car_choice_and_model >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.car_choice_and_model >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->car_choice_and_model);
+			io_write16(board_records, (uint8_t)race->state.car_choice_and_model);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->window_segment >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.window_segment >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->window_segment);
+			io_write16(board_records, (uint8_t)race->state.window_segment);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->road_x >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.road_x >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->road_x);
+			io_write16(board_records, (uint8_t)race->state.road_x);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->segment >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.segment >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->segment);
+			io_write16(board_records, (uint8_t)race->state.segment);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->segment_fraction >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.segment_fraction >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->segment_fraction);
+			io_write16(board_records, (uint8_t)race->state.segment_fraction);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->palette >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.palette >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->palette);
+			io_write16(board_records, (uint8_t)race->state.palette);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->animation >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.animation >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->animation);
+			io_write16(board_records, (uint8_t)race->state.animation);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_z >> 24u));
+			io_write16(board_records, (uint8_t)(race->state.world_z >> 24u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_z >> 16u));
+			io_write16(board_records, (uint8_t)(race->state.world_z >> 16u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_z >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.world_z >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->world_z);
+			io_write16(board_records, (uint8_t)race->state.world_z);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_y >> 24u));
+			io_write16(board_records, (uint8_t)(race->state.world_y >> 24u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_y >> 16u));
+			io_write16(board_records, (uint8_t)(race->state.world_y >> 16u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_y >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.world_y >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->world_y);
+			io_write16(board_records, (uint8_t)race->state.world_y);
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_x >> 24u));
+			io_write16(board_records, (uint8_t)(race->state.world_x >> 24u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_x >> 16u));
+			io_write16(board_records, (uint8_t)(race->state.world_x >> 16u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)(race->world_x >> 8u));
+			io_write16(board_records, (uint8_t)(race->state.world_x >> 8u));
 			board_records -= 2u;
-			io_write16(board_records, (uint8_t)race->world_x);
+			io_write16(board_records, (uint8_t)race->state.world_x);
 			board_records -= 2u;
 			io_write16(board_records, race->link_brake);
 			board_records -= 2u;

@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -59,7 +59,7 @@ void player_car_update(void)
 			draw_distances = screen_view_defaults[0].draw_distances;
 			distance_index = RACE(screen->host_record)->racer_count;
 			screen_view_default = screen_view_defaults_ADDRESS + 0x4u;
-			if (game->isdn_mode != 0u)
+			if (game->eeprom.settings.isdn_mode != 0u)
 				distance_index = 0u;
 			screen->draw_distance = DRAW_DISTANCE_LIST(draw_distances)[(int32_t)distance_index];
 			screen->eye_distance = SCREEN_VIEW_DEFAULT(screen_view_default - 0x4u)->eye_distance;
@@ -122,7 +122,7 @@ void player_car_update(void)
 				player_car_publish();
 				return;
 			}
-			RACE(screen->race)->time_left = (game->race_copies[0].master_time_difficulty[0] + 0x28u) * 0x1Eu;
+			RACE(screen->race)->state.time_left = (game->race_copies[0].master_time_difficulty[0] + 0x28u) * 0x1Eu;
 			player_car_start_engine_sound();
 			player_car_animate();
 			player_car_publish();
@@ -141,7 +141,7 @@ void player_car_update(void)
 			player_car->moving = 0xFFu;
 			if ((screen->demo_flags & 0x100u) == 0u)
 			{
-				RACE(screen->race)->started = 0xFFu;
+				RACE(screen->race)->state.started = 0xFFu;
 				screen->race_started = 0xFFu;
 			}
 		case 2:
@@ -182,7 +182,7 @@ void player_car_update(void)
 				{
 					if (player_car->speed != 0u)
 					{
-						player_car->race_time = RACE(screen->host_record)->race_time;
+						player_car->race_time = RACE(screen->host_record)->state.race_time;
 						player_car_move();
 						return;
 					}
@@ -241,14 +241,14 @@ void player_car_update(void)
 				current_object->player_car.step++;
 				current_object->player_car.finished = 0xFFu;
 				stage_count_place = screen->race + 0x60u;
-				RACE(stage_count_place - 0x60u)->stage_count++;
+				RACE(stage_count_place - 0x60u)->state.stage_count++;
 				current_object->player_car.stop_position = player_car->segment;
 				player_car_clear_hit();
 				current_object->flags |= 8u;
 				player_car_move();
 				return;
 			case 1:
-				player_time = screen->checkpoint_times_by_player[screen->player + 0x28u];
+				player_time = screen->progress.checkpoint_times_by_player[screen->player + 0x28u];
 				if (player_time == 0u)
 				{
 					player_car_move();
@@ -256,7 +256,7 @@ void player_car_update(void)
 				}
 				RACE(screen->race)->finish_time = player_time;
 				player_car->race_time = player_time * 0xAu;
-				RACE(screen->race)->finished = 0xFFu;
+				RACE(screen->race)->state.finished = 0xFFu;
 				current_object->player_car.step++;
 				goal_stop = goal_stops[screen->places[screen->player]];
 				current_object->player_car.stop_position += GOAL_STOP(goal_stop)->position;
@@ -371,7 +371,7 @@ void player_car_update(void)
 	player_car_check_car_hits();
 	if ((current_object->flags & 4u) == 0u)
 	{
-		player_car->race_time = RACE(screen->host_record)->race_time;
+		player_car->race_time = RACE(screen->host_record)->state.race_time;
 		player_car_move();
 		return;
 	}
@@ -380,7 +380,7 @@ void player_car_update(void)
 	case 3:
 		current_object->flags &= 0xFBu;
 		player_car->slowed_frames = 0xFu;
-		player_car->race_time = RACE(screen->host_record)->race_time;
+		player_car->race_time = RACE(screen->host_record)->state.race_time;
 		player_car_move();
 		return;
 	case 0:
@@ -432,14 +432,14 @@ void player_car_update(void)
 		other_record = pointer_to(current_object->player_car.hit_other);
 		other_record = pointer_to(RACE_COPY_1 + (uint16_t)(address_of(other_record) << 7));
 		side_gap = player_car->road_x;
-		other_x = other_record->road_x;
+		other_x = other_record->state.road_x;
 		own_slide = current_object->player_car.sideways_speed;
-		other_slide = other_record->sideways_speed;
+		other_slide = other_record->state.sideways_speed;
 		own_speed = current_object->player_car.speed;
-		impact = other_record->speed;
+		impact = other_record->state.speed;
 		own_speed = own_speed >> 1;
 		impact = impact >> 1;
-		other_weight = car_weights[(uint8_t)(other_record->car_choice_and_model >> 8u)];
+		other_weight = car_weights[(uint8_t)(other_record->state.car_choice_and_model >> 8u)];
 		break;
 	}
 	own_weight = car_weights[player_car->model];
@@ -596,8 +596,8 @@ void player_car_check_place(void)
 		screen->last_record = race_copy_offsets[last_player] + GAME_VARIABLES;
 		screen->ahead_record = race_copy_offsets[ahead_player] + GAME_VARIABLES;
 		screen->behind_record = race_copy_offsets[behind_player] + GAME_VARIABLES;
-		screen->leader_window_segment = leader_race->window_segment;
-		screen->leader_stage = leader_race->stage;
+		screen->progress.leader_window_segment = leader_race->state.window_segment;
+		screen->progress.leader_stage = leader_race->state.stage;
 		return;
 	}
 	race = screen->host_record + 0x1Fu;
@@ -626,7 +626,7 @@ void player_car_check_place(void)
 		passed_race = pointer_to(screen->behind_record);
 		if (carry | zero)
 			passed_race = pointer_to(screen->ahead_record);
-		distance_across = (uint16_t)(passed_race->road_x - RACE(screen->race_copy)->road_x);
+		distance_across = (uint16_t)(passed_race->state.road_x - RACE(screen->race_copy)->state.road_x);
 		sound = 0x3Au;
 		if ((int16_t)distance_across < 0x160 && (int16_t)distance_across > -0x160)
 			sound = 0x37u;
@@ -649,8 +649,8 @@ void player_car_check_place(void)
 	screen->last_record = race_copy_offsets[last_player] + GAME_VARIABLES;
 	screen->ahead_record = race_copy_offsets[ahead_player] + GAME_VARIABLES;
 	screen->behind_record = race_copy_offsets[behind_player] + GAME_VARIABLES;
-	screen->leader_window_segment = leader_race->window_segment;
-	screen->leader_stage = leader_race->stage;
+	screen->progress.leader_window_segment = leader_race->state.window_segment;
+	screen->progress.leader_stage = leader_race->state.stage;
 }
 
 /* Hands the car's state on: this frame's view into the screen's ring of eight (screen + 600, slot
@@ -667,15 +667,15 @@ struct view *player_car_publish(void)
 
 	race = pointer_to(screen->race);
 	race_copy = pointer_to(screen->race_copy);
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		view_ring_slot = screen->view_ring_slot;
 		view_ring_slot = (uint8_t)(view_ring_slot + 1u);
 		view_ring_slot = view_ring_slot & 7u;
 		screen->view_ring_slot = view_ring_slot;
-		race->view_slot = view_ring_slot;
+		race->state.view_slot = view_ring_slot;
 		view = pointer_to(address_of(screen) + 0x600u + (uint16_t)(view_ring_slot << 5));
-		view_slot = race_copy->view_slot;
+		view_slot = race_copy->state.view_slot;
 		shown_view = pointer_to(address_of(screen) + 0x600u + (uint16_t)(view_slot << 5));
 		screen->shown_view = address_of(shown_view);
 	}
@@ -699,28 +699,28 @@ struct view *player_car_publish(void)
 	view->segment_remaining = player_car->segment_remaining;
 	view->horizon_line = screen->horizon_line;
 	screen->horizon_line = shown_view->horizon_line;
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
-		race->world_x = current_object->player_car.world_x;
-		race->world_y = current_object->player_car.world_y;
-		race->world_z = current_object->player_car.world_z;
-		race->animation = current_object->animation;
-		race->palette = current_object->palette;
-		race->frame = current_object->frame;
-		race->wheel_effect_sides = player_car->wheel_effect_sides;
-		race->hard_acceleration = player_car->hard_acceleration;
-		race->wheel_effect_1 = player_car->wheel_effect_1;
-		race->wheel_effect_2 = player_car->wheel_effect_2;
-		race->speed = current_object->player_car.speed;
-		race->sideways_speed = current_object->player_car.sideways_speed;
-		race->car_flags = (current_object->flags | ((uint32_t)current_object->flags_high << 8u));
-		race->segment_fraction = player_car->segment_fraction;
-		race->segment = player_car->segment;
-		race->road_x = player_car->road_x;
-		race->window_segment = player_car->window_segment;
-		race->stage = screen->built_stage;
-		race->bounce_height = (uint16_t)current_object->player_car.bounce_height;
-		race->published = 0xFFu;
+		race->state.world_x = current_object->player_car.world_x;
+		race->state.world_y = current_object->player_car.world_y;
+		race->state.world_z = current_object->player_car.world_z;
+		race->state.animation = current_object->animation;
+		race->state.palette = current_object->palette;
+		race->state.frame = current_object->frame;
+		race->state.wheel_effect_sides = player_car->wheel_effect_sides;
+		race->state.hard_acceleration = player_car->hard_acceleration;
+		race->state.wheel_effect_1 = player_car->wheel_effect_1;
+		race->state.wheel_effect_2 = player_car->wheel_effect_2;
+		race->state.speed = current_object->player_car.speed;
+		race->state.sideways_speed = current_object->player_car.sideways_speed;
+		race->state.car_flags = (current_object->flags | ((uint32_t)current_object->flags_high << 8u));
+		race->state.segment_fraction = player_car->segment_fraction;
+		race->state.segment = player_car->segment;
+		race->state.road_x = player_car->road_x;
+		race->state.window_segment = player_car->window_segment;
+		race->state.stage = screen->built_stage;
+		race->state.bounce_height = (uint16_t)current_object->player_car.bounce_height;
+		race->state.published = 0xFFu;
 	}
 	return view;
 }
@@ -740,12 +740,12 @@ struct view *clear_published_car(void)
 	struct view *view = NULL;
 
 	race = pointer_to(screen->race);
-	race->published = 0u;
+	race->state.published = 0u;
 	view_ring_slot = screen->view_ring_slot;
 	view_ring_slot = (uint8_t)(view_ring_slot + 1u);
 	view_ring_slot = view_ring_slot & 7u;
 	screen->view_ring_slot = view_ring_slot;
-	race->view_slot = view_ring_slot;
+	race->state.view_slot = view_ring_slot;
 	view = pointer_to(address_of(screen) + 0x600u + (uint16_t)(view_ring_slot << 5));
 	screen->shown_view = address_of(view);
 	player_car->view_x = 0;
@@ -759,21 +759,21 @@ struct view *clear_published_car(void)
 	player_car->view_yaw = 0u;
 	view->yaw = 0u;
 	player_car->wheel_effect_sides = 0u;
-	race->wheel_effect_sides = 0u;
+	race->state.wheel_effect_sides = 0u;
 	player_car->hard_acceleration = 0u;
-	race->hard_acceleration = 0u;
+	race->state.hard_acceleration = 0u;
 	player_car->wheel_effect_1 = 0u;
-	race->wheel_effect_1 = 0u;
+	race->state.wheel_effect_1 = 0u;
 	player_car->wheel_effect_2 = 0u;
-	race->wheel_effect_2 = 0u;
+	race->state.wheel_effect_2 = 0u;
 	player_car->segment_fraction = 0u;
-	race->segment_fraction = 0u;
+	race->state.segment_fraction = 0u;
 	player_car->segment = 0u;
-	race->segment = 0u;
+	race->state.segment = 0u;
 	player_car->road_x = 0;
-	race->road_x = 0;
+	race->state.road_x = 0;
 	player_car->window_segment = 0u;
-	race->window_segment = 0u;
+	race->state.window_segment = 0u;
 	player_car->window_offset = 0u;
 	view->window_offset = 0u;
 	player_car->segment_remaining = 0u;
@@ -781,7 +781,7 @@ struct view *clear_published_car(void)
 	screen->horizon_line = 0u;
 	view->horizon_line = 0u;
 	current_object->player_car.bounce_height &= 0xFFFF0000u;
-	race->bounce_height = 0;
+	race->state.bounce_height = 0;
 	return view;
 }
 
@@ -937,7 +937,7 @@ uint16_t player_car_view_height(void)
 
 	view_height = 0u;
 	highest = 5u;
-	pitch_over_road = ((player_car->view_pitch - 0xB0u) << 4) - ((uint32_t)RACE(screen->race_copy)->segment_pitch << 4);
+	pitch_over_road = ((player_car->view_pitch - 0xB0u) << 4) - ((uint32_t)RACE(screen->race_copy)->state.segment_pitch << 4);
 	tilt = pitch_over_road;
 	if ((int16_t)pitch_over_road >= 0)
 	{
@@ -1186,14 +1186,14 @@ void player_car_check_rivals(void)
 	race = pointer_to(screen->race_copy);
 	ahead_race = pointer_to(screen->ahead_record);
 	race_2 = pointer_to(screen->behind_record);
-	position = (race->segment_fraction | ((uint32_t)race->segment << 16u));
-	speed = race->speed;
+	position = (race->state.segment_fraction | ((uint32_t)race->state.segment << 16u));
+	speed = race->state.speed;
 	position = (position & ~0xFFFFu) | (uint16_t)(position << 9);
 	if (address_of(ahead_race) != address_of(race))
 	{
-		gap = (ahead_race->segment_fraction | ((uint32_t)ahead_race->segment << 16u));
+		gap = (ahead_race->state.segment_fraction | ((uint32_t)ahead_race->state.segment << 16u));
 		gap = ((gap & ~0xFFFFu) | (uint16_t)(gap << 9)) - position;
-		speed_gap = ahead_race->speed - speed;
+		speed_gap = ahead_race->state.speed - speed;
 		if (current_object->player_car.rival_near == 0u)
 		{
 			if (speed < 0x6000u)
@@ -1246,9 +1246,9 @@ void player_car_check_rivals(void)
 		current_object->player_car.rival_hold--;
 		return;
 	}
-	gap = (race_2->segment_fraction | ((uint32_t)race_2->segment << 16u));
+	gap = (race_2->state.segment_fraction | ((uint32_t)race_2->state.segment << 16u));
 	gap = ((gap & ~0xFFFFu) | (uint16_t)(gap << 9)) - position;
-	speed_gap = race_2->speed - speed;
+	speed_gap = race_2->state.speed - speed;
 	if (current_object->player_car.rival_near == 0u)
 	{
 		if (speed < 0x6000u || (int32_t)gap < -0x30000 || (int32_t)speed_gap > 0x2000 || (int32_t)speed_gap < 0)
@@ -1403,7 +1403,7 @@ void player_car_crash_step(void)
 		current_object->player_car.bounce_height = 0;
 		current_object->player_car.speed_change = 0;
 		current_object->player_car.gas = 0u;
-		player_car->race_time = RACE(screen->host_record)->race_time;
+		player_car->race_time = RACE(screen->host_record)->state.race_time;
 		player_car_move();
 		return;
 	}
@@ -1431,7 +1431,7 @@ void player_car_crash_step(void)
 		current_object->player_car.bounce_height = 0;
 		current_object->player_car.speed_change = 0;
 		current_object->player_car.gas = 0u;
-		player_car->race_time = RACE(screen->host_record)->race_time;
+		player_car->race_time = RACE(screen->host_record)->state.race_time;
 		player_car_move();
 		return;
 	}
@@ -1457,6 +1457,6 @@ void player_car_crash_step(void)
 	}
 	current_object->player_car.bounce_speed = new_bounce_speed;
 	current_object->player_car.bounce_height = new_height;
-	player_car->race_time = RACE(screen->host_record)->race_time;
+	player_car->race_time = RACE(screen->host_record)->state.race_time;
 	player_car_move();
 }

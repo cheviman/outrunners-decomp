@@ -3,7 +3,7 @@
  *    Description: the palettes: the boot's, the stages', the upload queue, the screen fades and the palette fades
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -262,7 +262,7 @@ void step_screen_fade(void)
 	level = (uint8_t)(screen->fade_level + screen->fade_step) & 0x3Fu;
 	screen->fade_level = (uint8_t)level;
 	mixer_register = address_of(screen) + 0x19Fu;
-	SCREEN(mixer_register - 0x19Fu)->colour_offset_select = (SCREEN(mixer_register - 0x19Fu)->colour_offset_select & 0xFFu) | 0xC000u;
+	SCREEN(mixer_register - 0x19Fu)->mixer_values.colour_offset_select = (SCREEN(mixer_register - 0x19Fu)->mixer_values.colour_offset_select & 0xFFu) | 0xC000u;
 	channels = screen->fade_channels;
 	channels_left = 3u;
 	mixer_register++;

@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -401,7 +401,7 @@ void game_mode_play(void)
 			} while ((racers_left != 0u) & (racer != player));
 			if (zero)
 			{
-				if (screen->player == screen->host_player && game->isdn_mode == 0u)
+				if (screen->player == screen->host_player && game->eeprom.settings.isdn_mode == 0u)
 					io_write8(LINK_ENTRIES_CLOSED, 1u);
 				screen->game_step++;
 			}
@@ -483,11 +483,11 @@ void game_mode_play(void)
 		SCREEN(demo_record - 0x490u)->demo_stage = stage;
 		model = demo_race_choice->model;
 		player_car->model = model;
-		RACE(screen->race)->car_choice_and_model = (RACE(screen->race)->car_choice_and_model & 0xFFu) | ((model & 0xFFu) << 8u);
+		RACE(screen->race)->state.car_choice_and_model = (RACE(screen->race)->state.car_choice_and_model & 0xFFu) | ((model & 0xFFu) << 8u);
 		screen->game_step = 0x1Bu;
 		colour_block = title_palette;
 		queue_palette(colour_block);
-		if (RACE(screen->race_copy)->published != 0u)
+		if (RACE(screen->race_copy)->state.published != 0u)
 			return;
 		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
@@ -500,7 +500,7 @@ void game_mode_play(void)
 		screen->game_step = 0x17u;
 		return;
 	case 27:
-		if (RACE(screen->race_copy)->published != 0u)
+		if (RACE(screen->race_copy)->state.published != 0u)
 			return;
 		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
@@ -515,7 +515,7 @@ void game_mode_play(void)
 	case 5:
 		if ((screen->flags & 1u) != 0u)
 			return;
-		RACE(screen->race)->ready = 0u;
+		RACE(screen->race)->state.ready = 0u;
 		silence_and_clear_screen();
 		if (screen->index != 0u)
 			io_write8(IO_2_CNT, 0x84u);
@@ -528,7 +528,7 @@ void game_mode_play(void)
 		screen->game_step = 0x17u;
 		return;
 	case 23:
-		if (RACE(screen->race_copy)->published == 0u)
+		if (RACE(screen->race_copy)->state.published == 0u)
 			return;
 		screen->race_running = 0xFFu;
 		handler_list = race_objects_ADDRESS;
@@ -592,7 +592,7 @@ void game_mode_play(void)
 		clear_objects();
 		return;
 	case 12:
-		if (RACE(screen->race_copy)->finished == 0u)
+		if (RACE(screen->race_copy)->state.finished == 0u)
 		{
 			reset_screen_sound();
 			song_title = meaning_of_the_light_title_ADDRESS;
@@ -688,7 +688,7 @@ void game_mode_play(void)
 			bookkeeping_set16(bookkeeping_entry, (uint16_t)time_played);
 		}
 		stage_level = screen->current_stage_level;
-		if (RACE(screen->race_copy)->finished != 0u)
+		if (RACE(screen->race_copy)->state.finished != 0u)
 			stage_level = 6u;
 		bookkeeping_entry = BOOKKEEPING_HISTOGRAM_ADDRESS + stage_level * 2u;
 		bookkeeping_increment16(bookkeeping_entry);
@@ -751,6 +751,6 @@ void clear_race_state(void)
 {
 	race_record_clear();
 	move_halfwords(address_of(player_car), zero_block_ADDRESS, 0x180u);
-	move_halfwords(address_of(screen) + 0x330u, zero_block_ADDRESS, 0xB0u);
-	move_halfwords(address_of(screen) + 0x600u, zero_block_ADDRESS, 0x80u);
+	memset(&screen->progress, 0, sizeof screen->progress);
+	memset(screen->views, 0, sizeof screen->views);
 }

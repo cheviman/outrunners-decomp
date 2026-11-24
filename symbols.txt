@@ -66,11 +66,45 @@ register R32  stack_pointer      # SP, in the functions whose stack stays in mem
 struct object 100
 struct car 200
 struct screen 6000
+# The screen's race progress (330-48F), which clear_race_state clears at once: the stages and passes counted, the route, the leader, the checkpoints' orders and times
+struct race_progress 160
+member screen 330 progress race_progress
 # Each player's race record, two copies of 0x80 bytes in the game's variables: 20FB00 and 20FB80 (the number
 # of stages at 60, the stage at 62, the time of the last checkpoint pass at 68, the time left at 6A in 30ths
 # of a second, the race time at 6C in thousandths), and the copies of every player's from 20FC00, 0x80 apart,
 # that the screens read (eight with the link: link_receive_records brings in the other cabinets')
 struct race 80
+# The race's part of a race record (30-7F), which race_record_clear clears at once: the car's published state, the checkpoint passes, the times
+struct race_state 50
+member race 30 state race_state
+# The EEPROM's 64 words (the settings page, 20E600-20E67F): the magic, the signature, the settings, and
+# their backup copy (the backup from backup_settings_checksum, 3C bytes on from 20E644)
+struct eeprom_contents 80
+field eeprom_contents 00 magic u32
+field eeprom_contents 04 signature u16
+member eeprom_contents 08 settings settings
+member eeprom_contents 44 backup_settings settings
+# The settings (and their backup copy): the checksum, the EEPROM write count, the controls and their
+# calibration; the backup's fields are the same (backup_settings_checksum was 20E644, backup_eeprom_write_count 20E646)
+struct settings 3C
+field settings 00 checksum u16
+field settings 02 eeprom_write_count u16
+field settings 04 flip_screen u8
+field settings 05 advertise_sound u8
+field settings 08 coins_per_credit u8
+field settings 09 first_chute_multiplier u8
+field settings 0A second_chute_multiplier u8
+field settings 0B bonus_adder u8
+field settings 0C coin_setting u8
+field settings 0D free_play u8
+field settings 18 stand_alone u8
+field settings 19 link_master u8
+field settings 1A cabinet_id u8
+field settings 1B isdn_mode u8
+field settings 1C steering_wheel_reaction u8
+field settings 28 game_difficulty u8
+field settings 2A time_difficulty s8[6]
+field settings 30 volume_ranges u8
 # Below each screen's block (screen - 8000), its objects' area: this frame's list of objects and the next
 # frame's (each a count, then the low halves of the objects' addresses; the two, at 200 and 300, swap every
 # frame), the used slots (7C bytes at 10, FF used), a spare object at 100 and the 124 objects from 400
@@ -3178,8 +3212,8 @@ field screen 4AF demo_player_count u8
 field screen 4B0 demo_players u8
 field screen 4F2 demo_stage u8
 field race 28 game_over u8
-field race 5C ready u8
-field race 5F published u8
+field race_state 2C ready u8
+field race_state 2F published u8
 20E004  var  waiting_task_stack u32
 20E023  var  frame_ready u8
 20E024  var  single_task u8
@@ -3209,11 +3243,6 @@ field race 5F published u8
 20E128  var  seat_2_gas u8
 20E129  var  seat_2_brake u8
 20E304  var  course_record_times[28] u16
-20E600  var  settings_magic u32
-20E604  var  settings_signature u16
-20E608  var  settings_checksum u16
-20E644  var  backup_settings_checksum u16
-20E646  var  backup_eeprom_write_count u16
 
 # ======== the race's logic, the link between cabinets, the draw modes and the LCD (naming batch H) ========
 00AB24  func  distance_offset_from_x
@@ -3379,20 +3408,20 @@ field screen 31C race_started u8
 field screen 31F place u8
 field screen 320 places u8[8]
 field screen 328 name_entries_seen u8
-field screen 330 counted_stages u8[8]   # a byte a racer, its stage_count as last counted: race_progress_update 00DBCB "cmp.b 60[R15], [R14](R2)", 00DBDB "mov.b R3, [R14](R2)" (R14 = 330[R25])
-field screen 338 counted_passes u8[6]   # a byte a checkpoint (0-4 the forks, 5 the goal): race_progress_update 00DBE9 "movz.bw 338[R25](R3), R4", 00DBEF "inc.b 338[R25](R3)"
-field screen 342 pass_seen u8
-field screen 344 route_stages u8[5]   # a byte a fork (not the goal, checkpoint 5): race_progress_update 00DD9B "mov.b E5D3[PC](R0), 344[R25](R1)"
-field screen 349 forks_decided u8
-field screen 34A route_branches u8[6]   # a byte a fork (not the goal, checkpoint 5): race_progress_update 00DD80 "mov.b R3, 34A[R25](R1)"; route_map reads one before it as 349 + forks_reached (forks_decided)
-field screen 350 leader_window_segment u16
-field screen 352 leader_stage u8
-field screen 35A checkpoint_passes u8[6]   # a byte a checkpoint: race_progress_update 00DD43 "inc.b 35A[R25](R1)"
-field screen 360 checkpoint_orders u8[30]
-field screen 390 checkpoint_order u8[30]   # by checkpoint (8 each), then the order the cars passed it in: the player
-field screen 480 checkpoints_passed u8[8]   # a byte a player: race_progress_update 00DD3E "inc.b 480[R25](R0)"
-field screen 3C0 checkpoint_times_by_player u16[30]   # by checkpoint (8 players each), then player: lap_timer_update, checkpoint_board_update; checkpoint 5's are the finish times (410 + 2 * player: goal_update, player_car_update)
-field screen 420 checkpoint_times u16[30]   # by checkpoint (8 each), then the order the cars passed it in
+field race_progress 0 counted_stages u8[8]   # a byte a racer, its stage_count as last counted: race_progress_update 00DBCB "cmp.b 60[R15], [R14](R2)", 00DBDB "mov.b R3, [R14](R2)" (R14 = 330[R25])
+field race_progress 8 counted_passes u8[6]   # a byte a checkpoint (0-4 the forks, 5 the goal): race_progress_update 00DBE9 "movz.bw 338[R25](R3), R4", 00DBEF "inc.b 338[R25](R3)"
+field race_progress 12 pass_seen u8
+field race_progress 14 route_stages u8[5]   # a byte a fork (not the goal, checkpoint 5): race_progress_update 00DD9B "mov.b E5D3[PC](R0), 344[R25](R1)"
+field race_progress 19 forks_decided u8
+field race_progress 1A route_branches u8[6]   # a byte a fork (not the goal, checkpoint 5): race_progress_update 00DD80 "mov.b R3, 34A[R25](R1)"; route_map reads one before it as 349 + forks_reached (forks_decided)
+field race_progress 20 leader_window_segment u16
+field race_progress 22 leader_stage u8
+field race_progress 2A checkpoint_passes u8[6]   # a byte a checkpoint: race_progress_update 00DD43 "inc.b 35A[R25](R1)"
+field race_progress 30 checkpoint_orders u8[30]
+field race_progress 60 checkpoint_order u8[30]   # by checkpoint (8 each), then the order the cars passed it in: the player
+field race_progress 150 checkpoints_passed u8[8]   # a byte a player: race_progress_update 00DD3E "inc.b 480[R25](R0)"
+field race_progress 90 checkpoint_times_by_player u16[30]   # by checkpoint (8 players each), then player: lap_timer_update, checkpoint_board_update; checkpoint 5's are the finish times (410 + 2 * player: goal_update, player_car_update)
+field race_progress F0 checkpoint_times u16[30]   # by checkpoint (8 each), then the order the cars passed it in
 field screen F10 lcd_text u8[10]   # the 16 characters of the LCD's line (lcd_start, lcd_reset copy them in four words)
 field screen F30 dj_mouth_shapes u32 dj_mouth_shape_numbers
 field screen F34 dj_mouth_frames u8
@@ -3416,17 +3445,17 @@ field race 1D entry_serial u8
 field race 1E entrant u8
 field race 1F racer_count u8
 field race 20 race_order u8
-field race 60 stage_count u8
-field race 61 pass_seen u8
-field race 62 stage u8
-field race 63 pass_count u8
-field race 64 pass_player u8
-field race 65 pass_checkpoint u8
-field race 66 pass_order u8
-field race 67 pass_branch u8
-field race 68 pass_time u16
-field race 6A time_left u16
-field race 6C race_time u32
+field race_state 30 stage_count u8
+field race_state 31 pass_seen u8
+field race_state 32 stage u8
+field race_state 33 pass_count u8
+field race_state 34 pass_player u8
+field race_state 35 pass_checkpoint u8
+field race_state 36 pass_order u8
+field race_state 37 pass_branch u8
+field race_state 38 pass_time u16
+field race_state 3A time_left u16
+field race_state 3C race_time u32
 20E030  var  car_numbers[8] u8
 20E040  var  machine_count u8
 20E041  var  player_count u8
@@ -3561,8 +3590,13 @@ field screen 151 fade_step s8
 field screen 152 fade_end u8
 field screen 153 fade_kind u8
 field screen 154 fade_channels u8
-field screen 160 mixer_values u16[1F]          # the mixer's registers 00-3D as the screen keeps them (init_mixer from mixer_register_defaults, the other screen's layers cleared by number: "mov.h #0, 160[R25](R0)" 0108CD); vblank_update_mixer sends them with 4C-4F (1AC); 3E-4B are the colour offsets
-field screen 1B0 mixer_defaults u16[1F]        # the set vblank_update_mixer makes the current one (flags bit 3), registers 00-3D as mixer_values (4C-4F at 1FC)
+# The mixer's registers 00-4F as a screen keeps them, two sets in its block: the one vblank_update_mixer
+# sends and the one it makes the current set; 40-4B are the two colour offsets (red, green, blue each)
+struct mixer_register_set 50
+field mixer_register_set 00 registers u16[1F]   # registers 00-3D (set_up_background: the tile layers' priorities in the low four bits of 22-28)
+field mixer_register_set 3E colour_offset_select u16   # mixer register 3E: which colour offset each layer takes (bit 15, and a bit for each layer); init_mixer and the vertical blank copy it with 40-4A as halfwords, step_screen_fade sets its high byte to C0 ("mov.b #C0, [R19+]" 011713, screen + 19F)
+member screen 160 mixer_values mixer_register_set   # the mixer's registers as the screen keeps them (init_mixer from mixer_register_defaults, the other screen's layers cleared by number: "mov.h #0, 160[R25](R0)" 0108CD); vblank_update_mixer sends them with 4C-4F (1AC); 3E-4B are the colour offsets
+member screen 1B0 mixer_defaults mixer_register_set   # the set vblank_update_mixer makes the current one (flags bit 3: its registers 00-3D into mixer_values, then 00-3D and 4C-4F to the mixer)
 field screen 700 stage_lengths u16[1F]         # the 31 roads of stage_courses, the sum of their sections' lengths (init_screen "mov.h R8, [R11+]" 013DB6); branch_road_length after them
 field screen B00 unpack_state u16
 field screen B02 unpack_read_place u8
@@ -3579,7 +3613,6 @@ field screen 1F10 crest_layers u16[10]   # by crest (note_road_crest: at the old
 field screen 1F30 crest_heights u16[10]   # by crest (entry 0 the bottom of the screen; note_road_crest at the new count)
 field screen 5000 depth_lists u16
 20E020  var  sprite_list_buffers u16
-20E080  var  coin_meters u8
 20E08C  var  seat1_coin_sounds u8
 20E08D  var  seat2_coin_sounds u8
 20E08E  var  seat1_service_sounds u8
@@ -3591,7 +3624,6 @@ field screen 5000 depth_lists u16
 20E0A8  var  seat2_credits u8
 20E0A9  var  seat2_coin_units u8
 20E200  var  video_registers[72] u16
-20E60C  var  flip_screen u8
 
 # ======== the test mode, first part (naming batch J1) ========
 01C241  func  test_mode_start
@@ -3716,14 +3748,6 @@ comment test_mode_coin_assignments_next_setting COIN/CREDIT SETTING: the next of
 20E72F  var  test_mode_blink_timer s8
 20E730  var  sound_test_number_a u8
 20E731  var  sound_test_number_b u8
-20E60A  var  eeprom_write_count u16
-20E60D  var  advertise_sound u8
-20E614  var  coin_setting u8
-20E615  var  free_play u8
-20E624  var  steering_wheel_reaction u8
-20E630  var  game_difficulty u8
-20E632  var  time_difficulty[6] s8
-20E638  var  volume_ranges u8
 
 # ======== the test mode, second part, and the interrupt hooks (naming batch J2) ========
 01DEC7  func  test_mode_coin_assignments_manual_start
@@ -3856,14 +3880,6 @@ field screen F25 arrows_lamp_timer u8
 20E733  var  test_mode_sound_queue_read u8
 20E734  var  test_mode_sound_queue[16] u16
 20E754  var  test_mode_privilege_mode u8
-20E610  var  coins_per_credit u8
-20E611  var  first_chute_multiplier u8
-20E612  var  second_chute_multiplier u8
-20E613  var  bonus_adder u8
-20E620  var  stand_alone u8
-20E621  var  link_master u8
-20E622  var  cabinet_id u8
-20E623  var  isdn_mode u8
 20E00A  var  vblanks_since_start u16
 20E028  var  task_swapping u8
 20E02C  var  timer_interrupts_left u8
@@ -4273,7 +4289,6 @@ field screen_sound_page 18 tyre_noise u8
 field screen 10 eye_distance u16
 field screen 12 draw_distance u16
 field screen 18 view_pitch_base u16
-field screen 19E colour_offset_select u16   # mixer register 3E as the screen keeps it: which colour offset each layer takes (bit 15, and a bit for each layer); init_mixer and the vertical blank copy it with 40-4A as halfwords, step_screen_fade sets its high byte to C0 ("mov.b #C0, [R19+]" 011713, at 19F)
 field screen 200 road_top_line u16
 field screen 202 background_changing u8
 field screen 203 stage_background_change u8
@@ -4358,32 +4373,32 @@ field race 2C link_buttons u8
 field race 2D link_wheel u8
 field race 2E link_gas u8
 field race 2F link_brake u8
-field race 30 world_x s32
-field race 34 world_y s32
-field race 38 world_z s32
-field race 3C animation u16
-field race 3E palette u16
-field race 40 segment_fraction u16
-field race 42 segment u16
-field race 44 road_x s16
-field race 46 window_segment u16
+field race_state 0 world_x s32
+field race_state 4 world_y s32
+field race_state 8 world_z s32
+field race_state C animation u16
+field race_state E palette u16
+field race_state 10 segment_fraction u16
+field race_state 12 segment u16
+field race_state 14 road_x s16
+field race_state 16 window_segment u16
 # The car chosen and its model are the two halves of one halfword, as the V70 holds them on any processor: the link
 # moves the bookkeeping's course records by halfwords into the race records (network_check_result), where record 4's
 # model_and_initial lands here, and a demo race's racer_copy model reads its higher half (attract.txt frame 1656)
-field race 48 car_choice_and_model u16   # the car chosen (its low byte: the model + 1, 0 none) and the car's model (its high byte)
-field race 4A frame u8
-field race 4B view_slot u8
-field race 4C speed u16
-field race 4E sideways_speed s16
-field race 50 wheel_effect_sides u8
-field race 51 wheel_effect_1 u8
-field race 52 wheel_effect_2 u8
-field race 53 hard_acceleration u8
-field race 54 segment_pitch u16
-field race 56 bounce_height s16
-field race 58 car_flags u16
-field race 5D started u8
-field race 5E finished u8
+field race_state 18 car_choice_and_model u16   # the car chosen (its low byte: the model + 1, 0 none) and the car's model (its high byte)
+field race_state 1A frame u8
+field race_state 1B view_slot u8
+field race_state 1C speed u16
+field race_state 1E sideways_speed s16
+field race_state 20 wheel_effect_sides u8
+field race_state 21 wheel_effect_1 u8
+field race_state 22 wheel_effect_2 u8
+field race_state 23 hard_acceleration u8
+field race_state 24 segment_pitch u16
+field race_state 26 bounce_height s16
+field race_state 28 car_flags u16
+field race_state 2D started u8
+field race_state 2E finished u8
 20E000  var  waiting_task_frame u32
 20E00E  var  debug_timer_rounds u8
 20E022  var  sprite_lists_set_up u8
@@ -7568,7 +7583,7 @@ local test_mode_game_assignments_draw 01DACC,01DB34 R9 stages_left
 local test_mode_game_assignments_draw 01DAA1 t3 bar_length     # game_difficulty * 2: two cells a level
 local test_mode_game_assignments_time 01DB68 R1 stage_item       # the item under the cursor, 1-6: the stage's time_difficulty is the item's byte from time_difficulty - 1
 local test_mode_game_assignments_time 01DB72,01DB79 R0 seconds
-local test_mode_game_assignments_time entry R20 current_object &settings_magic   # the game assignments page keeps R20 at the settings (test_mode_game_assignments)
+local test_mode_game_assignments_time entry R20 current_object eeprom_contents   # the game assignments page keeps R20 at the settings (test_mode_game_assignments)
 # The coin assignments. Their pages' item routines take in R1 what the page's loop left there (the
 # page's item count, 3 or 4, when SERVICE has just moved the cursor) and pass it on unused:
 # test_mode_coin_assignments_manual_draw keeps only its upper half, under the colours.
@@ -7927,8 +7942,8 @@ field object 14 parent u32 object        # the object that started it (race_back
 field object 18 parameter u32            # what the list or the road's stream that starts it gives it (road_object_stream_start_object: the entry's parameter; families read their record there)
 field object 80 list_data u32            # the data the object list that starts it gives it (object_lists: data -> field 80)
 field race 0B master_time_difficulty s8[6]    # the time difficulty the master cabinet sends, a byte a checkpoint as time_difficulty holds them (link_send_records, link_take_master_settings, which move the last four as one word; race_progress_update reads them by checkpoint)
-field race 5A link_pad_5A u8             # sent with the record (link_send_records); nothing else reads or writes it
-field race 5B link_pad_5B u8
+field race_state 2A link_pad_5A u8             # sent with the record (link_send_records); nothing else reads or writes it
+field race_state 2B link_pad_5B u8
 local clear_published_car entry R20 car_object object.player_car   # the screen's car's object (player_car_update calls it)
 
 # ======== records reached through pointers (mem_access) ========
@@ -7973,10 +7988,7 @@ field coin_chute_variant 0C coin_units u32 chute_unit_settings    # the address 
 field coin_chute_variant 10 event_code u8   # the byte insert_coin writes to C00074: 11 a first chute's coin, 10 a second's
 local insert_coin 011260 R19 chute_entry coin_chute_variant   # "add.w R0, R19": past the entry's first 8 bytes, chute_entry_offset on
 # The settings: a copy of them and its checksum, twice (load_settings checks each against its crc16)
-struct settings_copy 3C        # the settings from settings_checksum (20E608) and their backup from backup_settings_checksum (20E644): the copy load_settings keeps reads its write count through R10
-field settings_copy 00 checksum u16       # the crc16 of the 3A bytes after it (settings_checksum, backup_settings_checksum)
-field settings_copy 02 write_count u16    # the EEPROM's saves (eeprom_write_count, backup_eeprom_write_count)
-local load_settings 000268,000281 R10 settings settings_copy   # settings_checksum, backup_settings_checksum: the copy whose checksum held
+local load_settings 000268,000281 R10 settings settings   # eeprom settings or backup_settings: the copy whose checksum held, whose eeprom_write_count it reads
 # The seats' inputs
 struct seat_inputs 4           # a seat's buttons and analog inputs for the coming frame: seat_1_buttons (20E121) and seat_2_buttons (20E126), which pack_seat_inputs writes, or on ISDN those the link brought (race link_buttons); queue_screen_inputs reads the four at once
 field seat_inputs 00 buttons u8           # bit 6 START, 4-5 the shift up and down, 0-3 the others

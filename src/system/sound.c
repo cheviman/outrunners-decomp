@@ -3,7 +3,7 @@
  *    Description: the sound requests to the sound program: sounds, the engine and tyre noise, the music's fade
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -37,7 +37,7 @@ void request_sound(uint8_t sound)
 		queue_sound(sound);
 		return;
 	}
-	if (game->advertise_sound != 0u)
+	if (game->eeprom.settings.advertise_sound != 0u)
 	{
 		sound_number = (uint8_t)sound;
 		if ((demo_sounds[sound_number >> 5] & shl32(1u, (int)(sound_number & 0x1Fu))) != 0u)
@@ -77,7 +77,7 @@ void request_second_sound(uint8_t sound)
 		request_ring->second_sound_queue[(int32_t)second_sound_queue_write] = sound;
 		request_ring->second_sound_queue_write = (second_sound_queue_write + 1u) & 0x1Fu;
 	}
-	else if (game->advertise_sound != 0u)
+	else if (game->eeprom.settings.advertise_sound != 0u)
 	{
 		sound_number = (uint8_t)sound;
 		if ((demo_second_sounds[sound_number >> 5] & shl32(1u, (int)(sound_number & 0x1Fu))) != 0u)
@@ -100,7 +100,7 @@ void player_car_start_engine_sound(void)
 	uint8_t loudness = 0;
 	uint32_t sound_page = 0;
 
-	if ((screen->demo_flags & 0x100u) != 0u && game->advertise_sound == 0u)
+	if ((screen->demo_flags & 0x100u) != 0u && game->eeprom.settings.advertise_sound == 0u)
 	{
 		sound_page = (uint32_t)screen->index << 8;
 		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = 0u;
@@ -122,7 +122,7 @@ void player_car_engine_sound(void)
 {
 	uint32_t sound_page = 0;
 
-	if ((screen->demo_flags & 0x100u) == 0u || game->advertise_sound != 0u)
+	if ((screen->demo_flags & 0x100u) == 0u || game->eeprom.settings.advertise_sound != 0u)
 	{
 		sound_page = (uint32_t)screen->index << 8;
 		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS + sound_page)->engine_revs = player_car->revs >> 8;
@@ -153,7 +153,7 @@ void set_tyre_noise(uint8_t tyre_noise)
 {
 	uint32_t sound_page = 0;
 
-	if ((screen->demo_flags & 0x100u) == 0u || game->advertise_sound != 0u)
+	if ((screen->demo_flags & 0x100u) == 0u || game->eeprom.settings.advertise_sound != 0u)
 	{
 		SCREEN_SOUND_PAGE(SOUND_COMMAND_1_ADDRESS)[screen->index].tyre_noise = tyre_noise;
 		return;

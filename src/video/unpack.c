@@ -3,7 +3,7 @@
  *    Description: unpacking the tile pages and the lists of packed blocks, a step each frame
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -284,22 +284,21 @@ void unpack_queued_step(void)
 /* Unused: unpacks a list of packed blocks at once (unpack): 8-byte entries, the packed data's address
    and where to unpack it, closed by a negative entry (the first is taken without the check).
    unpack_tile_pages does the same for a list of tile pages. */
-void unpack_list(uint32_t block_list)
+void unpack_list(const struct packed_block_entry *block_list)
 {
 	uint32_t destination = 0, source = 0, source_2 = 0;
 	uint32_t next_entry = 0;
 
 	do
 	{
-		source_2 = PACKED_BLOCK_ENTRY(block_list)->source;
-		block_list += 4u;
-		destination = PACKED_BLOCK_ENTRY(block_list - 0x4u)->destination;
-		next_entry = block_list + 4u;
+		source_2 = block_list->source;
+		destination = block_list->destination;
+		next_entry = address_of(&block_list->destination) + 4u;
 		source = source_2;
 		r12 = next_entry;
 		unpack(source, destination);
-		block_list = r12;
-	} while ((int32_t)PACKED_BLOCK_ENTRY(block_list)->source >= 0);
+		block_list = rom_pointer(r12);
+	} while ((int32_t)block_list->source >= 0);
 }
 
 /* Unpacks a list of tilemap pages into video RAM at once (unpack): each 32-bit entry a page number in

@@ -86,9 +86,18 @@ memory.NAMED_BASES = {0x208000: "SCREEN_1", 0x218000: "SCREEN_2", 0x20FB00: "RAC
 # and the stacks
 memory.STATE = "game"
 memory.STATE_BLOCKS = ((0x200000, "object_area_1", "object_area", 1), (0x208000, "screen_1", "screen", 1),
+                       (0x20E080, "coin_meters", "coin_meter", 4),
+                       (0x20E600, "eeprom", "eeprom_contents", 1),
                        (0x20FB00, "races", "race", 2), (0x20FC00, "race_copies", "race", 8),
                        (0x210000, "object_area_2", "object_area", 1), (0x218000, "screen_2", "screen", 1),
                        (0x21E000, "isdn_races", "race", 8), (0x21F000, "stacks", None, 0x1000))
+# a copy whose ends are each one exact thing of its size is typed C (memset from zero_block, the ROM's 400 bytes of
+# zeros; an assignment between two of the same type)
+memory.TYPED_MOVES = True
+# a place of the state is a C pointer from where it is made to where it is read: locals that only carry it,
+# parameters whose callers all pass one (phase 2, typed pointers)
+memory.TYPED_POINTERS = True
+memory.ZERO_BLOCK = (0x100800, 0x100C00)
 # the game's variables the code reaches only by name, never by its address (63 of them: none an array the code indexes
 # past, none sharing bytes with another name, none read with the next ones at once; the ones it writes by their
 # address stay in the work RAM: the settings the EEPROM is read into, the screens' VBLANK counts, the analog inputs,

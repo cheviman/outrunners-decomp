@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -572,7 +572,7 @@ void road_crosser_update(void)
 		current_object->road_crosser.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->road_crosser.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->road_crosser.appear_position)
 			return;
 		current_object->state++;
 		if ((int16_t)player_car->segment < current_object->road_crosser.trigger_position)
@@ -679,7 +679,7 @@ void kangaroo_update(void)
 		current_object->kangaroo.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->kangaroo.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->kangaroo.appear_position)
 			return;
 		current_object->state++;
 		if ((int16_t)player_car->segment < current_object->kangaroo.trigger_position)
@@ -845,7 +845,7 @@ void moving_scenery_update(void)
 		current_object->moving_scenery.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->moving_scenery.trigger_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->moving_scenery.trigger_position)
 			return;
 		current_object->state++;
 		if ((int16_t)player_car->window_segment < current_object->position)
@@ -928,7 +928,7 @@ void swooping_helicopter_update(void)
 		current_object->swooping_helicopter.draw_distance = draw_distance;
 		return;
 	case 1:
-		if (current_object->swooping_helicopter.trigger_position < (int16_t)RACE(screen->race_copy)->window_segment)
+		if (current_object->swooping_helicopter.trigger_position < (int16_t)RACE(screen->race_copy)->state.window_segment)
 		{
 			current_object->state++;
 			current_object->swooping_helicopter.dive_countdown = current_object->swooping_helicopter.dive_frames;
@@ -1142,7 +1142,7 @@ void flagman_update(void)
 		current_object->flagman.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->flagman.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->flagman.appear_position)
 			return;
 		current_object->state++;
 		in_view_animation = current_object->flagman.in_view_animation;
@@ -1301,7 +1301,7 @@ void west_east_panel_update(void)
 		current_object->y -= 2u;
 		if (current_object->y == 0xDCu)
 			current_object->state++;
-		if (RACE(screen->host_record)->time_left != 0u && player_car->segment <= 0x250u)
+		if (RACE(screen->host_record)->state.time_left != 0u && player_car->segment <= 0x250u)
 		{
 			palette = current_object->west_east_panel.colour_count;
 			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
@@ -1325,7 +1325,7 @@ void west_east_panel_update(void)
 		current_object->flags_high = 0u;
 		return;
 	case 2:
-		if (RACE(screen->host_record)->time_left != 0u && player_car->segment <= 0x250u)
+		if (RACE(screen->host_record)->state.time_left != 0u && player_car->segment <= 0x250u)
 		{
 			palette = current_object->west_east_panel.colour_count;
 			palette = (palette & ~0xFFu) | (uint8_t)(palette + 1u);
@@ -1406,7 +1406,7 @@ void santa_sleigh_update(void)
 		current_object->santa_sleigh.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->santa_sleigh.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->santa_sleigh.appear_position)
 			return;
 		current_object->state++;
 	case 2:
@@ -1501,7 +1501,7 @@ void goal_parade_rightward_update(void)
 		current_object->goal_parade.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->goal_parade.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->goal_parade.appear_position)
 			return;
 		current_object->state++;
 		current_object->x_offset += current_object->goal_parade.x_speed;
@@ -1645,7 +1645,7 @@ void goal_parade_leftward_update(void)
 		current_object->goal_parade.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->goal_parade.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->goal_parade.appear_position)
 			return;
 		current_object->state++;
 		current_object->x_offset += current_object->goal_parade.x_speed;
@@ -1728,7 +1728,7 @@ void goal_parade_dragon_update(void)
 		current_object->goal_parade.draw_distance = draw_distance;
 		return;
 	case 1:
-		if ((int16_t)RACE(screen->race_copy)->window_segment <= current_object->goal_parade.appear_position)
+		if ((int16_t)RACE(screen->race_copy)->state.window_segment <= current_object->goal_parade.appear_position)
 			return;
 		current_object->state++;
 		current_object->x_offset += current_object->goal_parade.x_speed;
@@ -1873,7 +1873,7 @@ void fork_branch_draw(void)
 	case 1:
 		break;
 	}
-	window_segment = RACE(screen->race_copy)->window_segment;
+	window_segment = RACE(screen->race_copy)->state.window_segment;
 	start_position = (uint16_t)current_object->fork_branch.start_position;
 	end_position = (uint16_t)current_object->fork_branch.end_position;
 	if (end_position <= window_segment)

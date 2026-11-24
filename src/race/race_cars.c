@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -32,7 +32,7 @@ void race_cars_start(void)
 		object->race_car.player = player;
 		record = pointer_to(race_copy_offsets[player] + GAME_VARIABLES);
 		object->race_car.record = address_of(record);
-		model = (uint8_t)(record->car_choice_and_model >> 8u);
+		model = (uint8_t)(record->state.car_choice_and_model >> 8u);
 		object->race_car.model = model;
 		object->race_car.first_body_piece = race_car_first_body_pieces[model];
 		object->race_car.first_body_animation = race_car_first_body_animations[model];
@@ -119,7 +119,7 @@ void race_car_draw(void)
 	window_segment = player_car->window_segment;
 	far_segment = (uint16_t)(window_segment + (screen->draw_distance >> 7));
 	race = pointer_to(current_object->race_car.record);
-	segment = race->segment;
+	segment = race->state.segment;
 	if (current_object->race_car.rival == 0u)
 	{
 		if ((screen->flags & 0x10u) != 0u)
@@ -138,9 +138,9 @@ void race_car_draw(void)
 			return;
 	}
 	car = address_of(player_car) + 0xDCu;
-	r12 = (uint32_t)race->world_x - player_car->view_x;
-	relative_y = (uint32_t)race->world_y - player_car->view_y;
-	r14 = (uint32_t)race->world_z - player_car->view_z;
+	r12 = (uint32_t)race->state.world_x - player_car->view_x;
+	relative_y = (uint32_t)race->state.world_y - player_car->view_y;
+	r14 = (uint32_t)race->state.world_z - player_car->view_z;
 	x_term = r12 * CAR(car - 0xDCu)->view_matrix_xx;
 	car += 4u;
 	y_term = relative_y * CAR(car - 0xE0u)->view_matrix_xy;
@@ -186,7 +186,7 @@ void race_car_draw(void)
 		else
 			scale = (uint16_t)((int16_t)scale >> 4);
 	}
-	current_object->race_car.wheel_turn += race->speed;
+	current_object->race_car.wheel_turn += race->state.speed;
 	palette = (uint8_t)(current_object->race_car.wheel_turn >> 16u);
 	palette = palette & 1u;
 	if ((uint8_t)(current_object->race_car.wheel_turn >> 24u) != palette)
@@ -195,9 +195,9 @@ void race_car_draw(void)
 		current_object->race_car.wheel_turn &= 0xFFFF0000u;
 	}
 	palette = (uint16_t)(palette + player_car->brake_lights);
-	palette = (uint16_t)(palette + race->palette);
-	r12 = race->animation;
-	r14 = race->frame;
+	palette = (uint16_t)(palette + race->state.palette);
+	r12 = race->state.animation;
+	r14 = race->state.frame;
 	sprite_x = (uint16_t)screen_x;
 	sprite_y = (uint16_t)screen_y;
 	current_object->x = screen_x;
@@ -208,7 +208,7 @@ void race_car_draw(void)
 	current_object->race_car.body_attributes = body_attributes;
 	if (current_object->race_car.special_body == 0u)
 	{
-		animation = race->animation;
+		animation = race->state.animation;
 		body_animation = (uint16_t)(animation - current_object->race_car.first_body_animation);
 		if (race_car_body_wheel_kinds[body_animation] != 0u)
 		{
@@ -221,7 +221,7 @@ void race_car_draw(void)
 				second_rider = pointer_to(LINKED(address_of(second_rider), (uint16_t)address_of(first_rider)));
 				first_rider = pointer_to(LINKED(address_of(first_rider), swapped_rider));
 			}
-			if (race->speed == 0u)
+			if (race->state.speed == 0u)
 			{
 				r14 = 0u;
 				second_rider_frame = 0u;
@@ -241,7 +241,7 @@ void race_car_draw(void)
 			}
 			first_rider->frame = r14;
 			second_rider->frame = second_rider_frame;
-			piece = SPRITE_ANIMATION(sprite_animations[animation])->frames[race->frame] + 2u;
+			piece = SPRITE_ANIMATION(sprite_animations[animation])->frames[race->state.frame] + 2u;
 			view = SPRITE_PIECE(piece)->attributes;
 			piece += 2u;
 			view = view & 0x40u;
@@ -278,12 +278,12 @@ void race_car_draw(void)
 				other_spray = (uint16_t)spray;
 				spray = (spray & ~0xFFFFu) | swapped_spray;
 			}
-			wheel_effect_sides = race->wheel_effect_sides;
+			wheel_effect_sides = race->state.wheel_effect_sides;
 			sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y, pointer_to(spray));
 			spray = (spray & ~0xFFFFu) | (uint16_t)other_spray;
 			sprite_entry = race_car_draw_spray(view_offset, x_offset, y_offset, wheel_effect_sides, scale, sprite_entry, (uint16_t)screen_x, (uint16_t)screen_y, pointer_to(spray));
 			hard_acceleration_frame = current_object->race_car.hard_acceleration_frame;
-			if (hard_acceleration_frame != 0u || race->hard_acceleration != 0u)
+			if (hard_acceleration_frame != 0u || race->state.hard_acceleration != 0u)
 			{
 				r14 = hard_acceleration_frame;
 				hard_acceleration_frame++;
@@ -422,15 +422,15 @@ void race_car_draw_behind(uint32_t sprite_entry, struct race *race, uint32_t *p_
 	current_object->race_car.special_body = 0u;
 	current_object->race_car.gesture_shown = 0u;
 	own_race = pointer_to(screen->race_copy);
-	distance_behind = own_race->segment;
-	distance_behind = (uint16_t)(distance_behind - race->segment);
+	distance_behind = own_race->state.segment;
+	distance_behind = (uint16_t)(distance_behind - race->state.segment);
 	past_limit = distance_behind - 0x100u;
 	distance_behind = past_limit;
 	if ((int16_t)past_limit >= 0)
 		return;
 	distance_behind = (uint16_t)(0u - distance_behind);
 	depth_layer = 0x191u;
-	sprite_x = (uint16_t)((int16_t)((race->road_x - own_race->road_x) * 3u) >> 2);
+	sprite_x = (uint16_t)((int16_t)((race->state.road_x - own_race->state.road_x) * 3u) >> 2);
 	if ((int16_t)sprite_x <= 0x58)
 	{
 		if ((int16_t)sprite_x < -0x58)
@@ -438,12 +438,12 @@ void race_car_draw_behind(uint32_t sprite_entry, struct race *race, uint32_t *p_
 	}
 	else
 		sprite_x = 0x58u;
-	sprite_y = (uint16_t)((int16_t)(0u - race->bounce_height) >> 2);
+	sprite_y = (uint16_t)((int16_t)(0u - race->state.bounce_height) >> 2);
 	scale = distance_behind * 3u;
 	scale = (scale & ~0xFFFFu) | ((uint16_t)scale >> 3);
-	animation = race->animation;
-	palette = race->palette;
-	frame = race->frame;
+	animation = race->state.animation;
+	palette = race->state.palette;
+	frame = race->state.frame;
 	race_car_put_frame(scale, sprite_x, sprite_y, &ignored, &sprite_entry, &animation, &palette, &frame);
 	sprite_y = (uint16_t)((int16_t)(distance_behind * 0xFFECu) >> 8);
 	scale = distance_behind;

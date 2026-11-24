@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -74,7 +74,7 @@ void race_car_occupant_update(void)
 	current_object->height_scale = scale;
 	current_object->x = object->x + screen->sprite_origin_x;
 	if (object->race_car.rival != 0u)
-		current_object->y = ((int32_t)(RACE(object->race_car.record)->bounce_height * scale) >> 8) + object->y + screen->sprite_origin_y;
+		current_object->y = ((int32_t)(RACE(object->race_car.record)->state.bounce_height * scale) >> 8) + object->y + screen->sprite_origin_y;
 	draw_object(scale);
 	animation_advance(0u);
 	if (current_object->frame_time == 0u)
@@ -346,13 +346,13 @@ void stage_end_sounds_update(void)
 	{
 	case 0:
 		current_object->state++;
-		current_object->stage_end_sounds.stage = RACE(screen->race_copy)->stage_count;
+		current_object->stage_end_sounds.stage = RACE(screen->race_copy)->state.stage_count;
 		sound_cue = stage_end_sound_cues;
 		current_object->stage_end_sounds.countdown = sound_cue->time;
 		current_object->stage_end_sounds.sound_list = address_of(&sound_cue->sound);
 		return;
 	case 1:
-		if (current_object->stage_end_sounds.stage != RACE(screen->race_copy)->stage_count)
+		if (current_object->stage_end_sounds.stage != RACE(screen->race_copy)->state.stage_count)
 		{
 			current_object->state++;
 			return;
@@ -374,7 +374,7 @@ void stage_end_sounds_update(void)
 		current_object->state++;
 		return;
 	case 2:
-		if (current_object->stage_end_sounds.stage == RACE(screen->race_copy)->stage_count)
+		if (current_object->stage_end_sounds.stage == RACE(screen->race_copy)->state.stage_count)
 			return;
 		end_sound = 0x24u;
 		if (screen->player != screen->leader_player)
@@ -404,10 +404,10 @@ void fork_camera_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		if (RACE(screen->race_copy)->segment < (uint16_t)current_object->position)
+		if (RACE(screen->race_copy)->state.segment < (uint16_t)current_object->position)
 			return;
 		current_object->state++;
-		model = (uint8_t)(RACE(screen->race_copy)->car_choice_and_model >> 8u);
+		model = (uint8_t)(RACE(screen->race_copy)->state.car_choice_and_model >> 8u);
 		current_object->fork_camera.lift_height = 0u - screen_view_defaults[0].view_pitch_bases[model] + 0x1E0u;
 		current_object->fork_camera.lift_step = fork_camera_lift_steps[model];
 		current_object->fork_camera.tilt_step = fork_camera_tilt_steps[model];
@@ -427,7 +427,7 @@ void fork_camera_update(void)
 		player_car->view_shift_lift -= current_object->fork_camera.tilt_step;
 		return;
 	case 2:
-		if (RACE(screen->race_copy)->segment < current_object->fork_camera.lower_position)
+		if (RACE(screen->race_copy)->state.segment < current_object->fork_camera.lower_position)
 			return;
 		current_object->state++;
 		break;
@@ -468,7 +468,7 @@ void race_car_start_ending(void)
 		current_object->x += 0xA0u;
 		current_object->y += 0xDEu;
 		player = screen->player;
-		if (RACE(screen->race_copy)->finished == 0u)
+		if (RACE(screen->race_copy)->state.finished == 0u)
 		{
 			actor_count = unfinished_ending_actor_count;
 			actor_list = unfinished_ending_actors_ADDRESS;
@@ -501,7 +501,7 @@ void race_car_start_ending(void)
 		request_sound(sound);
 		screen->flags |= 2u;
 		screen->flags &= 0xFFFFFFEFu;
-		if (RACE(screen->race_copy)->finished == 0u)
+		if (RACE(screen->race_copy)->state.finished == 0u)
 		{
 			fade_out_music();
 			return;
@@ -519,11 +519,11 @@ void goal_actor_car_start(void)
 	struct object *object = NULL;
 
 	object = pointer_to(current_object->goal_actor.scene);
-	animation = RACE(screen->race_copy)->animation;
+	animation = RACE(screen->race_copy)->state.animation;
 	current_object->animation = animation;
 	animation_start(animation);
-	current_object->palette = RACE(screen->race_copy)->palette;
-	current_object->frame = RACE(screen->race_copy)->frame;
+	current_object->palette = RACE(screen->race_copy)->state.palette;
+	current_object->frame = RACE(screen->race_copy)->state.frame;
 	current_object->depth_layer = object->depth_layer;
 	current_object->x = object->x;
 	current_object->y = object->y;
@@ -569,7 +569,7 @@ void goal_actor_rider_place(struct object *scene)
 	current_object->palette = RACE_CAR_RIDER(r12)->palette;
 	current_object->depth_layer = scene->depth_layer;
 	race = pointer_to(screen->race_copy);
-	piece = rom_pointer(SPRITE_ANIMATION(sprite_animations[race->animation])->frames[race->frame] + 2u);
+	piece = rom_pointer(SPRITE_ANIMATION(sprite_animations[race->state.animation])->frames[race->state.frame] + 2u);
 	view = piece->attributes;
 	view = view & 0x40u;
 	view = view >> 6;

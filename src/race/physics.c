@@ -3,7 +3,7 @@
  *    Description: the car's physics: the gears and torque curves, the controls, driving along the road, the engine, the road's drag and its edges, the wheels' effects
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -214,7 +214,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		drag = player_car_road_drag(drag, start_road_x, road_half_width, half_width, car_handling);
 	}
 	segment_pitch = ROAD_SEGMENT(segment_record)->pitch;
-	RACE(screen->race)->segment_pitch = segment_pitch;
+	RACE(screen->race)->state.segment_pitch = segment_pitch;
 	road_force = ((int32_t)sine_table[segment_pitch] >> 1) - (drag + 0x1800u);
 	gas = current_object->player_car.gas;
 	player_car->brake_lights = 0u;
@@ -232,8 +232,8 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	drive_force = (int32_t)((uint32_t)gas_pedal_curve[gas] * TORQUE_CURVE_FORCES(gear_curve)[speed >> 8]) >> 6;
 	gear_ratio = player_car->gear_ratio;
 	player_car_engine(road_force, drive_force, brake_force, car_handling, gear_ratio);
-	if (game->isdn_mode != 0u)
-		player_car->speed = RACE(screen->race_copy)->speed;
+	if (game->eeprom.settings.isdn_mode != 0u)
+		player_car->speed = RACE(screen->race_copy)->state.speed;
 	new_speed = player_car->speed;
 	current_object->player_car.speed = new_speed;
 	wheel = current_object->player_car.wheel;
@@ -293,7 +293,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		else
 		{
 			new_sideways_speed += steering;
-			if ((screen->demo_flags & 0x100u) != 0u || RACE(screen->race_copy)->finished != 0u)
+			if ((screen->demo_flags & 0x100u) != 0u || RACE(screen->race_copy)->state.finished != 0u)
 			{
 				drift = (uint16_t)current_object->player_car.sideways_speed;
 				target_sideways_speed = new_sideways_speed;
@@ -309,9 +309,9 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 			}
 		}
 	}
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
-		drift = (uint16_t)RACE(screen->race_copy)->sideways_speed;
+		drift = (uint16_t)RACE(screen->race_copy)->state.sideways_speed;
 		current_object->player_car.sideways_speed = drift;
 	}
 	drift = (uint32_t)(int16_t)drift << 8;
@@ -324,7 +324,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 	segment_fraction = player_car->segment_progress + forward_speed;
 	if (current_object->player_car.finished == 0u)
 	{
-		catch_up_target = (uint16_t)(RACE(screen->ahead_record)->segment - RACE(screen->race_copy)->segment);
+		catch_up_target = (uint16_t)(RACE(screen->ahead_record)->state.segment - RACE(screen->race_copy)->state.segment);
 		if ((int16_t)catch_up_target > 0x20)
 			catch_up_target = 0x20u;
 		gap_to_ahead = catch_up_target;
@@ -347,11 +347,11 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		player_car->catch_up = catch_up;
 		segment_fraction += (catch_up * forward_speed) >> 7;
 	}
-	if (game->isdn_mode != 0u)
+	if (game->eeprom.settings.isdn_mode != 0u)
 	{
-		segment_fraction = RACE(screen->race_copy)->segment_fraction;
-		segment_then_offset = RACE(screen->race_copy)->segment;
-		road_x = RACE(screen->race_copy)->road_x;
+		segment_fraction = RACE(screen->race_copy)->state.segment_fraction;
+		segment_then_offset = RACE(screen->race_copy)->state.segment;
+		road_x = RACE(screen->race_copy)->state.road_x;
 		player_car->segment_fraction = segment_fraction;
 		player_car->segment_progress = segment_fraction;
 		player_car->segment_progress = player_car->segment_progress << 8;
@@ -365,7 +365,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		segment_length = sine_table[segment_length & 0xFFFu] * road_x;
 		carry = (segment_length >> 5) & 1u;
 		segment_length = (int32_t)(((int32_t)segment_length >> 6) + 0x8000u + carry) >> 8;
-		window_segment = RACE(screen->race_copy)->window_segment;
+		window_segment = RACE(screen->race_copy)->state.window_segment;
 		player_car->window_segment = window_segment;
 		player_car->window_offset = (window_segment * 0x20u) & 0xFFFu;
 	}
@@ -397,7 +397,7 @@ void player_car_drive(uint32_t *p_segment_record, uint32_t *p_next_segment, uint
 		segment_length = (int32_t)segment_length >> 8;
 		player_car->segment_fraction = segment_fraction;
 	}
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		max_road_x = ROAD_SEGMENT(segment_record)->half_width;
 		min_road_x = (uint16_t)(0u - max_road_x);
@@ -444,7 +444,7 @@ void player_car_world_position(struct road_segment *segment_record, struct road_
 	uint16_t heading = 0;
 	uint32_t world_y = 0;
 
-	if (game->isdn_mode == 0u)
+	if (game->eeprom.settings.isdn_mode == 0u)
 	{
 		offset_y = 0u;
 		offset_x = road_x << 7;
@@ -459,9 +459,9 @@ void player_car_world_position(struct road_segment *segment_record, struct road_
 	}
 	else
 	{
-		current_object->player_car.world_x = RACE(screen->race_copy)->world_x;
-		height = (uint32_t)RACE(screen->race_copy)->world_y + RACE(screen->race_copy)->bounce_height;
-		current_object->player_car.world_z = RACE(screen->race_copy)->world_z;
+		current_object->player_car.world_x = RACE(screen->race_copy)->state.world_x;
+		height = (uint32_t)RACE(screen->race_copy)->state.world_y + RACE(screen->race_copy)->state.bounce_height;
+		current_object->player_car.world_z = RACE(screen->race_copy)->state.world_z;
 		segment_remaining = segment_length - segment_fraction;
 	}
 	world_y = height;

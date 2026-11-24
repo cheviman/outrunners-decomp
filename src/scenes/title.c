@@ -3,7 +3,7 @@
  *    Description: the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    16-11-2026
+ *    Modified:    20-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -46,7 +46,7 @@ void title_screen_update(void)
 		current_object->title_screen.second_scroll_x_address = title_screen_layer_setup->second_scroll_x_address;
 		current_object->title_screen.second_scroll_y_address = title_screen_layer_setup->second_scroll_y_address;
 		background_setup = title_background_setups_ADDRESS + screen->index * 5u * 4u;
-		set_up_background(background_setup);
+		set_up_background(rom_pointer(background_setup));
 		VIDEO_REGISTER_WORDS(current_object->title_screen.second_scroll_y_address)[0] = 0xFFF0u;
 		VIDEO_REGISTER_WORDS(current_object->title_screen.scroll_x_address)[0] = 0x360u;
 		scroll_x_address = current_object->title_screen.scroll_x_address;
