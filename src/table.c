@@ -92,7 +92,8 @@ void call_test_mode_bookkeeping_second_page_wait(void)
 	test_mode_bookkeeping_second_page_wait(0);
 }
 
-/* the C function for each number: a slot's handler */
+/* the C function for each number: a slot's handler, which the runtime's call_function runs (0,
+   NO_FUNCTION, is none: call_function refuses it, as a number past the table) */
 void (*const game_functions[])(void) =
 {
 	NULL,
@@ -341,6 +342,8 @@ void (*const game_functions[])(void) =
 	int_vector_43,
 	int_vector_44,
 };
+
+const size_t game_function_count = FUNCTION_COUNT;
 
 const void *boot_e80000_bytes_data;
 const void *boot_interrupt_control_bytes_data;

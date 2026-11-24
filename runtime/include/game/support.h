@@ -314,6 +314,11 @@ extern const size_t game_code_count;
 void game_entry(void);                          /* the code at the reset vector */
 
 void call_code(uint32_t address);
+/* ... and through slots that hold a function's number (a game with memory.CODE_FIELDS): game_functions[number],
+   0 and past the table refused */
+extern void (*const game_functions[])(void);    /* written by tools/decompile.py (table.c) */
+extern const size_t game_function_count;
+void call_function(uint32_t number);
 GAME_NORETURN void unknown_code(uint32_t address);    /* a jump or call to an address no code was found at */
 /* the default of a switch on a jump table's index: the original checks nothing, and an index past the table
    would jump to 'address', which no case handles */

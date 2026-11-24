@@ -365,6 +365,20 @@ GAME_NORETURN void unknown_code(uint32_t address)
 	exit(3);
 }
 
+/* A call through a slot that holds a function's number (enum game_function): a number that is no function's
+   (NO_FUNCTION, which a ROM table's address no code was found at gives, or past the table) is reported and
+   stops the program, never called */
+void call_function(uint32_t number)
+{
+	if (number == 0 || number >= game_function_count)
+	{
+		fprintf(stderr, "No function has number %u (frame %llu)\n", (unsigned)number, (unsigned long long)frames);
+		print_recent_calls();
+		exit(3);
+	}
+	game_functions[number]();
+}
+
 /* The MEMORY TEST's ROM part (runtime/replaced.txt): the game's, original_test_mode_memory_test_checksum, sums
    the program ROM's code chips (from 000000) or its data chips (from 100000) as two 16-bit checks; the
    decompiled game has no chips to measure (the code is in none of its data), so it hands back the sums the

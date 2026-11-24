@@ -136,7 +136,7 @@ void test_mode_frame(void)
 {
 	test_mode_read_controls();
 	test_mode_send_sound();
-	game_functions[world->test_mode_routine]();
+	call_function(world->test_mode_routine);
 }
 
 /* Shows the test mode's menu, where every page returns: in CONTINUE mode (test_mode_flags bit 0) the

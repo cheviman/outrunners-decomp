@@ -271,7 +271,6 @@ enum game_function
 	FUNCTION_int_vector_44,
 	FUNCTION_COUNT    /* (how many numbers there are) */
 };
-extern void (*const game_functions[])(void);    /* the C function for each number: a slot's handler */
 uint32_t function_number(uint32_t address);     /* the number of the function at a V70 address read
                                                    out of the program ROM's tables (the projection's) */
 void call_second_task(void);

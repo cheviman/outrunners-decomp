@@ -55,7 +55,7 @@ void run_objects(void)
 			break;
 		if ((current_object->flags & 1u) != 0u)
 		{
-			game_functions[current_object->handler]();
+			call_function(current_object->handler);
 			next_list = OBJECT_AREA(address_of(screen) - 0x8000u)->next_list;
 			OBJECT_LIST(next_list)->count++;
 			OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->count - 1u)] = address_of(current_object);

@@ -265,7 +265,7 @@ const size_t game_code_count = 244;
 
 /* the number of the function at a V70 address (its row of game_code, which is in address order, + 1):
    what the C keeps for an address read out of the program ROM's tables; NO_FUNCTION for an address
-   no code was found at, which game_functions[] does not run */
+   no code was found at, which call_function refuses */
 uint32_t function_number(uint32_t address)
 {
 	const uint32_t rows = FUNCTION_COUNT - 1;
