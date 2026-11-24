@@ -3,7 +3,7 @@
  *    Description: the screen's car each frame: its place, the view, the rivals' warning, the crash physics
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -197,12 +197,12 @@ void player_car_update(void)
 				if (RACE(screen->host_record)->racer_count <= 1u)
 				{
 					object = start_object();
-					object->handler = game_over_banner_show_ADDRESS;
+					object->handler = FUNCTION_game_over_banner_show;
 				}
 				else
 				{
 					object = start_object();
-					object->handler = race_result_start_ADDRESS;
+					object->handler = FUNCTION_race_result_start;
 				}
 			case 2:
 				timer_3 = current_object->player_car.timer;
@@ -973,7 +973,7 @@ void player_car_move_view(void)
 			if (current_object->player_car.rival_near != 0u)
 			{
 				object = start_object();
-				object->handler = rival_warning_update_ADDRESS;
+				object->handler = FUNCTION_rival_warning_update;
 				current_object->player_car.rival_step = 2u;
 				continue;
 			}
@@ -982,7 +982,7 @@ void player_car_move_view(void)
 			if (current_object->player_car.rival_near != 0u)
 			{
 				object = start_object();
-				object->handler = rival_warning_update_ADDRESS;
+				object->handler = FUNCTION_rival_warning_update;
 				current_object->player_car.rival_step = 2u;
 				continue;
 			}
@@ -1297,7 +1297,7 @@ void rival_warning_update(void)
 		current_object->rival_warning.blinks = 2u;
 		current_object->rival_warning.frames = 0xCu;
 		object = start_object();
-		object->handler = rival_alarm_update_ADDRESS;
+		object->handler = FUNCTION_rival_alarm_update;
 		break;
 	case 1:
 		break;

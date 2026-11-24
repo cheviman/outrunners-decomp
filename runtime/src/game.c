@@ -146,6 +146,10 @@ void frame_end(void)
 		world_project();    /* (the port hashes the state and dumps it there) */
 	if (program_frame_done)
 		program_frame_done();
+	/* and back: the projection also puts the code's addresses in place of the function numbers the C
+	   keeps in the work RAM (the objects' handlers), which the C goes on reading */
+	if (world_ram_depth == 0)
+		world_unproject();
 }
 
 /* ---- the game's two tasks ---- */

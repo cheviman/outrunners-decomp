@@ -3,7 +3,7 @@
  *    Description: the name entry after a record: the certificate, the letters' drum, the LCD, the car, the drivers and the course's name
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -65,7 +65,7 @@ void name_entry_update(void)
 		screen->button_lamps = 0xFFFFu;
 		world->lcd_restart_frames = 0u;
 		object = start_object();
-		object->handler = name_entry_lcd_update_ADDRESS;
+		object->handler = FUNCTION_name_entry_lcd_update;
 		object->name_entry_lcd.name_entry = address_of(current_object);
 		background_setup = name_entry_backgrounds_ADDRESS + screen->index * 5u * 4u;
 		set_up_background(rom_pointer(background_setup));
@@ -79,7 +79,7 @@ void name_entry_update(void)
 		{
 			object = start_object();
 			object->name_entry_letter.name_entry = address_of(current_object);
-			object->handler = name_entry_letter_update_ADDRESS;
+			object->handler = FUNCTION_name_entry_letter_update;
 			letters_left = letter_index;
 			letter_index = (uint8_t)(letters_left - 1u);
 			object->name_entry_letter.index = letter_index;

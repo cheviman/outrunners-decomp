@@ -3,7 +3,7 @@
  *    Description: the traffic: its cars, convoys, people and their hits
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -79,7 +79,7 @@ void traffic_spawner_update(void)
 			}
 			traffic_object = start_object();
 			traffic_object->position = object_position;
-			traffic_object->handler = entry->handler;
+			traffic_object->handler = function_number(entry->handler);
 			traffic_object->traffic.stop_distance = entry->stop_distance;
 			traffic_object->traffic.record = entry->record;
 			entry++;
@@ -141,7 +141,7 @@ void traffic_car_start_convoy(void)
 			break;
 		object = start_object();
 		object->position = leader->position - spacing;
-		object->handler = traffic_follower_update_ADDRESS;
+		object->handler = FUNCTION_traffic_follower_update;
 		object->traffic_follower.stop_distance = leader->traffic.stop_distance;
 		object->traffic_follower.record = r12;
 		object->traffic_follower.leader = address_of(leader);
@@ -149,7 +149,7 @@ void traffic_car_start_convoy(void)
 		screen->traffic_count++;
 	}
 	current_object->traffic.record = line;
-	current_object->handler = traffic_car_update_ADDRESS;
+	current_object->handler = FUNCTION_traffic_car_update;
 	traffic_car_update();
 }
 
@@ -450,7 +450,7 @@ void traffic_figure_start_team(void)
 			break;
 		object = start_object();
 		object->position = leader->position - spacing;
-		object->handler = pulled_vehicle_update_ADDRESS;
+		object->handler = FUNCTION_pulled_vehicle_update;
 		object->pulled_vehicle.stop_distance = leader->traffic.stop_distance;
 		object->pulled_vehicle.record = r12;
 		object->pulled_vehicle.leader = address_of(leader);
@@ -458,7 +458,7 @@ void traffic_figure_start_team(void)
 		screen->traffic_count++;
 	}
 	current_object->traffic.record = line;
-	current_object->handler = traffic_figure_update_ADDRESS;
+	current_object->handler = FUNCTION_traffic_figure_update;
 	traffic_figure_update();
 }
 
@@ -590,7 +590,7 @@ void traffic_start_hit_sound(void)
 	if (current_object->traffic.hit_sound != 0u)
 	{
 		object = start_object();
-		object->handler = traffic_hit_sound_wait_ADDRESS;
+		object->handler = FUNCTION_traffic_hit_sound_wait;
 		object->traffic_hit_sound.delay = 0xFu;
 		object->traffic_hit_sound.sound = current_object->traffic.hit_sound;
 	}

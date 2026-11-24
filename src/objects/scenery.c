@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -87,7 +87,7 @@ uint32_t road_object_stream_start_object(uint16_t position, uint32_t entry)
 
 	object = start_object();
 	object->position = position + current_object->road_object_stream.stage_start;
-	object->handler = ROAD_OBJECT_STREAM_ENTRY(entry - 0x4u)->handler;
+	object->handler = function_number(ROAD_OBJECT_STREAM_ENTRY(entry - 0x4u)->handler);
 	entry += 4u;
 	object->parameter = ROAD_OBJECT_STREAM_ENTRY(entry - 0x8u)->parameter;
 	entry += 4u;
@@ -1833,7 +1833,7 @@ void goal_parade_dragon_update(void)
    the left way): direction -1, then fork_branch_draw. */
 void fork_branch_start_right(void)
 {
-	current_object->handler = fork_branch_draw_ADDRESS;
+	current_object->handler = FUNCTION_fork_branch_draw;
 	current_object->fork_branch.direction = -1;
 	fork_branch_draw();
 }
@@ -1842,7 +1842,7 @@ void fork_branch_start_right(void)
    fork_branch_draw. */
 void fork_branch_start_left(void)
 {
-	current_object->handler = fork_branch_draw_ADDRESS;
+	current_object->handler = FUNCTION_fork_branch_draw;
 	current_object->fork_branch.direction = 1;
 	fork_branch_draw();
 }

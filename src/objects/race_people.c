@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -484,7 +484,7 @@ void race_car_start_ending(void)
 		do
 		{
 			actor = start_object();
-			actor->handler = OBJECT_LIST_PAIR(actor_list)->handler;
+			actor->handler = function_number(OBJECT_LIST_PAIR(actor_list)->handler);
 			actor_list += 4u;
 			actor->goal_actor.script = OBJECT_LIST_PAIR(actor_list - 0x4u)->data;
 			actor->goal_actor.scene = address_of(current_object);
@@ -601,7 +601,7 @@ void goal_actor_rider_place(struct object *scene)
 /* Sets an actor of the goal scene to a screen position (draw_mode 0) and goes on to goal_actor_run. */
 void goal_actor_start(void)
 {
-	current_object->handler = goal_actor_run_ADDRESS;
+	current_object->handler = FUNCTION_goal_actor_run;
 	current_object->draw_mode = 0u;
 	goal_actor_run();
 }

@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -151,7 +151,7 @@ void route_map_update(void)
 			world->send_video_registers = 0xFFu;
 			screen->skip_scroll_update = 0xFFu;
 			object = start_object();
-			object->handler = route_map_car_update_ADDRESS;
+			object->handler = FUNCTION_route_map_car_update;
 			object->route_map_car.model = player_car->model;
 			object->route_map_car.route_map = address_of(current_object);
 			screen->route_map_signals |= 0x80u;
@@ -162,7 +162,7 @@ void route_map_update(void)
 			do
 			{
 				object = start_object();
-				object->handler = route_map_landmark_update_ADDRESS;
+				object->handler = FUNCTION_route_map_landmark_update;
 				object->route_map_landmark.index_then_half_rate = landmark_index;
 				object->route_map_landmark.route_map = address_of(current_object);
 				landmark_index++;
@@ -179,7 +179,7 @@ void route_map_update(void)
 		case 5:
 			screen->route_map_signals &= ~0x80u;
 			object = start_object();
-			object->handler = stage_result_line_draw_ADDRESS;
+			object->handler = FUNCTION_stage_result_line_draw;
 			object->stage_result_line.stage = current_object->route_map.stage;
 			if (current_object->route_map.checkpoint_legs_left != 0u)
 			{
@@ -207,7 +207,7 @@ void route_map_update(void)
 			if ((screen->route_map_signals & 0x40u) == 0u)
 			{
 				object = start_object();
-				object->handler = route_map_sign_update_ADDRESS;
+				object->handler = FUNCTION_route_map_sign_update;
 				object->route_map_sign.route_map = address_of(current_object);
 				object->route_map_sign.kind = 0u;
 				screen->route_map_signals &= ~2u;
@@ -220,7 +220,7 @@ void route_map_update(void)
 			if (RACE(screen->race_copy)->state.finished != 0u)
 			{
 				object = start_object();
-				object->handler = route_map_sign_update_ADDRESS;
+				object->handler = FUNCTION_route_map_sign_update;
 				object->route_map_sign.route_map = address_of(current_object);
 				object->route_map_sign.kind = 1u;
 			}
@@ -234,7 +234,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -243,7 +243,7 @@ void route_map_update(void)
 				continue;
 			}
 			object = start_object();
-			object->handler = stage_result_line_draw_ADDRESS;
+			object->handler = FUNCTION_stage_result_line_draw;
 			object->stage_result_line.stage = current_object->route_map.stage;
 			if (current_object->route_map.checkpoint_legs_left == 0u)
 				object->stage_result_line.last = 1u;
@@ -287,7 +287,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -339,7 +339,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -348,7 +348,7 @@ void route_map_update(void)
 				continue;
 			}
 			object = start_object();
-			object->handler = route_map_sign_update_ADDRESS;
+			object->handler = FUNCTION_route_map_sign_update;
 			object->route_map_sign.route_map = address_of(current_object);
 			object->route_map_sign.kind = 0u;
 			screen->route_map_signals &= 0xFFFFFFF3u;
@@ -363,7 +363,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -372,7 +372,7 @@ void route_map_update(void)
 				continue;
 			}
 			object = start_object();
-			object->handler = stage_result_line_draw_ADDRESS;
+			object->handler = FUNCTION_stage_result_line_draw;
 			object->stage_result_line.stage = current_object->route_map.stage;
 			if (current_object->route_map.checkpoint_legs_left == 0u)
 				object->stage_result_line.last = 1u;
@@ -444,7 +444,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -506,7 +506,7 @@ void route_map_update(void)
 				if (RACE(screen->race_copy)->state.finished != 0u)
 				{
 					object = start_object();
-					object->handler = route_map_sign_update_ADDRESS;
+					object->handler = FUNCTION_route_map_sign_update;
 					object->route_map_sign.route_map = address_of(current_object);
 					object->route_map_sign.kind = 1u;
 				}
@@ -520,7 +520,7 @@ void route_map_update(void)
 			if (current_object->route_map.stage != 6u)
 			{
 				object = start_object();
-				object->handler = route_map_sign_update_ADDRESS;
+				object->handler = FUNCTION_route_map_sign_update;
 				object->route_map_sign.route_map = address_of(current_object);
 				object->route_map_sign.kind = 0u;
 				current_object->state = 0xBu;
@@ -530,7 +530,7 @@ void route_map_update(void)
 			if (RACE(screen->race_copy)->state.finished != 0u)
 			{
 				object = start_object();
-				object->handler = route_map_sign_update_ADDRESS;
+				object->handler = FUNCTION_route_map_sign_update;
 				object->route_map_sign.route_map = address_of(current_object);
 				object->route_map_sign.kind = 1u;
 			}
@@ -616,7 +616,7 @@ void route_map_update(void)
 		case 17:
 			io_write16(current_object->route_map.sea_colour_address, 0u);
 			object = start_object();
-			object->handler = route_map_direction_sign_show_ADDRESS;
+			object->handler = FUNCTION_route_map_direction_sign_show;
 			legs_left = current_object->route_map.stage;
 			if (legs_left != 6u)
 				legs_left++;
@@ -624,7 +624,7 @@ void route_map_update(void)
 			do
 			{
 				object = start_object();
-				object->handler = route_map_leg_show_ADDRESS;
+				object->handler = FUNCTION_route_map_leg_show;
 				object->route_map_leg.leg = leg_number;
 				object->route_map_leg.progress = current_object->route_map.last_leg_progress;
 				object->route_map_leg.map = address_of(current_object);
@@ -645,7 +645,7 @@ void route_map_update(void)
 				return;
 			screen->game_step = 0x10u;
 			object = start_object();
-			object->handler = route_map_wait_banner_show_ADDRESS;
+			object->handler = FUNCTION_route_map_wait_banner_show;
 			current_object->state++;
 			return;
 		case 20:
@@ -665,7 +665,7 @@ void route_map_update(void)
 		return;
 	screen->game_step = 0x10u;
 	object = start_object();
-	object->handler = route_map_wait_banner_show_ADDRESS;
+	object->handler = FUNCTION_route_map_wait_banner_show;
 	current_object->state++;
 }
 
@@ -1038,7 +1038,7 @@ void route_map_leg_show(void)
 		{
 			current_object->frame = current_object->route_map_leg.progress;
 			object = start_object();
-			object->handler = route_map_leg_car_show_ADDRESS;
+			object->handler = FUNCTION_route_map_leg_car_show;
 			object->route_map_leg_car.leg = address_of(current_object);
 			current_object->frame--;
 			if ((int8_t)current_object->frame < 0)
@@ -1051,7 +1051,7 @@ void route_map_leg_show(void)
 		current_object->x = 0u;
 		current_object->y = 0u;
 		object = start_object();
-		object->handler = route_map_checkpoint_show_ADDRESS;
+		object->handler = FUNCTION_route_map_checkpoint_show;
 		object->route_map_checkpoint.leg = address_of(current_object);
 		if (current_object->route_map_leg.leg != (uint8_t)OBJECT(current_object->route_map_leg.map)->route_map.stage)
 		{
@@ -1063,7 +1063,7 @@ void route_map_leg_show(void)
 		}
 		current_object->frame = current_object->route_map_leg.progress;
 		object = start_object();
-		object->handler = route_map_leg_car_show_ADDRESS;
+		object->handler = FUNCTION_route_map_leg_car_show;
 		object->route_map_leg_car.leg = address_of(current_object);
 		current_object->frame--;
 		if ((int8_t)current_object->frame < 0)
@@ -1086,7 +1086,7 @@ void route_map_leg_show(void)
 		current_object->x = route_map_stage_xs[leg_stage];
 		current_object->y = route_map_stage_ys[leg_stage];
 		object = start_object();
-		object->handler = route_map_checkpoint_show_ADDRESS;
+		object->handler = FUNCTION_route_map_checkpoint_show;
 		object->route_map_checkpoint.leg = address_of(current_object);
 		current_object->depth_layer += current_object->route_map_leg.leg;
 		if (current_object->route_map_leg.leg != 5u)
@@ -1101,7 +1101,7 @@ void route_map_leg_show(void)
 			}
 			current_object->frame = current_object->route_map_leg.progress;
 			object = start_object();
-			object->handler = route_map_leg_car_show_ADDRESS;
+			object->handler = FUNCTION_route_map_leg_car_show;
 			object->route_map_leg_car.leg = address_of(current_object);
 			current_object->frame--;
 			if ((int8_t)current_object->frame < 0)
@@ -1115,7 +1115,7 @@ void route_map_leg_show(void)
 		{
 			current_object->frame = current_object->route_map_leg.progress;
 			object = start_object();
-			object->handler = route_map_leg_car_show_ADDRESS;
+			object->handler = FUNCTION_route_map_leg_car_show;
 			object->route_map_leg_car.leg = address_of(current_object);
 			current_object->frame--;
 			if ((int8_t)current_object->frame < 0)
@@ -1130,12 +1130,12 @@ void route_map_leg_show(void)
 		else
 		{
 			object = start_object();
-			object->handler = route_map_checkpoint_show_ADDRESS;
+			object->handler = FUNCTION_route_map_checkpoint_show;
 			object->route_map_checkpoint.leg = address_of(current_object);
 			object->route_map_checkpoint.kind = 1u;
 			current_object->route_map_leg.progress = 0xBu;
 			object = start_object();
-			object->handler = route_map_leg_car_show_ADDRESS;
+			object->handler = FUNCTION_route_map_leg_car_show;
 			object->route_map_leg_car.leg = address_of(current_object);
 			current_object->frame = 0xBu;
 		}

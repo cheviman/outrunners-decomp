@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -34,7 +34,7 @@ void game_mode_title(void)
 		colour_block = title_palette;
 		queue_palette(colour_block);
 		object = start_object();
-		object->handler = title_screen_update_ADDRESS;
+		object->handler = FUNCTION_title_screen_update;
 		screen->fade_kind = 1u;
 		screen->flags |= 1u;
 		screen->input_write_place = 0u;
@@ -316,7 +316,7 @@ void game_mode_ranking(void)
 	handler_list = ranking_objects_ADDRESS;
 	start_object_list(handler_list);
 	object = start_object();
-	object->handler = ranking_update_ADDRESS;
+	object->handler = FUNCTION_ranking_update;
 	screen->mode_timer = 0x10Eu;
 	RACE(screen->race)->game_over = 0u;
 }
@@ -439,7 +439,7 @@ void game_mode_play(void)
 		lamp_place->leader_period = 0u;
 		lamp_place->leader_timer = 0u;
 		object = start_object();
-		object->handler = car_select_start_ADDRESS;
+		object->handler = FUNCTION_car_select_start;
 		screen->fade_kind = 1u;
 		screen->flags |= 1u;
 		if (screen->index != 0u)
@@ -639,7 +639,7 @@ void game_mode_play(void)
 			clear_objects();
 			screen->game_step++;
 			object = start_object();
-			object->handler = name_entry_update_ADDRESS;
+			object->handler = FUNCTION_name_entry_update;
 		}
 		return;
 	case 19:

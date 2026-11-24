@@ -3,7 +3,7 @@
  *    Description: the car radio: the songs, the DJ and his messages, the songs' titles
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -44,7 +44,7 @@ void car_radio_start(void)
 	screen->nearing_fork = 0u;
 	player_car->song = car_model_songs[player_car->model];
 	current_object->car_radio.stage = screen->route_stage;
-	current_object->handler = car_radio_wait_start_ADDRESS;
+	current_object->handler = FUNCTION_car_radio_wait_start;
 	car_radio_wait_start();
 }
 
@@ -54,7 +54,7 @@ void car_radio_wait_start(void)
 {
 	if (OBJECT(player_car->object)->player_car.timer != 0u)
 		return;
-	current_object->handler = car_radio_read_buttons_ADDRESS;
+	current_object->handler = FUNCTION_car_radio_read_buttons;
 	car_radio_read_buttons();
 }
 
@@ -73,7 +73,7 @@ void car_radio_read_buttons(void)
 	current_object->car_radio.buttons = 0u;
 	current_object->car_radio.talk_step = 5u;
 	screen->button_lamps = 0u;
-	current_object->handler = car_radio_update_ADDRESS;
+	current_object->handler = FUNCTION_car_radio_update;
 	car_radio_update();
 }
 
@@ -520,7 +520,7 @@ struct object *start_song_title(uint32_t song_title)
 	struct object *object = NULL;
 
 	object = start_object();
-	object->handler = song_title_show_ADDRESS;
+	object->handler = FUNCTION_song_title_show;
 	object->song_title.text = song_title;
 	object->song_title.time_left = 0x3C;
 	return object;

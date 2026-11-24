@@ -3,7 +3,7 @@
  *    Description: the cabinets' LCD: its driver and the race's information on it
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -597,7 +597,7 @@ void lcd_race_info_start(void)
 {
 	clear_lcd();
 	screen->dj_face = 0xFFu;
-	current_object->handler = lcd_race_info_update_ADDRESS;
+	current_object->handler = FUNCTION_lcd_race_info_update;
 	lcd_race_info_update();
 }
 
@@ -619,7 +619,7 @@ void lcd_race_info_update(void)
 	if (player_car->at_goal != 0u)
 	{
 		current_object->state = 0u;
-		current_object->handler = lcd_race_info_finish_ADDRESS;
+		current_object->handler = FUNCTION_lcd_race_info_finish;
 		lcd_race_info_finish();
 		return;
 	}
@@ -632,7 +632,7 @@ void lcd_race_info_update(void)
 	if (screen->lcd_scroll != 0u)
 	{
 		current_object->state = 1u;
-		current_object->handler = lcd_race_info_paused_ADDRESS;
+		current_object->handler = FUNCTION_lcd_race_info_paused;
 		lcd_race_info_paused();
 		return;
 	}
@@ -937,7 +937,7 @@ void lcd_race_info_paused(void)
 {
 	if (screen->lcd_scroll == 0u)
 	{
-		current_object->handler = lcd_race_info_update_ADDRESS;
+		current_object->handler = FUNCTION_lcd_race_info_update;
 		lcd_race_info_update();
 		return;
 	}

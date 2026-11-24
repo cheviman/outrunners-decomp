@@ -3,7 +3,7 @@
  *    Description: the cars of the race drawn as the screen's view sees them: the body, the spray, the pieces
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -28,7 +28,7 @@ void race_cars_start(void)
 	{
 		object = start_object();
 		player = RACE_ORDER_PLAYERS(race)[0];
-		object->handler = race_car_draw_ADDRESS;
+		object->handler = FUNCTION_race_car_draw;
 		object->race_car.player = player;
 		record = pointer_to(race_copy_offsets[player] + GAME_VARIABLES);
 		object->race_car.record = address_of(record);
@@ -64,24 +64,24 @@ void race_cars_start(void)
 		driver_occupant = model;
 		race++;
 		occupant = start_object();
-		occupant->handler = race_car_driver_handlers[driver_occupant];
+		occupant->handler = function_number(race_car_driver_handlers[driver_occupant]);
 		occupant->race_car_occupant.car = r12;
 		occupant->race_car_occupant.occupant = driver_occupant;
 		occupant->race_car_occupant.body_back = 0xFFu;
 		occupant = start_object();
-		occupant->handler = race_car_passenger_handlers[driver_occupant];
+		occupant->handler = function_number(race_car_passenger_handlers[driver_occupant]);
 		occupant->race_car_occupant.car = r12;
 		occupant->race_car_occupant.occupant = driver_occupant + 8u;
 		occupant->race_car_occupant.body_back = 0u;
 		rider = (uint8_t)model;
 		object = start_object();
-		object->handler = rider_gesture_update_ADDRESS;
+		object->handler = FUNCTION_rider_gesture_update;
 		object->rider_gesture.car = r12;
 		object->rider_gesture.rider = rider;
 		object->rider_gesture.model = model;
 		object->rider_gesture.player = OBJECT(r12)->race_car.player;
 		object = start_object();
-		object->handler = rider_gesture_update_ADDRESS;
+		object->handler = FUNCTION_rider_gesture_update;
 		object->rider_gesture.car = r12;
 		object->rider_gesture.rider = rider + 8u;
 		object->rider_gesture.model = model;
@@ -123,7 +123,7 @@ void race_car_draw(void)
 	if (current_object->race_car.rival == 0u)
 	{
 		if ((screen->flags & 0x10u) != 0u)
-			current_object->handler = race_car_ending_handlers[current_object->race_car.model];
+			current_object->handler = function_number(race_car_ending_handlers[current_object->race_car.model]);
 		else if (far_segment <= segment)
 			return;
 	}

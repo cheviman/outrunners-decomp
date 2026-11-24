@@ -3,7 +3,7 @@
  *    Description: the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -58,15 +58,15 @@ void title_screen_update(void)
 		screen->link_event_data_1 = screen->attract_car;
 		screen->link_event = 5u;
 		object = start_object();
-		object->handler = credit_display_update_ADDRESS;
+		object->handler = FUNCTION_credit_display_update;
 		object = start_object();
-		object->handler = coin_prompt_update_ADDRESS;
+		object->handler = FUNCTION_coin_prompt_update;
 		objects_left = 8u;
 		object_index = 0u;
 		do
 		{
 			object = start_object();
-			object->handler = title_car_drive_ADDRESS;
+			object->handler = FUNCTION_title_car_drive;
 			object->title_car.index = object_index;
 			object_index++;
 			objects_left--;
@@ -85,15 +85,15 @@ void title_screen_update(void)
 		if (frames != 1u)
 			return;
 		object = start_object();
-		object->handler = title_logo_update_ADDRESS;
+		object->handler = FUNCTION_title_logo_update;
 		object = start_object();
-		object->handler = title_logo_copy_update_ADDRESS;
+		object->handler = FUNCTION_title_logo_copy_update;
 		objects_left = 3u;
 		object_index = 0u;
 		do
 		{
 			object = start_object();
-			object->handler = title_logo_car_update_ADDRESS;
+			object->handler = FUNCTION_title_logo_car_update;
 			object->title_logo_car.index = object_index;
 			object_index++;
 			objects_left--;
@@ -103,7 +103,7 @@ void title_screen_update(void)
 		do
 		{
 			object = start_object();
-			object->handler = title_logo_stripe_update_ADDRESS;
+			object->handler = FUNCTION_title_logo_stripe_update;
 			object->title_logo_stripe.index = object_index;
 			object_index++;
 			objects_left--;
@@ -126,7 +126,7 @@ void title_screen_update(void)
 		do
 		{
 			object = start_object();
-			object->handler = title_logo_car_update_ADDRESS;
+			object->handler = FUNCTION_title_logo_car_update;
 			object->title_logo_car.index = object_index;
 			object_index++;
 			objects_left--;
@@ -168,11 +168,11 @@ void title_car_drive(void)
 		current_object->depth_layer = 0x18Fu;
 		current_object->depth_layer += title_car_record->depth_layer;
 		object = start_object();
-		object->handler = title_car_passenger_update_ADDRESS;
+		object->handler = FUNCTION_title_car_passenger_update;
 		object->title_car_passenger.car = address_of(current_object);
 		object->title_car_passenger.model = model;
 		object = start_object();
-		object->handler = title_car_driver_update_ADDRESS;
+		object->handler = FUNCTION_title_car_driver_update;
 		object->title_car_driver.car = address_of(current_object);
 		object->title_car_driver.model = model;
 		current_object->state++;
@@ -277,14 +277,14 @@ void title_screen_start_palms(void)
 	if ((current_object->title_screen.palm_frames & 7u) == 0u)
 	{
 		object = start_object();
-		object->handler = title_palm_tree_update_ADDRESS;
+		object->handler = FUNCTION_title_palm_tree_update;
 		object->title_palm_tree.near_or_far = 0u;
 		return;
 	}
 	if ((current_object->title_screen.palm_frames & 1u) == 0u)
 	{
 		object = start_object();
-		object->handler = title_palm_tree_update_ADDRESS;
+		object->handler = FUNCTION_title_palm_tree_update;
 		object->title_palm_tree.near_or_far = 1u;
 		return;
 	}
@@ -404,13 +404,13 @@ void title_logo_update(void)
 		return;
 	}
 	object = start_object();
-	object->handler = title_board_palms_update_ADDRESS;
+	object->handler = FUNCTION_title_board_palms_update;
 	objects_left = 2u;
 	object_index = 0u;
 	do
 	{
 		object = start_object();
-		object->handler = title_seagull_fly_ADDRESS;
+		object->handler = FUNCTION_title_seagull_fly;
 		object->title_seagull.index = object_index;
 		object_index++;
 		objects_left--;
@@ -420,7 +420,7 @@ void title_logo_update(void)
 	do
 	{
 		object = start_object();
-		object->handler = title_picture_draw_ADDRESS;
+		object->handler = FUNCTION_title_picture_draw;
 		object->title_picture.index = object_index_2;
 		object_index_2 = (uint8_t)(object_index_2 + 1u);
 		objects_left--;

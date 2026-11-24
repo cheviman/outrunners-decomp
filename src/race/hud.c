@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -178,7 +178,7 @@ void gear_indicator_update(void)
 			{
 				current_object->gear_indicator.hint_started = 0xFFu;
 				object = start_object();
-				object->handler = shift_up_hint_update_ADDRESS;
+				object->handler = FUNCTION_shift_up_hint_update;
 				object->shift_up_hint.indicator = address_of(current_object);
 				object->shift_up_hint.gear = gear;
 			}
@@ -277,7 +277,7 @@ void place_count_update(void)
 	place = screen->place;
 	current_object->place_count.place = place;
 	object = start_object();
-	object->handler = place_number_update_ADDRESS;
+	object->handler = FUNCTION_place_number_update;
 	object->place_number.place = place;
 	current_object->place_count.number = address_of(object);
 	current_object->state++;
@@ -490,7 +490,7 @@ void stage_indicator_start(void)
 	current_object->x = 0x20u;
 	current_object->y = 0x16u;
 	animation_start(animation);
-	current_object->handler = stage_indicator_draw_ADDRESS;
+	current_object->handler = FUNCTION_stage_indicator_draw;
 	stage_indicator_draw();
 }
 
@@ -797,7 +797,7 @@ void time_left_display_check_extension(void)
 	{
 		player_car->extensions_shown = screen->progress.forks_decided;
 		object = start_object();
-		object->handler = extend_time_message_start_ADDRESS;
+		object->handler = FUNCTION_extend_time_message_start;
 	}
 }
 
@@ -818,7 +818,7 @@ void extend_time_message_start(void)
 	current_object->y = 0x30u;
 	current_object->extend_time_message.frames = 0x5Au;
 	current_object->extend_time_message.blink = 0u;
-	current_object->handler = extend_time_message_blink_ADDRESS;
+	current_object->handler = FUNCTION_extend_time_message_blink;
 	lamp = pointer_to(GAME_VARIABLES + screen->index * 4u);
 	lamp->checkpoint_timer = 1u;
 	lamp->checkpoint_period = 0x10u;
@@ -992,7 +992,7 @@ void goal_update(void)
 	if (RACE(screen->host_record)->racer_count != 1u)
 	{
 		result_object = start_object();
-		result_object->handler = race_result_start_ADDRESS;
+		result_object->handler = FUNCTION_race_result_start;
 		current_object->state++;
 	}
 	current_object->goal.timer = 0xF0u;
@@ -1022,7 +1022,7 @@ void race_result_start(void)
 	uint8_t place = 0;
 
 	object = start_object();
-	object->handler = race_result_verdict_start_ADDRESS;
+	object->handler = FUNCTION_race_result_verdict_start;
 	current_object->draw_mode = 8u;
 	current_object->depth_layer = 0x19Cu;
 	animation = RACE_PLACES;
@@ -1036,7 +1036,7 @@ void race_result_start(void)
 	current_object->x = 0xA0u;
 	current_object->y = 0xC8u;
 	current_object->race_result.frames = 0xF0u;
-	current_object->handler = race_result_hold_ADDRESS;
+	current_object->handler = FUNCTION_race_result_hold;
 	race_result_hold();
 }
 
@@ -1074,7 +1074,7 @@ void race_result_verdict_start(void)
 		animation_start(animation);
 		current_object->palette = 0x42u;
 		current_object->race_result.frames = 0xF0u;
-		current_object->handler = race_result_hold_ADDRESS;
+		current_object->handler = FUNCTION_race_result_hold;
 		race_result_hold();
 		return;
 	}
@@ -1082,7 +1082,7 @@ void race_result_verdict_start(void)
 	animation_start(animation);
 	current_object->palette = 0x41u;
 	current_object->race_result.frames = 0xF0u;
-	current_object->handler = race_result_verdict_blink_ADDRESS;
+	current_object->handler = FUNCTION_race_result_verdict_blink;
 	race_result_verdict_blink();
 }
 

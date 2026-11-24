@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -319,7 +319,7 @@ void race_background_start_lower_animation(void)
 	object->race_background_lower_animation.delay = 2u;
 	object->race_background_lower_animation.step = screen->index;
 	object->race_background_lower_animation.page_word_address = current_object->race_background.page_word_address;
-	object->handler = race_background_lower_animation_wait_ADDRESS;
+	object->handler = FUNCTION_race_background_lower_animation_wait;
 }
 
 /* Waits until the animation's tiles are loaded (screen unpack_state), then goes on to
@@ -328,7 +328,7 @@ void race_background_lower_animation_wait(void)
 {
 	if (screen->unpack_state != 0u)
 		return;
-	current_object->handler = race_background_lower_animation_cycle_ADDRESS;
+	current_object->handler = FUNCTION_race_background_lower_animation_cycle;
 	race_background_lower_animation_cycle();
 }
 
@@ -372,7 +372,7 @@ void race_background_start_upper_animation(uint32_t animation)
 	object->race_background_upper_animation.delay = 3u;
 	object->race_background_upper_animation.step = screen->index;
 	object->race_background_upper_animation.page_word_address = current_object->race_background.page_word_address;
-	object->handler = race_background_upper_animation_wait_ADDRESS;
+	object->handler = FUNCTION_race_background_upper_animation_wait;
 }
 
 /* Waits until the animation's tiles are loaded (screen unpack_state), then goes on to
@@ -381,7 +381,7 @@ void race_background_upper_animation_wait(void)
 {
 	if (screen->unpack_state != 0u)
 		return;
-	current_object->handler = race_background_upper_animation_cycle_ADDRESS;
+	current_object->handler = FUNCTION_race_background_upper_animation_cycle;
 	race_background_upper_animation_cycle();
 }
 
@@ -491,7 +491,7 @@ void race_background_start_objects(uint32_t stage)
 		do
 		{
 			object = start_object();
-			object->handler = OBJECT_LIST_PAIR(object_list)->handler;
+			object->handler = function_number(OBJECT_LIST_PAIR(object_list)->handler);
 			object_list += 4u;
 			object->list_data = OBJECT_LIST_PAIR(object_list - 0x4u)->data;
 			object->parent = address_of(current_object);
@@ -679,7 +679,7 @@ void sunset_fade_start(void)
 		fades_left--;
 		fade_slot++;
 	} while (fades_left != 0u);
-	current_object->handler = sunset_fade_wait_ADDRESS;
+	current_object->handler = FUNCTION_sunset_fade_wait;
 }
 
 /* Waits for its palette fades to finish, then ends; if the stage's background starts changing (screen
@@ -744,7 +744,7 @@ void backdrop_far_start(void)
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);
-	current_object->handler = backdrop_far_update_ADDRESS;
+	current_object->handler = FUNCTION_backdrop_far_update;
 	backdrop_far_update();
 }
 
@@ -806,7 +806,7 @@ void backdrop_near_start(void)
 	current_object->draw_mode = 0xAu;
 	current_object->depth_layer = 1u;
 	animation_start(animation);
-	current_object->handler = backdrop_near_update_ADDRESS;
+	current_object->handler = FUNCTION_backdrop_near_update;
 	backdrop_near_update();
 }
 
@@ -877,7 +877,7 @@ void backdrop_landmark_start(void)
 	current_object->depth_layer = 2u;
 	animation_start(animation);
 	current_object->backdrop_landmark.approach_start = 0u - backdrop_record->approach_distance + player_car->window_segment;
-	current_object->handler = backdrop_landmark_update_ADDRESS;
+	current_object->handler = FUNCTION_backdrop_landmark_update;
 	backdrop_landmark_update();
 }
 
@@ -969,7 +969,7 @@ void backdrop_flashing_start(void)
 	current_object->depth_layer = 1u;
 	animation_start(animation);
 	current_object->backdrop_flashing.other_palette = 0x120u;
-	current_object->handler = backdrop_flashing_update_ADDRESS;
+	current_object->handler = FUNCTION_backdrop_flashing_update;
 	backdrop_flashing_update();
 }
 
@@ -1036,7 +1036,7 @@ void backdrop_translucent_start(void)
 	current_object->depth_layer = 1u;
 	animation_start(animation);
 	current_object->backdrop_translucent.frame_count = 0u;
-	current_object->handler = backdrop_translucent_update_ADDRESS;
+	current_object->handler = FUNCTION_backdrop_translucent_update;
 	backdrop_translucent_update();
 }
 

@@ -3,7 +3,7 @@
  *    Description: the objects: the object loop, starting and freeing objects and their lists, the random numbers
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -55,7 +55,7 @@ void run_objects(void)
 			break;
 		if ((current_object->flags & 1u) != 0u)
 		{
-			call_code(current_object->handler);
+			game_functions[current_object->handler]();
 			next_list = OBJECT_AREA(address_of(screen) - 0x8000u)->next_list;
 			OBJECT_LIST(next_list)->count++;
 			OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->objects[(int32_t)(OBJECT_LIST(OBJECT_AREA(address_of(screen) - 0x8000u)->next_list)->count - 1u)] = address_of(current_object);
@@ -167,7 +167,7 @@ struct object *start_object_list(uint32_t handler_list)
 	do
 	{
 		object = start_object();
-		object->handler = OBJECT_HANDLERS(handler_list)[0];
+		object->handler = function_number(OBJECT_HANDLERS(handler_list)[0]);
 		object->number = list_index;
 		list_index++;
 		objects_left--;

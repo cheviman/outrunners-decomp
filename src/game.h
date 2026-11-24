@@ -3,7 +3,7 @@
  *    Description: prototypes of the game's functions and the addresses of the code it keeps in memory slots
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -21,250 +21,269 @@ extern struct object *current_object;
 extern struct car *player_car;
 extern struct screen *screen;
 
-/* where the code the program keeps in memory slots (objects' handlers, hooks) is, as the game's own
-   addresses: what it stores and compares, and what call_code() runs */
-#define bar_picture_bar_start_ADDRESS 0x0010EBu
-#define bar_picture_bar_fly_ADDRESS 0x001141u
-#define bar_picture_bar_draw_ADDRESS 0x0011ABu
-#define car_presentation_update_ADDRESS 0x001687u
-#define staff_credits_code_start_ADDRESS 0x001894u
-#define staff_credits_code_watch_ADDRESS 0x0018A4u
-#define staff_credits_code_show_ADDRESS 0x0018E5u
-#define staff_credits_code_done_ADDRESS 0x0018FEu
-#define car_name_start_ADDRESS 0x001980u
-#define car_name_letter_update_ADDRESS 0x0019C0u
-#define name_entry_update_ADDRESS 0x001EC2u
-#define name_entry_letter_update_ADDRESS 0x002204u
-#define name_entry_lcd_update_ADDRESS 0x0022F7u
-#define name_entry_car_update_ADDRESS 0x002379u
-#define name_entry_drivers_update_ADDRESS 0x0023C6u
-#define name_entry_course_name_update_ADDRESS 0x002416u
-#define ranking_update_ADDRESS 0x00247Au
-#define ranking_background_update_ADDRESS 0x00254Du
-#define ranking_title_left_update_ADDRESS 0x002612u
-#define ranking_title_right_update_ADDRESS 0x00265Fu
-#define ranking_course_banner_update_ADDRESS 0x0026ADu
-#define ranking_record_start_ADDRESS 0x00270Cu
-#define ranking_record_character_update_ADDRESS 0x00278Eu
-#define ranking_record_car_update_ADDRESS 0x002870u
-#define passing_traffic_start_ADDRESS 0x002933u
-#define passing_traffic_update_ADDRESS 0x002952u
-#define passing_car_update_ADDRESS 0x002998u
-#define route_map_update_ADDRESS 0x003520u
-#define route_map_car_update_ADDRESS 0x003E1Bu
-#define route_map_sign_update_ADDRESS 0x003F27u
-#define route_map_landmark_update_ADDRESS 0x004056u
-#define stage_result_line_draw_ADDRESS 0x004152u
-#define route_map_leg_show_ADDRESS 0x004240u
-#define route_map_leg_car_show_ADDRESS 0x004421u
-#define route_map_checkpoint_show_ADDRESS 0x00457Du
-#define route_map_direction_sign_show_ADDRESS 0x00463Cu
-#define route_map_wait_banner_show_ADDRESS 0x0046BBu
-#define game_over_banner_show_ADDRESS 0x004771u
-#define car_select_start_ADDRESS 0x005030u
-#define car_select_run_ADDRESS 0x00503Du
-#define car_attendant_run_ADDRESS 0x005526u
-#define turntable_car_show_ADDRESS 0x0056B4u
-#define turntable_scenery_show_ADDRESS 0x005762u
-#define welcome_letter_start_ADDRESS 0x005862u
-#define welcome_letter_show_ADDRESS 0x005883u
-#define select_car_heading_show_ADDRESS 0x005908u
-#define select_instruction_show_ADDRESS 0x0059B8u
-#define transmission_choice_run_ADDRESS 0x005A1Du
-#define automatic_panel_show_ADDRESS 0x005B45u
-#define manual_panel_show_ADDRESS 0x005BD6u
-#define transmission_label_start_automatic_ADDRESS 0x005C71u
-#define transmission_label_start_manual_ADDRESS 0x005CA4u
-#define transmission_label_follow_ADDRESS 0x005CE5u
-#define driver_couple_start_ADDRESS 0x005D14u
-#define car_caption_show_ADDRESS 0x005D5Cu
-#define car_gears_caption_show_ADDRESS 0x005E10u
-#define waiting_banner_show_ADDRESS 0x005EB4u
-#define car_select_entries_run_ADDRESS 0x005F51u
-#define choice_flag_start_ADDRESS 0x006070u
-#define choice_flag_follow_ADDRESS 0x0060B1u
-#define stacked_choice_flag_start_ADDRESS 0x006105u
-#define stacked_choice_flag_follow_ADDRESS 0x00613Fu
-#define choice_flag_number_start_ADDRESS 0x006173u
-#define choice_flag_number_follow_ADDRESS 0x0061A2u
-#define entry_countdown_start_ADDRESS 0x006356u
-#define entry_countdown_count_ADDRESS 0x0063F9u
-#define entry_countdown_done_ADDRESS 0x006463u
-#define entry_banner_start_ADDRESS 0x0064E2u
-#define entry_banner_blink_ADDRESS 0x006514u
-#define entry_car_ring_start_ADDRESS 0x00652Au
-#define entry_car_ring_draw_ADDRESS 0x006560u
-#define entry_traffic_run_ADDRESS 0x00660Fu
-#define entry_traffic_car_drive_ADDRESS 0x00664Eu
-#define player_car_update_ADDRESS 0x006EF0u
-#define rival_warning_update_ADDRESS 0x007C36u
-#define rival_alarm_update_ADDRESS 0x007C9Eu
-#define race_cars_start_ADDRESS 0x009590u
-#define race_car_draw_ADDRESS 0x00974Cu
-#define distance_offset_from_x_ADDRESS 0x00AB24u
-#define distance_offset_from_z_ADDRESS 0x00AB36u
-#define rev_meter_update_ADDRESS 0x00BFC1u
-#define speedometer_update_ADDRESS 0x00C017u
-#define speed_unit_update_ADDRESS 0x00C0C6u
-#define gear_indicator_update_ADDRESS 0x00C10Du
-#define shift_up_hint_update_ADDRESS 0x00C231u
-#define place_count_update_ADDRESS 0x00C2ACu
-#define place_number_update_ADDRESS 0x00C342u
-#define lap_timer_update_ADDRESS 0x00C43Eu
-#define stage_indicator_start_ADDRESS 0x00C553u
-#define stage_indicator_draw_ADDRESS 0x00C585u
-#define start_message_update_ADDRESS 0x00C59Cu
-#define time_left_display_update_ADDRESS 0x00C65Fu
-#define extend_time_message_start_ADDRESS 0x00C7ECu
-#define extend_time_message_blink_ADDRESS 0x00C857u
-#define stage_entry_update_ADDRESS 0x00C873u
-#define goal_update_ADDRESS 0x00C8B6u
-#define race_result_start_ADDRESS 0x00C9EDu
-#define race_result_hold_ADDRESS 0x00CA44u
-#define race_result_verdict_start_ADDRESS 0x00CA50u
-#define race_result_verdict_blink_ADDRESS 0x00CAA8u
-#define branch_arrow_update_ADDRESS 0x00CABCu
-#define checkpoint_board_update_ADDRESS 0x00CBC0u
-#define draw_object_ADDRESS 0x00EAE4u
-#define road_object_stream_read_ADDRESS 0x0126FCu
-#define crest_clip_update_ADDRESS 0x0127EEu
-#define scenery_update_ADDRESS 0x01287Cu
-#define flashing_scenery_update_ADDRESS 0x012906u
-#define scenery_pair_update_ADDRESS 0x0129ABu
-#define overhead_scenery_update_ADDRESS 0x0129F4u
-#define aurora_update_ADDRESS 0x012A20u
-#define fork_sign_update_ADDRESS 0x012ACFu
-#define animated_scenery_update_ADDRESS 0x012AF4u
-#define animated_scenery_pair_update_ADDRESS 0x012B84u
-#define road_crosser_update_ADDRESS 0x012BAEu
-#define kangaroo_update_ADDRESS 0x012CAAu
-#define moving_scenery_update_ADDRESS 0x012DB7u
-#define swooping_helicopter_update_ADDRESS 0x012EA2u
-#define start_gate_update_ADDRESS 0x012FBCu
-#define start_flagman_update_ADDRESS 0x01307Eu
-#define flagman_update_ADDRESS 0x013104u
-#define start_balloon_update_ADDRESS 0x0131A5u
-#define ambient_sound_update_ADDRESS 0x01322Du
-#define one_shot_sound_update_ADDRESS 0x013288u
-#define west_east_panel_update_ADDRESS 0x013296u
-#define santa_sleigh_update_ADDRESS 0x01333Cu
-#define goal_parade_rightward_update_ADDRESS 0x01344Fu
-#define sounding_scenery_update_ADDRESS 0x01351Eu
-#define goal_parade_leftward_update_ADDRESS 0x0135CCu
-#define goal_parade_dragon_update_ADDRESS 0x01369Au
-#define traffic_spawner_update_ADDRESS 0x01376Cu
-#define traffic_car_start_convoy_ADDRESS 0x01389Eu
-#define traffic_car_update_ADDRESS 0x0138EBu
-#define traffic_follower_update_ADDRESS 0x013AB7u
-#define pulled_vehicle_update_ADDRESS 0x013AD8u
-#define traffic_stopping_car_update_ADDRESS 0x013AF9u
-#define traffic_figure_start_team_ADDRESS 0x013B56u
-#define traffic_figure_update_ADDRESS 0x013BA3u
-#define traffic_hit_sound_wait_ADDRESS 0x013D15u
-#define fork_branch_start_right_ADDRESS 0x013DC4u
-#define fork_branch_start_left_ADDRESS 0x013DD5u
-#define fork_branch_draw_ADDRESS 0x013DE4u
-#define race_car_occupant_update_ADDRESS 0x014108u
-#define rider_gesture_update_ADDRESS 0x0141F4u
-#define race_opening_update_ADDRESS 0x014470u
-#define stage_end_sounds_update_ADDRESS 0x014514u
-#define fork_camera_update_ADDRESS 0x01458Du
-#define race_car_start_ending_ADDRESS 0x014694u
-#define goal_actor_car_start_ADDRESS 0x014735u
-#define goal_actor_driver_start_ADDRESS 0x014777u
-#define goal_actor_passenger_start_ADDRESS 0x014782u
-#define goal_actor_start_ADDRESS 0x014838u
-#define goal_actor_run_ADDRESS 0x014846u
-#define road_surface_update_ADDRESS 0x016B00u
-#define road_tiles_change_update_ADDRESS 0x0171CEu
-#define race_background_update_ADDRESS 0x017524u
-#define race_background_lower_animation_wait_ADDRESS 0x0178C9u
-#define race_background_lower_animation_cycle_ADDRESS 0x0178D5u
-#define race_background_upper_animation_wait_ADDRESS 0x01794Cu
-#define race_background_upper_animation_cycle_ADDRESS 0x017958u
-#define palette_cycle_update_ADDRESS 0x017BFBu
-#define sunset_fade_start_ADDRESS 0x017CAAu
-#define sunset_fade_wait_ADDRESS 0x017D1Fu
-#define backdrop_far_update_ADDRESS 0x017DB0u
-#define backdrop_near_start_ADDRESS 0x017E1Bu
-#define backdrop_near_update_ADDRESS 0x017E5Bu
-#define backdrop_landmark_start_ADDRESS 0x017EF2u
-#define backdrop_landmark_update_ADDRESS 0x017F3Du
-#define backdrop_flashing_update_ADDRESS 0x018050u
-#define backdrop_translucent_start_ADDRESS 0x0180CBu
-#define backdrop_translucent_update_ADDRESS 0x018110u
-#define race_background_fade_watch_update_ADDRESS 0x01854Au
-#define palette_fade_prepare_ADDRESS 0x0185D2u
-#define palette_fade_step_ADDRESS 0x01864Au
-#define lcd_race_info_start_ADDRESS 0x018BA0u
-#define lcd_race_info_update_ADDRESS 0x018BB2u
-#define lcd_race_info_finish_ADDRESS 0x018E32u
-#define lcd_race_info_paused_ADDRESS 0x018E98u
-#define car_radio_start_ADDRESS 0x018F74u
-#define car_radio_wait_start_ADDRESS 0x018FD3u
-#define car_radio_read_buttons_ADDRESS 0x018FE0u
-#define car_radio_update_ADDRESS 0x01900Au
-#define song_title_show_ADDRESS 0x019322u
-#define title_screen_update_ADDRESS 0x019CACu
-#define title_car_drive_ADDRESS 0x019E6Bu
-#define title_car_driver_update_ADDRESS 0x019F4Cu
-#define title_car_passenger_update_ADDRESS 0x019F60u
-#define title_palm_tree_update_ADDRESS 0x01A0E2u
-#define title_logo_update_ADDRESS 0x01A18Cu
-#define title_logo_copy_update_ADDRESS 0x01A29Cu
-#define title_logo_car_update_ADDRESS 0x01A329u
-#define title_logo_stripe_update_ADDRESS 0x01A3E9u
-#define title_board_palms_update_ADDRESS 0x01A499u
-#define title_seagull_fly_ADDRESS 0x01A536u
-#define title_picture_draw_ADDRESS 0x01A672u
-#define coin_prompt_update_ADDRESS 0x01A6CFu
-#define coin_prompt_car_drive_ADDRESS 0x01A7C5u
-#define coin_prompt_message_update_ADDRESS 0x01A834u
-#define ignition_key_prompt_update_ADDRESS 0x01A8E2u
-#define credit_display_update_ADDRESS 0x01AA01u
-#define demo_captions_run_ADDRESS 0x01ADE8u
-#define demo_caption_update_ADDRESS 0x01AE8Du
-#define test_mode_menu_ADDRESS 0x01C392u
-#define test_mode_menu_run_ADDRESS 0x01C3E6u
-#define test_mode_menu_toggle_continue_ADDRESS 0x01C5BAu
-#define test_mode_memory_test_ADDRESS 0x01C5DBu
-#define test_mode_memory_test_run_ADDRESS 0x01C928u
-#define test_mode_volume_adjustment_ADDRESS 0x01CDE0u
-#define test_mode_volume_adjustment_select_ADDRESS 0x01CE15u
-#define test_mode_volume_adjustment_adjust_ADDRESS 0x01CE97u
-#define test_mode_input_test_ADDRESS 0x01D111u
-#define test_mode_input_test_run_ADDRESS 0x01D126u
-#define test_mode_input_test_release_ADDRESS 0x01D13Bu
-#define test_mode_output_test_ADDRESS 0x01D3E4u
-#define test_mode_output_test_run_ADDRESS 0x01D419u
-#define test_mode_sound_test_ADDRESS 0x01D620u
-#define test_mode_sound_test_run_ADDRESS 0x01D661u
-#define test_mode_crt_test_ADDRESS 0x01D840u
-#define test_mode_crt_test_bars_run_ADDRESS 0x01D868u
-#define test_mode_crt_test_grid_ADDRESS 0x01D87Au
-#define test_mode_crt_test_grid_run_ADDRESS 0x01D88Fu
-#define test_mode_game_assignments_ADDRESS 0x01D9F3u
-#define test_mode_game_assignments_run_ADDRESS 0x01DA28u
-#define test_mode_coin_assignments_ADDRESS 0x01DD1Eu
-#define test_mode_coin_assignments_show_ADDRESS 0x01DD2Bu
-#define test_mode_coin_assignments_run_ADDRESS 0x01DD58u
-#define test_mode_coin_assignments_manual_run_ADDRESS 0x01DEFDu
-#define test_mode_network_assignments_start_ADDRESS 0x01E453u
-#define test_mode_network_assignments_run_ADDRESS 0x01E4BAu
-#define test_mode_bookkeeping_start_ADDRESS 0x01E6EBu
-#define test_mode_bookkeeping_wait_ADDRESS 0x01E703u
-#define test_mode_bookkeeping_second_page_start_ADDRESS 0x01E715u
-#define test_mode_bookkeeping_second_page_wait_ADDRESS 0x01E72Du
-#define test_mode_backup_data_clear_start_ADDRESS 0x01EDC4u
-#define test_mode_backup_data_clear_run_ADDRESS 0x01EDF1u
-#define test_mode_backup_data_clear_wait_ADDRESS 0x01EE66u
-#define test_mode_exit_ADDRESS 0x01EEC1u
-#define test_mode_exit_caution_wait_ADDRESS 0x01EEEFu
-#define int_vector_40_ADDRESS 0x03F500u
-#define int_vector_41_ADDRESS 0x03F794u
-#define int_vector_42_ADDRESS 0x03F7A0u
-#define int_vector_43_ADDRESS 0x03F7ACu
-#define int_vector_44_ADDRESS 0x03F830u
+/* the number of each function the game's state holds in a slot: an index into game_functions[] */
+enum game_function
+{
+	NO_FUNCTION,
+	FUNCTION_second_task,
+	FUNCTION_isdn_status_update,
+	FUNCTION_bar_picture_bar_start,
+	FUNCTION_bar_picture_bar_fly,
+	FUNCTION_bar_picture_bar_draw,
+	FUNCTION_car_presentation_update,
+	FUNCTION_staff_credits_code_start,
+	FUNCTION_staff_credits_code_watch,
+	FUNCTION_staff_credits_code_show,
+	FUNCTION_staff_credits_code_done,
+	FUNCTION_car_name_start,
+	FUNCTION_car_name_letter_update,
+	FUNCTION_name_entry_update,
+	FUNCTION_name_entry_letter_update,
+	FUNCTION_name_entry_lcd_update,
+	FUNCTION_name_entry_car_update,
+	FUNCTION_name_entry_drivers_update,
+	FUNCTION_name_entry_course_name_update,
+	FUNCTION_ranking_update,
+	FUNCTION_ranking_background_update,
+	FUNCTION_ranking_title_left_update,
+	FUNCTION_ranking_title_right_update,
+	FUNCTION_ranking_course_banner_update,
+	FUNCTION_ranking_record_start,
+	FUNCTION_ranking_record_character_update,
+	FUNCTION_ranking_record_car_update,
+	FUNCTION_passing_traffic_start,
+	FUNCTION_passing_traffic_update,
+	FUNCTION_passing_car_update,
+	FUNCTION_route_map_update,
+	FUNCTION_route_map_car_update,
+	FUNCTION_route_map_sign_update,
+	FUNCTION_route_map_landmark_update,
+	FUNCTION_stage_result_line_draw,
+	FUNCTION_route_map_leg_show,
+	FUNCTION_route_map_leg_car_show,
+	FUNCTION_route_map_checkpoint_show,
+	FUNCTION_route_map_direction_sign_show,
+	FUNCTION_route_map_wait_banner_show,
+	FUNCTION_game_over_banner_show,
+	FUNCTION_car_select_start,
+	FUNCTION_car_select_run,
+	FUNCTION_car_attendant_run,
+	FUNCTION_turntable_car_show,
+	FUNCTION_turntable_scenery_show,
+	FUNCTION_welcome_letter_start,
+	FUNCTION_welcome_letter_show,
+	FUNCTION_select_car_heading_show,
+	FUNCTION_select_instruction_show,
+	FUNCTION_transmission_choice_run,
+	FUNCTION_automatic_panel_show,
+	FUNCTION_manual_panel_show,
+	FUNCTION_transmission_label_start_automatic,
+	FUNCTION_transmission_label_start_manual,
+	FUNCTION_transmission_label_follow,
+	FUNCTION_driver_couple_start,
+	FUNCTION_car_caption_show,
+	FUNCTION_car_gears_caption_show,
+	FUNCTION_waiting_banner_show,
+	FUNCTION_car_select_entries_run,
+	FUNCTION_choice_flag_start,
+	FUNCTION_choice_flag_follow,
+	FUNCTION_stacked_choice_flag_start,
+	FUNCTION_stacked_choice_flag_follow,
+	FUNCTION_choice_flag_number_start,
+	FUNCTION_choice_flag_number_follow,
+	FUNCTION_entry_countdown_start,
+	FUNCTION_entry_countdown_count,
+	FUNCTION_entry_countdown_done,
+	FUNCTION_entry_banner_start,
+	FUNCTION_entry_banner_blink,
+	FUNCTION_entry_car_ring_start,
+	FUNCTION_entry_car_ring_draw,
+	FUNCTION_entry_traffic_run,
+	FUNCTION_entry_traffic_car_drive,
+	FUNCTION_player_car_update,
+	FUNCTION_rival_warning_update,
+	FUNCTION_rival_alarm_update,
+	FUNCTION_race_cars_start,
+	FUNCTION_race_car_draw,
+	FUNCTION_distance_offset_from_x,
+	FUNCTION_distance_offset_from_z,
+	FUNCTION_rev_meter_update,
+	FUNCTION_speedometer_update,
+	FUNCTION_speed_unit_update,
+	FUNCTION_gear_indicator_update,
+	FUNCTION_shift_up_hint_update,
+	FUNCTION_place_count_update,
+	FUNCTION_place_number_update,
+	FUNCTION_lap_timer_update,
+	FUNCTION_stage_indicator_start,
+	FUNCTION_stage_indicator_draw,
+	FUNCTION_start_message_update,
+	FUNCTION_time_left_display_update,
+	FUNCTION_extend_time_message_start,
+	FUNCTION_extend_time_message_blink,
+	FUNCTION_stage_entry_update,
+	FUNCTION_goal_update,
+	FUNCTION_race_result_start,
+	FUNCTION_race_result_hold,
+	FUNCTION_race_result_verdict_start,
+	FUNCTION_race_result_verdict_blink,
+	FUNCTION_branch_arrow_update,
+	FUNCTION_checkpoint_board_update,
+	FUNCTION_draw_object,
+	FUNCTION_road_object_stream_read,
+	FUNCTION_crest_clip_update,
+	FUNCTION_scenery_update,
+	FUNCTION_flashing_scenery_update,
+	FUNCTION_scenery_pair_update,
+	FUNCTION_overhead_scenery_update,
+	FUNCTION_aurora_update,
+	FUNCTION_fork_sign_update,
+	FUNCTION_animated_scenery_update,
+	FUNCTION_animated_scenery_pair_update,
+	FUNCTION_road_crosser_update,
+	FUNCTION_kangaroo_update,
+	FUNCTION_moving_scenery_update,
+	FUNCTION_swooping_helicopter_update,
+	FUNCTION_start_gate_update,
+	FUNCTION_start_flagman_update,
+	FUNCTION_flagman_update,
+	FUNCTION_start_balloon_update,
+	FUNCTION_ambient_sound_update,
+	FUNCTION_one_shot_sound_update,
+	FUNCTION_west_east_panel_update,
+	FUNCTION_santa_sleigh_update,
+	FUNCTION_goal_parade_rightward_update,
+	FUNCTION_sounding_scenery_update,
+	FUNCTION_goal_parade_leftward_update,
+	FUNCTION_goal_parade_dragon_update,
+	FUNCTION_traffic_spawner_update,
+	FUNCTION_traffic_car_start_convoy,
+	FUNCTION_traffic_car_update,
+	FUNCTION_traffic_follower_update,
+	FUNCTION_pulled_vehicle_update,
+	FUNCTION_traffic_stopping_car_update,
+	FUNCTION_traffic_figure_start_team,
+	FUNCTION_traffic_figure_update,
+	FUNCTION_traffic_hit_sound_wait,
+	FUNCTION_fork_branch_start_right,
+	FUNCTION_fork_branch_start_left,
+	FUNCTION_fork_branch_draw,
+	FUNCTION_race_car_occupant_update,
+	FUNCTION_rider_gesture_update,
+	FUNCTION_race_opening_update,
+	FUNCTION_stage_end_sounds_update,
+	FUNCTION_fork_camera_update,
+	FUNCTION_race_car_start_ending,
+	FUNCTION_goal_actor_car_start,
+	FUNCTION_goal_actor_driver_start,
+	FUNCTION_goal_actor_passenger_start,
+	FUNCTION_goal_actor_start,
+	FUNCTION_goal_actor_run,
+	FUNCTION_road_surface_update,
+	FUNCTION_road_tiles_change_update,
+	FUNCTION_race_background_update,
+	FUNCTION_race_background_lower_animation_wait,
+	FUNCTION_race_background_lower_animation_cycle,
+	FUNCTION_race_background_upper_animation_wait,
+	FUNCTION_race_background_upper_animation_cycle,
+	FUNCTION_palette_cycle_update,
+	FUNCTION_sunset_fade_start,
+	FUNCTION_sunset_fade_wait,
+	FUNCTION_backdrop_far_update,
+	FUNCTION_backdrop_near_start,
+	FUNCTION_backdrop_near_update,
+	FUNCTION_backdrop_landmark_start,
+	FUNCTION_backdrop_landmark_update,
+	FUNCTION_backdrop_flashing_update,
+	FUNCTION_backdrop_translucent_start,
+	FUNCTION_backdrop_translucent_update,
+	FUNCTION_race_background_fade_watch_update,
+	FUNCTION_palette_fade_prepare,
+	FUNCTION_palette_fade_step,
+	FUNCTION_lcd_race_info_start,
+	FUNCTION_lcd_race_info_update,
+	FUNCTION_lcd_race_info_finish,
+	FUNCTION_lcd_race_info_paused,
+	FUNCTION_car_radio_start,
+	FUNCTION_car_radio_wait_start,
+	FUNCTION_car_radio_read_buttons,
+	FUNCTION_car_radio_update,
+	FUNCTION_song_title_show,
+	FUNCTION_title_screen_update,
+	FUNCTION_title_car_drive,
+	FUNCTION_title_car_driver_update,
+	FUNCTION_title_car_passenger_update,
+	FUNCTION_title_palm_tree_update,
+	FUNCTION_title_logo_update,
+	FUNCTION_title_logo_copy_update,
+	FUNCTION_title_logo_car_update,
+	FUNCTION_title_logo_stripe_update,
+	FUNCTION_title_board_palms_update,
+	FUNCTION_title_seagull_fly,
+	FUNCTION_title_picture_draw,
+	FUNCTION_coin_prompt_update,
+	FUNCTION_coin_prompt_car_drive,
+	FUNCTION_coin_prompt_message_update,
+	FUNCTION_ignition_key_prompt_update,
+	FUNCTION_credit_display_update,
+	FUNCTION_demo_captions_run,
+	FUNCTION_demo_caption_update,
+	FUNCTION_test_mode_menu,
+	FUNCTION_test_mode_menu_run,
+	FUNCTION_test_mode_menu_toggle_continue,
+	FUNCTION_test_mode_memory_test,
+	FUNCTION_test_mode_memory_test_run,
+	FUNCTION_test_mode_volume_adjustment,
+	FUNCTION_test_mode_volume_adjustment_select,
+	FUNCTION_test_mode_volume_adjustment_adjust,
+	FUNCTION_test_mode_input_test,
+	FUNCTION_test_mode_input_test_run,
+	FUNCTION_test_mode_input_test_release,
+	FUNCTION_test_mode_output_test,
+	FUNCTION_test_mode_output_test_run,
+	FUNCTION_test_mode_sound_test,
+	FUNCTION_test_mode_sound_test_run,
+	FUNCTION_test_mode_crt_test,
+	FUNCTION_test_mode_crt_test_bars_run,
+	FUNCTION_test_mode_crt_test_grid,
+	FUNCTION_test_mode_crt_test_grid_run,
+	FUNCTION_test_mode_game_assignments,
+	FUNCTION_test_mode_game_assignments_run,
+	FUNCTION_test_mode_coin_assignments,
+	FUNCTION_test_mode_coin_assignments_show,
+	FUNCTION_test_mode_coin_assignments_run,
+	FUNCTION_test_mode_coin_assignments_manual_run,
+	FUNCTION_test_mode_network_assignments_start,
+	FUNCTION_test_mode_network_assignments_run,
+	FUNCTION_test_mode_bookkeeping_start,
+	FUNCTION_test_mode_bookkeeping_wait,
+	FUNCTION_test_mode_bookkeeping_second_page_start,
+	FUNCTION_test_mode_bookkeeping_second_page_wait,
+	FUNCTION_test_mode_backup_data_clear_start,
+	FUNCTION_test_mode_backup_data_clear_run,
+	FUNCTION_test_mode_backup_data_clear_wait,
+	FUNCTION_test_mode_exit,
+	FUNCTION_test_mode_exit_caution_wait,
+	FUNCTION_int_vector_40,
+	FUNCTION_int_vector_41,
+	FUNCTION_int_vector_42,
+	FUNCTION_int_vector_43,
+	FUNCTION_int_vector_44,
+	FUNCTION_COUNT    /* (how many numbers there are) */
+};
+extern void (*const game_functions[])(void);    /* the C function for each number: a slot's handler */
+uint32_t function_number(uint32_t address);     /* the number of the function at a V70 address read
+                                                   out of the program ROM's tables (the projection's) */
+void call_second_task(void);
+void call_draw_object(void);
+void call_test_mode_memory_test_run(void);
+void call_test_mode_volume_adjustment_select(void);
+void call_test_mode_input_test_run(void);
+void call_test_mode_crt_test_bars_run(void);
+void call_test_mode_crt_test_grid_run(void);
+void call_test_mode_coin_assignments_run(void);
+void call_test_mode_bookkeeping_wait(void);
+void call_test_mode_bookkeeping_second_page_wait(void);
 
 /* engine/objects.c: the objects: the object loop, starting and freeing objects and their lists, the random numbers */
 void clear_objects(void);

@@ -125,6 +125,7 @@ memory.HOST_VARIABLES = frozenset(("waiting_task_stack", "vblanks_since_start", 
                                    "sound_test_number_b", "test_mode_sound_queue_write", "test_mode_sound_queue_read",
                                    "test_mode_sound_queue", "test_mode_privilege_mode"))
 memory.HOST_SYNCED = frozenset(("test_mode_memory_test_words", "crc16", "unrolled_copy"))
+memory.CODE_FIELDS = frozenset(("object.handler", "test_mode_routine"))
 memory.NOTES = {
     "variables": ["/* the game's variables in work RAM, by their addresses (the fields of struct game, at the end);",
                   "   SCREEN_1 and SCREEN_2 are the blocks of the two screens, which the code reaches through screen",

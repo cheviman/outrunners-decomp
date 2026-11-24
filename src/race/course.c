@@ -3,7 +3,7 @@
  *    Description: the course: its segments built ahead of the car, the road projected for the view
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -86,7 +86,7 @@ void player_car_extend_course(void)
 	player_car->at_fork = 0u;
 	queue_stage_load();
 	object = start_object();
-	object->handler = branch_arrow_update_ADDRESS;
+	object->handler = FUNCTION_branch_arrow_update;
 	for (;;)
 	{
 		player_car->course_records_read++;
@@ -104,7 +104,7 @@ void player_car_extend_course(void)
 			return;
 		case 6:
 			object = start_object();
-			object->handler = goal_update_ADDRESS;
+			object->handler = FUNCTION_goal_update;
 			object->position = player_car->built_segments;
 			player_car->course = address_of(course_place);
 			continue;
@@ -193,7 +193,7 @@ void player_car_build_segment(uint16_t ring_mask)
 				return;
 			case 6:
 				object = start_object();
-				object->handler = goal_update_ADDRESS;
+				object->handler = FUNCTION_goal_update;
 				object->position = player_car->built_segments;
 				player_car->course = address_of(course_place);
 				continue;

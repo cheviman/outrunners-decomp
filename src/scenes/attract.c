@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -25,7 +25,7 @@ void bar_picture_start(void)
 	do
 	{
 		object = start_object();
-		object->handler = bar_picture_bar_start_ADDRESS;
+		object->handler = FUNCTION_bar_picture_bar_start;
 		scales = bar->scales;
 		object->list_data = bar->target;
 		object->bar_picture.scales = scales;
@@ -57,7 +57,7 @@ void bar_picture_bar_start(void)
 	current_object->bar_picture.speed_x = (int16_t)(int8_t)random_x >> 4;
 	random_y = io_read8(0xD80000u);
 	current_object->bar_picture.speed_y = (int16_t)(int8_t)random_y >> 4;
-	current_object->handler = bar_picture_bar_fly_ADDRESS;
+	current_object->handler = FUNCTION_bar_picture_bar_fly;
 }
 
 /* Only unused code reaches it (bar_picture_start): each frame the bar's speed_x and speed_y grow by 1
@@ -107,7 +107,7 @@ void bar_picture_bar_fly(void)
 			draw_object(y_motion);
 			return;
 		}
-		current_object->handler = bar_picture_bar_draw_ADDRESS;
+		current_object->handler = FUNCTION_bar_picture_bar_draw;
 		current_object->frame = 0xDu;
 		draw_object(y_motion);
 		return;
@@ -125,7 +125,7 @@ void bar_picture_bar_fly(void)
 		draw_object(y_motion);
 		return;
 	}
-	current_object->handler = bar_picture_bar_draw_ADDRESS;
+	current_object->handler = FUNCTION_bar_picture_bar_draw;
 	current_object->frame = 0xDu;
 	draw_object(y_motion);
 }
@@ -175,9 +175,9 @@ void car_presentation_update(void)
 	{
 	case 0:
 		object = start_object();
-		object->handler = car_name_start_ADDRESS;
+		object->handler = FUNCTION_car_name_start;
 		object = start_object();
-		object->handler = staff_credits_code_start_ADDRESS;
+		object->handler = FUNCTION_staff_credits_code_start;
 		object->staff_credits_code.presentation = address_of(current_object);
 		current_object->car_presentation.staff_credits_code = address_of(object);
 		current_object->state++;
@@ -230,7 +230,7 @@ void staff_credits_code_start(void)
 
 	staff_credits_code_read_controls(&new_controls, &zero);
 	current_object->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
-	current_object->handler = staff_credits_code_watch_ADDRESS;
+	current_object->handler = FUNCTION_staff_credits_code_watch;
 	staff_credits_code_watch();
 }
 
@@ -269,7 +269,7 @@ void staff_credits_code_watch(void)
 	presentation_timer = current_object->staff_credits_code.presentation + 0x10u;
 	OBJECT(presentation_timer - 0x10u)->car_presentation.timer += 0x4B0u;
 	current_object->staff_credits_code.frames_left = 0x4B0u;
-	current_object->handler = staff_credits_code_show_ADDRESS;
+	current_object->handler = FUNCTION_staff_credits_code_show;
 	staff_credits_code_show();
 }
 
@@ -285,7 +285,7 @@ void staff_credits_code_show(void)
 	current_object->staff_credits_code.frames_left = frames_left - 1u;
 	if (frames_left == 1u)
 	{
-		current_object->handler = staff_credits_code_done_ADDRESS;
+		current_object->handler = FUNCTION_staff_credits_code_done;
 		fade_out_music();
 		return;
 	}
@@ -379,7 +379,7 @@ void car_name_start(void)
 	while (letter_place[0] != 0u)
 	{
 		object = start_object();
-		object->handler = car_name_letter_update_ADDRESS;
+		object->handler = FUNCTION_car_name_letter_update;
 		object->car_name_letter.character = letter_place[0];
 		object->x = letter_x;
 		letter_x += 0x12u;
@@ -547,7 +547,7 @@ void demo_captions_head_to_head(void)
 	else
 		record++;
 	object = start_object();
-	object->handler = demo_caption_update_ADDRESS;
+	object->handler = FUNCTION_demo_caption_update;
 	object->demo_caption.record = record;
 }
 
@@ -583,7 +583,7 @@ void demo_captions_start(uint8_t first_record, uint32_t record_count)
 	do
 	{
 		object = start_object();
-		object->handler = demo_caption_update_ADDRESS;
+		object->handler = FUNCTION_demo_caption_update;
 		object->demo_caption.record = first_record;
 		first_record++;
 		record_count--;

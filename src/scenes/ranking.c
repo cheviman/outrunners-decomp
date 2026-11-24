@@ -3,7 +3,7 @@
  *    Description: the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -88,11 +88,11 @@ void ranking_update(void)
 		start_object_list(handler_list);
 		object = start_object();
 		object->ranking_background.ranking = address_of(current_object);
-		object->handler = ranking_background_update_ADDRESS;
+		object->handler = FUNCTION_ranking_background_update;
 		object = start_object();
-		object->handler = ranking_title_left_update_ADDRESS;
+		object->handler = FUNCTION_ranking_title_left_update;
 		object = start_object();
-		object->handler = ranking_title_right_update_ADDRESS;
+		object->handler = FUNCTION_ranking_title_right_update;
 		current_object->state++;
 		return;
 	case 1:
@@ -108,11 +108,11 @@ void ranking_update(void)
 		current_object->ranking.frames_left = 0x3Cu;
 		record_course = screen->record_course;
 		object = start_object();
-		object->handler = ranking_course_banner_update_ADDRESS;
+		object->handler = FUNCTION_ranking_course_banner_update;
 		object->ranking_course_banner.ranking = address_of(current_object);
 		object->ranking_course_banner.course = record_course;
 		object = start_object();
-		object->handler = ranking_record_start_ADDRESS;
+		object->handler = FUNCTION_ranking_record_start;
 		object->ranking_record.course = record_course;
 		current_object->state++;
 		return;
@@ -353,7 +353,7 @@ void ranking_record_start(void)
 		object->ranking_record_character.ranking_record = address_of(current_object);
 		object->ranking_record_character.index = character_index;
 		object->ranking_record_character.course = current_object->ranking_record.course;
-		object->handler = ranking_record_character_update_ADDRESS;
+		object->handler = FUNCTION_ranking_record_character_update;
 		character_index++;
 		characters_left--;
 	} while (characters_left != 0u);
@@ -395,7 +395,7 @@ void ranking_record_character_update(void)
 		if (current_object->ranking_record_character.slide_steps >= 7u)
 		{
 			object = start_object();
-			object->handler = ranking_record_car_update_ADDRESS;
+			object->handler = FUNCTION_ranking_record_car_update;
 			object->ranking_record_car.course = current_object->ranking_record_character.course;
 			current_object->state++;
 		}
@@ -579,7 +579,7 @@ void passing_traffic_start(void)
 		traffic_path_step = traffic_path_step + 1;
 	}
 	current_object->passing_traffic.path_steps = step_count;
-	current_object->handler = passing_traffic_update_ADDRESS;
+	current_object->handler = FUNCTION_passing_traffic_update;
 	passing_traffic_update();
 }
 
@@ -599,7 +599,7 @@ void passing_traffic_update(void)
 		if ((random & 0xFu) == 0u)
 		{
 			object = start_object();
-			object->handler = passing_car_update_ADDRESS;
+			object->handler = FUNCTION_passing_car_update;
 			object->passing_car.step = current_object->passing_traffic.path_steps;
 			current_object->passing_traffic.wait = 0xAu;
 			current_object->state++;

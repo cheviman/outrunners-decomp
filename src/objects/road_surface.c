@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -121,7 +121,7 @@ void road_surface_update(void)
 		object->road_tiles_change.road = address_of(current_object);
 		object->road_tiles_change.flag = address_of(current_object) + 0xBu;
 		object->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
-		object->handler = road_tiles_change_update_ADDRESS;
+		object->handler = FUNCTION_road_tiles_change_update;
 		return;
 	case 2:
 		second_tiles_flag = ~current_object->road_surface.second_tiles_flag;
@@ -133,7 +133,7 @@ void road_surface_update(void)
 		object->road_tiles_change.road = address_of(current_object);
 		object->road_tiles_change.flag = address_of(current_object) + 0xBu;
 		object->road_tiles_change.data = road_tiles_change_second_data_ADDRESS;
-		object->handler = road_tiles_change_update_ADDRESS;
+		object->handler = FUNCTION_road_tiles_change_update;
 		return;
 	}
 }
@@ -822,7 +822,7 @@ void road_surface_start_tiles_change(void)
 	object->road_tiles_change.road = address_of(current_object);
 	object->road_tiles_change.flag = address_of(current_object) + 0xAu;
 	object->road_tiles_change.data = road_tiles_change_first_data_ADDRESS;
-	object->handler = road_tiles_change_update_ADDRESS;
+	object->handler = FUNCTION_road_tiles_change_update;
 }
 
 /* Changes the road's tiles for a stretch of road (road_surface starts it when an event turns one of its

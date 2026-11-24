@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    20-11-2026
+ *    Modified:    24-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -123,7 +123,7 @@ uint32_t test_mode_start(void)
 	game->screen_2.lcd_text[13] = (uint8_t)(text_12_to >> 8u);
 	game->screen_2.lcd_text[14] = (uint8_t)(text_12_to >> 16u);
 	game->screen_2.lcd_text[15] = (uint8_t)(text_12_to >> 24u);
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 	lcd_place = address_of(&game->screen_2.button_lamps);
 	test_mode_read_controls();
 	return lcd_place;
@@ -136,7 +136,7 @@ void test_mode_frame(void)
 {
 	test_mode_read_controls();
 	test_mode_send_sound();
-	call_code(world->test_mode_routine);
+	game_functions[world->test_mode_routine]();
 }
 
 /* Shows the test mode's menu, where every page returns: in CONTINUE mode (test_mode_flags bit 0) the
@@ -153,7 +153,7 @@ void test_mode_menu(void)
 
 	if (world->test_mode_cursor == 0u)
 	{
-		world->test_mode_routine = test_mode_menu_run_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu_run;
 		test_mode_menu_run();
 		return;
 	}
@@ -170,7 +170,7 @@ void test_mode_menu(void)
 	test_mode_draw_instructions(heading);
 	cursor_cell = 0x310000u | test_mode_menu_cursor_cells[world->test_mode_cursor];
 	test_mode_set_cursor(heading, cursor_cell);
-	world->test_mode_routine = test_mode_menu_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu_run;
 	test_mode_menu_run();
 }
 
@@ -201,7 +201,7 @@ void test_mode_menu_run(void)
 		test_mode_set_cursor(cursor, cursor_cell);
 	}
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_page_jumps[world->test_mode_cursor];
+		world->test_mode_routine = function_number(test_mode_page_jumps[world->test_mode_cursor]);
 	blink_timer = world->test_mode_blink_timer - 1u;
 	world->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
@@ -252,7 +252,7 @@ void test_mode_menu_toggle_continue(void)
 	heading = 0u - (0xFFFFFFFFu + carry);
 	text = test_mode_menu_headings[heading];
 	test_mode_draw_texts((uint16_t)heading, text);
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* The MEMORY TEST, all at once with the interrupts off and the sound program held in its wait loop
@@ -499,7 +499,7 @@ void test_mode_memory_test(void)
 	SOUND_PROGRAM_HOLD = 0u;
 	interrupts_on();
 	test_mode_show_exit_prompt();
-	world->test_mode_routine = test_mode_memory_test_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_memory_test_run;
 	test_mode_memory_test_run((uint16_t)failures);
 }
 
@@ -508,7 +508,7 @@ void test_mode_memory_test(void)
 void test_mode_memory_test_run(uint16_t character)
 {
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_menu_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu;
 	test_mode_blink_prompt(character);
 }
 
@@ -1073,7 +1073,7 @@ void test_mode_volume_adjustment(void)
 	world->test_mode_page_cursor = 1u;
 	cell = 0x310000u | volume_adjustment_cancel_cell;
 	character = test_mode_set_cursor(character, cell);
-	world->test_mode_routine = test_mode_volume_adjustment_select_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_volume_adjustment_select;
 	test_mode_volume_adjustment_select(character);
 }
 
@@ -1136,10 +1136,10 @@ void test_mode_volume_adjustment_select(uint32_t character)
 			analog_input++;
 			range++;
 		} while (controls_left != 0u);
-		world->test_mode_routine = test_mode_volume_adjustment_adjust_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_volume_adjustment_adjust;
 		return;
 	}
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 	blink_timer = world->test_mode_blink_timer - 1u;
 	world->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
@@ -1181,7 +1181,7 @@ void test_mode_volume_adjustment_adjust(void)
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
 	{
 		world->test_mode_flags |= 2u;
-		world->test_mode_routine = test_mode_menu_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu;
 	}
 	test_mode_blink_prompt((uint16_t)position);
 }
@@ -1276,7 +1276,7 @@ void test_mode_input_test(void)
 	text = input_test_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
-	world->test_mode_routine = test_mode_input_test_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_input_test_run;
 	test_mode_input_test_run(character);
 }
 
@@ -1291,7 +1291,7 @@ void test_mode_input_test_run(uint32_t character)
 		test_mode_blink_prompt((uint16_t)character);
 		return;
 	}
-	world->test_mode_routine = test_mode_input_test_release_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_input_test_release;
 	test_mode_blink_prompt((uint16_t)character);
 }
 
@@ -1307,7 +1307,7 @@ void test_mode_input_test_release(void)
 		test_mode_blink_prompt((uint16_t)test_switches);
 		return;
 	}
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 	test_mode_blink_prompt((uint16_t)test_switches);
 }
 
@@ -1427,7 +1427,7 @@ void test_mode_output_test(void)
 	cell = 0x310000u | output_test_exit_cell;
 	test_mode_set_cursor(character, cell);
 	r12 = test_mode_output_test_draw();
-	world->test_mode_routine = test_mode_output_test_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_output_test_run;
 	test_mode_output_test_run();
 }
 
@@ -1583,7 +1583,7 @@ void test_mode_output_test_exit(void)
 	port_g_outputs_0_halfword = (game->port_g_outputs[0] | ((uint32_t)game->port_g_outputs[1] << 8u)) & ~0x403u;
 	game->port_g_outputs[0] = (uint8_t)port_g_outputs_0_halfword;
 	game->port_g_outputs[1] = (uint8_t)(port_g_outputs_0_halfword >> 8u);
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* Starts the SOUND TEST: MONITOR A No., MONITOR B No. (the numbers of the next sounds, both 0:
@@ -1604,7 +1604,7 @@ void test_mode_sound_test(void)
 	world->sound_test_number_a = 0u;
 	world->sound_test_number_b = 0u;
 	test_mode_sound_test_draw();
-	world->test_mode_routine = test_mode_sound_test_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_sound_test_run;
 	test_mode_sound_test_run();
 }
 
@@ -1767,7 +1767,7 @@ void test_mode_sound_test_play_b(void)
 /* The sound test's EXIT: back to the menu. */
 void test_mode_sound_test_exit(void)
 {
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* Starts the C.R.T. TEST's first page: a black background (the background colour of both palettes,
@@ -1785,7 +1785,7 @@ void test_mode_crt_test(void)
 	test_mode_draw_texts(character, text);
 	character = test_mode_crt_test_draw_bars(character);
 	test_mode_show_continue_prompt();
-	world->test_mode_routine = test_mode_crt_test_bars_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_crt_test_bars_run;
 	test_mode_crt_test_bars_run(character);
 }
 
@@ -1794,7 +1794,7 @@ void test_mode_crt_test(void)
 void test_mode_crt_test_bars_run(uint16_t character)
 {
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_crt_test_grid_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_crt_test_grid;
 	test_mode_blink_prompt(character);
 }
 
@@ -1809,7 +1809,7 @@ void test_mode_crt_test_grid(void)
 	text = crt_test_second_page_text_ADDRESS;
 	character = test_mode_draw_texts(character, text);
 	test_mode_show_exit_prompt();
-	world->test_mode_routine = test_mode_crt_test_grid_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_crt_test_grid_run;
 	test_mode_crt_test_grid_run(character);
 }
 
@@ -1822,7 +1822,7 @@ void test_mode_crt_test_grid_run(uint16_t character)
 		character = test_mode_clear_text();
 		io_write16(BACKGROUND_COLOUR_1, 0x733u);
 		io_write16(BACKGROUND_COLOUR_2, 0x733u);
-		world->test_mode_routine = test_mode_menu_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu;
 	}
 	test_mode_blink_prompt(character);
 }
@@ -1964,7 +1964,7 @@ void test_mode_game_assignments(void)
 	world->test_mode_page_cursor = 9u;
 	cell = 0x310000u | game_assignments_exit_cell;
 	test_mode_set_cursor(character_2, cell);
-	world->test_mode_routine = test_mode_game_assignments_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_game_assignments_run;
 	test_mode_game_assignments_run();
 }
 
@@ -2177,12 +2177,12 @@ void test_mode_game_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
-			world->test_mode_routine = test_mode_menu_ADDRESS;
+			world->test_mode_routine = FUNCTION_test_mode_menu;
 			return;
 		}
 	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	world->test_mode_flags |= 2u;
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* Starts the COIN ASSIGNMENTS with the cursor on EXIT (test_mode_page_cursor 2):
@@ -2209,7 +2209,7 @@ void test_mode_coin_assignments_show(void)
 	test_mode_draw_instructions(character_2);
 	cell = 0x310000u | coin_assignments_cursor_cells[world->test_mode_page_cursor];
 	test_mode_set_cursor(character_2, cell);
-	world->test_mode_routine = test_mode_coin_assignments_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_coin_assignments_run;
 	test_mode_coin_assignments_run(colours);
 }
 
@@ -2408,7 +2408,7 @@ void test_mode_coin_assignments_manual_start(uint32_t item_count)
 	world->test_mode_page_cursor = 3u;
 	cell = 0x310000u | coin_manual_exit_cell;
 	test_mode_set_cursor(coins_for_credit, cell);
-	world->test_mode_routine = test_mode_coin_assignments_manual_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_coin_assignments_manual_run;
 }
 
 /* Each frame of the MANUAL SETTING page: SERVICE moves the cursor down its four lines
@@ -2644,7 +2644,7 @@ void test_mode_coin_assignments_step_multiplier(uint32_t item_count)
 void test_mode_coin_assignments_manual_exit(void)
 {
 	world->test_mode_page_cursor = 1u;
-	world->test_mode_routine = test_mode_coin_assignments_show_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_coin_assignments_show;
 }
 
 /* EXIT of the coin assignments page: when coins_per_credit, first_chute_multiplier, bonus_adder,
@@ -2662,13 +2662,13 @@ void test_mode_coin_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
-			world->test_mode_routine = test_mode_menu_ADDRESS;
+			world->test_mode_routine = FUNCTION_test_mode_menu;
 			return;
 		}
 	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	world->test_mode_flags |= 2u;
 	r12 = bookkeeping_clear_credits();
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* Opens the NETWORK ASSIGNMENTS page: its texts, with PRIVILEGE MODE and CABINET ID hidden (colour 6E)
@@ -2699,7 +2699,7 @@ void test_mode_network_assignments_start(void)
 	world->test_mode_page_cursor = 3u;
 	cell = 0x310000u | network_assignments_exit_cell;
 	test_mode_set_cursor(character, cell);
-	world->test_mode_routine = test_mode_network_assignments_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_network_assignments_run;
 	test_mode_network_assignments_run();
 }
 
@@ -2866,12 +2866,12 @@ void test_mode_network_assignments_exit(void)
 		setting_places++;
 		if ((uint8_t)address_of(current_object) == 0u)
 		{
-			world->test_mode_routine = test_mode_menu_ADDRESS;
+			world->test_mode_routine = FUNCTION_test_mode_menu;
 			return;
 		}
 	} while (BACKED_UP_SETTING(address_of(current_object))->backup == BACKED_UP_SETTING(address_of(current_object))->value);
 	world->test_mode_flags |= 2u;
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 }
 
 /* Opens the first BOOKKEEPING page (1/2): its texts, its numbers (test_mode_bookkeeping_draw_totals) and
@@ -2887,7 +2887,7 @@ void test_mode_bookkeeping_start(void)
 	test_mode_draw_texts(character, text);
 	character = test_mode_bookkeeping_draw_totals();
 	test_mode_show_continue_prompt();
-	world->test_mode_routine = test_mode_bookkeeping_wait_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_bookkeeping_wait;
 	test_mode_bookkeeping_wait(character);
 }
 
@@ -2896,7 +2896,7 @@ void test_mode_bookkeeping_start(void)
 void test_mode_bookkeeping_wait(uint16_t character)
 {
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_bookkeeping_second_page_start_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_bookkeeping_second_page_start;
 	test_mode_blink_prompt(character);
 }
 
@@ -2913,7 +2913,7 @@ void test_mode_bookkeeping_second_page_start(void)
 	test_mode_draw_texts(character, text);
 	test_mode_bookkeeping_draw_histogram(&character_2, &r12);
 	test_mode_show_exit_prompt();
-	world->test_mode_routine = test_mode_bookkeeping_second_page_wait_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_bookkeeping_second_page_wait;
 	test_mode_bookkeeping_second_page_wait((uint16_t)character_2);
 }
 
@@ -2921,7 +2921,7 @@ void test_mode_bookkeeping_second_page_start(void)
 void test_mode_bookkeeping_second_page_wait(uint16_t character)
 {
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_menu_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu;
 	test_mode_blink_prompt(character);
 }
 
@@ -3231,7 +3231,7 @@ void test_mode_backup_data_clear_start(void)
 	world->test_mode_page_cursor = 1u;
 	cell = 0x310000u | backup_data_clear_no_cell;
 	test_mode_set_cursor(character, cell);
-	world->test_mode_routine = test_mode_backup_data_clear_run_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_backup_data_clear_run;
 	test_mode_backup_data_clear_run();
 }
 
@@ -3281,10 +3281,10 @@ void test_mode_backup_data_clear_run(void)
 		hidden_colour = 0x6Eu;
 		test_mode_colour_line(hidden_colour, instructions_cell);
 		test_mode_show_exit_prompt();
-		world->test_mode_routine = test_mode_backup_data_clear_wait_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_backup_data_clear_wait;
 		return;
 	}
-	world->test_mode_routine = test_mode_menu_ADDRESS;
+	world->test_mode_routine = FUNCTION_test_mode_menu;
 	blink_timer = world->test_mode_blink_timer - 1u;
 	world->test_mode_blink_timer = blink_timer;
 	if ((int8_t)blink_timer < 0)
@@ -3302,7 +3302,7 @@ void test_mode_backup_data_clear_run(void)
 void test_mode_backup_data_clear_wait(void)
 {
 	if ((world->test_mode_buttons_pressed & 2u) != 0u)
-		world->test_mode_routine = test_mode_menu_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_menu;
 	test_mode_blink_prompt(0u);
 }
 
@@ -3338,7 +3338,7 @@ void test_mode_exit(void)
 		text = eeprom_caution_text_ADDRESS;
 		test_mode_draw_texts(character, text);
 		test_mode_show_exit_prompt();
-		world->test_mode_routine = test_mode_exit_caution_wait_ADDRESS;
+		world->test_mode_routine = FUNCTION_test_mode_exit_caution_wait;
 		return;
 	}
 	world->test_mode_on = 0u;
