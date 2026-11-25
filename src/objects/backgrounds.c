@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -52,7 +52,7 @@ void race_background_update(void)
 	case 0:
 		index = screen->index;
 		current_object->race_background.page_half = index;
-		race_background_layer_setup = rom_pointer(race_background_layer_setups_ADDRESS + index * 5u * 4u);
+		race_background_layer_setup = &race_background_layer_setups[(int32_t)index];
 		current_object->race_background.scroll_x_address = race_background_layer_setup->scroll_x_address;
 		current_object->race_background.scroll_y_address = race_background_layer_setup->scroll_y_address;
 		current_object->race_background.tile_bank_address = race_background_layer_setup->tile_bank_address;

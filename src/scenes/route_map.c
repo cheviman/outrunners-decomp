@@ -3,7 +3,7 @@
  *    Description: the route map after the race: the car, the signs, the landmarks, the legs of the route, the stage results and the GAME OVER banner
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -870,7 +870,7 @@ void route_map_landmark_update(void)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		landmark = rom_pointer(route_map_landmarks_ADDRESS + (((uint32_t)current_object->route_map_landmark.index_then_half_rate << 4) + ((uint32_t)screen->progress.route_branches[0] << 9)));
+		landmark = &route_map_landmarks[(int32_t)(current_object->route_map_landmark.index_then_half_rate + screen->progress.route_branches[0] * 0x20u)];
 		animation = landmark->animation;
 		animation_start(animation);
 		current_object->palette = landmark->palette;
@@ -954,7 +954,7 @@ void stage_result_line_draw(void)
 		return;
 	}
 	current_object->stage_result_line.place_address = address_of(screen) + 0x320u + player;
-	stage_result_text = rom_pointer(stage_result_labels_ADDRESS + current_object->stage_result_line.stage * 3u * 3u);
+	stage_result_text = &stage_result_labels[(int32_t)current_object->stage_result_line.stage];
 	attribute = stage_result_text->attribute;
 	text_place = (0x40u + (current_object->stage_result_line.stage << 4)) << 16;
 	text_place |= (uint16_t)(text_place + 0xA8u);
@@ -1176,7 +1176,7 @@ void route_map_leg_car_show(void)
 	switch (OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.leg)
 	{
 	case 0:
-		place = rom_pointer(route_map_start_leg_car_places_ADDRESS + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3));
+		place = &route_map_start_leg_car_places[OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress];
 		current_object->x = place->x;
 		current_object->y = place->y;
 		current_object->x += route_map_direction_x_shifts[screen->progress.route_branches[0]];
@@ -1185,7 +1185,7 @@ void route_map_leg_car_show(void)
 		current_object->state++;
 		return;
 	case 1:
-		place = rom_pointer(route_map_first_fork_leg_car_places_ADDRESS + (((uint32_t)screen->progress.route_branches[0] << 6) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3)));
+		place = &route_map_first_fork_leg_car_places[screen->progress.route_branches[0] * 8u + OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress];
 		current_object->x = place->x;
 		current_object->y = place->y;
 		current_object->x += route_map_direction_x_shifts[screen->progress.route_branches[0]];
@@ -1198,7 +1198,7 @@ void route_map_leg_car_show(void)
 	case 4:
 	case 5:
 		fork_index = OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.leg - 1u;
-		place = rom_pointer(route_map_fork_leg_car_places_ADDRESS + (((screen->progress.route_branches[0] * 3u) << 6) + ((screen->progress.route_branches[(int32_t)fork_index] * 3u) << 5) + ((uint32_t)OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress << 3)));
+		place = &route_map_fork_leg_car_places[(int32_t)(screen->progress.route_branches[0] * 0x18u + screen->progress.route_branches[(int32_t)fork_index] * 0xCu + OBJECT(current_object->route_map_leg_car.leg)->route_map_leg.progress)];
 		leg_stage = screen->progress.route_stages[(int32_t)(fork_index - 1u)];
 		current_object->x = route_map_stage_xs[leg_stage];
 		current_object->y = route_map_stage_ys[leg_stage];

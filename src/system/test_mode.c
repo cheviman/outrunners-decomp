@@ -3,7 +3,7 @@
  *    Description: the test mode: its menu and pages (memory, volume, input, output, sound, CRT, game, coins, network, bookkeeping, backup clear) and their drawing
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -534,7 +534,7 @@ void test_mode_memory_test_draw(uint32_t *p_cell_value, uint32_t *p_text_place)
 	results_left = 0x19u;
 	do
 	{
-		result_text = rom_pointer(memory_test_result_texts_ADDRESS + result_place[0] * 3u * 2u);
+		result_text = &memory_test_result_texts[result_place[0]];
 		colour = result_text->colour;
 		cell = result_cells[0];
 		result_cells++;
@@ -1561,7 +1561,7 @@ void test_mode_output_test_toggle(void)
 	uint8_t *output_variable = NULL;
 	uint32_t output_variable_0_long = 0;
 
-	output = rom_pointer(output_test_outputs_ADDRESS + 0x2u + world->test_mode_page_cursor * 4u - 2u);
+	output = &output_test_outputs[world->test_mode_page_cursor];
 	output_variable = pointer_to(output->variable + GAME_VARIABLES);
 	output_variable_0_long = (output_variable[0] | ((uint32_t)output_variable[1] << 8u) | ((uint32_t)output_variable[2] << 16u) | ((uint32_t)output_variable[3] << 24u)) ^ shl32(1u, (int)(output->bit));
 	output_variable[0] = (uint8_t)output_variable_0_long;
@@ -2371,7 +2371,7 @@ void test_mode_coin_assignments_next_setting(void)
 		if ((int8_t)setting_number >= 0x1A)
 			setting_number = 0u;
 		game->eeprom.settings.coin_setting = setting_number;
-		setting = rom_pointer(coin_setting_records_ADDRESS + setting_number * 4u);
+		setting = &coin_setting_records[(int32_t)setting_number];
 		if ((int8_t)setting->coins < 0)
 		{
 			game->eeprom.settings.coins_per_credit = 1u;
@@ -2839,7 +2839,7 @@ void test_mode_network_assignments_toggle_privilege_mode(void)
 	if ((int8_t)stepped_privilege < 0)
 		privilege = 1u;
 	world->test_mode_privilege_mode = privilege;
-	setting = rom_pointer(privilege_mode_settings_ADDRESS + privilege * 2u);
+	setting = &privilege_mode_settings[(int32_t)privilege];
 	game->eeprom.settings.link_master = setting->master;
 	game->eeprom.settings.isdn_mode = setting->isdn;
 	test_mode_network_assignments_draw();

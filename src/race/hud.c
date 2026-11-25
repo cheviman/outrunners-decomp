@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1388,7 +1388,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	uint32_t *car_sprite = NULL;
 	const struct checkpoint_board_place *place = NULL;
 
-	place = rom_pointer(checkpoint_board_number_places_ADDRESS + current_object->checkpoint_board.row * 4u);
+	place = &checkpoint_board_number_places[current_object->checkpoint_board.row];
 	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
 	current_object->y = place->y;
 	animation = checkpoint_board_number_animations[world->car_numbers[player]];
@@ -1397,7 +1397,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	current_object->draw_mode = 8u;
 	animation_start(animation);
 	draw_object(0u);
-	place = rom_pointer(checkpoint_board_car_places_ADDRESS + current_object->checkpoint_board.row * 4u);
+	place = &checkpoint_board_car_places[current_object->checkpoint_board.row];
 	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
 	current_object->y = place->y;
 	car_sprite = pointer_to(address_of(current_object) + 0x80u + player * 4u);
@@ -1421,7 +1421,7 @@ void checkpoint_board_draw_row(uint32_t player)
 	row_x_2 = current_object->checkpoint_board.row;
 	if (row_x_2 == 0u)
 		return;
-	place = rom_pointer(checkpoint_board_behind_places_ADDRESS + row_x_2 * 4u);
+	place = &checkpoint_board_behind_places[(int32_t)row_x_2];
 	current_object->x = place->x + current_object->checkpoint_board.row_offsets[(int32_t)player];
 	current_object->y = place->y;
 	animation = CHECKPOINT_BOARD_ROW;

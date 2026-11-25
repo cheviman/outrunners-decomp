@@ -3,7 +3,7 @@
  *    Description: the road's surface drawn line by line, and its tiles' changes
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -153,7 +153,7 @@ void road_surface_start(void)
 	const struct road_surface_layer_setup *road_surface_layer_setup = NULL;
 	uint32_t mixer_address_0_long = 0;
 
-	road_surface_layer_setup = rom_pointer(road_surface_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+	road_surface_layer_setup = &road_surface_layer_setups[screen->index];
 	video_bits = game->video_registers[2] & road_surface_layer_setup->video_mask;
 	game->video_registers[2] = video_bits | road_surface_layer_setup->video_bits;
 	VIDEO_REGISTER_WORDS(road_surface_layer_setup->scroll_x_address)[0] = 0x160u;

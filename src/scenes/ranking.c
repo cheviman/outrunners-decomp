@@ -3,7 +3,7 @@
  *    Description: the ranking: the course records, OutRunner of OutRunners, its titles, banners and record lines, and the traffic passing behind them
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -653,7 +653,7 @@ void passing_car_update(void)
 				return;
 			}
 			current_object->passing_car.step = step_index;
-			traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+			traffic_path_step = &traffic_path[(int32_t)step_index];
 			path_size = traffic_path_step->size;
 			current_object->width_scale = path_size;
 			current_object->height_scale = path_size;
@@ -673,7 +673,7 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)step_index];
 		mirrored_x = traffic_path_step->size;
 		current_object->width_scale = mirrored_x;
 		current_object->height_scale = mirrored_x;
@@ -691,7 +691,7 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)step_index];
 		path_size = traffic_path_step->size;
 		current_object->width_scale = path_size;
 		current_object->height_scale = path_size;
@@ -709,7 +709,7 @@ void passing_car_update(void)
 			return;
 		}
 		current_object->passing_car.step = step_index;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + step_index * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)step_index];
 		mirrored_x = traffic_path_step->size;
 		current_object->width_scale = mirrored_x;
 		current_object->height_scale = mirrored_x;
@@ -739,7 +739,7 @@ void ranking_background_load(void)
 	uint32_t saved_fades = 0;
 	uint32_t page_select_long = 0, mixer_place_0_long = 0, mixer_place_0_long_2 = 0;
 
-	ranking_background_registers = rom_pointer(ranking_background_register_sets_ADDRESS + screen->index * 0xCu * 4u);
+	ranking_background_registers = &ranking_background_register_sets[screen->index];
 	current_object->ranking_background.tile_bank_address = ranking_background_registers->tile_bank_address;
 	current_object->ranking_background.pages_address = ranking_background_registers->pages_address;
 	current_object->ranking_background.scroll_x_address = ranking_background_registers->scroll_x_address;

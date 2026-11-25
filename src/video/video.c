@@ -3,7 +3,7 @@
  *    Description: the video chips set up and cleared: the screens, the tile layers, the sprite chip and its lists, the mixer, the I/O chips
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -284,7 +284,7 @@ void init_mixer(void)
 	move_halfwords_backward(mixer, mixer_register_defaults_ADDRESS, 0x28u);
 	move_halfwords(address_of(screen) + 0x160u, mixer_register_defaults_ADDRESS, 0x28u);
 	move_halfwords(address_of(screen) + 0x1B0u, mixer_register_defaults_ADDRESS, 0x28u);
-	hidden_layer_pair = rom_pointer(hidden_layer_pairs_ADDRESS + screen->index * 2u);
+	hidden_layer_pair = &hidden_layer_pairs[screen->index];
 	first_layer = hidden_layer_pair->first_layer;
 	second_layer = hidden_layer_pair->second_layer;
 	io_write16(mixer + first_layer * 2u, 0u);

@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -65,7 +65,7 @@ void car_select_run(void)
 			dj_message = 0x3Bu;
 			start_dj_message(dj_message);
 		}
-		setup = rom_pointer(car_select_tilemap_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+		setup = &car_select_tilemap_setups[screen->index];
 		current_object->car_select.scroll_x_address = setup->scroll_x_address;
 		current_object->car_select.scroll_y_address = setup->scroll_y_address;
 		current_object->car_select.second_scroll_x_address = setup->second_scroll_x_address;
@@ -791,7 +791,7 @@ void turntable_car_show(void)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		look = rom_pointer(turntable_car_looks_ADDRESS + current_object->turntable_car.car * 4u);
+		look = &turntable_car_looks[current_object->turntable_car.car];
 		animation = look->animation;
 		current_object->palette = look->palette;
 		animation_start(animation);
@@ -843,7 +843,7 @@ void turntable_scenery_show(void)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		group = rom_pointer(turntable_scenery_groups_ADDRESS + current_object->turntable_scenery.group * 2u * 4u);
+		group = &turntable_scenery_groups[current_object->turntable_scenery.group];
 		animation = group->animation;
 		animation_start(animation);
 		current_object->palette = group->palette;
@@ -932,7 +932,7 @@ void welcome_letter_show(void)
 		animation_start(animation);
 		current_object->palette = 0x18u;
 		letter_index = current_object->welcome_letter.index;
-		place = rom_pointer(welcome_letter_places_ADDRESS + letter_index * 4u);
+		place = &welcome_letter_places[(int32_t)letter_index];
 		current_object->x = place->x;
 		current_object->y = 0x50u;
 		current_object->frame = place->letter;
@@ -1419,7 +1419,7 @@ void driver_couple_start(void)
 
 	current_object->draw_mode = 0u;
 	current_object->depth_layer = 0xEFu;
-	look = rom_pointer(driver_couple_looks_ADDRESS + player_car->model * 4u);
+	look = &driver_couple_looks[player_car->model];
 	animation = look->animation;
 	current_object->palette = look->palette;
 	animation_start(animation);
@@ -2238,7 +2238,7 @@ void entry_car_ring_draw(void)
 		ring_car = (uint8_t)(ring_car + 1u);
 		ring_car = ring_car & 7u;
 		current_object->entry_car_ring.car = ring_car;
-		look = rom_pointer(turntable_car_looks_ADDRESS + ring_car * 4u);
+		look = &turntable_car_looks[(int32_t)ring_car];
 		animation = look->animation;
 		current_object->palette = look->palette + 4u;
 		animation_start(animation);
@@ -2346,7 +2346,7 @@ void entry_traffic_car_drive(void)
 	case 1:
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)path_step];
 		path_size = traffic_path_step->size;
 		if (path_size != 0u)
 		{
@@ -2389,7 +2389,7 @@ void entry_traffic_car_drive(void)
 		}
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)path_step];
 		mirrored_x = traffic_path_step->size;
 		if (mirrored_x != 0u)
 		{
@@ -2409,7 +2409,7 @@ void entry_traffic_car_drive(void)
 		random_swapped = byte_swap32(traffic_car);
 		traffic_car &= 7u;
 		current_object->entry_traffic_car.car = traffic_car;
-		look = rom_pointer(turntable_car_looks_ADDRESS + traffic_car * 4u);
+		look = &turntable_car_looks[(int32_t)traffic_car];
 		animation = look->animation;
 		current_object->palette = look->palette;
 		animation_start(animation);
@@ -2428,7 +2428,7 @@ void entry_traffic_car_drive(void)
 		{
 			path_step = current_object->entry_traffic_car.path_step;
 			current_object->entry_traffic_car.path_step = path_step + 1u;
-			traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+			traffic_path_step = &traffic_path[(int32_t)path_step];
 			path_size = traffic_path_step->size;
 			if (path_size != 0u)
 			{
@@ -2449,7 +2449,7 @@ void entry_traffic_car_drive(void)
 	case 2:
 		path_step = current_object->entry_traffic_car.path_step;
 		current_object->entry_traffic_car.path_step = path_step + 1u;
-		traffic_path_step = rom_pointer(traffic_path_ADDRESS + path_step * 3u * 2u);
+		traffic_path_step = &traffic_path[(int32_t)path_step];
 		mirrored_x = traffic_path_step->size;
 		if (mirrored_x != 0u)
 		{

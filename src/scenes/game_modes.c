@@ -3,7 +3,7 @@
  *    Description: the game modes: the title, the power on, the car presentation, the demo race, the ranking and the game itself
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -471,7 +471,7 @@ void game_mode_play(void)
 	case 10:
 		silence_and_clear_screen();
 		clear_race_state();
-		demo_race_choice = rom_pointer(attract_demo_races_ADDRESS + screen->attract_car * 2u);
+		demo_race_choice = &attract_demo_races[screen->attract_car];
 		stage = demo_race_choice->stage;
 		screen->first_stage = stage;
 		screen->built_stage = stage;

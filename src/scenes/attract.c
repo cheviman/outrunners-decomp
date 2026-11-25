@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -151,7 +151,7 @@ void attract_lamps_update(void)
 	attract_lamp_step = rom_pointer(address_of(attract_lamp_step) >> 3);
 	attract_lamp_step = rom_pointer((uint8_t)(address_of(attract_lamp_step) * 2u));
 	screen_index = screen->index;
-	attract_lamp_step = rom_pointer(attract_lamp_steps_ADDRESS + (uint8_t)(address_of(attract_lamp_step) + screen_index) * 2u);
+	attract_lamp_step = &attract_lamp_steps[(uint8_t)(address_of(attract_lamp_step) + screen_index)];
 	screen_index = (uint8_t)(screen_index * 2u);
 	screen_index = (uint8_t)(screen_index * 2u);
 	game->checkpoint_lamp[screen_index] = attract_lamp_step->checkpoint;
@@ -616,7 +616,7 @@ void demo_caption_update(void)
 		return;
 	}
 	current_object->draw_mode = 0u;
-	picture = rom_pointer(demo_caption_pictures_ADDRESS + ((uint32_t)current_object->demo_caption.record << 4));
+	picture = &demo_caption_pictures[current_object->demo_caption.record];
 	animation = picture->animation;
 	animation_start(animation);
 	current_object->palette = picture->palette;

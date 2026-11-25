@@ -3,7 +3,7 @@
  *    Description: the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -36,7 +36,7 @@ void title_screen_update(void)
 	case 0:
 		screen->route_map_signals &= 0xFFFFFF00u;
 		screen->title_logo_shine = 0u;
-		title_screen_layer_setup = rom_pointer(title_screen_layer_setups_ADDRESS + ((uint32_t)screen->index << 3) * 4u);
+		title_screen_layer_setup = &title_screen_layer_setups[screen->index];
 		current_object->title_screen.tile_bank_address = title_screen_layer_setup->tile_bank_address;
 		current_object->title_screen.pages_address = title_screen_layer_setup->pages_address;
 		current_object->title_screen.scroll_x_address = title_screen_layer_setup->scroll_x_address;
@@ -154,7 +154,7 @@ void title_car_drive(void)
 	{
 	case 0:
 		current_object->draw_mode = 0xAu;
-		title_car_record = rom_pointer(title_car_records_ADDRESS + ((uint32_t)current_object->title_car.index << 4));
+		title_car_record = &title_car_records[current_object->title_car.index];
 		model = title_car_record->model;
 		animation = title_car_animations[model];
 		animation_start(animation);
@@ -508,7 +508,7 @@ void title_logo_car_update(void)
 		animation = title_car_animations[model];
 		animation_start(animation);
 		current_object->palette = title_logo_car_palettes[model];
-		place = rom_pointer(title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2));
+		place = &title_logo_car_places[current_object->title_logo_car.index];
 		current_object->x = place->x;
 		current_object->y = place->y;
 		current_object->width_scale = 0x40u;
@@ -529,7 +529,7 @@ void title_logo_car_update(void)
 		animation = title_car_animations[model];
 		animation_start(animation);
 		current_object->palette = title_logo_car_palettes[model];
-		place = rom_pointer(title_logo_car_places_ADDRESS + ((uint32_t)current_object->title_logo_car.index << 2));
+		place = &title_logo_car_places[current_object->title_logo_car.index];
 		current_object->x = place->x;
 		current_object->y = place->y;
 		current_object->width_scale = 0x40u;
@@ -607,7 +607,7 @@ void title_logo_stripe_update(void)
 	animation = TITLE_LOGO_STRIPE;
 	animation_start(animation);
 	current_object->palette = 0x270u;
-	place = rom_pointer(title_logo_stripe_places_ADDRESS + ((uint32_t)current_object->title_logo_stripe.index << 2));
+	place = &title_logo_stripe_places[current_object->title_logo_stripe.index];
 	current_object->x = place->x;
 	current_object->y = place->y;
 	current_object->depth_layer = 0x198u;
@@ -694,7 +694,7 @@ void title_seagull_fly(void)
 		current_object->palette = 0x272u;
 		current_object->width_scale = 0xC0u;
 		current_object->height_scale = 0xC0u;
-		place = rom_pointer(title_seagull_places_ADDRESS + ((uint32_t)current_object->title_seagull.index << 2));
+		place = &title_seagull_places[current_object->title_seagull.index];
 		current_object->x = place->x;
 		current_object->y = place->y;
 		current_object->depth_layer = 0x198u;
@@ -780,7 +780,7 @@ void title_picture_draw(void)
 		break;
 	}
 	current_object->draw_mode = 0u;
-	picture = rom_pointer(title_pictures_ADDRESS + ((uint32_t)current_object->title_picture.index << 4));
+	picture = &title_pictures[current_object->title_picture.index];
 	animation = picture->animation;
 	animation_start(animation);
 	current_object->palette = picture->palette;

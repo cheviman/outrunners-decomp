@@ -3,7 +3,7 @@
  *    Description: the prompts for coins and the ignition key, and the credits shown
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -267,7 +267,7 @@ void ignition_key_prompt_update(void)
 		return;
 	}
 	current_object->draw_mode = 0u;
-	piece = rom_pointer(ignition_key_prompt_pieces_ADDRESS + ((uint32_t)current_object->ignition_key_prompt.piece << 4));
+	piece = &ignition_key_prompt_pieces[current_object->ignition_key_prompt.piece];
 	animation = piece->animation;
 	animation_start(animation);
 	current_object->palette = piece->palette;
