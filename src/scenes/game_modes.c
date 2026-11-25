@@ -103,7 +103,8 @@ void game_mode_restart(void)
    mode 4 (the demo race). attract_lamps_update every frame first. */
 void game_mode_car_presentation(void)
 {
-	uint32_t colour_block = 0, handler_list = 0;
+	uint32_t colour_block = 0;
+	const uint32_t *handler_list = NULL;
 	uint16_t mode_timer = 0;
 
 	attract_lamps_update();
@@ -147,7 +148,7 @@ void game_mode_car_presentation(void)
 	queue_palette(colour_block);
 	colour_block = black_background_palette_ADDRESS;
 	queue_palette(colour_block);
-	handler_list = car_presentation_objects_ADDRESS;
+	handler_list = car_presentation_objects;
 	start_object_list(handler_list);
 	screen->fade_kind = 1u;
 	screen->flags |= 1u;
@@ -273,8 +274,9 @@ uint32_t demo_race_end(uint32_t left_caller)
    1 (back to the title). attract_lamps_update every frame first. */
 void game_mode_ranking(void)
 {
-	uint32_t colour_block = 0, handler_list = 0;
+	uint32_t colour_block = 0;
 	struct object *object = NULL;
+	const uint32_t *handler_list = NULL;
 	uint16_t mode_timer = 0;
 
 	attract_lamps_update();
@@ -313,7 +315,7 @@ void game_mode_ranking(void)
 	colour_block = ranking_palette;
 	queue_palette(colour_block);
 	screen->mode_step++;
-	handler_list = ranking_objects_ADDRESS;
+	handler_list = ranking_objects;
 	start_object_list(handler_list);
 	object = start_object();
 	object->handler = FUNCTION_ranking_update;
@@ -364,9 +366,10 @@ void game_mode_play(void)
 {
 	uint32_t zero = 0;
 	uint8_t model = 0, player = 0, sound_code = 0, stage = 0;
-	uint32_t bookkeeping_entry = 0, colour_block = 0, demo_record = 0, handler_list = 0, index = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
+	uint32_t bookkeeping_entry = 0, colour_block = 0, demo_record = 0, index = 0, race = 0, racers_left = 0, song_title = 0, stage_level = 0, time_played = 0;
 	const struct demo_race_choice *demo_race_choice = NULL;
 	struct object *car = NULL, *object = NULL;
+	const uint32_t *handler_list = NULL;
 	struct screen_lamps *lamp_place = NULL;
 	uint8_t racer = 0;
 	uint32_t flags = 0;
@@ -494,7 +497,7 @@ void game_mode_play(void)
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
-		handler_list = player_car_objects_ADDRESS;
+		handler_list = player_car_objects;
 		car = start_object_list(handler_list);
 		car->player_car.place = screen->places[screen->player];
 		screen->game_step = 0x17u;
@@ -507,7 +510,7 @@ void game_mode_play(void)
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
-		handler_list = player_car_objects_ADDRESS;
+		handler_list = player_car_objects;
 		car = start_object_list(handler_list);
 		car->player_car.place = screen->places[screen->player];
 		screen->game_step = 0x17u;
@@ -522,7 +525,7 @@ void game_mode_play(void)
 		else
 			io_write8(IO_1_CNT, 4u);
 		queue_stage_load();
-		handler_list = player_car_objects_ADDRESS;
+		handler_list = player_car_objects;
 		car = start_object_list(handler_list);
 		car->player_car.place = screen->places[screen->player];
 		screen->game_step = 0x17u;
@@ -531,9 +534,9 @@ void game_mode_play(void)
 		if (RACE(screen->race_copy)->state.published == 0u)
 			return;
 		screen->race_running = 0xFFu;
-		handler_list = race_objects_ADDRESS;
+		handler_list = race_objects;
 		if ((screen->demo_flags & 0x100u) != 0u)
-			handler_list = demo_race_objects_ADDRESS;
+			handler_list = demo_race_objects;
 		start_object_list(handler_list);
 		screen->game_step++;
 		return;
@@ -602,7 +605,7 @@ void game_mode_play(void)
 		}
 		colour_block = route_map_palette;
 		queue_palette(colour_block);
-		handler_list = route_map_objects_ADDRESS;
+		handler_list = route_map_objects;
 		start_object_list(handler_list);
 		screen->fade_kind = 1u;
 		screen->flags |= 1u;

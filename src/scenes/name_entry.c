@@ -54,8 +54,9 @@ void name_entry_update(void)
 {
 	uint8_t letter_index = 0, steps = 0;
 	uint16_t new_angle = 0;
-	uint32_t background_setup = 0, handler_list = 0, palette_fades = 0, player_time = 0, text_field = 0, text_record = 0;
+	uint32_t background_setup = 0, palette_fades = 0, player_time = 0, text_field = 0, text_record = 0;
 	struct object *object = NULL;
+	const uint32_t *handler_list = NULL;
 	uint8_t letters_left = 0;
 	uint16_t spin_frames = 0;
 
@@ -72,7 +73,7 @@ void name_entry_update(void)
 		palette_fades = name_entry_palette_fades_ADDRESS;
 		start_palette_fades(palette_fades);
 		time_digits_start();
-		handler_list = name_entry_objects_ADDRESS;
+		handler_list = name_entry_objects;
 		start_object_list(handler_list);
 		letter_index = 0x20u;
 		do

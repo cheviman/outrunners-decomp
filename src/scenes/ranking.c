@@ -76,15 +76,15 @@ uint32_t load_course_records(void)
 void ranking_update(void)
 {
 	uint8_t next_course = 0, record_course = 0;
-	uint32_t handler_list = 0;
 	struct object *object = NULL;
+	const uint32_t *handler_list = NULL;
 	uint16_t frames_left = 0;
 
 	switch (current_object->state)
 	{
 	case 0:
 		current_object->ranking.courses_shown = 0u;
-		handler_list = ranking_objects_ADDRESS;
+		handler_list = ranking_objects;
 		start_object_list(handler_list);
 		object = start_object();
 		object->ranking_background.ranking = address_of(current_object);

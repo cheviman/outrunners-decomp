@@ -410,6 +410,7 @@ comment start_object Takes the first free object slot of the screen (FF into its
 0034F0  data  route_map_object_handlers  record=4 count=1 code=0    # the count at 0034EC; list taken at 003257
 001A7C  data  car_presentation_object_handlers  record=4 count=3 code=0    # the count at 001A78; list taken at 0014BA
 002D5C  data  name_entry_object_handlers  record=4 count=4 code=0    # the count at 002D58
+002CBC  data  ranking_object_handlers  record=4 count=2 code=0    # the count at 002CB8
 
 # Tables of lists taken by an index: "mov.w table[PC](R0), R10", then the records with [R10+]
 014A20  data  ending_actor_lists  pointers=16 record=8 count=prefix32 code=0 data=4   # 0146E9-014709: a 32-bit count, then (handler -> field 4, data -> field 80) pairs
@@ -6555,7 +6556,7 @@ local start_object 011D58 R9 slot
 local start_object 011D5E,011DE5 R21 object object
 local start_object 011D6A,011D6D,011D70,011D73,011D76,011D79,011D7C,011D7F,011D82,011D85,011D88,011D8B,011D8E,011D91,011D94,011D97,011D9A,011D9D,011DA0,011DA3,011DA6,011DA9,011DAC,011DAF,011DB2,011DB5,011DB8,011DBB,011DBE,011DC1,011DC4,011DC7 R26 object_bytes object_words
 local reserve_object_slot 011E05,011E17 R21 object
-param start_object_list R10 handler_list object_start_list
+param start_object_list R10 handler_list object_handlers
 local start_object_list 011E2C R10 handler_list object_handlers   # past the count (011E2C "mov.w [R10+], R8"): the handlers
 local start_object_list 011E2F,011E3E R7 list_index
 local start_object_list 011E2C,011E40 R8 objects_left

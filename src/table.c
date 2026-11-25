@@ -399,6 +399,95 @@ const uint32_t test_mode_page_jumps[13] =
 	FUNCTION_test_mode_exit,
 };
 
+/* the program's lists of code: a count, then the numbers of the functions (enum game_function) */
+const uint32_t isdn_connection_objects[2] =
+{
+	1u,
+	FUNCTION_isdn_status_update,
+};
+
+const uint32_t car_presentation_objects[4] =
+{
+	3u,
+	FUNCTION_credit_display_update,
+	FUNCTION_coin_prompt_update,
+	FUNCTION_car_presentation_update,
+};
+
+const uint32_t ranking_objects[3] =
+{
+	2u,
+	FUNCTION_credit_display_update,
+	FUNCTION_coin_prompt_update,
+};
+
+const uint32_t name_entry_objects[5] =
+{
+	4u,
+	FUNCTION_passing_traffic_start,
+	FUNCTION_name_entry_car_update,
+	FUNCTION_name_entry_drivers_update,
+	FUNCTION_name_entry_course_name_update,
+};
+
+const uint32_t player_car_objects[2] =
+{
+	1u,
+	FUNCTION_player_car_update,
+};
+
+const uint32_t race_objects[20] =
+{
+	19u,
+	FUNCTION_road_surface_update,
+	FUNCTION_race_background_update,
+	FUNCTION_race_cars_start,
+	FUNCTION_crest_clip_update,
+	FUNCTION_road_object_stream_read,
+	FUNCTION_traffic_spawner_update,
+	FUNCTION_speedometer_update,
+	FUNCTION_gear_indicator_update,
+	FUNCTION_rev_meter_update,
+	FUNCTION_speed_unit_update,
+	FUNCTION_lcd_race_info_start,
+	FUNCTION_car_radio_start,
+	FUNCTION_start_message_update,
+	FUNCTION_time_left_display_update,
+	FUNCTION_race_opening_update,
+	FUNCTION_checkpoint_board_update,
+	FUNCTION_place_count_update,
+	FUNCTION_lap_timer_update,
+	FUNCTION_stage_indicator_start,
+};
+
+const uint32_t demo_race_objects[10] =
+{
+	9u,
+	FUNCTION_road_surface_update,
+	FUNCTION_race_background_update,
+	FUNCTION_race_cars_start,
+	FUNCTION_crest_clip_update,
+	FUNCTION_road_object_stream_read,
+	FUNCTION_traffic_spawner_update,
+	FUNCTION_credit_display_update,
+	FUNCTION_coin_prompt_update,
+	FUNCTION_demo_captions_run,
+};
+
+const uint32_t route_map_objects[2] =
+{
+	1u,
+	FUNCTION_route_map_update,
+};
+
+const uint32_t entry_invitation_objects[4] =
+{
+	3u,
+	FUNCTION_entry_countdown_start,
+	FUNCTION_credit_display_update,
+	FUNCTION_coin_prompt_update,
+};
+
 const void *boot_e80000_bytes_data;
 const void *boot_interrupt_control_bytes_data;
 const void *seat_credits_addresses_data;

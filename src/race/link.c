@@ -37,7 +37,8 @@ void isdn_count_players(void)
 void game_mode_isdn_connection(void)
 {
 	uint8_t link_status = 0;
-	uint32_t colour_block = 0, handler_list = 0;
+	uint32_t colour_block = 0;
+	const uint32_t *handler_list = NULL;
 	struct screen_lamps *lamp_place = NULL;
 	uint8_t mode_timer = 0;
 
@@ -73,7 +74,7 @@ void game_mode_isdn_connection(void)
 		lamp_place->leader_period = 0u;
 		lamp_place->leader_timer = 0u;
 		clear_lcd();
-		handler_list = isdn_connection_objects_ADDRESS;
+		handler_list = isdn_connection_objects;
 		start_object_list(handler_list);
 		return;
 	case 2:
@@ -1431,7 +1432,8 @@ void race_progress_update(uint32_t *p_host_record, uint32_t *p_racer_copy)
    cleared (clear_lcd). */
 void entry_invitation_step(void)
 {
-	uint32_t index = 0, object_list = 0;
+	uint32_t index = 0;
+	const uint32_t *object_list = NULL;
 	struct screen_lamps *lamp = NULL;
 
 	switch (screen->game_step)
@@ -1445,7 +1447,7 @@ void entry_invitation_step(void)
 		break;
 	case 2:
 		screen->game_step++;
-		object_list = entry_invitation_objects_ADDRESS;
+		object_list = entry_invitation_objects;
 		start_object_list(object_list);
 		return;
 	case 3:

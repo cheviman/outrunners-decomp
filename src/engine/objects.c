@@ -155,23 +155,23 @@ void free_object_slot(uint16_t object)
    object_handlers_* tables), each with its place in the list at 9, and returns the last one. Used by the
    game modes (game_mode_car_presentation, game_mode_ranking, game_mode_play, initialise_board...),
    name_entry and ranking. */
-struct object *start_object_list(uint32_t handler_list)
+struct object *start_object_list(const uint32_t *handler_list)
 {
 	uint8_t list_index = 0;
 	uint32_t objects_left = 0;
 	struct object *object = NULL;
 
-	objects_left = OBJECT_START_LIST(handler_list)->count;
+	objects_left = handler_list[0];
 	list_index = 0u;
-	handler_list += 4u;
+	handler_list++;
 	do
 	{
 		object = start_object();
-		object->handler = function_number(OBJECT_HANDLERS(handler_list)[0]);
+		object->handler = handler_list[0];
 		object->number = list_index;
 		list_index++;
 		objects_left--;
-		handler_list += 4u;
+		handler_list++;
 	} while (objects_left != 0u);
 	return object;
 }

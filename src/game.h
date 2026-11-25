@@ -279,6 +279,17 @@ extern const uint32_t race_car_driver_handlers[8];
 extern const uint32_t race_car_passenger_handlers[8];
 extern const uint32_t race_car_ending_handlers[8];
 extern const uint32_t test_mode_page_jumps[13];
+
+/* the program's lists of code: a count, then the numbers (enum game_function) of the functions */
+extern const uint32_t isdn_connection_objects[2];
+extern const uint32_t car_presentation_objects[4];
+extern const uint32_t ranking_objects[3];
+extern const uint32_t name_entry_objects[5];
+extern const uint32_t player_car_objects[2];
+extern const uint32_t race_objects[20];
+extern const uint32_t demo_race_objects[10];
+extern const uint32_t route_map_objects[2];
+extern const uint32_t entry_invitation_objects[4];
 void call_second_task(void);
 void call_draw_object(void);
 void call_test_mode_memory_test_run(void);
@@ -296,7 +307,7 @@ void run_objects(void);
 struct object *start_object(void);
 uint32_t reserve_object_slot(void);
 void free_object_slot(uint16_t object);
-struct object *start_object_list(uint32_t handler_list);
+struct object *start_object_list(const uint32_t *handler_list);
 uint32_t random_number(void);
 
 /* engine/sprites.c: drawing an object: its draw modes, its sprites from its animation's frame, the rows of sprites along the road */
