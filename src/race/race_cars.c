@@ -557,7 +557,7 @@ void race_car_put_sprite(uint32_t scale, uint16_t sprite_x, uint16_t sprite_y, u
 	SPRITE_WORDS(sprite_entry)[0] = piece_attributes;
 	sprite_entry += 2u;
 	last_piece += 2u;
-	size_step = rom_pointer(sprite_size_steps_ADDRESS + SPRITE_PIECE(last_piece - 0x2u)->sprite * 4u);
+	size_step = record_at(sprite_size_steps, SPRITE_PIECE(last_piece - 0x2u)->sprite * 4u);
 	source_size = size_step->source_size;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry + 0x3000u)[0] = sprite_source_size;
@@ -621,7 +621,7 @@ void race_car_put_flat_sprite(uint16_t palette_word, uint16_t sprite_x, uint16_t
 	SPRITE_WORDS(sprite_entry + 0x3000u)[0] = attributes;
 	SPRITE_WORDS(sprite_entry)[0] = attributes;
 	sprite_entry += 2u;
-	size_step = rom_pointer(sprite_size_steps_ADDRESS + piece->sprite * 4u);
+	size_step = record_at(sprite_size_steps, piece->sprite * 4u);
 	source_size = size_step->source_size;
 	sprite_source_size = source_size;
 	SPRITE_WORDS(sprite_entry + 0x3000u)[0] = sprite_source_size;

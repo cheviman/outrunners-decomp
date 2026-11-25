@@ -29,7 +29,7 @@ void load_shadowed_text_font(void)
 	const uint8_t *font_rows = NULL;
 	uint32_t text_layer_font_words_long = 0;
 
-	font_rows = rom_pointer(one_bit_font_ADDRESS);
+	font_rows = one_bit_font;
 	destination = VIDEO_RAM + 0x18000u;
 	pen = 1u;
 	characters_left = 0x80u;

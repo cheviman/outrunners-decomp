@@ -4024,7 +4024,7 @@ param kanji_text_viewer_draw_quarter r13 rows kanji_character_rows
 # volume adjustment's bars (01D030, 6: test_mode_volume_adjustment_draw 01CEEA and 01CF4E), the input
 # test's bars (01D3D8, 6: test_mode_input_test_draw 01D16F, R14)
 elements test_mode_cells u16
-01CD96  data  memory_test_result_cells
+01CD96  table  memory_test_result_cells[25]  u16   # test_mode_memory_test_draw: the cell of each chip's result, the program ROM's 4, then the RAM's 21
 01D030  data  volume_adjustment_bar_cells
 01D380  data  input_test_items                # test_mode_input_test_draw 01D160 (R11): six numbers' cells, then the switches (port, bit, cell A, cell B; FFFF ends them), then TEST's three cells: one pointer over two layouts, left untyped
 01D3D8  data  input_test_bar_cells
@@ -4058,7 +4058,7 @@ local test_mode_memory_test_nibbles 01CBA0,01CBA9 R12 tested_address
 # 1CD87[PC], R28" 01CC8C, "mov.b [R28+], R26"), the coin assignments' " COIN    CREDIT" (01E20E,
 # test_mode_coin_assignments_draw "movea.b 1E20E[PC], R13" 01DDE9, "mov.b [R13+], R1")
 elements test_mode_characters u8
-01CD87  data  memory_test_now_testing_text
+01CD87  table  memory_test_now_testing_text[12]  u8   # "NOW TESTING", closed by 0 (test_mode_memory_test_blink)
 01E20E  data  coin_assignments_line_text
 local test_mode_memory_test_blink 01CC8C r28 now_testing test_mode_characters
 local test_mode_coin_assignments_draw 01DDE9 r13 line_text test_mode_characters
@@ -4096,9 +4096,9 @@ local test_mode_output_test_toggle 01D4CC r10 output
 # 01DD14 (test_mode_game_assignments_exit 01DBA9: 30 32-37 24 0D), 01E44D (test_mode_coin_assignments_exit
 # 01E0B0: 10 11 13 15 14), 01E6E0 (test_mode_network_assignments_exit 01E5F7: 20 21 23 22)
 elements test_mode_setting_places u8
-01DD14  data  game_assignments_setting_places
-01E44D  data  coin_assignments_setting_places
-01E6E0  data  network_assignments_setting_places
+01DD14  table  game_assignments_setting_places[10]  u8      # the settings' places on the page, closed by 0
+01E44D  table  coin_assignments_setting_places[6]  u8       # the same, closed by 0
+01E6E0  table  network_assignments_setting_places[5]  u8    # the same, closed by 0
 local test_mode_game_assignments_exit 01DBA9 r10 setting_places test_mode_setting_places
 local test_mode_game_assignments_exit 01DBB3 r10 setting_places
 local test_mode_coin_assignments_exit 01E0B0 r10 setting_places test_mode_setting_places
@@ -5506,7 +5506,7 @@ local player_car_drive 00A41F,00A423,00A434,00A43B,00A47B,00A4C5,00A4C9,00A4DA,0
 00E143  data  network_check_isdn_text         # NETWORK CHECK (ISDN)
 00E15E  data  board_check_text                # BOARD CHECK
 00E170  data  wait_text                       # WAIT, blinking on the status line (network_check_wait_board, network_check_wait_isdn through current_object, network_check_blink_text)
-00E17A  data  check_dualport_ram_characters   # "   CHECK DUALPORT RAM    ", characters only (network_check_toggle_memory_text 00D739)
+00E17A  table  check_dualport_ram_characters[26]  u8   # "   CHECK DUALPORT RAM    " and its closing 0, characters only (network_check_toggle_memory_text 00D739)
 00E1B6  data  check_network_status_text       # CHECK NETWORK STATUS, blinking (network_check through current_object)
 00E1D6  data  check_trans_end_text            # CHECK TRANS END (network_check)
 00E40E  data  network_error_text              # NETWORK ERROR, blinking (network_check_error, network_check_halt through current_object)
@@ -6289,9 +6289,9 @@ local unrolled_copy 010AAC t2 move_destination_63
 local unrolled_copy 010AAC t4 second_word_63
 local unrolled_copy 010AB0 t4 second_word_64
 # The data the screens' set-up copies (L3)
-010509  data  segment_projection_pattern  # player_car_project_road (01013C "movea.b 10509[PC], AP", 010150 "test.b [AP+]"): a byte a segment out from the window (road_projection_pattern), 1 projected, 0 a copy of the one before
+010509  table  segment_projection_pattern[259]  u8  # player_car_project_road (01013C "movea.b 10509[PC], AP", 010150 "test.b [AP+]"): a byte a segment out from the window (road_projection_pattern), 1 projected, 0 a copy of the one before (010509-01060B)
 010AB6  data  mixer_register_defaults     # init_mixer (28 halfwords, move_halfwords_backward and move_halfwords from 010AB6): the mixer's registers 00-4E -> mixer, and its copies in the screen's block (screen + 160, + 1B0)
-010B0C  data  sprite_control_rest         # init_sprite_chip (0107E0-0107EC "[R19+]", after sprite_control_flip): 01 03 00 00 -> 500006-50000C
+010B0C  table  sprite_control_rest[4]  u8   # init_sprite_chip (0107E0-0107EC "[R19+]", after sprite_control_flip): 00 01 03 00 -> 500006-50000C
 010B12  data  video_register_defaults     # init_video (47 halfwords -> 31FF02-31FF8F and video_registers + 2)
 010BF4  data  sprite_ram_start_entries    # init_sprite_lists (28 halfwords -> 400000): sprite RAM entries 0-4, 16 bytes each (the clip, the origin A0 DE and a jump, two jumps, an end)
 010C44  data  last_colour_tables          # load_sprite_ram_tables (C0 halfwords -> 403400): twelve tables of sixteen halfwords, after the ones from indirect_colour_tables
@@ -6306,15 +6306,15 @@ local unrolled_copy 010AB0 t4 second_word_64
 011504  data  seat1_second_chute_entry      # update_coins 011153: switch bit 3; alone 20E085, 701F08, 20E612, 10; shared as seat1_first_chute_entry's
 011534  data  seat2_first_chute_entry       # update_coins 011164: switch bit 4, seat2_coin_sounds; seat2_credits, 20E088, 701F0A, 20E611, 11 (both ways)
 011564  data  seat2_second_chute_entry      # update_coins 01116E: switch bit 5; alone 20E08B, 701F0C, 20E612, 10; shared as seat2_first_chute_entry's
-01173E  data  screen_fade_from_black        # step_screen_fade 0116B1 (fade_kind 1): screen_fade_starts' second record, 20 01 00 E0
-011742  data  screen_fade_to_white          # step_screen_fade 0116BA (fade_kind 2): 00 01 1F E0
-011746  data  screen_fade_from_white        # step_screen_fade 0116C3 (fade_kind 3): 1F FF 00 E0
-01174A  data  screen_fade_to_red_tint       # step_screen_fade 0116CC (fade_kind 4): 00 01 05 80 (red only)
-01174E  data  screen_fade_from_red_tint     # step_screen_fade 0116D5 (fade_kind 5): 05 FF 00 80
-0126BC  data  car_hit_box_sizes             # player_car_write_hit_box 0122BC "movea.w 126BC(R2), R19" (R2 the model * 8): by car model, 8 bytes as an item_hit_box (along_start, along_end, across_start, across_end: 00A0 0000 FFD4 002C for model 0); 0126BC-0126FB
+01173E  table  screen_fade_from_black  screen_fade_start     # step_screen_fade 0116B1 (fade_kind 1): screen_fade_starts' second record, 20 01 00 E0
+011742  table  screen_fade_to_white  screen_fade_start       # step_screen_fade 0116BA (fade_kind 2): 00 01 1F E0
+011746  table  screen_fade_from_white  screen_fade_start     # step_screen_fade 0116C3 (fade_kind 3): 1F FF 00 E0
+01174A  table  screen_fade_to_red_tint  screen_fade_start    # step_screen_fade 0116CC (fade_kind 4): 00 01 05 80 (red only)
+01174E  table  screen_fade_from_red_tint  screen_fade_start  # step_screen_fade 0116D5 (fade_kind 5): 05 FF 00 80
+0126BC  table  car_hit_box_sizes  item_hit_box   # player_car_write_hit_box 0122BC "movea.w 126BC(R2), R19" (R2 the model * 8): by car model, 8 bytes as an item_hit_box (along_start, along_end, across_start, across_end: 00A0 0000 FFD4 002C for model 0); 0126BC-0126FB
 03153C  data  boot_palette_9e00             # upload_boot_palettes 011594 "movea.b 3153C, R19" (upload_palette): place 9E00, 200 bytes, 256 colours
 153904  data  boot_palette_8000             # upload_boot_palettes 0115A8 "movea.b 153904, R19" (upload_palette): place 8000, 1400 bytes, 2560 colours
-103C20  data  one_bit_font                  # load_shadowed_text_font 0117FE "movea.b 103C20, R19": 128 characters of 8 rows, a bit a pixel (103C20-10401F)
+103C20  table  one_bit_font[1024]  u8       # load_shadowed_text_font 0117FE "movea.b 103C20, R19": 128 characters of 8 rows, a bit a pixel (103C20-10401F)
 104020  data  text_font                     # load_text_font: the text layer's 384 characters (3000 bytes) it copies into 318000
 # Unpacking
 param unpack R10 source packed_bytes                      # the packed data (unpack_list, unpack_tile_pages)
@@ -7856,7 +7856,7 @@ param road_row_pair_crash_check R15 next_hit_box
 000C98  data  second_task_start_frame       # the interrupt frame the second task starts from: boot and second_task copy 3E halfwords of it to 21FF84 (PC 0006B0, PSW 00040000)
 000F70  data  isdn_connection_objects       # game mode 8's list for start_object_list: the count (1), then isdn_connection_object_handlers
 001A78  data  car_presentation_objects      # game mode 3's list: the count (3), then car_presentation_object_handlers
-001AE8  data  staff_credits_texts           # staff_credits_code_show's texts, "OutRunners" MAIN STAFF and on (place, then the characters)
+001AE8  table  staff_credits_texts  sprite_text_record   # staff_credits_code_show's texts, "OutRunners" MAIN STAFF and on (place, then the characters): of different lengths, the C takes the first and draw_text hands back the next
 001D70  data  car_name_letter_palette_steps # car_name_letter_update's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
 002CB8  data  ranking_objects               # game_mode_ranking and ranking_update's list: the count (2), then the handlers
 002D58  data  name_entry_objects            # name_entry_update's list: the count (4), then name_entry_object_handlers

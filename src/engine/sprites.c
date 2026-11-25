@@ -450,7 +450,7 @@ void put_object_sprites(uint16_t y, uint32_t height_scale, uint32_t width_scale,
 		attributes = SPRITE_PIECE(frame)->attributes ^ flip_bits;
 		size_step_offset = current_object->size_step * 3u;
 		frame += 2u;
-		size_step = rom_pointer(sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u);
+		size_step = record_at(sprite_size_steps, (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u);
 		source_size = size_step->source_size;
 		sprite_source_size = source_size;
 		rom_offset = size_step->rom_offset;
@@ -514,7 +514,7 @@ void draw_object_one_piece(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint3
 	piece = rom_pointer(SPRITE_ANIMATION(sprite_animations[current_object->animation])->frames[current_object->frame] + 2u);
 	attributes = piece->attributes;
 	size_step_offset = current_object->size_step * 3u;
-	size_step = rom_pointer(sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + piece->sprite) * 4u);
+	size_step = record_at(sprite_size_steps, (uint16_t)(size_step_offset + piece->sprite) * 4u);
 	source_size = size_step->source_size;
 	rom_offset = size_step->rom_offset;
 	palette_word = SPRITE_PALETTE_WORDS(sprite_palettes[current_object->palette])[0];
@@ -650,7 +650,7 @@ void draw_object_smoothed(uint32_t *p_leftover, uint32_t *p_sprite_entry, uint32
 		copy_entry += 2u;
 		size_step_offset = current_object->size_step * 3u;
 		frame += 2u;
-		size_step = rom_pointer(sprite_size_steps_ADDRESS + (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u);
+		size_step = record_at(sprite_size_steps, (uint16_t)(size_step_offset + SPRITE_PIECE(frame - 0x2u)->sprite) * 4u);
 		source_size = size_step->source_size;
 		sprite_source_size = source_size;
 		SPRITE_WORDS(sprite_entry)[0] = sprite_source_size;

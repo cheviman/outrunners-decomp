@@ -289,7 +289,7 @@ void staff_credits_code_show(void)
 		fade_out_music();
 		return;
 	}
-	next_text = rom_pointer(staff_credits_texts_ADDRESS);
+	next_text = staff_credits_texts;
 	while ((int16_t)next_text->x >= 0)
 	{
 		text_record = address_of(next_text);

@@ -129,6 +129,7 @@ memory.CODE_FIELDS = frozenset(("object.handler", "test_mode_routine"))
 memory.CODE_TABLES = True
 memory.CODE_LIST_ELEMENTS = "object_handlers"
 pointers.RECORD_POINTERS = True
+pointers.RECORD_OFFSETS = True
 memory.NOTES = {
     "variables": ["/* the game's variables in work RAM, by their addresses (the fields of struct game, at the end);",
                   "   SCREEN_1 and SCREEN_2 are the blocks of the two screens, which the code reaches through screen",

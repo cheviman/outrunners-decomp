@@ -359,7 +359,7 @@ void player_car_project_road(uint32_t *p_matrix_yx, uint32_t *p_matrix_yz)
 	screen->crest_count = 0u;
 	previous_y = 0x7FFFu;
 	screen->crest_heights[0] = screen_top_y + 0xE0u;
-	projection_pattern = rom_pointer(segment_projection_pattern_ADDRESS);
+	projection_pattern = segment_projection_pattern;
 	for (;;)
 	{
 		ring_segment = pointer_to((address_of(ring_segment) + 0x20u) & ~0x5000u);

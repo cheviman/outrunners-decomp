@@ -521,6 +521,7 @@ const void *attract_car_scene_palettes_data;
 const void *car_presentation_backgrounds_data;
 const void *car_presentation_palette_cycle_data;
 const void *staff_credits_code_sequence_data;
+const void *staff_credits_texts_data;
 const void *attract_car_names_data;
 const void *ranking_step_jumps_data;
 const void *name_entry_state_jumps_data;
@@ -733,6 +734,7 @@ const void *lap_timer_checkpoint_states_data;
 const void *entry_invitation_step_jumps_data;
 const void *race_copy_offsets_data;
 const void *race_copy_player_offsets_data;
+const void *check_dualport_ram_characters_data;
 const void *link_board_ic_texts_data;
 const void *stage_start_times_data;
 const void *fork_next_stages_data;
@@ -748,22 +750,30 @@ const void *sprite_list_switch_records_data;
 const void *course_command_jumps_data;
 const void *unused_segment_steps_data;
 const void *unused_segment_shifts_data;
+const void *segment_projection_pattern_data;
 const void *unused_numbers_01060C_data;
 const void *hidden_layer_pairs_data;
 const void *sprite_control_mode_data;
 const void *sprite_control_flip_data;
+const void *sprite_control_rest_data;
 const void *video_control_default_data;
 const void *screen_hardware_records_data;
 const void *screen_view_defaults_data;
 const void *model_view_pitch_bases_data;
 const void *screen_fade_kind_jumps_data;
 const void *screen_fade_starts_data;
+const void *screen_fade_from_black_data;
+const void *screen_fade_to_white_data;
+const void *screen_fade_from_white_data;
+const void *screen_fade_to_red_tint_data;
+const void *screen_fade_from_red_tint_data;
 const void *music_fade_addresses_data;
 const void *car_model_engine_samples_data;
 const void *demo_sounds_data;
 const void *demo_second_sounds_data;
 const void *octant_base_angles_data;
 const void *octant_angle_factors_data;
+const void *car_hit_box_sizes_data;
 const void *road_object_stream_state_jumps_data;
 const void *road_object_stream_command_jumps_data;
 const void *crest_clip_state_jumps_data;
@@ -945,6 +955,8 @@ const void *test_mode_lcd_text_8_to_11_data;
 const void *test_mode_lcd_text_12_to_15_data;
 const void *test_mode_menu_headings_data;
 const void *test_mode_menu_cursor_cells_data;
+const void *memory_test_now_testing_text_data;
+const void *memory_test_result_cells_data;
 const void *memory_test_result_texts_data;
 const void *volume_adjustment_cursor_cells_data;
 const void *volume_adjustment_cancel_cell_data;
@@ -963,6 +975,7 @@ const void *game_assignments_cursor_cells_data;
 const void *game_assignments_exit_cell_data;
 const void *steering_wheel_reaction_texts_data;
 const void *advertise_sound_texts_data;
+const void *game_assignments_setting_places_data;
 const void *test_mode_coin_assignments_item_jumps_data;
 const void *test_mode_coin_assignments_manual_item_jumps_data;
 const void *coin_assignments_cursor_cells_data;
@@ -970,11 +983,13 @@ const void *coin_manual_cursor_cells_data;
 const void *coin_manual_exit_cell_data;
 const void *coin_setting_descriptions_data;
 const void *coin_setting_records_data;
+const void *coin_assignments_setting_places_data;
 const void *test_mode_network_assignments_item_jumps_data;
 const void *network_assignments_cursor_cells_data;
 const void *network_assignments_exit_cell_data;
 const void *communication_texts_data;
 const void *privilege_mode_texts_data;
+const void *network_assignments_setting_places_data;
 const void *privilege_mode_settings_data;
 const void *backup_data_clear_cursor_cells_data;
 const void *backup_data_clear_no_cell_data;
@@ -1012,6 +1027,7 @@ const void *blank_sprite_places_data;
 const void *sine_table_data;
 const void *cosine_table_data;
 const void *arctangents_data;
+const void *one_bit_font_data;
 const void *boot_tile_pages_5d_data;
 const void *boot_tile_pages_5e_data;
 const void *boot_tile_pages_29_to_4e_data;
@@ -1072,6 +1088,7 @@ const game_table game_tables[] =
 	{ "car_presentation_backgrounds", 0x001AA0u, &car_presentation_backgrounds_data },
 	{ "car_presentation_palette_cycle", 0x001AC8u, &car_presentation_palette_cycle_data },
 	{ "staff_credits_code_sequence", 0x001ADCu, &staff_credits_code_sequence_data },
+	{ "staff_credits_texts", 0x001AE8u, &staff_credits_texts_data },
 	{ "attract_car_names", 0x001CECu, &attract_car_names_data },
 	{ "ranking_step_jumps", 0x001DE0u, &ranking_step_jumps_data },
 	{ "name_entry_state_jumps", 0x001ED0u, &name_entry_state_jumps_data },
@@ -1284,6 +1301,7 @@ const game_table game_tables[] =
 	{ "entry_invitation_step_jumps", 0x00DDB4u, &entry_invitation_step_jumps_data },
 	{ "race_copy_offsets", 0x00E0A0u, &race_copy_offsets_data },
 	{ "race_copy_player_offsets", 0x00E0C4u, &race_copy_player_offsets_data },
+	{ "check_dualport_ram_characters", 0x00E17Au, &check_dualport_ram_characters_data },
 	{ "link_board_ic_texts", 0x00E4D0u, &link_board_ic_texts_data },
 	{ "stage_start_times", 0x00E5B3u, &stage_start_times_data },
 	{ "fork_next_stages", 0x00E5D3u, &fork_next_stages_data },
@@ -1299,22 +1317,30 @@ const game_table game_tables[] =
 	{ "course_command_jumps", 0x00FF40u, &course_command_jumps_data },
 	{ "unused_segment_steps", 0x010309u, &unused_segment_steps_data },
 	{ "unused_segment_shifts", 0x010425u, &unused_segment_shifts_data },
+	{ "segment_projection_pattern", 0x010509u, &segment_projection_pattern_data },
 	{ "unused_numbers_01060C", 0x01060Cu, &unused_numbers_01060C_data },
 	{ "hidden_layer_pairs", 0x010B06u, &hidden_layer_pairs_data },
 	{ "sprite_control_mode", 0x010B0Au, &sprite_control_mode_data },
 	{ "sprite_control_flip", 0x010B0Bu, &sprite_control_flip_data },
+	{ "sprite_control_rest", 0x010B0Cu, &sprite_control_rest_data },
 	{ "video_control_default", 0x010B10u, &video_control_default_data },
 	{ "screen_hardware_records", 0x010BA0u, &screen_hardware_records_data },
 	{ "screen_view_defaults", 0x010BC8u, &screen_view_defaults_data },
 	{ "model_view_pitch_bases", 0x010BD2u, &model_view_pitch_bases_data },
 	{ "screen_fade_kind_jumps", 0x01168Cu, &screen_fade_kind_jumps_data },
 	{ "screen_fade_starts", 0x01173Au, &screen_fade_starts_data },
+	{ "screen_fade_from_black", 0x01173Eu, &screen_fade_from_black_data },
+	{ "screen_fade_to_white", 0x011742u, &screen_fade_to_white_data },
+	{ "screen_fade_from_white", 0x011746u, &screen_fade_from_white_data },
+	{ "screen_fade_to_red_tint", 0x01174Au, &screen_fade_to_red_tint_data },
+	{ "screen_fade_from_red_tint", 0x01174Eu, &screen_fade_from_red_tint_data },
 	{ "music_fade_addresses", 0x011FFCu, &music_fade_addresses_data },
 	{ "car_model_engine_samples", 0x012026u, &car_model_engine_samples_data },
 	{ "demo_sounds", 0x01202Eu, &demo_sounds_data },
 	{ "demo_second_sounds", 0x01204Eu, &demo_second_sounds_data },
 	{ "octant_base_angles", 0x0121D8u, &octant_base_angles_data },
 	{ "octant_angle_factors", 0x0121E8u, &octant_angle_factors_data },
+	{ "car_hit_box_sizes", 0x0126BCu, &car_hit_box_sizes_data },
 	{ "road_object_stream_state_jumps", 0x012708u, &road_object_stream_state_jumps_data },
 	{ "road_object_stream_command_jumps", 0x012748u, &road_object_stream_command_jumps_data },
 	{ "crest_clip_state_jumps", 0x0127FCu, &crest_clip_state_jumps_data },
@@ -1496,6 +1522,8 @@ const game_table game_tables[] =
 	{ "test_mode_lcd_text_12_to_15", 0x01C384u, &test_mode_lcd_text_12_to_15_data },
 	{ "test_mode_menu_headings", 0x01C560u, &test_mode_menu_headings_data },
 	{ "test_mode_menu_cursor_cells", 0x01C588u, &test_mode_menu_cursor_cells_data },
+	{ "memory_test_now_testing_text", 0x01CD87u, &memory_test_now_testing_text_data },
+	{ "memory_test_result_cells", 0x01CD96u, &memory_test_result_cells_data },
 	{ "memory_test_result_texts", 0x01CDC8u, &memory_test_result_texts_data },
 	{ "volume_adjustment_cursor_cells", 0x01CF9Cu, &volume_adjustment_cursor_cells_data },
 	{ "volume_adjustment_cancel_cell", 0x01CF9Eu, &volume_adjustment_cancel_cell_data },
@@ -1514,6 +1542,7 @@ const game_table game_tables[] =
 	{ "game_assignments_exit_cell", 0x01DCE0u, &game_assignments_exit_cell_data },
 	{ "steering_wheel_reaction_texts", 0x01DCE4u, &steering_wheel_reaction_texts_data },
 	{ "advertise_sound_texts", 0x01DCECu, &advertise_sound_texts_data },
+	{ "game_assignments_setting_places", 0x01DD14u, &game_assignments_setting_places_data },
 	{ "test_mode_coin_assignments_item_jumps", 0x01E0D8u, &test_mode_coin_assignments_item_jumps_data },
 	{ "test_mode_coin_assignments_manual_item_jumps", 0x01E0E4u, &test_mode_coin_assignments_manual_item_jumps_data },
 	{ "coin_assignments_cursor_cells", 0x01E200u, &coin_assignments_cursor_cells_data },
@@ -1521,11 +1550,13 @@ const game_table game_tables[] =
 	{ "coin_manual_exit_cell", 0x01E20Cu, &coin_manual_exit_cell_data },
 	{ "coin_setting_descriptions", 0x01E220u, &coin_setting_descriptions_data },
 	{ "coin_setting_records", 0x01E3E8u, &coin_setting_records_data },
+	{ "coin_assignments_setting_places", 0x01E44Du, &coin_assignments_setting_places_data },
 	{ "test_mode_network_assignments_item_jumps", 0x01E61Cu, &test_mode_network_assignments_item_jumps_data },
 	{ "network_assignments_cursor_cells", 0x01E67Cu, &network_assignments_cursor_cells_data },
 	{ "network_assignments_exit_cell", 0x01E682u, &network_assignments_exit_cell_data },
 	{ "communication_texts", 0x01E684u, &communication_texts_data },
 	{ "privilege_mode_texts", 0x01E68Cu, &privilege_mode_texts_data },
+	{ "network_assignments_setting_places", 0x01E6E0u, &network_assignments_setting_places_data },
 	{ "privilege_mode_settings", 0x01E6E5u, &privilege_mode_settings_data },
 	{ "backup_data_clear_cursor_cells", 0x01EEAEu, &backup_data_clear_cursor_cells_data },
 	{ "backup_data_clear_no_cell", 0x01EEB0u, &backup_data_clear_no_cell_data },
@@ -1563,6 +1594,7 @@ const game_table game_tables[] =
 	{ "sine_table", 0x100C00u, &sine_table_data },
 	{ "cosine_table", 0x101400u, &cosine_table_data },
 	{ "arctangents", 0x103400u, &arctangents_data },
+	{ "one_bit_font", 0x103C20u, &one_bit_font_data },
 	{ "boot_tile_pages_5d", 0x109420u, &boot_tile_pages_5d_data },
 	{ "boot_tile_pages_5e", 0x109428u, &boot_tile_pages_5e_data },
 	{ "boot_tile_pages_29_to_4e", 0x109578u, &boot_tile_pages_29_to_4e_data },
@@ -1588,7 +1620,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 547;
+const size_t game_table_count = 563;
 
 /* the code at the reset vector */
 void game_entry(void)

@@ -2027,7 +2027,7 @@ void fork_branch_sprite(uint32_t *p_size_and_attributes, uint32_t *p_height_word
 
 	frames = rom_pointer(SPRITE_ANIMATION(fork_branch_piece_animation[0])->frames[0]);
 	piece_attributes = frames->piece_words[0];
-	size_step = rom_pointer(sprite_size_steps_ADDRESS + frames->piece_words[1] * 4u);
+	size_step = record_at(sprite_size_steps, frames->piece_words[1] * 4u);
 	*p_size_and_attributes = ((uint32_t)size_step->source_size << 16) | piece_attributes;
 	rom_offset = size_step->rom_offset;
 	height_word = 1u | size_step->height_bits;

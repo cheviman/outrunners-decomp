@@ -217,7 +217,7 @@ void step_screen_fade(void)
 		screen->fade_kind = 6u;
 		break;
 	case 1:
-		fade_start = rom_pointer(screen_fade_from_black_ADDRESS);
+		fade_start = screen_fade_from_black;
 		screen->fade_level = fade_start->level;
 		screen->fade_step = fade_start->step;
 		screen->fade_end = fade_start->end;
@@ -225,7 +225,7 @@ void step_screen_fade(void)
 		screen->fade_kind = 6u;
 		break;
 	case 2:
-		fade_start = rom_pointer(screen_fade_to_white_ADDRESS);
+		fade_start = screen_fade_to_white;
 		screen->fade_level = fade_start->level;
 		screen->fade_step = fade_start->step;
 		screen->fade_end = fade_start->end;
@@ -233,7 +233,7 @@ void step_screen_fade(void)
 		screen->fade_kind = 6u;
 		break;
 	case 3:
-		fade_start = rom_pointer(screen_fade_from_white_ADDRESS);
+		fade_start = screen_fade_from_white;
 		screen->fade_level = fade_start->level;
 		screen->fade_step = fade_start->step;
 		screen->fade_end = fade_start->end;
@@ -241,7 +241,7 @@ void step_screen_fade(void)
 		screen->fade_kind = 6u;
 		break;
 	case 4:
-		fade_start = rom_pointer(screen_fade_to_red_tint_ADDRESS);
+		fade_start = screen_fade_to_red_tint;
 		screen->fade_level = fade_start->level;
 		screen->fade_step = fade_start->step;
 		screen->fade_end = fade_start->end;
@@ -249,7 +249,7 @@ void step_screen_fade(void)
 		screen->fade_kind = 6u;
 		break;
 	case 5:
-		fade_start = rom_pointer(screen_fade_from_red_tint_ADDRESS);
+		fade_start = screen_fade_from_red_tint;
 		screen->fade_level = fade_start->level;
 		screen->fade_step = fade_start->step;
 		screen->fade_end = fade_start->end;

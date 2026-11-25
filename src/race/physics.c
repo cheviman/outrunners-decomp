@@ -875,7 +875,7 @@ void player_car_next_surfaces(void)
 	stage_length = (uint16_t)(screen->stage_lengths[(int32_t)address_of(stage_then_surfaces)] + screen->branch_road_length);
 	player_car->surface_start = player_car->surface_next_start;
 	player_car->surface_next_start += stage_length;
-	stage_then_surfaces = rom_pointer(stage_roadside_surface_lists_ADDRESS + (uint8_t)(address_of(stage_then_surfaces) * 2u) * 4u);
+	stage_then_surfaces = &stage_roadside_surface_lists[address_of(stage_then_surfaces) & 0x7Fu];
 	player_car->surface_entry_1 = stage_then_surfaces->first;
 	player_car->surface_entry_2 = stage_then_surfaces->second;
 }

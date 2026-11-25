@@ -529,7 +529,7 @@ void test_mode_memory_test_draw(uint32_t *p_cell_value, uint32_t *p_text_place)
 	text = memory_test_page_text_ADDRESS;
 	test_mode_draw_texts(cell_value, text);
 	result_place = &game->memory_test_results[0];
-	result_cells = rom_pointer(memory_test_result_cells_ADDRESS);
+	result_cells = memory_test_result_cells;
 	text_place = TEXT_CELL(0, 0);
 	results_left = 0x19u;
 	do
@@ -1045,7 +1045,7 @@ void test_mode_memory_test_blink(void)
 
 	character = 0x6600u;
 	next_cell = TEXT_CELL(14, 25);
-	now_testing = rom_pointer(memory_test_now_testing_text_ADDRESS);
+	now_testing = memory_test_now_testing_text;
 	do
 	{
 		character = (uint16_t)((character & ~0xFFu) | now_testing[0]);
@@ -2169,7 +2169,7 @@ void test_mode_game_assignments_exit(void)
 {
 	const uint8_t *setting_places = NULL;
 
-	setting_places = rom_pointer(game_assignments_setting_places_ADDRESS);
+	setting_places = game_assignments_setting_places;
 	current_object = pointer_to(address_of(&game->eeprom));
 	do
 	{
@@ -2655,7 +2655,7 @@ void test_mode_coin_assignments_exit(void)
 {
 	const uint8_t *setting_places = NULL;
 
-	setting_places = rom_pointer(coin_assignments_setting_places_ADDRESS);
+	setting_places = coin_assignments_setting_places;
 	do
 	{
 		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));
@@ -2859,7 +2859,7 @@ void test_mode_network_assignments_exit(void)
 {
 	const uint8_t *setting_places = NULL;
 
-	setting_places = rom_pointer(network_assignments_setting_places_ADDRESS);
+	setting_places = network_assignments_setting_places;
 	do
 	{
 		current_object = pointer_to(IN_PAGE(address_of(current_object), setting_places[0]));

@@ -916,7 +916,7 @@ void network_check_toggle_memory_text(void)
 
 	character = 0x6000u;
 	next_cell = TEXT_CELL(8, 24);
-	memory_text = rom_pointer(check_dualport_ram_characters_ADDRESS);
+	memory_text = check_dualport_ram_characters;
 	do
 	{
 		character = (uint16_t)((character & ~0xFFu) | memory_text[0]);

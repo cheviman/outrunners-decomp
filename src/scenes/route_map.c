@@ -966,7 +966,7 @@ void stage_result_line_draw(void)
 	place_index = screen->progress.checkpoint_orders[(int32_t)(player + (current_object->stage_result_line.stage << 3))] * 3u;
 	if (current_object->stage_result_line.last == 0u)
 	{
-		place_text = rom_pointer(stage_result_places_ADDRESS + place_index * 2u);
+		place_text = record_at(stage_result_places, place_index * 2u);
 		attribute = place_text->attribute;
 		place_text = rom_pointer(address_of(place_text) + 2u);
 		draw_text_at(text_place, attribute, address_of(place_text));

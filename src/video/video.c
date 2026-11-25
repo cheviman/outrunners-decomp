@@ -220,7 +220,7 @@ void init_sprite_chip(void)
 	io_write16(0x500000u, sprite_control_mode);
 	control_register = SPRITE_CONTROL + 0x4u;
 	control_flip = sprite_control_flip;
-	control_values = rom_pointer(sprite_control_rest_ADDRESS);
+	control_values = sprite_control_rest;
 	if (game->eeprom.settings.flip_screen != 0u)
 		control_flip = control_flip ^ 3u;
 	io_write16(control_register, control_flip);

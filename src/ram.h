@@ -723,6 +723,9 @@ extern const void *race_copy_offsets_data;
 #define race_copy_player_offsets_ADDRESS 0x00E0C4u
 extern const void *race_copy_player_offsets_data;
 #define race_copy_player_offsets ((const uint32_t *)race_copy_player_offsets_data)
+#define check_dualport_ram_characters_ADDRESS 0x00E17Au
+extern const void *check_dualport_ram_characters_data;
+#define check_dualport_ram_characters ((const uint8_t *)check_dualport_ram_characters_data)
 #define link_board_ic_texts_ADDRESS 0x00E4D0u
 extern const void *link_board_ic_texts_data;
 #define link_board_ic_texts ((const uint32_t *)link_board_ic_texts_data)
@@ -762,6 +765,9 @@ extern const void *unused_segment_steps_data;
 #define unused_segment_shifts_ADDRESS 0x010425u
 extern const void *unused_segment_shifts_data;
 #define unused_segment_shifts (*(const int8_t *)unused_segment_shifts_data)
+#define segment_projection_pattern_ADDRESS 0x010509u
+extern const void *segment_projection_pattern_data;
+#define segment_projection_pattern ((const uint8_t *)segment_projection_pattern_data)
 #define unused_numbers_01060C_ADDRESS 0x01060Cu
 extern const void *unused_numbers_01060C_data;
 #define unused_numbers_01060C (*(const uint32_t *)unused_numbers_01060C_data)
@@ -771,6 +777,9 @@ extern const void *sprite_control_mode_data;
 #define sprite_control_flip_ADDRESS 0x010B0Bu
 extern const void *sprite_control_flip_data;
 #define sprite_control_flip (*(const uint8_t *)sprite_control_flip_data)
+#define sprite_control_rest_ADDRESS 0x010B0Cu
+extern const void *sprite_control_rest_data;
+#define sprite_control_rest ((const uint8_t *)sprite_control_rest_data)
 #define video_control_default_ADDRESS 0x010B10u
 extern const void *video_control_default_data;
 #define video_control_default (*(const uint16_t *)video_control_default_data)
@@ -1293,6 +1302,12 @@ extern const void *test_mode_menu_headings_data;
 #define test_mode_menu_cursor_cells_ADDRESS 0x01C588u
 extern const void *test_mode_menu_cursor_cells_data;
 #define test_mode_menu_cursor_cells ((const uint16_t *)test_mode_menu_cursor_cells_data)
+#define memory_test_now_testing_text_ADDRESS 0x01CD87u
+extern const void *memory_test_now_testing_text_data;
+#define memory_test_now_testing_text ((const uint8_t *)memory_test_now_testing_text_data)
+#define memory_test_result_cells_ADDRESS 0x01CD96u
+extern const void *memory_test_result_cells_data;
+#define memory_test_result_cells ((const uint16_t *)memory_test_result_cells_data)
 #define volume_adjustment_cursor_cells_ADDRESS 0x01CF9Cu
 extern const void *volume_adjustment_cursor_cells_data;
 #define volume_adjustment_cursor_cells ((const uint16_t *)volume_adjustment_cursor_cells_data)
@@ -1341,6 +1356,9 @@ extern const void *steering_wheel_reaction_texts_data;
 #define advertise_sound_texts_ADDRESS 0x01DCECu
 extern const void *advertise_sound_texts_data;
 #define advertise_sound_texts ((const uint32_t *)advertise_sound_texts_data)
+#define game_assignments_setting_places_ADDRESS 0x01DD14u
+extern const void *game_assignments_setting_places_data;
+#define game_assignments_setting_places ((const uint8_t *)game_assignments_setting_places_data)
 #define test_mode_coin_assignments_item_jumps_ADDRESS 0x01E0D8u
 extern const void *test_mode_coin_assignments_item_jumps_data;
 #define test_mode_coin_assignments_item_jumps ((const uint32_t *)test_mode_coin_assignments_item_jumps_data)
@@ -1359,6 +1377,9 @@ extern const void *coin_manual_exit_cell_data;
 #define coin_setting_descriptions_ADDRESS 0x01E220u
 extern const void *coin_setting_descriptions_data;
 #define coin_setting_descriptions ((const uint32_t *)coin_setting_descriptions_data)
+#define coin_assignments_setting_places_ADDRESS 0x01E44Du
+extern const void *coin_assignments_setting_places_data;
+#define coin_assignments_setting_places ((const uint8_t *)coin_assignments_setting_places_data)
 #define test_mode_network_assignments_item_jumps_ADDRESS 0x01E61Cu
 extern const void *test_mode_network_assignments_item_jumps_data;
 #define test_mode_network_assignments_item_jumps ((const uint32_t *)test_mode_network_assignments_item_jumps_data)
@@ -1374,6 +1395,9 @@ extern const void *communication_texts_data;
 #define privilege_mode_texts_ADDRESS 0x01E68Cu
 extern const void *privilege_mode_texts_data;
 #define privilege_mode_texts ((const uint32_t *)privilege_mode_texts_data)
+#define network_assignments_setting_places_ADDRESS 0x01E6E0u
+extern const void *network_assignments_setting_places_data;
+#define network_assignments_setting_places ((const uint8_t *)network_assignments_setting_places_data)
 #define backup_data_clear_cursor_cells_ADDRESS 0x01EEAEu
 extern const void *backup_data_clear_cursor_cells_data;
 #define backup_data_clear_cursor_cells ((const uint16_t *)backup_data_clear_cursor_cells_data)
@@ -1470,6 +1494,9 @@ extern const void *cosine_table_data;
 #define arctangents_ADDRESS 0x103400u
 extern const void *arctangents_data;
 #define arctangents ((const uint16_t *)arctangents_data)
+#define one_bit_font_ADDRESS 0x103C20u
+extern const void *one_bit_font_data;
+#define one_bit_font ((const uint8_t *)one_bit_font_data)
 #define boot_tile_pages_5d_ADDRESS 0x109420u
 extern const void *boot_tile_pages_5d_data;
 #define boot_tile_pages_5d (*(const uint32_t *)boot_tile_pages_5d_data)
@@ -1661,7 +1688,6 @@ extern const void *kanji_font_data;
 #define default_settings_ADDRESS 0x0004C0u
 #define second_task_start_frame_ADDRESS 0x000C98u
 #define isdn_texts_ADDRESS 0x000F94u
-#define staff_credits_texts_ADDRESS 0x001AE8u
 #define attract_car_name_texts_ADDRESS 0x001D0Cu
 #define car_name_letter_palette_steps_ADDRESS 0x001D70u
 #define meaning_of_the_light_title_ADDRESS 0x003504u
@@ -1692,7 +1718,6 @@ extern const void *kanji_font_data;
 #define network_check_isdn_text_ADDRESS 0x00E143u
 #define board_check_text_ADDRESS 0x00E15Eu
 #define wait_text_ADDRESS 0x00E170u
-#define check_dualport_ram_characters_ADDRESS 0x00E17Au
 #define check_network_status_text_ADDRESS 0x00E1B6u
 #define check_trans_end_text_ADDRESS 0x00E1D6u
 #define network_error_text_ADDRESS 0x00E40Eu
@@ -1700,9 +1725,7 @@ extern const void *kanji_font_data;
 #define communication_board_error_texts_ADDRESS 0x00E464u
 #define communication_time_out_texts_ADDRESS 0x00E484u
 #define link_board_ic_text_records_ADDRESS 0x00E4F8u
-#define segment_projection_pattern_ADDRESS 0x010509u
 #define mixer_register_defaults_ADDRESS 0x010AB6u
-#define sprite_control_rest_ADDRESS 0x010B0Cu
 #define video_register_defaults_ADDRESS 0x010B12u
 #define sprite_ram_start_entries_ADDRESS 0x010BF4u
 #define last_colour_tables_ADDRESS 0x010C44u
@@ -1711,12 +1734,6 @@ extern const void *kanji_font_data;
 #define seat1_second_chute_entry_ADDRESS 0x011504u
 #define seat2_first_chute_entry_ADDRESS 0x011534u
 #define seat2_second_chute_entry_ADDRESS 0x011564u
-#define screen_fade_from_black_ADDRESS 0x01173Eu
-#define screen_fade_to_white_ADDRESS 0x011742u
-#define screen_fade_from_white_ADDRESS 0x011746u
-#define screen_fade_to_red_tint_ADDRESS 0x01174Au
-#define screen_fade_from_red_tint_ADDRESS 0x01174Eu
-#define car_hit_box_sizes_ADDRESS 0x0126BCu
 #define radio_song_titles_ADDRESS 0x019478u
 #define dj_mouth_shapes_ADDRESS 0x0196F8u
 #define coin_prompt_lcd_strings_ADDRESS 0x01A9C8u
@@ -1730,8 +1747,6 @@ extern const void *kanji_font_data;
 #define test_mode_menu_heading_texts_ADDRESS 0x01C568u
 #define test_mode_write_count_text_ADDRESS 0x01C5A2u
 #define memory_test_page_text_ADDRESS 0x01CC9Cu
-#define memory_test_now_testing_text_ADDRESS 0x01CD87u
-#define memory_test_result_cells_ADDRESS 0x01CD96u
 #define volume_adjustment_page_text_ADDRESS 0x01CF71u
 #define volume_adjustment_controls_text_ADDRESS 0x01CFA0u
 #define volume_adjusting_text_ADDRESS 0x01D021u
@@ -1747,7 +1762,6 @@ extern const void *kanji_font_data;
 #define crt_test_second_page_text_ADDRESS 0x01D9DCu
 #define game_assignments_page_text_ADDRESS 0x01DBF8u
 #define game_assignments_value_texts_ADDRESS 0x01DCF4u
-#define game_assignments_setting_places_ADDRESS 0x01DD14u
 #define coin_assignments_page_text_ADDRESS 0x01E0F4u
 #define coin_manual_page_text_ADDRESS 0x01E13Fu
 #define coin_assignments_line_text_ADDRESS 0x01E20Eu
@@ -1755,10 +1769,8 @@ extern const void *kanji_font_data;
 #define no_bonus_adder_text_ADDRESS 0x01E39Eu
 #define bonus_free_play_text_ADDRESS 0x01E3BCu
 #define bonus_adder_text_ADDRESS 0x01E3CBu
-#define coin_assignments_setting_places_ADDRESS 0x01E44Du
 #define network_assignments_page_text_ADDRESS 0x01E62Cu
 #define privilege_mode_text_lists_ADDRESS 0x01E698u
-#define network_assignments_setting_places_ADDRESS 0x01E6E0u
 #define time_digit_steps_ADDRESS 0x01E970u
 #define bookkeeping_first_page_text_ADDRESS 0x01EA5Cu
 #define bookkeeping_second_page_text_ADDRESS 0x01EBB9u
@@ -1777,7 +1789,6 @@ extern const void *kanji_font_data;
 #define black_background_palette_ADDRESS 0x031740u
 #define vector_table_ADDRESS 0x03F000u
 #define zero_block_ADDRESS 0x100800u
-#define one_bit_font_ADDRESS 0x103C20u
 #define text_font_ADDRESS 0x104020u
 #define indirect_colour_tables_ADDRESS 0x107020u
 #define solid_colour_blocks_ADDRESS 0x12297Cu
@@ -5607,6 +5618,9 @@ extern const void *car_presentation_backgrounds_data;
 #define staff_credits_code_sequence_ADDRESS 0x001ADCu
 extern const void *staff_credits_code_sequence_data;
 #define staff_credits_code_sequence ((const uint8_t *)(staff_credits_code_sequence_data))
+#define staff_credits_texts_ADDRESS 0x001AE8u
+extern const void *staff_credits_texts_data;
+#define staff_credits_texts ((const struct sprite_text_record *)(staff_credits_texts_data))
 #define ranking_background_register_sets_ADDRESS 0x002C44u
 extern const void *ranking_background_register_sets_data;
 #define ranking_background_register_sets ((const struct ranking_background_registers *)(ranking_background_register_sets_data))
@@ -5703,6 +5717,24 @@ extern const void *screen_view_defaults_data;
 #define screen_fade_starts_ADDRESS 0x01173Au
 extern const void *screen_fade_starts_data;
 #define screen_fade_starts ((const struct screen_fade_start *)(screen_fade_starts_data))
+#define screen_fade_from_black_ADDRESS 0x01173Eu
+extern const void *screen_fade_from_black_data;
+#define screen_fade_from_black ((const struct screen_fade_start *)(screen_fade_from_black_data))
+#define screen_fade_to_white_ADDRESS 0x011742u
+extern const void *screen_fade_to_white_data;
+#define screen_fade_to_white ((const struct screen_fade_start *)(screen_fade_to_white_data))
+#define screen_fade_from_white_ADDRESS 0x011746u
+extern const void *screen_fade_from_white_data;
+#define screen_fade_from_white ((const struct screen_fade_start *)(screen_fade_from_white_data))
+#define screen_fade_to_red_tint_ADDRESS 0x01174Au
+extern const void *screen_fade_to_red_tint_data;
+#define screen_fade_to_red_tint ((const struct screen_fade_start *)(screen_fade_to_red_tint_data))
+#define screen_fade_from_red_tint_ADDRESS 0x01174Eu
+extern const void *screen_fade_from_red_tint_data;
+#define screen_fade_from_red_tint ((const struct screen_fade_start *)(screen_fade_from_red_tint_data))
+#define car_hit_box_sizes_ADDRESS 0x0126BCu
+extern const void *car_hit_box_sizes_data;
+#define car_hit_box_sizes ((const struct item_hit_box *)(car_hit_box_sizes_data))
 #define race_opening_sound_cues_ADDRESS 0x014660u
 extern const void *race_opening_sound_cues_data;
 #define race_opening_sound_cues ((const struct sound_cue *)(race_opening_sound_cues_data))

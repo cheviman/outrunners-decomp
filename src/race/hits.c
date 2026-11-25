@@ -170,7 +170,7 @@ uint32_t player_car_write_hit_box(uint16_t segment, uint32_t model, uint32_t hit
 	CAR_HIT_BOX(hit_box - 0x6u)->first_segment = segment;
 	hit_box += 2u;
 	CAR_HIT_BOX(hit_box - 0x8u)->last_segment = segment + 4u;
-	box_size = rom_pointer(car_hit_box_sizes_ADDRESS + (uint8_t)(model * 2u) * 4u);
+	box_size = &car_hit_box_sizes[model & 0x7Fu];
 	along_start = box_size->along_start;
 	hit_box += 2u;
 	CAR_HIT_BOX(hit_box - 0xAu)->along_start = segment_fraction + along_start;

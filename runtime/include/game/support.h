@@ -5,7 +5,7 @@
  *                 and searches, and the screen's edges
  *    Version:     0.1.0
  *    Created:     11-10-2026
- *    Modified:    24-11-2026
+ *    Modified:    25-11-2026
  *    Author:      Sebastian Toyos
  *
  *    license:BSD-3-Clause
@@ -101,6 +101,14 @@ void *pointer_to(uint32_t address);
 /* The same for a pointer the C keeps into the program's data, which nothing writes through: the piece of
    the program's data at a ROM address, read in place */
 const void *rom_pointer(uint32_t address);
+
+/* A record of a table of the program's data a number of bytes into it that is not whole records: the
+   original's index counts in pieces of a record (a piece's sprite counts the size steps' records of 12 bytes
+   in fours, a place's number the place texts' records of 6 in twos) */
+static inline const void *record_at(const void *table, uint32_t bytes)
+{
+	return (const uint8_t *)table + bytes;
+}
 
 static inline uint32_t address_of(const void *pointer)
 {
