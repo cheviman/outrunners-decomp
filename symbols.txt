@@ -1179,7 +1179,7 @@ comment backdrop_landmark_start Sets up a landmark on the horizon that grows as 
 comment backdrop_landmark_update Keeps the landmark on the background's panorama (as backdrop_near_update, a quarter faster than the panorama) and grows it with the distance travelled: its scale (width_scale, height_scale) follows the sine of (car window_segment - approach_start) / 2 (sine_table) up to full size (100, state 2). By state: 0 waits until it is off the screen; 1 and 2 drawn while on the screen; off it, it ends once leaving.
 comment backdrop_translucent_start Sets up a sprite on the background that is drawn every other frame, so it looks faint (the pyramids of stages 13 and 20, the spray of stage 4's falls): as backdrop_near_start, layer 1, frame_count 0; then backdrop_translucent_update.
 comment backdrop_translucent_update Keeps the sprite on the background's panorama at the panorama's own speed (as backdrop_far_update), animates it and draws it only on even frames (frame_count), so it looks faint. By state: 0 waits until it is off the screen; 1 drawn while on the screen; off it, it ends once leaving.
-comment backdrop_off_screen Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x (field 30) more than half_width beyond the screen's edges (0..140).
+comment backdrop_off_screen Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x (field 30) more than half_width beyond the screen's edges (0..140). The edges keep their number, not PAST_LEFT and PAST_RIGHT (support.h): A0 is both the screen's middle (centre_x is x less A0) and how far each edge is from it (half_screen, and the right edge's compare), which a symbols.txt constant line, one name for each of a function's numbers, cannot tell apart; a port with a wider screen replaces the function.
 scoped object road_object_stream 80 stream u32 road_object_stream_forks   # the stream it reads (an entry), or at a fork (state 3) the fork's table
 scoped object road_object_stream 84 stage_start u16
 scoped object road_object_stream 86 stage u8
@@ -8865,3 +8865,67 @@ param wheel_effect_1_surface_2_outer R14 surface
 param wheel_effect_2_surface_2_inner R14 surface
 param wheel_effect_2_surface_2_outer R14 surface
 param write_bookkeeping_credits R12 bookkeeping_place
+
+# ======== the screen's edges an object's x is checked against ========
+# The board shows x 0000-013F. The race's objects have their x from the screen's middle (draw_object_at_scale; the
+# sprites' offset, A0 (init_sprite_lists), puts their x 0 at the middle: the board's edges are -A0 and A0); the
+# objects drawn at a screen position (draw modes 0 and A: the title's, the backdrops) have it from the left edge.
+# The code puts objects in, takes them away, stops drawing them or turns them back a little past one side or the
+# other, each with its own numbers. Here they are by the edge and the margin past it
+# (runtime/include/game/support.h: SCREEN_LEFT 0, SCREEN_RIGHT 140, PAST_LEFT(m) = 0 - m, PAST_RIGHT(m) = 140 + m,
+# FROM_MIDDLE(x) = x - A0), the same numbers on the board, and a port with a wider screen (SCREEN_MORE_LEFT,
+# SCREEN_MORE_RIGHT) moves them. Each is a signed compare but the put-in places, stores; the value is as the IR
+# holds it, FFxx for a negative 16-bit one, FFFFFxxx for a 32-bit one.
+# What keeps its number: the places inside the screen (race_car_draw_behind's rival kept within 58 of the middle,
+# ranking_record_car_update's car that drives in to 108, crest_clip_update's clip across 0-13F); aurora_update's
+# northern lights, which slide 8 a frame from -A0 to the middle (A0) and stay there: a start moved by the side would
+# stop them off the middle; backdrop_off_screen, where A0 is both the middle (centre_x, x less A0) and how far each
+# edge is from it (half_screen), which one constant line cannot tell apart; the edges at x 0 (the end of
+# coin_prompt_car_drive, car_name_letter_update and ranking_record_car_update), since a constant line would name
+# every 0 of the function; ranking_record_character_update's end at x -20, an equality its 16-pixel steps would
+# miss if the edge moved; and song_title_show's slide of D2 either way from its own place, a distance.
+#
+# taken away when the x is outside -F0..130 (the road's crossers, the kangaroos, the moving scenery, the swooping
+# helicopters)
+constant road_crosser_update FF10 FROM_MIDDLE(PAST_LEFT(0x50))
+constant road_crosser_update 130 FROM_MIDDLE(PAST_RIGHT(0x90))
+constant kangaroo_update FF10 FROM_MIDDLE(PAST_LEFT(0x50))
+constant kangaroo_update 130 FROM_MIDDLE(PAST_RIGHT(0x90))
+constant moving_scenery_update FF10 FROM_MIDDLE(PAST_LEFT(0x50))
+constant moving_scenery_update 130 FROM_MIDDLE(PAST_RIGHT(0x90))
+constant swooping_helicopter_update FF10 FROM_MIDDLE(PAST_LEFT(0x50))
+constant swooping_helicopter_update 130 FROM_MIDDLE(PAST_RIGHT(0x90))
+# turned back once the x is left of -B0, and again once it is right of F0 (Santa's sleigh, the orca)
+constant santa_sleigh_update FF50 FROM_MIDDLE(PAST_LEFT(0x10))
+constant santa_sleigh_update F0 FROM_MIDDLE(PAST_RIGHT(0x50))
+# the goal's parades: turned back right of B0 and left of -F0 (setting off rightward), left of -B0 and right of F0
+# (leftward, and the dragon dance)
+constant goal_parade_rightward_update B0 FROM_MIDDLE(PAST_RIGHT(0x10))
+constant goal_parade_rightward_update FF10 FROM_MIDDLE(PAST_LEFT(0x50))
+constant goal_parade_leftward_update FF50 FROM_MIDDLE(PAST_LEFT(0x10))
+constant goal_parade_leftward_update F0 FROM_MIDDLE(PAST_RIGHT(0x50))
+constant goal_parade_dragon_update FF50 FROM_MIDDLE(PAST_LEFT(0x10))
+constant goal_parade_dragon_update F0 FROM_MIDDLE(PAST_RIGHT(0x50))
+# not drawn when the x is outside -120..120 (the race cars, 32 bits), -1A0..1A0 (an object the road's projection
+# places), -1E0..1E0 (a road row's piece), -280..280 (a fork's branch, 32 bits)
+constant race_car_draw 120 FROM_MIDDLE(PAST_RIGHT(0x80))
+constant race_car_draw FFFFFEE0 FROM_MIDDLE(PAST_LEFT(0x80))
+constant draw_object_at_scale 1A0 FROM_MIDDLE(PAST_RIGHT(0x100))
+constant draw_object_at_scale FE60 FROM_MIDDLE(PAST_LEFT(0x100))
+constant road_row_draw 1E0 FROM_MIDDLE(PAST_RIGHT(0x140))
+constant road_row_draw FE20 FROM_MIDDLE(PAST_LEFT(0x140))
+constant fork_branch_draw 280 FROM_MIDDLE(PAST_RIGHT(0x1E0))
+constant fork_branch_draw FFFFFD80 FROM_MIDDLE(PAST_LEFT(0x1E0))
+# the title's palm trees (x from the left edge): put in at 170, taken away at -30 or left of it (the near ones move
+# 30 a frame, a number of their own)
+constant title_palm_tree_update 170 PAST_RIGHT(0x30)
+constant title_palm_tree_update FFD0 PAST_LEFT(0x30)
+# the title logo's cars drive on until their x is past 148, where the first one sets title_logo_shine
+constant title_logo_car_update 148 PAST_RIGHT(8)
+# the car select's turntable scene (x from the left edge: its projection's x plus A0): not drawn when the x is
+# outside -28..168 (32 bits)
+constant turntable_draw FFFFFFD8 PAST_LEFT(0x28)
+constant turntable_draw 168 PAST_RIGHT(0x28)
+# the coin prompt's little car (x from the left edge) is put in at the right edge; it is taken away once its x is
+# negative, a compare with 0 that keeps its number (a constant line would name every 0 of the function)
+constant coin_prompt_car_drive 140 PAST_RIGHT(0)

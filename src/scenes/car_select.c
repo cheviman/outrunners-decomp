@@ -2008,7 +2008,7 @@ uint16_t turntable_draw(uint32_t across, uint32_t down, uint32_t point_depth)
 			across = across * scale;
 			carry = (across >> 11) & 1u;
 			across = ((int32_t)across >> 12) + 0xA0u + carry;
-			if ((int32_t)across <= -0x28 || (int32_t)across >= 0x168)
+			if ((int32_t)across <= PAST_LEFT(0x28) || (int32_t)across >= PAST_RIGHT(0x28))
 			{
 				current_object->flags &= 0xDFu;
 				return scale;

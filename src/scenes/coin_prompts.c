@@ -122,7 +122,7 @@ void coin_prompt_car_drive(void)
 		current_object->draw_mode = 0xAu;
 		current_object->width_scale = 0x40u;
 		current_object->height_scale = 0x40u;
-		current_object->x = 0x140u;
+		current_object->x = PAST_RIGHT(0);
 		current_object->y = 0xC0u;
 		current_object->frame = 4u;
 		current_object->depth_layer = 0x19Eu;

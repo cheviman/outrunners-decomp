@@ -391,7 +391,7 @@ void draw_object_at_scale(uint16_t y, uint32_t scale, struct projected_segment *
 
 	current_object->x = x;
 	current_object->y = y;
-	if ((int16_t)x > 0x1A0 || (int16_t)x < -0x1A0 || (int16_t)y > 0x80 || (int16_t)y < -0x160)
+	if ((int16_t)x > FROM_MIDDLE(PAST_RIGHT(0x100)) || (int16_t)x < FROM_MIDDLE(PAST_LEFT(0x100)) || (int16_t)y > 0x80 || (int16_t)y < -0x160)
 		*p_left_caller = 1u;
 	else
 	{
@@ -1015,7 +1015,7 @@ void road_row_draw(uint32_t rom_offset_and_palette, uint32_t piece_width, uint32
 			y = (uint16_t)(((int32_t)(current_object->y_offset * size) >> 12) + projected_segment->y);
 			if (current_object->road_row.screen_centered == 0u)
 				x += projected_segment->x;
-			if ((int16_t)x > 0x1E0 || (int16_t)x < -0x1E0 || (int16_t)y > 0x80 || (int16_t)y < -0x160)
+			if ((int16_t)x > FROM_MIDDLE(PAST_RIGHT(0x140)) || (int16_t)x < FROM_MIDDLE(PAST_LEFT(0x140)) || (int16_t)y > 0x80 || (int16_t)y < -0x160)
 			{
 				SPRITE_PLACE(sprite_place)->y = 0xF800u;
 				SPRITE_PLACE(sprite_place)->x = 0xF800u;

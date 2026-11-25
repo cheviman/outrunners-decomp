@@ -1080,7 +1080,11 @@ void backdrop_translucent_update(void)
 }
 
 /* Whether the background sprite is wholly off the screen (zero set; it clears flags bit 5 then): its x
-   (field 30) more than half_width beyond the screen's edges (0..140). */
+   (field 30) more than half_width beyond the screen's edges (0..140). The edges keep their number, not
+   PAST_LEFT and PAST_RIGHT (support.h): A0 is both the screen's middle (centre_x is x less A0) and how
+   far each edge is from it (half_screen, and the right edge's compare), which a symbols.txt constant
+   line, one name for each of a function's numbers, cannot tell apart; a port with a wider screen
+   replaces the function. */
 uint32_t backdrop_off_screen(void)
 {
 	uint32_t zero = 0;

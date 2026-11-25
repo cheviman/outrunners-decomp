@@ -171,7 +171,7 @@ void race_car_draw(void)
 		scale = perspective_scales[depth];
 		screen_x = (int32_t)(screen_x * scale) >> 12;
 		screen_y = 0u - ((int32_t)(screen_y * scale) >> 12);
-		if ((int32_t)screen_x > 0x120 || (int32_t)screen_x < -0x120 || (int32_t)screen_y > 0xF0)
+		if ((int32_t)screen_x > FROM_MIDDLE(PAST_RIGHT(0x80)) || (int32_t)screen_x < FROM_MIDDLE(PAST_LEFT(0x80)) || (int32_t)screen_y > 0xF0)
 		{
 			if (current_object->race_car.rival != 0u)
 			{

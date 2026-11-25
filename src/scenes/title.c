@@ -308,7 +308,7 @@ void title_palm_tree_update(void)
 		{
 			current_object->width_scale = 0x60u;
 			current_object->height_scale = 0x60u;
-			current_object->x = 0x170u;
+			current_object->x = PAST_RIGHT(0x30);
 			current_object->y = 0x96u;
 			current_object->depth_layer = 0x185u;
 		}
@@ -316,7 +316,7 @@ void title_palm_tree_update(void)
 		{
 			current_object->width_scale = 0x100u;
 			current_object->height_scale = 0x100u;
-			current_object->x = 0x170u;
+			current_object->x = PAST_RIGHT(0x30);
 			current_object->y = 0xF0u;
 			current_object->depth_layer = 0x194u;
 		}
@@ -325,7 +325,7 @@ void title_palm_tree_update(void)
 	case 1:
 		break;
 	}
-	if ((int16_t)current_object->x <= -0x30)
+	if ((int16_t)current_object->x <= PAST_LEFT(0x30))
 	{
 		current_object->flags = 0u;
 		return;
@@ -541,7 +541,7 @@ void title_logo_car_update(void)
 		return;
 	case 2:
 		current_object->x += 0x10u;
-		if ((int16_t)current_object->x <= 0x148)
+		if ((int16_t)current_object->x <= PAST_RIGHT(8))
 		{
 			draw_object(0u);
 			return;
