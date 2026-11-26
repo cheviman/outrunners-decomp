@@ -94,6 +94,7 @@ memory.STATE_BLOCKS = ((0x200000, "object_area_1", "object_area", 1), (0x208000,
 # a copy whose ends are each one exact thing of its size is typed C (memset from zero_block, the ROM's 400 bytes of
 # zeros; an assignment between two of the same type)
 memory.TYPED_MOVES = True
+memory.UNREAD_ADDRESSES = False    # ram.h's #define NAME_ADDRESS only for the addresses the C reads (phase 2)
 # a place of the state is a C pointer from where it is made to where it is read: locals that only carry it,
 # parameters whose callers all pass one (phase 2, typed pointers)
 memory.TYPED_POINTERS = True

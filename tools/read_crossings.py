@@ -5,7 +5,7 @@ Description: where the original program's reads of its data run on from one name
              no piece of the assets may start at
 Version:     0.1.0
 Created:     27-10-2026
-Modified:    27-10-2026
+Modified:    25-11-2026
 Author:      Sebastian Toyos
 
 Usage: python tools/read_crossings.py [CENSUS_FOLDER]   (build/rom_reads by default)
@@ -38,9 +38,10 @@ OUTPUT = ROOT / "read_crossings.txt"
 def places():
     """[(address, name)] of the program's named places, as the extractor cuts its data"""
     found = data_formats.pieces(ROOT / "symbols.txt", 0, 0x200000)
-    header = (ROOT / "src" / "ram.h").read_text(encoding="ascii")
-    addresses = dict(re.findall(r"^#define (\w+)_ADDRESS 0x([0-9A-F]+)u", header, re.M))
-    found += [(int(addresses[name], 16), name) for name in re.findall(r"^extern const void \*(\w+)_data;", header, re.M)]
+    # (the tables the game loads, at their addresses: src/table.c's registry, { "name", 0xADDRESSu, &name_data })
+    registry = (ROOT / "src" / "table.c").read_text(encoding="ascii")
+    found += [(int(address, 16), name)
+              for name, address in re.findall(r'^\t\{ "(\w+)", 0x([0-9A-F]+)u, &\1_data \},', registry, re.M)]
     return sorted(set(found))
 
 
