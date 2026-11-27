@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-11-2026
+ *    Modified:    27-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -518,7 +518,7 @@ void palette_cycle_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		palette_cycle_record = rom_pointer(current_object->palette_cycle.data);
+		palette_cycle_record = host_of(current_object)->palette_cycle.data;
 		current_object->palette_cycle.delay = palette_cycle_record->delay;
 		current_object->palette_cycle.frames_left = palette_cycle_record->frames_left;
 		current_object->palette_cycle.palette_list = palette_cycle_record->palette_list;
@@ -628,7 +628,7 @@ void sunset_fade_start(void)
 	switch (current_object->state)
 	{
 	case 0:
-		sunset_fade_record = rom_pointer(current_object->sunset_fade.data);
+		sunset_fade_record = host_of(current_object)->sunset_fade.data;
 		current_object->sunset_fade.count = sunset_fade_record->delay;
 		current_object->sunset_fade.fade_list = sunset_fade_record->fade_list;
 		current_object->state++;
@@ -736,7 +736,7 @@ void backdrop_far_start(void)
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop.leaving = 0u;
-	backdrop_record = rom_pointer(current_object->backdrop.data);
+	backdrop_record = host_of(current_object)->backdrop.data;
 	animation = backdrop_record->animation;
 	current_object->palette = backdrop_record->palette;
 	current_object->backdrop.panorama_x = backdrop_record->panorama_x;
@@ -798,7 +798,7 @@ void backdrop_near_start(void)
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop.leaving = 0u;
-	backdrop_record = rom_pointer(current_object->backdrop.data);
+	backdrop_record = host_of(current_object)->backdrop.data;
 	animation = backdrop_record->animation;
 	current_object->palette = backdrop_record->palette;
 	current_object->backdrop.panorama_x = backdrop_record->panorama_x;
@@ -868,7 +868,7 @@ void backdrop_landmark_start(void)
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_landmark.leaving = 0u;
-	backdrop_record = rom_pointer(current_object->backdrop_landmark.data);
+	backdrop_record = host_of(current_object)->backdrop_landmark.data;
 	animation = backdrop_record->animation;
 	current_object->palette = backdrop_record->palette;
 	current_object->backdrop_landmark.panorama_x = backdrop_record->panorama_x;
@@ -960,7 +960,7 @@ void backdrop_flashing_start(void)
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_flashing.leaving = 0u;
-	backdrop_record = rom_pointer(current_object->backdrop_flashing.data);
+	backdrop_record = host_of(current_object)->backdrop_flashing.data;
 	animation = backdrop_record->animation;
 	current_object->palette = backdrop_record->palette;
 	current_object->backdrop_flashing.panorama_x = backdrop_record->panorama_x;
@@ -1027,7 +1027,7 @@ void backdrop_translucent_start(void)
 	if (screen->background_at_start != 0u)
 		current_object->state++;
 	current_object->backdrop_translucent.leaving = 0u;
-	backdrop_record = rom_pointer(current_object->backdrop_translucent.data);
+	backdrop_record = host_of(current_object)->backdrop_translucent.data;
 	animation = backdrop_record->animation;
 	current_object->palette = backdrop_record->palette;
 	current_object->backdrop_translucent.panorama_x = backdrop_record->panorama_x;

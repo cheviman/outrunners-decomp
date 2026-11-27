@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-11-2026
+ *    Modified:    27-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -211,7 +211,7 @@ void road_row_start(void)
 	const struct road_row_record *road_row_record = NULL;
 
 	current_object->state++;
-	road_row_record = rom_pointer(current_object->road_row.record);
+	road_row_record = host_of(current_object)->road_row.record;
 	animation = road_row_record->animation;
 	current_object->palette = road_row_record->palette;
 	current_object->flags |= road_row_record->flags;
@@ -485,7 +485,7 @@ void road_row_start_copy(void)
 	const struct road_row_record *road_row_record = NULL;
 
 	current_object->state++;
-	road_row_record = rom_pointer(current_object->road_row.record);
+	road_row_record = host_of(current_object)->road_row.record;
 	animation = road_row_record->animation;
 	current_object->palette = road_row_record->palette;
 	current_object->flags |= road_row_record->flags;
@@ -548,7 +548,7 @@ void road_crosser_update(void)
 	{
 	case 0:
 		current_object->state++;
-		road_crosser_record = rom_pointer(current_object->road_crosser.record);
+		road_crosser_record = host_of(current_object)->road_crosser.record;
 		animation = road_crosser_record->animation;
 		if (animation == SWORDFISH)
 		{
@@ -661,7 +661,7 @@ void kangaroo_update(void)
 	{
 	case 0:
 		current_object->state++;
-		road_crosser_record = rom_pointer(current_object->kangaroo.record);
+		road_crosser_record = host_of(current_object)->kangaroo.record;
 		animation = road_crosser_record->animation;
 		current_object->kangaroo.hop_animation = road_crosser_record->crossing_animation;
 		current_object->palette = road_crosser_record->palette;
@@ -706,6 +706,7 @@ void kangaroo_update(void)
 			if ((int16_t)(0u - current_object->kangaroo.draw_distance + current_object->position) < (int16_t)player_car->window_segment)
 			{
 				current_object->position_fraction = position_fraction;
+				object_sync(current_object);
 				animation_advance(0u);
 				draw_object(position_fraction);
 				if (current_object->kangaroo.screen_x >= FROM_MIDDLE(PAST_LEFT(0x50)) && current_object->kangaroo.screen_x <= FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -716,6 +717,7 @@ void kangaroo_update(void)
 			return;
 		}
 		current_object->position_fraction = position_fraction;
+		object_sync(current_object);
 		animation_advance(0u);
 		draw_object(position_fraction);
 		if (current_object->kangaroo.screen_x < FROM_MIDDLE(PAST_LEFT(0x50)) || current_object->kangaroo.screen_x > FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -749,6 +751,7 @@ void kangaroo_update(void)
 			if ((int16_t)(0u - current_object->kangaroo.draw_distance + current_object->position) < (int16_t)player_car->window_segment)
 			{
 				current_object->position_fraction = position_fraction;
+				object_sync(current_object);
 				animation_advance(0u);
 				draw_object(position_fraction);
 				if (current_object->kangaroo.screen_x >= FROM_MIDDLE(PAST_LEFT(0x50)) && current_object->kangaroo.screen_x <= FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -759,6 +762,7 @@ void kangaroo_update(void)
 			return;
 		}
 		current_object->position_fraction = position_fraction;
+		object_sync(current_object);
 		animation_advance(0u);
 		draw_object(position_fraction);
 		if (current_object->kangaroo.screen_x < FROM_MIDDLE(PAST_LEFT(0x50)) || current_object->kangaroo.screen_x > FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -784,6 +788,7 @@ void kangaroo_update(void)
 			if ((int16_t)(0u - current_object->kangaroo.draw_distance + current_object->position) < (int16_t)player_car->window_segment)
 			{
 				current_object->position_fraction = position_fraction;
+				object_sync(current_object);
 				animation_advance(0u);
 				draw_object(position_fraction);
 				if (current_object->kangaroo.screen_x >= FROM_MIDDLE(PAST_LEFT(0x50)) && current_object->kangaroo.screen_x <= FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -794,6 +799,7 @@ void kangaroo_update(void)
 			return;
 		}
 		current_object->position_fraction = position_fraction;
+		object_sync(current_object);
 		animation_advance(0u);
 		draw_object(position_fraction);
 		if (current_object->kangaroo.screen_x < FROM_MIDDLE(PAST_LEFT(0x50)) || current_object->kangaroo.screen_x > FROM_MIDDLE(PAST_RIGHT(0x90)))
@@ -824,7 +830,7 @@ void moving_scenery_update(void)
 	{
 	case 0:
 		current_object->state++;
-		moving_scenery_record = rom_pointer(current_object->moving_scenery.record);
+		moving_scenery_record = host_of(current_object)->moving_scenery.record;
 		animation = moving_scenery_record->animation;
 		current_object->palette = moving_scenery_record->palette;
 		current_object->flags |= moving_scenery_record->flags;
@@ -905,7 +911,7 @@ void swooping_helicopter_update(void)
 	{
 	case 0:
 		current_object->state++;
-		swooping_helicopter_record = rom_pointer(current_object->swooping_helicopter.record);
+		swooping_helicopter_record = host_of(current_object)->swooping_helicopter.record;
 		animation = swooping_helicopter_record->animation;
 		current_object->palette = swooping_helicopter_record->palette;
 		current_object->flags |= swooping_helicopter_record->flags;
@@ -1015,7 +1021,7 @@ void start_gate_update(void)
 	{
 	case 0:
 		current_object->state++;
-		start_gate_record = rom_pointer(current_object->start_gate.record);
+		start_gate_record = host_of(current_object)->start_gate.record;
 		animation = start_gate_record->animation;
 		current_object->palette = start_gate_record->palette;
 		current_object->flags |= start_gate_record->flags;
@@ -1068,7 +1074,7 @@ void start_flagman_update(void)
 	{
 	case 0:
 		current_object->state++;
-		flagman_record = rom_pointer(current_object->start_flagman.record);
+		flagman_record = host_of(current_object)->start_flagman.record;
 		animation = flagman_record->animation;
 		current_object->start_flagman.go_animation = flagman_record->waving_animation;
 		current_object->palette = flagman_record->palette;
@@ -1125,7 +1131,7 @@ void flagman_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		flagman_record = rom_pointer(current_object->flagman.record);
+		flagman_record = host_of(current_object)->flagman.record;
 		animation = flagman_record->animation;
 		current_object->flagman.in_view_animation = flagman_record->waving_animation;
 		current_object->palette = flagman_record->palette;
@@ -1184,7 +1190,7 @@ void start_balloon_update(void)
 	{
 	case 0:
 		current_object->state++;
-		start_balloon_record = rom_pointer(current_object->start_balloon.record);
+		start_balloon_record = host_of(current_object)->start_balloon.record;
 		animation = start_balloon_record->animation;
 		current_object->palette = start_balloon_record->palette;
 		current_object->side = start_balloon_record->side;
@@ -1383,7 +1389,7 @@ void santa_sleigh_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		santa_sleigh_record = rom_pointer(current_object->santa_sleigh.record);
+		santa_sleigh_record = host_of(current_object)->santa_sleigh.record;
 		animation = santa_sleigh_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
@@ -1482,7 +1488,7 @@ void goal_parade_rightward_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		goal_parade_record = host_of(current_object)->goal_parade.record;
 		animation = goal_parade_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
@@ -1573,7 +1579,7 @@ void sounding_scenery_update(void)
 	{
 	case 0:
 		current_object->state++;
-		sounding_scenery_record = rom_pointer(current_object->sounding_scenery.record);
+		sounding_scenery_record = host_of(current_object)->sounding_scenery.record;
 		animation = sounding_scenery_record->animation;
 		current_object->palette = sounding_scenery_record->palette;
 		current_object->flags |= sounding_scenery_record->flags;
@@ -1626,7 +1632,7 @@ void goal_parade_leftward_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		goal_parade_record = host_of(current_object)->goal_parade.record;
 		animation = goal_parade_record->animation;
 		if (animation == ORCA)
 			current_object->y_offset = -0x180;
@@ -1711,7 +1717,7 @@ void goal_parade_dragon_update(void)
 	switch (current_object->state)
 	{
 	case 0:
-		goal_parade_record = rom_pointer(current_object->goal_parade.record);
+		goal_parade_record = host_of(current_object)->goal_parade.record;
 		animation = goal_parade_record->animation;
 		current_object->palette = goal_parade_record->palette;
 		current_object->flags |= goal_parade_record->flags;

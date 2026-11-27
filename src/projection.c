@@ -3,7 +3,7 @@
  *    Description: where the game's state is put back into the original's memory for the state's hash: the code addresses the C keeps as function numbers, and the variables kept in the host's memory
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-11-2026
+ *    Modified:    27-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -301,20 +301,41 @@ static uint32_t address_function(uint32_t address)
 }
 
 /* the families of the objects' fields that hold an address in the program ROM (memory.ROM_FIELDS), and the one
-   of each function of game_functions[]: the family its name starts with (an object's handler says which
-   family's fields the object holds) */
+   of each function of game_functions[]: the family its name starts with, or, when that one holds no ROM
+   field, the one whose ROM fields the functions it calls use on its object (scenery_update's object is
+   road_row's: road_row_start reads its record; flashing_scenery_update, which calls only road_row_draw
+   and road_row_crash_check, has none); a family the function also reaches holds its fields at the same
+   offsets (step_palette's palette_list under the letters' and panels') */
 enum object_family
 {
 	OBJECT_FAMILY_NONE,
 	OBJECT_FAMILY_automatic_panel,
+	OBJECT_FAMILY_backdrop,
+	OBJECT_FAMILY_backdrop_flashing,
+	OBJECT_FAMILY_backdrop_landmark,
+	OBJECT_FAMILY_backdrop_translucent,
 	OBJECT_FAMILY_branch_arrow,
 	OBJECT_FAMILY_car_name_letter,
+	OBJECT_FAMILY_flagman,
+	OBJECT_FAMILY_goal_parade,
+	OBJECT_FAMILY_kangaroo,
 	OBJECT_FAMILY_manual_panel,
+	OBJECT_FAMILY_moving_scenery,
+	OBJECT_FAMILY_palette_cycle,
 	OBJECT_FAMILY_race_background,
 	OBJECT_FAMILY_race_opening,
+	OBJECT_FAMILY_road_crosser,
+	OBJECT_FAMILY_road_row,
+	OBJECT_FAMILY_santa_sleigh,
+	OBJECT_FAMILY_sounding_scenery,
 	OBJECT_FAMILY_staff_credits_code,
 	OBJECT_FAMILY_stage_end_sounds,
+	OBJECT_FAMILY_start_balloon,
+	OBJECT_FAMILY_start_flagman,
+	OBJECT_FAMILY_start_gate,
 	OBJECT_FAMILY_step_palette,
+	OBJECT_FAMILY_sunset_fade,
+	OBJECT_FAMILY_swooping_helicopter,
 	OBJECT_FAMILY_title_logo,
 	OBJECT_FAMILY_title_logo_copy,
 	OBJECT_FAMILY_title_screen,
@@ -333,9 +354,39 @@ static const uint8_t function_families[FUNCTION_COUNT] =
 	[FUNCTION_automatic_panel_show] = OBJECT_FAMILY_automatic_panel,
 	[FUNCTION_manual_panel_show] = OBJECT_FAMILY_manual_panel,
 	[FUNCTION_branch_arrow_update] = OBJECT_FAMILY_branch_arrow,
+	[FUNCTION_scenery_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_scenery_pair_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_overhead_scenery_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_fork_sign_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_animated_scenery_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_animated_scenery_pair_update] = OBJECT_FAMILY_road_row,
+	[FUNCTION_road_crosser_update] = OBJECT_FAMILY_road_crosser,
+	[FUNCTION_kangaroo_update] = OBJECT_FAMILY_kangaroo,
+	[FUNCTION_moving_scenery_update] = OBJECT_FAMILY_moving_scenery,
+	[FUNCTION_swooping_helicopter_update] = OBJECT_FAMILY_swooping_helicopter,
+	[FUNCTION_start_gate_update] = OBJECT_FAMILY_start_gate,
+	[FUNCTION_start_flagman_update] = OBJECT_FAMILY_start_flagman,
+	[FUNCTION_flagman_update] = OBJECT_FAMILY_flagman,
+	[FUNCTION_start_balloon_update] = OBJECT_FAMILY_start_balloon,
+	[FUNCTION_santa_sleigh_update] = OBJECT_FAMILY_santa_sleigh,
+	[FUNCTION_goal_parade_rightward_update] = OBJECT_FAMILY_goal_parade,
+	[FUNCTION_sounding_scenery_update] = OBJECT_FAMILY_sounding_scenery,
+	[FUNCTION_goal_parade_leftward_update] = OBJECT_FAMILY_goal_parade,
+	[FUNCTION_goal_parade_dragon_update] = OBJECT_FAMILY_goal_parade,
 	[FUNCTION_race_opening_update] = OBJECT_FAMILY_race_opening,
 	[FUNCTION_stage_end_sounds_update] = OBJECT_FAMILY_stage_end_sounds,
 	[FUNCTION_race_background_update] = OBJECT_FAMILY_race_background,
+	[FUNCTION_palette_cycle_update] = OBJECT_FAMILY_palette_cycle,
+	[FUNCTION_sunset_fade_start] = OBJECT_FAMILY_sunset_fade,
+	[FUNCTION_sunset_fade_wait] = OBJECT_FAMILY_sunset_fade,
+	[FUNCTION_backdrop_far_update] = OBJECT_FAMILY_backdrop,
+	[FUNCTION_backdrop_near_start] = OBJECT_FAMILY_backdrop,
+	[FUNCTION_backdrop_near_update] = OBJECT_FAMILY_backdrop,
+	[FUNCTION_backdrop_landmark_start] = OBJECT_FAMILY_backdrop_landmark,
+	[FUNCTION_backdrop_landmark_update] = OBJECT_FAMILY_backdrop_landmark,
+	[FUNCTION_backdrop_flashing_update] = OBJECT_FAMILY_backdrop_flashing,
+	[FUNCTION_backdrop_translucent_start] = OBJECT_FAMILY_backdrop_translucent,
+	[FUNCTION_backdrop_translucent_update] = OBJECT_FAMILY_backdrop_translucent,
 	[FUNCTION_title_screen_update] = OBJECT_FAMILY_title_screen,
 	[FUNCTION_title_logo_update] = OBJECT_FAMILY_title_logo,
 	[FUNCTION_title_logo_copy_update] = OBJECT_FAMILY_title_logo_copy,
@@ -368,14 +419,41 @@ static void object_project(struct object *object, const union object_host *host)
 	case OBJECT_FAMILY_automatic_panel:
 		object->automatic_panel.palette_list = rom_address(host->automatic_panel.palette_list, 0u);
 		break;
+	case OBJECT_FAMILY_backdrop:
+		object->backdrop.data = rom_address(host->backdrop.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_flashing:
+		object->backdrop_flashing.data = rom_address(host->backdrop_flashing.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_landmark:
+		object->backdrop_landmark.data = rom_address(host->backdrop_landmark.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_translucent:
+		object->backdrop_translucent.data = rom_address(host->backdrop_translucent.data, 0u);
+		break;
 	case OBJECT_FAMILY_branch_arrow:
 		object->branch_arrow.palette_list = rom_address(host->branch_arrow.palette_list, 0u);
 		break;
 	case OBJECT_FAMILY_car_name_letter:
 		object->car_name_letter.palette_list = rom_address(host->car_name_letter.palette_list, 0u);
 		break;
+	case OBJECT_FAMILY_flagman:
+		object->flagman.record = rom_address(host->flagman.record, 0u);
+		break;
+	case OBJECT_FAMILY_goal_parade:
+		object->goal_parade.record = rom_address(host->goal_parade.record, 0u);
+		break;
+	case OBJECT_FAMILY_kangaroo:
+		object->kangaroo.record = rom_address(host->kangaroo.record, 0u);
+		break;
 	case OBJECT_FAMILY_manual_panel:
 		object->manual_panel.palette_list = rom_address(host->manual_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_moving_scenery:
+		object->moving_scenery.record = rom_address(host->moving_scenery.record, 0u);
+		break;
+	case OBJECT_FAMILY_palette_cycle:
+		object->palette_cycle.data = rom_address(host->palette_cycle.data, 0u);
 		break;
 	case OBJECT_FAMILY_race_background:
 		object->race_background.next_page_words = rom_address(host->race_background.next_page_words, 0u);
@@ -383,14 +461,41 @@ static void object_project(struct object *object, const union object_host *host)
 	case OBJECT_FAMILY_race_opening:
 		object->race_opening.sound_list = rom_address(host->race_opening.sound_list, 1u);
 		break;
+	case OBJECT_FAMILY_road_crosser:
+		object->road_crosser.record = rom_address(host->road_crosser.record, 0u);
+		break;
+	case OBJECT_FAMILY_road_row:
+		object->road_row.record = rom_address(host->road_row.record, 0u);
+		break;
+	case OBJECT_FAMILY_santa_sleigh:
+		object->santa_sleigh.record = rom_address(host->santa_sleigh.record, 0u);
+		break;
+	case OBJECT_FAMILY_sounding_scenery:
+		object->sounding_scenery.record = rom_address(host->sounding_scenery.record, 0u);
+		break;
 	case OBJECT_FAMILY_staff_credits_code:
 		object->staff_credits_code.code_place = rom_address(host->staff_credits_code.code_place, 0u);
 		break;
 	case OBJECT_FAMILY_stage_end_sounds:
 		object->stage_end_sounds.sound_list = rom_address(host->stage_end_sounds.sound_list, 1u);
 		break;
+	case OBJECT_FAMILY_start_balloon:
+		object->start_balloon.record = rom_address(host->start_balloon.record, 0u);
+		break;
+	case OBJECT_FAMILY_start_flagman:
+		object->start_flagman.record = rom_address(host->start_flagman.record, 0u);
+		break;
+	case OBJECT_FAMILY_start_gate:
+		object->start_gate.record = rom_address(host->start_gate.record, 0u);
+		break;
 	case OBJECT_FAMILY_step_palette:
 		object->step_palette.palette_list = rom_address(host->step_palette.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_sunset_fade:
+		object->sunset_fade.data = rom_address(host->sunset_fade.data, 0u);
+		break;
+	case OBJECT_FAMILY_swooping_helicopter:
+		object->swooping_helicopter.record = rom_address(host->swooping_helicopter.record, 0u);
 		break;
 	case OBJECT_FAMILY_title_logo:
 		object->title_logo.palette_list = rom_address(host->title_logo.palette_list, 0u);
@@ -419,14 +524,41 @@ static void object_unproject(const struct object *object, union object_host *hos
 	case OBJECT_FAMILY_automatic_panel:
 		host->automatic_panel.palette_list = rom_place(object->automatic_panel.palette_list, 0u);
 		break;
+	case OBJECT_FAMILY_backdrop:
+		host->backdrop.data = rom_place(object->backdrop.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_flashing:
+		host->backdrop_flashing.data = rom_place(object->backdrop_flashing.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_landmark:
+		host->backdrop_landmark.data = rom_place(object->backdrop_landmark.data, 0u);
+		break;
+	case OBJECT_FAMILY_backdrop_translucent:
+		host->backdrop_translucent.data = rom_place(object->backdrop_translucent.data, 0u);
+		break;
 	case OBJECT_FAMILY_branch_arrow:
 		host->branch_arrow.palette_list = rom_place(object->branch_arrow.palette_list, 0u);
 		break;
 	case OBJECT_FAMILY_car_name_letter:
 		host->car_name_letter.palette_list = rom_place(object->car_name_letter.palette_list, 0u);
 		break;
+	case OBJECT_FAMILY_flagman:
+		host->flagman.record = rom_place(object->flagman.record, 0u);
+		break;
+	case OBJECT_FAMILY_goal_parade:
+		host->goal_parade.record = rom_place(object->goal_parade.record, 0u);
+		break;
+	case OBJECT_FAMILY_kangaroo:
+		host->kangaroo.record = rom_place(object->kangaroo.record, 0u);
+		break;
 	case OBJECT_FAMILY_manual_panel:
 		host->manual_panel.palette_list = rom_place(object->manual_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_moving_scenery:
+		host->moving_scenery.record = rom_place(object->moving_scenery.record, 0u);
+		break;
+	case OBJECT_FAMILY_palette_cycle:
+		host->palette_cycle.data = rom_place(object->palette_cycle.data, 0u);
 		break;
 	case OBJECT_FAMILY_race_background:
 		host->race_background.next_page_words = rom_place(object->race_background.next_page_words, 0u);
@@ -434,14 +566,41 @@ static void object_unproject(const struct object *object, union object_host *hos
 	case OBJECT_FAMILY_race_opening:
 		host->race_opening.sound_list = rom_place(object->race_opening.sound_list, 1u);
 		break;
+	case OBJECT_FAMILY_road_crosser:
+		host->road_crosser.record = rom_place(object->road_crosser.record, 0u);
+		break;
+	case OBJECT_FAMILY_road_row:
+		host->road_row.record = rom_place(object->road_row.record, 0u);
+		break;
+	case OBJECT_FAMILY_santa_sleigh:
+		host->santa_sleigh.record = rom_place(object->santa_sleigh.record, 0u);
+		break;
+	case OBJECT_FAMILY_sounding_scenery:
+		host->sounding_scenery.record = rom_place(object->sounding_scenery.record, 0u);
+		break;
 	case OBJECT_FAMILY_staff_credits_code:
 		host->staff_credits_code.code_place = rom_place(object->staff_credits_code.code_place, 0u);
 		break;
 	case OBJECT_FAMILY_stage_end_sounds:
 		host->stage_end_sounds.sound_list = rom_place(object->stage_end_sounds.sound_list, 1u);
 		break;
+	case OBJECT_FAMILY_start_balloon:
+		host->start_balloon.record = rom_place(object->start_balloon.record, 0u);
+		break;
+	case OBJECT_FAMILY_start_flagman:
+		host->start_flagman.record = rom_place(object->start_flagman.record, 0u);
+		break;
+	case OBJECT_FAMILY_start_gate:
+		host->start_gate.record = rom_place(object->start_gate.record, 0u);
+		break;
 	case OBJECT_FAMILY_step_palette:
 		host->step_palette.palette_list = rom_place(object->step_palette.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_sunset_fade:
+		host->sunset_fade.data = rom_place(object->sunset_fade.data, 0u);
+		break;
+	case OBJECT_FAMILY_swooping_helicopter:
+		host->swooping_helicopter.record = rom_place(object->swooping_helicopter.record, 0u);
 		break;
 	case OBJECT_FAMILY_title_logo:
 		host->title_logo.palette_list = rom_place(object->title_logo.palette_list, 0u);

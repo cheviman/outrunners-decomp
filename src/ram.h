@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    26-11-2026
+ *    Modified:    27-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -5475,6 +5475,26 @@ union object_host
 	} automatic_panel;
 	struct
 	{
+		const void *unused_0[0x20];
+		const struct backdrop_record *data;
+	} backdrop;
+	struct
+	{
+		const void *unused_0[0x20];
+		const struct backdrop_record *data;
+	} backdrop_flashing;
+	struct
+	{
+		const void *unused_0[0x20];
+		const struct backdrop_record *data;
+	} backdrop_landmark;
+	struct
+	{
+		const void *unused_0[0x20];
+		const struct backdrop_record *data;
+	} backdrop_translucent;
+	struct
+	{
 		const void *unused_0[0x6];
 		const int16_t *palette_list;
 	} branch_arrow;
@@ -5486,8 +5506,33 @@ union object_host
 	struct
 	{
 		const void *unused_0[0x6];
+		const struct flagman_record *record;
+	} flagman;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct goal_parade_record *record;
+	} goal_parade;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct road_crosser_record *record;
+	} kangaroo;
+	struct
+	{
+		const void *unused_0[0x6];
 		const int16_t *palette_list;
 	} manual_panel;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct moving_scenery_record *record;
+	} moving_scenery;
+	struct
+	{
+		const void *unused_0[0x20];
+		const struct palette_cycle_record *data;
+	} palette_cycle;
 	struct
 	{
 		const void *unused_0[0xA];
@@ -5501,6 +5546,26 @@ union object_host
 	struct
 	{
 		const void *unused_0[0x6];
+		const struct road_crosser_record *record;
+	} road_crosser;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct road_row_record *record;
+	} road_row;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct santa_sleigh_record *record;
+	} santa_sleigh;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct sounding_scenery_record *record;
+	} sounding_scenery;
+	struct
+	{
+		const void *unused_0[0x6];
 		const uint8_t *code_place;
 	} staff_credits_code;
 	struct
@@ -5511,8 +5576,33 @@ union object_host
 	struct
 	{
 		const void *unused_0[0x6];
+		const struct start_balloon_record *record;
+	} start_balloon;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct flagman_record *record;
+	} start_flagman;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct start_gate_record *record;
+	} start_gate;
+	struct
+	{
+		const void *unused_0[0x6];
 		const int16_t *palette_list;
 	} step_palette;
+	struct
+	{
+		const void *unused_0[0x20];
+		const struct sunset_fade_record *data;
+	} sunset_fade;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct swooping_helicopter_record *record;
+	} swooping_helicopter;
 	struct
 	{
 		const void *unused_0[0x20];

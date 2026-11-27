@@ -135,7 +135,15 @@ memory.ROM_FIELDS = frozenset(("object.automatic_panel.palette_list", "object.br
                                "object.staff_credits_code.code_place", "object.stage_end_sounds.sound_list",
                                "object.step_palette.palette_list", "object.title_logo.palette_list",
                                "object.title_logo_copy.palette_list", "object.title_screen.wave_times",
-                               "object.welcome_letter.palette_list"))
+                               "object.welcome_letter.palette_list",
+                               "object.backdrop.data", "object.backdrop_flashing.data",
+                               "object.backdrop_landmark.data", "object.backdrop_translucent.data",
+                               "object.flagman.record", "object.goal_parade.record", "object.kangaroo.record",
+                               "object.moving_scenery.record", "object.palette_cycle.data",
+                               "object.road_crosser.record", "object.road_row.record", "object.santa_sleigh.record",
+                               "object.sounding_scenery.record", "object.start_balloon.record",
+                               "object.start_flagman.record", "object.start_gate.record", "object.sunset_fade.data",
+                               "object.swooping_helicopter.record"))
 memory.ROM_FIELD_SYNCS = frozenset((("reserve_object_slot", "move_halfwords"), ("start_object", "slot")))
 memory.CODE_TABLES = True
 memory.CODE_LIST_ELEMENTS = "object_handlers"
