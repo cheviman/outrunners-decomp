@@ -3,7 +3,7 @@
  *    Description: the title screen: the cars and riders, the palms, the logo, the seagull, the pictures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -108,7 +108,7 @@ void title_screen_update(void)
 			object_index++;
 			objects_left--;
 		} while (objects_left != 0u);
-		current_object->title_screen.wave_times = title_logo_car_wave_frames_ADDRESS;
+		host_of(current_object)->title_screen.wave_times = title_logo_car_wave_frames;
 		current_object->title_screen.frames = 0u;
 		current_object->state++;
 		return;
@@ -119,7 +119,7 @@ void title_screen_update(void)
 		second_scroll_x_address_2 = current_object->title_screen.second_scroll_x_address;
 		VIDEO_REGISTER_WORDS(second_scroll_x_address_2)[0] += 0x14u;
 		current_object->title_screen.frames++;
-		if (current_object->title_screen.frames != TITLE_WAVE_FRAMES(current_object->title_screen.wave_times)[0])
+		if (current_object->title_screen.frames != host_of(current_object)->title_screen.wave_times[0])
 			return;
 		objects_left = 3u;
 		object_index = 0u;
@@ -131,7 +131,7 @@ void title_screen_update(void)
 			object_index++;
 			objects_left--;
 		} while (objects_left != 0u);
-		current_object->title_screen.wave_times += 2u;
+		host_of(current_object)->title_screen.wave_times++;
 		return;
 	}
 }
@@ -379,9 +379,9 @@ void title_logo_update(void)
 			draw_object(0u);
 			return;
 		}
-		palette_list = rom_pointer(current_object->title_logo.palette_list);
+		palette_list = host_of(current_object)->title_logo.palette_list;
 		current_object->palette = palette_list[0];
-		current_object->title_logo.palette_list = address_of(palette_list + 1);
+		host_of(current_object)->title_logo.palette_list = palette_list + 1;
 		draw_object(0u);
 		return;
 	case 3:
@@ -425,7 +425,7 @@ void title_logo_update(void)
 		object_index_2 = (uint8_t)(object_index_2 + 1u);
 		objects_left--;
 	} while (objects_left != 0u);
-	current_object->title_logo.palette_list = title_logo_flash_palettes_ADDRESS;
+	host_of(current_object)->title_logo.palette_list = title_logo_flash_palettes;
 	current_object->title_logo.frames = 6u;
 	current_object->state++;
 	draw_object(object_index_2);
@@ -462,9 +462,9 @@ void title_logo_copy_update(void)
 			current_object->flags = 0u;
 			return;
 		}
-		palette_list = rom_pointer(current_object->title_logo_copy.palette_list);
+		palette_list = host_of(current_object)->title_logo_copy.palette_list;
 		current_object->palette = palette_list[0];
-		current_object->title_logo_copy.palette_list = address_of(palette_list + 1);
+		host_of(current_object)->title_logo_copy.palette_list = palette_list + 1;
 		draw_object(0u);
 		return;
 	}
@@ -472,7 +472,7 @@ void title_logo_copy_update(void)
 	current_object->title_logo_copy.frames = frames_2 - 1u;
 	if (frames_2 == 1u)
 	{
-		current_object->title_logo_copy.palette_list = title_logo_copy_flash_palettes_ADDRESS;
+		host_of(current_object)->title_logo_copy.palette_list = title_logo_copy_flash_palettes;
 		current_object->title_logo_copy.frames = 6u;
 		current_object->state++;
 		draw_object(0u);

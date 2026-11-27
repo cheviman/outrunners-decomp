@@ -3,7 +3,7 @@
  *    Description: the road's objects: the streams that start them along the course, the scenery, the signs, the start gate and flagmen, the goal parades, the fork's branch
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -90,6 +90,7 @@ uint32_t road_object_stream_start_object(uint16_t position, uint32_t entry)
 	object->handler = function_number(ROAD_OBJECT_STREAM_ENTRY(entry - 0x4u)->handler);
 	entry += 4u;
 	object->parameter = ROAD_OBJECT_STREAM_ENTRY(entry - 0x8u)->parameter;
+	object_sync(object);
 	entry += 4u;
 	current_object->road_object_stream.stream = entry;
 	return entry;

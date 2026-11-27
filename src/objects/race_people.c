@@ -3,7 +3,7 @@
  *    Description: the race's people and moments: the cars' occupants and their gestures, the opening, the stage end, the camera at the forks, the goal's actors
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -294,7 +294,7 @@ void race_opening_sounds_start(void)
 {
 	current_object->race_opening.sound_step++;
 	current_object->race_opening.next_count = race_opening_sound_cues[0].time;
-	current_object->race_opening.sound_list = race_opening_sound_cues_ADDRESS + 0x1u;
+	host_of(current_object)->race_opening.sound_list = race_opening_sound_cues;
 }
 
 /* Counts the opening's steps (count) and requests each sound of the list at its count (sound_list:
@@ -311,14 +311,14 @@ void race_opening_sounds_play(void)
 		race_opening_sounds_done();
 		return;
 	}
-	sound_cue = rom_pointer(current_object->race_opening.sound_list - 1u);
+	sound_cue = host_of(current_object)->race_opening.sound_list;
 	sound = sound_cue->sound;
 	sound_cue++;
 	request_sound(sound);
 	if (sound_cue->time != 0u)
 	{
 		current_object->race_opening.next_count = sound_cue->time;
-		current_object->race_opening.sound_list = address_of(&sound_cue->sound);
+		host_of(current_object)->race_opening.sound_list = sound_cue;
 		return;
 	}
 	current_object->state++;
@@ -349,7 +349,7 @@ void stage_end_sounds_update(void)
 		current_object->stage_end_sounds.stage = RACE(screen->race_copy)->state.stage_count;
 		sound_cue = stage_end_sound_cues;
 		current_object->stage_end_sounds.countdown = sound_cue->time;
-		current_object->stage_end_sounds.sound_list = address_of(&sound_cue->sound);
+		host_of(current_object)->stage_end_sounds.sound_list = sound_cue;
 		return;
 	case 1:
 		if (current_object->stage_end_sounds.stage != RACE(screen->race_copy)->state.stage_count)
@@ -361,14 +361,14 @@ void stage_end_sounds_update(void)
 		current_object->stage_end_sounds.countdown = countdown - 1u;
 		if (countdown != 1u)
 			return;
-		sound_cue = rom_pointer(current_object->stage_end_sounds.sound_list - 1u);
+		sound_cue = host_of(current_object)->stage_end_sounds.sound_list;
 		sound = sound_cue->sound;
 		sound_cue++;
 		request_sound(sound);
 		if (sound_cue->time != 0u)
 		{
 			current_object->stage_end_sounds.countdown = sound_cue->time;
-			current_object->stage_end_sounds.sound_list = address_of(&sound_cue->sound);
+			host_of(current_object)->stage_end_sounds.sound_list = sound_cue;
 			return;
 		}
 		current_object->state++;

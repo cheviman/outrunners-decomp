@@ -127,6 +127,16 @@ memory.HOST_VARIABLES = frozenset(("waiting_task_stack", "vblanks_since_start", 
                                    "test_mode_sound_queue", "test_mode_privilege_mode"))
 memory.HOST_SYNCED = frozenset(("test_mode_memory_test_words", "crc16", "unrolled_copy"))
 memory.CODE_FIELDS = frozenset(("object.handler", "test_mode_routine"))
+# the objects' fields that hold an address in the program ROM, typed pointers in their host part
+# (host_of(object)->family.member); the clears of an object's bytes after which the C makes it again from them
+memory.ROM_FIELDS = frozenset(("object.automatic_panel.palette_list", "object.branch_arrow.palette_list",
+                               "object.car_name_letter.palette_list", "object.manual_panel.palette_list",
+                               "object.race_background.next_page_words", "object.race_opening.sound_list",
+                               "object.staff_credits_code.code_place", "object.stage_end_sounds.sound_list",
+                               "object.step_palette.palette_list", "object.title_logo.palette_list",
+                               "object.title_logo_copy.palette_list", "object.title_screen.wave_times",
+                               "object.welcome_letter.palette_list"))
+memory.ROM_FIELD_SYNCS = frozenset((("reserve_object_slot", "move_halfwords"), ("start_object", "slot")))
 memory.CODE_TABLES = True
 memory.CODE_LIST_ELEMENTS = "object_handlers"
 pointers.RECORD_POINTERS = True

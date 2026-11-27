@@ -3,7 +3,7 @@
  *    Description: the attract mode's scenes: the bar picture, the cabinet lamps, the car presentation and its car name, the staff credits code, the demo race's captions
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -229,7 +229,7 @@ void staff_credits_code_start(void)
 	uint32_t new_controls = 0;
 
 	staff_credits_code_read_controls(&new_controls, &zero);
-	current_object->staff_credits_code.code_place = staff_credits_code_sequence_ADDRESS;
+	host_of(current_object)->staff_credits_code.code_place = staff_credits_code_sequence;
 	current_object->handler = FUNCTION_staff_credits_code_watch;
 	staff_credits_code_watch();
 }
@@ -252,12 +252,12 @@ void staff_credits_code_watch(void)
 		staff_credits_code_done();
 		return;
 	}
-	next_control = rom_pointer(current_object->staff_credits_code.code_place);
+	next_control = host_of(current_object)->staff_credits_code.code_place;
 	element = next_control[0];
 	next_control++;
 	if (element != new_controls)
 		next_control = staff_credits_code_sequence;
-	current_object->staff_credits_code.code_place = address_of(next_control);
+	host_of(current_object)->staff_credits_code.code_place = next_control;
 	if (next_control[0] != 0u)
 	{
 		staff_credits_code_done();
@@ -408,7 +408,7 @@ void car_name_letter_update(void)
 		current_object->depth_layer = 0x19Eu;
 		animation = CAR_NAME_FONT;
 		animation_start(animation);
-		current_object->car_name_letter.palette_list = car_name_letter_palette_steps_ADDRESS;
+		host_of(current_object)->car_name_letter.palette_list = car_name_letter_palette_steps;
 		current_object->frame = current_object->car_name_letter.character;
 		current_object->x += 8u;
 		current_object->y = 0x14u;

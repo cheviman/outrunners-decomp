@@ -3,7 +3,7 @@
  *    Description: the backgrounds: their layers and animations, the palette cycles, the sunset, the backdrops
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -58,7 +58,7 @@ void race_background_update(void)
 		current_object->race_background.tile_bank_address = race_background_layer_setup->tile_bank_address;
 		page_word_address = pointer_to(race_background_layer_setup->page_word_address);
 		current_object->race_background.page_word_address = address_of(page_word_address);
-		upper_pages_long = background_page_words[(uint32_t)current_object->race_background.page_half << 3];
+		upper_pages_long = background_page_words[current_object->race_background.page_half * 8u];
 		page_word_address->upper_pages = (uint16_t)upper_pages_long;
 		page_word_address->lower_pages = (uint16_t)(upper_pages_long >> 16u);
 		mixer_address = pointer_to(race_background_layer_setup->mixer_address);
@@ -162,13 +162,13 @@ void race_background_update(void)
 		branch = screen->stage_background_branch;
 		if (screen->stage_background_change != 0u)
 		{
-			current_object->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
+			host_of(current_object)->race_background.next_page_words = &background_page_words[(int32_t)(((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 4u)];
 			current_object->state++;
 			current_object->race_background.change_step = 0u;
 			break;
 		}
 		branch = player_car->branch;
-		current_object->race_background.next_page_words = background_page_words_ADDRESS + ((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 2u * 2u * 4u;
+		host_of(current_object)->race_background.next_page_words = &background_page_words[(int32_t)(((page_word_set & ~0xFFu) | (uint8_t)(page_word_set + branch)) * 4u)];
 		current_object->state++;
 		current_object->race_background.change_step = 0u;
 		break;
@@ -192,11 +192,11 @@ void race_background_update(void)
 			palettes = background_palettes[background];
 			queue_palette_list(palettes);
 			TILEMAP_BANKS(current_object->race_background.tile_bank_address)->tile_bank = background_tile_banks[background];
-			next_page_words = rom_pointer(current_object->race_background.next_page_words);
+			next_page_words = host_of(current_object)->race_background.next_page_words;
 			upper_pages_long_2 = next_page_words[0];
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_2;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_2 >> 16u);
-			current_object->race_background.next_page_words = address_of(next_page_words + 1);
+			host_of(current_object)->race_background.next_page_words = next_page_words + 1;
 			current_object->race_background.change_step++;
 			break;
 		case 1:
@@ -208,22 +208,22 @@ void race_background_update(void)
 			fades = rom_pointer(background_road_palettes[current_object->race_background.background]);
 			if (fades == NULL)
 			{
-				next_page_words = rom_pointer(current_object->race_background.next_page_words);
+				next_page_words = host_of(current_object)->race_background.next_page_words;
 				upper_pages_long_3 = next_page_words[0];
 				TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_3;
 				TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_3 >> 16u);
-				current_object->race_background.next_page_words = address_of(next_page_words + 1);
+				host_of(current_object)->race_background.next_page_words = next_page_words + 1;
 				current_object->race_background.change_step++;
 				break;
 			}
 			screen->road_palette_fades = fades->road_fades;
 			fades = fades + 1;
 			start_palette_fades(address_of(fades));
-			next_page_words = rom_pointer(current_object->race_background.next_page_words);
+			next_page_words = host_of(current_object)->race_background.next_page_words;
 			upper_pages_long_4 = next_page_words[0];
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_4;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_4 >> 16u);
-			current_object->race_background.next_page_words = address_of(next_page_words + 1);
+			host_of(current_object)->race_background.next_page_words = next_page_words + 1;
 			current_object->race_background.change_step++;
 			break;
 		case 2:
@@ -239,21 +239,21 @@ void race_background_update(void)
 				break;
 			fades = rom_pointer(background_palette_fades[current_object->race_background.background]);
 			race_background_fade_palettes(address_of(fades));
-			next_page_words = rom_pointer(current_object->race_background.next_page_words);
+			next_page_words = host_of(current_object)->race_background.next_page_words;
 			upper_pages_long_5 = next_page_words[0];
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_5;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_5 >> 16u);
-			current_object->race_background.next_page_words = address_of(next_page_words + 1);
+			host_of(current_object)->race_background.next_page_words = next_page_words + 1;
 			current_object->race_background.change_step++;
 			break;
 		case 4:
 			if ((int16_t)view_turn > 0x60)
 				break;
-			next_page_words = rom_pointer(current_object->race_background.next_page_words);
+			next_page_words = host_of(current_object)->race_background.next_page_words;
 			upper_pages_long_6 = next_page_words[0];
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->upper_pages = (uint16_t)upper_pages_long_6;
 			TILEMAP_PAGES(current_object->race_background.page_word_address)->lower_pages = (uint16_t)(upper_pages_long_6 >> 16u);
-			current_object->race_background.next_page_words = address_of(next_page_words + 1);
+			host_of(current_object)->race_background.next_page_words = next_page_words + 1;
 			current_object->race_background.change_step++;
 			break;
 		case 5:
@@ -494,6 +494,7 @@ void race_background_start_objects(uint32_t stage)
 			object->handler = function_number(OBJECT_LIST_PAIR(object_list)->handler);
 			object_list += 4u;
 			object->list_data = OBJECT_LIST_PAIR(object_list - 0x4u)->data;
+			object_sync(object);
 			object->parent = address_of(current_object);
 			objects_left--;
 			object_list += 4u;

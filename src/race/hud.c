@@ -3,7 +3,7 @@
  *    Description: the race's display: the rev meter, the speedometer, the gear, the place, the lap timer, the time left, the stage and goal messages, the race result, the checkpoint board
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -1135,7 +1135,7 @@ void branch_arrow_update(void)
 		animation_start(animation);
 		current_object->x = 0xA0u;
 		current_object->y = 0xD0u;
-		current_object->branch_arrow.palette_list = branch_arrow_palette_steps_ADDRESS;
+		host_of(current_object)->branch_arrow.palette_list = branch_arrow_palette_steps;
 		current_object->branch_arrow.leave_segment = RACE(screen->race_copy)->state.segment + 0x39u;
 		current_object->state++;
 	case 1:
@@ -1146,7 +1146,7 @@ void branch_arrow_update(void)
 		}
 		if ((int16_t)RACE(screen->race_copy)->state.segment < (int16_t)current_object->branch_arrow.leave_segment)
 		{
-			palette_list = rom_pointer(current_object->branch_arrow.palette_list);
+			palette_list = host_of(current_object)->branch_arrow.palette_list;
 			palette = palette_list[0];
 			palette_list++;
 			if ((int16_t)palette < 0)
@@ -1156,7 +1156,7 @@ void branch_arrow_update(void)
 				palette_list++;
 			}
 			current_object->palette = palette;
-			current_object->branch_arrow.palette_list = address_of(palette_list);
+			host_of(current_object)->branch_arrow.palette_list = palette_list;
 			draw_object(palette);
 			return;
 		}
@@ -1176,7 +1176,7 @@ void branch_arrow_update(void)
 	new_scale = (uint16_t)(current_object->width_scale + 6u);
 	current_object->width_scale = new_scale;
 	current_object->height_scale = new_scale;
-	palette_list = rom_pointer(current_object->branch_arrow.palette_list);
+	palette_list = host_of(current_object)->branch_arrow.palette_list;
 	palette = palette_list[0];
 	palette_list++;
 	if ((int16_t)palette < 0)
@@ -1186,7 +1186,7 @@ void branch_arrow_update(void)
 		palette_list++;
 	}
 	current_object->palette = palette;
-	current_object->branch_arrow.palette_list = address_of(palette_list);
+	host_of(current_object)->branch_arrow.palette_list = palette_list;
 	draw_object(palette);
 }
 

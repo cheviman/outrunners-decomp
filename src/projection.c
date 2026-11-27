@@ -3,7 +3,7 @@
  *    Description: where the game's state is put back into the original's memory for the state's hash: the code addresses the C keeps as function numbers, and the variables kept in the host's memory
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -300,6 +300,195 @@ static uint32_t address_function(uint32_t address)
 	return number != NO_FUNCTION ? number : address;
 }
 
+/* the families of the objects' fields that hold an address in the program ROM (memory.ROM_FIELDS), and the one
+   of each function of game_functions[]: the family its name starts with (an object's handler says which
+   family's fields the object holds) */
+enum object_family
+{
+	OBJECT_FAMILY_NONE,
+	OBJECT_FAMILY_automatic_panel,
+	OBJECT_FAMILY_branch_arrow,
+	OBJECT_FAMILY_car_name_letter,
+	OBJECT_FAMILY_manual_panel,
+	OBJECT_FAMILY_race_background,
+	OBJECT_FAMILY_race_opening,
+	OBJECT_FAMILY_staff_credits_code,
+	OBJECT_FAMILY_stage_end_sounds,
+	OBJECT_FAMILY_step_palette,
+	OBJECT_FAMILY_title_logo,
+	OBJECT_FAMILY_title_logo_copy,
+	OBJECT_FAMILY_title_screen,
+	OBJECT_FAMILY_welcome_letter,
+};
+
+static const uint8_t function_families[FUNCTION_COUNT] =
+{
+	[FUNCTION_staff_credits_code_start] = OBJECT_FAMILY_staff_credits_code,
+	[FUNCTION_staff_credits_code_watch] = OBJECT_FAMILY_staff_credits_code,
+	[FUNCTION_staff_credits_code_show] = OBJECT_FAMILY_staff_credits_code,
+	[FUNCTION_staff_credits_code_done] = OBJECT_FAMILY_staff_credits_code,
+	[FUNCTION_car_name_letter_update] = OBJECT_FAMILY_car_name_letter,
+	[FUNCTION_welcome_letter_start] = OBJECT_FAMILY_welcome_letter,
+	[FUNCTION_welcome_letter_show] = OBJECT_FAMILY_welcome_letter,
+	[FUNCTION_automatic_panel_show] = OBJECT_FAMILY_automatic_panel,
+	[FUNCTION_manual_panel_show] = OBJECT_FAMILY_manual_panel,
+	[FUNCTION_branch_arrow_update] = OBJECT_FAMILY_branch_arrow,
+	[FUNCTION_race_opening_update] = OBJECT_FAMILY_race_opening,
+	[FUNCTION_stage_end_sounds_update] = OBJECT_FAMILY_stage_end_sounds,
+	[FUNCTION_race_background_update] = OBJECT_FAMILY_race_background,
+	[FUNCTION_title_screen_update] = OBJECT_FAMILY_title_screen,
+	[FUNCTION_title_logo_update] = OBJECT_FAMILY_title_logo,
+	[FUNCTION_title_logo_copy_update] = OBJECT_FAMILY_title_logo_copy,
+};
+
+/* the address the original holds for a pointer into the program's data, 'bias' bytes into the record it
+   points at (0 for none) */
+static uint32_t rom_address(const void *pointer, uint32_t bias)
+{
+	return pointer == NULL ? 0u : address_of(pointer) + bias;
+}
+
+/* the pointer for such an address: the record 'bias' bytes before it (none for 0) */
+static const void *rom_place(uint32_t address, uint32_t bias)
+{
+	return address == 0u ? NULL : rom_pointer(address - bias);
+}
+
+/* the family of an object's handler (OBJECT_FAMILY_NONE for a number that is no function's) */
+static unsigned object_family(const struct object *object)
+{
+	return object->handler < FUNCTION_COUNT ? function_families[object->handler] : OBJECT_FAMILY_NONE;
+}
+
+/* an object's ROM fields into its bytes, by its handler's family: the addresses the original holds there */
+static void object_project(struct object *object, const union object_host *host)
+{
+	switch (object_family(object))
+	{
+	case OBJECT_FAMILY_automatic_panel:
+		object->automatic_panel.palette_list = rom_address(host->automatic_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_branch_arrow:
+		object->branch_arrow.palette_list = rom_address(host->branch_arrow.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_car_name_letter:
+		object->car_name_letter.palette_list = rom_address(host->car_name_letter.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_manual_panel:
+		object->manual_panel.palette_list = rom_address(host->manual_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_race_background:
+		object->race_background.next_page_words = rom_address(host->race_background.next_page_words, 0u);
+		break;
+	case OBJECT_FAMILY_race_opening:
+		object->race_opening.sound_list = rom_address(host->race_opening.sound_list, 1u);
+		break;
+	case OBJECT_FAMILY_staff_credits_code:
+		object->staff_credits_code.code_place = rom_address(host->staff_credits_code.code_place, 0u);
+		break;
+	case OBJECT_FAMILY_stage_end_sounds:
+		object->stage_end_sounds.sound_list = rom_address(host->stage_end_sounds.sound_list, 1u);
+		break;
+	case OBJECT_FAMILY_step_palette:
+		object->step_palette.palette_list = rom_address(host->step_palette.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_logo:
+		object->title_logo.palette_list = rom_address(host->title_logo.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_logo_copy:
+		object->title_logo_copy.palette_list = rom_address(host->title_logo_copy.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_screen:
+		object->title_screen.wave_times = rom_address(host->title_screen.wave_times, 0u);
+		break;
+	case OBJECT_FAMILY_welcome_letter:
+		object->welcome_letter.palette_list = rom_address(host->welcome_letter.palette_list, 0u);
+		break;
+	default:
+		break;
+	}
+}
+
+/* and back: the pointers of its family's fields from its bytes, every other slot none (an object started
+   again by its bytes keeps nothing of the one before) */
+static void object_unproject(const struct object *object, union object_host *host)
+{
+	memset(host, 0, sizeof *host);
+	switch (object_family(object))
+	{
+	case OBJECT_FAMILY_automatic_panel:
+		host->automatic_panel.palette_list = rom_place(object->automatic_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_branch_arrow:
+		host->branch_arrow.palette_list = rom_place(object->branch_arrow.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_car_name_letter:
+		host->car_name_letter.palette_list = rom_place(object->car_name_letter.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_manual_panel:
+		host->manual_panel.palette_list = rom_place(object->manual_panel.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_race_background:
+		host->race_background.next_page_words = rom_place(object->race_background.next_page_words, 0u);
+		break;
+	case OBJECT_FAMILY_race_opening:
+		host->race_opening.sound_list = rom_place(object->race_opening.sound_list, 1u);
+		break;
+	case OBJECT_FAMILY_staff_credits_code:
+		host->staff_credits_code.code_place = rom_place(object->staff_credits_code.code_place, 0u);
+		break;
+	case OBJECT_FAMILY_stage_end_sounds:
+		host->stage_end_sounds.sound_list = rom_place(object->stage_end_sounds.sound_list, 1u);
+		break;
+	case OBJECT_FAMILY_step_palette:
+		host->step_palette.palette_list = rom_place(object->step_palette.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_logo:
+		host->title_logo.palette_list = rom_place(object->title_logo.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_logo_copy:
+		host->title_logo_copy.palette_list = rom_place(object->title_logo_copy.palette_list, 0u);
+		break;
+	case OBJECT_FAMILY_title_screen:
+		host->title_screen.wave_times = rom_place(object->title_screen.wave_times, 0u);
+		break;
+	case OBJECT_FAMILY_welcome_letter:
+		host->welcome_letter.palette_list = rom_place(object->welcome_letter.palette_list, 0u);
+		break;
+	default:
+		break;
+	}
+}
+
+/* the host part of an object of the state's (host_of): its union object_host in struct world, by its place */
+union object_host *object_host(const struct object *object)
+{
+	const uintptr_t place = (uintptr_t)object;
+
+	if (object == &game->object_area_1.spare_object)
+		return &world->object_area_1_spare_object;
+	if (place - (uintptr_t)game->object_area_1.objects < sizeof game->object_area_1.objects)
+		return &world->object_area_1_objects[(place - (uintptr_t)game->object_area_1.objects) / sizeof (struct object)];
+	if (object == &game->object_area_2.spare_object)
+		return &world->object_area_2_spare_object;
+	if (place - (uintptr_t)game->object_area_2.objects < sizeof game->object_area_2.objects)
+		return &world->object_area_2_objects[(place - (uintptr_t)game->object_area_2.objects) / sizeof (struct object)];
+	board_outside(address_of(object));
+}
+
+/* an object's host part made again from its bytes, after code wrote them without its family's names: a link
+   a spawner stores (its parameter, its list_data) or the clear of a new object's (start_object's) */
+void object_sync(const struct object *object)
+{
+	object_unproject(object, object_host(object));
+}
+
+/* the same for the object at an address, after a clear of its bytes by address (memory.ROM_FIELD_SYNCS) */
+void object_sync_at(uint32_t address)
+{
+	object_sync((const struct object *)ram(address));
+}
+
 /* the game's variables the C keeps in the host's memory (struct world), the runtime's one world's */
 static struct world first_world;
 struct world *world = &first_world;
@@ -382,6 +571,12 @@ void world_project(void)
 	for (size_t index = 0; index < 0x10; index++)
 		game->test_mode_sound_queue[index] = world->test_mode_sound_queue[index];
 	game->test_mode_privilege_mode = world->test_mode_privilege_mode;
+	object_project(&game->object_area_1.spare_object, &world->object_area_1_spare_object);
+	for (size_t index = 0; index < 0x7C; index++)
+		object_project(&game->object_area_1.objects[index], &world->object_area_1_objects[index]);
+	object_project(&game->object_area_2.spare_object, &world->object_area_2_spare_object);
+	for (size_t index = 0; index < 0x7C; index++)
+		object_project(&game->object_area_2.objects[index], &world->object_area_2_objects[index]);
 	game->object_area_1.spare_object.handler = function_address(game->object_area_1.spare_object.handler);
 	for (size_t index = 0; index < 0x7C; index++)
 		game->object_area_1.objects[index].handler = function_address(game->object_area_1.objects[index].handler);
@@ -399,6 +594,12 @@ void world_unproject(void)
 	game->object_area_2.spare_object.handler = address_function(game->object_area_2.spare_object.handler);
 	for (size_t index = 0; index < 0x7C; index++)
 		game->object_area_2.objects[index].handler = address_function(game->object_area_2.objects[index].handler);
+	object_unproject(&game->object_area_1.spare_object, &world->object_area_1_spare_object);
+	for (size_t index = 0; index < 0x7C; index++)
+		object_unproject(&game->object_area_1.objects[index], &world->object_area_1_objects[index]);
+	object_unproject(&game->object_area_2.spare_object, &world->object_area_2_spare_object);
+	for (size_t index = 0; index < 0x7C; index++)
+		object_unproject(&game->object_area_2.objects[index], &world->object_area_2_objects[index]);
 	world->waiting_task_stack = game->waiting_task_stack;
 	world->vblanks_since_start = game->vblanks_since_start;
 	world->debug_timer_rounds = game->debug_timer_rounds;

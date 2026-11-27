@@ -1004,7 +1004,7 @@ scoped object car_select B0 entry_over u8
 scoped object welcome_letter 09 index u8
 scoped object welcome_letter 10 delay s16
 scoped object welcome_letter 12 frames_left u16
-scoped object welcome_letter 18 palette_list u32 rom
+scoped object welcome_letter 18 palette_list u32 object_palette_steps   # read by step_palette, which welcome_letter_show calls (its comment: "cycles its colours (step_palette, from 006DCC)")
 
 # ======== road objects, traffic and backdrops (naming batch C) ========
 00C873  func  stage_entry_update
@@ -2206,7 +2206,7 @@ scoped object car_name_letter 09 character u8
 scoped object car_name_letter 10 delay u8
 scoped object car_name_letter 11 slide_frames u8
 scoped object car_name_letter 12 frames_left u16
-scoped object car_name_letter 18 palette_list u32 rom
+scoped object car_name_letter 18 palette_list u32 object_palette_steps  # read by step_palette, which car_name_letter_update calls ("its colours cycling through 001D70 with step_palette")
 scoped object name_entry 09 open u8
 scoped object name_entry 0A letter u8
 scoped object name_entry 0B place u8
@@ -2648,11 +2648,11 @@ scoped object transmission_choice 12 automatic_cycle u8
 scoped object transmission_choice 13 slide_frames u8
 scoped object transmission_choice 2C slide_step s16
 scoped object automatic_panel 14 choice u32 object
-scoped object automatic_panel 18 palette_list u32 rom
+scoped object automatic_panel 18 palette_list u32 object_palette_steps  # read by step_palette, which automatic_panel_show calls ("cycles its colours (step_palette from palette_list)")
 scoped object automatic_panel 20 x_offset s16
 scoped object automatic_panel 24 y_offset s16
 scoped object manual_panel 14 choice u32 object
-scoped object manual_panel 18 palette_list u32 rom
+scoped object manual_panel 18 palette_list u32 object_palette_steps  # read by step_palette, which manual_panel_show calls ("cycles its colours (step_palette from palette_list)")
 scoped object manual_panel 20 x_offset s16
 scoped object manual_panel 24 y_offset s16
 scoped object driver_couple 09 left_side u8
@@ -2760,7 +2760,7 @@ field race_background_layer_setup 08 tile_bank_address u32 tilemap_banks   # "mo
 field race_background_layer_setup 0C page_word_address u32 tilemap_pages   # "mov.w [R10+], R11" (01755D) -> 20[R20], the first page word into it
 field race_background_layer_setup 10 mixer_address u32 mixer_register_copies   # "mov.w [R10], R10" (017572), then its low bits 4
 017A50  table race_background_layer_setups  race_background_layer_setup   # census ROM 017A50-017A77 (screen 1: 20E292 20E296 20E2B0 20E240 208182; screen 2: 20E29A 20E29E 20E2B1 20E244 218184)
-017AE0  table background_page_words  u32   # the background's page words, four a set (16 bytes) by page half x 2 + branch: race_background_update "mov.w 17AE0[PC](R0), [R11]" (01756B: R0 = page_half << 3, the set's first) and "movea.w 17AE0[PC](R0), 28[R20]" (017707: the set into next_page_words); census ROM 017AE0-017B5F (8 sets: 04030201 04070209 08070609 08070605, ...)
+017AE0  table background_page_words  background_page_word_steps   # the background's page words, four a set (16 bytes) by page half x 2 + branch: race_background_update "mov.w 17AE0[PC](R0), [R11]" (01756B: R0 = page_half << 3, the set's first) and "movea.w 17AE0[PC](R0), 28[R20]" (017707: the set into next_page_words); census ROM 017AE0-017B5F (8 sets: 04030201 04070209 08070609 08070605, ...)
 # The page words a background change puts into the tilemap one at a time (race_background next_page_words, 28,
 # four from a set of background_page_words): "mov.w [R10+], [20[R20]]" (01783F), "mov.w R10, 28[R20]"
 elements background_page_word_steps u32
@@ -2824,7 +2824,7 @@ field title_screen_layer_setup 18 second_scroll_x_address u32
 field title_screen_layer_setup 1C second_scroll_y_address u32
 01ACCC  table title_screen_layer_setups  title_screen_layer_setup   # census ROM 01ACCC-01AD0B (screen 1: 20E2B0 20E240 20E292 20E296 20E2B2 20E248 20E2A2 20E2A6; screen 2: 20E2B1 20E244 20E29A 20E29E 20E2B3 20E24C 20E2AA 20E2AE)
 01AD0C  table title_background_setups  background_setup   # title_screen_update "movea.w 1AD0C[PC](R0), R19" (019D15, R0 = index x 5) for set_up_background; census ROM 01AD0C-01AD33 (screen 1: 05040302 00000101 01 03 01 02 01AD34 01AD64; screen 2: 0F0E0D0C 00000B0B 01 03 01 02 01AD4C 01AD64)
-01ACC0  table title_logo_car_wave_frames  u16  # title_screen_update "movea.b 1ACC0[PC], 80[R20]" (019E16): the frames at which three more logo cars start, closed by 0; census ROM 01ACC0-01ACCB (78 F0 12C 186 1C2 0)
+01ACC0  table  title_logo_car_wave_frames  title_wave_frames  # title_screen_update "movea.b 1ACC0[PC], 80[R20]" (019E16): the frames at which three more logo cars start, closed by 0; census ROM 01ACC0-01ACCB (78 F0 12C 186 1C2 0)
 # The frames of title_logo_car_wave_frames the title waits for (title_screen wave_times, 80): "mov.w 80[R20], R10;
 # cmp.h [R10], 10[R20]" (019E3B, 019E40), then "add.w #2, 80[R20]" (019E64)
 elements title_wave_frames u16
@@ -3972,8 +3972,8 @@ local demo_caption_update 01AEB2,01AEBB,01AEC0,01AEC5,01AECA,01AECF r10 picture
 # title_logo_copy palette_list: "mov.w 80[R20], R10", "mov.h [R10+], 3A[R20]" at 01A250 and 01A314):
 # 01AC54: 26A 26A 26B 26B 26C 26C 26C; 01AC62: 26D 26D 26E 26E 26F 26F 26C (5 of each are shown)
 elements title_logo_palettes u16
-01AC54  data  title_logo_flash_palettes
-01AC62  data  title_logo_copy_flash_palettes
+01AC54  table  title_logo_flash_palettes  title_logo_palettes   # title_logo_update's palette list (title_logo_palettes, 6 frames): 26A 26A 26B 26B 26C 26C 26C, to title_logo_copy_flash_palettes (01AC54-01AC61)
+01AC62  table  title_logo_copy_flash_palettes  title_logo_palettes   # title_logo_copy_update's palette list (title_logo_palettes, 6 frames): 26D 26D 26E 26E 26F 26F 26C, to title_pictures (01AC62-01AC6F)
 01AC44  table  title_logo_car_palettes  u16     # by car model 0-7 ("mov.h 1AC44[PC](R0), 3A[R20]", 01A374): 7E 7E 97 97 7E 8D 97 92
 # The prompt under the title (coin_prompt and its pieces)
 01A9BC  table  coin_prompt_lcd_texts  u32       # by message ("mov.w 1A9BC[PC](R0), F40[R25]", 01A7BB: screen lcd_scroll_request): Insert Coin(s), Insert More Coin(s), Turn the Ignition Key (01A9C8, 01A9D7, 01A9EB)
@@ -5489,7 +5489,7 @@ local player_car_drive 00A41F,00A423,00A434,00A43B,00A47B,00A4C5,00A4C9,00A4DA,0
 00CB98  data  check_point_lcd_text_branch_0   # ~~~ CHECK POINT ~~~ (7E: the LCD's arrow character), branch_arrow_update 00CAF4 into screen lcd_scroll_request for car branch 0
 00CBAC  data  check_point_lcd_text_branch_1   # the same with character 7F, for car branch 1 (branch_arrow_update 00CB04)
 00D08E  data  total_time_text                 # TOTAL TIME (x 58, y 30, attribute B0; goal_update, draw_text)
-00D0A0  data  branch_arrow_palette_steps      # 5D 5D 5E 5E 5F 5F, then FFF2 back to the start: the arrow's colour cycle (branch_arrow_update into palette_list)
+00D0A0  table  branch_arrow_palette_steps  object_palette_steps  # 5D 5D 5E 5E 5F 5F, then FFF2 back to the start: the arrow's colour cycle (branch_arrow_update into palette_list)
 00D0AE  data  dream_flying_song_title         # Dream Flying (goal_update 00C987 "movea.b D0AE, R10", start_song_title)
 00DF74  data  entry_invitation_objects        # the count (3) of the handler list at 00DF78 (entry_countdown_start, credit_display_update, coin_prompt_update), which start_object_list takes from here (entry_invitation_step 00DE57)
 00DF84  data  network_check_text              # NETWORK CHECK (print_text_layer: x, y, attribute, the characters; FFFF closes the list)
@@ -7857,7 +7857,7 @@ param road_row_pair_crash_check R15 next_hit_box
 000F70  data  isdn_connection_objects       # game mode 8's list for start_object_list: the count (1), then isdn_connection_object_handlers
 001A78  data  car_presentation_objects      # game mode 3's list: the count (3), then car_presentation_object_handlers
 001AE8  table  staff_credits_texts  sprite_text_record   # staff_credits_code_show's texts, "OutRunners" MAIN STAFF and on (place, then the characters): of different lengths, the C takes the first and draw_text hands back the next
-001D70  data  car_name_letter_palette_steps # car_name_letter_update's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
+001D70  table  car_name_letter_palette_steps  object_palette_steps  # car_name_letter_update's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
 002CB8  data  ranking_objects               # game_mode_ranking and ranking_update's list: the count (2), then the handlers
 002D58  data  name_entry_objects            # name_entry_update's list: the count (4), then name_entry_object_handlers
 00346C  data  player_car_objects            # game_mode_play's list at the race's start (steps 5, 27...): the count (1), then player_car_object_handlers (the screen's car, player_car_update)
@@ -7866,8 +7866,8 @@ param road_row_pair_crash_check R15 next_hit_box
 0034EC  data  route_map_objects             # game_mode_play's list for the route map (game step 12): the count (1), then route_map_object_handlers
 003504  data  meaning_of_the_light_title    # a song title (song_title_record: x 48, then "Meaning of the Light"), which game_mode_play starts
 005014  data  thank_you_lcd_text            # "Thank you for your playing.", which route_map_update keeps scrolling on the LCD (screen lcd_scroll_request)
-006DCC  data  welcome_letter_palette_steps  # welcome_letter_show's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
-006E18  data  transmission_panel_palette_steps  # the automatic and manual panels' palette list (object_palette_steps: 2A8 2A9 2AA 2AB 2AC 2AD 2AC 2AB 2AA 2A9, then -16 back)
+006DCC  table  welcome_letter_palette_steps  object_palette_steps  # welcome_letter_show's palette list (object_palette_steps: 18 19 1A 1B 1C 1B 1A 19, then -12 back)
+006E18  table  transmission_panel_palette_steps  object_palette_steps  # the automatic and manual panels' palette list (object_palette_steps: 2A8 2A9 2AA 2AB 2AC 2AD 2AC 2AB 2AA 2A9, then -16 back)
 006EB0  data  entry_lcd_text                # "Entry:", which car_select_entries_run copies to the LCD's text (screen F12)
 006EB6  data  mega_driver_title             # a song title (song_title_record: x 6C, then "Mega Driver"), which car_select_run starts
 

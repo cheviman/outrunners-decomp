@@ -3,7 +3,7 @@
  *    Description: the car select: the attendant and the turntable, the cars, the transmission, the flags of the other cabinets' choices, the countdown and the entry traffic
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -938,7 +938,7 @@ void welcome_letter_show(void)
 		current_object->frame = place->letter;
 		current_object->welcome_letter.delay = letter_index * 2u;
 		current_object->welcome_letter.frames_left = 0x2Du;
-		current_object->welcome_letter.palette_list = welcome_letter_palette_steps_ADDRESS;
+		host_of(current_object)->welcome_letter.palette_list = welcome_letter_palette_steps;
 		current_object->state++;
 		break;
 	case 1:
@@ -1275,7 +1275,7 @@ void automatic_panel_show(void)
 		current_object->palette = 0x2A8u;
 		current_object->x_offset = 0x54;
 		current_object->y_offset = -0x6C;
-		current_object->automatic_panel.palette_list = transmission_panel_palette_steps_ADDRESS;
+		host_of(current_object)->automatic_panel.palette_list = transmission_panel_palette_steps;
 		current_object->state++;
 		break;
 	case 1:
@@ -1327,7 +1327,7 @@ void manual_panel_show(void)
 		current_object->x = 0xA0u;
 		current_object->x_offset = 0xEC;
 		current_object->y_offset = -0x6C;
-		current_object->manual_panel.palette_list = transmission_panel_palette_steps_ADDRESS;
+		host_of(current_object)->manual_panel.palette_list = transmission_panel_palette_steps;
 		current_object->state++;
 		break;
 	case 1:
@@ -2474,7 +2474,7 @@ void step_palette(void)
 	uint32_t palette_entry = 0;
 	const int16_t *list_place = NULL;
 
-	list_place = rom_pointer(current_object->step_palette.palette_list);
+	list_place = host_of(current_object)->step_palette.palette_list;
 	palette_entry = list_place[0];
 	list_place++;
 	if ((int16_t)palette_entry < 0)
@@ -2484,5 +2484,5 @@ void step_palette(void)
 		list_place++;
 	}
 	current_object->palette = palette_entry;
-	current_object->step_palette.palette_list = address_of(list_place);
+	host_of(current_object)->step_palette.palette_list = list_place;
 }

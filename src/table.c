@@ -3,7 +3,7 @@
  *    Description: the registers the whole program shares, the code calls through memory slots reach (by address), and the reset entry
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -523,6 +523,7 @@ const void *car_presentation_palette_cycle_data;
 const void *staff_credits_code_sequence_data;
 const void *staff_credits_texts_data;
 const void *attract_car_names_data;
+const void *car_name_letter_palette_steps_data;
 const void *ranking_step_jumps_data;
 const void *name_entry_state_jumps_data;
 const void *name_entry_gas_step_jumps_data;
@@ -641,9 +642,11 @@ const void *turntable_scenery_items_data;
 const void *car_select_turn_delays_data;
 const void *car_select_wheel_transmissions_data;
 const void *welcome_letter_places_data;
+const void *welcome_letter_palette_steps_data;
 const void *car_caption_palettes_data;
 const void *car_select_car_sounds_data;
 const void *select_instruction_pieces_data;
+const void *transmission_panel_palette_steps_data;
 const void *automatic_panel_palette_lists_data;
 const void *manual_panel_palette_lists_data;
 const void *driver_couple_looks_data;
@@ -730,6 +733,7 @@ const void *checkpoint_board_number_animations_data;
 const void *checkpoint_board_time_places_data;
 const void *gear_indicator_animations_data;
 const void *stage_level_texts_data;
+const void *branch_arrow_palette_steps_data;
 const void *lap_timer_checkpoint_states_data;
 const void *entry_invitation_step_jumps_data;
 const void *race_copy_offsets_data;
@@ -936,6 +940,8 @@ const void *title_car_screen_offsets_data;
 const void *title_car_records_data;
 const void *title_car_animations_data;
 const void *title_logo_car_palettes_data;
+const void *title_logo_flash_palettes_data;
+const void *title_logo_copy_flash_palettes_data;
 const void *title_pictures_data;
 const void *title_seagull_places_data;
 const void *title_logo_stripe_places_data;
@@ -1090,6 +1096,7 @@ const game_table game_tables[] =
 	{ "staff_credits_code_sequence", 0x001ADCu, &staff_credits_code_sequence_data },
 	{ "staff_credits_texts", 0x001AE8u, &staff_credits_texts_data },
 	{ "attract_car_names", 0x001CECu, &attract_car_names_data },
+	{ "car_name_letter_palette_steps", 0x001D70u, &car_name_letter_palette_steps_data },
 	{ "ranking_step_jumps", 0x001DE0u, &ranking_step_jumps_data },
 	{ "name_entry_state_jumps", 0x001ED0u, &name_entry_state_jumps_data },
 	{ "name_entry_gas_step_jumps", 0x002088u, &name_entry_gas_step_jumps_data },
@@ -1208,9 +1215,11 @@ const game_table game_tables[] =
 	{ "car_select_turn_delays", 0x006D9Cu, &car_select_turn_delays_data },
 	{ "car_select_wheel_transmissions", 0x006DA4u, &car_select_wheel_transmissions_data },
 	{ "welcome_letter_places", 0x006DACu, &welcome_letter_places_data },
+	{ "welcome_letter_palette_steps", 0x006DCCu, &welcome_letter_palette_steps_data },
 	{ "car_caption_palettes", 0x006DDEu, &car_caption_palettes_data },
 	{ "car_select_car_sounds", 0x006DEEu, &car_select_car_sounds_data },
 	{ "select_instruction_pieces", 0x006DF6u, &select_instruction_pieces_data },
+	{ "transmission_panel_palette_steps", 0x006E18u, &transmission_panel_palette_steps_data },
 	{ "automatic_panel_palette_lists", 0x006E30u, &automatic_panel_palette_lists_data },
 	{ "manual_panel_palette_lists", 0x006E44u, &manual_panel_palette_lists_data },
 	{ "driver_couple_looks", 0x006E58u, &driver_couple_looks_data },
@@ -1297,6 +1306,7 @@ const game_table game_tables[] =
 	{ "checkpoint_board_time_places", 0x00CFF8u, &checkpoint_board_time_places_data },
 	{ "gear_indicator_animations", 0x00D018u, &gear_indicator_animations_data },
 	{ "stage_level_texts", 0x00D034u, &stage_level_texts_data },
+	{ "branch_arrow_palette_steps", 0x00D0A0u, &branch_arrow_palette_steps_data },
 	{ "lap_timer_checkpoint_states", 0x00D0C0u, &lap_timer_checkpoint_states_data },
 	{ "entry_invitation_step_jumps", 0x00DDB4u, &entry_invitation_step_jumps_data },
 	{ "race_copy_offsets", 0x00E0A0u, &race_copy_offsets_data },
@@ -1503,6 +1513,8 @@ const game_table game_tables[] =
 	{ "title_car_records", 0x01ABB4u, &title_car_records_data },
 	{ "title_car_animations", 0x01AC34u, &title_car_animations_data },
 	{ "title_logo_car_palettes", 0x01AC44u, &title_logo_car_palettes_data },
+	{ "title_logo_flash_palettes", 0x01AC54u, &title_logo_flash_palettes_data },
+	{ "title_logo_copy_flash_palettes", 0x01AC62u, &title_logo_copy_flash_palettes_data },
 	{ "title_pictures", 0x01AC70u, &title_pictures_data },
 	{ "title_seagull_places", 0x01ACA0u, &title_seagull_places_data },
 	{ "title_logo_stripe_places", 0x01ACA8u, &title_logo_stripe_places_data },
@@ -1620,7 +1632,7 @@ const game_table game_tables[] =
 	{ "kanji_font", 0x1CF000u, &kanji_font_data },
 };
 
-const size_t game_table_count = 563;
+const size_t game_table_count = 569;
 
 /* the code at the reset vector */
 void game_entry(void)

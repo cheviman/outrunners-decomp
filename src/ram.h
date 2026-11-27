@@ -3,7 +3,7 @@
  *    Description: the game's variables, tables, board registers and structures
  *    Version:     0.1.0
  *    Created:     12-10-2026
- *    Modified:    25-11-2026
+ *    Modified:    26-11-2026
  *    Author:      Sebastian Toyos
  *
  *    OutRunners (arcade, Sega System Multi 32): the game's V70 program decompiled into C by
@@ -680,9 +680,6 @@ extern const void *background_upper_animation_page_pairs_data;
 #define background_upper_animation_page_pairs ((const uint16_t *)background_upper_animation_page_pairs_data)
 extern const void *background_register_lists_data;
 #define background_register_lists ((const uint32_t *)background_register_lists_data)
-#define background_page_words_ADDRESS 0x017AE0u
-extern const void *background_page_words_data;
-#define background_page_words ((const uint32_t *)background_page_words_data)
 extern const void *stage_backgrounds_data;
 #define stage_backgrounds ((const uint8_t *)stage_backgrounds_data)
 extern const void *background_tile_banks_data;
@@ -847,9 +844,6 @@ extern const void *title_car_animations_data;
 #define title_car_animations ((const uint16_t *)title_car_animations_data)
 extern const void *title_logo_car_palettes_data;
 #define title_logo_car_palettes ((const uint16_t *)title_logo_car_palettes_data)
-#define title_logo_car_wave_frames_ADDRESS 0x01ACC0u
-extern const void *title_logo_car_wave_frames_data;
-#define title_logo_car_wave_frames (*(const uint16_t *)title_logo_car_wave_frames_data)
 extern const void *demo_captions_state_jumps_data;
 #define demo_captions_state_jumps ((const uint32_t *)demo_captions_state_jumps_data)
 extern const void *demo_caption_state_jumps_data;
@@ -1181,18 +1175,14 @@ extern const void *kanji_font_data;
 #define signature_text_ADDRESS 0x00010Cu
 #define default_settings_ADDRESS 0x0004C0u
 #define second_task_start_frame_ADDRESS 0x000C98u
-#define car_name_letter_palette_steps_ADDRESS 0x001D70u
 #define meaning_of_the_light_title_ADDRESS 0x003504u
 #define thank_you_lcd_text_ADDRESS 0x005014u
-#define welcome_letter_palette_steps_ADDRESS 0x006DCCu
-#define transmission_panel_palette_steps_ADDRESS 0x006E18u
 #define entry_lcd_text_ADDRESS 0x006EB0u
 #define mega_driver_title_ADDRESS 0x006EB6u
 #define rival_warning_text_ADDRESS 0x007CDBu
 #define check_point_lcd_text_branch_0_ADDRESS 0x00CB98u
 #define check_point_lcd_text_branch_1_ADDRESS 0x00CBACu
 #define total_time_text_ADDRESS 0x00D08Eu
-#define branch_arrow_palette_steps_ADDRESS 0x00D0A0u
 #define dream_flying_song_title_ADDRESS 0x00D0AEu
 #define network_check_text_ADDRESS 0x00DF84u
 #define communication_success_text_ADDRESS 0x00DF98u
@@ -1225,8 +1215,6 @@ extern const void *kanji_font_data;
 #define credit_free_play_text_ADDRESS 0x01AB62u
 #define credit_singular_text_ADDRESS 0x01AB72u
 #define credit_plural_text_ADDRESS 0x01AB80u
-#define title_logo_flash_palettes_ADDRESS 0x01AC54u
-#define title_logo_copy_flash_palettes_ADDRESS 0x01AC62u
 #define timeline_1AFC0_ADDRESS 0x01AFC0u
 #define test_mode_menu_text_ADDRESS 0x01C490u
 #define test_mode_write_count_text_ADDRESS 0x01C5A2u
@@ -5091,11 +5079,12 @@ extern const void *attract_lamp_steps_data;
 #define car_presentation_backgrounds_ADDRESS 0x001AA0u
 extern const void *car_presentation_backgrounds_data;
 #define car_presentation_backgrounds ((const struct background_setup *)(car_presentation_backgrounds_data))
-#define staff_credits_code_sequence_ADDRESS 0x001ADCu
 extern const void *staff_credits_code_sequence_data;
 #define staff_credits_code_sequence ((const uint8_t *)(staff_credits_code_sequence_data))
 extern const void *staff_credits_texts_data;
 #define staff_credits_texts ((const struct sprite_text_record *)(staff_credits_texts_data))
+extern const void *car_name_letter_palette_steps_data;
+#define car_name_letter_palette_steps ((const int16_t *)(car_name_letter_palette_steps_data))
 extern const void *ranking_background_register_sets_data;
 #define ranking_background_register_sets ((const struct ranking_background_registers *)(ranking_background_register_sets_data))
 extern const void *default_course_records_data;
@@ -5141,8 +5130,12 @@ extern const void *turntable_scenery_groups_data;
 #define turntable_scenery_groups ((const struct turntable_scenery_group *)(turntable_scenery_groups_data))
 extern const void *welcome_letter_places_data;
 #define welcome_letter_places ((const struct welcome_letter_place *)(welcome_letter_places_data))
+extern const void *welcome_letter_palette_steps_data;
+#define welcome_letter_palette_steps ((const int16_t *)(welcome_letter_palette_steps_data))
 extern const void *select_instruction_pieces_data;
 #define select_instruction_pieces ((const struct select_instruction_piece *)(select_instruction_pieces_data))
+extern const void *transmission_panel_palette_steps_data;
+#define transmission_panel_palette_steps ((const int16_t *)(transmission_panel_palette_steps_data))
 extern const void *driver_couple_looks_data;
 #define driver_couple_looks ((const struct animation_palette *)(driver_couple_looks_data))
 extern const void *stage_roadside_surface_lists_data;
@@ -5153,6 +5146,8 @@ extern const void *checkpoint_board_number_places_data;
 #define checkpoint_board_number_places ((const struct checkpoint_board_place *)(checkpoint_board_number_places_data))
 extern const void *checkpoint_board_behind_places_data;
 #define checkpoint_board_behind_places ((const struct checkpoint_board_place *)(checkpoint_board_behind_places_data))
+extern const void *branch_arrow_palette_steps_data;
+#define branch_arrow_palette_steps ((const int16_t *)(branch_arrow_palette_steps_data))
 extern const void *sprite_list_switches_data;
 #define sprite_list_switches ((const uint32_t *)(sprite_list_switches_data))
 extern const void *sprite_list_switch_records_data;
@@ -5178,7 +5173,6 @@ extern const void *screen_fade_from_red_tint_data;
 #define screen_fade_from_red_tint ((const struct screen_fade_start *)(screen_fade_from_red_tint_data))
 extern const void *car_hit_box_sizes_data;
 #define car_hit_box_sizes ((const struct item_hit_box *)(car_hit_box_sizes_data))
-#define race_opening_sound_cues_ADDRESS 0x014660u
 extern const void *race_opening_sound_cues_data;
 #define race_opening_sound_cues ((const struct sound_cue *)(race_opening_sound_cues_data))
 extern const void *stage_end_sound_cues_data;
@@ -5187,6 +5181,8 @@ extern const void *road_surface_layer_setups_data;
 #define road_surface_layer_setups ((const struct road_surface_layer_setup *)(road_surface_layer_setups_data))
 extern const void *race_background_layer_setups_data;
 #define race_background_layer_setups ((const struct race_background_layer_setup *)(race_background_layer_setups_data))
+extern const void *background_page_words_data;
+#define background_page_words ((const uint32_t *)(background_page_words_data))
 extern const void *lcd_custom_characters_data;
 #define lcd_custom_characters ((const uint8_t *)(lcd_custom_characters_data))
 extern const void *lcd_boot_text_data;
@@ -5198,6 +5194,10 @@ extern const void *ignition_key_prompt_pieces_data;
 #define ignition_key_prompt_pieces ((const struct picture_record *)(ignition_key_prompt_pieces_data))
 extern const void *title_car_records_data;
 #define title_car_records ((const struct title_car_record *)(title_car_records_data))
+extern const void *title_logo_flash_palettes_data;
+#define title_logo_flash_palettes ((const uint16_t *)(title_logo_flash_palettes_data))
+extern const void *title_logo_copy_flash_palettes_data;
+#define title_logo_copy_flash_palettes ((const uint16_t *)(title_logo_copy_flash_palettes_data))
 extern const void *title_pictures_data;
 #define title_pictures ((const struct picture_record *)(title_pictures_data))
 extern const void *title_seagull_places_data;
@@ -5206,6 +5206,8 @@ extern const void *title_logo_stripe_places_data;
 #define title_logo_stripe_places ((const struct title_place *)(title_logo_stripe_places_data))
 extern const void *title_logo_car_places_data;
 #define title_logo_car_places ((const struct title_place *)(title_logo_car_places_data))
+extern const void *title_logo_car_wave_frames_data;
+#define title_logo_car_wave_frames ((const uint16_t *)(title_logo_car_wave_frames_data))
 extern const void *title_screen_layer_setups_data;
 #define title_screen_layer_setups ((const struct title_screen_layer_setup *)(title_screen_layer_setups_data))
 #define title_background_setups_ADDRESS 0x01AD0Cu
@@ -5460,6 +5462,79 @@ _Static_assert(offsetof(struct game, isdn_races) == 0x1E000, "isdn_races at its 
 _Static_assert(offsetof(struct game, stacks) == 0x1F000, "stacks at its place in the work RAM");
 extern struct game *game;
 
+/* an object's fields that hold an address in the program ROM, as the pointers the C keeps (memory.ROM_FIELDS):
+   each family's in the slot of its offset in the object (offset / 4), so that two families' fields at the
+   same bytes share a slot as they share the bytes; host_of(object) is the object's, and the projection puts
+   the addresses into the object's bytes by its handler's family */
+union object_host
+{
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} automatic_panel;
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} branch_arrow;
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} car_name_letter;
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} manual_panel;
+	struct
+	{
+		const void *unused_0[0xA];
+		const uint32_t *next_page_words;
+	} race_background;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct sound_cue *sound_list;
+	} race_opening;
+	struct
+	{
+		const void *unused_0[0x6];
+		const uint8_t *code_place;
+	} staff_credits_code;
+	struct
+	{
+		const void *unused_0[0x6];
+		const struct sound_cue *sound_list;
+	} stage_end_sounds;
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} step_palette;
+	struct
+	{
+		const void *unused_0[0x20];
+		const uint16_t *palette_list;
+	} title_logo;
+	struct
+	{
+		const void *unused_0[0x20];
+		const uint16_t *palette_list;
+	} title_logo_copy;
+	struct
+	{
+		const void *unused_0[0x20];
+		const uint16_t *wave_times;
+	} title_screen;
+	struct
+	{
+		const void *unused_0[0x6];
+		const int16_t *palette_list;
+	} welcome_letter;
+};
+
 /* the game's variables the code reaches only by name, in the host's memory (their places in the work
    RAM, struct game, are where world_project puts them) */
 struct world
@@ -5527,10 +5602,18 @@ struct world
 	uint8_t test_mode_sound_queue_read;
 	uint16_t test_mode_sound_queue[0x10];
 	uint8_t test_mode_privilege_mode;
+	union object_host object_area_1_spare_object;
+	union object_host object_area_1_objects[0x7C];
+	union object_host object_area_2_spare_object;
+	union object_host object_area_2_objects[0x7C];
 };
 extern struct world *world;
 void world_project(void);
 void world_unproject(void);
 void world_clear(void);
+union object_host *object_host(const struct object *object);
+#define host_of(record) _Generic((record), struct object *: object_host, const struct object *: object_host)(record)
+void object_sync(const struct object *object);
+void object_sync_at(uint32_t address);
 
 #endif
